@@ -1,0 +1,20 @@
+language: go
+go:
+  - '1.11'
+install:
+  - npm install -g snyk
+  - make setup
+
+script:
+  - make
+
+jobs:
+  include:
+    - stage: check
+      script:
+        - make
+        - bash <(curl -s https://codecov.io/bash)
+    - stage: check
+      script:
+        - snyk monitor --org=czi
+        - snyk test

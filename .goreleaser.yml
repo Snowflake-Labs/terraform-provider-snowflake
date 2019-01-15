@@ -1,0 +1,23 @@
+before:
+  hooks:
+    - make clean
+
+builds:
+  - binary: terraform-provider-snowflake
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/util.GitSha={{.Commit}} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Version={{.Version}} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Dirty=false -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Release=true"
+
+archive:
+  files:
+  - none*
+
+release:
+  prerelease: false
