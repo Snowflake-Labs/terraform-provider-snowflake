@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/hashicorp/terraform/plugin"
+	"github.com/hashicorp/terraform/terraform"
+)
 
 func main() {
-	fmt.Println("Hello World")
+	plugin.Serve(&plugin.ServeOpts{
+		ProviderFunc: func() terraform.ResourceProvider {
+			return provider.Provider()
+		},
+	})
 }
