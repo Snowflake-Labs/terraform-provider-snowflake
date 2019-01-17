@@ -44,7 +44,7 @@ build: ## build the binary
 .PHONY: build
 
 coverage: ## run the go coverage tool, reading file coverage.out
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.txt
 .PHONY: coverage
 
 test: ## run the tests

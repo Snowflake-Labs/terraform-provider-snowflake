@@ -49,28 +49,12 @@ func Provider() *schema.Provider {
 			"snowflake_database": resources.Database(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{},
-		ConfigureFunc:  configureProvider,
+		ConfigureFunc:  ConfigureProvider,
 	}
 }
 
-func configureProvider(s *schema.ResourceData) (interface{}, error) {
-	account := s.Get("account").(string)
-	username := s.Get("username").(string)
-	password := s.Get("password").(string)
-	region := s.Get("region").(string)
-	role := s.Get("role").(string)
-
-	if region == "us-west-2" {
-		region = ""
-	}
-
-	dsn, err := gosnowflake.DSN(&gosnowflake.Config{
-		Account:  account,
-		User:     username,
-		Region:   region,
-		Password: password,
-		Role:     role,
-	})
+func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+	dsn, err := DSN(s)
 
 	log.Printf("[DEBUG] connecting to %s", dsn)
 	if err != nil {
@@ -83,4 +67,27 @@ func configureProvider(s *schema.ResourceData) (interface{}, error) {
 	}
 
 	return db, nil
+}
+
+func DSN(s *schema.ResourceData) (string, error) {
+	account := s.Get("account").(string)
+	username := s.Get("username").(string)
+	password := s.Get("password").(string)
+	region := s.Get("region").(string)
+	role := s.Get("role").(string)
+
+	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
+	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
+	if region == "us-west-2" {
+		region = ""
+	}
+
+	dsn, err := gosnowflake.DSN(&gosnowflake.Config{
+		Account:  account,
+		User:     username,
+		Region:   region,
+		Password: password,
+		Role:     role,
+	})
+	return dsn, err
 }
