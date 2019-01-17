@@ -66,6 +66,8 @@ func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
 	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", name)
 	log.Printf("[DEBUG] stmt %s", stmt)
 
+	// TODO if we try to read a row and there is none, this will return an error. We should probably
+	//      do something more graceful
 	row := db.QueryRow(stmt)
 
 	var createdOn, dbname, isDefault, isCurrent, origin, owner, comment, options, retentionTime sql.NullString
