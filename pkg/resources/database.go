@@ -106,15 +106,13 @@ func (d *database) Delete(data *schema.ResourceData, meta interface{}) error {
 }
 
 func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
-	// Note that snowflake DDL statements always behave as if AUTOCOMMIT=true. So in cases that we have to run
-	// multiple ALTER TABLE statements, we are inherently unsafe.
-	// Retries might migate the problems in the case of transient failures, but will not provide guarantees.
-	// https://docs.snowflake.net/manuals/sql-reference/transactions.html#scope-of-a-snowflake-transaction
+	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
+	data.Partial(true)
 
 	db := meta.(*sql.DB)
 	if data.HasChange("name") {
-		oldNameI, newNameI := data.GetChange("name")
 		// I wish this could be done on one line.
+		oldNameI, newNameI := data.GetChange("name")
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
@@ -126,6 +124,7 @@ func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error renaming database %s to %s", oldName, newName)
 		}
 		data.SetId(newName)
+		data.SetPartial("name")
 	}
 
 	if data.HasChange("comment") {
@@ -139,6 +138,8 @@ func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrap(err, "error altering database")
 		}
+		data.SetPartial("comment")
 	}
+	data.Partial(false)
 	return nil
 }
