@@ -25,8 +25,12 @@ func Database() *schema.Resource {
 				Description: "TODO",
 				// TODO validation
 			},
-			// "comment": &schema.Schema{
-			// },
+			"comment": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				// TODO validation
+			},
 		},
 	}
 }
@@ -39,12 +43,14 @@ func newResourceDatabase() *database {
 
 func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
+	comment := data.Get("comment").(string)
 	db := meta.(*sql.DB)
 
 	// TODO escape name
-	// TODO name appears to get normalized to uppercase, should we do that?
-	//      or maybe just consider it case-insensitive?
-	stmt := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", name)
+	// TODO escape comment
+	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
+	// 	case-insensitive?
+	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, comment)
 	log.Printf("[DEBUG] stmt %s", stmt)
 	_, err := db.Exec(stmt)
 
@@ -60,6 +66,7 @@ func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
+	// TODO Not sure if we should use id or name here.
 	name := data.Id()
 
 	// TODO make sure there are no wildcard-y characters here, otherwise it could match more than1 row.
@@ -98,4 +105,40 @@ func (d *database) Delete(data *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func (d *database) Update(data *schema.ResourceData, meta interface{}) error { return nil }
+func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
+	// Note that snowflake DDL statements always behave as if AUTOCOMMIT=true. So in cases that we have to run
+	// multiple ALTER TABLE statements, we are inherently unsafe.
+	// Retries might migate the problems in the case of transient failures, but will not provide guarantees.
+	// https://docs.snowflake.net/manuals/sql-reference/transactions.html#scope-of-a-snowflake-transaction
+
+	db := meta.(*sql.DB)
+	if data.HasChange("name") {
+		oldNameI, newNameI := data.GetChange("name")
+		// I wish this could be done on one line.
+		oldName := oldNameI.(string)
+		newName := newNameI.(string)
+
+		stmt := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", oldName, newName)
+		log.Printf("[DEBUG] stmt %s", stmt)
+
+		_, err := db.Exec(stmt)
+		if err != nil {
+			return errors.Wrapf(err, "error renaming database %s to %s", oldName, newName)
+		}
+		data.SetId(newName)
+	}
+
+	if data.HasChange("comment") {
+		name := data.Get("name").(string)
+		comment := data.Get("comment").(string)
+
+		stmt := fmt.Sprintf("ALTER DATABASE %s SET COMMENT='%s'", name, comment)
+		log.Printf("[DEBUG] stmt %s", stmt)
+
+		_, err := db.Exec(stmt)
+		if err != nil {
+			return errors.Wrap(err, "error altering database")
+		}
+	}
+	return nil
+}
