@@ -1,0 +1,20 @@
+sudo: false
+language: go
+go:
+  - "1.10"
+  - "1.11.x"
+  - tip
+before_install:
+  - openssl aes-256-cbc -k "$super_secret_password" -in parameters.json.enc -out parameters.json -d
+  - openssl aes-256-cbc -k "$super_secret_password" -in rsa-2048-private-key.p8.enc -out rsa-2048-private-key.p8 -d
+  - curl -L -s https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
+install:
+  - dep ensure
+script:
+  - make fmt lint cov
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+env:
+  global:
+  - secure: J33DZodaFJMwoGSr898rm5eQ+nIpNpBsIrrYfEDRVMNpdDXuHDvpUPEgn00RfGsQRhFaGCayI3rFIJ2w5DHEn6krIJO2NRkaCaZqxElEYCvmUZ538YuMBsK9c14E7kCKjBdrKOLWxglGXK/Q7gdSkNPTcBcUmlLTyZgM7P6Z9t8siSChLThtmnmd6HnpVmORElnO9IjGY8AGjnrHqclyHPHw/2j22HP5mf7mrEPc/Okvg3hh2bltgKGER+WLGNNTZ3R6Twy7wgna2okF5bcCIyEo49PnT3JOVCzrZMqxH8+jZbm7n9hZPtzycpxZ/LMwARQmk6jITYyj4P3SfcFYeTijD+a2NsgOQ3b/L/3v7tyiw8UMEyGhgY/fPXgeza/Rbq8I0vavDSKPDr4iTOijsd/Rl9g2GZkOd2Eii1NYa23rvqEgDEjZ9p0nDcXqThPhuihaLspdDfH/GGkffCYRH7G1e74/eVad7Gdo6LVwiQ468i4SlaKHv0L7AmUqB8MkamwsZSG+Q700AI7G0D3q/b4Th4dS1OVpA6bCPj/xtO36Zj8WvboAPfCLf9GLQ7rqVsBIwUaNsubYNCv1nI576mQrb2P4DKyRcp0SuhFcgeqDLWIxKujl8zlNf9dLyjqx9NzN0gpKveSAad4PtJYesTtvjwXiSlIevVdvg8opH5M=

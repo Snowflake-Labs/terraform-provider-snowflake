@@ -1,0 +1,87 @@
+package resources
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/pkg/errors"
+)
+
+func Database() *schema.Resource {
+	d := newResourceDatabase()
+	return &schema.Resource{
+		Create: d.Create,
+		Read:   d.Read,
+		Delete: d.Delete,
+		Update: d.Update,
+
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "TODO",
+				// TODO validation
+			},
+			// "comment": &schema.Schema{
+			// },
+		},
+	}
+}
+
+type database struct{}
+
+func newResourceDatabase() *database {
+	return &database{}
+}
+
+func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
+	name := data.Get("name").(string)
+	db := meta.(*sql.DB)
+
+	// TODO escape name
+	// TODO name appears to get normalized to uppercase, should we do that?
+	//      or maybe just consider it case-insensitive?
+	stmt := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", name)
+	log.Printf("[DEBUG] stmt %s", stmt)
+	_, err := db.Exec(stmt)
+
+	if err != nil {
+		return errors.Wrap(err, "error creating database")
+	}
+
+	data.SetId(name)
+
+	return d.Read(data, meta)
+}
+
+func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+
+	name := data.Id()
+
+	// TODO make sure there are no wildcard-y characters here, otherwise it could match more than1 row.
+	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", name)
+	log.Printf("[DEBUG] stmt %s", stmt)
+
+	row := db.QueryRow(stmt)
+
+	var createdOn, dbname, isDefault, isCurrent, origin, owner, comment, options, retentionTime sql.NullString
+
+	err := row.Scan(
+		&createdOn, &dbname, &isDefault, &isCurrent, &origin, &owner, &comment, &options, &retentionTime,
+	)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
+	}
+
+	data.Set("name", dbname)
+	return nil
+}
+
+func (d *database) Delete(data *schema.ResourceData, meta interface{}) error { return nil }
+
+func (d *database) Update(data *schema.ResourceData, meta interface{}) error { return nil }

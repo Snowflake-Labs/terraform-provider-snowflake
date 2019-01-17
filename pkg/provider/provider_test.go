@@ -8,8 +8,8 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	assert := assert.New(t)
+	a := assert.New(t)
 	p := provider.Provider()
 	err := p.InternalValidate()
-	assert.Nil(err)
+	a.NoError(err)
 }

@@ -55,6 +55,12 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 	go install ${LDFLAGS} .
 .PHONY: install
 
+install-tf: build ## installs plugin where terraform can find it
+	mkdir -p $(HOME)/.terraform.d/plugins
+	cp ./terraform-provider-snowflake $(HOME)/.terraform.d/plugins
+.PHONY: install-tf
+
+
 help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
