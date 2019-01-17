@@ -84,6 +84,18 @@ func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func (d *database) Delete(data *schema.ResourceData, meta interface{}) error { return nil }
+func (d *database) Delete(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+
+	stmt := fmt.Sprintf("DROP DATABASE %s", name)
+	log.Printf("[DEBUG] stmt %s", stmt)
+	_, err := db.Exec(stmt)
+	if err != nil {
+		return errors.Wrapf(err, "error dropping database %s", name)
+	}
+
+	return nil
+}
 
 func (d *database) Update(data *schema.ResourceData, meta interface{}) error { return nil }
