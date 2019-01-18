@@ -11,5 +11,5 @@ func TestEscapeString(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal(`\'`, snowflake.EscapeString(`'`))
-	// a.Equal(`\'`, snowflake.EscapeString(`\'`))
+	a.Equal(`\\\'`, snowflake.EscapeString(`\'`))
 }
