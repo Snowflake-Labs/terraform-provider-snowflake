@@ -44,7 +44,7 @@ build: ## build the binary
 .PHONY: build
 
 coverage: ## run the go coverage tool, reading file coverage.out
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.txt
 .PHONY: coverage
 
 test: ## run the tests
@@ -54,6 +54,12 @@ test: ## run the tests
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 	go install ${LDFLAGS} .
 .PHONY: install
+
+install-tf: build ## installs plugin where terraform can find it
+	mkdir -p $(HOME)/.terraform.d/plugins
+	cp ./terraform-provider-snowflake $(HOME)/.terraform.d/plugins
+.PHONY: install-tf
+
 
 help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
