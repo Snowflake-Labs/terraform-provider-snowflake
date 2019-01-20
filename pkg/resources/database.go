@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -19,11 +20,11 @@ func Database() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    false,
-				Description: "TODO",
-				// TODO validation
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "TODO",
+				ValidateFunc: ValidateDatabaseName,
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -41,6 +42,11 @@ func newResourceDatabase() *database {
 	return &database{}
 }
 
+func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
+	return snowflake.ValidateIdentifier(val)
+
+}
+
 func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	comment := data.Get("comment").(string)
@@ -50,7 +56,7 @@ func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 	// TODO escape comment
 	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
 	// 	case-insensitive?
-	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, comment)
+	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, snowflake.EscapeString(comment))
 	log.Printf("[DEBUG] stmt %s", stmt)
 	_, err := db.Exec(stmt)
 
@@ -131,7 +137,7 @@ func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
 		name := data.Get("name").(string)
 		comment := data.Get("comment").(string)
 
-		stmt := fmt.Sprintf("ALTER DATABASE %s SET COMMENT='%s'", name, comment)
+		stmt := fmt.Sprintf("ALTER DATABASE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
 		log.Printf("[DEBUG] stmt %s", stmt)
 
 		_, err := db.Exec(stmt)
