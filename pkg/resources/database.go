@@ -44,7 +44,6 @@ func newResourceDatabase() *database {
 
 func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
 	return snowflake.ValidateIdentifier(val)
-
 }
 
 func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
@@ -52,6 +51,7 @@ func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 	comment := data.Get("comment").(string)
 	db := meta.(*sql.DB)
 
+	// TODO prepared statements don't appear to work for DDL statements, so we might need to do all this ourselves
 	// TODO escape name
 	// TODO escape comment
 	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
