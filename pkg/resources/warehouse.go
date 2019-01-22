@@ -24,12 +24,12 @@ func Warehouse() *schema.Resource {
 				Required:     true,
 				ValidateFunc: ValidateWarehouseName,
 			},
-			// "comment": &schema.Schema{
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	Default:  "",
-			// 	// TODO validation
-			// },
+			"comment": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				// TODO validation
+			},
 		},
 	}
 }
@@ -46,9 +46,10 @@ func ValidateWarehouseName(val interface{}, key string) ([]string, []error) {
 
 func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
+	comment := data.Get("comment").(string)
 	db := meta.(*sql.DB)
 
-	stmt := fmt.Sprintf("CREATE WAREHOUSE %s", name)
+	stmt := fmt.Sprintf("CREATE WAREHOUSE %s COMMENT='%s", name, comment)
 	log.Printf("[DEBUG] stmt %s", stmt)
 
 	_, err := db.Exec(stmt)
@@ -72,15 +73,16 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 
 	db.Exec(stmt)
 
-	stmt2 := `select "name" from table(result_scan(last_query_id()));`
+	stmt2 := `select "name", "comment" from table(result_scan(last_query_id()));`
 	log.Printf("[DEBUG] stmt %s", stmt2)
 
 	row2 := db.QueryRow(stmt)
 
-	var warehouseName sql.NullString
-	row2.Scan(&warehouseName)
+	var warehouseName, comment sql.NullString
+	row2.Scan(&warehouseName, &comment)
 
 	data.Set("name", warehouseName)
+	data.Set("comment", comment)
 	return nil
 
 }
@@ -121,19 +123,19 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 		data.SetPartial("name")
 	}
 
-	// if data.HasChange("comment") {
-	// 	name := data.Get("name").(string)
-	// 	comment := data.Get("comment").(string)
+	if data.HasChange("comment") {
+		name := data.Get("name").(string)
+		comment := data.Get("comment").(string)
 
-	// 	stmt := fmt.Sprintf("ALTER WAREHOUSE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
-	// 	log.Printf("[DEBUG] stmt %s", stmt)
+		stmt := fmt.Sprintf("ALTER WAREHOUSE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
+		log.Printf("[DEBUG] stmt %s", stmt)
 
-	// 	_, err := db.Exec(stmt)
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "error altering warehouse")
-	// 	}
-	// 	data.SetPartial("comment")
-	// }
+		_, err := db.Exec(stmt)
+		if err != nil {
+			return errors.Wrap(err, "error altering warehouse")
+		}
+		data.SetPartial("comment")
+	}
 	data.Partial(false)
 	return nil
 }
