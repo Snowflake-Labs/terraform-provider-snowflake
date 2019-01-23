@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -23,6 +24,9 @@ func Warehouse() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: ValidateWarehouseName,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.ToUpper(old) == strings.ToUpper(new)
+				},
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -62,24 +66,25 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 
 func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-
 	name := data.Id()
 
-	stmt := fmt.Sprintf("SHOW WAREHOUSES LIKE '%s'", name)
-	log.Printf("[DEBUG] stmt %s", stmt)
-
-	_, err := db.Exec(stmt)
+	err := DBExec(db, `USE WAREHOUSE %s`, name)
 	if err != nil {
 		return err
 	}
 
-	stmt2 := `select "name", "comment" from table(result_scan(last_query_id()))`
-	log.Printf("[DEBUG] stmt %s", stmt2)
+	err = DBExec(db, "SHOW WAREHOUSES LIKE '%s'", name)
+	if err != nil {
+		return err
+	}
 
-	row2 := db.QueryRow(stmt2)
+	stmt3 := `select "name", "comment" from table(result_scan(last_query_id()))`
+	log.Printf("[DEBUG] stmt %s", stmt3)
+
+	row := db.QueryRow(stmt3)
 
 	var warehouseName, comment sql.NullString
-	err = row2.Scan(&warehouseName, &comment)
+	err = row.Scan(&warehouseName, &comment)
 	if err != nil {
 		return err
 	}

@@ -58,6 +58,7 @@ func TestWarehouseRead(t *testing.T) {
 	d := resource(t, "good_name", map[string]interface{}{"name": "good_name"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec("USE WAREHOUSE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec("SHOW WAREHOUSES LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
 		rows := sqlmock.NewRows([]string{"name", "comment"}).AddRow("good_name", "mock comment")
 		mock.ExpectQuery(`select "name", "comment" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
