@@ -11,7 +11,7 @@ import (
 )
 
 func Warehouse() *schema.Resource {
-	d := newResourceWarehouse()
+	d := NewResourceWarehouse()
 	return &schema.Resource{
 		Create: d.Create,
 		Read:   d.Read,
@@ -36,7 +36,7 @@ func Warehouse() *schema.Resource {
 
 type warehouse struct{}
 
-func newResourceWarehouse() *warehouse {
+func NewResourceWarehouse() *warehouse {
 	return &warehouse{}
 }
 
@@ -49,10 +49,7 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 	comment := data.Get("comment").(string)
 	db := meta.(*sql.DB)
 
-	stmt := fmt.Sprintf("CREATE WAREHOUSE %s COMMENT='%s", name, comment)
-	log.Printf("[DEBUG] stmt %s", stmt)
-
-	_, err := db.Exec(stmt)
+	err := DBExec(db, "CREATE WAREHOUSE %s COMMENT='%s", name, comment)
 
 	if err != nil {
 		return errors.Wrap(err, "error creating warehouse")
@@ -60,7 +57,7 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 
 	data.SetId(name)
 
-	return w.Read(data, meta)
+	return nil
 }
 
 func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
@@ -71,29 +68,38 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 	stmt := fmt.Sprintf("SHOW WAREHOUSES LIKE '%s'", name)
 	log.Printf("[DEBUG] stmt %s", stmt)
 
-	db.Exec(stmt)
+	_, err := db.Exec(stmt)
+	if err != nil {
+		return err
+	}
 
-	stmt2 := `select "name", "comment" from table(result_scan(last_query_id()));`
+	stmt2 := `select "name", "comment" from table(result_scan(last_query_id()))`
 	log.Printf("[DEBUG] stmt %s", stmt2)
 
-	row2 := db.QueryRow(stmt)
+	row2 := db.QueryRow(stmt2)
 
 	var warehouseName, comment sql.NullString
-	row2.Scan(&warehouseName, &comment)
+	err = row2.Scan(&warehouseName, &comment)
+	if err != nil {
+		return err
+	}
 
-	data.Set("name", warehouseName)
-	data.Set("comment", comment)
+	err = data.Set("name", warehouseName.String)
+	if err != nil {
+		return err
+	}
+	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
 	return nil
-
 }
 
 func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	stmt := fmt.Sprintf("DROP WAREHOUSE %s", name)
-	log.Printf("[DEBUG] stmt %s", stmt)
-	_, err := db.Exec(stmt)
+	err := DBExec(db, "DROP WAREHOUSE %s", name)
 	if err != nil {
 		return errors.Wrapf(err, "error dropping warehouse %s", name)
 	}
@@ -102,7 +108,6 @@ func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
 }
 
 func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
 	data.Partial(true)
 
 	db := meta.(*sql.DB)
@@ -112,10 +117,8 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		stmt := fmt.Sprintf("ALTER WAREHOUSE %s RENAME TO %s", oldName, newName)
-		log.Printf("[DEBUG] stmt %s", stmt)
+		err := DBExec(db, "ALTER WAREHOUSE %s RENAME TO %s", oldName, newName)
 
-		_, err := db.Exec(stmt)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming warehouse %s to %s", oldName, newName)
 		}
@@ -127,10 +130,8 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 		name := data.Get("name").(string)
 		comment := data.Get("comment").(string)
 
-		stmt := fmt.Sprintf("ALTER WAREHOUSE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
-		log.Printf("[DEBUG] stmt %s", stmt)
+		err := DBExec(db, "ALTER WAREHOUSE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
 
-		_, err := db.Exec(stmt)
 		if err != nil {
 			return errors.Wrap(err, "error altering warehouse")
 		}
@@ -138,4 +139,12 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 	}
 	data.Partial(false)
 	return nil
+}
+
+func DBExec(db *sql.DB, query string, args ...interface{}) error {
+	stmt := fmt.Sprintf(query, args...)
+	log.Printf("[DEBUG] stmt %s", stmt)
+
+	_, err := db.Exec(stmt)
+	return err
 }
