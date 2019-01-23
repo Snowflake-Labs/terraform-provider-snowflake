@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var properties = []string{"comment", "warehouse_size"}
+
 func Warehouse() *schema.Resource {
 	d := NewResourceWarehouse()
 	return &schema.Resource{
@@ -36,6 +38,21 @@ func Warehouse() *schema.Resource {
 				Default:  "",
 				// TODO validation
 			},
+			"warehouse_size": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					// TODO
+					return
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					normalize := func(s string) string {
+						return strings.ToUpper(strings.Replace(s, "-", "", -1))
+					}
+					return normalize(old) == normalize(new)
+				},
+			},
 		},
 	}
 }
@@ -47,11 +64,24 @@ func NewResourceWarehouse() *warehouse {
 }
 
 func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
-	name := data.Get("name").(string)
-	comment := data.Get("comment").(string)
 	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
 
-	err := DBExec(db, "CREATE WAREHOUSE %s COMMENT='%s", name, comment)
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("CREATE WAREHOUSE %s", name))
+
+	for _, field := range properties {
+		val, ok := data.GetOk(field)
+		valStr := val.(string)
+		if ok {
+			_, err := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	err := DBExec(db, sb.String())
 
 	if err != nil {
 		return errors.Wrap(err, "error creating warehouse")
@@ -76,13 +106,13 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	stmt3 := `select "name", "comment" from table(result_scan(last_query_id()))`
+	stmt3 := `select "name", "comment", "size" from table(result_scan(last_query_id()))`
 	log.Printf("[DEBUG] stmt %s", stmt3)
 
 	row := db.QueryRow(stmt3)
 
-	var warehouseName, comment sql.NullString
-	err = row.Scan(&warehouseName, &comment)
+	var warehouseName, comment, size sql.NullString
+	err = row.Scan(&warehouseName, &comment, &size)
 	if err != nil {
 		return err
 	}
@@ -92,6 +122,11 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("warehouse_size", size.String)
 	if err != nil {
 		return err
 	}
@@ -111,10 +146,10 @@ func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
 }
 
 func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
-	data.Partial(true)
 
 	db := meta.(*sql.DB)
 	if data.HasChange("name") {
+		data.Partial(true)
 		// I wish this could be done on one line.
 		oldNameI, newNameI := data.GetChange("name")
 		oldName := oldNameI.(string)
@@ -127,20 +162,34 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 		}
 		data.SetId(newName)
 		data.SetPartial("name")
+		data.Partial(false)
 	}
 
-	if data.HasChange("comment") {
+	changes := []string{}
+
+	for _, prop := range properties {
+		if data.HasChange(prop) {
+			changes = append(changes, prop)
+		}
+	}
+	if len(changes) > 0 {
 		name := data.Get("name").(string)
-		comment := data.Get("comment").(string)
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("ALTER WAREHOUSE %s SET", name))
 
-		err := DBExec(db, "ALTER WAREHOUSE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
-
+		for _, change := range changes {
+			val := data.Get(change).(string)
+			_, err := sb.WriteString(fmt.Sprintf(" %s='%s'",
+				strings.ToUpper(change), snowflake.EscapeString(val)))
+			if err != nil {
+				return err
+			}
+		}
+		err := DBExec(db, sb.String())
 		if err != nil {
 			return errors.Wrap(err, "error altering warehouse")
 		}
-		data.SetPartial("comment")
 	}
-	data.Partial(false)
 	return nil
 }
 
