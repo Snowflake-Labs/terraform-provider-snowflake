@@ -15,14 +15,6 @@ func TestWarehouse(t *testing.T) {
 	resources.Warehouse().InternalValidate(provider.Provider().Schema, false)
 }
 
-func TestValiateWarehouseName(t *testing.T) {
-	a := assert.New(t)
-
-	warns, errs := resources.ValidateWarehouseName("foo", "name")
-	a.Len(warns, 0)
-	a.Len(errs, 0)
-}
-
 func TestWarehouseCreate(t *testing.T) {
 	a := assert.New(t)
 	w := resources.NewResourceWarehouse()

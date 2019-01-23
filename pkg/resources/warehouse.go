@@ -21,9 +21,11 @@ func Warehouse() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: ValidateWarehouseName,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+					return snowflake.ValidateIdentifier(val)
+				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
@@ -42,10 +44,6 @@ type warehouse struct{}
 
 func NewResourceWarehouse() *warehouse {
 	return &warehouse{}
-}
-
-func ValidateWarehouseName(val interface{}, key string) ([]string, []error) {
-	return snowflake.ValidateIdentifier(val)
 }
 
 func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
