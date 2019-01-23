@@ -8,5 +8,4 @@ func EscapeString(in string) string {
 	out := strings.Replace(in, `\`, `\\`, -1)
 	out = strings.Replace(out, `'`, `\'`, -1)
 	return out
-
 }
