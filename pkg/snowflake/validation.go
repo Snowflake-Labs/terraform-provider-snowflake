@@ -34,8 +34,8 @@ func ValidateIdentifier(val interface{}) (warns []string, errs []error) {
 
 func isIdentifierRune(r rune) bool {
 	return (r == '_' ||
-		(r > 'A' && r < 'Z') ||
-		(r > 'a' && r < 'z')) ||
-		(r > '0' && r < '9')
+		(r >= 'A' && r <= 'Z') ||
+		(r >= 'a' && r <= 'z')) ||
+		(r >= '0' && r <= '9')
 
 }

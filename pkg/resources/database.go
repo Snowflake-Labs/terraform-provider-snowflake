@@ -48,7 +48,6 @@ func newResourceDatabase() *database {
 
 func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
 	return snowflake.ValidateIdentifier(val)
-
 }
 
 func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
