@@ -42,6 +42,12 @@ func TestAccDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_database.db",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

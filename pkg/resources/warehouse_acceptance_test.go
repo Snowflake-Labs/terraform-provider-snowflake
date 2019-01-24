@@ -42,6 +42,12 @@ func TestAccWarehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "Small"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_warehouse.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
