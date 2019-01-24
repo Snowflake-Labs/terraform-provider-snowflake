@@ -17,8 +17,6 @@ func TestWarehouse(t *testing.T) {
 
 func TestWarehouseCreate(t *testing.T) {
 	a := assert.New(t)
-	w := resources.NewResourceWarehouse()
-	a.NotNil(w)
 
 	in := map[string]interface{}{
 		"name":    "good_name",
@@ -29,23 +27,27 @@ func TestWarehouseCreate(t *testing.T) {
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE WAREHOUSE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
-		err := w.Create(d, db)
+		expectReadWarehouse(mock)
+		err := resources.CreateWarehouse(d, db)
 		a.NoError(err)
 	})
 }
 
+func expectReadWarehouse(mock sqlmock.Sqlmock) {
+	mock.ExpectExec("USE WAREHOUSE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("SHOW WAREHOUSES LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
+	rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
+	mock.ExpectQuery(`select "name", "comment", "size" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
+}
+
 func TestWarehouseRead(t *testing.T) {
 	a := assert.New(t)
-	w := resources.NewResourceWarehouse()
 
 	d := warehouse(t, "good_name", map[string]interface{}{"name": "good_name"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("USE WAREHOUSE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec("SHOW WAREHOUSES LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
-		rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
-		mock.ExpectQuery(`select "name", "comment", "size" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
-		err := w.Read(d, db)
+		expectReadWarehouse(mock)
+		err := resources.ReadWarehouse(d, db)
 		a.NoError(err)
 		a.Equal("mock comment", d.Get("comment").(string))
 	})
@@ -53,14 +55,12 @@ func TestWarehouseRead(t *testing.T) {
 
 func TestWarehouseDelete(t *testing.T) {
 	a := assert.New(t)
-	w := resources.NewResourceWarehouse()
-	a.NotNil(w)
 
 	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP WAREHOUSE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
-		err := w.Delete(d, db)
+		err := resources.DeleteWarehouse(d, db)
 		a.NoError(err)
 	})
 }
