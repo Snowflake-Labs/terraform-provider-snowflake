@@ -69,7 +69,10 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("CREATE WAREHOUSE %s", name))
+	_, err := sb.WriteString(fmt.Sprintf("CREATE WAREHOUSE %s", name))
+	if err != nil {
+		return err
+	}
 
 	for _, field := range properties {
 		val, ok := data.GetOk(field)
@@ -81,7 +84,7 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	err := DBExec(db, sb.String())
+	err = DBExec(db, sb.String())
 
 	if err != nil {
 		return errors.Wrap(err, "error creating warehouse")
@@ -127,10 +130,8 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("warehouse_size", size.String)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
