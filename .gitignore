@@ -15,8 +15,8 @@ coverage.txt
 .vscode
 terraform-provider-snowflake
 
-.envrc
+.DS_Store
 *tfstate*
 .terraform
 crash.log
-.DS_Store
+.envrc

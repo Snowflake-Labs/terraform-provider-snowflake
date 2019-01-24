@@ -27,9 +27,15 @@ func TestDatabaseCreate(t *testing.T) {
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE DATABASE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		a.NoError(err)
 	})
+}
+
+func expectRead(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retentionTime"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
+	mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(rows)
 }
 
 func TestDatabaseRead(t *testing.T) {
@@ -38,8 +44,7 @@ func TestDatabaseRead(t *testing.T) {
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retentionTime"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
-		mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(rows)
+		expectRead(mock)
 		err := resources.ReadDatabase(d, db)
 		a.NoError(err)
 		a.Equal("good_name", d.Get("name").(string))

@@ -1,0 +1,76 @@
+package resources_test
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
+)
+
+func TestAccDatabase(t *testing.T) {
+	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: dbConfig(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
+					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+				),
+			},
+			// RENAME
+			{
+				Config: dbConfig(prefix2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
+					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+				),
+			},
+			// CHANGE PROPERTIES
+			{
+				Config: dbConfig2(prefix2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
+				),
+			},
+		},
+	})
+}
+
+func dbConfig(prefix string) string {
+	s := `
+resource "snowflake_database" "db" {
+	name = "%s"
+	comment = "test comment"
+}
+`
+	return fmt.Sprintf(s, prefix)
+}
+func dbConfig2(prefix string) string {
+	s := `
+resource "snowflake_database" "db" {
+	name = "%s"
+	comment = "test comment 2"
+	data_retention_time_in_days = 3
+}
+`
+	return fmt.Sprintf(s, prefix)
+}
+
+func providers() map[string]terraform.ResourceProvider {
+	p := provider.Provider()
+	return map[string]terraform.ResourceProvider{
+		"snowflake": p,
+	}
+}

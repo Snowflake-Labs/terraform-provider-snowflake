@@ -298,7 +298,15 @@
   revision = "fa9f258a92500514cc8e9c67020487709df92432"
 
 [[projects]]
-  digest = "1:5145bded18e0f1cf73b0123304fb9d528568bf530674c84b6cb0c204fdbe7691"
+  digest = "1:16ae35b3a854c667baaf55ff5d455c486f7c2baf040a2727f2ef0e4b096b2a95"
+  name = "github.com/hashicorp/logutils"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a335183dfd075f638afcc820c90591ca3c97eba6"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:69709abb7ea3bee324df04bf869ff5ff6cd6162de38fc744c7c679c91bfd7ecc"
   name = "github.com/hashicorp/terraform"
   packages = [
     "config",
@@ -307,8 +315,12 @@
     "config/module",
     "dag",
     "flatmap",
+    "helper/acctest",
+    "helper/config",
     "helper/hashcode",
     "helper/hilmapstructure",
+    "helper/logging",
+    "helper/resource",
     "helper/schema",
     "httpclient",
     "moduledeps",
@@ -515,12 +527,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5f0f8a2da02f00f58e72baf3582a5f580189dd29acf537287acbd387cdd207e8"
+  digest = "1:fb27562e90b424c2801c4081765d852f9f3fa0a76ca136e2bd89a536afd48650"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
     "cast5",
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
     "ocsp",
     "openpgp",
     "openpgp/armor",
@@ -528,6 +545,8 @@
     "openpgp/errors",
     "openpgp/packet",
     "openpgp/s2k",
+    "poly1305",
+    "ssh",
   ]
   pruneopts = "UT"
   revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
@@ -643,6 +662,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/hashicorp/terraform/helper/acctest",
+    "github.com/hashicorp/terraform/helper/resource",
     "github.com/hashicorp/terraform/helper/schema",
     "github.com/hashicorp/terraform/plugin",
     "github.com/hashicorp/terraform/terraform",

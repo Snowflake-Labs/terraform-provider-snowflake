@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -25,6 +26,9 @@ func Database() *schema.Resource {
 				ForceNew:     false,
 				Description:  "TODO",
 				ValidateFunc: ValidateDatabaseName,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.ToUpper(old) == strings.ToUpper(new)
+				},
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -35,6 +39,7 @@ func Database() *schema.Resource {
 			"data_retention_time_in_days": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -47,14 +52,14 @@ func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	comment := data.Get("comment").(string)
-	retention := data.Get("data_retention_time_in_days")
+	retention, retentionSet := data.GetOk("data_retention_time_in_days")
 	db := meta.(*sql.DB)
 
 	// TODO prepared statements don't appear to work for DDL statements, so we might need to do all this ourselves
 	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
 	// 	case-insensitive?
 	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, snowflake.EscapeString(comment))
-	if retention != nil {
+	if retentionSet {
 		stmt = fmt.Sprintf("%s DATA_RETENTION_TIME_IN_DAYS = %d", stmt, retention)
 	}
 	log.Printf("[DEBUG] stmt %s", stmt)
@@ -66,8 +71,7 @@ func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 
 	data.SetId(name)
 
-	// return ReadDatabase(data, meta)
-	return nil
+	return ReadDatabase(data, meta)
 }
 
 func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
@@ -177,5 +181,5 @@ func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 		data.SetPartial("data_retention_time_in_days")
 	}
 	data.Partial(false)
-	return nil
+	return ReadDatabase(data, meta)
 }
