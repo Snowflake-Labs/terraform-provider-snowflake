@@ -16,3 +16,4 @@ coverage.txt
 terraform-provider-snowflake
 
 .DS_Store
+.envrc

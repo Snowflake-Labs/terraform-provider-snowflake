@@ -51,6 +51,10 @@ test: ## run the tests
 	gotest -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test
 
+test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
+	TF_ACC=1 gotest -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+.PHONY: test-acceptance
+
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 	go install ${LDFLAGS} .
 .PHONY: install
@@ -59,7 +63,6 @@ install-tf: build ## installs plugin where terraform can find it
 	mkdir -p $(HOME)/.terraform.d/plugins
 	cp ./terraform-provider-snowflake $(HOME)/.terraform.d/plugins
 .PHONY: install-tf
-
 
 help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
