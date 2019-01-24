@@ -16,4 +16,7 @@ coverage.txt
 terraform-provider-snowflake
 
 .DS_Store
+*tfstate*
+.terraform
+crash.log
 .envrc
