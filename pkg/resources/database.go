@@ -32,6 +32,10 @@ func Database() *schema.Resource {
 				Default:  "",
 				// TODO validation
 			},
+			"data_retention_time_in_days": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -49,14 +53,16 @@ func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
 func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	comment := data.Get("comment").(string)
+	retention := data.Get("data_retention_time_in_days")
 	db := meta.(*sql.DB)
 
 	// TODO prepared statements don't appear to work for DDL statements, so we might need to do all this ourselves
-	// TODO escape name
-	// TODO escape comment
 	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
 	// 	case-insensitive?
 	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, snowflake.EscapeString(comment))
+	if retention != nil {
+		stmt = fmt.Sprintf("%s DATA_RETENTION_TIME_IN_DAYS = %d", stmt, retention)
+	}
 	log.Printf("[DEBUG] stmt %s", stmt)
 	_, err := db.Exec(stmt)
 
@@ -94,6 +100,8 @@ func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	data.Set("name", dbname)
+	data.Set("comment", comment)
+	data.Set("data_retention_time_in_days", retentionTime)
 	return nil
 }
 
@@ -133,6 +141,7 @@ func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
 		data.SetPartial("name")
 	}
 
+	// TODO collapse these two conditionals into a loop that generates a single statement.
 	if data.HasChange("comment") {
 		name := data.Get("name").(string)
 		comment := data.Get("comment").(string)
@@ -145,6 +154,20 @@ func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrap(err, "error altering database")
 		}
 		data.SetPartial("comment")
+	}
+
+	if data.HasChange("data_retention_time_in_days") {
+		name := data.Get("name").(string)
+		retention := data.Get("data_retention_time_in_days").(int)
+
+		stmt := fmt.Sprintf("ALTER DATABASE %s SET DATA_RETENTION_TIME_IN_DAYS = %d", name, retention)
+		log.Printf("[DEBUG] stmt %s", stmt)
+
+		_, err := db.Exec(stmt)
+		if err != nil {
+			return errors.Wrap(err, "Error setting data_retention_time_in_days")
+		}
+		data.SetPartial("data_retention_time_in_days")
 	}
 	data.Partial(false)
 	return nil
