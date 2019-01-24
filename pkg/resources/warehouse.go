@@ -78,9 +78,9 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 		val, ok := data.GetOk(field)
 		valStr := val.(string)
 		if ok {
-			_, err := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
-			if err != nil {
-				return err
+			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
+			if e != nil {
+				return e
 			}
 		}
 	}
@@ -176,7 +176,10 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 	if len(changes) > 0 {
 		name := data.Get("name").(string)
 		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("ALTER WAREHOUSE %s SET", name))
+		_, err := sb.WriteString(fmt.Sprintf("ALTER WAREHOUSE %s SET", name))
+		if err != nil {
+			return err
+		}
 
 		for _, change := range changes {
 			val := data.Get(change).(string)
@@ -186,7 +189,7 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		err := DBExec(db, sb.String())
+		err = DBExec(db, sb.String())
 		if err != nil {
 			return errors.Wrap(err, "error altering warehouse")
 		}
