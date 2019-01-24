@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,12 +12,11 @@ import (
 )
 
 func Database() *schema.Resource {
-	d := newResourceDatabase()
 	return &schema.Resource{
-		Create: d.Create,
-		Read:   d.Read,
-		Delete: d.Delete,
-		Update: d.Update,
+		Create: CreateDatabase,
+		Read:   ReadDatabase,
+		Delete: DeleteDatabase,
+		Update: UpdateDatabase,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -40,17 +40,11 @@ func Database() *schema.Resource {
 	}
 }
 
-type database struct{}
-
-func newResourceDatabase() *database {
-	return &database{}
-}
-
 func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
 	return snowflake.ValidateIdentifier(val)
 }
 
-func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
+func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	comment := data.Get("comment").(string)
 	retention := data.Get("data_retention_time_in_days")
@@ -72,10 +66,11 @@ func (d *database) Create(data *schema.ResourceData, meta interface{}) error {
 
 	data.SetId(name)
 
-	return d.Read(data, meta)
+	// return ReadDatabase(data, meta)
+	return nil
 }
 
-func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
+func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
 	// TODO Not sure if we should use id or name here.
@@ -99,13 +94,25 @@ func (d *database) Read(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
 	}
 
-	data.Set("name", dbname)
-	data.Set("comment", comment)
-	data.Set("data_retention_time_in_days", retentionTime)
-	return nil
+	err = data.Set("name", dbname.String)
+	if err != nil {
+		return err
+	}
+	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
+
+	i, err := strconv.ParseInt(retentionTime.String, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("data_retention_time_in_days", i)
+	return err
 }
 
-func (d *database) Delete(data *schema.ResourceData, meta interface{}) error {
+func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
@@ -119,7 +126,7 @@ func (d *database) Delete(data *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func (d *database) Update(data *schema.ResourceData, meta interface{}) error {
+func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
 	data.Partial(true)
 
