@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 	"github.com/stretchr/testify/assert"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -33,4 +35,11 @@ func database(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	a.NotNil(d)
 	d.SetId(id)
 	return d
+}
+
+func providers() map[string]terraform.ResourceProvider {
+	p := provider.Provider()
+	return map[string]terraform.ResourceProvider{
+		"snowflake": p,
+	}
 }

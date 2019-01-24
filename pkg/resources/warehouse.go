@@ -14,12 +14,11 @@ import (
 var properties = []string{"comment", "warehouse_size"}
 
 func Warehouse() *schema.Resource {
-	d := NewResourceWarehouse()
 	return &schema.Resource{
-		Create: d.Create,
-		Read:   d.Read,
-		Delete: d.Delete,
-		Update: d.Update,
+		Create: CreateWarehouse,
+		Read:   ReadWarehouse,
+		Delete: DeleteWarehouse,
+		Update: UpdateWarehouse,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -57,13 +56,7 @@ func Warehouse() *schema.Resource {
 	}
 }
 
-type warehouse struct{}
-
-func NewResourceWarehouse() *warehouse {
-	return &warehouse{}
-}
-
-func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
+func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
@@ -86,17 +79,16 @@ func (w *warehouse) Create(data *schema.ResourceData, meta interface{}) error {
 	}
 	err = DBExec(db, sb.String())
 
-
 	if err != nil {
 		return errors.Wrap(err, "error creating warehouse")
 	}
 
 	data.SetId(name)
 
-	return nil
+	return ReadWarehouse(data, meta)
 }
 
-func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
+func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
 
@@ -135,7 +127,7 @@ func (w *warehouse) Read(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
+func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
@@ -147,8 +139,7 @@ func (w *warehouse) Delete(data *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
-
+func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	if data.HasChange("name") {
 		data.Partial(true)
@@ -196,7 +187,7 @@ func (w *warehouse) Update(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrap(err, "error altering warehouse")
 		}
 	}
-	return nil
+	return ReadWarehouse(data, meta)
 }
 
 func DBExec(db *sql.DB, query string, args ...interface{}) error {

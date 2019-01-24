@@ -5,10 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDatabase(t *testing.T) {
@@ -57,6 +55,7 @@ resource "snowflake_database" "db" {
 `
 	return fmt.Sprintf(s, prefix)
 }
+
 func dbConfig2(prefix string) string {
 	s := `
 resource "snowflake_database" "db" {
@@ -66,11 +65,4 @@ resource "snowflake_database" "db" {
 }
 `
 	return fmt.Sprintf(s, prefix)
-}
-
-func providers() map[string]terraform.ResourceProvider {
-	p := provider.Provider()
-	return map[string]terraform.ResourceProvider{
-		"snowflake": p,
-	}
 }
