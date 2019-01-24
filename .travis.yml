@@ -12,7 +12,7 @@ jobs:
   include:
     - stage: check
       script:
-        - make
+        - make test-acceptance
         - bash <(curl -s https://codecov.io/bash)
     - stage: check
       script:
