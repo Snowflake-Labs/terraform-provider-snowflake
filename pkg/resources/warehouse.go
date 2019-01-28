@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var properties = []string{"comment", "warehouse_size"}
+var warehouseProperties = []string{"comment", "warehouse_size"}
 
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
@@ -70,7 +70,7 @@ func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	for _, field := range properties {
+	for _, field := range warehouseProperties {
 		val, ok := data.GetOk(field)
 		valStr := val.(string)
 		if ok {
@@ -163,7 +163,7 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 	changes := []string{}
 
-	for _, prop := range properties {
+	for _, prop := range warehouseProperties {
 		if data.HasChange(prop) {
 			changes = append(changes, prop)
 		}
