@@ -11,19 +11,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-var warehouseProperties = []string{"comment", "warehouse_size"}
+var userProperties = []string{"comment"}
 
-func Warehouse() *schema.Resource {
+func User() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateWarehouse,
-		Read:   ReadWarehouse,
-		Delete: DeleteWarehouse,
-		Update: UpdateWarehouse,
+		Create: CreateUser,
+		Read:   ReadUser,
+		Delete: DeleteUser,
+		Update: UpdateUser,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the user. Note that login_name is what they will use to to log in. https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					return snowflake.ValidateIdentifier(val)
 				},
@@ -37,21 +38,30 @@ func Warehouse() *schema.Resource {
 				Default:  "",
 				// TODO validation
 			},
-			"warehouse_size": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					// TODO
-					return
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					normalize := func(s string) string {
-						return strings.ToUpper(strings.Replace(s, "-", "", -1))
-					}
-					return normalize(old) == normalize(new)
-				},
-			},
+
+			//    PASSWORD = '<string>'
+			//    LOGIN_NAME = <string>
+			//    DISPLAY_NAME = <string>
+			//    FIRST_NAME = <string>
+			//    MIDDLE_NAME = <string>
+			//    LAST_NAME = <string>
+			//    EMAIL = <string>
+			//    MUST_CHANGE_PASSWORD = TRUE | FALSE
+			//    DISABLED = TRUE | FALSE
+			//    SNOWFLAKE_LOCK = TRUE | FALSE
+			//    SNOWFLAKE_SUPPORT = TRUE | FALSE
+			//    DAYS_TO_EXPIRY = <integer>
+			//    MINS_TO_UNLOCK = <integer>
+			//    DEFAULT_WAREHOUSE = <string>
+			//    DEFAULT_NAMESPACE = <string>
+			//    DEFAULT_ROLE = <string>
+			//    EXT_AUTHN_DUO = TRUE | FALSE
+			//    EXT_AUTHN_UID = <string>
+			//    MINS_TO_BYPASS_MFA = <integer>
+			//    DISABLE_MFA = TRUE | FALSE
+			//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
+			//    RSA_PUBLIC_KEY = <string>
+			//    RSA_PUBLIC_KEY_2 = <string>
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,21 +69,23 @@ func Warehouse() *schema.Resource {
 	}
 }
 
-func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
+func CreateUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
 	var sb strings.Builder
 
-	_, err := sb.WriteString(fmt.Sprintf("CREATE WAREHOUSE %s", name))
+	_, err := sb.WriteString(fmt.Sprintf("CREATE USER %s", name))
 	if err != nil {
 		return err
 	}
 
-	for _, field := range warehouseProperties {
+	for _, field := range userProperties {
+		log.Printf("prop %s", field)
 		val, ok := data.GetOk(field)
-		valStr := val.(string)
+		log.Printf("val, ok %#v, %#v", ok, val)
 		if ok {
+			valStr := val.(string)
 			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
 			if e != nil {
 				return e
@@ -83,15 +95,15 @@ func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
 	err = DBExec(db, sb.String())
 
 	if err != nil {
-		return errors.Wrap(err, "error creating warehouse")
+		return errors.Wrap(err, "error creating user")
 	}
 
 	data.SetId(name)
 
-	return ReadWarehouse(data, meta)
+	return ReadUser(data, meta)
 }
 
-func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
+func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
 
@@ -100,23 +112,23 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = DBExec(db, "SHOW WAREHOUSES LIKE '%s'", name)
+	err = DBExec(db, "SHOW USERS LIKE '%s'", name)
 	if err != nil {
 		return err
 	}
 
-	stmt3 := `select "name", "comment", "size" from table(result_scan(last_query_id()))`
+	stmt3 := `select "name", "comment" from table(result_scan(last_query_id()))`
 	log.Printf("[DEBUG] stmt %s", stmt3)
 
 	row := db.QueryRow(stmt3)
 
-	var warehouseName, comment, size sql.NullString
-	err = row.Scan(&warehouseName, &comment, &size)
+	var userName, comment sql.NullString
+	err = row.Scan(&userName, &comment)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", warehouseName.String)
+	err = data.Set("name", userName.String)
 	if err != nil {
 		return err
 	}
@@ -125,24 +137,22 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("warehouse_size", size.String)
-
 	return err
 }
 
-func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
+func DeleteUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	err := DBExec(db, "DROP WAREHOUSE %s", name)
+	err := DBExec(db, "DROP USER %s", name)
 	if err != nil {
-		return errors.Wrapf(err, "error dropping warehouse %s", name)
+		return errors.Wrapf(err, "error dropping user %s", name)
 	}
 
 	return nil
 }
 
-func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
+func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	if data.HasChange("name") {
 		data.Partial(true)
@@ -151,10 +161,10 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		err := DBExec(db, "ALTER WAREHOUSE %s RENAME TO %s", oldName, newName)
+		err := DBExec(db, "ALTER USER %s RENAME TO %s", oldName, newName)
 
 		if err != nil {
-			return errors.Wrapf(err, "error renaming warehouse %s to %s", oldName, newName)
+			return errors.Wrapf(err, "error renaming user %s to %s", oldName, newName)
 		}
 		data.SetId(newName)
 		data.SetPartial("name")
@@ -163,7 +173,7 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 	changes := []string{}
 
-	for _, prop := range warehouseProperties {
+	for _, prop := range userProperties {
 		if data.HasChange(prop) {
 			changes = append(changes, prop)
 		}
@@ -171,7 +181,7 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 	if len(changes) > 0 {
 		name := data.Get("name").(string)
 		var sb strings.Builder
-		_, err := sb.WriteString(fmt.Sprintf("ALTER WAREHOUSE %s SET", name))
+		_, err := sb.WriteString(fmt.Sprintf("ALTER USER %s SET", name))
 		if err != nil {
 			return err
 		}
@@ -187,16 +197,8 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 		err = DBExec(db, sb.String())
 		if err != nil {
-			return errors.Wrap(err, "error altering warehouse")
+			return errors.Wrap(err, "error altering user")
 		}
 	}
-	return ReadWarehouse(data, meta)
-}
-
-func DBExec(db *sql.DB, query string, args ...interface{}) error {
-	stmt := fmt.Sprintf(query, args...)
-	log.Printf("[DEBUG] stmt %s", stmt)
-
-	_, err := db.Exec(stmt)
-	return err
+	return ReadUser(data, meta)
 }
