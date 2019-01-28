@@ -49,6 +49,7 @@ func Provider() *schema.Provider {
 			"snowflake_database":  resources.Database(),
 			"snowflake_warehouse": resources.Warehouse(),
 			"snowflake_user":      resources.User(),
+			"snowflake_role":      resources.Role(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{},
 		ConfigureFunc:  ConfigureProvider,
