@@ -20,3 +20,4 @@ terraform-provider-snowflake
 .terraform
 crash.log
 .envrc
+\nbin

@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var userProperties = []string{"comment"}
+var userProperties = []string{"comment", "password"}
 
 func User() *schema.Resource {
 	return &schema.Resource{
@@ -35,11 +35,15 @@ func User() *schema.Resource {
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				// TODO validation
 			},
-
-			//    PASSWORD = '<string>'
+			"password": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "NOTE: this will put the password in the terraform state file. Use carefully.",
+				// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
+			},
 			//    LOGIN_NAME = <string>
 			//    DISPLAY_NAME = <string>
 			//    FIRST_NAME = <string>
@@ -105,30 +109,16 @@ func CreateUser(data *schema.ResourceData, meta interface{}) error {
 
 func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Id()
+	id := data.Id()
 
-	err := DBExec(db, `USE WAREHOUSE %s`, name)
+	row := db.QueryRow(fmt.Sprintf("SHOW USERS LIKE '%s'", id))
+	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, disabled, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUid, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
+	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUid, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
 	if err != nil {
 		return err
 	}
 
-	err = DBExec(db, "SHOW USERS LIKE '%s'", name)
-	if err != nil {
-		return err
-	}
-
-	stmt3 := `select "name", "comment" from table(result_scan(last_query_id()))`
-	log.Printf("[DEBUG] stmt %s", stmt3)
-
-	row := db.QueryRow(stmt3)
-
-	var userName, comment sql.NullString
-	err = row.Scan(&userName, &comment)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("name", userName.String)
+	err = data.Set("name", name.String)
 	if err != nil {
 		return err
 	}

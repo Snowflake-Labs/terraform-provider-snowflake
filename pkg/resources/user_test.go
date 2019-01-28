@@ -19,14 +19,15 @@ func TestUserCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"name":    "good_name",
-		"comment": "great comment",
+		"name":     "good_name",
+		"comment":  "great comment",
+		"password": "awesomepassword",
 	}
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, in)
 	a.NotNil(d)
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("CREATE USER good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("CREATE USER good_name COMMENT='great comment' PASSWORD='awesomepassword'").WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		a.NoError(err)
@@ -34,16 +35,19 @@ func TestUserCreate(t *testing.T) {
 }
 
 func expectReadUser(mock sqlmock.Sqlmock) {
-	mock.ExpectExec("USE WAREHOUSE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec("SHOW USERS LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
-	rows := sqlmock.NewRows([]string{"name", "comment"}).AddRow("good_name", "mock comment")
-	mock.ExpectQuery(`select "name", "comment" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
+	rows := sqlmock.NewRows([]string{
+		"name", "created_on", "login_name", "display_name", "first_name", "last_name", "email", "mins_to_unlock",
+		"days_to_expiry", "comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse",
+		"default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner",
+		"last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key"},
+	).AddRow("good_name", "created_on", "login_name", "display_name", "first_name", "last_name", "email", "mins_to_unlock", "days_to_expiry", "mock comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse", "default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner", "last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key")
+	mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(rows)
 }
 
 func TestUserRead(t *testing.T) {
 	a := assert.New(t)
 
-	d := warehouse(t, "good_name", map[string]interface{}{"name": "good_name"})
+	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadUser(mock)
@@ -56,7 +60,7 @@ func TestUserRead(t *testing.T) {
 func TestUserDelete(t *testing.T) {
 	a := assert.New(t)
 
-	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})
+	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP USER drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
