@@ -45,6 +45,14 @@ func user(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 	return d
 }
 
+func role(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Role().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func providers() map[string]terraform.ResourceProvider {
 	p := provider.Provider()
 	return map[string]terraform.ResourceProvider{
