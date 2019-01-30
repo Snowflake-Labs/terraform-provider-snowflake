@@ -17,6 +17,10 @@ func withMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 	a.NoError(err)
 
 	f(db, mock)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
 }
 
 func Test_grantToRole(t *testing.T) {

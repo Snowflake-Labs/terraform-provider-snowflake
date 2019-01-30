@@ -62,6 +62,7 @@ func RoleGrants() *schema.Resource {
 }
 
 func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+	log.Println("FOO")
 	db := meta.(*sql.DB)
 	log.Printf("[DEBUG] data %#v", data)
 	name := data.Get("name").(string)
@@ -77,12 +78,17 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No users or roles specified for role grants.")
 	}
 
-	grantRoleToRoles(db, roleName, roles)
-	grantRoleToUsers(db, roleName, users)
+	err := grantRoleToRoles(db, roleName, roles)
+	if err != nil {
+		return err
+	}
+	err = grantRoleToUsers(db, roleName, users)
+	if err != nil {
+		return err
+	}
 
 	data.SetId(name)
-	// return ReadRoleGrants(data, meta)
-	return nil
+	return ReadRoleGrants(data, meta)
 }
 
 func grantRoleToRoles(db *sql.DB, roleName string, roles []string) error {

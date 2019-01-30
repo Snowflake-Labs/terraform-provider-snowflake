@@ -1,61 +1,74 @@
 package resources_test
 
-// import (
-// 	"database/sql"
-// 	"testing"
+import (
+	"database/sql"
+	"testing"
 
-// 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-// 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-// 	"github.com/hashicorp/terraform/helper/schema"
-// 	"github.com/stretchr/testify/assert"
-// 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-// )
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
 
-// func TestRoleGrants(t *testing.T) {
-// 	resources.RoleGrants().InternalValidate(provider.Provider().Schema, false)
-// }
+func TestRoleGrants(t *testing.T) {
+	resources.RoleGrants().InternalValidate(provider.Provider().Schema, false)
+}
 
-// func TestRoleGrantsCreate(t *testing.T) {
-// 	a := assert.New(t)
+func TestRoleGrantsCreate(t *testing.T) {
+	a := assert.New(t)
 
-// 	in := map[string]interface{}{
-// 		"name":      "fake name",
-// 		"role_name": "good_name",
-// 		"roles":     []string{"role1", "role2"},
-// 	}
-// 	d := schema.TestResourceDataRaw(t, resources.RoleGrants().Schema, in)
-// 	a.NotNil(d)
+	d := roleGrants(t, "good_name", map[string]interface{}{
+		"name":      "fake name",
+		"role_name": "good_name",
+		"roles":     []string{"role1", "role2"},
+		"users":     []string{"user1", "user2"},
+	})
 
-// 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-// 		mock.ExpectExec("CREATE USER good_name COMMENT='great comment' PASSWORD='awesomepassword'").WillReturnResult(sqlmock.NewResult(1, 1))
-// 		expectReadRoleGrants(mock)
-// 		err := resources.CreateRoleGrants(d, db)
-// 		a.NoError(err)
-// 	})
-// }
+	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec("GRANT ROLE good_name TO ROLE role2").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("GRANT ROLE good_name TO ROLE role1").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("GRANT ROLE good_name TO USER user1").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("GRANT ROLE good_name TO USER user2").WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadRoleGrants(mock)
+		err := resources.CreateRoleGrants(d, db)
+		a.NoError(err)
+	})
+}
 
-// func expectReadRoleGrants(mock sqlmock.Sqlmock) {
-// 	rows := sqlmock.NewRows([]string{
-// 		"name", "created_on", "login_name", "display_name", "first_name", "last_name", "email", "mins_to_unlock",
-// 		"days_to_expiry", "comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse",
-// 		"default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner",
-// 		"last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key"},
-// 	).AddRow("good_name", "created_on", "login_name", "display_name", "first_name", "last_name", "email", "mins_to_unlock", "days_to_expiry", "mock comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse", "default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner", "last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key")
-// 	mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(rows)
-// }
+func expectReadRoleGrants(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on",
+		"role",
+		"granted_to",
+		"grantee_name",
+		"granted_by",
+	}).
+		AddRow("_", "good_name", "ROLE", "role1", "").
+		AddRow("_", "good_name", "ROLE", "role2", "").
+		AddRow("_", "good_name", "USER", "user1", "").
+		AddRow("_", "good_name", "USER", "user2", "")
+	mock.ExpectQuery(`SHOW GRANTS OF ROLE good_name`).WillReturnRows(rows)
+}
 
-// // func TestRoleGrantsRead(t *testing.T) {
-// // 	a := assert.New(t)
+func TestRoleGrantsRead(t *testing.T) {
+	a := assert.New(t)
 
-// // 	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
+	d := roleGrants(t, "good_name", map[string]interface{}{
+		"name":      "fake name",
+		"role_name": "good_name",
+		"roles":     []string{"role1", "role2"},
+		"users":     []string{"user1", "user2"},
+	})
 
-// // 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-// // 		expectReadRoleGrants(mock)
-// // 		err := resources.ReadRoleGrants(d, db)
-// // 		a.NoError(err)
-// // 		a.Equal("mock comment", d.Get("comment").(string))
-// // 	})
-// // }
+	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadRoleGrants(mock)
+		err := resources.ReadRoleGrants(d, db)
+		a.NoError(err)
+		a.Len(d.Get("users").(*schema.Set).List(), 2)
+		a.Len(d.Get("roles").(*schema.Set).List(), 2)
+	})
+}
 
 // // func TestRoleGrantsDelete(t *testing.T) {
 // // 	a := assert.New(t)

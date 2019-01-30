@@ -19,6 +19,10 @@ func withMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 	a.NoError(err)
 
 	f(db, mock)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
 }
 
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
@@ -53,6 +57,12 @@ func role(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 	return d
 }
 
+func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.RoleGrants().Schema, params)
+	a.NotNil(d)
+	return d
+}
 func providers() map[string]terraform.ResourceProvider {
 	p := provider.Provider()
 	return map[string]terraform.ResourceProvider{
