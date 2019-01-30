@@ -93,6 +93,27 @@ func TestAccGrantRole(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
+				Config:       rgConfig(role1, role2, user1),
+				ResourceName: "snowflake_role_grants.w",
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
+					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
+					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
+				),
+			},
+			// CHANGE PROPERTIES
+			{
+				Config:       rgConfig2(role1, role2, user1),
+				ResourceName: "snowflake_role_grants.w",
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
+					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
+					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+					testCheckRolesAndUsers("snowflake_role_grants.w", []string{}, []string{user1}),
+				),
+			},
+			{
 				Config: rgConfig(role1, role2, user1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
@@ -101,18 +122,19 @@ func TestAccGrantRole(t *testing.T) {
 					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
 				),
 			},
-			// 			// CHANGE PROPERTIES
-			// 			{
-			// 				Config: uConfig2(prefix2),
-			// 				Check: resource.ComposeTestCheckFunc(
-			// 					resource.TestCheckResourceAttr("snowflake_grant_role.w", "name", strings.ToUpper(prefix2)),
-			// 					resource.TestCheckResourceAttr("snowflake_grant_role.w", "comment", "test comment 2"),
-			// 					resource.TestCheckResourceAttr("snowflake_grant_role.w", "password", "best password"),
-			// 				),
-			// 			},
+			// CHANGE PROPERTIES
+			{
+				Config: rgConfig3(role1, role2, user1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
+					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
+					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{}),
+				),
+			},
 			// 			// IMPORT
 			// 			{
-			// 				ResourceName:            "snowflake_grant_role.w",
+			// 				ResourceName:            "snowflake_role_grants.w",
 			// 				ImportState:             true,
 			// 				ImportStateVerify:       true,
 			// 			},
@@ -141,13 +163,42 @@ resource "snowflake_role_grants" "w" {
 	return fmt.Sprintf(s, role1, role2, user1)
 }
 
-func rgConfig2(prefix string) string {
+func rgConfig2(role1, role2, user1 string) string {
 	s := `
-resource "snowflake_grant_role" "w" {
+resource "snowflake_role" "r" {
 	name = "%s"
-	comment = "test comment 2"
-	password = "best password"
+}
+resource "snowflake_role" "r2" {
+	name = "%s"
+}
+resource "snowflake_user" "u" {
+	name = "%s"
+}
+resource "snowflake_role_grants" "w" {
+	name = "${snowflake_role.r.name}"
+	role_name = "${snowflake_role.r.name}"
+	users = ["${snowflake_user.u.name}"]
 }
 `
-	return fmt.Sprintf(s, prefix)
+	return fmt.Sprintf(s, role1, role2, user1)
+}
+
+func rgConfig3(role1, role2, user1 string) string {
+	s := `
+resource "snowflake_role" "r" {
+	name = "%s"
+}
+resource "snowflake_role" "r2" {
+	name = "%s"
+}
+resource "snowflake_user" "u" {
+	name = "%s"
+}
+resource "snowflake_role_grants" "w" {
+	name = "${snowflake_role.r.name}"
+	role_name = "${snowflake_role.r.name}"
+	roles = ["${snowflake_role.r2.name}"]
+}
+`
+	return fmt.Sprintf(s, role1, role2, user1)
 }

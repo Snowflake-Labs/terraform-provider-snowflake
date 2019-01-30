@@ -220,6 +220,48 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 }
 
 func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	roleName := data.Get("role_name").(string)
+
+	x := func(resource string, grant func(db *sql.DB, role string, target string) error, revoke func(db *sql.DB, role string, target string) error) error {
+		o, n := data.GetChange(resource)
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		for _, user := range remove {
+			err := revoke(db, roleName, user)
+			if err != nil {
+				return err
+			}
+		}
+		for _, user := range add {
+			err := grant(db, roleName, user)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	err := x("users", grantRoleToUser, revokeRoleFromUser)
+	if err != nil {
+		return err
+	}
+
+	err = x("roles", grantRoleToRole, revokeRoleFromRole)
+	if err != nil {
+		return err
+	}
 
 	return ReadRoleGrants(data, meta)
 }
