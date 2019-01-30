@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -25,7 +26,7 @@ func TestRoleGrantsCreate(t *testing.T) {
 		"users":     []string{"user1", "user2"},
 	})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("GRANT ROLE good_name TO ROLE role2").WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec("GRANT ROLE good_name TO ROLE role1").WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec("GRANT ROLE good_name TO USER user1").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -61,7 +62,7 @@ func TestRoleGrantsRead(t *testing.T) {
 		"users":     []string{"user1", "user2"},
 	})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadRoleGrants(mock)
 		err := resources.ReadRoleGrants(d, db)
 		a.NoError(err)
@@ -80,10 +81,10 @@ func TestRoleGrantsDelete(t *testing.T) {
 		"users":     []string{"user1", "user2"},
 	})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// TODO Not sure why these first two come out of order
-		mock.ExpectExec("REVOKE ROLE drop_it FROM ROLE role2").WillReturnResult(sqlmock.NewResult(1, 1))
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+
 		mock.ExpectExec("REVOKE ROLE drop_it FROM ROLE role1").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("REVOKE ROLE drop_it FROM ROLE role2").WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec("REVOKE ROLE drop_it FROM USER user1").WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec("REVOKE ROLE drop_it FROM USER user2").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteRoleGrants(d, db)

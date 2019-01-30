@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -25,7 +26,7 @@ func TestRoleCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.Role().Schema, in)
 	a.NotNil(d)
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE ROLE good_name COMMENT='great comment'").WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRole(mock)
 		err := resources.CreateRole(d, db)
@@ -46,7 +47,7 @@ func TestRoleRead(t *testing.T) {
 
 	d := role(t, "good_name", map[string]interface{}{"name": "good_name"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadRole(mock)
 		err := resources.ReadRole(d, db)
 		a.NoError(err)
@@ -60,7 +61,7 @@ func TestRoleDelete(t *testing.T) {
 
 	d := role(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP ROLE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteRole(d, db)
 		a.NoError(err)

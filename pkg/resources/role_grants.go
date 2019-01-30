@@ -204,6 +204,7 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	data.SetId("")
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -26,7 +27,7 @@ func TestUserCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, in)
 	a.NotNil(d)
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE USER good_name COMMENT='great comment' PASSWORD='awesomepassword'").WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
@@ -49,7 +50,7 @@ func TestUserRead(t *testing.T) {
 
 	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadUser(mock)
 		err := resources.ReadUser(d, db)
 		a.NoError(err)
@@ -62,7 +63,7 @@ func TestUserDelete(t *testing.T) {
 
 	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP USER drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteUser(d, db)
 		a.NoError(err)

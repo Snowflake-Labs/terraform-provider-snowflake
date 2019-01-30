@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -25,7 +26,7 @@ func TestWarehouseCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, in)
 	a.NotNil(d)
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE WAREHOUSE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadWarehouse(mock)
 		err := resources.CreateWarehouse(d, db)
@@ -45,7 +46,7 @@ func TestWarehouseRead(t *testing.T) {
 
 	d := warehouse(t, "good_name", map[string]interface{}{"name": "good_name"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadWarehouse(mock)
 		err := resources.ReadWarehouse(d, db)
 		a.NoError(err)
@@ -58,7 +59,7 @@ func TestWarehouseDelete(t *testing.T) {
 
 	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP WAREHOUSE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteWarehouse(d, db)
 		a.NoError(err)

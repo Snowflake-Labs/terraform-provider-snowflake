@@ -30,7 +30,6 @@ func TestDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{"simple", args{resourceData(t, "acct", "user", "pass", "region", "role")},
 			"user:pass@acct.region.snowflakecomputing.com:443?region=region&role=role", false},
 		{"us-west-2 special case", args{resourceData(t, "acct2", "user2", "pass2", "us-west-2", "role2")},

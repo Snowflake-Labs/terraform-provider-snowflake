@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -9,21 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/stretchr/testify/assert"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
-
-func withMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
-	a := assert.New(t)
-	db, mock, err := sqlmock.New()
-	defer db.Close()
-	a.NoError(err)
-
-	f(db, mock)
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-
-}
 
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	a := assert.New(t)
