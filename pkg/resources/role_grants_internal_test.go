@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"errors"
 	"testing"
 
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
@@ -20,23 +19,6 @@ func Test_grantToRole(t *testing.T) {
 	})
 }
 
-func Test_grantRoletoRoles(t *testing.T) {
-	a := assert.New(t)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`GRANT ROLE foo TO ROLE bar`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`GRANT ROLE foo TO ROLE bam`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := grantRoleToRoles(db, "foo", []string{"bar", "bam"})
-		a.NoError(err)
-	})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`GRANT ROLE foo TO ROLE bar`).WillReturnError(errors.New("uh oh"))
-		err := grantRoleToRoles(db, "foo", []string{"bar", "bam"})
-		a.Error(err)
-	})
-}
-
 func Test_grantToUser(t *testing.T) {
 	a := assert.New(t)
 
@@ -44,23 +26,6 @@ func Test_grantToUser(t *testing.T) {
 		mock.ExpectExec("GRANT ROLE foo TO USER bar").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := grantRoleToUser(db, "foo", "bar")
 		a.NoError(err)
-	})
-}
-
-func Test_grantRoletoUsers(t *testing.T) {
-	a := assert.New(t)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`GRANT ROLE foo TO USER bar`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`GRANT ROLE foo TO USER bam`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := grantRoleToUsers(db, "foo", []string{"bar", "bam"})
-		a.NoError(err)
-	})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`GRANT ROLE foo TO USER bar`).WillReturnError(errors.New("uh oh"))
-		err := grantRoleToUsers(db, "foo", []string{"bar", "bam"})
-		a.Error(err)
 	})
 }
 

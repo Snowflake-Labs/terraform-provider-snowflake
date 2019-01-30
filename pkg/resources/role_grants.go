@@ -72,27 +72,21 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No users or roles specified for role grants.")
 	}
 
-	err := grantRoleToRoles(db, roleName, roles)
-	if err != nil {
-		return err
-	}
-	err = grantRoleToUsers(db, roleName, users)
-	if err != nil {
-		return err
-	}
-
-	data.SetId(name)
-	return ReadRoleGrants(data, meta)
-}
-
-func grantRoleToRoles(db *sql.DB, roleName string, roles []string) error {
 	for _, role := range roles {
 		err := grantRoleToRole(db, roleName, role)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+
+	for _, user := range users {
+		err := grantRoleToUser(db, roleName, user)
+		if err != nil {
+			return err
+		}
+	}
+	data.SetId(name)
+	return ReadRoleGrants(data, meta)
 }
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
@@ -102,12 +96,7 @@ func grantRoleToRole(db *sql.DB, role1, role2 string) error {
 }
 
 func grantRoleToUsers(db *sql.DB, roleName string, users []string) error {
-	for _, user := range users {
-		err := grantRoleToUser(db, roleName, user)
-		if err != nil {
-			return err
-		}
-	}
+
 	return nil
 }
 
@@ -117,6 +106,8 @@ func grantRoleToUser(db *sql.DB, role1, user string) error {
 	return err
 }
 
+// Trying out this new way of reading rows. If it works well, will move to pkg/snowflake and apply to other
+//  types too.
 type grant struct {
 	CreatedOn   sql.RawBytes   `db:"created_on"`
 	Role        sql.NullString `db:"role"`
