@@ -55,9 +55,10 @@ func RoleGrants() *schema.Resource {
 				Description: "Grants role to this specified user.",
 			},
 		},
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		// TODO
+		// Importer: &schema.ResourceImporter{
+		// 	State: schema.ImportStatePassthrough,
+		// },
 	}
 }
 
