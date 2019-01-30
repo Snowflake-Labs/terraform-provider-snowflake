@@ -95,11 +95,6 @@ func grantRoleToRole(db *sql.DB, role1, role2 string) error {
 	return err
 }
 
-func grantRoleToUsers(db *sql.DB, roleName string, users []string) error {
-
-	return nil
-}
-
 func grantRoleToUser(db *sql.DB, role1, user string) error {
 	g := snowflake.RoleGrant(role1)
 	_, err := db.Exec(g.User(user).Grant())
