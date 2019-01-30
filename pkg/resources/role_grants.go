@@ -3,7 +3,6 @@ package resources
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -63,17 +62,11 @@ func RoleGrants() *schema.Resource {
 }
 
 func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
-	log.Println("FOO")
 	db := meta.(*sql.DB)
-	log.Printf("[DEBUG] data %#v", data)
 	name := data.Get("name").(string)
 	roleName := data.Get("role_name").(string)
 	roles := expandStringList(data.Get("roles").(*schema.Set).List())
 	users := expandStringList(data.Get("users").(*schema.Set).List())
-
-	log.Printf("[DEBUG] role_name %#v", roleName)
-	log.Printf("[DEBUG] roles %#v", roles)
-	log.Printf("[DEBUG] users %#v", users)
 
 	if len(roles) == 0 && len(users) == 0 {
 		return fmt.Errorf("No users or roles specified for role grants.")
@@ -177,7 +170,6 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("[DEBUG] row #%v", g)
 		grants = append(grants, g)
 
 	}
