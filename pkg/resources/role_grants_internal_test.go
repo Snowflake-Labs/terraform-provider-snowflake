@@ -91,3 +91,24 @@ func Test_readGrants(t *testing.T) {
 		a.Equal("bam", g.GranteeName.String)
 	})
 }
+
+func Test_revokeRoleFromRole(t *testing.T) {
+	a := assert.New(t)
+	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`REVOKE ROLE foo FROM ROLE bar`).WillReturnResult(sqlmock.NewResult(1, 1))
+		err := revokeRoleFromRole(db, "foo", "bar")
+		a.NoError(err)
+
+	})
+
+}
+func Test_revokeRoleFromUser(t *testing.T) {
+	a := assert.New(t)
+	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`REVOKE ROLE foo FROM USER bar`).WillReturnResult(sqlmock.NewResult(1, 1))
+		err := revokeRoleFromUser(db, "foo", "bar")
+		a.NoError(err)
+
+	})
+
+}

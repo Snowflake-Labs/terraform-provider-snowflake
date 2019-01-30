@@ -103,7 +103,7 @@ func grantRoleToRoles(db *sql.DB, roleName string, roles []string) error {
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
 	g := snowflake.RoleGrant(role1)
-	_, err := db.Exec(g.Role(role2).Statement())
+	_, err := db.Exec(g.Role(role2).Grant())
 	return err
 }
 
@@ -119,7 +119,7 @@ func grantRoleToUsers(db *sql.DB, roleName string, users []string) error {
 
 func grantRoleToUser(db *sql.DB, role1, user string) error {
 	g := snowflake.RoleGrant(role1)
-	_, err := db.Exec(g.User(user).Statement())
+	_, err := db.Exec(g.User(user).Grant())
 	return err
 }
 
@@ -184,8 +184,39 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 }
 
 func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	roleName := data.Get("role_name").(string)
+
+	roles := expandStringList(data.Get("roles").(*schema.Set).List())
+	users := expandStringList(data.Get("users").(*schema.Set).List())
+
+	for _, role := range roles {
+		err := revokeRoleFromRole(db, roleName, role)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, user := range users {
+		err := revokeRoleFromUser(db, roleName, user)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
+}
+
+func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
+	rg := snowflake.RoleGrant(role1).Role(role2)
+	_, err := db.Exec(rg.Revoke())
+	return err
+}
+
+func revokeRoleFromUser(db *sql.DB, role1, user string) error {
+	rg := snowflake.RoleGrant(role1).User(user)
+	_, err := db.Exec(rg.Revoke())
+	return err
 }
 
 func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {

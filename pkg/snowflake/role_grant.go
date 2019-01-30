@@ -39,6 +39,10 @@ func (gb *RoleGrantBuilder) Role(role string) *RoleGrantExecutable {
 	}
 }
 
-func (gr *RoleGrantExecutable) Statement() string {
+func (gr *RoleGrantExecutable) Grant() string {
 	return fmt.Sprintf(`GRANT ROLE %s TO %s %s`, gr.name, gr.granteeType, gr.grantee)
+}
+
+func (gr *RoleGrantExecutable) Revoke() string {
+	return fmt.Sprintf(`REVOKE ROLE %s FROM %s %s`, gr.name, gr.granteeType, gr.grantee)
 }

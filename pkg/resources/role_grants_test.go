@@ -70,14 +70,23 @@ func TestRoleGrantsRead(t *testing.T) {
 	})
 }
 
-// // func TestRoleGrantsDelete(t *testing.T) {
-// // 	a := assert.New(t)
+func TestRoleGrantsDelete(t *testing.T) {
+	a := assert.New(t)
 
-// // 	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
+	d := roleGrants(t, "drop_it", map[string]interface{}{
+		"name":      "drop_it",
+		"role_name": "drop_it",
+		"roles":     []string{"role1", "role2"},
+		"users":     []string{"user1", "user2"},
+	})
 
-// // 	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-// // 		mock.ExpectExec("DROP USER drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
-// // 		err := resources.DeleteRoleGrants(d, db)
-// // 		a.NoError(err)
-// // 	})
-// // }
+	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// TODO Not sure why these first two come out of order
+		mock.ExpectExec("REVOKE ROLE drop_it FROM ROLE role2").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("REVOKE ROLE drop_it FROM ROLE role1").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("REVOKE ROLE drop_it FROM USER user1").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("REVOKE ROLE drop_it FROM USER user2").WillReturnResult(sqlmock.NewResult(1, 1))
+		err := resources.DeleteRoleGrants(d, db)
+		a.NoError(err)
+	})
+}
