@@ -87,17 +87,18 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 func TestAccGrantRole(t *testing.T) {
 	role1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: rgConfig(role1, role2),
+				Config: rgConfig(role1, role2, user1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
 					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
 					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{}),
+					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
 				),
 			},
 			// 			// CHANGE PROPERTIES
@@ -119,7 +120,7 @@ func TestAccGrantRole(t *testing.T) {
 	})
 }
 
-func rgConfig(prefix, prefix2 string) string {
+func rgConfig(role1, role2, user1 string) string {
 	s := `
 resource "snowflake_role" "r" {
 	name = "%s"
@@ -127,13 +128,17 @@ resource "snowflake_role" "r" {
 resource "snowflake_role" "r2" {
 	name = "%s"
 }
+resource "snowflake_user" "u" {
+	name = "%s"
+}
 resource "snowflake_role_grants" "w" {
 	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r2.name}"]
+	users = ["${snowflake_user.u.name}"]
 }
 `
-	return fmt.Sprintf(s, prefix, prefix2)
+	return fmt.Sprintf(s, role1, role2, user1)
 }
 
 func rgConfig2(prefix string) string {
