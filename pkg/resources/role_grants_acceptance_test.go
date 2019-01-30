@@ -89,49 +89,47 @@ func TestAccGrantRole(t *testing.T) {
 	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
+	basicChecks := resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
+		resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
+		resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+	)
+
+	baselineStep := resource.TestStep{
+		Config:       rgConfig(role1, role2, user1),
+		ResourceName: "snowflake_role_grants.w",
+		Check: resource.ComposeTestCheckFunc(
+			basicChecks,
+			testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
+		),
+	}
+
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
-			{
-				Config:       rgConfig(role1, role2, user1),
-				ResourceName: "snowflake_role_grants.w",
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
-					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
-					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
-				),
-			},
-			// CHANGE PROPERTIES
+			// test settup + removing a role
+			baselineStep,
 			{
 				Config:       rgConfig2(role1, role2, user1),
 				ResourceName: "snowflake_role_grants.w",
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
-					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
-					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+					basicChecks,
 					testCheckRolesAndUsers("snowflake_role_grants.w", []string{}, []string{user1}),
 				),
 			},
+			// back to baseline, which means adding a role, then remove a user
+			baselineStep,
 			{
-				Config: rgConfig(role1, role2, user1),
+				Config:       rgConfig3(role1, role2, user1),
+				ResourceName: "snowflake_role_grants.w",
+
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
-					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
-					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1}),
-				),
-			},
-			// CHANGE PROPERTIES
-			{
-				Config: rgConfig3(role1, role2, user1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
-					resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
-					resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+					basicChecks,
 					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{}),
 				),
 			},
+			// add the role back to get back to baseline
+			baselineStep,
 			// 			// IMPORT
 			// 			{
 			// 				ResourceName:            "snowflake_role_grants.w",
@@ -198,6 +196,27 @@ resource "snowflake_role_grants" "w" {
 	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r2.name}"]
+}
+`
+	return fmt.Sprintf(s, role1, role2, user1)
+}
+
+func rgConfig4(role1, role2, user1 string) string {
+	s := `
+resource "snowflake_role" "r" {
+	name = "%s"
+}
+resource "snowflake_role" "r2" {
+	name = "%s"
+}
+resource "snowflake_user" "u" {
+	name = "%s"
+}
+resource "snowflake_role_grants" "w" {
+	name = "${snowflake_role.r.name}"
+	role_name = "${snowflake_role.r.name}"
+	roles = ["${snowflake_role.r2.name}"]
+	users = ["${snowflake_user.u.name}"]
 }
 `
 	return fmt.Sprintf(s, role1, role2, user1)
