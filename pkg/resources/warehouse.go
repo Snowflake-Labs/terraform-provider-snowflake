@@ -139,6 +139,7 @@ func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error dropping warehouse %s", name)
 	}
 
+	data.SetId("")
 	return nil
 }
 

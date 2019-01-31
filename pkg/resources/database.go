@@ -126,6 +126,7 @@ func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error dropping database %s", name)
 	}
 
+	data.SetId("")
 	return nil
 }
 

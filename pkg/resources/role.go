@@ -109,6 +109,7 @@ func DeleteRole(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error dropping role %s", name)
 	}
 
+	data.SetId("")
 	return nil
 }
 

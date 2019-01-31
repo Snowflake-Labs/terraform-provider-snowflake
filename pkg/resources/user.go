@@ -139,6 +139,7 @@ func DeleteUser(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error dropping user %s", name)
 	}
 
+	data.SetId("")
 	return nil
 }
 
