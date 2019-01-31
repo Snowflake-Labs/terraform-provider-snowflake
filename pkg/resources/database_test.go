@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -25,7 +26,7 @@ func TestDatabaseCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
 	a.NotNil(d)
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("CREATE DATABASE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
@@ -43,7 +44,7 @@ func TestDatabaseRead(t *testing.T) {
 
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectRead(mock)
 		err := resources.ReadDatabase(d, db)
 		a.NoError(err)
@@ -58,7 +59,7 @@ func TestDatabaseDelete(t *testing.T) {
 
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
-	withMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec("DROP DATABASE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteDatabase(d, db)
 		a.NoError(err)

@@ -20,13 +20,11 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
-				// TODO Validation
 			},
 			"username": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
-				// TODO validation
 			},
 			"password": &schema.Schema{
 				Type:        schema.TypeString,
@@ -46,10 +44,11 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"snowflake_database":  resources.Database(),
-			"snowflake_warehouse": resources.Warehouse(),
-			"snowflake_user":      resources.User(),
-			"snowflake_role":      resources.Role(),
+			"snowflake_database":    resources.Database(),
+			"snowflake_warehouse":   resources.Warehouse(),
+			"snowflake_user":        resources.User(),
+			"snowflake_role":        resources.Role(),
+			"snowflake_role_grants": resources.RoleGrants(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{},
 		ConfigureFunc:  ConfigureProvider,

@@ -34,7 +34,6 @@ func Database() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
-				// TODO validation
 			},
 			"data_retention_time_in_days": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -58,9 +57,6 @@ func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 	retention, retentionSet := data.GetOk("data_retention_time_in_days")
 	db := meta.(*sql.DB)
 
-	// TODO prepared statements don't appear to work for DDL statements, so we might need to do all this ourselves
-	// TODO name appears to get normalized to uppercase, should we do that? or maybe just consider it
-	// 	case-insensitive?
 	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, snowflake.EscapeString(comment))
 	if retentionSet {
 		stmt = fmt.Sprintf("%s DATA_RETENTION_TIME_IN_DAYS = %d", stmt, retention)
@@ -83,7 +79,7 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	// TODO Not sure if we should use id or name here.
 	name := data.Id()
 
-	// TODO make sure there are no wildcard-y characters here, otherwise it could match more than1 row.
+	// TODO make sure there are no wildcard-y characters here, otherwise it could match more than 1 row.
 	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", name)
 	log.Printf("[DEBUG] stmt %s", stmt)
 
