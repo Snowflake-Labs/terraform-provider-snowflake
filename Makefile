@@ -40,7 +40,12 @@ release-snapshot: ## run a release
 	goreleaser release --snapshot
 .PHONY: release-snapshot
 
-build: ## build the binary
+dep: ## ensure dependencies are vendored
+	# this should be super-fast in the no-op case
+	dep ensure
+.PHONY: dep
+
+build: dep ## build the binary
 	go build ${LDFLAGS} .
 .PHONY: build
 
@@ -74,3 +79,11 @@ clean: ## clean the repo
 	go clean
 	rm -rf dist
 .PHONY: clean
+
+docs: build ## generate some docs
+	./scripts/update-readme.sh update
+.PHONY: docs
+
+check-docs: build ## check that docs have been generated
+	./scripts/update-readme.sh check
+.PHONY: check-docs

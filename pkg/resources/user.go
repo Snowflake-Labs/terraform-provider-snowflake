@@ -24,7 +24,7 @@ func User() *schema.Resource {
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the user. Note that login_name is what they will use to to log in. https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters",
+				Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					return snowflake.ValidateIdentifier(val)
 				},
@@ -41,7 +41,7 @@ func User() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "NOTE: this will put the password in the terraform state file. Use carefully.",
+				Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
 				// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
 			},
 			//    LOGIN_NAME = <string>
