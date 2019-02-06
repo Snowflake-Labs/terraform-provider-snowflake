@@ -383,6 +383,14 @@
   version = "v0.0.4"
 
 [[projects]]
+  digest = "1:0356f3312c9bd1cbeda81505b7fd437501d8e778ab66998ef69f00d7f9b3a0d7"
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3ee7d812e62a0804a7d0a324e0249ca2db3476d3"
+  version = "v0.0.4"
+
+[[projects]]
   digest = "1:dac0667a3fcdd4102a5da07abeddc89eb2f125b1e91af1ea9544c80eaff19c9a"
   name = "github.com/mitchellh/cli"
   packages = ["."]
@@ -453,6 +461,14 @@
   pruneopts = "UT"
   revision = "4dadeb3030eda0273a12382bb2348ffc7c9d1a39"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:abcdbf03ca6ca13d3697e2186edc1f33863bbdac2b3a44dfa39015e8903f7409"
+  name = "github.com/olekukonko/tablewriter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -680,6 +696,7 @@
     "github.com/hashicorp/terraform/plugin",
     "github.com/hashicorp/terraform/terraform",
     "github.com/jmoiron/sqlx",
+    "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/snowflakedb/gosnowflake",
     "github.com/stretchr/testify/assert",

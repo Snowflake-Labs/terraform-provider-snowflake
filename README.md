@@ -23,6 +23,62 @@ We support managing a subset of snowflakedb resources, with a focus on access co
 You can see a number of examples [here](examples).
 
 <!-- START -->
+
+### snowflake_database
+
+#### properties
+
+|            NAME             |  TYPE  | DESCRIPTION | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------------------------|--------|-------------|----------|-----------|----------|---------|
+| comment                     | string |             | true     | false     | false    | ""      |
+| data_retention_time_in_days | int    |             | true     | false     | true     | <nil>   |
+| name                        | string | TODO        | false    | true      | false    | <nil>   |
+
+### snowflake_role
+
+#### properties
+
+|  NAME   |  TYPE  | DESCRIPTION | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------|--------|-------------|----------|-----------|----------|---------|
+| comment | string |             | true     | false     | false    | <nil>   |
+| name    | string |             | false    | true      | false    | <nil>   |
+
+### snowflake_role_grants
+
+#### properties
+
+|   NAME    |  TYPE  |          DESCRIPTION           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------|--------|--------------------------------|----------|-----------|----------|---------|
+| name      | string |                                | false    | true      | false    | <nil>   |
+| role_name | string | The name of the role we are    | false    | true      | false    | <nil>   |
+|           |        | granting.                      |          |           |          |         |
+| roles     | set    | Grants role to this specified  | true     | false     | false    | <nil>   |
+|           |        | role.                          |          |           |          |         |
+| users     | set    | Grants role to this specified  | true     | false     | false    | <nil>   |
+|           |        | user.                          |          |           |          |         |
+
+### snowflake_user
+
+#### properties
+
+|   NAME   |  TYPE  |                                           DESCRIPTION                                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------|--------|--------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment  | string |                                                                                                  | true     | false     | false    | <nil>   |
+| name     | string | Name of the user. Note that if you do not supply login_name this will be used as login_name.     | false    | true      | false    | <nil>   |
+|          |        | [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters) |          |           |          |         |
+| password | string | **WARNING:** this will put                                                                       | true     | false     | false    | <nil>   |
+|          |        | the password in the terraform                                                                    |          |           |          |         |
+|          |        | state file. Use carefully.                                                                       |          |           |          |         |
+
+### snowflake_warehouse
+
+#### properties
+
+|      NAME      |  TYPE  | DESCRIPTION | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------|--------|-------------|----------|-----------|----------|---------|
+| comment        | string |             | true     | false     | false    | ""      |
+| name           | string |             | false    | true      | false    | <nil>   |
+| warehouse_size | string |             | true     | false     | true     | <nil>   |
 <!-- END -->
 
 ## Development
