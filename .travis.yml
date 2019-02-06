@@ -19,3 +19,6 @@ jobs:
       script:
         - snyk monitor --org=czi
         - snyk test
+    - stage: check
+      script:
+        - make check-docs
