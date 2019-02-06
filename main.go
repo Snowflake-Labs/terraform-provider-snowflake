@@ -43,6 +43,7 @@ func doc() {
 		fmt.Printf("#### properties\n\n")
 
 		table := tablewriter.NewWriter(os.Stdout)
+		table.SetAutoWrapText(false)
 		table.SetHeader([]string{"name", "type", "description", "optional", " required", "computed", "default"})
 		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 		table.SetCenterSeparator("|")

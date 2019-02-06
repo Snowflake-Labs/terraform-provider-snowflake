@@ -55,28 +55,22 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|   NAME    |  TYPE  |          DESCRIPTION           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|-----------|--------|--------------------------------|----------|-----------|----------|---------|
-| name      | string |                                | false    | true      | false    | <nil>   |
-| role_name | string | The name of the role we are    | false    | true      | false    | <nil>   |
-|           |        | granting.                      |          |           |          |         |
-| roles     | set    | Grants role to this specified  | true     | false     | false    | <nil>   |
-|           |        | role.                          |          |           |          |         |
-| users     | set    | Grants role to this specified  | true     | false     | false    | <nil>   |
-|           |        | user.                          |          |           |          |         |
+|   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------|--------|---------------------------------------|----------|-----------|----------|---------|
+| name      | string |                                       | false    | true      | false    | <nil>   |
+| role_name | string | The name of the role we are granting. | false    | true      | false    | <nil>   |
+| roles     | set    | Grants role to this specified role.   | true     | false     | false    | <nil>   |
+| users     | set    | Grants role to this specified user.   | true     | false     | false    | <nil>   |
 
 ### snowflake_user
 
 #### properties
 
-|   NAME   |  TYPE  |                                           DESCRIPTION                                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|----------|--------|--------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| comment  | string |                                                                                                  | true     | false     | false    | <nil>   |
-| name     | string | Name of the user. Note that if you do not supply login_name this will be used as login_name.     | false    | true      | false    | <nil>   |
-|          |        | [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters) |          |           |          |         |
-| password | string | **WARNING:** this will put                                                                       | true     | false     | false    | <nil>   |
-|          |        | the password in the terraform                                                                    |          |           |          |         |
-|          |        | state file. Use carefully.                                                                       |          |           |          |         |
+|   NAME   |  TYPE  |                                                                                          DESCRIPTION                                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment  | string |                                                                                                                                                                                               | true     | false     | false    | <nil>   |
+| name     | string | Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters) | false    | true      | false    | <nil>   |
+| password | string | **WARNING:** this will put the password in the terraform state file. Use carefully.                                                                                                           | true     | false     | false    | <nil>   |
 
 ### snowflake_warehouse
 
