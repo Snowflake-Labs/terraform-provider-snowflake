@@ -22,11 +22,8 @@ We support managing a subset of snowflakedb resources, with a focus on access co
 
 You can see a number of examples [here](examples).
 
-### Database
-
-### Warehouse
-
-### Role
+<!-- START -->
+<!-- END -->
 
 ## Development
 
