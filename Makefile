@@ -11,6 +11,7 @@ setup: ## setup development dependencies
 	go get github.com/rakyll/gotest
 	go install github.com/rakyll/gotest
 	curl -L https://raw.githubusercontent.com/chanzuckerberg/bff/master/download.sh | sh
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 .PHONY: setup
 
 lint: ## run the fast go linters
