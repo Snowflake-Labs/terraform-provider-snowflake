@@ -21,3 +21,4 @@ terraform-provider-snowflake
 crash.log
 .envrc
 bin
+dist
