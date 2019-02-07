@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/jmoiron/sqlx"
 )
@@ -25,12 +23,8 @@ func RoleGrants() *schema.Resource {
 				Required: true,
 			},
 			"role_name": &schema.Schema{
-				Type: schema.TypeString,
-				Elem: &schema.Schema{Type: schema.TypeString},
-				Set: func(v interface{}) int {
-					// TODO no longer case sensitive
-					return hashcode.String(strings.ToUpper(v.(string)))
-				},
+				Type:        schema.TypeString,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
@@ -38,20 +32,14 @@ func RoleGrants() *schema.Resource {
 				},
 			},
 			"roles": &schema.Schema{
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{Type: schema.TypeString},
-				Set: func(v interface{}) int {
-					return hashcode.String(strings.ToUpper(v.(string)))
-				},
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified role.",
 			},
 			"users": &schema.Schema{
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{Type: schema.TypeString},
-				Set: func(v interface{}) int {
-					return hashcode.String(strings.ToUpper(v.(string)))
-				},
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified user.",
 			},

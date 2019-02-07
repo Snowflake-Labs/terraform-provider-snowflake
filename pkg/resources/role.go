@@ -24,13 +24,6 @@ func Role() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// TODO
-					return strings.ToUpper(old) == strings.ToUpper(new)
-				},
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,

@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -39,7 +38,7 @@ func extractList(in map[string]string, name string) ([]string, error) {
 	return out, nil
 }
 
-func listCaseSensitiveSetEqual(a, b []string) bool {
+func listSetEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -48,7 +47,7 @@ func listCaseSensitiveSetEqual(a, b []string) bool {
 	sort.Strings(b)
 
 	for i := range a {
-		if strings.ToUpper(a[i]) != strings.ToUpper(b[i]) {
+		if a[i] != b[i] {
 			return false
 		}
 	}
@@ -69,7 +68,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 		}
 
 		// TODO no longer case sensitive
-		if !listCaseSensitiveSetEqual(roles, r) {
+		if !listSetEqual(roles, r) {
 			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
 		}
 
@@ -81,7 +80,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 			return err
 		}
 
-		if !listCaseSensitiveSetEqual(users, u) {
+		if !listSetEqual(users, u) {
 			return fmt.Errorf("expected users %#v but got %#v", users, u)
 		}
 
