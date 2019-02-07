@@ -18,10 +18,6 @@ func RoleGrants() *schema.Resource {
 		Update: UpdateRoleGrants,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"role_name": &schema.Schema{
 				Type:        schema.TypeString,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -44,16 +40,15 @@ func RoleGrants() *schema.Resource {
 				Description: "Grants role to this specified user.",
 			},
 		},
-		// TODO
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 	}
 }
 
 func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
 	roleName := data.Get("role_name").(string)
 	roles := expandStringList(data.Get("roles").(*schema.Set).List())
 	users := expandStringList(data.Get("users").(*schema.Set).List())
@@ -75,7 +70,7 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	data.SetId(name)
+	data.SetId(roleName)
 	return ReadRoleGrants(data, meta)
 }
 
@@ -103,7 +98,7 @@ type grant struct {
 
 func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
+	roleName := data.Id()
 
 	roles := make([]string, 0)
 	users := make([]string, 0)
@@ -124,6 +119,10 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	err = data.Set("role_name", roleName)
+	if err != nil {
+		return err
+	}
 	err = data.Set("roles", roles)
 	if err != nil {
 		return err

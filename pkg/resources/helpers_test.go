@@ -46,6 +46,7 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	a := assert.New(t)
 	d := schema.TestResourceDataRaw(t, resources.RoleGrants().Schema, params)
 	a.NotNil(d)
+	d.SetId(id)
 	return d
 }
 func providers() map[string]terraform.ResourceProvider {

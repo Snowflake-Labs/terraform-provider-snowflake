@@ -22,7 +22,6 @@ func TestRoleGrantsCreate(t *testing.T) {
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
-		"name":      "fake name",
 		"role_name": "good_name",
 		"roles":     []string{"role1", "role2"},
 		"users":     []string{"user1", "user2"},
@@ -59,7 +58,6 @@ func TestRoleGrantsRead(t *testing.T) {
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
-		"name":      "fake name",
 		"role_name": "good_name",
 		"roles":     []string{"role1", "role2"},
 		"users":     []string{"user1", "user2"},
@@ -79,7 +77,6 @@ func TestRoleGrantsDelete(t *testing.T) {
 	a := assert.New(t)
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{
-		"name":      "drop_it",
 		"role_name": "drop_it",
 		"roles":     []string{"role1", "role2"},
 		"users":     []string{"user1", "user2"},
