@@ -110,8 +110,8 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	row := db.QueryRow(fmt.Sprintf("SHOW USERS LIKE '%s'", id))
-	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, disabled, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUid, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
-	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUid, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
+	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, disabled, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
+	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUID, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
 	if err != nil {
 		return err
 	}
@@ -177,10 +177,10 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 
 		for _, change := range changes {
 			val := data.Get(change).(string)
-			_, err := sb.WriteString(fmt.Sprintf(" %s='%s'",
+			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'",
 				strings.ToUpper(change), snowflake.EscapeString(val)))
-			if err != nil {
-				return err
+			if e != nil {
+				return e
 			}
 		}
 
