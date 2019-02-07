@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -19,7 +18,7 @@ func TestAccDatabase(t *testing.T) {
 			{
 				Config: dbConfig(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
 					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
 				),
@@ -28,7 +27,7 @@ func TestAccDatabase(t *testing.T) {
 			{
 				Config: dbConfig(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
 					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
 				),
@@ -37,7 +36,7 @@ func TestAccDatabase(t *testing.T) {
 			{
 				Config: dbConfig2(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
 				),

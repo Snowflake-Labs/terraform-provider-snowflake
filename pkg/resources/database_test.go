@@ -27,7 +27,7 @@ func TestDatabaseCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("CREATE DATABASE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		a.NoError(err)
@@ -60,7 +60,7 @@ func TestDatabaseDelete(t *testing.T) {
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("DROP DATABASE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`DROP DATABASE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteDatabase(d, db)
 		a.NoError(err)
 	})
