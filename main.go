@@ -33,7 +33,7 @@ func doc() {
 	resources := provider.Provider().ResourcesMap
 
 	names := make([]string, 0)
-	for k, _ := range resources {
+	for k := range resources {
 		names = append(names, k)
 	}
 	sort.Strings(names)
@@ -49,7 +49,7 @@ func doc() {
 		table.SetCenterSeparator("|")
 
 		properties := make([]string, 0)
-		for k, _ := range resource.Schema {
+		for k := range resource.Schema {
 			properties = append(properties, k)
 		}
 		sort.Strings(properties)

@@ -172,10 +172,10 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 		for _, change := range changes {
 			val := data.Get(change).(string)
-			_, err := sb.WriteString(fmt.Sprintf(" %s='%s'",
+			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'",
 				strings.ToUpper(change), snowflake.EscapeString(val)))
-			if err != nil {
-				return err
+			if e != nil {
+				return e
 			}
 		}
 
