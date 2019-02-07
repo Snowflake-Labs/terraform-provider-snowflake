@@ -13,10 +13,12 @@ import (
 )
 
 func TestRoleGrants(t *testing.T) {
+	t.Parallel()
 	resources.RoleGrants().InternalValidate(provider.Provider().Schema, false)
 }
 
 func TestRoleGrantsCreate(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
@@ -52,6 +54,7 @@ func expectReadRoleGrants(mock sqlmock.Sqlmock) {
 }
 
 func TestRoleGrantsRead(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
@@ -70,6 +73,7 @@ func TestRoleGrantsRead(t *testing.T) {
 }
 
 func TestRoleGrantsDelete(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{

@@ -13,10 +13,12 @@ import (
 )
 
 func TestWarehouse(t *testing.T) {
+	t.Parallel()
 	resources.Warehouse().InternalValidate(provider.Provider().Schema, false)
 }
 
 func TestWarehouseCreate(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	in := map[string]interface{}{
@@ -42,6 +44,7 @@ func expectReadWarehouse(mock sqlmock.Sqlmock) {
 }
 
 func TestWarehouseRead(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := warehouse(t, "good_name", map[string]interface{}{"name": "good_name"})
@@ -55,6 +58,7 @@ func TestWarehouseRead(t *testing.T) {
 }
 
 func TestWarehouseDelete(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})

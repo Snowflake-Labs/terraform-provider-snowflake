@@ -54,7 +54,7 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	users := expandStringList(data.Get("users").(*schema.Set).List())
 
 	if len(roles) == 0 && len(users) == 0 {
-		return fmt.Errorf("No users or roles specified for role grants.")
+		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
 	for _, role := range roles {
@@ -119,9 +119,18 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	data.Set("role_name", roleName)
-	data.Set("roles", roles)
-	data.Set("users", users)
+	err = data.Set("role_name", roleName)
+	if err != nil {
+		return err
+	}
+	err = data.Set("roles", roles)
+	if err != nil {
+		return err
+	}
+	err = data.Set("users", users)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

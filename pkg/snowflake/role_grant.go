@@ -40,9 +40,9 @@ func (gb *RoleGrantBuilder) Role(role string) *RoleGrantExecutable {
 }
 
 func (gr *RoleGrantExecutable) Grant() string {
-	return fmt.Sprintf(`GRANT ROLE "%s" TO %s "%s"`, gr.name, gr.granteeType, gr.grantee)
+	return fmt.Sprintf(`GRANT ROLE "%s" TO %s "%s"`, gr.name, gr.granteeType, gr.grantee) // nolint: gosec
 }
 
 func (gr *RoleGrantExecutable) Revoke() string {
-	return fmt.Sprintf(`REVOKE ROLE "%s" FROM %s "%s"`, gr.name, gr.granteeType, gr.grantee)
+	return fmt.Sprintf(`REVOKE ROLE "%s" FROM %s "%s"`, gr.name, gr.granteeType, gr.grantee) // nolint: gosec
 }

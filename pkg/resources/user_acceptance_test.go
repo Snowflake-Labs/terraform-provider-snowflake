@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccUser(t *testing.T) {
+	t.Parallel()
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := randomdata.Email()
 

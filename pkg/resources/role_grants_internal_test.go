@@ -10,6 +10,7 @@ import (
 )
 
 func Test_grantToRole(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -20,6 +21,7 @@ func Test_grantToRole(t *testing.T) {
 }
 
 func Test_grantToUser(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -30,6 +32,7 @@ func Test_grantToUser(t *testing.T) {
 }
 
 func Test_readGrants(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -45,6 +48,7 @@ func Test_readGrants(t *testing.T) {
 }
 
 func Test_revokeRoleFromRole(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM ROLE "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -55,6 +59,7 @@ func Test_revokeRoleFromRole(t *testing.T) {
 
 }
 func Test_revokeRoleFromUser(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM USER "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
