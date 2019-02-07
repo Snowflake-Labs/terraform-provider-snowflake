@@ -13,10 +13,12 @@ import (
 )
 
 func TestDatabase(t *testing.T) {
+	t.Parallel()
 	resources.Database().InternalValidate(provider.Provider().Schema, false)
 }
 
 func TestDatabaseCreate(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	in := map[string]interface{}{
@@ -40,6 +42,7 @@ func expectRead(mock sqlmock.Sqlmock) {
 }
 
 func TestDatabaseRead(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
@@ -55,6 +58,7 @@ func TestDatabaseRead(t *testing.T) {
 }
 
 func TestDatabaseDelete(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})

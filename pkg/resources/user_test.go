@@ -13,10 +13,12 @@ import (
 )
 
 func TestUser(t *testing.T) {
+	t.Parallel()
 	resources.User().InternalValidate(provider.Provider().Schema, false)
 }
 
 func TestUserCreate(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	in := map[string]interface{}{
@@ -46,6 +48,7 @@ func expectReadUser(mock sqlmock.Sqlmock) {
 }
 
 func TestUserRead(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
@@ -59,6 +62,7 @@ func TestUserRead(t *testing.T) {
 }
 
 func TestUserDelete(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
