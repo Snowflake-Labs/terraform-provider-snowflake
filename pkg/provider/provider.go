@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+
+	// Used to register the snowflake sql driver.
 	_ "github.com/snowflakedb/gosnowflake"
 )
 
