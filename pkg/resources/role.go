@@ -24,12 +24,6 @@ func Role() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
-				},
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -49,7 +43,7 @@ func CreateRole(data *schema.ResourceData, meta interface{}) error {
 
 	var sb strings.Builder
 
-	_, err := sb.WriteString(fmt.Sprintf("CREATE ROLE %s", name))
+	_, err := sb.WriteString(fmt.Sprintf(`CREATE ROLE "%s"`, name))
 	if err != nil {
 		return err
 	}
@@ -104,7 +98,7 @@ func DeleteRole(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	err := DBExec(db, "DROP ROLE %s", name)
+	err := DBExec(db, `DROP ROLE "%s"`, name)
 	if err != nil {
 		return errors.Wrapf(err, "error dropping role %s", name)
 	}
@@ -122,7 +116,7 @@ func UpdateRole(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		err := DBExec(db, "ALTER ROLE %s RENAME TO %s", oldName, newName)
+		err := DBExec(db, `ALTER ROLE "%s" RENAME TO "%s"`, oldName, newName)
 
 		if err != nil {
 			return errors.Wrapf(err, "error renaming role %s to %s", oldName, newName)
@@ -142,7 +136,7 @@ func UpdateRole(data *schema.ResourceData, meta interface{}) error {
 	if len(changes) > 0 {
 		name := data.Get("name").(string)
 		var sb strings.Builder
-		_, err := sb.WriteString(fmt.Sprintf("ALTER ROLE %s SET", name))
+		_, err := sb.WriteString(fmt.Sprintf(`ALTER ROLE "%s" SET`, name))
 		if err != nil {
 			return err
 		}

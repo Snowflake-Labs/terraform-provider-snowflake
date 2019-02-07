@@ -40,7 +40,7 @@ You can see a number of examples [here](examples).
 |-----------------------------|--------|-------------|----------|-----------|----------|---------|
 | comment                     | string |             | true     | false     | false    | ""      |
 | data_retention_time_in_days | int    |             | true     | false     | true     | <nil>   |
-| name                        | string | TODO        | false    | true      | false    | <nil>   |
+| name                        | string |             | false    | true      | false    | <nil>   |
 
 ### snowflake_role
 

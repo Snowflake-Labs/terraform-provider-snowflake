@@ -2,16 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccUser(t *testing.T) {
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	prefix2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix2 := randomdata.Email()
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -19,7 +19,7 @@ func TestAccUser(t *testing.T) {
 			{
 				Config: uConfig(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", strings.ToUpper(prefix)),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 				),
 			},
@@ -27,7 +27,7 @@ func TestAccUser(t *testing.T) {
 			{
 				Config: uConfig(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 				),
 			},
@@ -35,7 +35,7 @@ func TestAccUser(t *testing.T) {
 			{
 				Config: uConfig2(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
 				),

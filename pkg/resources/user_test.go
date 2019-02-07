@@ -28,7 +28,7 @@ func TestUserCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("CREATE USER good_name COMMENT='great comment' PASSWORD='awesomepassword'").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE USER "good_name" COMMENT='great comment' PASSWORD='awesomepassword'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		a.NoError(err)
@@ -64,7 +64,7 @@ func TestUserDelete(t *testing.T) {
 	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("DROP USER drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`DROP USER "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteUser(d, db)
 		a.NoError(err)
 	})

@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -19,7 +18,7 @@ func TestAccRole(t *testing.T) {
 			{
 				Config: rConfig(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.w", "name", strings.ToUpper(prefix)),
+					resource.TestCheckResourceAttr("snowflake_role.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_role.w", "comment", "test comment"),
 				),
 			},
@@ -27,7 +26,7 @@ func TestAccRole(t *testing.T) {
 			{
 				Config: rConfig(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_role.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_role.w", "comment", "test comment"),
 				),
 			},
@@ -35,7 +34,7 @@ func TestAccRole(t *testing.T) {
 			{
 				Config: rConfig2(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_role.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_role.w", "comment", "test comment 2"),
 				),
 			},

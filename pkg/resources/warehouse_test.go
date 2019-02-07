@@ -27,7 +27,7 @@ func TestWarehouseCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("CREATE WAREHOUSE good_name COMMENT='great comment").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE WAREHOUSE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadWarehouse(mock)
 		err := resources.CreateWarehouse(d, db)
 		a.NoError(err)
@@ -35,7 +35,7 @@ func TestWarehouseCreate(t *testing.T) {
 }
 
 func expectReadWarehouse(mock sqlmock.Sqlmock) {
-	mock.ExpectExec("USE WAREHOUSE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`USE WAREHOUSE "good_name"`).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("SHOW WAREHOUSES LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
 	rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
 	mock.ExpectQuery(`select "name", "comment", "size" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
@@ -60,7 +60,7 @@ func TestWarehouseDelete(t *testing.T) {
 	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("DROP WAREHOUSE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`DROP WAREHOUSE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteWarehouse(d, db)
 		a.NoError(err)
 	})

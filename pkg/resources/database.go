@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -21,14 +20,9 @@ func Database() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     false,
-				Description:  "TODO",
-				ValidateFunc: ValidateDatabaseName,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
-				},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: false,
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -47,17 +41,13 @@ func Database() *schema.Resource {
 	}
 }
 
-func ValidateDatabaseName(val interface{}, key string) ([]string, []error) {
-	return snowflake.ValidateIdentifier(val)
-}
-
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	comment := data.Get("comment").(string)
 	retention, retentionSet := data.GetOk("data_retention_time_in_days")
 	db := meta.(*sql.DB)
 
-	stmt := fmt.Sprintf("CREATE DATABASE %s COMMENT='%s'", name, snowflake.EscapeString(comment))
+	stmt := fmt.Sprintf(`CREATE DATABASE "%s" COMMENT='%s'`, name, snowflake.EscapeString(comment))
 	if retentionSet {
 		stmt = fmt.Sprintf("%s DATA_RETENTION_TIME_IN_DAYS = %d", stmt, retention)
 	}
@@ -119,7 +109,7 @@ func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	stmt := fmt.Sprintf("DROP DATABASE %s", name)
+	stmt := fmt.Sprintf(`DROP DATABASE "%s"`, name)
 	log.Printf("[DEBUG] stmt %s", stmt)
 	_, err := db.Exec(stmt)
 	if err != nil {
@@ -141,7 +131,7 @@ func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		stmt := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", oldName, newName)
+		stmt := fmt.Sprintf(`ALTER DATABASE "%s" RENAME TO "%s"`, oldName, newName)
 		log.Printf("[DEBUG] stmt %s", stmt)
 
 		_, err := db.Exec(stmt)
@@ -157,7 +147,7 @@ func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 		name := data.Get("name").(string)
 		comment := data.Get("comment").(string)
 
-		stmt := fmt.Sprintf("ALTER DATABASE %s SET COMMENT='%s'", name, snowflake.EscapeString(comment))
+		stmt := fmt.Sprintf(`ALTER DATABASE "%s" SET COMMENT='%s'`, name, snowflake.EscapeString(comment))
 		log.Printf("[DEBUG] stmt %s", stmt)
 
 		_, err := db.Exec(stmt)
@@ -171,7 +161,7 @@ func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 		name := data.Get("name").(string)
 		retention := data.Get("data_retention_time_in_days").(int)
 
-		stmt := fmt.Sprintf("ALTER DATABASE %s SET DATA_RETENTION_TIME_IN_DAYS = %d", name, retention)
+		stmt := fmt.Sprintf(`ALTER DATABASE "%s" SET DATA_RETENTION_TIME_IN_DAYS = %d`, name, retention)
 		log.Printf("[DEBUG] stmt %s", stmt)
 
 		_, err := db.Exec(stmt)

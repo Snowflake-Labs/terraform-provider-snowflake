@@ -27,7 +27,7 @@ func TestRoleCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("CREATE ROLE good_name COMMENT='great comment'").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE ROLE "good_name" COMMENT='great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRole(mock)
 		err := resources.CreateRole(d, db)
 		a.NoError(err)
@@ -62,7 +62,7 @@ func TestRoleDelete(t *testing.T) {
 	d := role(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec("DROP ROLE drop_it").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`DROP ROLE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteRole(d, db)
 		a.NoError(err)
 	})

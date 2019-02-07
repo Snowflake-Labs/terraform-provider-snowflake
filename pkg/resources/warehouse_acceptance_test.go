@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -19,7 +18,7 @@ func TestAccWarehouse(t *testing.T) {
 			{
 				Config: wConfig(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", strings.ToUpper(prefix)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 				),
@@ -28,7 +27,7 @@ func TestAccWarehouse(t *testing.T) {
 			{
 				Config: wConfig(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 				),
@@ -37,7 +36,7 @@ func TestAccWarehouse(t *testing.T) {
 			{
 				Config: wConfig2(prefix2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", strings.ToUpper(prefix2)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "Small"),
 				),

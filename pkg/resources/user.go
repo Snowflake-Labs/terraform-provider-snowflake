@@ -24,14 +24,12 @@ func User() *schema.Resource {
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
-				},
-			},
+				Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)"},
+			// "login_name": &schema.Schema{
+			// 	Type:     schema.TypeString,
+			// 	Required: false,
+			// 	Computed: true,
+			// },
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -79,7 +77,7 @@ func CreateUser(data *schema.ResourceData, meta interface{}) error {
 
 	var sb strings.Builder
 
-	_, err := sb.WriteString(fmt.Sprintf("CREATE USER %s", name))
+	_, err := sb.WriteString(fmt.Sprintf(`CREATE USER "%s"`, name))
 	if err != nil {
 		return err
 	}
@@ -132,9 +130,9 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 
 func DeleteUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := data.Id()
 
-	err := DBExec(db, "DROP USER %s", name)
+	err := DBExec(db, `DROP USER "%s"`, name)
 	if err != nil {
 		return errors.Wrapf(err, "error dropping user %s", name)
 	}
@@ -152,7 +150,7 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		err := DBExec(db, "ALTER USER %s RENAME TO %s", oldName, newName)
+		err := DBExec(db, `ALTER USER "%s" RENAME TO "%s"`, oldName, newName)
 
 		if err != nil {
 			return errors.Wrapf(err, "error renaming user %s to %s", oldName, newName)
@@ -172,7 +170,7 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 	if len(changes) > 0 {
 		name := data.Get("name").(string)
 		var sb strings.Builder
-		_, err := sb.WriteString(fmt.Sprintf("ALTER USER %s SET", name))
+		_, err := sb.WriteString(fmt.Sprintf(`ALTER USER "%s" SET`, name))
 		if err != nil {
 			return err
 		}
