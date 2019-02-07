@@ -10,17 +10,19 @@ import (
 )
 
 func TestProvider(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 	p := provider.Provider()
 	err := p.InternalValidate()
 	a.NoError(err)
 }
 
-func TestConfigureProvider(t *testing.T) {
-	// a := assert.New(t)
-}
+// func TestConfigureProvider(t *testing.T) {
+// 	// a := assert.New(t)
+// }
 
 func TestDSN(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s *schema.ResourceData
 	}

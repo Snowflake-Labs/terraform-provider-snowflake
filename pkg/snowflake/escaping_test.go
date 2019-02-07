@@ -8,6 +8,7 @@ import (
 )
 
 func TestEscapeString(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 
 	a.Equal(`\'`, snowflake.EscapeString(`'`))

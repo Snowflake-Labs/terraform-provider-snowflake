@@ -8,6 +8,7 @@ import (
 )
 
 func TestRoleGrant(t *testing.T) {
+	t.Parallel()
 	a := assert.New(t)
 	rg := snowflake.RoleGrant("role1")
 
