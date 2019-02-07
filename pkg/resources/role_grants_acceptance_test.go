@@ -98,7 +98,7 @@ func TestAccGrantRole(t *testing.T) {
 	basicChecks := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
 		resource.TestCheckResourceAttr("snowflake_role.r2", "name", role2),
-		resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", role1),
+		resource.TestCheckResourceAttr("snowflake_role_grants.w", "role_name", role1),
 	)
 
 	baselineStep := resource.TestStep{
@@ -149,12 +149,12 @@ func TestAccGrantRole(t *testing.T) {
 					},
 				),
 			},
-			// 			// IMPORT
-			// 			{
-			// 				ResourceName:            "snowflake_role_grants.w",
-			// 				ImportState:             true,
-			// 				ImportStateVerify:       true,
-			// 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_role_grants.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -185,7 +185,6 @@ func rgConfig(role1, role2, role3, user1, user2 string) string {
 %s
 
 resource "snowflake_role_grants" "w" {
-	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
 	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
@@ -200,7 +199,6 @@ func rgConfig2(role1, role2, role3, user1, user2 string) string {
 %s
 
 resource "snowflake_role_grants" "w" {
-	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r2.name}"]
 	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
@@ -215,7 +213,6 @@ func rgConfig3(role1, role2, role3, user1, user2 string) string {
 %s
 
 resource "snowflake_role_grants" "w" {
-	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
 	users = ["${snowflake_user.u.name}"]
@@ -229,7 +226,6 @@ func rgConfig4(role1, role2, role3, user1, user2 string) string {
 
 %s
 	resource "snowflake_role_grants" "w" {
-	name = "${snowflake_role.r.name}"
 	role_name = "${snowflake_role.r.name}"
 	roles = ["${snowflake_role.r3.name}", "${snowflake_role.r2.name}"]
 	users = ["${snowflake_user.u2.name}", "${snowflake_user.u.name}"]
