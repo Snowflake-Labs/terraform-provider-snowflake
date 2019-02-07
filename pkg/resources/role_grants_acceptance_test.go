@@ -68,6 +68,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 			return err
 		}
 
+		// TODO no longer case sensitive
 		if !listCaseSensitiveSetEqual(roles, r) {
 			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
 		}
@@ -96,9 +97,9 @@ func TestAccGrantRole(t *testing.T) {
 	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	basicChecks := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr("snowflake_role.r", "name", strings.ToUpper(role1)),
-		resource.TestCheckResourceAttr("snowflake_role.r2", "name", strings.ToUpper(role2)),
-		resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", strings.ToUpper(role1)),
+		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
+		resource.TestCheckResourceAttr("snowflake_role.r2", "name", role2),
+		resource.TestCheckResourceAttr("snowflake_role_grants.w", "name", role1),
 	)
 
 	baselineStep := resource.TestStep{

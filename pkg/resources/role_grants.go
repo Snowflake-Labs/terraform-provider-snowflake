@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -27,6 +28,7 @@ func RoleGrants() *schema.Resource {
 				Type: schema.TypeString,
 				Elem: &schema.Schema{Type: schema.TypeString},
 				Set: func(v interface{}) int {
+					// TODO no longer case sensitive
 					return hashcode.String(strings.ToUpper(v.(string)))
 				},
 				Required:    true,
@@ -91,13 +93,13 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
 	g := snowflake.RoleGrant(role1)
-	_, err := db.Exec(g.Role(role2).Grant())
+	err := DBExec(db, g.Role(role2).Grant())
 	return err
 }
 
 func grantRoleToUser(db *sql.DB, role1, user string) error {
 	g := snowflake.RoleGrant(role1)
-	_, err := db.Exec(g.User(user).Grant())
+	err := DBExec(db, g.User(user).Grant())
 	return err
 }
 
@@ -143,7 +145,9 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 	sdb := sqlx.NewDb(db, "snowflake")
 
-	rows, err := sdb.Queryx(fmt.Sprintf("SHOW GRANTS OF ROLE %s", roleName))
+	stmt := fmt.Sprintf(`SHOW GRANTS OF ROLE "%s"`, roleName)
+	log.Printf("[DEBUG] stmt %s", stmt)
+	rows, err := sdb.Queryx(stmt)
 
 	if err != nil {
 		return nil, err
@@ -189,13 +193,13 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 
 func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 	rg := snowflake.RoleGrant(role1).Role(role2)
-	_, err := db.Exec(rg.Revoke())
+	err := DBExec(db, rg.Revoke())
 	return err
 }
 
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	rg := snowflake.RoleGrant(role1).User(user)
-	_, err := db.Exec(rg.Revoke())
+	err := DBExec(db, rg.Revoke())
 	return err
 }
 

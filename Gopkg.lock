@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:ddaeea4ba16546053455f7139c27b9efe16a6a739353043cc2af76a9437d73b2"
+  name = "github.com/Pallinder/go-randomdata"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "97a2356fcab20708fb8ae46cbbf69a5bc9feca63"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:a69ab3f1445ffd4815add4bd31ba05b65b3b9fec1ade5057d5d717f30e6efd6d"
   name = "github.com/SermoDigital/jose"
   packages = [
@@ -689,6 +697,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Pallinder/go-randomdata",
     "github.com/hashicorp/terraform/helper/acctest",
     "github.com/hashicorp/terraform/helper/hashcode",
     "github.com/hashicorp/terraform/helper/resource",
