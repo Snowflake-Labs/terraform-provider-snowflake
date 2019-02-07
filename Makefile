@@ -41,8 +41,7 @@ release-snapshot: ## run a release
 .PHONY: release-snapshot
 
 dep: ## ensure dependencies are vendored
-	# this should be super-fast in the no-op case
-	dep ensure
+	dep ensure # this should be super-fast in the no-op case
 .PHONY: dep
 
 build: dep ## build the binary
@@ -53,11 +52,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test: ## run the tests
+test: dep ## run the tests
 	gotest -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test
 
-test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
+test-acceptance: dep ## runs all tests, including the acceptance tests which create and destroys real resources
 	TF_ACC=1 gotest -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test-acceptance
 
