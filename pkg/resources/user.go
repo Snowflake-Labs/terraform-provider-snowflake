@@ -2,9 +2,7 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -75,12 +73,7 @@ func CreateUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	var sb strings.Builder
-
-	_, err := sb.WriteString(fmt.Sprintf(`CREATE USER "%s"`, name))
-	if err != nil {
-		return err
-	}
+	qb := snowflake.User(name).Create()
 
 	for _, field := range userProperties {
 		log.Printf("prop %s", field)
@@ -88,13 +81,10 @@ func CreateUser(data *schema.ResourceData, meta interface{}) error {
 		log.Printf("val, ok %#v, %#v", ok, val)
 		if ok {
 			valStr := val.(string)
-			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
-			if e != nil {
-				return e
-			}
+			qb.SetString(field, valStr)
 		}
 	}
-	err = DBExec(db, sb.String())
+	err := DBExec(db, qb.Statement())
 
 	if err != nil {
 		return errors.Wrap(err, "error creating user")
@@ -109,7 +99,8 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := data.Id()
 
-	row := db.QueryRow(fmt.Sprintf("SHOW USERS LIKE '%s'", id))
+	stmt := snowflake.User(id).Show()
+	row := db.QueryRow(stmt)
 	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, disabled, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
 	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUID, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
 	if err != nil {
@@ -132,7 +123,8 @@ func DeleteUser(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
 
-	err := DBExec(db, `DROP USER "%s"`, name)
+	stmt := snowflake.User(name).Drop()
+	err := DBExec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error dropping user %s", name)
 	}
@@ -150,7 +142,8 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		err := DBExec(db, `ALTER USER "%s" RENAME TO "%s"`, oldName, newName)
+		stmt := snowflake.User(oldName).Rename(newName)
+		err := DBExec(db, stmt)
 
 		if err != nil {
 			return errors.Wrapf(err, "error renaming user %s to %s", oldName, newName)
@@ -169,22 +162,14 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 	}
 	if len(changes) > 0 {
 		name := data.Get("name").(string)
-		var sb strings.Builder
-		_, err := sb.WriteString(fmt.Sprintf(`ALTER USER "%s" SET`, name))
-		if err != nil {
-			return err
-		}
+		qb := snowflake.User(name).Alter()
 
 		for _, change := range changes {
 			val := data.Get(change).(string)
-			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'",
-				strings.ToUpper(change), snowflake.EscapeString(val)))
-			if e != nil {
-				return e
-			}
+			qb.SetString(change, val)
 		}
 
-		err = DBExec(db, sb.String())
+		err := DBExec(db, qb.Statement())
 		if err != nil {
 			return errors.Wrap(err, "error altering user")
 		}
