@@ -3,13 +3,14 @@ package resources
 import (
 	"database/sql"
 	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
 )
 
-var userProperties = []string{"comment", "password"}
+var userProperties = []string{"comment", "login_name", "password"}
 
 func User() *schema.Resource {
 	return &schema.Resource{
@@ -23,11 +24,16 @@ func User() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)"},
-			// "login_name": &schema.Schema{
-			// 	Type:     schema.TypeString,
-			// 	Required: false,
-			// 	Computed: true,
-			// },
+			"login_name": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
+				// login_name is case-insensitive
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.ToUpper(old) == strings.ToUpper(new)
+				},
+			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -40,28 +46,28 @@ func User() *schema.Resource {
 				Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
 				// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
 			},
-			//    LOGIN_NAME = <string>
+			//    DISABLED = TRUE | FALSE
+			//    DEFAULT_WAREHOUSE = <string>
+			//    DEFAULT_NAMESPACE = <string>
+			//    DEFAULT_ROLE = <string>
+			//    RSA_PUBLIC_KEY = <string>
+			//    RSA_PUBLIC_KEY_2 = <string>
+
 			//    DISPLAY_NAME = <string>
 			//    FIRST_NAME = <string>
 			//    MIDDLE_NAME = <string>
 			//    LAST_NAME = <string>
 			//    EMAIL = <string>
 			//    MUST_CHANGE_PASSWORD = TRUE | FALSE
-			//    DISABLED = TRUE | FALSE
 			//    SNOWFLAKE_LOCK = TRUE | FALSE
 			//    SNOWFLAKE_SUPPORT = TRUE | FALSE
 			//    DAYS_TO_EXPIRY = <integer>
 			//    MINS_TO_UNLOCK = <integer>
-			//    DEFAULT_WAREHOUSE = <string>
-			//    DEFAULT_NAMESPACE = <string>
-			//    DEFAULT_ROLE = <string>
 			//    EXT_AUTHN_DUO = TRUE | FALSE
 			//    EXT_AUTHN_UID = <string>
 			//    MINS_TO_BYPASS_MFA = <integer>
 			//    DISABLE_MFA = TRUE | FALSE
 			//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
-			//    RSA_PUBLIC_KEY = <string>
-			//    RSA_PUBLIC_KEY_2 = <string>
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -112,6 +118,11 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("login_name", loginName.String)
 	if err != nil {
 		return err
 	}

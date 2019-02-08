@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Pallinder/go-randomdata"
@@ -22,6 +23,7 @@ func TestAccUser(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
 				),
 			},
 			// RENAME
@@ -30,6 +32,7 @@ func TestAccUser(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -39,6 +42,7 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
 				),
 			},
 			// IMPORT
@@ -57,9 +61,10 @@ func uConfig(prefix string) string {
 resource "snowflake_user" "w" {
 	name = "%s"
 	comment = "test comment"
+	login_name = "%s_login"
 }
 `
-	return fmt.Sprintf(s, prefix)
+	return fmt.Sprintf(s, prefix, prefix)
 }
 
 func uConfig2(prefix string) string {
@@ -68,7 +73,8 @@ resource "snowflake_user" "w" {
 	name = "%s"
 	comment = "test comment 2"
 	password = "best password"
+	login_name = "%s_login"
 }
 `
-	return fmt.Sprintf(s, prefix)
+	return fmt.Sprintf(s, prefix, prefix)
 }

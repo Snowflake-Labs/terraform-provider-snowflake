@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -88,10 +89,17 @@ func (b *UserCreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE USER "%s"`, b.name)) // TODO handle error
 
-	for k, v := range b.stringProperties {
-		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
+	sortedStringProperties := make([]string, 0)
+	for k := range b.stringProperties {
+		sortedStringProperties = append(sortedStringProperties, k)
+	}
+	sort.Strings(sortedStringProperties)
+
+	for _, k := range sortedStringProperties {
+		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(b.stringProperties[k])))
 	}
 
+	// TODO sort
 	for k, v := range b.boolProperties {
 		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), v))
 	}
