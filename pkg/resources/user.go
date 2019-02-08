@@ -9,7 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-var userProperties = []string{"comment", "login_name", "password", "disabled"}
+var userProperties = []string{"comment", "login_name", "password", "disabled", "default_namespace", "default_role", "default_warehouse"}
+
+var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
+	return strings.ToUpper(old) == strings.ToUpper(new)
+}
 
 var userSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
@@ -22,9 +26,7 @@ var userSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			return strings.ToUpper(old) == strings.ToUpper(new)
-		},
+		DiffSuppressFunc: diffCaseInsensitive,
 	},
 	"comment": &schema.Schema{
 		Type:     schema.TypeString,
@@ -43,9 +45,23 @@ var userSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
-	//    DEFAULT_WAREHOUSE = <string>
-	//    DEFAULT_NAMESPACE = <string>
-	//    DEFAULT_ROLE = <string>
+	"default_warehouse": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
+	},
+	"default_namespace": &schema.Schema{
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: diffCaseInsensitive,
+		Description: "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login."
+	},
+	"default_role": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		Description: "Specifies the role that is active by default for the user’s session upon login.",
+	},
 	//    RSA_PUBLIC_KEY = <string>
 	//    RSA_PUBLIC_KEY_2 = <string>
 
@@ -123,6 +139,7 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// TODO turn this into a loop after we switch to scaning in a struct
 	err = data.Set("name", name.String)
 	if err != nil {
 		return err
@@ -138,6 +155,21 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("disabled", disabled)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("default_role", defaultRole.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("default_namespace", defaultNamespace.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("default_warehouse", defaultWarehouse.String)
 	if err != nil {
 		return err
 	}

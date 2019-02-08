@@ -22,17 +22,20 @@ func TestUserCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"name":       "good_name",
-		"comment":    "great comment",
-		"password":   "awesomepassword",
-		"login_name": "gname",
-		"disabled":   true,
+		"name":              "good_name",
+		"comment":           "great comment",
+		"password":          "awesomepassword",
+		"login_name":        "gname",
+		"disabled":          true,
+		"default_warehouse": "mywarehouse",
+		"default_namespace": "mynamespace",
+		"default_role":      "bestrole",
 	}
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, in)
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' LOGIN_NAME='gname' PASSWORD='awesomepassword' DISABLED=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' LOGIN_NAME='gname' PASSWORD='awesomepassword' DISABLED=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		a.NoError(err)

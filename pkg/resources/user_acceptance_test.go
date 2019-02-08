@@ -42,6 +42,9 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
 					checkBool("snowflake_user.w", "disabled", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 				),
 			},
 			// RENAME
@@ -51,7 +54,11 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
-					checkBool("snowflake_user.w", "disabled", false)),
+					checkBool("snowflake_user.w", "disabled", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
+				),
 			},
 			// CHANGE PROPERTIES
 			{
@@ -62,6 +69,9 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
 					checkBool("snowflake_user.w", "disabled", true),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
 				),
 			},
 			// IMPORT
@@ -82,6 +92,9 @@ resource "snowflake_user" "w" {
 	comment = "test comment"
 	login_name = "%s_login"
 	disabled = false
+	default_warehouse="foo"
+	default_role="foo"
+	default_namespace="foo"
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
@@ -95,6 +108,9 @@ resource "snowflake_user" "w" {
 	password = "best password"
 	login_name = "%s_login"
 	disabled = true
+	default_warehouse="bar"
+	default_role="bar"
+	default_namespace="bar"
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
