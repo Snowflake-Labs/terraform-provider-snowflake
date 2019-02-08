@@ -99,9 +99,14 @@ func (b *UserCreateBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(b.stringProperties[k])))
 	}
 
-	// TODO sort
-	for k, v := range b.boolProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), v))
+	sortedBoolProperties := make([]string, 0)
+	for k := range b.boolProperties {
+		sortedBoolProperties = append(sortedBoolProperties, k)
+	}
+	sort.Strings(sortedBoolProperties)
+
+	for _, k := range sortedBoolProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), b.boolProperties[k]))
 	}
 
 	return sb.String()

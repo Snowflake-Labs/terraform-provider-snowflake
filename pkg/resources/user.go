@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -10,7 +9,62 @@ import (
 	"github.com/pkg/errors"
 )
 
-var userProperties = []string{"comment", "login_name", "password"}
+var userProperties = []string{"comment", "login_name", "password", "disabled"}
+
+var userSchema = map[string]*schema.Schema{
+	"name": &schema.Schema{
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)"},
+	"login_name": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
+		// login_name is case-insensitive
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.ToUpper(old) == strings.ToUpper(new)
+		},
+	},
+	"comment": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		// TODO validation
+	},
+	"password": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
+		// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
+	},
+	"disabled": &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	//    DEFAULT_WAREHOUSE = <string>
+	//    DEFAULT_NAMESPACE = <string>
+	//    DEFAULT_ROLE = <string>
+	//    RSA_PUBLIC_KEY = <string>
+	//    RSA_PUBLIC_KEY_2 = <string>
+
+	//    DISPLAY_NAME = <string>
+	//    FIRST_NAME = <string>
+	//    MIDDLE_NAME = <string>
+	//    LAST_NAME = <string>
+	//    EMAIL = <string>
+	//    MUST_CHANGE_PASSWORD = TRUE | FALSE
+	//    SNOWFLAKE_LOCK = TRUE | FALSE
+	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
+	//    DAYS_TO_EXPIRY = <integer>
+	//    MINS_TO_UNLOCK = <integer>
+	//    EXT_AUTHN_DUO = TRUE | FALSE
+	//    EXT_AUTHN_UID = <string>
+	//    MINS_TO_BYPASS_MFA = <integer>
+	//    DISABLE_MFA = TRUE | FALSE
+	//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
+}
 
 func User() *schema.Resource {
 	return &schema.Resource{
@@ -19,56 +73,7 @@ func User() *schema.Resource {
 		Delete: DeleteUser,
 		Update: UpdateUser,
 
-		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)"},
-			"login_name": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
-				// login_name is case-insensitive
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
-				},
-			},
-			"comment": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				// TODO validation
-			},
-			"password": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
-				// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
-			},
-			//    DISABLED = TRUE | FALSE
-			//    DEFAULT_WAREHOUSE = <string>
-			//    DEFAULT_NAMESPACE = <string>
-			//    DEFAULT_ROLE = <string>
-			//    RSA_PUBLIC_KEY = <string>
-			//    RSA_PUBLIC_KEY_2 = <string>
-
-			//    DISPLAY_NAME = <string>
-			//    FIRST_NAME = <string>
-			//    MIDDLE_NAME = <string>
-			//    LAST_NAME = <string>
-			//    EMAIL = <string>
-			//    MUST_CHANGE_PASSWORD = TRUE | FALSE
-			//    SNOWFLAKE_LOCK = TRUE | FALSE
-			//    SNOWFLAKE_SUPPORT = TRUE | FALSE
-			//    DAYS_TO_EXPIRY = <integer>
-			//    MINS_TO_UNLOCK = <integer>
-			//    EXT_AUTHN_DUO = TRUE | FALSE
-			//    EXT_AUTHN_UID = <string>
-			//    MINS_TO_BYPASS_MFA = <integer>
-			//    DISABLE_MFA = TRUE | FALSE
-			//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
-		},
+		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -82,12 +87,16 @@ func CreateUser(data *schema.ResourceData, meta interface{}) error {
 	qb := snowflake.User(name).Create()
 
 	for _, field := range userProperties {
-		log.Printf("prop %s", field)
 		val, ok := data.GetOk(field)
-		log.Printf("val, ok %#v, %#v", ok, val)
 		if ok {
-			valStr := val.(string)
-			qb.SetString(field, valStr)
+			switch userSchema[field].Type {
+			case schema.TypeString:
+				valStr := val.(string)
+				qb.SetString(field, valStr)
+			case schema.TypeBool:
+				valBool := val.(bool)
+				qb.SetBool(field, valBool)
+			}
 		}
 	}
 	err := DBExec(db, qb.Statement())
@@ -107,7 +116,8 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.User(id).Show()
 	row := db.QueryRow(stmt)
-	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, disabled, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
+	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
+	var disabled bool
 	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUID, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
 	if err != nil {
 		return err
@@ -123,6 +133,11 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("login_name", loginName.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("disabled", disabled)
 	if err != nil {
 		return err
 	}
@@ -175,9 +190,16 @@ func UpdateUser(data *schema.ResourceData, meta interface{}) error {
 		name := data.Get("name").(string)
 		qb := snowflake.User(name).Alter()
 
-		for _, change := range changes {
-			val := data.Get(change).(string)
-			qb.SetString(change, val)
+		for _, field := range changes {
+			val := data.Get(field)
+			switch userSchema[field].Type {
+			case schema.TypeString:
+				valStr := val.(string)
+				qb.SetString(field, valStr)
+			case schema.TypeBool:
+				valBool := val.(bool)
+				qb.SetBool(field, valBool)
+			}
 		}
 
 		err := DBExec(db, qb.Statement())
