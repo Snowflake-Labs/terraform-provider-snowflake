@@ -76,8 +76,8 @@ You can see a number of examples [here](examples).
 | login_name         | string | The name users use to log in. If not supplied, snowflake will use name instead.                                                                                                                                            | true     | false     | true     | <nil>   |
 | name               | string | Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)                              | false    | true      | false    | <nil>   |
 | password           | string | **WARNING:** this will put the password in the terraform state file. Use carefully.                                                                                                                                        | true     | false     | false    | <nil>   |
-| rsa_public_key     | string | Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 like without header and trailer.                                                                                                       | true     | false     | false    | <nil>   |
-| rsa_public_key_2   | string | Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 like without header and trailer. | true     | false     | false    | <nil>   |
+| rsa_public_key     | string | Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.                                                                                                       | true     | false     | false    | <nil>   |
+| rsa_public_key_2   | string | Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer. | true     | false     | false    | <nil>   |
 
 ### snowflake_warehouse
 
