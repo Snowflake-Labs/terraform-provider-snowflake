@@ -9,7 +9,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-var userProperties = []string{"comment", "login_name", "password", "disabled", "default_namespace", "default_role", "default_warehouse"}
+var userProperties = []string{
+	"comment",
+	"login_name",
+	"password",
+	"disabled",
+	"default_namespace",
+	"default_role",
+	"default_warehouse",
+	"rsa_public_key",
+	"rsa_public_key_2",
+}
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
 	return strings.ToUpper(old) == strings.ToUpper(new)
@@ -46,24 +56,37 @@ var userSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"default_warehouse": &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
 	},
 	"default_namespace": &schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: diffCaseInsensitive,
-		Description: "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login."
+		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
 	"default_role": &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
 		Description: "Specifies the role that is active by default for the user’s session upon login.",
 	},
-	//    RSA_PUBLIC_KEY = <string>
-	//    RSA_PUBLIC_KEY_2 = <string>
+	"rsa_public_key": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the user’s RSA public key; used for key-pair authentication.",
+	},
+	"rsa_public_key_2": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization.",
+	},
+	"has_rsa_public_key": &schema.Schema{
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Will be true if user as an RSA key set.",
+	},
 
 	//    DISPLAY_NAME = <string>
 	//    FIRST_NAME = <string>
@@ -132,8 +155,8 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.User(id).Show()
 	row := db.QueryRow(stmt)
-	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword, hasRsaPublicKey sql.NullString
-	var disabled bool
+	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword sql.NullString
+	var disabled, hasRsaPublicKey bool
 	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUID, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
 	if err != nil {
 		return err
@@ -173,6 +196,8 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	err = data.Set("has_rsa_public_key", hasRsaPublicKey)
 
 	return err
 }

@@ -30,12 +30,14 @@ func TestUserCreate(t *testing.T) {
 		"default_warehouse": "mywarehouse",
 		"default_namespace": "mynamespace",
 		"default_role":      "bestrole",
+		"rsa_public_key":    "asdf",
+		"rsa_public_key_2":  "asdf2",
 	}
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, in)
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' LOGIN_NAME='gname' PASSWORD='awesomepassword' DISABLED=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		a.NoError(err)
@@ -48,7 +50,7 @@ func expectReadUser(mock sqlmock.Sqlmock) {
 		"days_to_expiry", "comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse",
 		"default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner",
 		"last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key"},
-	).AddRow("good_name", "created_on", "myloginname", "display_name", "first_name", "last_name", "email", "mins_to_unlock", "days_to_expiry", "mock comment", false, "must_change_password", "snowflake_lock", "default_warehouse", "default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner", "last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key")
+	).AddRow("good_name", "created_on", "myloginname", "display_name", "first_name", "last_name", "email", "mins_to_unlock", "days_to_expiry", "mock comment", false, "must_change_password", "snowflake_lock", "default_warehouse", "default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner", "last_success_login", "expires_at_time", "locked_until_time", "has_password", false)
 	mock.ExpectQuery(`^SHOW USERS LIKE 'good_name'$`).WillReturnRows(rows)
 }
 

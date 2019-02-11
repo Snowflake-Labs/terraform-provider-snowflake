@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func checkBool(path, attr string, value bool) func(*terraform.State) error {
@@ -29,14 +30,25 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 
 func TestAccUser(t *testing.T) {
 	t.Parallel()
+	a := assert.New(t)
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := randomdata.Email()
+	sshkey1, err := fixture("userkey1")
+	a.NoError(err)
+	sshkey2, err := fixture("userkey2")
+	a.NoError(err)
+	sshkey3, err := fixture("userkey3")
+	a.NoError(err)
+	sshkey4, err := fixture("userkey4")
+	a.NoError(err)
+
+	fmt.Printf("[DEBUG] key1 %s\n\nkey2 %s\n\nkey3 %s\n\nkey4 %s\n\n", sshkey1, sshkey2, sshkey3, sshkey4)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix),
+				Config: uConfig(prefix, sshkey1, sshkey2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
@@ -45,11 +57,12 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
+					checkBool("snowflake_user.w", "has_rsa_public_key", true),
 				),
 			},
 			// RENAME
 			{
-				Config: uConfig(prefix2),
+				Config: uConfig(prefix2, sshkey1, sshkey2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
@@ -72,6 +85,7 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
+					checkBool("snowflake_user.w", "has_rsa_public_key", false),
 				),
 			},
 			// IMPORT
@@ -79,13 +93,13 @@ func TestAccUser(t *testing.T) {
 				ResourceName:            "snowflake_user.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2"},
 			},
 		},
 	})
 }
 
-func uConfig(prefix string) string {
+func uConfig(prefix, key1, key2 string) string {
 	s := `
 resource "snowflake_user" "w" {
 	name = "%s"
@@ -95,9 +109,17 @@ resource "snowflake_user" "w" {
 	default_warehouse="foo"
 	default_role="foo"
 	default_namespace="foo"
+	rsa_public_key = <<KEY
+%s
+KEY
+	rsa_public_key_2 = <<KEY
+%s
+KEY
 }
 `
-	return fmt.Sprintf(s, prefix, prefix)
+	s = fmt.Sprintf(s, prefix, prefix, key1, key2)
+	fmt.Printf("[DEBUG] s %s", s)
+	return s
 }
 
 func uConfig2(prefix string) string {
@@ -113,5 +135,6 @@ resource "snowflake_user" "w" {
 	default_namespace="bar"
 }
 `
+	fmt.Printf("[DEBUG] s2 %s", s)
 	return fmt.Sprintf(s, prefix, prefix)
 }
