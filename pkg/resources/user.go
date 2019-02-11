@@ -75,12 +75,12 @@ var userSchema = map[string]*schema.Schema{
 	"rsa_public_key": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the user’s RSA public key; used for key-pair authentication.",
+		Description: "Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 like without header and trailer.",
 	},
 	"rsa_public_key_2": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization.",
+		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 like without header and trailer.",
 	},
 	"has_rsa_public_key": &schema.Schema{
 		Type:        schema.TypeBool,
