@@ -37,12 +37,6 @@ func TestAccUser(t *testing.T) {
 	a.NoError(err)
 	sshkey2, err := fixture("userkey2")
 	a.NoError(err)
-	sshkey3, err := fixture("userkey3")
-	a.NoError(err)
-	sshkey4, err := fixture("userkey4")
-	a.NoError(err)
-
-	fmt.Printf("[DEBUG] key1 %s\n\nkey2 %s\n\nkey3 %s\n\nkey4 %s\n\n", sshkey1, sshkey2, sshkey3, sshkey4)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
