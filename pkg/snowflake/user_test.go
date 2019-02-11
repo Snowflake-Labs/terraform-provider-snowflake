@@ -34,4 +34,10 @@ func TestUser(t *testing.T) {
 	q = ab.Statement()
 
 	a.Equal(`ALTER USER "user1" SET FOO='bar' BAM=false`, q)
+
+	c := u.Create()
+	c.SetString("foo", "bar")
+	c.SetBool("bam", false)
+	q = c.Statement()
+	a.Equal(`CREATE USER "user1" FOO='bar' BAM=false`, q)
 }
