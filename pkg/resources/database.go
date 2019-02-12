@@ -12,6 +12,26 @@ import (
 	"github.com/pkg/errors"
 )
 
+var databaseSchema = map[string]*schema.Schema{
+	"name": &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: false,
+	},
+	"comment": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "",
+	},
+	"data_retention_time_in_days": &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+	},
+}
+
+var databaseProperties = []string{"comment", "data_retention_time_in_days"}
+
 func Database() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabase,
@@ -19,23 +39,7 @@ func Database() *schema.Resource {
 		Delete: DeleteDatabase,
 		Update: UpdateDatabase,
 
-		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
-			},
-			"comment": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
-			"data_retention_time_in_days": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-		},
+		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,18 +77,16 @@ type database struct {
 	Owner         sql.NullString `db:"owner"`
 	Comment       sql.NullString `db:"comment"`
 	Options       sql.NullString `db:"options"`
-	RetentionTime sql.NullString `db:"retentionTime"`
+	RetentionTime sql.NullString `db:"retention_time"`
 }
 
 func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	sdb := sqlx.NewDb(db, "snowflake")
 
-	// TODO Not sure if we should use id or name here.
 	name := data.Id()
 
-	// TODO make sure there are no wildcard-y characters here, otherwise it could match more than 1 row.
-	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", name)
+	stmt := snowflake.Database(name).Show()
 
 	log.Printf("[DEBUG] stmt %s", stmt)
 	row := sdb.QueryRowx(stmt)
@@ -118,9 +120,9 @@ func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	stmt := fmt.Sprintf(`DROP DATABASE "%s"`, name)
-	log.Printf("[DEBUG] stmt %s", stmt)
-	_, err := db.Exec(stmt)
+	stmt := snowflake.Database(name).Drop()
+
+	err := DBExec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error dropping database %s", name)
 	}
@@ -140,45 +142,49 @@ func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
 		oldName := oldNameI.(string)
 		newName := newNameI.(string)
 
-		stmt := fmt.Sprintf(`ALTER DATABASE "%s" RENAME TO "%s"`, oldName, newName)
-		log.Printf("[DEBUG] stmt %s", stmt)
+		stmt := snowflake.Database(oldName).Rename(newName)
 
-		_, err := db.Exec(stmt)
+		err := DBExec(db, stmt)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming database %s to %s", oldName, newName)
 		}
+
 		data.SetId(newName)
 		data.SetPartial("name")
 	}
+	data.Partial(false)
 
-	// TODO collapse these two conditionals into a loop that generates a single statement.
-	if data.HasChange("comment") {
+	// TODO this was c/p from user.go we can probably refactor to a common implementation
+	changes := []string{}
+
+	for _, prop := range databaseProperties {
+		if data.HasChange(prop) {
+			changes = append(changes, prop)
+		}
+	}
+	if len(changes) > 0 {
 		name := data.Get("name").(string)
-		comment := data.Get("comment").(string)
+		qb := snowflake.Database(name).Alter()
 
-		stmt := fmt.Sprintf(`ALTER DATABASE "%s" SET COMMENT='%s'`, name, snowflake.EscapeString(comment))
-		log.Printf("[DEBUG] stmt %s", stmt)
+		for _, field := range changes {
+			val := data.Get(field)
+			switch databaseSchema[field].Type {
+			case schema.TypeString:
+				valStr := val.(string)
+				qb.SetString(field, valStr)
+			case schema.TypeBool:
+				valBool := val.(bool)
+				qb.SetBool(field, valBool)
+			case schema.TypeInt:
+				valInt := val.(int)
+				qb.SetInt(field, valInt)
+			}
+		}
 
-		_, err := db.Exec(stmt)
+		err := DBExec(db, qb.Statement())
 		if err != nil {
 			return errors.Wrap(err, "error altering database")
 		}
-		data.SetPartial("comment")
 	}
-
-	if data.HasChange("data_retention_time_in_days") {
-		name := data.Get("name").(string)
-		retention := data.Get("data_retention_time_in_days").(int)
-
-		stmt := fmt.Sprintf(`ALTER DATABASE "%s" SET DATA_RETENTION_TIME_IN_DAYS = %d`, name, retention)
-		log.Printf("[DEBUG] stmt %s", stmt)
-
-		_, err := db.Exec(stmt)
-		if err != nil {
-			return errors.Wrap(err, "Error setting data_retention_time_in_days")
-		}
-		data.SetPartial("data_retention_time_in_days")
-	}
-	data.Partial(false)
 	return ReadDatabase(data, meta)
 }
