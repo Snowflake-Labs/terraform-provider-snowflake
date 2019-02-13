@@ -109,8 +109,8 @@ func User() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateUser,
 		Read:   ReadUser,
-		Delete: DeleteUser,
-		Update: UpdateUser,
+		Delete: DeleteResource("user", snowflake.User),
+		Update: UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser),
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{

@@ -17,7 +17,7 @@ func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateWarehouse,
 		Read:   ReadWarehouse,
-		Delete: DeleteWarehouse,
+		Delete: DeleteResource("warehouse", snowflake.Warehouse),
 		Update: UpdateWarehouse,
 
 		Schema: map[string]*schema.Schema{
@@ -121,19 +121,6 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	err = data.Set("warehouse_size", size.String)
 
 	return err
-}
-
-func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-
-	err := DBExec(db, `DROP WAREHOUSE "%s"`, name)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping warehouse %s", name)
-	}
-
-	data.SetId("")
-	return nil
 }
 
 func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {

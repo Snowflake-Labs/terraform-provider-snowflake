@@ -6,6 +6,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -67,7 +68,7 @@ func TestRoleDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP ROLE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteRole(d, db)
+		err := resources.DeleteResource("role", snowflake.Role)(d, db)
 		a.NoError(err)
 	})
 }

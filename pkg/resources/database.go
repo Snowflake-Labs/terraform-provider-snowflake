@@ -36,8 +36,8 @@ func Database() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabase,
 		Read:   ReadDatabase,
-		Delete: DeleteDatabase,
-		Update: UpdateDatabase,
+		Delete: DeleteResource("database", snowflake.Database),
+		Update: UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase),
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
@@ -116,75 +116,84 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
+	return func(data *schema.ResourceData, meta interface{}) error {
+		db := meta.(*sql.DB)
+		name := data.Get("name").(string)
 
-	stmt := snowflake.Database(name).Drop()
-
-	err := DBExec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping database %s", name)
-	}
-
-	data.SetId("")
-	return nil
-}
-
-func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
-	db := meta.(*sql.DB)
-	if data.HasChange("name") {
-		// I wish this could be done on one line.
-		oldNameI, newNameI := data.GetChange("name")
-		oldName := oldNameI.(string)
-		newName := newNameI.(string)
-
-		stmt := snowflake.Database(oldName).Rename(newName)
+		stmt := builder(name).Drop()
 
 		err := DBExec(db, stmt)
 		if err != nil {
-			return errors.Wrapf(err, "error renaming database %s to %s", oldName, newName)
+			return errors.Wrapf(err, "error dropping %s %s", t, name)
 		}
 
-		data.SetId(newName)
-		data.SetPartial("name")
+		data.SetId("")
+		return nil
 	}
-	data.Partial(false)
+}
 
-	// TODO this was c/p from user.go we can probably refactor to a common implementation
-	changes := []string{}
+func UpdateResource(
+	t string,
+	properties []string,
+	s map[string]*schema.Schema,
+	builder func(string) *snowflake.Builder,
+	read func(*schema.ResourceData, interface{}) error,
+) func(*schema.ResourceData, interface{}) error {
+	return func(data *schema.ResourceData, meta interface{}) error {
+		// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
+		data.Partial(true)
 
-	for _, prop := range databaseProperties {
-		if data.HasChange(prop) {
-			changes = append(changes, prop)
+		db := meta.(*sql.DB)
+		if data.HasChange("name") {
+			// I wish this could be done on one line.
+			oldNameI, newNameI := data.GetChange("name")
+			oldName := oldNameI.(string)
+			newName := newNameI.(string)
+
+			stmt := builder(oldName).Rename(newName)
+
+			err := DBExec(db, stmt)
+			if err != nil {
+				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
+			}
+
+			data.SetId(newName)
+			data.SetPartial("name")
 		}
-	}
-	if len(changes) > 0 {
-		name := data.Get("name").(string)
-		qb := snowflake.Database(name).Alter()
+		data.Partial(false)
 
-		for _, field := range changes {
-			val := data.Get(field)
-			switch databaseSchema[field].Type {
-			case schema.TypeString:
-				valStr := val.(string)
-				qb.SetString(field, valStr)
-			case schema.TypeBool:
-				valBool := val.(bool)
-				qb.SetBool(field, valBool)
-			case schema.TypeInt:
-				valInt := val.(int)
-				qb.SetInt(field, valInt)
+		changes := []string{}
+
+		for _, prop := range properties {
+			if data.HasChange(prop) {
+				changes = append(changes, prop)
 			}
 		}
+		if len(changes) > 0 {
+			name := data.Get("name").(string)
+			qb := builder(name).Alter()
 
-		err := DBExec(db, qb.Statement())
-		if err != nil {
-			return errors.Wrap(err, "error altering database")
+			for _, field := range changes {
+				val := data.Get(field)
+				switch s[field].Type {
+				case schema.TypeString:
+					valStr := val.(string)
+					qb.SetString(field, valStr)
+				case schema.TypeBool:
+					valBool := val.(bool)
+					qb.SetBool(field, valBool)
+				case schema.TypeInt:
+					valInt := val.(int)
+					qb.SetInt(field, valInt)
+				}
+			}
+
+			err := DBExec(db, qb.Statement())
+			if err != nil {
+				return errors.Wrapf(err, "error altering %s", t)
+			}
 		}
+		return read(data, meta)
 	}
-	return ReadDatabase(data, meta)
 }

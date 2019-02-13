@@ -17,7 +17,7 @@ func Role() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateRole,
 		Read:   ReadRole,
-		Delete: DeleteRole,
+		Delete: DeleteResource("role", snowflake.Role),
 		Update: UpdateRole,
 
 		Schema: map[string]*schema.Schema{
@@ -92,19 +92,6 @@ func ReadRole(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	return err
-}
-
-func DeleteRole(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-
-	err := DBExec(db, `DROP ROLE "%s"`, name)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping role %s", name)
-	}
-
-	data.SetId("")
-	return nil
 }
 
 func UpdateRole(data *schema.ResourceData, meta interface{}) error {
