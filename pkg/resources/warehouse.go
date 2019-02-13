@@ -8,44 +8,44 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var warehouseProperties = []string{"comment", "warehouse_size"}
+var warehouseSchema = map[string]*schema.Schema{
+	"name": &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
+	},
+	"comment": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "",
+	},
+	"warehouse_size": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			// TODO
+			return
+		},
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			normalize := func(s string) string {
+				return strings.ToUpper(strings.Replace(s, "-", "", -1))
+			}
+			return normalize(old) == normalize(new)
+		},
+	},
+}
 
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateWarehouse,
 		Read:   ReadWarehouse,
-		Delete: DeleteResource("warehouse", snowflake.Warehouse),
+		Delete: DeleteWarehouse,
 		Update: UpdateWarehouse,
 
-		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"comment": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
-			"warehouse_size": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					// TODO
-					return
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					normalize := func(s string) string {
-						return strings.ToUpper(strings.Replace(s, "-", "", -1))
-					}
-					return normalize(old) == normalize(new)
-				},
-			},
-		},
+		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,35 +53,8 @@ func Warehouse() *schema.Resource {
 }
 
 func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	return CreateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
 
-	var sb strings.Builder
-
-	_, err := sb.WriteString(fmt.Sprintf(`CREATE WAREHOUSE "%s"`, name))
-	if err != nil {
-		return err
-	}
-
-	for _, field := range warehouseProperties {
-		val, ok := data.GetOk(field)
-		valStr := val.(string)
-		if ok {
-			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(field), snowflake.EscapeString(valStr)))
-			if e != nil {
-				return e
-			}
-		}
-	}
-	err = DBExec(db, sb.String())
-
-	if err != nil {
-		return errors.Wrap(err, "error creating warehouse")
-	}
-
-	data.SetId(name)
-
-	return ReadWarehouse(data, meta)
 }
 
 func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
@@ -124,54 +97,11 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	if data.HasChange("name") {
-		data.Partial(true)
-		// I wish this could be done on one line.
-		oldNameI, newNameI := data.GetChange("name")
-		oldName := oldNameI.(string)
-		newName := newNameI.(string)
+	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+}
 
-		err := DBExec(db, `ALTER WAREHOUSE "%s" RENAME TO "%s"`, oldName, newName)
-
-		if err != nil {
-			return errors.Wrapf(err, "error renaming warehouse %s to %s", oldName, newName)
-		}
-		data.SetId(newName)
-		data.SetPartial("name")
-		data.Partial(false)
-	}
-
-	changes := []string{}
-
-	for _, prop := range warehouseProperties {
-		if data.HasChange(prop) {
-			changes = append(changes, prop)
-		}
-	}
-	if len(changes) > 0 {
-		name := data.Get("name").(string)
-		var sb strings.Builder
-		_, err := sb.WriteString(fmt.Sprintf(`ALTER WAREHOUSE "%s" SET`, name))
-		if err != nil {
-			return err
-		}
-
-		for _, change := range changes {
-			val := data.Get(change).(string)
-			_, e := sb.WriteString(fmt.Sprintf(" %s='%s'",
-				strings.ToUpper(change), snowflake.EscapeString(val)))
-			if e != nil {
-				return e
-			}
-		}
-
-		err = DBExec(db, sb.String())
-		if err != nil {
-			return errors.Wrap(err, "error altering warehouse")
-		}
-	}
-	return ReadWarehouse(data, meta)
+func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
 }
 
 func DBExec(db *sql.DB, query string, args ...interface{}) error {

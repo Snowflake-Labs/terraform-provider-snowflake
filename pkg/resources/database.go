@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -36,8 +35,8 @@ func Database() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabase,
 		Read:   ReadDatabase,
-		Delete: DeleteResource("database", snowflake.Database),
-		Update: UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase),
+		Delete: DeleteDatabase,
+		Update: UpdateDatabase,
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
@@ -47,25 +46,8 @@ func Database() *schema.Resource {
 }
 
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
-	name := data.Get("name").(string)
-	comment := data.Get("comment").(string)
-	retention, retentionSet := data.GetOk("data_retention_time_in_days")
-	db := meta.(*sql.DB)
+	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
 
-	stmt := fmt.Sprintf(`CREATE DATABASE "%s" COMMENT='%s'`, name, snowflake.EscapeString(comment))
-	if retentionSet {
-		stmt = fmt.Sprintf("%s DATA_RETENTION_TIME_IN_DAYS = %d", stmt, retention)
-	}
-	log.Printf("[DEBUG] stmt %s", stmt)
-	_, err := db.Exec(stmt)
-
-	if err != nil {
-		return errors.Wrap(err, "error creating database")
-	}
-
-	data.SetId(name)
-
-	return ReadDatabase(data, meta)
 }
 
 type database struct {
@@ -116,84 +98,10 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
-	return func(data *schema.ResourceData, meta interface{}) error {
-		db := meta.(*sql.DB)
-		name := data.Get("name").(string)
-
-		stmt := builder(name).Drop()
-
-		err := DBExec(db, stmt)
-		if err != nil {
-			return errors.Wrapf(err, "error dropping %s %s", t, name)
-		}
-
-		data.SetId("")
-		return nil
-	}
+func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
 }
 
-func UpdateResource(
-	t string,
-	properties []string,
-	s map[string]*schema.Schema,
-	builder func(string) *snowflake.Builder,
-	read func(*schema.ResourceData, interface{}) error,
-) func(*schema.ResourceData, interface{}) error {
-	return func(data *schema.ResourceData, meta interface{}) error {
-		// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-		data.Partial(true)
-
-		db := meta.(*sql.DB)
-		if data.HasChange("name") {
-			// I wish this could be done on one line.
-			oldNameI, newNameI := data.GetChange("name")
-			oldName := oldNameI.(string)
-			newName := newNameI.(string)
-
-			stmt := builder(oldName).Rename(newName)
-
-			err := DBExec(db, stmt)
-			if err != nil {
-				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
-			}
-
-			data.SetId(newName)
-			data.SetPartial("name")
-		}
-		data.Partial(false)
-
-		changes := []string{}
-
-		for _, prop := range properties {
-			if data.HasChange(prop) {
-				changes = append(changes, prop)
-			}
-		}
-		if len(changes) > 0 {
-			name := data.Get("name").(string)
-			qb := builder(name).Alter()
-
-			for _, field := range changes {
-				val := data.Get(field)
-				switch s[field].Type {
-				case schema.TypeString:
-					valStr := val.(string)
-					qb.SetString(field, valStr)
-				case schema.TypeBool:
-					valBool := val.(bool)
-					qb.SetBool(field, valBool)
-				case schema.TypeInt:
-					valInt := val.(int)
-					qb.SetInt(field, valInt)
-				}
-			}
-
-			err := DBExec(db, qb.Statement())
-			if err != nil {
-				return errors.Wrapf(err, "error altering %s", t)
-			}
-		}
-		return read(data, meta)
-	}
+func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("database", snowflake.Database)(data, meta)
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var userProperties = []string{
@@ -109,8 +108,8 @@ func User() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateUser,
 		Read:   ReadUser,
-		Delete: DeleteResource("user", snowflake.User),
-		Update: UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser),
+		Delete: DeleteUser,
+		Update: UpdateUser,
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
@@ -119,34 +118,10 @@ func User() *schema.Resource {
 	}
 }
 
+// func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
+
 func CreateUser(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-
-	qb := snowflake.User(name).Create()
-
-	for _, field := range userProperties {
-		val, ok := data.GetOk(field)
-		if ok {
-			switch userSchema[field].Type {
-			case schema.TypeString:
-				valStr := val.(string)
-				qb.SetString(field, valStr)
-			case schema.TypeBool:
-				valBool := val.(bool)
-				qb.SetBool(field, valBool)
-			}
-		}
-	}
-	err := DBExec(db, qb.Statement())
-
-	if err != nil {
-		return errors.Wrap(err, "error creating user")
-	}
-
-	data.SetId(name)
-
-	return ReadUser(data, meta)
+	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
 }
 
 func ReadUser(data *schema.ResourceData, meta interface{}) error {
@@ -202,16 +177,10 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
+func UpdateUser(data *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+}
+
 func DeleteUser(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Id()
-
-	stmt := snowflake.User(name).Drop()
-	err := DBExec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping user %s", name)
-	}
-
-	data.SetId("")
-	return nil
+	return DeleteResource("user", snowflake.User)(data, meta)
 }
