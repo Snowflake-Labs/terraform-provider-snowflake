@@ -6,7 +6,6 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -66,7 +65,7 @@ func TestWarehouseDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP WAREHOUSE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteResource("warehouse", snowflake.Warehouse)(d, db)
+		err := resources.DeleteWarehouse(d, db)
 		a.NoError(err)
 	})
 }
