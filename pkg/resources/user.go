@@ -6,7 +6,6 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var userProperties = []string{
@@ -119,34 +118,10 @@ func User() *schema.Resource {
 	}
 }
 
+// func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
+
 func CreateUser(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-
-	qb := snowflake.User(name).Create()
-
-	for _, field := range userProperties {
-		val, ok := data.GetOk(field)
-		if ok {
-			switch userSchema[field].Type {
-			case schema.TypeString:
-				valStr := val.(string)
-				qb.SetString(field, valStr)
-			case schema.TypeBool:
-				valBool := val.(bool)
-				qb.SetBool(field, valBool)
-			}
-		}
-	}
-	err := DBExec(db, qb.Statement())
-
-	if err != nil {
-		return errors.Wrap(err, "error creating user")
-	}
-
-	data.SetId(name)
-
-	return ReadUser(data, meta)
+	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
 }
 
 func ReadUser(data *schema.ResourceData, meta interface{}) error {
@@ -202,67 +177,10 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func DeleteUser(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := data.Id()
-
-	stmt := snowflake.User(name).Drop()
-	err := DBExec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping user %s", name)
-	}
-
-	data.SetId("")
-	return nil
+func UpdateUser(data *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
 }
 
-func UpdateUser(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	if data.HasChange("name") {
-		data.Partial(true)
-		// I wish this could be done on one line.
-		oldNameI, newNameI := data.GetChange("name")
-		oldName := oldNameI.(string)
-		newName := newNameI.(string)
-
-		stmt := snowflake.User(oldName).Rename(newName)
-		err := DBExec(db, stmt)
-
-		if err != nil {
-			return errors.Wrapf(err, "error renaming user %s to %s", oldName, newName)
-		}
-		data.SetId(newName)
-		data.SetPartial("name")
-		data.Partial(false)
-	}
-
-	changes := []string{}
-
-	for _, prop := range userProperties {
-		if data.HasChange(prop) {
-			changes = append(changes, prop)
-		}
-	}
-	if len(changes) > 0 {
-		name := data.Get("name").(string)
-		qb := snowflake.User(name).Alter()
-
-		for _, field := range changes {
-			val := data.Get(field)
-			switch userSchema[field].Type {
-			case schema.TypeString:
-				valStr := val.(string)
-				qb.SetString(field, valStr)
-			case schema.TypeBool:
-				valBool := val.(bool)
-				qb.SetBool(field, valBool)
-			}
-		}
-
-		err := DBExec(db, qb.Statement())
-		if err != nil {
-			return errors.Wrap(err, "error altering user")
-		}
-	}
-	return ReadUser(data, meta)
+func DeleteUser(data *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("user", snowflake.User)(data, meta)
 }

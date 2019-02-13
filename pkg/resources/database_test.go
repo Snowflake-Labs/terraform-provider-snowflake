@@ -37,7 +37,7 @@ func TestDatabaseCreate(t *testing.T) {
 }
 
 func expectRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retentionTime"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
+	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
 	mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(rows)
 }
 

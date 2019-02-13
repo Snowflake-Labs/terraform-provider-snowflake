@@ -19,7 +19,7 @@ lint: ## run the fast go linters
 .PHONY: lint
 
 lint-slow: ## run all linters, even the slow ones
-	gometalinter --vendor --deadline 120s ./...
+	gometalinter --enable-all --vendor --deadline 120s ./...
 .PHONY: lint-slow
 
 release: ## run a release

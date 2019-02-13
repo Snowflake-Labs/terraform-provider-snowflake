@@ -1,8 +1,8 @@
 package snowflake
 
-func User(name string) *Builder {
+func Role(name string) *Builder {
 	return &Builder{
-		entityType: UserType,
+		entityType: RoleType,
 		name:       name,
 	}
 }

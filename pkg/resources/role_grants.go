@@ -86,8 +86,6 @@ func grantRoleToUser(db *sql.DB, role1, user string) error {
 	return err
 }
 
-// Trying out this new way of reading rows. If it works well, will move to pkg/snowflake and apply to other
-//  types too.
 type grant struct {
 	CreatedOn   sql.RawBytes   `db:"created_on"`
 	Role        sql.NullString `db:"role"`
