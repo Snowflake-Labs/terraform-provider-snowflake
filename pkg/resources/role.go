@@ -12,25 +12,26 @@ import (
 )
 
 var roleProperties = []string{"comment"}
+var roleSchema = map[string]*schema.Schema{
+	"name": &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
+	},
+	"comment": &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		// TODO validation
+	},
+}
 
 func Role() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateRole,
 		Read:   ReadRole,
 		Delete: DeleteResource("role", snowflake.Role),
-		Update: UpdateRole,
+		Update: UpdateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole),
 
-		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"comment": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				// TODO validation
-			},
-		},
+		Schema: roleSchema,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
