@@ -30,9 +30,15 @@ func Provider() *schema.Provider {
 			},
 			"password": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:   true,
+			},
+			"browser_auth": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", false),
+				Sensitive:   false,
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
@@ -77,6 +83,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 	account := s.Get("account").(string)
 	username := s.Get("username").(string)
 	password := s.Get("password").(string)
+	browserAuth := s.Get("browser_auth").(bool)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
@@ -93,5 +100,16 @@ func DSN(s *schema.ResourceData) (string, error) {
 		Password: password,
 		Role:     role,
 	})
+
+	if browserAuth {
+		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
+			Account:       account,
+			User:          username,
+			Region:        region,
+			Role:          role,
+			Authenticator: "externalbrowser",
+		})
+	}
+
 	return dsn, err
 }
