@@ -3,8 +3,6 @@ package hclsyntax
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/hashicorp/hcl2/hcl"
 )
 
 type navigation struct {
@@ -40,20 +38,4 @@ func (n navigation) ContextString(offset int) string {
 		fmt.Fprintf(buf, " %q", label)
 	}
 	return buf.String()
-}
-
-func (n navigation) ContextDefRange(offset int) hcl.Range {
-	var block *Block
-	for _, candidate := range n.root.Blocks {
-		if candidate.Range().ContainsOffset(offset) {
-			block = candidate
-			break
-		}
-	}
-
-	if block == nil {
-		return hcl.Range{}
-	}
-
-	return block.DefRange()
 }

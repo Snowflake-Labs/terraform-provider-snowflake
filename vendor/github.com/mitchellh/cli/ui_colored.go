@@ -1,11 +1,7 @@
 package cli
 
 import (
-	"github.com/fatih/color"
-)
-
-const (
-	noColor = -1
+	"fmt"
 )
 
 // UiColor is a posix shell color code to use.
@@ -16,13 +12,13 @@ type UiColor struct {
 
 // A list of colors that are useful. These are all non-bolded by default.
 var (
-	UiColorNone    UiColor = UiColor{noColor, false}
-	UiColorRed             = UiColor{int(color.FgHiRed), false}
-	UiColorGreen           = UiColor{int(color.FgHiGreen), false}
-	UiColorYellow          = UiColor{int(color.FgHiYellow), false}
-	UiColorBlue            = UiColor{int(color.FgHiBlue), false}
-	UiColorMagenta         = UiColor{int(color.FgHiMagenta), false}
-	UiColorCyan            = UiColor{int(color.FgHiCyan), false}
+	UiColorNone    UiColor = UiColor{-1, false}
+	UiColorRed             = UiColor{31, false}
+	UiColorGreen           = UiColor{32, false}
+	UiColorYellow          = UiColor{33, false}
+	UiColorBlue            = UiColor{34, false}
+	UiColorMagenta         = UiColor{35, false}
+	UiColorCyan            = UiColor{36, false}
 )
 
 // ColoredUi is a Ui implementation that colors its output according
@@ -59,15 +55,15 @@ func (u *ColoredUi) Warn(message string) {
 	u.Ui.Warn(u.colorize(message, u.WarnColor))
 }
 
-func (u *ColoredUi) colorize(message string, uc UiColor) string {
-	if uc.Code == noColor {
+func (u *ColoredUi) colorize(message string, color UiColor) string {
+	if color.Code == -1 {
 		return message
 	}
 
-	attr := []color.Attribute{color.Attribute(uc.Code)}
-	if uc.Bold {
-		attr = append(attr, color.Bold)
+	attr := 0
+	if color.Bold {
+		attr = 1
 	}
 
-	return color.New(attr...).SprintFunc()(message)
+	return fmt.Sprintf("\033[%d;%dm%s\033[0m", attr, color.Code, message)
 }

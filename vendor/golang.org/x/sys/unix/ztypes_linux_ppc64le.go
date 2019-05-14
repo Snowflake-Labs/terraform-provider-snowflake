@@ -33,11 +33,13 @@ type Timeval struct {
 
 type Timex struct {
 	Modes     uint32
+	_         [4]byte
 	Offset    int64
 	Freq      int64
 	Maxerror  int64
 	Esterror  int64
 	Status    int32
+	_         [4]byte
 	Constant  int64
 	Precision int64
 	Tolerance int64
@@ -46,6 +48,7 @@ type Timex struct {
 	Ppsfreq   int64
 	Jitter    int64
 	Shift     int32
+	_         [4]byte
 	Stabil    int64
 	Jitcnt    int64
 	Calcnt    int64
@@ -161,6 +164,7 @@ type Fsid struct {
 type Flock_t struct {
 	Type   int16
 	Whence int16
+	_      [4]byte
 	Start  int64
 	Len    int64
 	Pid    int32
@@ -257,6 +261,7 @@ type RawSockaddrRFCOMM struct {
 
 type RawSockaddrCAN struct {
 	Family  uint16
+	_       [2]byte
 	Ifindex int32
 	Addr    [8]byte
 }
@@ -284,8 +289,6 @@ type RawSockaddrXDP struct {
 	Queue_id       uint32
 	Shared_umem_fd uint32
 }
-
-type RawSockaddrPPPoX [0x1e]byte
 
 type RawSockaddr struct {
 	Family uint16
@@ -335,6 +338,7 @@ type PacketMreq struct {
 type Msghdr struct {
 	Name       *byte
 	Namelen    uint32
+	_          [4]byte
 	Iov        *Iovec
 	Iovlen     uint64
 	Control    *byte
@@ -382,6 +386,7 @@ type TCPInfo struct {
 	Probes         uint8
 	Backoff        uint8
 	Options        uint8
+	_              [2]byte
 	Rto            uint32
 	Ato            uint32
 	Snd_mss        uint32
@@ -422,7 +427,6 @@ const (
 	SizeofSockaddrALG       = 0x58
 	SizeofSockaddrVM        = 0x10
 	SizeofSockaddrXDP       = 0x10
-	SizeofSockaddrPPPoX     = 0x1e
 	SizeofLinger            = 0x8
 	SizeofIovec             = 0x10
 	SizeofIPMreq            = 0x8
@@ -651,6 +655,7 @@ type SockFilter struct {
 
 type SockFprog struct {
 	Len    uint16
+	_      [6]byte
 	Filter *SockFilter
 }
 
@@ -694,6 +699,7 @@ type Sysinfo_t struct {
 	Freeswap  uint64
 	Procs     uint16
 	Pad       uint16
+	_         [4]byte
 	Totalhigh uint64
 	Freehigh  uint64
 	Unit      uint32
@@ -712,6 +718,7 @@ type Utsname struct {
 
 type Ustat_t struct {
 	Tfree  int32
+	_      [4]byte
 	Tinode uint64
 	Fname  [6]uint8
 	Fpack  [6]uint8
@@ -761,26 +768,6 @@ type Sigset_t struct {
 	Val [16]uint64
 }
 
-type SignalfdSiginfo struct {
-	Signo   uint32
-	Errno   int32
-	Code    int32
-	Pid     uint32
-	Uid     uint32
-	Fd      int32
-	Tid     uint32
-	Band    uint32
-	Overrun uint32
-	Trapno  uint32
-	Status  int32
-	Int     int32
-	Ptr     uint64
-	Utime   uint64
-	Stime   uint64
-	Addr    uint64
-	_       [48]uint8
-}
-
 const RNDGETENTCNT = 0x40045200
 
 const PERF_IOC_FLAG_GROUP = 0x1
@@ -805,9 +792,11 @@ type Winsize struct {
 
 type Taskstats struct {
 	Version                   uint16
+	_                         [2]byte
 	Ac_exitcode               uint32
 	Ac_flag                   uint8
 	Ac_nice                   uint8
+	_                         [6]byte
 	Cpu_count                 uint64
 	Cpu_delay_total           uint64
 	Blkio_count               uint64
@@ -825,6 +814,7 @@ type Taskstats struct {
 	Ac_pid                    uint32
 	Ac_ppid                   uint32
 	Ac_btime                  uint32
+	_                         [4]byte
 	Ac_etime                  uint64
 	Ac_utime                  uint64
 	Ac_stime                  uint64
@@ -848,8 +838,6 @@ type Taskstats struct {
 	Cpu_scaled_run_real_total uint64
 	Freepages_count           uint64
 	Freepages_delay_total     uint64
-	Thrashing_count           uint64
-	Thrashing_delay_total     uint64
 }
 
 const (
@@ -1198,6 +1186,7 @@ type HDGeometry struct {
 	Heads     uint8
 	Sectors   uint8
 	Cylinders uint16
+	_         [4]byte
 	Start     uint64
 }
 
@@ -1883,6 +1872,7 @@ type RTCTime struct {
 type RTCWkAlrm struct {
 	Enabled uint8
 	Pending uint8
+	_       [2]byte
 	Time    RTCTime
 }
 
@@ -1900,6 +1890,7 @@ type BlkpgIoctlArg struct {
 	Op      int32
 	Flags   int32
 	Datalen int32
+	_       [4]byte
 	Data    *byte
 }
 

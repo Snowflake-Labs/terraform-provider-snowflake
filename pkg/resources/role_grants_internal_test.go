@@ -6,7 +6,7 @@ import (
 
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/assert"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 )
 
 func Test_grantToRole(t *testing.T) {

@@ -14,9 +14,7 @@ import (
 
 // HgGetter is a Getter implementation that will download a module from
 // a Mercurial repository.
-type HgGetter struct {
-	getter
-}
+type HgGetter struct{}
 
 func (g *HgGetter) ClientMode(_ *url.URL) (ClientMode, error) {
 	return ClientModeDir, nil

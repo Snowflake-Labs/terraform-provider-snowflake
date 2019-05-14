@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 Snowflake Computing Inc. All right reserved.
+// Copyright (c) 2017-2019 Snowflake Computing Inc. All right reserved.
 
 package gosnowflake
 
@@ -113,12 +113,7 @@ func valueToString(v driver.Value, tsmode string) (*string, error) {
 				s := fmt.Sprintf("%d",
 					(tm.Hour()*3600+tm.Minute()*60+tm.Second())*1e9+tm.Nanosecond())
 				return &s, nil
-			case "TIMESTAMP_NTZ":
-				s := fmt.Sprintf("%d", tm.UnixNano())
-				return &s, nil
-			case "TIMESTAMP_LTZ":
-				_, offset := tm.Zone()
-				tm = tm.Add(time.Second * time.Duration(offset))
+			case "TIMESTAMP_NTZ", "TIMESTAMP_LTZ":
 				s := fmt.Sprintf("%d", tm.UnixNano())
 				return &s, nil
 			case "TIMESTAMP_TZ":
@@ -202,10 +197,7 @@ func stringToValue(dest *driver.Value, srcColumnMeta execResponseRowType, srcVal
 		if err != nil {
 			return err
 		}
-		tt := time.Unix(sec, nsec)
-		zone, offset := tt.Zone() // get timezone for the given datetime
-		glog.V(2).Infof("local: %v, %v", zone, offset)
-		*dest = tt.Add(time.Second * time.Duration(-offset))
+		*dest = time.Unix(sec, nsec)
 		return nil
 	case "timestamp_tz":
 		glog.V(2).Infof("tz: %v", *srcValue)

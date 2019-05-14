@@ -120,5 +120,5 @@ Support
 ----------------------------------------------------------------------
 
 For official support, contact Snowflake support at:
-https://support.snowflake.net/s/snowflake-support
+https://support.snowflake.net/
 

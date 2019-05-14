@@ -52,14 +52,11 @@ func AbsTraversalForExpr(expr Expression) (Traversal, Diagnostics) {
 func RelTraversalForExpr(expr Expression) (Traversal, Diagnostics) {
 	traversal, diags := AbsTraversalForExpr(expr)
 	if len(traversal) > 0 {
-		ret := make(Traversal, len(traversal))
-		copy(ret, traversal)
 		root := traversal[0].(TraverseRoot)
-		ret[0] = TraverseAttr{
+		traversal[0] = TraverseAttr{
 			Name:     root.Name,
 			SrcRange: root.SrcRange,
 		}
-		return ret, diags
 	}
 	return traversal, diags
 }

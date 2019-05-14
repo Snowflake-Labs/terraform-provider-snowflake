@@ -18,9 +18,7 @@ import (
 
 // S3Getter is a Getter implementation that will download a module from
 // a S3 bucket.
-type S3Getter struct {
-	getter
-}
+type S3Getter struct{}
 
 func (g *S3Getter) ClientMode(u *url.URL) (ClientMode, error) {
 	// Parse URL

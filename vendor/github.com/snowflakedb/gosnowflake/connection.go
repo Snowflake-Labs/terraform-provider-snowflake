@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 Snowflake Computing Inc. All right reserved.
+// Copyright (c) 2017-2019 Snowflake Computing Inc. All right reserved.
 
 package gosnowflake
 
@@ -24,14 +24,15 @@ const (
 
 const (
 	sessionClientSessionKeepAlive = "client_session_keep_alive"
+	serviceName                   = "service_name"
 )
 
 type snowflakeConn struct {
-	cfg            *Config
-	rest           *snowflakeRestful
-	SequeceCounter uint64
-	QueryID        string
-	SQLState       string
+	cfg             *Config
+	rest            *snowflakeRestful
+	SequenceCounter uint64
+	QueryID         string
+	SQLState        string
 }
 
 // isDml returns true if the statement type code is in the range of DML.
@@ -49,7 +50,7 @@ func (sc *snowflakeConn) exec(
 	ctx context.Context,
 	query string, noResult bool, isInternal bool, parameters []driver.NamedValue) (*execResponse, error) {
 	var err error
-	counter := atomic.AddUint64(&sc.SequeceCounter, 1) // query sequence counter
+	counter := atomic.AddUint64(&sc.SequenceCounter, 1) // query sequence counter
 
 	req := execRequest{
 		SQLText:    query,
@@ -88,6 +89,9 @@ func (sc *snowflakeConn) exec(
 	headers["Content-Type"] = headerContentTypeApplicationJSON
 	headers["accept"] = headerAcceptTypeApplicationSnowflake // TODO v1.1: change to JSON in case of PUT/GET
 	headers["User-Agent"] = userAgent
+	if serviceName, ok := sc.cfg.Params[serviceName]; ok {
+		headers["X-Snowflake-Service"] = *serviceName
+	}
 
 	jsonBody, err := json.Marshal(req)
 	if err != nil {

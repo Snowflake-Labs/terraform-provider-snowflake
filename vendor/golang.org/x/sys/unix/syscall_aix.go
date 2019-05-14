@@ -13,7 +13,10 @@
 
 package unix
 
-import "unsafe"
+import (
+	"syscall"
+	"unsafe"
+)
 
 /*
  * Wrapped
@@ -268,13 +271,6 @@ func Gettimeofday(tv *Timeval) (err error) {
 	return
 }
 
-func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
-	if raceenabled {
-		raceReleaseMerge(unsafe.Pointer(&ioSync))
-	}
-	return sendfile(outfd, infd, offset, count)
-}
-
 // TODO
 func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	return -1, ENOSYS
@@ -388,6 +384,10 @@ func IoctlGetTermios(fd int, req uint) (*Termios, error) {
 //sys	FcntlFlock(fd uintptr, cmd int, lk *Flock_t) (err error) = fcntl
 
 //sys	fcntl(fd int, cmd int, arg int) (val int, err error)
+
+func Flock(fd int, how int) (err error) {
+	return syscall.Flock(fd, how)
+}
 
 /*
  * Direct access

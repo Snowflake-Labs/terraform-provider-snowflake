@@ -248,8 +248,6 @@ type Termios C.struct_termios
 
 type Winsize C.struct_winsize
 
-type Ptmget C.struct_ptmget
-
 // fchmodat-like syscalls.
 
 const (
