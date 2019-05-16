@@ -139,11 +139,10 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 	stmt := fmt.Sprintf(`SHOW GRANTS OF ROLE "%s"`, roleName)
 	log.Printf("[DEBUG] stmt %s", stmt)
 	rows, err := sdb.Queryx(stmt)
-	defer rows.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	grants := make([]*grant, 0)
 	for rows.Next() {
