@@ -12,15 +12,12 @@ setup: ## setup development dependencies
 	go install github.com/rakyll/gotest
 	curl -L https://raw.githubusercontent.com/chanzuckerberg/bff/master/download.sh | sh
 	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 .PHONY: setup
 
 lint: ## run the fast go linters
-	gometalinter --vendor --fast ./...
+	golangci-lint run
 .PHONY: lint
-
-lint-slow: ## run all linters, even the slow ones
-	gometalinter --enable-all --vendor --deadline 120s ./...
-.PHONY: lint-slow
 
 release: ## run a release
 	./bin/bff bump

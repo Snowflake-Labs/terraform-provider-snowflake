@@ -9,12 +9,15 @@ import (
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestDatabase(t *testing.T) {
 	t.Parallel()
-	resources.Database().InternalValidate(provider.Provider().Schema, false)
+	r := require.New(t)
+	err := resources.Database().InternalValidate(provider.Provider().Schema, true)
+	r.NoError(err)
 }
 
 func TestDatabaseCreate(t *testing.T) {

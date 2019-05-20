@@ -12,8 +12,7 @@ import (
 func TestProvider(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
-	p := provider.Provider()
-	err := p.InternalValidate()
+	err := provider.Provider().InternalValidate()
 	a.NoError(err)
 }
 
