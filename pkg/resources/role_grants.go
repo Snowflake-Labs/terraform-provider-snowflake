@@ -3,7 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -137,7 +137,6 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 	sdb := sqlx.NewDb(db, "snowflake")
 
 	stmt := fmt.Sprintf(`SHOW GRANTS OF ROLE "%s"`, roleName)
-	log.Printf("[DEBUG] stmt %s", stmt)
 	rows, err := sdb.Queryx(stmt)
 	defer rows.Close()
 
@@ -155,6 +154,16 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 		grants = append(grants, g)
 
 	}
+
+	for _, g := range grants {
+		if g.GranteeName.Valid {
+			s := g.GranteeName.String
+			s = strings.TrimPrefix(s, `"`)
+			s = strings.TrimSuffix(s, `"`)
+			g.GranteeName = sql.NullString{String: s}
+		}
+	}
+
 	return grants, nil
 }
 
