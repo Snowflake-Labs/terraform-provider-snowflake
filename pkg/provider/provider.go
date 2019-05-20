@@ -1,17 +1,13 @@
 package provider
 
 import (
-	"database/sql"
-
 	"log"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
-
-	// Used to register the snowflake sql driver.
-	_ "github.com/snowflakedb/gosnowflake"
 )
 
 // Provider is a provider
@@ -65,7 +61,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
 	}
 
-	db, err := sql.Open("snowflake", dsn)
+	db, err := db.Open(dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not open snowflake database.")
 	}
