@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:5a7a3d19d4ca514c71352d1daa044f985277c5efd40fa9cd00301e8f9aebb6aa"
+  name = "github.com/ExpansiveWorlds/instrumentedsql"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "45abb4b1947db48d8205cd4d33b3b4d83f54641f"
+
+[[projects]]
   digest = "1:ddaeea4ba16546053455f7139c27b9efe16a6a739353043cc2af76a9437d73b2"
   name = "github.com/Pallinder/go-randomdata"
   packages = ["."]
@@ -375,6 +383,22 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
+  name = "github.com/kr/pretty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:15b5cc79aad436d47019f814fde81a10221c740dc8ddf769221a65097fb6c2e9"
+  name = "github.com/kr/text"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
+
+[[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
@@ -700,6 +724,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/ExpansiveWorlds/instrumentedsql",
     "github.com/Pallinder/go-randomdata",
     "github.com/hashicorp/terraform/helper/acctest",
     "github.com/hashicorp/terraform/helper/resource",
