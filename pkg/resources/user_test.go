@@ -73,6 +73,20 @@ func TestUserRead(t *testing.T) {
 	})
 }
 
+func TestUserExists(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadUser(mock)
+		b, err := resources.UserExists(d, db)
+		a.NoError(err)
+		a.True(b)
+	})
+}
+
 func TestUserDelete(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)

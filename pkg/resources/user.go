@@ -108,8 +108,9 @@ func User() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateUser,
 		Read:   ReadUser,
-		Delete: DeleteUser,
 		Update: UpdateUser,
+		Delete: DeleteUser,
+		Exists: UserExists,
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
@@ -122,6 +123,22 @@ func User() *schema.Resource {
 
 func CreateUser(data *schema.ResourceData, meta interface{}) error {
 	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+}
+
+func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+	db := meta.(*sql.DB)
+	id := data.Id()
+
+	stmt := snowflake.User(id).Show()
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return false, err
+	}
+
+	if rows.Next() {
+		return true, nil
+	}
+	return false, nil
 }
 
 func ReadUser(data *schema.ResourceData, meta interface{}) error {
