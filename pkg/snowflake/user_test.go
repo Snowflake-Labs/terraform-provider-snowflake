@@ -8,7 +8,6 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 	u := snowflake.User("user1")
 	a.NotNil(u)

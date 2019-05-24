@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 )
 
 func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {

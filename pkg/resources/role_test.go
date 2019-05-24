@@ -14,14 +14,12 @@ import (
 )
 
 func TestRole(t *testing.T) {
-	t.Parallel()
 	r := require.New(t)
 	err := resources.Role().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
 func TestRoleCreate(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	in := map[string]interface{}{
@@ -48,7 +46,6 @@ func expectReadRole(mock sqlmock.Sqlmock) {
 }
 
 func TestRoleRead(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := role(t, "good_name", map[string]interface{}{"name": "good_name"})
@@ -63,7 +60,6 @@ func TestRoleRead(t *testing.T) {
 }
 
 func TestRoleDelete(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := role(t, "drop_it", map[string]interface{}{"name": "drop_it"})

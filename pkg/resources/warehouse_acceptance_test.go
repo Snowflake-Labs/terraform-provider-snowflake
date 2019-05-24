@@ -9,7 +9,6 @@ import (
 )
 
 func TestAccWarehouse(t *testing.T) {
-	t.Parallel()
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 

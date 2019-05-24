@@ -29,7 +29,6 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 }
 
 func TestAccUser(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := randomdata.Email()
