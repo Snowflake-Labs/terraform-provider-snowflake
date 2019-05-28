@@ -34,7 +34,7 @@ func Provider() *schema.Provider {
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", false),
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
 				ConflictsWith: []string{"password"},
 			},
