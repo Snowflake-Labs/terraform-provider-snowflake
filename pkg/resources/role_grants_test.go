@@ -4,24 +4,22 @@ import (
 	"database/sql"
 	"testing"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestRoleGrants(t *testing.T) {
-	t.Parallel()
 	r := require.New(t)
 	err := resources.RoleGrants().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
 func TestRoleGrantsCreate(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
@@ -57,7 +55,6 @@ func expectReadRoleGrants(mock sqlmock.Sqlmock) {
 }
 
 func TestRoleGrantsRead(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
@@ -76,7 +73,6 @@ func TestRoleGrantsRead(t *testing.T) {
 }
 
 func TestRoleGrantsDelete(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{

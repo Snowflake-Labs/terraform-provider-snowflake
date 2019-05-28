@@ -4,24 +4,22 @@ import (
 	"database/sql"
 	"testing"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestDatabase(t *testing.T) {
-	t.Parallel()
 	r := require.New(t)
 	err := resources.Database().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
 func TestDatabaseCreate(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	in := map[string]interface{}{
@@ -45,7 +43,6 @@ func expectRead(mock sqlmock.Sqlmock) {
 }
 
 func TestDatabaseRead(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
@@ -61,7 +58,6 @@ func TestDatabaseRead(t *testing.T) {
 }
 
 func TestDatabaseDelete(t *testing.T) {
-	t.Parallel()
 	a := assert.New(t)
 
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})

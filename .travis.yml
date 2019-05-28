@@ -1,6 +1,6 @@
 language: go
 go:
-  - '1.11'
+  - '1.12'
 install:
   - npm install -g snyk
   - make setup
@@ -15,10 +15,11 @@ jobs:
         - make test-acceptance
       after_success:
         - bash <(curl -s https://codecov.io/bash)
-    - stage: check
-      script:
-        - snyk monitor --org=czi
-        - snyk test
+    # Disable snyk until https://github.com/snyk/snyk/issues/354 is resolved
+    # - stage: check
+    #   script:
+    #     - snyk monitor --org=czi
+    #     - snyk test
     - stage: check
       script:
         - make check-docs

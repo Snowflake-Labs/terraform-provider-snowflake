@@ -1,7 +1,7 @@
 package gosnowflake
 
 //
-// Copyright (c) 2018 Snowflake Computing Inc. All right reserved.
+// Copyright (c) 2019 Snowflake Computing Inc. All right reserved.
 //
 
 import (

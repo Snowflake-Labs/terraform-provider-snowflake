@@ -9,7 +9,6 @@ import (
 	"github.com/apparentlymart/go-textseg/textseg"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
 )
 
 type parser struct {
@@ -236,10 +235,18 @@ func (p *parser) finishParsingBodyAttribute(ident Token, singleLine bool) (Node,
 			end := p.Peek()
 			if end.Type != TokenNewline && end.Type != TokenEOF {
 				if !p.recovery {
+					summary := "Missing newline after argument"
+					detail := "An argument definition must end with a newline."
+
+					if end.Type == TokenComma {
+						summary = "Unexpected comma after argument"
+						detail = "Argument definitions must be separated by newlines, not commas. " + detail
+					}
+
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Missing newline after argument",
-						Detail:   "An argument definition must end with a newline.",
+						Summary:  summary,
+						Detail:   detail,
 						Subject:  &end.Range,
 						Context:  hcl.RangeBetween(ident.Range, end.Range).Ptr(),
 					})
@@ -408,6 +415,17 @@ Token:
 			})
 		}
 		p.recoverAfterBodyItem()
+	}
+
+	// We must never produce a nil body, since the caller may attempt to
+	// do analysis of a partial result when there's an error, so we'll
+	// insert a placeholder if we otherwise failed to produce a valid
+	// body due to one of the syntax error paths above.
+	if body == nil && diags.HasErrors() {
+		body = &Body{
+			SrcRange: hcl.RangeBetween(oBrace.Range, cBraceRange),
+			EndRange: cBraceRange,
+		}
 	}
 
 	return &Block{
@@ -1040,11 +1058,10 @@ func (p *parser) parseExpressionTerm() (Expression, hcl.Diagnostics) {
 }
 
 func (p *parser) numberLitValue(tok Token) (cty.Value, hcl.Diagnostics) {
-	// We'll lean on the cty converter to do the conversion, to ensure that
-	// the behavior is the same as what would happen if converting a
-	// non-literal string to a number.
-	numStrVal := cty.StringVal(string(tok.Bytes))
-	numVal, err := convert.Convert(numStrVal, cty.Number)
+	// The cty.ParseNumberVal is always the same behavior as converting a
+	// string to a number, ensuring we always interpret decimal numbers in
+	// the same way.
+	numVal, err := cty.ParseNumberVal(string(tok.Bytes))
 	if err != nil {
 		ret := cty.UnknownVal(cty.Number)
 		return ret, hcl.Diagnostics{
@@ -1236,7 +1253,13 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 		panic("parseObjectCons called without peeker pointing to open brace")
 	}
 
-	if forKeyword.TokenMatches(p.Peek()) {
+	// We must temporarily stop looking at newlines here while we check for
+	// a "for" keyword, since for expressions are _not_ newline-sensitive,
+	// even though object constructors are.
+	p.PushIncludeNewlines(false)
+	isFor := forKeyword.TokenMatches(p.Peek())
+	p.PopIncludeNewlines()
+	if isFor {
 		return p.finishParsingForExpr(open)
 	}
 
@@ -1371,6 +1394,8 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 }
 
 func (p *parser) finishParsingForExpr(open Token) (Expression, hcl.Diagnostics) {
+	p.PushIncludeNewlines(false)
+	defer p.PopIncludeNewlines()
 	introducer := p.Read()
 	if !forKeyword.TokenMatches(introducer) {
 		// Should never happen if callers are behaving

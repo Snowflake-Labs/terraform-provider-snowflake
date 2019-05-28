@@ -11,7 +11,6 @@ setup: ## setup development dependencies
 	go get github.com/rakyll/gotest
 	go install github.com/rakyll/gotest
 	curl -L https://raw.githubusercontent.com/chanzuckerberg/bff/master/download.sh | sh
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 .PHONY: setup
 
@@ -37,11 +36,7 @@ release-snapshot: ## run a release
 	goreleaser release --snapshot
 .PHONY: release-snapshot
 
-dep: ## ensure dependencies are vendored
-	dep ensure # this should be super-fast in the no-op case
-.PHONY: dep
-
-build: dep ## build the binary
+build: ## build the binary
 	go build ${LDFLAGS} .
 .PHONY: build
 
@@ -49,11 +44,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test: dep ## run the tests
+test: ## run the tests
 	gotest -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test
 
-test-acceptance: dep ## runs all tests, including the acceptance tests which create and destroys real resources
+test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
 	TF_ACC=1 gotest -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test-acceptance
 

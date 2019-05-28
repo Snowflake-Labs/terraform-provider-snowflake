@@ -85,16 +85,18 @@ const (
 	// things that might work in other languages they are familiar with, or
 	// simply make incorrect assumptions about the HCL language.
 
-	TokenBitwiseAnd TokenType = '&'
-	TokenBitwiseOr  TokenType = '|'
-	TokenBitwiseNot TokenType = '~'
-	TokenBitwiseXor TokenType = '^'
-	TokenStarStar   TokenType = '➚'
-	TokenBacktick   TokenType = '`'
-	TokenSemicolon  TokenType = ';'
-	TokenTabs       TokenType = '␉'
-	TokenInvalid    TokenType = '�'
-	TokenBadUTF8    TokenType = '💩'
+	TokenBitwiseAnd    TokenType = '&'
+	TokenBitwiseOr     TokenType = '|'
+	TokenBitwiseNot    TokenType = '~'
+	TokenBitwiseXor    TokenType = '^'
+	TokenStarStar      TokenType = '➚'
+	TokenApostrophe    TokenType = '\''
+	TokenBacktick      TokenType = '`'
+	TokenSemicolon     TokenType = ';'
+	TokenTabs          TokenType = '␉'
+	TokenInvalid       TokenType = '�'
+	TokenBadUTF8       TokenType = '💩'
+	TokenQuotedNewline TokenType = '␤'
 
 	// TokenNil is a placeholder for when a token is required but none is
 	// available, e.g. when reporting errors. The scanner will never produce
@@ -183,11 +185,15 @@ func checkInvalidTokens(tokens Tokens) hcl.Diagnostics {
 	toldBitwise := 0
 	toldExponent := 0
 	toldBacktick := 0
+	toldApostrophe := 0
 	toldSemicolon := 0
 	toldTabs := 0
 	toldBadUTF8 := 0
 
 	for _, tok := range tokens {
+		// copy token so it's safe to point to it
+		tok := tok
+
 		switch tok.Type {
 		case TokenBitwiseAnd, TokenBitwiseOr, TokenBitwiseXor, TokenBitwiseNot:
 			if toldBitwise < 4 {
@@ -223,15 +229,29 @@ func checkInvalidTokens(tokens Tokens) hcl.Diagnostics {
 		case TokenBacktick:
 			// Only report for alternating (even) backticks, so we won't report both start and ends of the same
 			// backtick-quoted string.
-			if toldExponent < 4 && (toldExponent%2) == 0 {
+			if (toldBacktick % 2) == 0 {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid character",
 					Detail:   "The \"`\" character is not valid. To create a multi-line string, use the \"heredoc\" syntax, like \"<<EOT\".",
 					Subject:  &tok.Range,
 				})
-
+			}
+			if toldBacktick <= 2 {
 				toldBacktick++
+			}
+		case TokenApostrophe:
+			if (toldApostrophe % 2) == 0 {
+				newDiag := &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid character",
+					Detail:   "Single quotes are not valid. Use double quotes (\") to enclose strings.",
+					Subject:  &tok.Range,
+				}
+				diags = append(diags, newDiag)
+			}
+			if toldApostrophe <= 2 {
+				toldApostrophe++
 			}
 		case TokenSemicolon:
 			if toldSemicolon < 1 {
@@ -266,6 +286,13 @@ func checkInvalidTokens(tokens Tokens) hcl.Diagnostics {
 
 				toldBadUTF8++
 			}
+		case TokenQuotedNewline:
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid multi-line string",
+				Detail:   "Quoted strings may not be split over multiple lines. To produce a multi-line string, either use the \\n escape to represent a newline character or use the \"heredoc\" multi-line template syntax.",
+				Subject:  &tok.Range,
+			})
 		case TokenInvalid:
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -273,8 +300,6 @@ func checkInvalidTokens(tokens Tokens) hcl.Diagnostics {
 				Detail:   "This character is not used within the language.",
 				Subject:  &tok.Range,
 			})
-
-			toldTabs++
 		}
 	}
 	return diags
