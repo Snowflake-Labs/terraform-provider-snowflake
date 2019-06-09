@@ -140,6 +140,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform/helper/schema
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/terraform
+github.com/hashicorp/terraform/helper/validation
 github.com/hashicorp/terraform/config
 github.com/hashicorp/terraform/config/hcl2shim
 github.com/hashicorp/terraform/configs/configschema
@@ -165,6 +166,7 @@ github.com/hashicorp/terraform/plans
 github.com/hashicorp/terraform/plans/objchange
 github.com/hashicorp/terraform/states
 github.com/hashicorp/terraform/states/statefile
+github.com/hashicorp/terraform/helper/structure
 github.com/hashicorp/terraform/helper/acctest
 github.com/hashicorp/terraform/helper/resource
 github.com/hashicorp/terraform/helper/hilmapstructure
