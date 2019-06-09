@@ -3,6 +3,7 @@ VERSION=$(shell cat VERSION)
 DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
 # TODO add release flag
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/util.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Dirty=${DIRTY}"
+GOTEST=gotest
 
 all: test docs install
 .PHONY: all
@@ -45,11 +46,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: ## run the tests
-	gotest -race -coverprofile=coverage.txt -covermode=atomic ./...
+	${GOTEST} -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	TF_ACC=1 gotest -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	TF_ACC=1 ${GOTEST} -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test-acceptance
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
