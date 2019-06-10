@@ -16,7 +16,6 @@ const (
 )
 
 var managedAccountProperties = []string{
-	"name",
 	"admin_name",
 	"admin_password",
 	"type",
@@ -28,7 +27,6 @@ var managedAccountSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		Description:  "Identifier for the managed account; must be unique for your account.",
-		ValidateFunc: snowflakeValidation.ValidateAccount,
 		ForceNew:     true,
 	},
 	"admin_name": &schema.Schema{
@@ -162,7 +160,7 @@ func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("is_reader should have been true but was %t", isReader)
+		return fmt.Errorf("Unable to determine the account type")
 	}
 
 	err = data.Set("comment", comment.String)

@@ -13,23 +13,6 @@ const (
 	asciiz = 122
 )
 
-// ValidateAccount checks that your account name is valid
-//
-// the identifier must start with an alphabetic character and cannot contain spaces or special characters unless
-// the entire identifier string is enclosed in double quotes (e.g. "My object").
-func ValidateAccount(i interface{}, k string) ([]string, []error) {
-	name, ok := i.(string)
-	if !ok {
-		return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
-	}
-
-	if firstChar := name[0]; firstChar < asciiA || firstChar > asciiz || (firstChar > asciiZ && firstChar < asciia) {
-		return nil, []error{fmt.Errorf("%v is not a valid starting character for the identifier (must be alphabetic)", firstChar)}
-	}
-
-	return nil, nil
-}
-
 // ValidatePassword checks that you password meets the Snowflake Password Policy
 //
 // Must be at least 8 characters long.

@@ -33,7 +33,7 @@ func TestManagedAccountCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^CREATE MANAGED ACCOUNT "test-account" ADMIN_NAME='bob' ADMIN_PASSWORD='abc123ABC' COMMENT='great comment' NAME='test-account' TYPE='READER'$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^CREATE MANAGED ACCOUNT "test-account" ADMIN_NAME='bob' ADMIN_PASSWORD='abc123ABC' COMMENT='great comment' TYPE='READER'$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadManagedAccount(mock)
 		err := resources.CreateManagedAccount(d, db)
 		a.NoError(err)
