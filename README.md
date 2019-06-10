@@ -98,6 +98,15 @@ You can see a number of examples [here](examples).
 | roles     | set    | Grants role to this specified role.   | true     | false     | false    | <nil>   |
 | users     | set    | Grants role to this specified user.   | true     | false     | false    | <nil>   |
 
+### snowflake_share
+
+#### properties
+
+|  NAME   |  TYPE  |                                              DESCRIPTION                                              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------|--------|-------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment | string | Specifies a comment for the managed account.                                                          | true     | false     | false    | <nil>   |
+| name    | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    | <nil>   |
+
 ### snowflake_user
 
 #### properties
