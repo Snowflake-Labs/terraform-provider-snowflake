@@ -50,7 +50,7 @@ test: ## run the tests
 .PHONY: test
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	TF_ACC=1 ${GOTEST} -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	TF_ACC=1 ${GOTEST} -v -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin

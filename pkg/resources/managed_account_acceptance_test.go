@@ -35,7 +35,7 @@ func TestAccManagedAccount(t *testing.T) {
 				ResourceName:            "snowflake_managed_account.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"admin_password"},
+				ImportStateVerifyIgnore: []string{"admin_name", "admin_password"},
 			},
 		},
 	})
