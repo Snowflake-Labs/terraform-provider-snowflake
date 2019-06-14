@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"strings"
 
@@ -102,12 +101,4 @@ func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
-}
-
-func DBExec(db *sql.DB, query string, args ...interface{}) error {
-	stmt := fmt.Sprintf(query, args...)
-	log.Printf("[DEBUG] stmt %s", stmt)
-
-	_, err := db.Exec(stmt)
-	return err
 }
