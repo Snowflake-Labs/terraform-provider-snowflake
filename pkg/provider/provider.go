@@ -54,10 +54,7 @@ func Provider() *schema.Provider {
 			"snowflake_managed_account": resources.ManagedAccount(),
 			"snowflake_role":            resources.Role(),
 			"snowflake_role_grants":     resources.RoleGrants(),
-<<<<<<< HEAD
 			"snowflake_share":           resources.Share(),
-=======
->>>>>>> c324e6e2545261e2a584eebc95ee676795d3a379
 			"snowflake_user":            resources.User(),
 			"snowflake_warehouse":       resources.Warehouse(),
 		},
