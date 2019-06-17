@@ -7,11 +7,17 @@ import (
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View
 type ViewBuilder struct {
-	name string
-	secure bool
-	comment string
-	statement string
+	name          string
+	secure        bool
+	comment       string
+	statement     string
 	statementArgs []interface{}
+}
+
+// WithComment adds a comment to the ViewBuilder
+func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
+	vb.comment = c
+	return vb
 }
 
 // WithSecure sets the secure boolean to true
@@ -21,9 +27,15 @@ func (vb *ViewBuilder) WithSecure() *ViewBuilder {
 	return vb
 }
 
-// WithComment adds a comment to the ViewBuilder
-func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
-	vb.comment = c
+// WithStatement adds the SQL statement to be used for the view
+func (vb *ViewBuilder) WithStatement(s string) *ViewBuilder {
+	vb.statement = s
+	return vb
+}
+
+//WithStatmentArgs adds the args to be passed to db.Exec
+func (vb *ViewBuilder) WithStatementArgs(args []interface{}) *ViewBuilder {
+	vb.statementArgs = args
 	return vb
 }
 
@@ -37,11 +49,9 @@ func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
 //   - DESCRIBE VIEW
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-table.html#standard-view-management)
-func View(name, s string, args []interface{}) *ViewBuilder {
+func View(name string) *ViewBuilder {
 	return &ViewBuilder{
 		name: name,
-		statement: s,
-		statementArgs: args,
 	}
 }
 
@@ -64,7 +74,7 @@ func (vb *ViewBuilder) Create() (string, []interface{}) {
 
 	// The onus is on the user to provide a clean query statement at the moment
 	q.WriteString(fmt.Sprintf(" AS %s", vb.statement))
-	
+
 	return q.String(), append(args, vb.statementArgs...)
 }
 
@@ -88,7 +98,7 @@ func (vb *ViewBuilder) Unsecure() (string, []interface{}) {
 
 // ChangeComment returns the SQL query and args suitable for passing directly to
 // db.Exec that will update the comment on the view. Note that comment is the
-// only parameter, if more are released this should be abstracted as per the 
+// only parameter, if more are released this should be abstracted as per the
 // generic builder.
 func (vb *ViewBuilder) ChangeComment(c string) (string, []interface{}) {
 	return "ALTER VIEW ? SET COMMENT = ?", []interface{}{vb.name, c}
@@ -96,8 +106,14 @@ func (vb *ViewBuilder) ChangeComment(c string) (string, []interface{}) {
 
 // RemoveComment returns the SQL query and args suitable for passing directly to
 // db.Exec that will remove the comment on the view. Note that comment is the
-// only parameter, if more are released this should be abstracted as per the 
+// only parameter, if more are released this should be abstracted as per the
 // generic builder.
 func (vb *ViewBuilder) RemoveComment() (string, []interface{}) {
 	return "ALTER VIEW ? UNSET COMMENT", []interface{}{vb.name}
+}
+
+// Show returns the SQL query and args suitable for passing directly to db.Exec
+// that will show the row representing this view.
+func (vb *ViewBuilder) Show() (string, []interface{}) {
+	return "SHOW VIEWS LIKE ?", []interface{}{vb.name}
 }
