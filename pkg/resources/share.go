@@ -14,9 +14,9 @@ var shareProperties = []string{
 
 var shareSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the identifier for the share; must be unique for the account in which the share is created.",
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier for the share; must be unique for the account in which the share is created.",
 	},
 	"comment": &schema.Schema{
 		Type:        schema.TypeString,

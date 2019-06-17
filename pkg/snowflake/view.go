@@ -117,3 +117,9 @@ func (vb *ViewBuilder) RemoveComment() (string, []interface{}) {
 func (vb *ViewBuilder) Show() (string, []interface{}) {
 	return "SHOW VIEWS LIKE ?", []interface{}{vb.name}
 }
+
+// Drop returns the SQL query and args suitable for passing directly to db.Exec
+// that will show the row representing this view.
+func (vb *ViewBuilder) Drop() (string, []interface{}) {
+	return "DROP VIEW ?", []interface{}{vb.name}
+}
