@@ -37,7 +37,7 @@ func TestViewCreate(t *testing.T) {
 		mock.ExpectExec(
 			`^CREATE SECURE VIEW \? COMMENT = \? AS SELECT \* FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = '\?'$`,
 		).WithArgs("good_name", "great comment", "bobs-account-id").WillReturnResult(sqlmock.NewResult(1, 1))
-		
+
 		expectReadView(mock)
 		err := resources.CreateView(d, db)
 		a.NoError(err)

@@ -125,6 +125,19 @@ You can see a number of examples [here](examples).
 | rsa_public_key     | string | Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.                                                                                                       | true     | false     | false    | <nil>   |
 | rsa_public_key_2   | string | Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer. | true     | false     | false    | <nil>   |
 
+### snowflake_view
+
+#### properties
+
+|        NAME         |  TYPE  |                                                        DESCRIPTION                                                        | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------------|--------|---------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment             | string | Specifies a comment for the view.                                                                                         | true     | false     | false    | <nil>   |
+| is_secure           | bool   | Specifies that the view is secure.                                                                                        | true     | false     | false    | false   |
+| name                | string | Specifies the identifier for the view; must be unique for the schema in which the view is created.                        | false    | true      | false    | <nil>   |
+| statement           | string | Specifies the query used to create the view. Arguments may be interpolated with a ? using the `statement_arguments` field | false    | true      | false    | <nil>   |
+| statement_arguments | set    | Arguments for `statement` to be interpolated using the SQL engine.                                                        | true     | false     | false    | <nil>   |
+| view_text           | string | The interpolated text of the SQL statement for this view.                                                                 | false    | false     | true     | <nil>   |
+
 ### snowflake_warehouse
 
 #### properties
