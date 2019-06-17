@@ -62,6 +62,23 @@ You can see a number of examples [here](examples).
 | data_retention_time_in_days | int    |             | true     | false     | true     | <nil>   |
 | name                        | string |             | false    | true      | false    | <nil>   |
 
+### snowflake_managed_account
+
+#### properties
+
+|      NAME      |  TYPE  |                                                                  DESCRIPTION                                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|----------------|--------|------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| admin_name     | string | Identifier, as well as login name, for the initial user in the managed account. This user serves as the account administrator for the account. | false    | true      | false    | <nil>    |
+| admin_password | string | Password for the initial user in the managed account.                                                                                          | false    | true      | false    | <nil>    |
+| cloud          | string | Cloud in which the managed account is located.                                                                                                 | false    | false     | true     | <nil>    |
+| comment        | string | Specifies a comment for the managed account.                                                                                                   | true     | false     | false    | <nil>    |
+| created_on     | string | Date and time when the managed account was created.                                                                                            | false    | false     | true     | <nil>    |
+| locator        | string | Display name of the managed account.                                                                                                           | false    | false     | true     | <nil>    |
+| name           | string | Identifier for the managed account; must be unique for your account.                                                                           | false    | true      | false    | <nil>    |
+| region         | string | Snowflake Region in which the managed account is located.                                                                                      | false    | false     | true     | <nil>    |
+| type           | string | Specifies the type of managed account.                                                                                                         | true     | false     | false    | "READER" |
+| url            | string | URL for accessing the managed account, particularly through the web interface.                                                                 | false    | false     | true     | <nil>    |
+
 ### snowflake_role
 
 #### properties

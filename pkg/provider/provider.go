@@ -51,6 +51,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"snowflake_database":        resources.Database(),
+			"snowflake_managed_account": resources.ManagedAccount(),
 			"snowflake_role":            resources.Role(),
 			"snowflake_role_grants":     resources.RoleGrants(),
 			"snowflake_share":           resources.Share(),
