@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
@@ -69,8 +68,6 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 	name := data.Get("name").(string)
 	s := data.Get("statement").(string)
 	args := data.Get("statement_arguments").(*schema.Set).List()
-
-	fmt.Printf("[DEBUG] args: %+v\n", args)
 
 	builder := snowflake.View(name).WithStatement(s).WithStatementArgs(args)
 
@@ -143,7 +140,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, name := data.GetChange("name")
 
 		q, args := snowflake.View(data.Id()).Rename(name.(string))
-		err := DBExec(db, q, args)
+		err := DBExec(db, q, args...)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
 		}
@@ -157,13 +154,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if c := comment.(string); c == "" {
 			q, args := snowflake.View(data.Id()).RemoveComment()
-			err := DBExec(db, q, args)
+			err := DBExec(db, q, args...)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
 			}
 		} else {
 			q, args := snowflake.View(data.Id()).ChangeComment(c)
-			err := DBExec(db, q, args)
+			err := DBExec(db, q, args...)
 			if err != nil {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
 			}
@@ -178,13 +175,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if secure.(bool) {
 			q, args := snowflake.View(data.Id()).Secure()
-			err := DBExec(db, q, args)
+			err := DBExec(db, q, args...)
 			if err != nil {
 				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
 			}
 		} else {
 			q, args := snowflake.View(data.Id()).Unsecure()
-			err := DBExec(db, q, args)
+			err := DBExec(db, q, args...)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
 			}
@@ -198,7 +195,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 func DeleteView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	q, args := snowflake.View(data.Id()).Drop()
-	err := DBExec(db, q, args)
+	err := DBExec(db, q, args...)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting view %v", data.Id())
 	}
@@ -213,7 +210,7 @@ func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
 
 	q, args := snowflake.View(data.Id()).Show()
-	rows, err := db.Query(q, args)
+	rows, err := db.Query(q, args...)
 	if err != nil {
 		return false, err
 	}
