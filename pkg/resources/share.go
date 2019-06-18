@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -67,7 +68,7 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", StripAccountFromName(name.String))
 	if err != nil {
 		return err
 	}
@@ -101,4 +102,10 @@ func ShareExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// StripAccountFromName removes the accout prefix from a resource (e.g. a share)
+// that returns it (e.g. yt12345.my_share should just be my_share)
+func StripAccountFromName(s string) string {
+	return s[strings.Index(s, ".")+1:]
 }

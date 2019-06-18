@@ -45,3 +45,15 @@ func expectReadShare(mock sqlmock.Sqlmock) {
 	}).AddRow("2019-05-19 16:55:36.530 -0700", "SECURE", "test-share", "test_db", "", "admin", "great comment")
 	mock.ExpectQuery(`^SHOW SHARES LIKE 'test-share'$`).WillReturnRows(rows)
 }
+
+func TestStripAccountFromName(t *testing.T) {
+	a := assert.New(t)
+	s := "yt12345.my_share"
+	a.Equal("my_share", resources.StripAccountFromName(s))
+
+	s = "yt12345.my.share"
+	a.Equal("my.share", resources.StripAccountFromName(s))
+
+	s = "no_account_for_some_reason"
+	a.Equal("no_account_for_some_reason", resources.StripAccountFromName(s))
+}
