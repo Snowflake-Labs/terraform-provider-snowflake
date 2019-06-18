@@ -18,9 +18,9 @@ func TestAccView(t *testing.T) {
 				Config: viewConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", "DEMO_DB"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
 					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
-					resource.TestCheckResourceAttr("snowflake_view.test", "view_text", "SELECT a, b FROM MY_TABLE WHERE this = something"),
 				),
 			},
 		},
@@ -30,11 +30,11 @@ func TestAccView(t *testing.T) {
 func viewConfig(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_view" "test" {
-	name                = "%v"
-	comment             = "Terraform test resource"
-	is_secure           = true
-	statement           = "SELECT a, b FROM MY_TABLE WHERE this = ?"
-	statement_arguments = ["something"]
+	name      = "%v"
+	comment   = "Terraform test resource"
+	database  = "DEMO_DB"
+	is_secure = true
+	statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 }
 `, n)
 }

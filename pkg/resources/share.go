@@ -83,7 +83,7 @@ func UpdateShare(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteShare implements schema.DeleteFunc
 func DeleteShare(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.User)(data, meta)
+	return DeleteResource("this does not seem to be used", snowflake.Share)(data, meta)
 }
 
 // ShareExists implements schema.ExistsFunc

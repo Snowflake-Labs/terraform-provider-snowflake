@@ -60,12 +60,12 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
 
-	err := DBExec(db, `USE WAREHOUSE ?`, name)
+	err := DBExec(db, `USE WAREHOUSE "%s"`, name)
 	if err != nil {
 		return err
 	}
 
-	err = DBExec(db, "SHOW WAREHOUSES LIKE ?", name)
+	err = DBExec(db, "SHOW WAREHOUSES LIKE '%s'", name)
 	if err != nil {
 		return err
 	}

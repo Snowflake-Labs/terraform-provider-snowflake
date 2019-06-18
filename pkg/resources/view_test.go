@@ -24,19 +24,20 @@ func TestViewCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"name":                "good_name",
-		"comment":             "great comment",
-		"statement":           "SELECT * FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = '?'",
-		"statement_arguments": []string{"bobs-account-id"},
-		"is_secure":           true,
+		"name":      "good_name",
+		"database":  "test_db",
+		"comment":   "great comment",
+		"statement": "SELECT * FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
+		"is_secure": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`USE DATABASE "test_db"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(
-			`^CREATE SECURE VIEW \? COMMENT = \? AS SELECT \* FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = '\?'$`,
-		).WithArgs("good_name", "great comment", "bobs-account-id").WillReturnResult(sqlmock.NewResult(1, 1))
+			`^CREATE SECURE VIEW "good_name" COMMENT = 'great comment' AS SELECT \* FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
 		err := resources.CreateView(d, db)
@@ -48,5 +49,5 @@ func expectReadView(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure"},
 	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "GREAT_DB", "GREAT_SCHEMA", "admin", "great comment", "SELECT * FROM GREAT_DB.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true)
-	mock.ExpectQuery(`^SHOW VIEWS LIKE \?$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW VIEWS LIKE 'good_name'$`).WillReturnRows(rows)
 }

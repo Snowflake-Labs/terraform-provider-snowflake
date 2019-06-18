@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
@@ -14,6 +15,11 @@ var viewSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created.",
+	},
+	"database": &schema.Schema{
+		Type: schema.TypeString,
+		Required: true,
+		Description: "The database in which to create the view.",
 	},
 	"is_secure": &schema.Schema{
 		Type:        schema.TypeBool,
@@ -29,20 +35,8 @@ var viewSchema = map[string]*schema.Schema{
 	"statement": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the query used to create the view. Arguments may be interpolated with a ? using the `statement_arguments` field",
+		Description: "Specifies the query used to create the view.",
 		ForceNew:    true,
-	},
-	"statement_arguments": &schema.Schema{
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Description: "Arguments for `statement` to be interpolated using the SQL engine.",
-		ForceNew:    true,
-		Optional:    true,
-	},
-	"view_text": &schema.Schema{
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "The interpolated text of the SQL statement for this view.",
 	},
 }
 
@@ -67,9 +61,8 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 	s := data.Get("statement").(string)
-	args := data.Get("statement_arguments").(*schema.Set).List()
 
-	builder := snowflake.View(name).WithStatement(s).WithStatementArgs(args)
+	builder := snowflake.View(name).WithStatement(s)
 
 	// Set optionals
 	if v, ok := data.GetOk("is_secure"); ok && v.(bool) {
@@ -80,9 +73,14 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	q, qArgs := builder.Create()
+	q := builder.Create()
 
-	err := DBExec(db, q, qArgs...)
+	err := useDatabase(data, meta)
+	if err != nil {
+		return errors.Wrapf(err, "error using database for view %v", data.Id())
+	}
+
+	err = DBExec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
@@ -97,8 +95,8 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := data.Id()
 
-	stmt, args := snowflake.View(id).Show()
-	row := db.QueryRow(stmt, args...)
+	q := snowflake.View(id).Show()
+	row := db.QueryRow(q)
 	var createdOn, name, reserved, databaseName, schemaName, owner, comment, text sql.NullString
 	var isSecure bool
 	err := row.Scan(&createdOn, &name, &reserved, &databaseName, &schemaName, &owner, &comment, &text, &isSecure)
@@ -122,11 +120,6 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("view_text", text.String)
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
@@ -139,8 +132,8 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("name") {
 		_, name := data.GetChange("name")
 
-		q, args := snowflake.View(data.Id()).Rename(name.(string))
-		err := DBExec(db, q, args...)
+		q := snowflake.View(data.Id()).Rename(name.(string))
+		err := DBExec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
 		}
@@ -153,14 +146,14 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, comment := data.GetChange("comment")
 
 		if c := comment.(string); c == "" {
-			q, args := snowflake.View(data.Id()).RemoveComment()
-			err := DBExec(db, q, args...)
+			q := snowflake.View(data.Id()).RemoveComment()
+			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
 			}
 		} else {
-			q, args := snowflake.View(data.Id()).ChangeComment(c)
-			err := DBExec(db, q, args...)
+			q := snowflake.View(data.Id()).ChangeComment(c)
+			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
 			}
@@ -174,14 +167,14 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, secure := data.GetChange("is_secure")
 
 		if secure.(bool) {
-			q, args := snowflake.View(data.Id()).Secure()
-			err := DBExec(db, q, args...)
+			q := snowflake.View(data.Id()).Secure()
+			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
 			}
 		} else {
-			q, args := snowflake.View(data.Id()).Unsecure()
-			err := DBExec(db, q, args...)
+			q := snowflake.View(data.Id()).Unsecure()
+			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
 			}
@@ -194,8 +187,14 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc
 func DeleteView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	q, args := snowflake.View(data.Id()).Drop()
-	err := DBExec(db, q, args...)
+	q := snowflake.View(data.Id()).Drop()
+
+	err := useDatabase(data, meta)
+	if err != nil {
+		return errors.Wrapf(err, "error using database for view %v", data.Id())
+	}
+
+	err = DBExec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting view %v", data.Id())
 	}
@@ -209,8 +208,8 @@ func DeleteView(data *schema.ResourceData, meta interface{}) error {
 func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
 
-	q, args := snowflake.View(data.Id()).Show()
-	rows, err := db.Query(q, args...)
+	q := snowflake.View(data.Id()).Show()
+	rows, err := db.Query(q)
 	if err != nil {
 		return false, err
 	}
@@ -220,4 +219,8 @@ func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func useDatabase(data *schema.ResourceData, meta interface{}) error {
+	return DBExec(meta.(*sql.DB), fmt.Sprintf(`USE DATABASE "%v"`, data.Get("database").(string)))
 }
