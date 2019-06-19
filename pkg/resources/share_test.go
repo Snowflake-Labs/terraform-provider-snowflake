@@ -24,8 +24,8 @@ func TestShareCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"name":     "test-share",
-		"comment":  "great comment",
+		"name":    "test-share",
+		"comment": "great comment",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, in)
 	a.NotNil(d)
@@ -43,4 +43,16 @@ func expectReadShare(mock sqlmock.Sqlmock) {
 		"created_on", "kind", "name", "database_name", "to", "owner", "comment",
 	}).AddRow("2019-05-19 16:55:36.530 -0700", "SECURE", "test-share", "test_db", "", "admin", "great comment")
 	mock.ExpectQuery(`^SHOW SHARES LIKE 'test-share'$`).WillReturnRows(rows)
+}
+
+func TestStripAccountFromName(t *testing.T) {
+	a := assert.New(t)
+	s := "yt12345.my_share"
+	a.Equal("my_share", resources.StripAccountFromName(s))
+
+	s = "yt12345.my.share"
+	a.Equal("my.share", resources.StripAccountFromName(s))
+
+	s = "no_account_for_some_reason"
+	a.Equal("no_account_for_some_reason", resources.StripAccountFromName(s))
 }

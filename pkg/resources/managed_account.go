@@ -24,10 +24,10 @@ var managedAccountProperties = []string{
 
 var managedAccountSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Identifier for the managed account; must be unique for your account.",
-		ForceNew:     true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Identifier for the managed account; must be unique for your account.",
+		ForceNew:    true,
 	},
 	"admin_name": &schema.Schema{
 		Type:        schema.TypeString,

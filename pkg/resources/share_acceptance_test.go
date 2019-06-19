@@ -27,9 +27,9 @@ func TestAccShare(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_share.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      "snowflake_share.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
