@@ -39,6 +39,7 @@ func TestShareCreate(t *testing.T) {
 }
 
 func expectReadShare(mock sqlmock.Sqlmock) {
+	// &createdOn, &kind, &name, &databaseName, &to, &owner, &comment
 	rows := sqlmock.NewRows([]string{
 		"created_on", "kind", "name", "database_name", "to", "owner", "comment",
 	}).AddRow("2019-05-19 16:55:36.530 -0700", "SECURE", "test-share", "test_db", "", "admin", "great comment")

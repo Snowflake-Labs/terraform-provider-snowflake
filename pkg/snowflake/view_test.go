@@ -1,0 +1,49 @@
+package snowflake
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestView(t *testing.T) {
+	a := assert.New(t)
+	v := View("test")
+	a.NotNil(v)
+	a.False(v.secure)
+
+	v.WithSecure()
+	a.True(v.secure)
+
+	v.WithComment("great comment")
+	a.Equal("great comment", v.comment)
+
+	v.WithStatement("SELECT * FROM DUMMY LIMIT 1")
+	a.Equal("SELECT * FROM DUMMY LIMIT 1", v.statement)
+
+	v.WithStatement("SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1")
+
+	q := v.Create()
+	a.Equal(`CREATE SECURE VIEW "test" COMMENT = 'great comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+
+	q = v.Rename("test2")
+	a.Equal(`ALTER VIEW "test" RENAME TO "test2"`, q)
+
+	q = v.Secure()
+	a.Equal(`ALTER VIEW "test" SET SECURE`, q)
+	
+	q = v.Unsecure()
+	a.Equal(`ALTER VIEW "test" UNSET SECURE`, q)
+	
+	q = v.ChangeComment("bad comment")
+	a.Equal(`ALTER VIEW "test" SET COMMENT = 'bad comment'`, q)
+	
+	q = v.RemoveComment()
+	a.Equal(`ALTER VIEW "test" UNSET COMMENT`, q)
+	
+	q = v.Drop()
+	a.Equal(`DROP VIEW "test"`, q)
+	
+	q = v.Show()
+	a.Equal(`SHOW VIEWS LIKE 'test'`, q)
+}
