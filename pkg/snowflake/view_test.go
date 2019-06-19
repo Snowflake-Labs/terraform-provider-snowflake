@@ -31,19 +31,19 @@ func TestView(t *testing.T) {
 
 	q = v.Secure()
 	a.Equal(`ALTER VIEW "test" SET SECURE`, q)
-	
+
 	q = v.Unsecure()
 	a.Equal(`ALTER VIEW "test" UNSET SECURE`, q)
-	
+
 	q = v.ChangeComment("bad comment")
 	a.Equal(`ALTER VIEW "test" SET COMMENT = 'bad comment'`, q)
-	
+
 	q = v.RemoveComment()
 	a.Equal(`ALTER VIEW "test" UNSET COMMENT`, q)
-	
+
 	q = v.Drop()
 	a.Equal(`DROP VIEW "test"`, q)
-	
+
 	q = v.Show()
 	a.Equal(`SHOW VIEWS LIKE 'test'`, q)
 }

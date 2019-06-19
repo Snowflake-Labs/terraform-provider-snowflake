@@ -7,10 +7,10 @@ import (
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View
 type ViewBuilder struct {
-	name          string
-	secure        bool
-	comment       string
-	statement     string
+	name      string
+	secure    bool
+	comment   string
+	statement string
 }
 
 // WithComment adds a comment to the ViewBuilder
@@ -51,7 +51,7 @@ func View(name string) *ViewBuilder {
 // Create returns the SQL query that will create a new view.
 func (vb *ViewBuilder) Create() string {
 	var q strings.Builder
-	
+
 	q.WriteString("CREATE")
 	if vb.secure {
 		q.WriteString(" SECURE")

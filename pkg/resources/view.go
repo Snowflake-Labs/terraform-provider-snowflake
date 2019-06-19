@@ -17,8 +17,8 @@ var viewSchema = map[string]*schema.Schema{
 		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created.",
 	},
 	"database": &schema.Schema{
-		Type: schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
 		Description: "The database in which to create the view.",
 	},
 	"is_secure": &schema.Schema{
