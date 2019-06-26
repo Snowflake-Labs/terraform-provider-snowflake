@@ -42,6 +42,11 @@ func ViewGrant(name string) *GrantBuilder {
 	}
 }
 
+// Show returns the SQL that will show all privileges on the grant
+func (gb *GrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW GRANTS ON %v "%v"`, gb.grantType, gb.name)
+}
+
 type granteeType string
 
 const (
