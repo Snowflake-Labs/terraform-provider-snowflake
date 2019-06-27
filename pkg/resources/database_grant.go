@@ -13,32 +13,32 @@ var validDatabasePrivileges = []string{"USAGE", "REFERENCE_USAGE"}
 
 var databaseGrantSchema = map[string]*schema.Schema{
 	"database_name": &schema.Schema{
-		Type: schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
 		Description: "The name of the database on which to grant privileges.",
-		ForceNew: true,
+		ForceNew:    true,
 	},
 	"privilege": &schema.Schema{
-		Type: schema.TypeString,
-		Optional: true,
-		Description: "The privilege to grant on the database.",
-		Default: "USAGE",
+		Type:         schema.TypeString,
+		Optional:     true,
+		Description:  "The privilege to grant on the database.",
+		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validDatabasePrivileges, true),
-		ForceNew: true,
+		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew: true,
+		ForceNew:    true,
 	},
 	"shares": &schema.Schema{
-		Type: schema.TypeSet,
-		Elem: &schema.Schema{Type: schema.TypeString},
-		Optional: true,
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
 		Description: "Grants privilege to these shares.",
-		ForceNew: true,
+		ForceNew:    true,
 	},
 }
 
@@ -46,7 +46,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 func DatabaseGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabaseGrant,
-		Read: ReadDatabaseGrant,
+		Read:   ReadDatabaseGrant,
 		Delete: DeleteDatabaseGrant,
 
 		Schema: databaseGrantSchema,

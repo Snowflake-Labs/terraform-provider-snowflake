@@ -26,12 +26,12 @@ func TestViewGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"view_name": "test-view",
-		"schema_name": "PUBLIC",
+		"view_name":     "test-view",
+		"schema_name":   "PUBLIC",
 		"database_name": "test-db",
-		"privilege": "SELECT",
-		"roles":     []string{"test-role-1", "test-role-2"},
-		"shares":    []string{"test-share-1", "test-share-2"},
+		"privilege":     "SELECT",
+		"roles":         []string{"test-role-1", "test-role-2"},
+		"shares":        []string{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	a.NotNil(d)
@@ -50,9 +50,6 @@ func TestViewGrantCreate(t *testing.T) {
 func expectReadViewGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
-	}).AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "ROLE", "test-role-1", false, "bob",
-	).AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "ROLE", "test-role-2", false, "bob",
-	).AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "SHARE", "test-share-1", false, "bob",
-	).AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "SHARE", "test-share-2", false, "bob")
+	}).AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "ROLE", "test-role-1", false, "bob").AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "ROLE", "test-role-2", false, "bob").AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "SHARE", "test-share-1", false, "bob").AddRow(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-view", "SHARE", "test-share-2", false, "bob")
 	mock.ExpectQuery(`^SHOW GRANTS ON VIEW "test-db"."PUBLIC"."test-view"$`).WillReturnRows(rows)
 }

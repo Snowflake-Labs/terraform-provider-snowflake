@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-
 // SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
 type SchemaBuilder struct {
 	name                 string
@@ -114,7 +113,7 @@ func (sb *SchemaBuilder) Rename(newName string) string {
 // metadata, including identifiers, between the two specified schemas.
 func (sb *SchemaBuilder) Swap(targetSchema string) string {
 	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH "%v"`, sb.QualifiedName(), targetSchema)
-} 
+}
 
 // ChangeComment returns the SQL query that will update the comment on the schema.
 func (sb *SchemaBuilder) ChangeComment(c string) string {
