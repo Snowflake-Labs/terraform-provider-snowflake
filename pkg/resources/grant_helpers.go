@@ -14,7 +14,7 @@ import (
 
 // grant represents a generic grant of a privilge from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
-// build a nice go replresentation of a grant
+// build a nice go representation of a grant
 type grant struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
