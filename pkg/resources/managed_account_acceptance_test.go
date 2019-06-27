@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -13,6 +14,10 @@ const (
 )
 
 func TestAccManagedAccount(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
+		t.Skip("Skipping TestACcManagedAccount")
+	} 
+
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

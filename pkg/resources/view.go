@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
@@ -14,12 +15,20 @@ var viewSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created.",
+		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.",
 	},
 	"database": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The database in which to create the view.",
+		Description: "The database in which to create the view. Don't use the | character.",
+		ForceNew:    true,
+	},
+	"schema": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:	 "PUBLIC",
+		Description: "The schema in which to create the view. Don't use the | character.",
+		ForceNew:    true,
 	},
 	"is_secure": &schema.Schema{
 		Type:        schema.TypeBool,
@@ -60,9 +69,11 @@ func View() *schema.Resource {
 func CreateView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
+	schema := data.Get("schema").(string)
+	database := data.Get("database").(string)
 	s := data.Get("statement").(string)
 
-	builder := snowflake.View(name).WithStatement(s)
+	builder := snowflake.View(name).WithDB(database).WithSchema(schema).WithStatement(s)
 
 	// Set optionals
 	if v, ok := data.GetOk("is_secure"); ok && v.(bool) {
@@ -75,17 +86,13 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := useDatabase(data, meta)
-	if err != nil {
-		return errors.Wrapf(err, "error using database for view %v", data.Id())
-	}
-
-	err = DBExec(db, q)
+	err := DBExec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
 
-	data.SetId(name)
+	// ID format is <database>|<schema>|<view> - please don't use a pipe in your names!
+	data.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
 
 	return ReadView(data, meta)
 }
@@ -93,13 +100,16 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 // ReadView implements schema.ReadFunc
 func ReadView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	dbName, schema, view, err := splitViewID(data.Id())
+	if err != nil {
+		return err
+	}
 
-	q := snowflake.View(id).Show()
+	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := db.QueryRow(q)
 	var createdOn, name, reserved, databaseName, schemaName, owner, comment, text sql.NullString
 	var isSecure bool
-	err := row.Scan(&createdOn, &name, &reserved, &databaseName, &schemaName, &owner, &comment, &text, &isSecure)
+	err = row.Scan(&createdOn, &name, &reserved, &databaseName, &schemaName, &owner, &comment, &text, &isSecure)
 	if err != nil {
 		return err
 	}
@@ -128,11 +138,18 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
 	data.Partial(true)
 
+	dbName, schema, view, err := splitViewID(data.Id())
+	if err != nil {
+		return err
+	}
+
+	builder := snowflake.View(view).WithDB(dbName).WithSchema(schema)
+
 	db := meta.(*sql.DB)
 	if data.HasChange("name") {
 		_, name := data.GetChange("name")
 
-		q := snowflake.View(data.Id()).Rename(name.(string))
+		q := builder.Rename(name.(string))
 		err := DBExec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
@@ -146,13 +163,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, comment := data.GetChange("comment")
 
 		if c := comment.(string); c == "" {
-			q := snowflake.View(data.Id()).RemoveComment()
+			q := builder.RemoveComment()
 			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
 			}
 		} else {
-			q := snowflake.View(data.Id()).ChangeComment(c)
+			q := builder.ChangeComment(c)
 			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
@@ -167,13 +184,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, secure := data.GetChange("is_secure")
 
 		if secure.(bool) {
-			q := snowflake.View(data.Id()).Secure()
+			q := builder.Secure()
 			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
 			}
 		} else {
-			q := snowflake.View(data.Id()).Unsecure()
+			q := builder.Unsecure()
 			err := DBExec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
@@ -187,12 +204,12 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc
 func DeleteView(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	q := snowflake.View(data.Id()).Drop()
-
-	err := useDatabase(data, meta)
+	dbName, schema, view, err := splitViewID(data.Id())
 	if err != nil {
-		return errors.Wrapf(err, "error using database for view %v", data.Id())
+		return err
 	}
+
+	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
 
 	err = DBExec(db, q)
 	if err != nil {
@@ -207,8 +224,12 @@ func DeleteView(data *schema.ResourceData, meta interface{}) error {
 // ViewExists implements schema.ExistsFunc
 func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
+	dbName, schema, view, err := splitViewID(data.Id())
+	if err != nil {
+		return false, err
+	}
 
-	q := snowflake.View(data.Id()).Show()
+	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	rows, err := db.Query(q)
 	if err != nil {
 		return false, err
@@ -221,6 +242,13 @@ func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	return false, nil
 }
 
-func useDatabase(data *schema.ResourceData, meta interface{}) error {
-	return DBExec(meta.(*sql.DB), fmt.Sprintf(`USE DATABASE "%v"`, data.Get("database").(string)))
+// splitViewID takes the <database_name>|<schema_name>|<view_name> ID and returns the database
+// name, schema name and view name.
+func splitViewID(v string) (string, string, string, error) {
+	arr := strings.Split(v, "|")
+	if len(arr) != 3 {
+		return "", "", "", fmt.Errorf("ID %v is invalid", v)
+	}
+
+	return arr[0], arr[1], arr[2], nil
 }

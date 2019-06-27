@@ -10,6 +10,7 @@ import (
 func TestDatabaseGrant(t *testing.T) {
 	a := assert.New(t)
 	dg := snowflake.DatabaseGrant("testDB")
+	a.Equal(dg.Name(), "testDB")
 
 	s := dg.Show()
 	a.Equal(`SHOW GRANTS ON DATABASE "testDB"`, s)
@@ -30,6 +31,7 @@ func TestDatabaseGrant(t *testing.T) {
 func TestSchemaGrant(t *testing.T) {
 	a := assert.New(t)
 	sg := snowflake.SchemaGrant("testSchema")
+	a.Equal(sg.Name(), "testSchema")
 
 	s := sg.Show()
 	a.Equal(`SHOW GRANTS ON SCHEMA "testSchema"`, s)
@@ -49,20 +51,30 @@ func TestSchemaGrant(t *testing.T) {
 
 func TestViewGrant(t *testing.T) {
 	a := assert.New(t)
-	vg := snowflake.ViewGrant("testView")
+	vg := snowflake.ViewGrant("test_db", "PUBLIC", "testView")
+	a.Equal(vg.Name(), "testView")
 
 	s := vg.Show()
-	a.Equal(`SHOW GRANTS ON VIEW "testView"`, s)
+	a.Equal(`SHOW GRANTS ON VIEW "test_db"."PUBLIC"."testView"`, s)
 
 	s = vg.Role("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON VIEW "testView" TO ROLE "bob"`, s)
+	a.Equal(`GRANT USAGE ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob"`, s)
 
 	s = vg.Role("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON VIEW "testView" FROM ROLE "bob"`, s)
+	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM ROLE "bob"`, s)
 
 	s = vg.Share("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON VIEW "testView" TO SHARE "bob"`, s)
+	a.Equal(`GRANT USAGE ON VIEW "test_db"."PUBLIC"."testView" TO SHARE "bob"`, s)
 
 	s = vg.Share("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON VIEW "testView" FROM SHARE "bob"`, s)
+	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM SHARE "bob"`, s)
+}
+
+func TestShowGrantsOf(t *testing.T) {
+	a := assert.New(t)
+	s := snowflake.ViewGrant("test_db", "PUBLIC", "testView").Role("testRole").Show()
+	a.Equal(`SHOW GRANTS OF ROLE "testRole"`, s)
+
+	s = snowflake.ViewGrant("test_db", "PUBLIC", "testView").Share("testShare").Show()
+	a.Equal(`SHOW GRANTS OF SHARE "testShare"`, s)
 }
