@@ -109,6 +109,19 @@ You can see a number of examples [here](examples).
 | roles     | set    | Grants role to this specified role.   | true     | false     | false    | <nil>   |
 | users     | set    | Grants role to this specified user.   | true     | false     | false    | <nil>   |
 
+### snowflake_schema
+
+#### properties
+
+|        NAME         |  TYPE  |                                                                                                                      DESCRIPTION                                                                                                                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment             | string | Specifies a comment for the schema.                                                                                                                                                                                                                    | true     | false     | false    | <nil>   |
+| data_retention_days | int    | Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.                                       | true     | false     | false    |       1 |
+| database            | string | The database in which to create the view.                                                                                                                                                                                                              | false    | true      | false    | <nil>   |
+| is_managed          | bool   | Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.                                                                                                                                              | true     | false     | false    | false   |
+| is_transient        | bool   | Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss. | true     | false     | false    | false   |
+| name                | string | Specifies the identifier for the schema; must be unique for the database in which the schema is created.                                                                                                                                               | false    | true      | false    | <nil>   |
+
 ### snowflake_share
 
 #### properties
