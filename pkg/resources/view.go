@@ -26,7 +26,7 @@ var viewSchema = map[string]*schema.Schema{
 	"schema": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:	 "PUBLIC",
+		Default:     "PUBLIC",
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},

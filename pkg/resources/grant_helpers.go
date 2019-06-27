@@ -14,7 +14,7 @@ import (
 
 // grant represents a generic grant of a privilge from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
-// build a nice go replresentation of a grant
+// build a nice go representation of a grant
 type grant struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
@@ -44,7 +44,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 	roles := expandStringList(data.Get("roles").(*schema.Set).List())
 	shares := expandStringList(data.Get("shares").(*schema.Set).List())
 
-	if len(roles) + len(shares) == 0 {
+	if len(roles)+len(shares) == 0 {
 		return fmt.Errorf("no roles or shares specified for this grant")
 	}
 
@@ -127,7 +127,7 @@ func readGenericGrants(db *sql.DB, builder *snowflake.GrantBuilder) ([]*grant, e
 		}
 		grants = append(grants, grant)
 	}
-	
+
 	return grants, nil
 }
 

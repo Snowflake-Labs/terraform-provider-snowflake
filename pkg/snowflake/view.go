@@ -22,12 +22,12 @@ func (vb *ViewBuilder) QualifiedName() string {
 	if vb.db != "" && vb.schema != "" {
 		n.WriteString(fmt.Sprintf(`"%v"."%v".`, vb.db, vb.schema))
 	}
-	
+
 	if vb.db != "" && vb.schema == "" {
 		n.WriteString(fmt.Sprintf(`"%v"..`, vb.db))
 	}
 
-	if vb.db == "" &&vb.schema != "" {
+	if vb.db == "" && vb.schema != "" {
 		n.WriteString(fmt.Sprintf(`"%v".`, vb.schema))
 	}
 
@@ -91,8 +91,8 @@ func (vb *ViewBuilder) Create() string {
 	if vb.secure {
 		q.WriteString(" SECURE")
 	}
-	
-	q.WriteString(fmt.Sprintf(` VIEW %v`,vb.QualifiedName()))
+
+	q.WriteString(fmt.Sprintf(` VIEW %v`, vb.QualifiedName()))
 
 	if vb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", vb.comment))
