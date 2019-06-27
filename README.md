@@ -62,6 +62,17 @@ You can see a number of examples [here](examples).
 | data_retention_time_in_days | int    |             | true     | false     | true     | <nil>   |
 | name                        | string |             | false    | true      | false    | <nil>   |
 
+### snowflake_database_grant
+
+#### properties
+
+|     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege     | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+
 ### snowflake_managed_account
 
 #### properties
@@ -129,14 +140,27 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|        NAME         |  TYPE  |                                                        DESCRIPTION                                                        | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------------|--------|---------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| comment             | string | Specifies a comment for the view.                                                                                         | true     | false     | false    | <nil>   |
-| is_secure           | bool   | Specifies that the view is secure.                                                                                        | true     | false     | false    | false   |
-| name                | string | Specifies the identifier for the view; must be unique for the schema in which the view is created.                        | false    | true      | false    | <nil>   |
-| statement           | string | Specifies the query used to create the view. Arguments may be interpolated with a ? using the `statement_arguments` field | false    | true      | false    | <nil>   |
-| statement_arguments | set    | Arguments for `statement` to be interpolated using the SQL engine.                                                        | true     | false     | false    | <nil>   |
-| view_text           | string | The interpolated text of the SQL statement for this view.                                                                 | false    | false     | true     | <nil>   |
+|   NAME    |  TYPE  |                                                          DESCRIPTION                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|-----------|--------|-------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| comment   | string | Specifies a comment for the view.                                                                                             | true     | false     | false    | <nil>    |
+| database  | string | The database in which to create the view. Don't use the | character.                                                          | false    | true      | false    | <nil>    |
+| is_secure | bool   | Specifies that the view is secure.                                                                                            | true     | false     | false    | false    |
+| name      | string | Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character. | false    | true      | false    | <nil>    |
+| schema    | string | The schema in which to create the view. Don't use the | character.                                                            | true     | false     | false    | "PUBLIC" |
+| statement | string | Specifies the query used to create the view.                                                                                  | false    | true      | false    | <nil>    |
+
+### snowflake_view_grant
+
+#### properties
+
+|     NAME      |  TYPE  |                                DESCRIPTION                                 | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|---------------|--------|----------------------------------------------------------------------------|----------|-----------|----------|----------|
+| database_name | string | The name of the database containing the view on which to grant privileges. | false    | true      | false    | <nil>    |
+| privilege     | string | The privilege to grant on the view.                                        | true     | false     | false    | "SELECT" |
+| roles         | set    | Grants privilege to these roles.                                           | true     | false     | false    | <nil>    |
+| schema_name   | string | The name of the schema containing the view on which to grant privileges.   | true     | false     | false    | "PUBLIC" |
+| shares        | set    | Grants privilege to these shares.                                          | true     | false     | false    | <nil>    |
+| view_name     | string | The name of the view on which to grant privileges.                         | false    | true      | false    | <nil>    |
 
 ### snowflake_warehouse
 
