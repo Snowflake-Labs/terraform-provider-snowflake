@@ -2,9 +2,11 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -23,6 +25,12 @@ var shareSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the managed account.",
+	},
+	"accounts": &schema.Schema{
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "A list of accounts to be added to the share.",
 	},
 }
 
@@ -44,13 +52,44 @@ func Share() *schema.Resource {
 
 // CreateShare implements schema.CreateFunc
 func CreateShare(data *schema.ResourceData, meta interface{}) error {
-	return CreateResource(
-		"this does not seem to be used",
-		shareProperties,
-		shareSchema,
-		snowflake.Share,
-		ReadShare,
-	)(data, meta)
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+
+	builder := snowflake.Share(name).Create()
+	builder.SetString("COMMENT", data.Get("comment").(string))
+
+	err := DBExec(db, builder.Statement())
+	if err != nil {
+		return errors.Wrapf(err, "error creating share")
+	}
+	data.SetId(name)
+
+	// Adding accounts must be done via an ALTER query
+
+	// @TODO flesh out the share type in the snowflake package since it doesn't
+	// follow the normal generic rules
+	err = setAccounts(data, meta)
+	if err != nil {
+		return err
+	}
+
+	return ReadShare(data, meta)
+}
+
+func setAccounts(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+	accs := expandStringList(data.Get("accounts").(*schema.Set).List())
+
+	if len(accs) > 0 {
+		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
+		err := DBExec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error adding accounts to share %v", name)
+		}
+	}
+
+	return nil
 }
 
 // ReadShare implements schema.ReadFunc
@@ -67,18 +106,32 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
+	// TODO turn this into a loop after we switch to scanning in a struct
 	err = data.Set("name", StripAccountFromName(name.String))
 	if err != nil {
 		return err
 	}
 	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
+
+	accs := strings.Split(to.String, ", ")
+	err = data.Set("accounts", accs)
 
 	return err
 }
 
 // UpdateShare implements schema.UpdateFunc
 func UpdateShare(data *schema.ResourceData, meta interface{}) error {
+	// Change the accounts first - this is a special case and won't work using the generic method
+	if data.HasChange("accounts") {
+		err := setAccounts(data, meta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(data, meta)
 }
 
