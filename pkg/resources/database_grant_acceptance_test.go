@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -9,6 +10,10 @@ import (
 )
 
 func TestAccDatabaseGrant(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
+		t.Skip("Skipping TestAccDatabaseGrant")
+	}
+
 	dbName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
