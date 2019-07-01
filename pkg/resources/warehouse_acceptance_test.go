@@ -46,9 +46,9 @@ func TestAccWarehouse(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_warehouse.w",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_warehouse.w",
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning"},
 			},
 		},
