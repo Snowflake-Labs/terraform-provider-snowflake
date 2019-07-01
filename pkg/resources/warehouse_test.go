@@ -38,10 +38,8 @@ func TestWarehouseCreate(t *testing.T) {
 }
 
 func expectReadWarehouse(mock sqlmock.Sqlmock) {
-	mock.ExpectExec(`USE WAREHOUSE "good_name"`).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec("SHOW WAREHOUSES LIKE 'good_name'").WillReturnResult(sqlmock.NewResult(1, 1))
 	rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
-	mock.ExpectQuery(`select "name", "comment", "size" from table\(result_scan\(last_query_id\(\)\)\)`).WillReturnRows(rows)
+	mock.ExpectQuery("SHOW WAREHOUSES LIKE 'good_name'").WillReturnRows(rows)
 }
 
 func TestWarehouseRead(t *testing.T) {

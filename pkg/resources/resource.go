@@ -33,6 +33,9 @@ func CreateResource(
 				case schema.TypeBool:
 					valBool := val.(bool)
 					qb.SetBool(field, valBool)
+				case schema.TypeInt:
+					valInt := val.(int)
+					qb.SetInt(field, valInt)
 				}
 			}
 		}
