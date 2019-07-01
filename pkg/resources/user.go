@@ -18,6 +18,7 @@ var userProperties = []string{
 	"default_warehouse",
 	"rsa_public_key",
 	"rsa_public_key_2",
+	"must_change_password",
 }
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
@@ -85,6 +86,11 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Computed:    true,
 		Description: "Will be true if user as an RSA key set.",
+	},
+	"must_change_password": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
 	},
 
 	//    DISPLAY_NAME = <string>
