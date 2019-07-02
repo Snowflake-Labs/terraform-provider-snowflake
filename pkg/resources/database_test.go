@@ -68,3 +68,24 @@ func TestDatabaseDelete(t *testing.T) {
 		a.NoError(err)
 	})
 }
+
+func TestDatabaseCreateFromShare(t *testing.T) {
+	a := assert.New(t)
+
+	in := map[string]interface{}{
+		"name": "good_name",
+		"from_share": map[string]interface{}{
+			"provider": "abc123",
+			"share":    "my_share",
+		},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	a.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" FROM SHARE "abc123"."my_share"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		a.NoError(err)
+	})
+}

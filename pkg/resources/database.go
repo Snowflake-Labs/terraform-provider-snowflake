@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -27,10 +28,17 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
+	"from_share": &schema.Schema{
+		Type:        schema.TypeMap,
+		Description: "Specify a provider and a share in this map to create a database from a share.",
+		Optional:    true,
+		ForceNew:    true,
+	},
 }
 
 var databaseProperties = []string{"comment", "data_retention_time_in_days"}
 
+// Database returns a pointer to the resource representing a database
 func Database() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabase,
@@ -45,9 +53,36 @@ func Database() *schema.Resource {
 	}
 }
 
+// CreateDatabase implements schema.CreateFunc
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
+	_, ok := data.GetOk("from_share")
+	if ok {
+		return createDatabaseFromShare(data, meta)
+	}
 	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
+}
 
+func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error {
+	in := data.Get("from_share").(map[string]interface{})
+	prov := in["provider"]
+	share := in["share"]
+
+	if prov == nil || share == nil {
+		return fmt.Errorf("from_share must contain the keys provider and share, but it had %+v", in)
+	}
+
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
+
+	err := DBExec(db, builder.Create())
+	if err != nil {
+		errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+	}
+
+	data.SetId(name)
+
+	return ReadDatabase(data, meta)
 }
 
 type database struct {
