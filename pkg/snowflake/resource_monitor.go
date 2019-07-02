@@ -28,6 +28,8 @@ func ResourceMonitor(name string) *ResourceMonitorBuilder {
 	}
 }
 
+// @TODO support for a ResourceMonitorAlterBuilder so that we can alter triggers
+
 // ResourceMonitorCreateBuilder extends the generic create builder to provide support for triggers
 type ResourceMonitorCreateBuilder struct {
 	CreateBuilder
