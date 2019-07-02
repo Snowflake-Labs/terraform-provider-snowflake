@@ -90,6 +90,21 @@ You can see a number of examples [here](examples).
 | type           | string | Specifies the type of managed account.                                                                                                         | true     | false     | false    | "READER" |
 | url            | string | URL for accessing the managed account, particularly through the web interface.                                                                 | false    | false     | true     | <nil>    |
 
+### snowflake_resource_monitor
+
+#### properties
+
+|            NAME            |  TYPE  |                                                                   DESCRIPTION                                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| credit_quota               | int    | The number of credits allocated monthly to the resource monitor.                                                                                | true     | false     | true     | <nil>   |
+| end_timestamp              | string | The date and time when the resource monitor suspends the assigned warehouses.                                                                   | true     | false     | false    | <nil>   |
+| frequency                  | string | The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP. | true     | false     | true     | <nil>   |
+| name                       | string | Identifier for the resource monitor; must be unique for your account.                                                                           | false    | true      | false    | <nil>   |
+| notify_triggers            | set    | A list of percentage thresholds at which to send an alert to subscribed users.                                                                  | true     | false     | false    | <nil>   |
+| start_timestamp            | string | The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.                                         | true     | false     | true     | <nil>   |
+| suspend_immediate_triggers | set    | A list of percentage thresholds at which to immediately suspend all warehouses.                                                                 | true     | false     | false    | <nil>   |
+| suspend_triggers           | set    | A list of percentage thresholds at which to suspend all warehouses.                                                                             | true     | false     | false    | <nil>   |
+
 ### snowflake_role
 
 #### properties
