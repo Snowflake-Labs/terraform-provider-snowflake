@@ -56,11 +56,12 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|            NAME             |  TYPE  | DESCRIPTION | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|-----------------------------|--------|-------------|----------|-----------|----------|---------|
-| comment                     | string |             | true     | false     | false    | ""      |
-| data_retention_time_in_days | int    |             | true     | false     | true     | <nil>   |
-| name                        | string |             | false    | true      | false    | <nil>   |
+|            NAME             |  TYPE  |                                  DESCRIPTION                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------------------------|--------|-------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| comment                     | string |                                                                               | true     | false     | false    | ""      |
+| data_retention_time_in_days | int    |                                                                               | true     | false     | true     | <nil>   |
+| from_share                  | map    | Specify a provider and a share in this map to create a database from a share. | true     | false     | false    | <nil>   |
+| name                        | string |                                                                               | false    | true      | false    | <nil>   |
 
 ### snowflake_database_grant
 
