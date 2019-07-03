@@ -210,6 +210,16 @@ You can see a number of examples [here](examples).
 | scaling_policy        | string | Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.      | true     | false     | true     | <nil>   |
 | wait_for_provisioning | bool   | Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries. | true     | false     | false    | <nil>   |
 | warehouse_size        | string |                                                                                                                                          | true     | false     | true     | <nil>   |
+
+### snowflake_warehouse_grant
+
+#### properties
+
+|      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
+| privilege      | string | The privilege to grant on the warehouse.                | true     | false     | false    | "USAGE" |
+| roles          | set    | Grants privilege to these roles.                        | true     | false     | false    | <nil>   |
+| warehouse_name | string | The name of the warehouse on which to grant privileges. | false    | true      | false    | <nil>   |
 <!-- END -->
 
 ## Development

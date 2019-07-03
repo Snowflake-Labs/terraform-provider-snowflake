@@ -79,8 +79,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	}
 	priv := data.Get("privilege").(string)
 
-	var roles []string
-	var shares []string
+	var roles, shares []string
 
 	for _, grant := range grants {
 		if grant.Privilege != priv {
@@ -144,8 +143,15 @@ func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	shares := expandStringList(data.Get("shares").(*schema.Set).List())
+
+	var roles, shares []string
+	if _, ok := data.GetOk("roles"); ok {
+		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	}
+
+	if _, ok := data.GetOk("shares"); ok {
+		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	}
 
 	for _, role := range roles {
 		err := DBExec(db, builder.Role(role).Revoke(priv))
