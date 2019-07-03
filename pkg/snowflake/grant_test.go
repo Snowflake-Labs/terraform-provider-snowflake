@@ -70,6 +70,21 @@ func TestViewGrant(t *testing.T) {
 	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM SHARE "bob"`, s)
 }
 
+func TestWarehouseGrant(t *testing.T) {
+	a := assert.New(t)
+	wg := snowflake.WarehouseGrant("test_warehouse")
+	a.Equal(wg.Name(), "test_warehouse")
+
+	s := wg.Show()
+	a.Equal(`SHOW GRANTS ON WAREHOUSE "test_warehouse"`, s)
+
+	s = wg.Role("bob").Grant("USAGE")
+	a.Equal(`GRANT USAGE ON WAREHOUSE "test_warehouse" TO ROLE "bob"`, s)
+
+	s = wg.Role("bob").Revoke("USAGE")
+	a.Equal(`REVOKE USAGE ON WAREHOUSE "test_warehouse" FROM ROLE "bob"`, s)
+}
+
 func TestShowGrantsOf(t *testing.T) {
 	a := assert.New(t)
 	s := snowflake.ViewGrant("test_db", "PUBLIC", "testView").Role("testRole").Show()

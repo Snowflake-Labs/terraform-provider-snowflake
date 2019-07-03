@@ -7,9 +7,10 @@ import (
 type grantType string
 
 const (
-	databaseType grantType = "DATABASE"
-	schemaType   grantType = "SCHEMA"
-	viewType     grantType = "VIEW"
+	databaseType  grantType = "DATABASE"
+	schemaType    grantType = "SCHEMA"
+	viewType      grantType = "VIEW"
+	warehouseType grantType = "WAREHOUSE"
 )
 
 // GrantBuilder abstracts the creation of GrantExecutables
@@ -48,6 +49,15 @@ func ViewGrant(db, schema, view string) *GrantBuilder {
 		name:          view,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view),
 		grantType:     viewType,
+	}
+}
+
+// WarehouseGrant returns a pointer to a GrantBuilder for a warehouse
+func WarehouseGrant(w string) *GrantBuilder {
+	return &GrantBuilder{
+		name:          w,
+		qualifiedName: fmt.Sprintf(`"%v"`, w),
+		grantType:     warehouseType,
 	}
 }
 

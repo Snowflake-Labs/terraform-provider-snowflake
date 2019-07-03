@@ -9,7 +9,10 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validDatabasePrivileges = []string{"USAGE", "REFERENCE_USAGE"}
+var validDatabasePrivileges = []string{
+	"ALL", "CREATE SCHEMA", "IMPORTED PRIVILEGES", "MODIFY", "MONITOR",
+	"OWNERSHIP", "REFERENCE_USAGE", "USAGE",
+}
 
 var databaseGrantSchema = map[string]*schema.Schema{
 	"database_name": &schema.Schema{

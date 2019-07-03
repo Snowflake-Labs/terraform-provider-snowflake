@@ -41,8 +41,14 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	shares := expandStringList(data.Get("shares").(*schema.Set).List())
+	var roles, shares []string
+	if _, ok := data.GetOk("roles"); ok {
+		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	}
+
+	if _, ok := data.GetOk("shares"); ok {
+		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	}
 
 	if len(roles)+len(shares) == 0 {
 		return fmt.Errorf("no roles or shares specified for this grant")
@@ -102,7 +108,10 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	}
 	err = data.Set("shares", shares)
 	if err != nil {
-		return err
+		// warehouses don't use shares - check for this error
+		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
+			return err
+		}
 	}
 
 	return nil
