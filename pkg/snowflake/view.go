@@ -105,7 +105,9 @@ func (vb *ViewBuilder) Create() string {
 
 // Rename returns the SQL query that will rename the view.
 func (vb *ViewBuilder) Rename(newName string) string {
-	return fmt.Sprintf(`ALTER VIEW %v RENAME TO "%v"`, vb.QualifiedName(), newName)
+	oldName := vb.QualifiedName()
+	vb.name = newName
+	return fmt.Sprintf(`ALTER VIEW %v RENAME TO %v`, oldName, vb.QualifiedName())
 }
 
 // Secure returns the SQL query that will change the view to a secure view.
