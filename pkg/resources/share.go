@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/pkg/errors"
@@ -82,10 +83,39 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 	accs := expandStringList(data.Get("accounts").(*schema.Set).List())
 
 	if len(accs) > 0 {
+		// There is a race condition where error accounts cannot be added to a
+		// share until after a database is added to the share. Since a database
+		// grant is dependent on the share itself, this is a hack to get the
+		// thing working.
+		// 1. Create new temporary DB
+		tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
+		tempDB := snowflake.Database(tempName)
+		err := DBExec(db, tempDB.Create().Statement())
+		if err != nil {
+			return errors.Wrapf(err, "error creating temporary DB %v", tempName)
+		}
+
+		// 2. Create temporary DB grant to the share
+		tempDBGrant := snowflake.DatabaseGrant(tempName)
+		err = DBExec(db, tempDBGrant.Share(name).Grant("USAGE"))
+		if err != nil {
+			return errors.Wrapf(err, "error creating temporary DB grant %v", tempName)
+		}
+		// 3. Add the accounts to the share
 		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-		err := DBExec(db, q)
+		err = DBExec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error adding accounts to share %v", name)
+		}
+		// 4. Revoke temporary DB grant to the share
+		err = DBExec(db, tempDBGrant.Share(name).Revoke("USAGE"))
+		if err != nil {
+			return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
+		}
+		// 5. Remove the temporary DB
+		err = DBExec(db, tempDB.Drop())
+		if err != nil {
+			return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
 		}
 	}
 

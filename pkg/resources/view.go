@@ -91,7 +91,6 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
 
-	// ID format is <database>|<schema>|<view> - please don't use a pipe in your names!
 	data.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
 
 	return ReadView(data, meta)
@@ -155,7 +154,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
 		}
 
-		data.SetId(name.(string))
+		data.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
 		data.SetPartial("name")
 	}
 

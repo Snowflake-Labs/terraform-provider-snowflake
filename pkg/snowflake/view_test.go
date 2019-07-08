@@ -27,9 +27,6 @@ func TestView(t *testing.T) {
 	q := v.Create()
 	a.Equal(`CREATE SECURE VIEW "test" COMMENT = 'great comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
-	q = v.Rename("test2")
-	a.Equal(`ALTER VIEW "test" RENAME TO "test2"`, q)
-
 	q = v.Secure()
 	a.Equal(`ALTER VIEW "test" SET SECURE`, q)
 
@@ -77,4 +74,20 @@ func TestQualifiedName(t *testing.T) {
 
 	v = View("view").WithDB("db").WithSchema("schema")
 	a.Equal(v.QualifiedName(), `"db"."schema"."view"`)
+}
+
+func TestRename(t *testing.T) {
+	a := assert.New(t)
+	v := View("test")
+
+	q := v.Rename("test2")
+	a.Equal(`ALTER VIEW "test" RENAME TO "test2"`, q)
+
+	v.WithDB("testDB")
+	q = v.Rename("test3")
+	a.Equal(`ALTER VIEW "testDB".."test2" RENAME TO "testDB".."test3"`, q)
+
+	v = View("test4").WithSchema("testSchema")
+	q = v.Rename("test5")
+	a.Equal(`ALTER VIEW "testSchema"."test4" RENAME TO "testSchema"."test5"`, q)
 }

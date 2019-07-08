@@ -41,14 +41,8 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
-	var roles, shares []string
-	if _, ok := data.GetOk("roles"); ok {
-		roles = expandStringList(data.Get("roles").(*schema.Set).List())
-	}
 
-	if _, ok := data.GetOk("shares"); ok {
-		shares = expandStringList(data.Get("shares").(*schema.Set).List())
-	}
+	roles, shares := expandRolesAndShares(data)
 
 	if len(roles)+len(shares) == 0 {
 		return fmt.Errorf("no roles or shares specified for this grant")
@@ -79,19 +73,30 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	}
 	priv := data.Get("privilege").(string)
 
+	rolesIn, sharesIn := expandRolesAndShares(data)
+
 	var roles, shares []string
 
 	for _, grant := range grants {
+		// Skip if wrong privilege
 		if grant.Privilege != priv {
 			continue
 		}
 
 		switch grant.GranteeType {
 		case "ROLE":
+			if !stringInSlice(grant.GranteeName, rolesIn) {
+				continue
+			}
 			roles = append(roles, grant.GranteeName)
 		case "SHARE":
 			// Shares get the account appended to their name, remove this
-			shares = append(shares, StripAccountFromName(grant.GranteeName))
+			granteeName := StripAccountFromName(grant.GranteeName)
+			if !stringInSlice(granteeName, sharesIn) {
+				continue
+			}
+
+			shares = append(shares, granteeName)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
@@ -169,4 +174,25 @@ func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 
 	data.SetId("")
 	return nil
+}
+
+func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
+	var roles, shares []string
+	if _, ok := data.GetOk("roles"); ok {
+		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	}
+
+	if _, ok := data.GetOk("shares"); ok {
+		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	}
+	return roles, shares
+}
+
+func stringInSlice(v string, sl []string) bool {
+	for _, s := range sl {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
