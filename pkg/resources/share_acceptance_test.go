@@ -45,6 +45,7 @@ func shareConfig(name string) string {
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
+	accounts       = ["PC37737"]
 }
 `, name, shareComment)
 }

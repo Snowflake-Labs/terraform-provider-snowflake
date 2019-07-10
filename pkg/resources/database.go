@@ -77,7 +77,7 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 
 	err := DBExec(db, builder.Create())
 	if err != nil {
-		errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
 	}
 
 	data.SetId(name)
@@ -112,6 +112,11 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	err := row.StructScan(database)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("[WARN] database %v not found, removing from state file", name)
+			data.SetId("")
+			return nil
+		}
 		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
 	}
 

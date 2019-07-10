@@ -46,11 +46,15 @@ type warehouse struct {
 	ScalingPolicy   string    `db:"scaling_policy"`
 }
 
+// warehouseCreateProperties are only available via the CREATE statement
+var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
+
 var warehouseProperties = []string{
 	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
-	"scaling_policy", "auto_suspend", "auto_resume", "initially_suspended",
-	"resource_monitor", "wait_for_provisioning",
+	"scaling_policy", "auto_suspend", "auto_resume",
+	"resource_monitor",
 }
+
 var warehouseSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
 		Type:     schema.TypeString,
@@ -130,6 +134,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	},
 }
 
+// Warehouse returns a pointer to the resource representing a warehouse
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateWarehouse,
@@ -144,8 +149,10 @@ func Warehouse() *schema.Resource {
 	}
 }
 
+// CreateWarehouse implements schema.CreateFunc
 func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return CreateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+	props := append(warehouseProperties, warehouseCreateProperties...)
+	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc
@@ -202,10 +209,12 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
+// UpdateWarehouse implements schema.UpdateFunc
 func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
 	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
 }
 
+// DeleteWarehouse implements schema.DeleteFunc
 func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
 }

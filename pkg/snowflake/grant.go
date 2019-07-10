@@ -35,10 +35,10 @@ func DatabaseGrant(name string) *GrantBuilder {
 }
 
 // SchemaGrant returns a pointer to a GrantBuilder for a schema
-func SchemaGrant(name string) *GrantBuilder {
+func SchemaGrant(db, schema string) *GrantBuilder {
 	return &GrantBuilder{
-		name:          name,
-		qualifiedName: fmt.Sprintf(`"%v"`, name),
+		name:          schema,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"`, db, schema),
 		grantType:     schemaType,
 	}
 }
