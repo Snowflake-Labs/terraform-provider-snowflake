@@ -30,23 +30,23 @@ func TestDatabaseGrant(t *testing.T) {
 
 func TestSchemaGrant(t *testing.T) {
 	a := assert.New(t)
-	sg := snowflake.SchemaGrant("testSchema")
+	sg := snowflake.SchemaGrant("test_db", "testSchema")
 	a.Equal(sg.Name(), "testSchema")
 
 	s := sg.Show()
-	a.Equal(`SHOW GRANTS ON SCHEMA "testSchema"`, s)
+	a.Equal(`SHOW GRANTS ON SCHEMA "test_db"."testSchema"`, s)
 
 	s = sg.Role("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON SCHEMA "testSchema" TO ROLE "bob"`, s)
+	a.Equal(`GRANT USAGE ON SCHEMA "test_db"."testSchema" TO ROLE "bob"`, s)
 
 	s = sg.Role("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON SCHEMA "testSchema" FROM ROLE "bob"`, s)
+	a.Equal(`REVOKE USAGE ON SCHEMA "test_db"."testSchema" FROM ROLE "bob"`, s)
 
 	s = sg.Share("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON SCHEMA "testSchema" TO SHARE "bob"`, s)
+	a.Equal(`GRANT USAGE ON SCHEMA "test_db"."testSchema" TO SHARE "bob"`, s)
 
 	s = sg.Share("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON SCHEMA "testSchema" FROM SHARE "bob"`, s)
+	a.Equal(`REVOKE USAGE ON SCHEMA "test_db"."testSchema" FROM SHARE "bob"`, s)
 }
 
 func TestViewGrant(t *testing.T) {

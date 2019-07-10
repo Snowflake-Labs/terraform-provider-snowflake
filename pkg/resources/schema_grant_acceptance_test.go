@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccViewGrant(t *testing.T) {
+func TestAccSchemaGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccViewGrant")
+		t.Skip("Skipping TestAccSchemaGrant")
 	}
 
-	vName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	sName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
@@ -22,15 +22,15 @@ func TestAccViewGrant(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(vName, roleName, shareName),
+				Config: schemaGrantConfig(sName, roleName, shareName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", vName),
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", sName),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_view_grant.test",
+				ResourceName:      "snowflake_schema_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -38,18 +38,16 @@ func TestAccViewGrant(t *testing.T) {
 	})
 }
 
-func viewGrantConfig(n, role, share string) string {
+func schemaGrantConfig(n, role, share string) string {
 	return fmt.Sprintf(`
-
 resource "snowflake_database" "test" {
   name = "%v"
 }
 
-resource "snowflake_view" "test" {
+resource "snowflake_schema" "test" {
   name      = "%v"
   database  = snowflake_database.test.name
-  statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-  is_secure = true
+  comment   = "Terraform acceptance test"
 }
 
 resource "snowflake_role" "test" {
@@ -62,13 +60,13 @@ resource "snowflake_share" "test" {
 }
 
 resource "snowflake_database_grant" "test" {
-  database_name = snowflake_view.test.database
+  database_name = snowflake_schema.test.database
   shares        = [snowflake_share.test.name]
 }
 
-resource "snowflake_view_grant" "test" {
-  view_name     = snowflake_view.test.name
-  database_name = snowflake_view.test.database
+resource "snowflake_schema_grant" "test" {
+  schema_name   = snowflake_schema.test.name
+  database_name = snowflake_schema.test.database
   roles         = [snowflake_role.test.name]
   shares        = [snowflake_share.test.name]
 

@@ -138,6 +138,18 @@ You can see a number of examples [here](examples).
 | is_transient        | bool   | Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss. | true     | false     | false    | false   |
 | name                | string | Specifies the identifier for the schema; must be unique for the database in which the schema is created.                                                                                                                                               | false    | true      | false    | <nil>   |
 
+### snowflake_schema_grant
+
+#### properties
+
+|     NAME      |  TYPE  |                                 DESCRIPTION                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database containing the schema on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege     | string | The privilege to grant on the schema.                                        | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                                             | true     | false     | false    | <nil>   |
+| schema_name   | string | The name of the schema on which to grant privileges.                         | false    | true      | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares.                                            | true     | false     | false    | <nil>   |
+
 ### snowflake_share
 
 #### properties
