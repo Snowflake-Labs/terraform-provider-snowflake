@@ -45,6 +45,25 @@ func TestDatabaseGrantCreate(t *testing.T) {
 	})
 }
 
+func TestDatabaseGrantRead(t *testing.T) {
+	a := assert.New(t)
+
+	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
+		"database_name": "test-database",
+		"privilege":     "IMPORTED PRIVILIGES",
+		"roles":         []string{"test-role-1", "test-role-2"},
+		"shares":        []string{"test-share-1", "test-share-2"},
+	})
+
+	a.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadDatabaseGrant(mock)
+		err := resources.ReadDatabaseGrant(d, db)
+		a.NoError(err)
+	})
+}
+
 func expectReadDatabaseGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",

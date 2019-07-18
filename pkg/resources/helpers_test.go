@@ -12,14 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	a := assert.New(t)
-	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)
-	a.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	a := assert.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, params)
@@ -28,12 +20,24 @@ func database(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	return d
 }
 
-func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+func databaseGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	a := assert.New(t)
-	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, params)
 	a.NotNil(d)
 	d.SetId(id)
 	return d
+}
+
+func fixture(name string) (string, error) {
+	b, err := ioutil.ReadFile(filepath.Join("testdata", name))
+	return string(b), err
+}
+
+func providers() map[string]terraform.ResourceProvider {
+	p := provider.Provider()
+	return map[string]terraform.ResourceProvider{
+		"snowflake": p,
+	}
 }
 
 func role(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
@@ -52,14 +56,18 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
-func providers() map[string]terraform.ResourceProvider {
-	p := provider.Provider()
-	return map[string]terraform.ResourceProvider{
-		"snowflake": p,
-	}
+func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
 }
 
-func fixture(name string) (string, error) {
-	b, err := ioutil.ReadFile(filepath.Join("testdata", name))
-	return string(b), err
+func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
 }

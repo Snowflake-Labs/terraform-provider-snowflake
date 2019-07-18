@@ -91,6 +91,12 @@ func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
+	// that it is still there. Just exit for now
+	if priv == "IMPORTED PRIVILEGES" {
+		return nil
+	}
+
 	builder := snowflake.DatabaseGrant(dbName)
 
 	return readGenericGrant(data, meta, builder)
