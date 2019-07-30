@@ -97,11 +97,8 @@ func ShareExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
+	defer rows.Close()
+	return rows.Next(), rows.Err()
 }
 
 // StripAccountFromName removes the accout prefix from a resource (e.g. a share)

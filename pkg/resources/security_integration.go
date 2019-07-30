@@ -3,6 +3,8 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -79,8 +81,59 @@ func ReadSecurityIntegration(data *schema.ResourceData, meta interface{}) error 
 	db := meta.(*sql.DB)
 	id := data.Id()
 
-	row := db.QueryRow(fmt.Sprintf("DESCRIBE SECURITY INTEGRATION '%s'", id))
+	securityIntegrationPropertiesSet := map[string]struct{}{}
+	for _, prop := range securityIntegrationProperties {
+		securityIntegrationPropertiesSet[prop] = struct{}{}
+	}
+
+	var property, propertyType, propertyValue, propertyDefault *string
+	rows, err := db.Query(fmt.Sprintf("DESCRIBE SECURITY INTEGRATION '%s'", id))
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(property, propertyType, propertyValue, propertyDefault)
+		if err != nil {
+			return err
+		}
+
+		normalizedPropertyName := strings.ToLower(*property)
+		_, ok := securityIntegrationPropertiesSet[normalizedPropertyName]
+		if !ok {
+			log.Printf("[DEBUG] unrecognized SECURITY INTEGRATION property %s, skipping.", normalizedPropertyName)
+			continue
+		}
+		data.Set(normalizedPropertyName, *propertyValue)
+	}
+
+	return rows.Err()
+}
+func UpdateSecurityIntegration(data *schema.ResourceData, meta interface{}) error {
+	return UpdateResource(
+		"this does not seem to be used",
+		securityIntegrationProperties,
+		securityIntegrationSchema,
+		snowflake.SecurityIntegration,
+		ReadSecurityIntegration)(data, meta)
+}
+func DeleteSecurityIntegration(data *schema.ResourceData, meta interface{}) error {
+	return DeleteResource(
+		"this does not seem to be used",
+		snowflake.SecurityIntegration)(data, meta)
+}
+
+func SecurityIntegrationExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+	db := meta.(*sql.DB)
+	id := data.Id()
+
+	stmt := snowflake.SecurityIntegration(id).Show()
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	return rows.Next(), rows.Err()
 
 }
-func UpdateSecurityIntegration(data *schema.ResourceData, meta interface{}) error {}
-func DeleteSecurityIntegration(data *schema.ResourceData, meta interface{}) error {}
