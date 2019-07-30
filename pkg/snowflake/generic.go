@@ -12,6 +12,7 @@ const (
 	DatabaseType       EntityType = "DATABASE"
 	ManagedAccountType EntityType = "MANAGED ACCOUNT"
 	RoleType           EntityType = "ROLE"
+	ShareType          EntityType = "SHARE"
 	UserType           EntityType = "USER"
 	WarehouseType      EntityType = "WAREHOUSE"
 )
