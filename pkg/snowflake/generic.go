@@ -9,11 +9,12 @@ import (
 type EntityType string
 
 const (
-	DatabaseType       EntityType = "DATABASE"
-	ManagedAccountType EntityType = "MANAGED ACCOUNT"
-	RoleType           EntityType = "ROLE"
-	UserType           EntityType = "USER"
-	WarehouseType      EntityType = "WAREHOUSE"
+	DatabaseType        EntityType = "DATABASE"
+	ManagedAccountType  EntityType = "MANAGED ACCOUNT"
+	RoleType            EntityType = "ROLE"
+	UserType            EntityType = "USER"
+	WarehouseType       EntityType = "WAREHOUSE"
+	SecurityIntegrationType EntityType = "SECURITY INTEGRATION"
 )
 
 type Builder struct {

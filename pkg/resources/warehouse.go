@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -104,10 +105,14 @@ func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
 }
 
-func DBExec(db *sql.DB, query string, args ...interface{}) error {
-	stmt := fmt.Sprintf(query, args...)
-	log.Printf("[DEBUG] stmt %s", stmt)
-
-	_, err := db.Exec(stmt)
-	return err
+func SetValidationFunc(set map[string]struct{}) func(val interface{}, key string) ([]string, []error) {
+	keys := reflect.ValueOf(set).MapKeys()
+	return func(val interface{}, key string) (warns []string, errors []error) {
+		s := val.(string)
+		_, ok := set[s]
+		if !ok {
+			errors = append(errors, fmt.Errorf("%s is not in {%v}", s, keys))
+		}
+		return
+	}
 }
