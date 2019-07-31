@@ -12,7 +12,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// grant represents a generic grant of a privilge from a grant (the target) to a
+// grant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
 // build a nice go representation of a grant
 type grant struct {
