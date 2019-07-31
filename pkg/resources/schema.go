@@ -22,7 +22,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"database": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The database in which to create the view.",
+		Description: "The database in which to create the schema.",
 		ForceNew:    true,
 	},
 	"comment": &schema.Schema{
