@@ -6,6 +6,7 @@ import (
 )
 
 func TestExtractTriggerInts(t *testing.T) {
+// TODO rewrite to use testify/assert
 	resp := sql.NullString{"51%,63%", true}
 	out, err := extractTriggerInts(resp)
 	if err != nil {
