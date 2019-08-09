@@ -21,13 +21,10 @@ cov:
 
 ## Lint
 lint: clint
-	for c in $$(ls cmd); do \
-		(cd cmd/$$c;  make lint); \
-	done
 
 ## Format source codes
 fmt: cfmt
-	for c in $$(ls cmd); do \
+	@for c in $$(ls cmd); do \
 		(cd cmd/$$c;  make fmt); \
 	done
 

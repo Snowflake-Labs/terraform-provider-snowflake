@@ -14,7 +14,7 @@ import (
 
 // goTypeToSnowflake translates Go data type to Snowflake data type.
 func goTypeToSnowflake(v driver.Value, tsmode string) string {
-	switch v.(type) {
+	switch v := v.(type) {
 	case int64:
 		return "FIXED"
 	case float64:
@@ -27,16 +27,14 @@ func goTypeToSnowflake(v driver.Value, tsmode string) string {
 		if tsmode == "BINARY" {
 			return "BINARY" // may be redundant but ensures BINARY type
 		}
-		if bd, ok := v.([]byte); ok {
-			if bd == nil || len(bd) != 1 {
-				return "TEXT" // invalid byte array. won't take as BINARY
-			}
-			_, err := dataTypeMode(v)
-			if err != nil {
-				return "TEXT" // not supported dataType
-			}
-			return "CHANGE_TYPE"
+		if v == nil || len(v) != 1 {
+			return "TEXT" // invalid byte array. won't take as BINARY
 		}
+		_, err := dataTypeMode(v)
+		if err != nil {
+			return "TEXT" // not supported dataType
+		}
+		return "CHANGE_TYPE"
 	case time.Time:
 		return tsmode
 	}

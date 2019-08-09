@@ -89,7 +89,7 @@ The following connection parameters are supported:
 
 	* application: Identifies your application to Snowflake Support.
 
-	* insecureMode false by default. Set to true to bypass the Online
+	* insecureMode: false by default. Set to true to bypass the Online
 		Certificate Status Protocol (OCSP) certificate revocation check.
 		IMPORTANT: Change the default value for testing or emergency situations only.
 
@@ -99,6 +99,7 @@ The following connection parameters are supported:
 		such that the connection session will never expire. Care should be taken in using this option as it opens up
 		the access forever as long as the process is alive.
 
+	* ocspFailOpen: true by default. Set to false to make OCSP check fail closed mode.
 
 All other parameters are taken as session parameters. For example, TIMESTAMP_OUTPUT_FORMAT session parameter can be
 set by adding:

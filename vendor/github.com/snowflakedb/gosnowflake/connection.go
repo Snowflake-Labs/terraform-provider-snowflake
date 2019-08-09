@@ -173,11 +173,6 @@ func (sc *snowflakeConn) Close() (err error) {
 	glog.V(2).Infoln("Close")
 	sc.stopHeartBeat()
 
-	// ensure transaction is rollbacked
-	_, err = sc.exec(context.Background(), "ROLLBACK", false, false, nil)
-	if err != nil {
-		glog.V(2).Info(err)
-	}
 	err = sc.rest.FuncCloseSession(sc.rest)
 	if err != nil {
 		glog.V(2).Info(err)

@@ -33,7 +33,6 @@ type snowflakeRestful struct {
 	Protocol       string
 	LoginTimeout   time.Duration // Login timeout
 	RequestTimeout time.Duration // request timeout
-	Authenticator  string
 
 	Client      *http.Client
 	Token       string
@@ -54,6 +53,13 @@ type snowflakeRestful struct {
 	FuncPostAuthSAML func(*snowflakeRestful, map[string]string, []byte, time.Duration) (*authResponse, error)
 	FuncPostAuthOKTA func(*snowflakeRestful, map[string]string, []byte, string, time.Duration) (*authOKTAResponse, error)
 	FuncGetSSO       func(*snowflakeRestful, *url.Values, map[string]string, string, time.Duration) ([]byte, error)
+}
+
+func (sr *snowflakeRestful) getURL() *url.URL {
+	return &url.URL{
+		Scheme: sr.Protocol,
+		Host:   sr.Host + ":" + strconv.Itoa(sr.Port),
+	}
 }
 
 type renewSessionResponse struct {
