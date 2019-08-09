@@ -8,7 +8,7 @@ env:
 go_import_path: github.com/chanzuckerberg/terraform-provider-snowflake
 
 install:
-  - npm install -g snyk
+  # - npm install -g snyk
   - make setup
 
 script:

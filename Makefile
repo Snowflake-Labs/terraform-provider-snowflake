@@ -16,7 +16,7 @@ setup: ## setup development dependencies
 .PHONY: setup
 
 lint: ## run the fast go linters
-	golangci-lint run
+	./bin/golangci-lint run
 .PHONY: lint
 
 release: ## run a release
@@ -50,7 +50,7 @@ test: ## run the tests
 .PHONY: test
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_SHARE_TESTS=1 TF_ACC=1 ${GOTEST} -v -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_SHARE_TESTS=1 TF_ACC=1 ${GOTEST} -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
