@@ -52,7 +52,7 @@ Explanation:
 */
 func authenticateBySAML(
 	sr *snowflakeRestful,
-	authenticator string,
+	oktaURL *url.URL,
 	application string,
 	account string,
 	user string,
@@ -74,7 +74,7 @@ func authenticateBySAML(
 		ClientAppVersion:  SnowflakeGoDriverVersion,
 		AccountName:       account,
 		ClientEnvironment: clientEnvironment,
-		Authenticator:     authenticator,
+		Authenticator:     oktaURL.String(),
 	}
 	authRequest := authRequest{
 		Data: requestMain,
@@ -106,20 +106,21 @@ func authenticateBySAML(
 			Message:  respd.Message,
 		}
 	}
-	glog.V(2).Info("step 2: validate Token and SSO URL has the same prefix as authenticator")
-	var b1, b2 bool
-	if b1, err = isPrefixEqual(authenticator, respd.Data.TokenURL); err != nil {
-		return nil, err
+	glog.V(2).Info("step 2: validate Token and SSO URL has the same prefix as oktaURL")
+	var tokenURL *url.URL
+	var ssoURL *url.URL
+	if tokenURL, err = url.Parse(respd.Data.TokenURL); err != nil {
+		return nil, fmt.Errorf("failed to parse token URL. %v", respd.Data.TokenURL)
 	}
-	if b2, err = isPrefixEqual(authenticator, respd.Data.SSOURL); err != nil {
-		return nil, err
+	if ssoURL, err = url.Parse(respd.Data.TokenURL); err != nil {
+		return nil, fmt.Errorf("failed to parse ssoURL URL. %v", respd.Data.SSOURL)
 	}
-	if !b1 || !b2 {
+	if !isPrefixEqual(oktaURL, ssoURL) || !isPrefixEqual(oktaURL, tokenURL) {
 		return nil, &SnowflakeError{
 			Number:      ErrCodeIdpConnectionError,
 			SQLState:    SQLStateConnectionRejected,
 			Message:     errMsgIdpConnectionError,
-			MessageArgs: []interface{}{authenticator, respd.Data.TokenURL, respd.Data.SSOURL},
+			MessageArgs: []interface{}{oktaURL, respd.Data.TokenURL, respd.Data.SSOURL},
 		}
 	}
 	glog.V(2).Info("step 3: query IDP token url to authenticate and retrieve access token")
@@ -151,12 +152,10 @@ func authenticateBySAML(
 	if err != nil {
 		return nil, err
 	}
-	fullURL := fmt.Sprintf("%s://%s:%d", sr.Protocol, sr.Host, sr.Port)
+
+	fullURL := sr.getURL()
 	glog.V(2).Infof("tgtURL: %v, origURL: %v", tgtURL, fullURL)
-	if b2, err = isPrefixEqual(tgtURL, fullURL); err != nil {
-		return nil, err
-	}
-	if !b2 {
+	if !isPrefixEqual(tgtURL, fullURL) {
 		return nil, &SnowflakeError{
 			Number:      ErrCodeSSOURLNotMatch,
 			SQLState:    SQLStateConnectionRejected,
@@ -167,35 +166,25 @@ func authenticateBySAML(
 	return bd, nil
 }
 
-func postBackURL(htmlData []byte) (urlp string, err error) {
+func postBackURL(htmlData []byte) (url *url.URL, err error) {
 	idx0 := bytes.Index(htmlData, []byte("<form"))
 	if idx0 < 0 {
-		return "", fmt.Errorf("failed to find a form tag in HTML response: %v", htmlData)
+		return nil, fmt.Errorf("failed to find a form tag in HTML response: %v", htmlData)
 	}
 	idx := bytes.Index(htmlData[idx0:], []byte("action=\""))
 	if idx < 0 {
-		return "", fmt.Errorf("failed to find action field in HTML response: %v", htmlData[idx0:])
+		return nil, fmt.Errorf("failed to find action field in HTML response: %v", htmlData[idx0:])
 	}
 	idx += idx0
 	endIdx := bytes.Index(htmlData[idx+8:], []byte("\""))
 	if endIdx < 0 {
-		return "", fmt.Errorf("failed to find the end of action field: %v", htmlData[idx+8:])
+		return nil, fmt.Errorf("failed to find the end of action field: %v", htmlData[idx+8:])
 	}
 	r := html.UnescapeString(string(htmlData[idx+8 : idx+8+endIdx]))
-	return r, nil
+	return url.Parse(r)
 }
 
-func isPrefixEqual(url1 string, url2 string) (bool, error) {
-	var err error
-	var u1, u2 *url.URL
-	u1, err = url.Parse(url1)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse URL. %v", url1)
-	}
-	u2, err = url.Parse(url2)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse URL. %v", url2)
-	}
+func isPrefixEqual(u1 *url.URL, u2 *url.URL) bool {
 	p1 := u1.Port()
 	if p1 == "" && u1.Scheme == "https" {
 		p1 = "443"
@@ -204,7 +193,7 @@ func isPrefixEqual(url1 string, url2 string) (bool, error) {
 	if p2 == "" && u1.Scheme == "https" {
 		p2 = "443"
 	}
-	return u1.Hostname() == u2.Hostname() && p1 == p2 && u1.Scheme == u2.Scheme, nil
+	return u1.Hostname() == u2.Hostname() && p1 == p2 && u1.Scheme == u2.Scheme
 }
 
 // Makes a request to /session/authenticator-request to get SAML Information,

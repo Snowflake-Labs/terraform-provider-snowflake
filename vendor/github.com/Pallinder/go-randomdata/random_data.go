@@ -9,6 +9,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
@@ -34,6 +35,8 @@ const (
 	DateInputLayout  = "2006-01-02"
 	DateOutputLayout = "Monday 2 Jan 2006"
 )
+
+const ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 type jsonContent struct {
 	Adjectives          []string `json:"adjectives"`
@@ -65,11 +68,28 @@ type jsonContent struct {
 	StreetTypesGB       []string `json:"streetTypesGB"`
 }
 
+type pRand struct {
+	pr *rand.Rand
+	mu *sync.Mutex
+}
+
+func (r *pRand) Intn(n int) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.pr.Intn(n)
+}
+
+func (r *pRand) Float64() float64 {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.pr.Float64()
+}
+
 var jsonData = jsonContent{}
-var privateRand *rand.Rand
+var privateRand *pRand
 
 func init() {
-	privateRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	privateRand = &pRand{rand.New(rand.NewSource(time.Now().UnixNano())), &sync.Mutex{}}
 	jsonData = jsonContent{}
 
 	err := json.Unmarshal(data, &jsonData)
@@ -80,7 +100,7 @@ func init() {
 }
 
 func CustomRand(randToUse *rand.Rand) {
-	privateRand = randToUse
+	privateRand.pr = randToUse
 }
 
 // Returns a random part of a slice
@@ -90,19 +110,14 @@ func randomFrom(source []string) string {
 
 // Title returns a random title, gender decides the gender of the name
 func Title(gender int) string {
-	var title = ""
 	switch gender {
 	case Male:
-		title = randomFrom(jsonData.MaleTitles)
-		break
+		return randomFrom(jsonData.MaleTitles)
 	case Female:
-		title = randomFrom(jsonData.FemaleTitles)
-		break
+		return randomFrom(jsonData.FemaleTitles)
 	default:
-		title = FirstName(privateRand.Intn(2))
-		break
+		return Title(privateRand.Intn(2))
 	}
-	return title
 }
 
 // FirstName returns a random first name, gender decides the gender of the name
@@ -273,6 +288,17 @@ func StringSample(stringList ...string) string {
 		str = stringList[Number(0, len(stringList))]
 	}
 	return str
+}
+
+// Alphanumeric returns a random alphanumeric string consits of [0-9a-zA-Z].
+func Alphanumeric(length int) string {
+	list := make([]byte, length)
+
+	for i := range list {
+		list[i] = ALPHANUMERIC[privateRand.Intn(len(ALPHANUMERIC))]
+	}
+
+	return string(list)
 }
 
 func Boolean() bool {

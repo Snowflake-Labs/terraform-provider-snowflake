@@ -17,7 +17,6 @@ const (
 	defaultLoginTimeout   = 60 * time.Second  // Timeout for retry for login EXCLUDING clientTimeout
 	defaultRequestTimeout = 0 * time.Second   // Timeout for retry for request EXCLUDING clientTimeout
 	defaultJWTTimeout     = 60 * time.Second
-	defaultAuthenticator  = "snowflake"
 	defaultDomain         = ".snowflakecomputing.com"
 )
 
@@ -37,20 +36,35 @@ type Config struct {
 	Host     string // hostname (optional)
 	Port     int    // port (optional)
 
-	Authenticator      string // snowflake, okta URL, oauth or externalbrowser
+	Authenticator AuthType // The authenticator type
+
 	Passcode           string
 	PasscodeInPassword bool
+
+	OktaURL *url.URL
 
 	LoginTimeout     time.Duration // Login retry timeout EXCLUDING network roundtrip and read out http response
 	RequestTimeout   time.Duration // request retry timeout EXCLUDING network roundtrip and read out http response
 	JWTExpireTimeout time.Duration // JWT expire after timeout
 
-	Application  string // application name.
-	InsecureMode bool   // driver doesn't check certificate revocation status
+	Application  string           // application name.
+	InsecureMode bool             // driver doesn't check certificate revocation status
+	OCSPFailOpen OCSPFailOpenMode // OCSP Fail Open
 
 	Token string // Token to use for OAuth other forms of token based auth
 
 	PrivateKey *rsa.PrivateKey // Private key used to sign JWT
+}
+
+// ocspMode returns the OCSP mode in string INSECURE, FAIL_OPEN, FAIL_CLOSED
+func (c *Config) ocspMode() string {
+	if c.InsecureMode {
+		return ocspModeInsecure
+	} else if c.OCSPFailOpen == ocspFailOpenNotSet || c.OCSPFailOpen == OCSPFailOpenTrue {
+		// by default or set to true
+		return ocspModeFailOpen
+	}
+	return ocspModeFailClosed
 }
 
 // DSN constructs a DSN for Snowflake db.
@@ -95,8 +109,12 @@ func DSN(cfg *Config) (dsn string, err error) {
 	if cfg.Region != "" {
 		params.Add("region", cfg.Region)
 	}
-	if cfg.Authenticator != defaultAuthenticator {
-		params.Add("authenticator", strings.ToLower(cfg.Authenticator))
+	if cfg.Authenticator != AuthTypeSnowflake {
+		if cfg.Authenticator == AuthTypeOkta {
+			params.Add("authenticator", strings.ToLower(cfg.OktaURL.String()))
+		} else {
+			params.Add("authenticator", strings.ToLower(cfg.Authenticator.String()))
+		}
 	}
 	if cfg.Passcode != "" {
 		params.Add("passcode", cfg.Passcode)
@@ -147,7 +165,8 @@ func DSN(cfg *Config) (dsn string, err error) {
 func ParseDSN(dsn string) (cfg *Config, err error) {
 	// New config with some default values
 	cfg = &Config{
-		Params: make(map[string]*string),
+		Params:        make(map[string]*string),
+		Authenticator: AuthTypeSnowflake, // Default to snowflake
 	}
 
 	// user[:password]@account/database/schema[?param1=value1&paramN=valueN]
@@ -284,22 +303,18 @@ func ParseDSN(dsn string) (cfg *Config, err error) {
 }
 
 func fillMissingConfigParameters(cfg *Config) error {
-	if strings.Trim(cfg.Authenticator, " ") == "" {
-		cfg.Authenticator = defaultAuthenticator
-	}
 	if strings.Trim(cfg.Account, " ") == "" {
 		return ErrEmptyAccount
 	}
-	authenticator := strings.ToUpper(cfg.Authenticator)
 
-	if authenticator != authenticatorOAuth && strings.Trim(cfg.User, " ") == "" {
+	if cfg.Authenticator != AuthTypeOAuth && strings.Trim(cfg.User, " ") == "" {
 		// oauth does not require a username
 		return ErrEmptyUsername
 	}
 
-	if authenticator != authenticatorExternalBrowser &&
-		authenticator != authenticatorOAuth &&
-		authenticator != authenticatorJWT &&
+	if cfg.Authenticator != AuthTypeExternalBrowser &&
+		cfg.Authenticator != AuthTypeOAuth &&
+		cfg.Authenticator != AuthTypeJwt &&
 		strings.Trim(cfg.Password, " ") == "" {
 		// no password parameter is required for EXTERNALBROWSER, OAUTH or JWT.
 		return ErrEmptyPassword
@@ -340,6 +355,9 @@ func fillMissingConfigParameters(cfg *Config) error {
 			Message:     errMsgFailedToParseHost,
 			MessageArgs: []interface{}{cfg.Host},
 		}
+	}
+	if cfg.OCSPFailOpen == ocspFailOpenNotSet {
+		cfg.OCSPFailOpen = OCSPFailOpenTrue
 	}
 	return nil
 }
@@ -459,7 +477,10 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 		case "application":
 			cfg.Application = value
 		case "authenticator":
-			cfg.Authenticator = strings.ToLower(value)
+			err := determineAuthenticatorType(cfg, value)
+			if err != nil {
+				return err
+			}
 		case "insecureMode":
 			var vv bool
 			vv, err = strconv.ParseBool(value)
@@ -467,6 +488,18 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				return
 			}
 			cfg.InsecureMode = vv
+		case "ocspFailOpen":
+			var vv bool
+			vv, err = strconv.ParseBool(value)
+			if err != nil {
+				return
+			}
+			if vv {
+				cfg.OCSPFailOpen = OCSPFailOpenTrue
+			} else {
+				cfg.OCSPFailOpen = OCSPFailOpenFalse
+			}
+
 		case "token":
 			cfg.Token = value
 		case "privateKey":

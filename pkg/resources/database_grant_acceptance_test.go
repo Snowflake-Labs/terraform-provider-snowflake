@@ -7,7 +7,29 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func testRolesAndShares(path string, roles, shares []string) func(*terraform.State) error {
+	return func(state *terraform.State) error {
+		is := state.RootModule().Resources[path].Primary
+
+		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(c) != int64(len(roles)) {
+			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
+		}
+		r, err := extractList(is.Attributes, "roles")
+		if err != nil {
+			return err
+		}
+
+		// TODO case sensitive?
+		if !listSetEqual(roles, r) {
+			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
+		}
+
+		return nil
+	}
+}
 
 func TestAccDatabaseGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
@@ -26,10 +48,15 @@ func TestAccDatabaseGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "database_name", dbName),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "privilege", "USAGE"),
+					resource.TestCheckResourceAttr("snowflake_database_grant.test", "roles.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
+					testRolesAndShares("snowflake_database_grant.test", []string{roleName}, []string{shareName}),
 				),
 			},
 			// IMPORT
 			{
+				PreConfig:         func() { fmt.Println("[DEBUG] IMPORT") },
 				ResourceName:      "snowflake_database_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,

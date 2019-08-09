@@ -59,9 +59,9 @@ type execResponseData struct {
 	ChunkHeaders       map[string]string     `json:"chunkHeaders,omitempty"`
 
 	// ping pong response data
-	GetResultURL         string        `json:"getResultUrl,omitempty"`
-	ProgressDesc         string        `json:"progressDesc,omitempty"`
-	QueryAbortsAfterSecs time.Duration `json:"queryAbortsAfterSecs,omitempty"`
+	GetResultURL      string        `json:"getResultUrl,omitempty"`
+	ProgressDesc      string        `json:"progressDesc,omitempty"`
+	QueryAbortTimeout time.Duration `json:"queryAbortsAfterSecs,omitempty"`
 }
 
 type execResponse struct {

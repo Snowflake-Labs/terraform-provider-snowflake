@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -9,6 +10,9 @@ import (
 )
 
 func TestAccWarehouseGrant(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_GRANT_TESTS"); ok {
+		t.Skip("Skipping TestAccWarehouseGrant")
+	}
 	wName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
@@ -22,7 +26,7 @@ func TestAccWarehouseGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "privilege", "USAGE"),
 				),
 			},
-			// IMPORT
+			// // IMPORT
 			{
 				ResourceName:      "snowflake_warehouse_grant.test",
 				ImportState:       true,

@@ -55,12 +55,12 @@ func (lcd *largeChunkDecoder) mkError(s string) error {
 }
 
 func (lcd *largeChunkDecoder) decode() ([][]*string, error) {
-	if '[' != lcd.nextByteNonWhitespace() {
+	if lcd.nextByteNonWhitespace() != '[' {
 		return nil, lcd.mkError("expected chunk to begin with '['")
 	}
 
 	rows := make([][]*string, 0, lcd.rows)
-	if ']' == lcd.nextByteNonWhitespace() {
+	if lcd.nextByteNonWhitespace() == ']' {
 		return rows, nil // special case of an empty chunk
 	}
 	lcd.rewind(1)
@@ -86,12 +86,12 @@ OuterLoop:
 }
 
 func (lcd *largeChunkDecoder) decodeRow() ([]*string, error) {
-	if '[' != lcd.nextByteNonWhitespace() {
+	if lcd.nextByteNonWhitespace() != '[' {
 		return nil, lcd.mkError("expected row to begin with '['")
 	}
 
 	row := make([]*string, 0, lcd.cells)
-	if ']' == lcd.nextByteNonWhitespace() {
+	if lcd.nextByteNonWhitespace() == ']' {
 		return row, nil // special case of an empty row
 	}
 	lcd.rewind(1)
@@ -122,9 +122,9 @@ func (lcd *largeChunkDecoder) decodeCell() (*string, error) {
 		s, err := lcd.decodeString()
 		return &s, err
 	} else if c == 'n' {
-		if 'u' == lcd.nextByte() &&
-			'l' == lcd.nextByte() &&
-			'l' == lcd.nextByte() {
+		if lcd.nextByte() == 'u' &&
+			lcd.nextByte() == 'l' &&
+			lcd.nextByte() == 'l' {
 			return nil, nil
 		}
 	}
@@ -216,10 +216,10 @@ func (lcd *largeChunkDecoder) getu4WithPrefix() (rune, int) {
 	// where we were before we began consuming bytes
 	ptr := lcd.ptr
 
-	if '\\' != lcd.nextByte() {
+	if lcd.nextByte() != '\\' {
 		return -1, lcd.ptr - ptr
 	}
-	if 'u' != lcd.nextByte() {
+	if lcd.nextByte() != 'u' {
 		return -1, lcd.ptr - ptr
 	}
 	r := lcd.getu4()
