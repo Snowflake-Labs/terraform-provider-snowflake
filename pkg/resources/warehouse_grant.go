@@ -37,7 +37,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// WarehouseGrant returns a pointer to the resource representing a view grant
+// WarehouseGrant returns a pointer to the resource representing a warehouse grant
 func WarehouseGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateWarehouseGrant,
@@ -45,6 +45,7 @@ func WarehouseGrant() *schema.Resource {
 		Delete: DeleteWarehouseGrant,
 
 		Schema: warehouseGrantSchema,
+		// FIXME - tests for this don't currently work
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -114,7 +114,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 			User:          username,
 			Region:        region,
 			Role:          role,
-			Authenticator: "externalbrowser",
+			Authenticator: gosnowflake.AuthTypeExternalBrowser,
 		})
 	}
 

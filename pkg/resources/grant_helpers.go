@@ -65,6 +65,10 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 	return nil
 }
 
+func d(in interface{}) {
+	fmt.Printf("[DEBUG]%#v\n", in)
+}
+
 func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 	grants, err := readGenericGrants(db, builder)
@@ -76,13 +80,13 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	rolesIn, sharesIn := expandRolesAndShares(data)
 
 	var roles, shares []string
-
+	d("foo")
 	for _, grant := range grants {
 		// Skip if wrong privilege
 		if grant.Privilege != priv {
 			continue
 		}
-
+		d(grant)
 		switch grant.GranteeType {
 		case "ROLE":
 			if !stringInSlice(grant.GranteeName, rolesIn) {
@@ -106,10 +110,12 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	if err != nil {
 		return err
 	}
+
 	err = data.Set("roles", roles)
 	if err != nil {
 		return err
 	}
+
 	err = data.Set("shares", shares)
 	if err != nil {
 		// warehouses don't use shares - check for this error
