@@ -2,6 +2,8 @@ package validation
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var validPasswords = []string{
@@ -19,17 +21,15 @@ var invalidPasswords = []interface{}{
 }
 
 func TestValidatePassword(t *testing.T) {
+	r := require.New(t)
 	for _, p := range validPasswords {
 		_, errs := ValidatePassword(p, "test_password")
-		if len(errs) != 0 {
-			t.Errorf("%v failed to validate: %v", p, errs)
-		}
+		r.Len(errs, 0, "%v failed to validate: %v", p, errs)
+
 	}
 
 	for _, p := range invalidPasswords {
 		_, errs := ValidatePassword(p, "test_password")
-		if len(errs) == 0 {
-			t.Errorf("%v should have failed to validate: %v", p, errs)
-		}
+		r.NotZero(len(errs), "%v should have failed to validate: %v", p, errs)
 	}
 }
