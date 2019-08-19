@@ -16,5 +16,5 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc // indirect
 	github.com/snowflakedb/gosnowflake v1.2.0
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 )
