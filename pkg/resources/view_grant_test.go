@@ -30,8 +30,8 @@ func TestViewGrantCreate(t *testing.T) {
 		"schema_name":   "PUBLIC",
 		"database_name": "test-db",
 		"privilege":     "SELECT",
-		"roles":         []string{"test-role-1", "test-role-2"},
-		"shares":        []string{"test-share-1", "test-share-2"},
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	a.NotNil(d)

@@ -26,7 +26,7 @@ func TestShareCreate(t *testing.T) {
 	in := map[string]interface{}{
 		"name":     "test-share",
 		"comment":  "great comment",
-		"accounts": []string{"bob123", "sue456"},
+		"accounts": []interface{}{"bob123", "sue456"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, in)
 	a.NotNil(d)

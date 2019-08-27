@@ -24,8 +24,8 @@ func TestRoleGrantsCreate(t *testing.T) {
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
-		"roles":     []string{"role1", "role2"},
-		"users":     []string{"user1", "user2"},
+		"roles":     []interface{}{"role1", "role2"},
+		"users":     []interface{}{"user1", "user2"},
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -59,8 +59,8 @@ func TestRoleGrantsRead(t *testing.T) {
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
-		"roles":     []string{"role1", "role2"},
-		"users":     []string{"user1", "user2"},
+		"roles":     []interface{}{"role1", "role2"},
+		"users":     []interface{}{"user1", "user2"},
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -77,8 +77,8 @@ func TestRoleGrantsDelete(t *testing.T) {
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{
 		"role_name": "drop_it",
-		"roles":     []string{"role1", "role2"},
-		"users":     []string{"user1", "user2"},
+		"roles":     []interface{}{"role1", "role2"},
+		"users":     []interface{}{"user1", "user2"},
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
