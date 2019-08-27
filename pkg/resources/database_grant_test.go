@@ -28,8 +28,8 @@ func TestDatabaseGrantCreate(t *testing.T) {
 	in := map[string]interface{}{
 		"database_name": "test-database",
 		"privilege":     "USAGE",
-		"roles":         []string{"test-role-1", "test-role-2"},
-		"shares":        []string{"test-share-1", "test-share-2"},
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, in)
 	a.NotNil(d)
@@ -51,8 +51,8 @@ func TestDatabaseGrantRead(t *testing.T) {
 	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
 		"database_name": "test-database",
 		"privilege":     "IMPORTED PRIVILIGES",
-		"roles":         []string{"test-role-1", "test-role-2"},
-		"shares":        []string{"test-share-1", "test-share-2"},
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	})
 
 	a.NotNil(d)

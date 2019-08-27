@@ -29,8 +29,8 @@ func TestSchemaGrantCreate(t *testing.T) {
 		"schema_name":   "test-schema",
 		"database_name": "test-db",
 		"privilege":     "USAGE",
-		"roles":         []string{"test-role-1", "test-role-2"},
-		"shares":        []string{"test-share-1", "test-share-2"},
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
 	a.NotNil(d)

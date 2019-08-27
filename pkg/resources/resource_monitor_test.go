@@ -26,9 +26,9 @@ func TestResourceMonitorCreate(t *testing.T) {
 	in := map[string]interface{}{
 		"name":                       "good_name",
 		"credit_quota":               100,
-		"notify_triggers":            []int{75, 88},
-		"suspend_triggers":           []int{99},
-		"suspend_immediate_triggers": []int{105},
+		"notify_triggers":            []interface{}{75, 88},
+		"suspend_triggers":           []interface{}{99},
+		"suspend_immediate_triggers": []interface{}{105},
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
