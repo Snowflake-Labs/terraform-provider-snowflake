@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -66,7 +67,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *sn
 }
 
 func d(in interface{}) {
-	fmt.Printf("[DEBUG]%#v\n", in)
+	log.Printf("[DEBUG]%#v\n", in)
 }
 
 func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snowflake.GrantBuilder) error {

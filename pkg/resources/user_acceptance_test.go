@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"testing"
@@ -113,7 +114,7 @@ KEY
 }
 `
 	s = fmt.Sprintf(s, prefix, prefix, key1, key2)
-	fmt.Printf("[DEBUG] s %s", s)
+	log.Printf("[DEBUG] s %s", s)
 	return s
 }
 
@@ -130,6 +131,6 @@ resource "snowflake_user" "w" {
 	default_namespace="bar"
 }
 `
-	fmt.Printf("[DEBUG] s2 %s", s)
+	log.Printf("[DEBUG] s2 %s", s)
 	return fmt.Sprintf(s, prefix, prefix)
 }
