@@ -14,18 +14,18 @@ install:
 script:
   - make
 
-jobs:
+matrix:
   include:
-    - stage: check
+    - name: unit/acceptance tests
       script:
         - make test-acceptance
       after_success:
         - bash <(curl -s https://codecov.io/bash)
     # Disable snyk until https://github.com/snyk/snyk/issues/354 is resolved
-    # - stage: check
+    # - name: snyk
     #   script:
     #     - snyk monitor --org=czi
     #     - snyk test
-    - stage: check
+    - name: docs check
       script:
         - make check-docs
