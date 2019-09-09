@@ -181,6 +181,7 @@ func ShareExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
 	if rows.Next() {
 		return true, nil
