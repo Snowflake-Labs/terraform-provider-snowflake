@@ -194,6 +194,7 @@ func ManagedAccountExists(data *schema.ResourceData, meta interface{}) (bool, er
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
 	if rows.Next() {
 		return true, nil
