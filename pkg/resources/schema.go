@@ -264,11 +264,13 @@ func SchemaExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
+	exists := false
 	if rows.Next() {
-		return true, nil
+		exists = true
 	}
 
-	return false, nil
+	rows.Close()
+	return exists, nil
 }
 
 // splitSchemaID takes the <database_name>|<schema_name> ID and returns the
