@@ -17,3 +17,6 @@ require (
 	github.com/snowflakedb/gosnowflake v1.2.0
 	github.com/stretchr/testify v1.4.0
 )
+
+// TODO: when https://github.com/hashicorp/terraform/issues/22664 gets resolved, remove this line:
+replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
