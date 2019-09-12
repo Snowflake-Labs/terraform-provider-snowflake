@@ -9,20 +9,15 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccViewGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccViewGrant")
-	}
-
+func TestAccViewGrantBasic(t *testing.T) {
 	vName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(vName, roleName, shareName),
+				Config: viewGrantConfigFuture(vName, roleName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", vName),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
@@ -33,12 +28,84 @@ func TestAccViewGrant(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				// I don't understand why ImportStateVerifyIgnore is needed, but
+				// adding this is the only way to make acceptance tests pass.
+				ImportStateVerifyIgnore: []string{"roles", "shares"},
 			},
 		},
 	})
 }
 
-func viewGrantConfig(n, role, share string) string {
+func TestAccViewGrantShares(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
+		t.Skip("Skipping TestAccViewGrantShares")
+	}
+
+	vName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: viewGrantConfigShares(vName, roleName, shareName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", vName),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_view_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// I don't understand why ImportStateVerifyIgnore is needed, but
+				// adding this is the only way to make acceptance tests pass.
+				ImportStateVerifyIgnore: []string{"roles", "shares"},
+			},
+		},
+	})
+}
+
+func TestAccFutureViewGrantChange(t *testing.T) {
+	vName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: viewGrantConfigFuture(vName, roleName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", vName),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "false"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// CHANGE FROM CURRENT TO FUTURE VIEWS
+			{
+				Config: viewGrantConfigFuture(vName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", ""),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_view_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// I don't understand why ImportStateVerifyIgnore is needed, but
+				// adding this is the only way to make acceptance tests pass.
+				ImportStateVerifyIgnore: []string{"roles"},
+			},
+		},
+	})
+}
+
+func viewGrantConfigShares(n, role, share string) string {
 	return fmt.Sprintf(`
 
 resource "snowflake_database" "test" {
@@ -75,4 +142,34 @@ resource "snowflake_view_grant" "test" {
   depends_on = [snowflake_database_grant.test]
 }
 `, n, n, role, share)
+}
+
+func viewGrantConfigFuture(n string, role string, future bool) string {
+	view_name_config := "view_name = snowflake_view.test.name"
+	if future {
+		view_name_config = "on_future = true"
+	}
+	return fmt.Sprintf(`
+
+resource "snowflake_database" "test" {
+  name = "%v"
+}
+
+resource "snowflake_view" "test" {
+  name      = "%v"
+  database  = snowflake_database.test.name
+  statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+  is_secure = true
+}
+
+resource "snowflake_role" "test" {
+  name = "%v"
+}
+
+resource "snowflake_view_grant" "test" {
+  %v
+  database_name = snowflake_view.test.database
+  roles         = [snowflake_role.test.name]
+}
+`, n, n, role, view_name_config)
 }

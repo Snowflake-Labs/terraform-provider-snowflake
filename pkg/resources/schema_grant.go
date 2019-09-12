@@ -117,7 +117,7 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.SchemaGrant(db, schema)
 
-	return readGenericGrant(data, meta, builder)
+	return readGenericGrant(data, meta, builder, false)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc
