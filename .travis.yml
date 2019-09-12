@@ -18,7 +18,7 @@ matrix:
   include:
     - name: unit/acceptance tests
       script:
-        - make test-ci
+        - make test-acceptance-ci
       after_success:
         - bash <(curl -s https://codecov.io/bash)
     # Disable snyk until https://github.com/snyk/snyk/issues/354 is resolved
