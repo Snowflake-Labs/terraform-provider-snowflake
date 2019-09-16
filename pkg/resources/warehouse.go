@@ -9,6 +9,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/jmoiron/sqlx"
 )
 
 var warehouseProperties = []string{"comment", "warehouse_size"}
@@ -58,41 +59,63 @@ func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
 
 }
 
+type warehouse struct {
+	Name            sql.NullString `db:"name"`
+	State           sql.NullString `db:"state"`
+	Warehousetype   sql.NullString `db:"type"`
+	Size            sql.NullString `db:"size"`
+	MinClusterCount sql.NullString `db:"min_cluster_count"`
+	MaxClusterCount sql.NullString `db:"max_cluster_count"`
+	StartedClusters sql.NullString `db:"started_clusters"`
+	Running         sql.NullString `db:"running"`
+	Queued          sql.NullString `db:"queued"`
+	IsDefault       sql.NullString `db:"is_default"`
+	IsCurrent       sql.NullString `db:"is_current"`
+	AutoSuspend     sql.NullString `db:"auto_suspend"`
+	AutoResume      sql.NullString `db:"auto_resume"`
+	Available       sql.NullString `db:"available"`
+	Provisioning    sql.NullString `db:"provisioning"`
+	Quiescing       sql.NullString `db:"quiescing"`
+	Other           sql.NullString `db:"other"`
+	CreatedOn       sql.NullString `db:"created_on"`
+	ResumedOn       sql.NullString `db:"resumed_on"`
+	UpdatedOn       sql.NullString `db:"updated_on"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
+	ResourceMonitor sql.NullString `db:"resource_monitor"`
+	Actives         sql.NullString `db:"actives"`
+	Pendings        sql.NullString `db:"pendings"`
+	Failed          sql.NullString `db:"failed"`
+	Suspended       sql.NullString `db:"suspended"`
+	Uuid            sql.NullString `db:"uuid"`
+	ScalingPolidy   sql.NullString `db:"scaling_policy"`
+}
+
 func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	sdb := sqlx.NewDb(db, "snowflake")
+
 	name := data.Id()
 
-	err := DBExec(db, `USE WAREHOUSE "%s"`, name)
+	stmt := snowflake.Warehouse(name).Show()
+
+	row := sdb.QueryRowx(stmt)
+	warehouse := &warehouse{}
+	err := row.StructScan(warehouse)
 	if err != nil {
 		return err
 	}
 
-	err = DBExec(db, "SHOW WAREHOUSES LIKE '%s'", name)
+	err = data.Set("name", warehouse.Name.String)
+	if err != nil {
+		return err
+	}
+	err = data.Set("comment", warehouse.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	stmt3 := `select "name", "comment", "size" from table(result_scan(last_query_id()))`
-	log.Printf("[DEBUG] stmt %s", stmt3)
-
-	row := db.QueryRow(stmt3)
-
-	var warehouseName, comment, size sql.NullString
-	err = row.Scan(&warehouseName, &comment, &size)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("name", warehouseName.String)
-	if err != nil {
-		return err
-	}
-	err = data.Set("comment", comment.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("warehouse_size", size.String)
+	err = data.Set("warehouse_size", warehouse.Size.String)
 
 	return err
 }
