@@ -13,10 +13,10 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// grant represents a generic grant of a privilege from a grant (the target) to a
+// currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
 // build a nice go representation of a grant
-type grant struct {
+type currentGrant struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
 	GrantType   string    `db:"granted_on"`
@@ -25,6 +25,30 @@ type grant struct {
 	GranteeName string    `db:"grantee_name"`
 	GrantOption bool      `db:"grant_option"`
 	GrantedBy   string    `db:"granted_by"`
+}
+
+// futureGrant represents the columns in the response from `SHOW FUTURE GRANTS
+// IN SCHEMA...` and can be used in conjunction with sqlx.
+type futureGrant struct {
+	CreatedOn   time.Time `db:"created_on"`
+	Privilege   string    `db:"privilege"`
+	GrantType   string    `db:"grant_on"`
+	GrantName   string    `db:"name"`
+	GranteeType string    `db:"grant_to"`
+	GranteeName string    `db:"grantee_name"`
+	GrantOption bool      `db:"grant_option"`
+}
+
+// grant is simply the least common denominator of fields in currentGrant and
+// futureGrant.
+type grant struct {
+	CreatedOn   time.Time
+	Privilege   string
+	GrantType   string
+	GrantName   string
+	GranteeType string
+	GranteeName string
+	GrantOption bool
 }
 
 // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
@@ -38,7 +62,7 @@ func splitGrantID(v string) (string, string, string, string, error) {
 	return arr[0], arr[1], arr[2], arr[3], nil
 }
 
-func createGenericGrant(data *schema.ResourceData, meta interface{}, builder *snowflake.GrantBuilder) error {
+func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
@@ -70,9 +94,15 @@ func d(in interface{}) {
 	log.Printf("[DEBUG]%#v\n", in)
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snowflake.GrantBuilder) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool) error {
 	db := meta.(*sql.DB)
-	grants, err := readGenericGrants(db, builder)
+	var grants []*grant
+	var err error
+	if futureObjects {
+		grants, err = readGenericFutureGrants(db, builder)
+	} else {
+		grants, err = readGenericCurrentGrants(db, builder)
+	}
 	if err != nil {
 		return err
 	}
@@ -96,12 +126,12 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 			roles = append(roles, grant.GranteeName)
 		case "SHARE":
 			// Shares get the account appended to their name, remove this
-			granteeName := StripAccountFromName(grant.GranteeName)
-			if !stringInSlice(granteeName, sharesIn) {
+			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
+			if !stringInSlice(granteeNameStrippedAccount, sharesIn) {
 				continue
 			}
 
-			shares = append(shares, granteeName)
+			shares = append(shares, grant.GranteeName)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
@@ -119,7 +149,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 
 	err = data.Set("shares", shares)
 	if err != nil {
-		// warehouses don't use shares - check for this error
+		// warehouses and future grants don't use shares - check for this error
 		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
 			return err
 		}
@@ -128,7 +158,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder *snow
 	return nil
 }
 
-func readGenericGrants(db *sql.DB, builder *snowflake.GrantBuilder) ([]*grant, error) {
+func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
 	conn := sqlx.NewDb(db, "snowflake")
 
 	stmt := builder.Show()
@@ -140,10 +170,19 @@ func readGenericGrants(db *sql.DB, builder *snowflake.GrantBuilder) ([]*grant, e
 
 	var grants []*grant
 	for rows.Next() {
-		grant := &grant{}
-		err := rows.StructScan(grant)
+		currentGrant := &currentGrant{}
+		err := rows.StructScan(currentGrant)
 		if err != nil {
 			return nil, err
+		}
+		grant := &grant{
+			CreatedOn: currentGrant.CreatedOn,
+			Privilege: currentGrant.Privilege,
+			GrantType: currentGrant.GrantType,
+			GrantName: currentGrant.GrantName,
+			GranteeType: currentGrant.GranteeType,
+			GranteeName: currentGrant.GranteeName,
+			GrantOption: currentGrant.GrantOption,
 		}
 		grants = append(grants, grant)
 	}
@@ -151,7 +190,39 @@ func readGenericGrants(db *sql.DB, builder *snowflake.GrantBuilder) ([]*grant, e
 	return grants, nil
 }
 
-func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder *snowflake.GrantBuilder) error {
+func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
+	conn := sqlx.NewDb(db, "snowflake")
+
+	stmt := builder.Show()
+	rows, err := conn.Queryx(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var grants []*grant
+	for rows.Next() {
+		futureGrant := &futureGrant{}
+		err := rows.StructScan(futureGrant)
+		if err != nil {
+			return nil, err
+		}
+		grant := &grant{
+			CreatedOn:   futureGrant.CreatedOn,
+			Privilege:   futureGrant.Privilege,
+			GrantType:   futureGrant.GrantType,
+			GrantName:   futureGrant.GrantName,
+			GranteeType: futureGrant.GranteeType,
+			GranteeName: futureGrant.GranteeName,
+			GrantOption: futureGrant.GrantOption,
+		}
+		grants = append(grants, grant)
+	}
+
+	return grants, nil
+}
+
+func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
