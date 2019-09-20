@@ -160,6 +160,20 @@ You can see a number of examples [here](examples).
 | comment  | string | Specifies a comment for the managed account.                                                          | true     | false     | false    | <nil>   |
 | name     | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    | <nil>   |
 
+### snowflake_table_grant
+
+#### properties
+
+|     NAME      |  TYPE  |                                            DESCRIPTION                                             | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|---------------|--------|----------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| database_name | string | The name of the database containing the current or future tables on which to grant privileges.     | false    | true      | false    | <nil>    |
+| on_future     | bool   | The name of the database containing the current or future tables on which to grant privileges.     | true     | false     | false    | false    |
+| privilege     | string | The privilege to grant on the current or future table.                                             | true     | false     | false    | "SELECT" |
+| roles         | set    | Grants privilege to these roles.                                                                   | true     | false     | false    | <nil>    |
+| schema_name   | string | The name of the schema containing the current or future tables on which to grant privileges.       | true     | false     | false    | "PUBLIC" |
+| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                               | true     | false     | false    | <nil>    |
+| table_name    | string | The name of the table on which to grant privileges immediately (only valid if on_future is unset). | true     | false     | false    | <nil>    |
+
 ### snowflake_user
 
 #### properties
@@ -196,14 +210,15 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|     NAME      |  TYPE  |                                DESCRIPTION                                 | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|---------------|--------|----------------------------------------------------------------------------|----------|-----------|----------|----------|
-| database_name | string | The name of the database containing the view on which to grant privileges. | false    | true      | false    | <nil>    |
-| privilege     | string | The privilege to grant on the view.                                        | true     | false     | false    | "SELECT" |
-| roles         | set    | Grants privilege to these roles.                                           | true     | false     | false    | <nil>    |
-| schema_name   | string | The name of the schema containing the view on which to grant privileges.   | true     | false     | false    | "PUBLIC" |
-| shares        | set    | Grants privilege to these shares.                                          | true     | false     | false    | <nil>    |
-| view_name     | string | The name of the view on which to grant privileges.                         | false    | true      | false    | <nil>    |
+|     NAME      |  TYPE  |                                            DESCRIPTION                                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|---------------|--------|---------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| database_name | string | The name of the database containing the current or future views on which to grant privileges.     | false    | true      | false    | <nil>    |
+| on_future     | bool   | The name of the database containing the current or future views on which to grant privileges.     | true     | false     | false    | false    |
+| privilege     | string | The privilege to grant on the current or future view.                                             | true     | false     | false    | "SELECT" |
+| roles         | set    | Grants privilege to these roles.                                                                  | true     | false     | false    | <nil>    |
+| schema_name   | string | The name of the schema containing the current or future views on which to grant privileges.       | true     | false     | false    | "PUBLIC" |
+| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                              | true     | false     | false    | <nil>    |
+| view_name     | string | The name of the view on which to grant privileges immediately (only valid if on_future is unset). | true     | false     | false    | <nil>    |
 
 ### snowflake_warehouse
 
