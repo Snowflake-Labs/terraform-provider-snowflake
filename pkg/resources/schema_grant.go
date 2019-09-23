@@ -14,6 +14,7 @@ import (
 var validSchemaPrivileges = []string{
 	"MODIFY",
 	"MONITOR",
+	"OWNERSHIP",
 	"USAGE",
 	"CREATE TABLE",
 	"CREATE VIEW",
