@@ -64,7 +64,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_future": &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "The name of the database containing the current or future tables on which to grant privileges.",
+		Description: "When this is set to true, apply this grant on all future tables in the given schema.  The table_name and shares fields must be unset in order to use on_future.",
 		Default:     false,
 		ForceNew:    true,
 		ConflictsWith: []string{"table_name", "shares"},
