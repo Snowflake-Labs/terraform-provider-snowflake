@@ -142,7 +142,7 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|     NAME      |  TYPE  |                                 DESCRIPTION                                                                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
 | database_name | string | The name of the database containing the schema on which to grant privileges.                                                                  | false    | true      | false    | <nil>   |
 | privilege     | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
