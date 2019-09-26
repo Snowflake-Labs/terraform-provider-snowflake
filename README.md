@@ -142,13 +142,13 @@ You can see a number of examples [here](examples).
 
 #### properties
 
-|     NAME      |  TYPE  |                                 DESCRIPTION                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database containing the schema on which to grant privileges. | false    | true      | false    | <nil>   |
-| privilege     | string | The privilege to grant on the schema.                                        | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                                             | true     | false     | false    | <nil>   |
-| schema_name   | string | The name of the schema on which to grant privileges.                         | false    | true      | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                                            | true     | false     | false    | <nil>   |
+|     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database containing the schema on which to grant privileges.                                                                  | false    | true      | false    | <nil>   |
+| privilege     | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
+| schema_name   | string | The name of the schema on which to grant privileges.                                                                                          | false    | true      | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares.                                                                                                             | true     | false     | false    | <nil>   |
 
 ### snowflake_share
 
