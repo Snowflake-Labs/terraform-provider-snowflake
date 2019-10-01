@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -55,6 +56,8 @@ func Share() *schema.Resource {
 func CreateShare(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
+
+	log.Printf("[DEBUG] name of share %s", name)
 
 	builder := snowflake.Share(name).Create()
 	builder.SetString("COMMENT", data.Get("comment").(string))
