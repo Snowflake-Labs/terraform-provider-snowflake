@@ -1,5 +1,7 @@
 package snowflake
 
+import "strings"
+
 // Share returns a pointer to a Builder that abstracts the DDL operations for a share.
 //
 // Supported DDL operations are:
@@ -13,6 +15,6 @@ package snowflake
 func Share(name string) *Builder {
 	return &Builder{
 		entityType: ShareType,
-		name:       name,
+		name:       strings.ToUpper(name),
 	}
 }
