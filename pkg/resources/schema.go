@@ -14,16 +14,18 @@ import (
 
 var schemaSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
+		ForceNew:         true,
+		DiffSuppressFunc: diffCaseInsensitive,
 	},
 	"database": &schema.Schema{
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the schema.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "The database in which to create the schema.",
+		ForceNew:         true,
+		DiffSuppressFunc: diffCaseInsensitive,
 	},
 	"comment": &schema.Schema{
 		Type:        schema.TypeString,

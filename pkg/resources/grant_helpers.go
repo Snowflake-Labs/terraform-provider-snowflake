@@ -114,7 +114,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	d("foo")
 	for _, grant := range grants {
 		// Skip if wrong privilege
-		grant.GranteeName = strings.ToUpper(grant.GranteeName)
+		//grant.GranteeName = strings.ToUpper(grant.GranteeName)
 		if grant.Privilege != priv {
 			continue
 		}
@@ -177,10 +177,10 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 			return nil, err
 		}
 		grant := &grant{
-			CreatedOn: currentGrant.CreatedOn,
-			Privilege: currentGrant.Privilege,
-			GrantType: currentGrant.GrantType,
-			GrantName: currentGrant.GrantName,
+			CreatedOn:   currentGrant.CreatedOn,
+			Privilege:   currentGrant.Privilege,
+			GrantType:   currentGrant.GrantType,
+			GrantName:   currentGrant.GrantName,
 			GranteeType: currentGrant.GranteeType,
 			GranteeName: currentGrant.GranteeName,
 			GrantOption: currentGrant.GrantOption,
