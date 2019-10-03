@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -55,11 +56,11 @@ var viewGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": &schema.Schema{
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
 	},
 }
@@ -107,7 +108,11 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>|<view_name>|<privilege>
+	// read dbName, schemaName, and priv through csvreader
+	dbName = strings.Replace(dbName, "|", " ", -1)
+	schemaName = strings.Replace(schemaName, "|", " ", -1)
+	priv = strings.Replace(priv, "|", " ", -1)
+
 	// view_name is empty when on_future = true
 	if futureViews {
 		data.SetId(fmt.Sprintf("%v|%v||%v", dbName, schemaName, priv))
