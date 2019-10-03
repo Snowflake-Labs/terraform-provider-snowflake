@@ -111,6 +111,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	// read dbName, schemaName, and priv through csvreader
 	dbName = strings.Replace(dbName, "|", " ", -1)
 	schemaName = strings.Replace(schemaName, "|", " ", -1)
+	viewName = strings.Replace(viewName, "|", " ", -1)
 	priv = strings.Replace(priv, "|", " ", -1)
 
 	// view_name is empty when on_future = true
