@@ -56,7 +56,7 @@ func Share() *schema.Resource {
 // CreateShare implements schema.CreateFunc
 func CreateShare(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := strings.ToUpper(data.Get("name").(string))
+	name := data.Get("name").(string)
 
 	builder := snowflake.Share(name).Create()
 	builder.SetString("COMMENT", data.Get("comment").(string))
