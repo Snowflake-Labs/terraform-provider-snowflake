@@ -162,6 +162,7 @@ func UpdateShare(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
 	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(data, meta)
 }
 
