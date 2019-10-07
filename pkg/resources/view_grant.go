@@ -1,8 +1,9 @@
 package resources
 
 import (
-	"fmt"
-	"strings"
+	"bytes"
+	"encoding/csv"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -108,18 +109,22 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// read dbName, schemaName, and priv through csvreader
-	dbName = strings.Replace(dbName, "|", " ", -1)
-	schemaName = strings.Replace(schemaName, "|", " ", -1)
-	viewName = strings.Replace(viewName, "|", " ", -1)
-	priv = strings.Replace(priv, "|", " ", -1)
+	data_identifiers := [][]string{{dbName, schemaName, viewName, ""}}
 
-	// view_name is empty when on_future = true
-	if futureViews {
-		data.SetId(fmt.Sprintf("%v|%v||%v", dbName, schemaName, priv))
-	} else {
-		data.SetId(fmt.Sprintf("%v|%v|%v|%v", dbName, schemaName, viewName, priv))
+	if !(futureViews) { // merge with above if/else statement if possible
+		data_identifiers[0][3] = priv
 	}
+
+	var buf bytes.Buffer
+	csv_writer := csv.NewWriter(&buf)
+	csv_writer.Comma = '|'
+	csv_writer.WriteAll(data_identifiers)
+
+	if err := csv_writer.Error(); err != nil {
+		log.Fatalln("error writing csv:", err)
+	}
+
+	data.SetId(buf.String())
 
 	return ReadViewGrant(data, meta)
 }

@@ -54,7 +54,9 @@ type grant struct {
 // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
 // returns the object name and privilege.
 func splitGrantID(v string) (string, string, string, string, error) {
+
 	arr := strings.Split(v, "|")
+
 	if len(arr) != 4 {
 		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
 	}
@@ -176,10 +178,10 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 			return nil, err
 		}
 		grant := &grant{
-			CreatedOn: currentGrant.CreatedOn,
-			Privilege: currentGrant.Privilege,
-			GrantType: currentGrant.GrantType,
-			GrantName: currentGrant.GrantName,
+			CreatedOn:   currentGrant.CreatedOn,
+			Privilege:   currentGrant.Privilege,
+			GrantType:   currentGrant.GrantType,
+			GrantName:   currentGrant.GrantName,
 			GranteeType: currentGrant.GranteeType,
 			GranteeName: currentGrant.GranteeName,
 			GrantOption: currentGrant.GrantOption,
