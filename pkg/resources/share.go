@@ -104,7 +104,7 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error creating temporary DB grant %v", tempName)
 		}
 		// 3. Add the accounts to the share
-		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
+		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.ToUpper(strings.Join(accs, ",")))
 		err = DBExec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error adding accounts to share %v", name)
@@ -164,7 +164,6 @@ func UpdateShare(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-
 	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(data, meta)
 }
 

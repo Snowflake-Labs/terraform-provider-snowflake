@@ -1,7 +1,5 @@
 package resources
 
-import "log"
-
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
 
 func expandIntList(configured []interface{}) []int {
@@ -19,8 +17,6 @@ func expandStringList(configured []interface{}) []string {
 	for _, v := range configured {
 		val, ok := v.(string)
 		if ok && val != "" {
-			val = "\"" + val + "\""
-			log.Printf("[DEBUG] VALUE IS NOW: %s", val)
 			vs = append(vs, val)
 		}
 	}
