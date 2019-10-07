@@ -14,9 +14,9 @@ import (
 
 var databaseSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         false,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: false,
 	},
 	"comment": &schema.Schema{
 		Type:     schema.TypeString,
@@ -29,10 +29,10 @@ var databaseSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"from_share": &schema.Schema{
-		Type:             schema.TypeMap,
-		Description:      "Specify a provider and a share in this map to create a database from a share.",
-		Optional:         true,
-		ForceNew:         true,
+		Type:        schema.TypeMap,
+		Description: "Specify a provider and a share in this map to create a database from a share.",
+		Optional:    true,
+		ForceNew:    true,
 	},
 }
 
