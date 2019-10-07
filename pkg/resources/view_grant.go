@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -124,7 +125,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		log.Fatalln("error writing csv:", err)
 	}
 
-	data.SetId(buf.String())
+	data.SetId(strings.TrimSuffix(buf.String(), "\n"))
 
 	return ReadViewGrant(data, meta)
 }
