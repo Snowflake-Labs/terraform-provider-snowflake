@@ -81,6 +81,9 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 	accs := expandStringList(data.Get("accounts").(*schema.Set).List())
+	for i := range accs {
+		accs[i] = StripAccountFromName(accs[i])
+	}
 
 	if len(accs) > 0 {
 		// There is a race condition where error accounts cannot be added to a
@@ -148,6 +151,9 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 
 	// accs := strings.Split(to.String, ", ")
 	accs := strings.FieldsFunc(to.String, func(c rune) bool { return c == ',' })
+	for i := range accs {
+		accs[i] = StripAccountFromName(accs[i])
+	}
 	err = data.Set("accounts", accs)
 
 	return err
