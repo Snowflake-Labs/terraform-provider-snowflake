@@ -17,7 +17,6 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         false,
-		DiffSuppressFunc: diffCaseInsensitive,
 	},
 	"comment": &schema.Schema{
 		Type:     schema.TypeString,
@@ -34,7 +33,6 @@ var databaseSchema = map[string]*schema.Schema{
 		Description:      "Specify a provider and a share in this map to create a database from a share.",
 		Optional:         true,
 		ForceNew:         true,
-		DiffSuppressFunc: diffCaseInsensitive,
 	},
 }
 
