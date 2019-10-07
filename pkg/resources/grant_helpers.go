@@ -114,7 +114,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	d("foo")
 	for _, grant := range grants {
 		// Skip if wrong privilege
-		//grant.GranteeName = strings.ToUpper(grant.GranteeName)
 		if grant.Privilege != priv {
 			continue
 		}

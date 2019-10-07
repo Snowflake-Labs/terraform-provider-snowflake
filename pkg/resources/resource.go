@@ -68,6 +68,7 @@ func UpdateResource(
 			oldNameI, newNameI := data.GetChange("name")
 			oldName := oldNameI.(string)
 			newName := newNameI.(string)
+
 			stmt := builder(oldName).Rename(newName)
 
 			err := DBExec(db, stmt)
