@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -32,6 +33,20 @@ var shareSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "A list of accounts to be added to the share.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			data := fmt.Sprintf("[DEBUG] k: %s, old: %s, new: %s \n", k, old, new)
+			fmt.Printf("[WARN] XXXXX %s\n", data)
+			f, err := os.OpenFile("/tmp/snowflake-provider",
+				os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Printf("[ERROR] open %v\n", err)
+			}
+			defer f.Close()
+			if _, err := f.WriteString(data); err != nil {
+				fmt.Printf("[ERROR] write %v\n", err)
+			}
+			return strings.ToUpper(old) == strings.ToUpper(new)
+		},
 	},
 }
 
@@ -81,9 +96,6 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 	accs := expandStringList(data.Get("accounts").(*schema.Set).List())
-	for i := range accs {
-		accs[i] = StripAccountFromName(accs[i])
-	}
 
 	if len(accs) > 0 {
 		// There is a race condition where error accounts cannot be added to a
