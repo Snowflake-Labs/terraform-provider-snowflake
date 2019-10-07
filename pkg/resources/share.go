@@ -18,10 +18,9 @@ var shareProperties = []string{
 
 var shareSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      "Specifies the identifier for the share; must be unique for the account in which the share is created.",
-		DiffSuppressFunc: diffCaseInsensitive,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier for the share; must be unique for the account in which the share is created.",
 	},
 	"comment": &schema.Schema{
 		Type:        schema.TypeString,
@@ -29,11 +28,10 @@ var shareSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the managed account.",
 	},
 	"accounts": &schema.Schema{
-		Type:             schema.TypeSet,
-		Elem:             &schema.Schema{Type: schema.TypeString},
-		Optional:         true,
-		Description:      "A list of accounts to be added to the share.",
-		DiffSuppressFunc: diffCaseInsensitive,
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "A list of accounts to be added to the share.",
 	},
 }
 
