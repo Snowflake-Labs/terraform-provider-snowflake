@@ -108,7 +108,8 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dataIdentifiers := make([][]string, 1, 4)
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 4)
 	dataIdentifiers[0][0] = dbName
 	dataIdentifiers[0][1] = schemaName
 	dataIdentifiers[0][2] = viewName
@@ -123,7 +124,6 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// data.SetId(strings.TrimSuffix(buf.String(), "\n"))
 	data.SetId(buf.String())
 
 	return ReadViewGrant(data, meta)
