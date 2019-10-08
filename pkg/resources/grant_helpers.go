@@ -61,14 +61,14 @@ func splitGrantID(v string) (string, string, string, string, error) {
 
 	lines, err := reader.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		return "", "", "", "", err
 	}
 
-	if len(lines) != 4 {
-		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
+	if (len(lines) == 1) && (len(lines[0]) == 4) {
+		return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
 	}
 
-	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
+	return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
 }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
