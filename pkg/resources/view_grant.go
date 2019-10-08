@@ -95,6 +95,9 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	if (viewName == "") && (futureViews == false) {
 		return errors.New("view_name must be set unless on_future is true.")
 	}
+	if (viewName != "") && (futureViews == true) {
+		return errors.New("view_name must be empty if on_future is true.")
+	}
 
 	var builder snowflake.GrantBuilder
 	if futureViews {
@@ -108,6 +111,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// ID format is <db_name>|<schema_name>|<view_name>|<privilege>
 	dataIdentifiers := make([][]string, 1)
 	dataIdentifiers[0] = make([]string, 4)
 	dataIdentifiers[0][0] = dbName
@@ -118,7 +122,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = '|'
-	csvWriter.WriteAll(dataIdentifiers) // calls Flush internally
+	csvWriter.WriteAll(dataIdentifiers)
 
 	if err := csvWriter.Error(); err != nil {
 		return err

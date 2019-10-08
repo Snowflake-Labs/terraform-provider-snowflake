@@ -65,11 +65,11 @@ func splitGrantID(v string) (string, string, string, string, error) {
 		return "", "", "", "", err
 	}
 
-	if (len(lines) == 1) && (len(lines[0]) == 4) {
-		return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
+	if len(lines) != 1 || len(lines[0]) != 4 {
+		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
 	}
 
-	return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
+	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
 }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
