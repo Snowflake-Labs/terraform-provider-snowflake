@@ -149,9 +149,6 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 
 	// accs := strings.Split(to.String, ", ")
 	accs := strings.FieldsFunc(to.String, func(c rune) bool { return c == ',' })
-	for i := range accs {
-		accs[i] = StripAccountFromName(accs[i])
-	}
 	err = data.Set("accounts", accs)
 
 	return err
