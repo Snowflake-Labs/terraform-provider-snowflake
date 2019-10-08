@@ -28,6 +28,7 @@ var shareSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the managed account.",
 	},
 	"accounts": &schema.Schema{
+		// Changed from Set to List to use DiffSuppressFunc: hashicorp/terraform-plugin-sdk#160
 		Type:             schema.TypeList,
 		Elem:             &schema.Schema{Type: schema.TypeString},
 		Optional:         true,
