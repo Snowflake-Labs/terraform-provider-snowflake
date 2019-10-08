@@ -55,8 +55,6 @@ type grant struct {
 // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
 // returns the object name and privilege.
 func splitGrantID(v string) (string, string, string, string, error) {
-
-	fmt.Printf("[DEBUG] splitGrantID input: %s", v)
 	reader := csv.NewReader(strings.NewReader(v))
 	reader.Comma = '|'
 
