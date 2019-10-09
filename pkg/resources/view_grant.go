@@ -3,8 +3,8 @@ package resources
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -55,11 +55,11 @@ var viewGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": &schema.Schema{
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
 	},
 }

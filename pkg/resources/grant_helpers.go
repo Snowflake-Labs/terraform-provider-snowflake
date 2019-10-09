@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -176,10 +176,10 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 			return nil, err
 		}
 		grant := &grant{
-			CreatedOn: currentGrant.CreatedOn,
-			Privilege: currentGrant.Privilege,
-			GrantType: currentGrant.GrantType,
-			GrantName: currentGrant.GrantName,
+			CreatedOn:   currentGrant.CreatedOn,
+			Privilege:   currentGrant.Privilege,
+			GrantType:   currentGrant.GrantType,
+			GrantName:   currentGrant.GrantName,
 			GranteeType: currentGrant.GranteeType,
 			GranteeName: currentGrant.GranteeName,
 			GrantOption: currentGrant.GrantOption,
