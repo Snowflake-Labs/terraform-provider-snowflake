@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"log"
 )
 
 type grantType string
@@ -86,6 +87,7 @@ func WarehouseGrant(w string) GrantBuilder {
 
 // Show returns the SQL that will show all privileges on the grant
 func (gb *CurrentGrantBuilder) Show() string {
+	log.Printf("[DEBUG] SHOW GRANTS HERE")
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
 }
 
@@ -140,5 +142,6 @@ func (ge *CurrentGrantExecutable) Revoke(p string) string {
 
 // Show returns the SQL that will show all grants of the grantee
 func (ge *CurrentGrantExecutable) Show() string {
+	log.Printf("[DEBUG] SHOW GRANTS OF HERE")
 	return fmt.Sprintf(`SHOW GRANTS OF %v "%v"`, ge.granteeType, ge.granteeName)
 }

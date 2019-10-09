@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 )
@@ -24,6 +25,8 @@ type Builder struct {
 }
 
 func (b *Builder) Show() string {
+	log.Printf("[DEBUG] SHOW SHARE HERE")
+	log.Printf("SHOW %sS LIKE '%s'", b.entityType, b.name)
 	return fmt.Sprintf(`SHOW %sS LIKE '%s'`, b.entityType, b.name)
 }
 
@@ -66,6 +69,7 @@ func (ab *AlterPropertiesBuilder) SetInt(key string, value int) {
 }
 
 func (ab *AlterPropertiesBuilder) Statement() string {
+	log.Printf("[DEBUG] ALTERPROPERTIESBUILDER HERE")
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`ALTER %s "%s" SET`, ab.entityType, ab.name)) // TODO handle error
 
@@ -115,6 +119,7 @@ func (b *CreateBuilder) SetInt(key string, value int) {
 }
 
 func (b *CreateBuilder) Statement() string {
+	log.Printf("[DEBUG] CREATE STATEMENT IN GENERIC HERE")
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %s "%s"`, b.entityType, b.name)) // TODO handle error
 

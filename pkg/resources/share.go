@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -55,6 +56,7 @@ func Share() *schema.Resource {
 
 // CreateShare implements schema.CreateFunc
 func CreateShare(data *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] CREATESHARE HERE")
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
@@ -80,6 +82,7 @@ func CreateShare(data *schema.ResourceData, meta interface{}) error {
 }
 
 func setAccounts(data *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] SETACCOUNTS HERE")
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 	accs := expandStringList(data.Get("accounts").([]interface{}))
@@ -126,6 +129,7 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 
 // ReadShare implements schema.ReadFunc
 func ReadShare(data *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] READSHARE HERE")
 	db := meta.(*sql.DB)
 	id := data.Id()
 
@@ -157,6 +161,7 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateShare implements schema.UpdateFunc
 func UpdateShare(data *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] UPDATESHARE HERE")
 	// Change the accounts first - this is a special case and won't work using the generic method
 	if data.HasChange("accounts") {
 		err := setAccounts(data, meta)
@@ -175,6 +180,7 @@ func DeleteShare(data *schema.ResourceData, meta interface{}) error {
 
 // ShareExists implements schema.ExistsFunc
 func ShareExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+	log.Printf("[DEBUG] SHAREEXISTS HERE")
 	db := meta.(*sql.DB)
 	id := data.Id()
 
