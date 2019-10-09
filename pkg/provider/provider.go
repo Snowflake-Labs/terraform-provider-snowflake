@@ -41,7 +41,7 @@ func Provider() *schema.Provider {
 			"path_private_key": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_KEY_PATH", nil),
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "password"},
 			},
