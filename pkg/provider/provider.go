@@ -29,14 +29,21 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth"},
+				ConflictsWith: []string{"browser_auth", "path_private_key"},
 			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{"password", "path_private_key"},
+			},
+			"path_private_key": &schema.Schema{
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_KEY_PATH", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password"},
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
@@ -92,6 +99,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 	username := s.Get("username").(string)
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
+	pathPrivateKey := s.Get("path_private_key").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
@@ -101,21 +109,37 @@ func DSN(s *schema.ResourceData) (string, error) {
 		region = ""
 	}
 
-	dsn, err := gosnowflake.DSN(&gosnowflake.Config{
-		Account:  account,
-		User:     username,
-		Region:   region,
-		Password: password,
-		Role:     role,
-	})
+	var dsn string
+	var err error
 
-	if browserAuth {
+	// attempt to log in through keypair auth first, fail if key doesn't work
+	if len(pathPrivateKey) != 0 {
+		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
+			Account:       account,
+			User:          username,
+			Region:        region,
+			Role:          role,
+			Authenticator: gosnowflake.AuthTypeJwt,
+		})
+
+		if err != nil {
+			return "", err
+		}
+	} else if browserAuth {
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
 			User:          username,
 			Region:        region,
 			Role:          role,
 			Authenticator: gosnowflake.AuthTypeExternalBrowser,
+		})
+	} else {
+		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
+			Account:  account,
+			User:     username,
+			Region:   region,
+			Password: password,
+			Role:     role,
 		})
 	}
 
