@@ -5,7 +5,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
@@ -26,7 +26,7 @@ func TestTableGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"table_name":     "test-table",
+		"table_name":    "test-table",
 		"schema_name":   "PUBLIC",
 		"database_name": "test-db",
 		"privilege":     "SELECT",
