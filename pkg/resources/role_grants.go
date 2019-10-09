@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -28,13 +29,13 @@ func RoleGrants() *schema.Resource {
 				},
 			},
 			"roles": &schema.Schema{
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified role.",
 			},
 			"users": &schema.Schema{
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified user.",
@@ -50,8 +51,8 @@ func RoleGrants() *schema.Resource {
 func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	roleName := data.Get("role_name").(string)
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roles := expandStringList(data.Get("roles").([]interface{}))
+	users := expandStringList(data.Get("users").([]interface{}))
 
 	if len(roles) == 0 && len(users) == 0 {
 		return fmt.Errorf("no users or roles specified for role grants")
@@ -170,8 +171,8 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	roleName := data.Get("role_name").(string)
 
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roles := expandStringList(data.Get("roles").([]interface{}))
+	users := expandStringList(data.Get("users").([]interface{}))
 
 	for _, role := range roles {
 		err := revokeRoleFromRole(db, roleName, role)
@@ -207,28 +208,36 @@ func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	roleName := data.Get("role_name").(string)
 
+	log.Printf("[DEBUG] Updating role_grants for %s", roleName)
+
 	x := func(resource string, grant func(db *sql.DB, role string, target string) error, revoke func(db *sql.DB, role string, target string) error) error {
 		o, n := data.GetChange(resource)
 
 		if o == nil {
-			o = new(schema.Set)
+			o = []interface{}{}
 		}
 		if n == nil {
-			n = new(schema.Set)
+			n = []interface{}{}
 		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
 
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		oldEntities := createStringSet(o.([]interface{}))
+		newEntities := createStringSet(n.([]interface{}))
+
+		remove := oldEntities.Difference(newEntities).List()
+		add := newEntities.Difference(oldEntities).List()
+
+		log.Printf("[DEBUG] role_grants would remove %v from role %s\n", remove, roleName)
+		log.Printf("[DEBUG] role_grants would add %v from role %s\n", add, roleName)
 
 		for _, user := range remove {
+			log.Printf("[DEBUG] Removing resource %s grant %s from role %s\n", resource, user, roleName)
 			err := revoke(db, roleName, user)
 			if err != nil {
 				return err
 			}
 		}
 		for _, user := range add {
+			log.Printf("[DEBUG] Adding resource %s grant %s from role %s\n", resource, user, roleName)
 			err := grant(db, roleName, user)
 			if err != nil {
 				return err

@@ -8,7 +8,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,8 +66,8 @@ func TestRoleGrantsRead(t *testing.T) {
 		expectReadRoleGrants(mock)
 		err := resources.ReadRoleGrants(d, db)
 		a.NoError(err)
-		a.Len(d.Get("users").(*schema.Set).List(), 2)
-		a.Len(d.Get("roles").(*schema.Set).List(), 2)
+		a.Len(d.Get("users").([]interface{}), 2)
+		a.Len(d.Get("roles").([]interface{}), 2)
 	})
 }
 
