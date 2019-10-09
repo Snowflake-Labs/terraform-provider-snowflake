@@ -7,9 +7,9 @@ import (
 	"sort"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/plugin"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/olekukonko/tablewriter"
 )
 
