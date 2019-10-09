@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
@@ -54,12 +55,19 @@ type grant struct {
 // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
 // returns the object name and privilege.
 func splitGrantID(v string) (string, string, string, string, error) {
-	arr := strings.Split(v, "|")
-	if len(arr) != 4 {
+	reader := csv.NewReader(strings.NewReader(v))
+	reader.Comma = '|'
+
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return "", "", "", "", err
+	}
+
+	if len(lines) != 1 || len(lines[0]) != 4 {
 		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
 	}
 
-	return arr[0], arr[1], arr[2], arr[3], nil
+	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
 }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
