@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 	"golang.org/x/crypto/ssh"
+
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Provider is a provider
@@ -114,31 +116,27 @@ func DSN(s *schema.ResourceData) (string, error) {
 	var err error
 
 	if len(pathPrivateKey) != 0 {
-		// JWT Authentication
 
-		// reading the private keyfile
-		privateKeyBytes, err := ioutil.ReadFile(pathPrivateKey)
+		expandedPathPrivateKey, err := homedir.Expand(pathPrivateKey)
+
+		privateKeyBytes, err := ioutil.ReadFile(expandedPathPrivateKey)
 		if err != nil {
 			return "", errors.Wrapf(err, "Could not read private key")
 		}
-
 		if len(privateKeyBytes) == 0 {
 			return "", errors.New("Private key is empty")
 		}
 
-		// reads and unmarshals a private key
 		privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 		if err != nil {
 			return "", errors.Wrapf(err, "Could not parse private key")
 		}
 
-		// typechecking the encryption format
 		rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
 		if !ok {
 			return "", errors.New("privateKey not of type RSA")
 		}
 
-		// implementing the Data Source Name
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
 			User:          username,
@@ -149,7 +147,6 @@ func DSN(s *schema.ResourceData) (string, error) {
 		})
 
 	} else if browserAuth {
-		// Browser Authentication
 
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
@@ -159,7 +156,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 			Authenticator: gosnowflake.AuthTypeExternalBrowser,
 		})
 	} else {
-		// Username and Password Authentication
+		// If JWT and Browser Authentication do not work, then use username and password authentication
 
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:  account,
