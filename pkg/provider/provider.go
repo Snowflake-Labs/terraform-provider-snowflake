@@ -81,7 +81,7 @@ func Provider() *schema.Provider {
 }
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
-	dsn, err := DSN(s) // got an error
+	dsn, err := DSN(s)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
@@ -114,24 +114,31 @@ func DSN(s *schema.ResourceData) (string, error) {
 	var err error
 
 	if len(pathPrivateKey) != 0 {
+		// JWT Authentication
 
-		// reading the private key
+		// reading the private keyfile
 		privateKeyBytes, err := ioutil.ReadFile(pathPrivateKey)
-		if err != nil || len(privateKeyBytes) == 0 { // both conditionals had to be false in order to get past this
-			return "", errors.Errorf("Could not read private key: %s", err)
+		if err != nil {
+			return "", errors.Wrapf(err, "Could not read private key")
+		}
+
+		if len(privateKeyBytes) == 0 {
+			return "", errors.New("Private key is empty")
 		}
 
 		// reads and unmarshals a private key
 		privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 		if err != nil {
-			return "", errors.Errorf("Could not parse private key: %s", err)
+			return "", errors.Wrapf(err, "Could not parse private key")
 		}
 
+		// typechecking the encryption format
 		rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
 		if !ok {
-			return "", errors.Errorf("privateKey not of type RSA")
+			return "", errors.New("privateKey not of type RSA")
 		}
 
+		// implementing the Data Source Name
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
 			User:          username,
@@ -141,11 +148,9 @@ func DSN(s *schema.ResourceData) (string, error) {
 			Authenticator: gosnowflake.AuthTypeJwt,
 		})
 
-		if err != nil {
-			return "", errors.Errorf("JWT authentication not successful: %s", err)
-		}
-
 	} else if browserAuth {
+		// Browser Authentication
+
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
 			User:          username,
@@ -154,6 +159,8 @@ func DSN(s *schema.ResourceData) (string, error) {
 			Authenticator: gosnowflake.AuthTypeExternalBrowser,
 		})
 	} else {
+		// Username and Password Authentication
+
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:  account,
 			User:     username,
