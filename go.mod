@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/snowflakedb/gosnowflake v1.2.0
 	github.com/stretchr/testify v1.4.0
+	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
 )
 
 // TODO: when https://github.com/hashicorp/terraform/issues/22664 gets resolved, remove this line:

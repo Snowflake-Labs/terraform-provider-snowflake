@@ -1,13 +1,15 @@
 package provider
 
 import (
-	"log"
+	"crypto/rsa"
+	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+	"golang.org/x/crypto/ssh"
 )
 
 // Provider is a provider
@@ -29,7 +31,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "path_private_key"},
+				ConflictsWith: []string{"browser_auth"},
 			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
@@ -43,7 +45,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "password"},
+				ConflictsWith: []string{"browser_auth"},
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
@@ -79,9 +81,8 @@ func Provider() *schema.Provider {
 }
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
-	dsn, err := DSN(s)
+	dsn, err := DSN(s) // got an error
 
-	log.Printf("[DEBUG] connecting to %s", dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
 	}
@@ -112,19 +113,38 @@ func DSN(s *schema.ResourceData) (string, error) {
 	var dsn string
 	var err error
 
-	// attempt to log in through keypair auth first, fail if key doesn't work
 	if len(pathPrivateKey) != 0 {
+
+		// define name of the private key file
+		privateKeyFilename := "/Users/anneku/.ssh/snowflake_private_key.p8"
+		privateKeyBytes, err := ioutil.ReadFile(privateKeyFilename)
+		if err != nil {
+			return "", errors.Errorf("Could not read private key: %s", err)
+		}
+
+		privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
+		if err != nil {
+			return "", errors.Errorf("Could not parse private key: %s", err)
+		}
+
+		rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
+		if !ok {
+			return "", errors.Errorf("privateKey not of type RSA")
+		}
+
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
 			User:          username,
 			Region:        region,
 			Role:          role,
+			PrivateKey:    rsaPrivateKey,
 			Authenticator: gosnowflake.AuthTypeJwt,
 		})
 
 		if err != nil {
-			return "", err
+			return "", errors.Errorf("JWT authentication not successful: %s", err)
 		}
+
 	} else if browserAuth {
 		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
 			Account:       account,
