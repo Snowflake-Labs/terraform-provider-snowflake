@@ -2,6 +2,7 @@ package provider
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
@@ -99,7 +100,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 
 func DSN(s *schema.ResourceData) (string, error) {
 	account := s.Get("account").(string)
-	username := s.Get("username").(string)
+	user := s.Get("username").(string)
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
 	pathPrivateKey := s.Get("path_private_key").(string)
@@ -112,60 +113,54 @@ func DSN(s *schema.ResourceData) (string, error) {
 		region = ""
 	}
 
-	var dsn string
-	var err error
+	config := gosnowflake.Config{
+		Account: account,
+		User:    user,
+		Region:  region,
+		Role:    role,
+	}
 
 	if len(pathPrivateKey) != 0 {
 
-		expandedPathPrivateKey, err := homedir.Expand(pathPrivateKey)
-
-		privateKeyBytes, err := ioutil.ReadFile(expandedPathPrivateKey)
+		rsaPrivateKey, err := ParsePrivateKey(pathPrivateKey)
 		if err != nil {
-			return "", errors.Wrapf(err, "Could not read private key")
+			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
-		if len(privateKeyBytes) == 0 {
-			return "", errors.New("Private key is empty")
-		}
-
-		privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
-		if err != nil {
-			return "", errors.Wrapf(err, "Could not parse private key")
-		}
-
-		rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
-		if !ok {
-			return "", errors.New("privateKey not of type RSA")
-		}
-
-		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
-			Account:       account,
-			User:          username,
-			Region:        region,
-			Role:          role,
-			PrivateKey:    rsaPrivateKey,
-			Authenticator: gosnowflake.AuthTypeJwt,
-		})
+		config.PrivateKey = rsaPrivateKey
+		config.Authenticator = gosnowflake.AuthTypeJwt
 
 	} else if browserAuth {
 
-		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
-			Account:       account,
-			User:          username,
-			Region:        region,
-			Role:          role,
-			Authenticator: gosnowflake.AuthTypeExternalBrowser,
-		})
-	} else {
-		// If JWT and Browser Authentication do not work, then use username and password authentication
+		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
 
-		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
-			Account:  account,
-			User:     username,
-			Region:   region,
-			Password: password,
-			Role:     role,
-		})
+	} else {
+		config.Password = password
 	}
 
-	return dsn, err
+	return gosnowflake.DSN(&config)
+}
+
+func ParsePrivateKey(pathPrivateKey string) (rsa.PrivateKey, error) {
+	var err error
+
+	expandedPathPrivateKey, err := homedir.Expand(pathPrivateKey)
+
+	privateKeyBytes, err := ioutil.ReadFile(expandedPathPrivateKey)
+	if err != nil {
+		fmt.Printf("Could not read private key: %w\n", err)
+	}
+	if len(privateKeyBytes) == 0 {
+		fmt.Println("Private key is empty")
+	}
+
+	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
+	if err != nil {
+		fmt.Printf("Could not parse private key: %w\n", err)
+	}
+
+	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		fmt.Println("privateKey not of type RSA")
+	}
+	return rsaPrivateKey, err
 }
