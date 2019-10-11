@@ -115,13 +115,15 @@ func DSN(s *schema.ResourceData) (string, error) {
 
 	if len(pathPrivateKey) != 0 {
 
-		// define name of the private key file
 		privateKeyFilename := "/Users/anneku/.ssh/snowflake_private_key.p8"
+
+		// reading the private key
 		privateKeyBytes, err := ioutil.ReadFile(privateKeyFilename)
-		if err != nil {
+		if err != nil || len(privateKeyBytes) == 0 { // both conditionals had to be false in order to get past this
 			return "", errors.Errorf("Could not read private key: %s", err)
 		}
 
+		// reads and unmarshals a private key
 		privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 		if err != nil {
 			return "", errors.Errorf("Could not parse private key: %s", err)
