@@ -31,7 +31,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth"},
+				ConflictsWith: []string{"browser_auth", "path_private_key"},
 			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
@@ -45,7 +45,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth"},
+				ConflictsWith: []string{"browser_auth", "password"},
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
