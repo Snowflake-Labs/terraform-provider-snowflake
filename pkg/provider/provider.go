@@ -115,7 +115,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 
 	if len(pathPrivateKey) != 0 {
 
-		privateKeyFilename := "/Users/anneku/.ssh/snowflake_private_key.p8"
+		privateKeyFilename := "/Users/anneku/.ssh/snowflake_key"
 
 		// reading the private key
 		privateKeyBytes, err := ioutil.ReadFile(privateKeyFilename)
