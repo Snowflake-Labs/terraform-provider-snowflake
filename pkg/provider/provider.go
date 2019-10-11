@@ -2,7 +2,6 @@ package provider
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
@@ -140,27 +139,30 @@ func DSN(s *schema.ResourceData) (string, error) {
 	return gosnowflake.DSN(&config)
 }
 
-func ParsePrivateKey(pathPrivateKey string) (rsa.PrivateKey, error) {
+func ParsePrivateKey(pathPrivateKey string) (*rsa.PrivateKey, error) {
 	var err error
 
 	expandedPathPrivateKey, err := homedir.Expand(pathPrivateKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid Path to private key")
+	}
 
 	privateKeyBytes, err := ioutil.ReadFile(expandedPathPrivateKey)
 	if err != nil {
-		fmt.Printf("Could not read private key: %w\n", err)
+		return nil, errors.Wrap(err, "Could not read private key")
 	}
 	if len(privateKeyBytes) == 0 {
-		fmt.Println("Private key is empty")
+		return nil, errors.New("Private key is empty")
 	}
 
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 	if err != nil {
-		fmt.Printf("Could not parse private key: %w\n", err)
+		return nil, errors.Wrap(err, "Could not parse private key")
 	}
 
 	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
 	if !ok {
-		fmt.Println("privateKey not of type RSA")
+		return nil, errors.New("privateKey not of type RSA")
 	}
 	return rsaPrivateKey, err
 }
