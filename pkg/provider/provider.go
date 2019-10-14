@@ -119,7 +119,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 		Role:    role,
 	}
 
-	if privateKeyPath != nil {
+	if len(privateKeyPath) != 0 {
 
 		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
 		if err != nil {
