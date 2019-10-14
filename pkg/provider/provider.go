@@ -137,7 +137,6 @@ func DSN(s *schema.ResourceData) (string, error) {
 }
 
 func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
-	var err error
 
 	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
 	if err != nil {
