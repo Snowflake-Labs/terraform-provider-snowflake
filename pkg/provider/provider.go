@@ -33,16 +33,16 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "path_private_key"},
+				ConflictsWith: []string{"browser_auth", "private_key_path"},
 			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "path_private_key"},
+				ConflictsWith: []string{"password", "private_key_path"},
 			},
-			"path_private_key": &schema.Schema{
+			"private_key_path": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
@@ -102,7 +102,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 	user := s.Get("username").(string)
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
-	pathPrivateKey := s.Get("path_private_key").(string)
+	privateKeyPath := s.Get("private_key_path").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
@@ -119,9 +119,9 @@ func DSN(s *schema.ResourceData) (string, error) {
 		Role:    role,
 	}
 
-	if len(pathPrivateKey) != 0 {
+	if privateKeyPath != nil {
 
-		rsaPrivateKey, err := ParsePrivateKey(pathPrivateKey)
+		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
@@ -139,15 +139,15 @@ func DSN(s *schema.ResourceData) (string, error) {
 	return gosnowflake.DSN(&config)
 }
 
-func ParsePrivateKey(pathPrivateKey string) (*rsa.PrivateKey, error) {
+func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 	var err error
 
-	expandedPathPrivateKey, err := homedir.Expand(pathPrivateKey)
+	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Invalid Path to private key")
 	}
 
-	privateKeyBytes, err := ioutil.ReadFile(expandedPathPrivateKey)
+	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read private key")
 	}
