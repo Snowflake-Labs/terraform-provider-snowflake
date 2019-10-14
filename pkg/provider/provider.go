@@ -7,11 +7,10 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 	"golang.org/x/crypto/ssh"
-
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Provider is a provider
