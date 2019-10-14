@@ -118,7 +118,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 		Role:    role,
 	}
 
-	if len(privateKeyPath) != 0 {
+	if privateKeyPath != "" {
 
 		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
 		if err != nil {
@@ -128,9 +128,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 		config.Authenticator = gosnowflake.AuthTypeJwt
 
 	} else if browserAuth {
-
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
-
 	} else {
 		config.Password = password
 	}
@@ -163,5 +161,5 @@ func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 	if !ok {
 		return nil, errors.New("privateKey not of type RSA")
 	}
-	return rsaPrivateKey, err
+	return rsaPrivateKey, nil
 }
