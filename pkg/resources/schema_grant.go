@@ -12,6 +12,7 @@ import (
 // Intentionally exclude the "ALL" alias because it is not a real privilege and
 // might not interact well with this provider.
 var validSchemaPrivileges = []string{
+	"ALL",
 	"MODIFY",
 	"MONITOR",
 	"OWNERSHIP",
