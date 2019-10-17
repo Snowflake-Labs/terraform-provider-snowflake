@@ -29,3 +29,6 @@ matrix:
     - name: docs check
       script:
         - make check-docs
+    - name: linter check
+      script:
+        - make lint

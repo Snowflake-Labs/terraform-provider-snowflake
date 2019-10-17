@@ -8,10 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	resourceMonitorComment = "Created by a Terraform acceptance test"
-)
-
 func TestAccResourceMonitor(t *testing.T) {
 	// TODO test more attributes
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
