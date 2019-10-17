@@ -98,7 +98,7 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	onFuture := data.Get("on_future").(bool)
 
-	if (tableName == "") && (onFuture == false) {
+	if (tableName == "") && !onFuture {
 		return errors.New("table_name must be set unless on_future is true.")
 	}
 

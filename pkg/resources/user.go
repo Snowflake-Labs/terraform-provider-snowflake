@@ -22,7 +22,7 @@ var userProperties = []string{
 }
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
-	return strings.ToUpper(old) == strings.ToUpper(new)
+	return strings.EqualFold(old, new)
 }
 
 var userSchema = map[string]*schema.Schema{

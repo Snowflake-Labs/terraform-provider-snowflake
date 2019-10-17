@@ -92,10 +92,10 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	futureViews := data.Get("on_future").(bool)
 
-	if (viewName == "") && (futureViews == false) {
+	if (viewName == "") && !futureViews {
 		return errors.New("view_name must be set unless on_future is true.")
 	}
-	if (viewName != "") && (futureViews == true) {
+	if (viewName != "") && futureViews {
 		return errors.New("view_name must be empty if on_future is true.")
 	}
 
@@ -122,7 +122,10 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = '|'
-	csvWriter.WriteAll(dataIdentifiers)
+	err = csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return err
+	}
 
 	if err := csvWriter.Error(); err != nil {
 		return err
