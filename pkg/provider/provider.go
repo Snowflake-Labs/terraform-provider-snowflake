@@ -1,13 +1,16 @@
 package provider
 
 import (
-	"log"
+	"crypto/rsa"
+	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+	"golang.org/x/crypto/ssh"
 )
 
 // Provider is a provider
@@ -29,14 +32,21 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth"},
+				ConflictsWith: []string{"browser_auth", "private_key_path"},
 			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{"password", "private_key_path"},
+			},
+			"private_key_path": &schema.Schema{
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password"},
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
@@ -74,7 +84,6 @@ func Provider() *schema.Provider {
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	dsn, err := DSN(s)
 
-	log.Printf("[DEBUG] connecting to %s", dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
 	}
@@ -89,9 +98,10 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 
 func DSN(s *schema.ResourceData) (string, error) {
 	account := s.Get("account").(string)
-	username := s.Get("username").(string)
+	user := s.Get("username").(string)
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
+	privateKeyPath := s.Get("private_key_path").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
@@ -101,23 +111,54 @@ func DSN(s *schema.ResourceData) (string, error) {
 		region = ""
 	}
 
-	dsn, err := gosnowflake.DSN(&gosnowflake.Config{
-		Account:  account,
-		User:     username,
-		Region:   region,
-		Password: password,
-		Role:     role,
-	})
-
-	if browserAuth {
-		dsn, err = gosnowflake.DSN(&gosnowflake.Config{
-			Account:       account,
-			User:          username,
-			Region:        region,
-			Role:          role,
-			Authenticator: gosnowflake.AuthTypeExternalBrowser,
-		})
+	config := gosnowflake.Config{
+		Account: account,
+		User:    user,
+		Region:  region,
+		Role:    role,
 	}
 
-	return dsn, err
+	if privateKeyPath != "" {
+
+		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
+		if err != nil {
+			return "", errors.Wrap(err, "Private Key could not be parsed")
+		}
+		config.PrivateKey = rsaPrivateKey
+		config.Authenticator = gosnowflake.AuthTypeJwt
+
+	} else if browserAuth {
+		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
+	} else {
+		config.Password = password
+	}
+
+	return gosnowflake.DSN(&config)
+}
+
+func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
+
+	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid Path to private key")
+	}
+
+	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not read private key")
+	}
+	if len(privateKeyBytes) == 0 {
+		return nil, errors.New("Private key is empty")
+	}
+
+	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not parse private key")
+	}
+
+	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("privateKey not of type RSA")
+	}
+	return rsaPrivateKey, nil
 }
