@@ -61,11 +61,11 @@ func splitGrantID(v string) ([]string, error) {
 
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return make([]string, 1), err
+		return make([]string, 4), err
 	}
 
 	if len(lines) != 1 {
-		return make([]string, 1), fmt.Errorf("ID %v is invalid", v)
+		return make([]string, 4), fmt.Errorf("ID %v is invalid", v)
 	}
 
 	return lines[0], nil
