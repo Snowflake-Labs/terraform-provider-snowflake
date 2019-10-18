@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -71,17 +69,29 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <db_name>|||<privilege>
-	data.SetId(fmt.Sprintf("%v|||%v", dbName, priv))
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 2)
+	dataIdentifiers[0][0] = dbName
+	dataIdentifiers[0][1] = priv
+	grantID, err := createGrantID(dataIdentifiers)
+
+	if err != nil {
+		return err
+	}
+
+	data.SetId(grantID)
 
 	return ReadDatabaseGrant(data, meta)
 }
 
 // ReadDatabaseGrant implements schema.ReadFunc
 func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, _, _, priv, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName, priv := grantIDArray[0], grantIDArray[1]
+
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err

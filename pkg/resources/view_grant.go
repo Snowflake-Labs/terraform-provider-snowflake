@@ -1,9 +1,6 @@
 package resources
 
 import (
-	"bytes"
-	"encoding/csv"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
@@ -119,29 +116,26 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	dataIdentifiers[0][2] = viewName
 	dataIdentifiers[0][3] = priv
 
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = '|'
-	err = csvWriter.WriteAll(dataIdentifiers)
+	grantID, err := createGrantID(dataIdentifiers)
+
 	if err != nil {
 		return err
 	}
 
-	if err := csvWriter.Error(); err != nil {
-		return err
-	}
-
-	data.SetId(buf.String())
+	data.SetId(grantID)
 
 	return ReadViewGrant(data, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc
 func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, viewName, priv, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+
+	dbName, schemaName, viewName, priv := grantIDArray[0], grantIDArray[1], grantIDArray[2], grantIDArray[3]
+
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -179,10 +173,12 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc
 func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, viewName, _, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+
+	dbName, schemaName, viewName := grantIDArray[0], grantIDArray[1], grantIDArray[2]
 
 	futureViews := false
 	if viewName == "" {

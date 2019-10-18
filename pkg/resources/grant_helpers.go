@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
@@ -52,22 +53,38 @@ type grant struct {
 	GrantOption bool
 }
 
-// splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
+// splitGrantID takes in an ID array and
 // returns the object name and privilege.
-func splitGrantID(v string) (string, string, string, string, error) {
+func splitGrantID(v string) ([]string, error) {
 	reader := csv.NewReader(strings.NewReader(v))
 	reader.Comma = '|'
 
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return "", "", "", "", err
+		return make([]string, 1), err
 	}
 
-	if len(lines) != 1 || len(lines[0]) != 4 {
-		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
+	if len(lines) != 1 {
+		return make([]string, 1), fmt.Errorf("ID %v is invalid", v)
 	}
 
-	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
+	return lines[0], nil
+}
+
+func createGrantID(dataIdentifiers [][]string) (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = '|'
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+
+	if err := csvWriter.Error(); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {

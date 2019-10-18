@@ -116,21 +116,40 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 
 	// ID format is <db_name>|<schema_name>|<table_name>|<privilege>
 	// table_name is empty when on_future = true
+	dataIdentifiers := make([][]string, 1)
 	if onFuture {
-		data.SetId(fmt.Sprintf("%v|%v||%v", dbName, schemaName, priv))
+		dataIdentifiers[0] = make([]string, 3)
+		dataIdentifiers[0][0] = dbName
+		dataIdentifiers[0][1] = schemaName
+		dataIdentifiers[0][2] = priv
 	} else {
+		dataIdentifiers[0] = make([]string, 4)
+		dataIdentifiers[0][0] = dbName
+		dataIdentifiers[0][1] = schemaName
+		dataIdentifiers[0][2] = tableName
+		dataIdentifiers[0][3] = priv
 		data.SetId(fmt.Sprintf("%v|%v|%v|%v", dbName, schemaName, tableName, priv))
 	}
 
+	grantID, err := createGrantID(dataIdentifiers)
+
+	if err != nil {
+		return err
+	}
+
+	data.SetId(grantID)
 	return ReadTableGrant(data, meta)
 }
 
 // ReadTableGrant implements schema.ReadFunc
 func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, tableName, priv, err := splitGrantID(data.Id())
+	// dbName, schemaName, tableName, priv, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName, schemaName, tableName, priv := grantIDArray[0], grantIDArray[1], grantIDArray[2], grantIDArray[3]
+
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -168,10 +187,12 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteTableGrant implements schema.DeleteFunc
 func DeleteTableGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, tableName, _, err := splitGrantID(data.Id())
+	// dbName, schemaName, tableName, _, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName, schemaName, tableName := grantIDArray[0], grantIDArray[1], grantIDArray[2]
 
 	onFuture := false
 	if tableName == "" {

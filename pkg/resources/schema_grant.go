@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -92,17 +90,30 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <db_name>|<schema_name>||<privilege>
-	data.SetId(fmt.Sprintf("%v|%v||%v", db, schema, priv))
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 3)
+	dataIdentifiers[0][0] = db
+	dataIdentifiers[0][1] = schema
+	dataIdentifiers[0][2] = priv
+	grantID, err := createGrantID(dataIdentifiers)
+
+	if err != nil {
+		return err
+	}
+
+	data.SetId(grantID)
 
 	return ReadSchemaGrant(data, meta)
 }
 
 // ReadSchemaGrant implements schema.ReadFunc
 func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	db, schema, _, priv, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	db, schema, priv := grantIDArray[0], grantIDArray[1], grantIDArray[2]
+
 	err = data.Set("database_name", db)
 	if err != nil {
 		return err
@@ -123,7 +134,12 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchemaGrant implements schema.DeleteFunc
 func DeleteSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	db, schema, _, _, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
+	if err != nil {
+		return err
+	}
+	db, schema := grantIDArray[0], grantIDArray[1]
+
 	if err != nil {
 		return err
 	}

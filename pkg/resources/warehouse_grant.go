@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -64,17 +62,30 @@ func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <warehouse_name>|||<privilege>
-	data.SetId(fmt.Sprintf("%v|||%v", w, priv))
+	// data.SetId(fmt.Sprintf("%v|||%v", w, priv))
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 2)
+	dataIdentifiers[0][0] = w
+	dataIdentifiers[0][1] = priv
+	grantID, err := createGrantID(dataIdentifiers)
 
+	if err != nil {
+		return err
+	}
+
+	data.SetId(grantID)
 	return ReadWarehouseGrant(data, meta)
 }
 
 // ReadWarehouseGrant implements schema.ReadFunc
 func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	w, _, _, priv, err := splitGrantID(data.Id())
+	// w, _, _, priv, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	w, priv := grantIDArray[0], grantIDArray[1]
+
 	err = data.Set("warehouse_name", w)
 	if err != nil {
 		return err
@@ -91,10 +102,12 @@ func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteWarehouseGrant implements schema.DeleteFunc
 func DeleteWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	w, _, _, _, err := splitGrantID(data.Id())
+	// w, _, _, _, err := splitGrantID(data.Id())
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	w := grantIDArray[0]
 
 	builder := snowflake.WarehouseGrant(w)
 

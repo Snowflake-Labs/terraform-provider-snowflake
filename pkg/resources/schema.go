@@ -101,7 +101,17 @@ func CreateSchema(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <database>|<schema> - please don't use a pipe in your names!
-	data.SetId(fmt.Sprintf("%v|%v", database, name))
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 2)
+	dataIdentifiers[0][0] = database
+	dataIdentifiers[0][1] = name // aku: why do we name the schema "name"? I want to rename the database and name vars to dbName and schemaName
+	grantID, err := createGrantID(dataIdentifiers)
+
+	if err != nil {
+		return err
+	}
+
+	data.SetId(grantID)
 
 	return ReadSchema(data, meta)
 }
@@ -109,10 +119,12 @@ func CreateSchema(data *schema.ResourceData, meta interface{}) error {
 // ReadSchema implements schema.ReadFunc
 func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbName, schema, err := splitSchemaID(data.Id())
+
+	grantIDArray, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName, schema := grantIDArray[0], grantIDArray[1]
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
 	row := db.QueryRow(q)
