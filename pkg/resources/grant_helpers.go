@@ -15,6 +15,10 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
+const (
+	grantIDDelimiter = '|'
+)
+
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
 // build a nice go representation of a grant
@@ -61,30 +65,36 @@ type grantID struct {
 	Privilege    string
 }
 
-func (grantID *grantID) String() (string, error) {
+// String() takes in a grantID object and returns a pipe-delimited string:
+// resourceName|schemaName|ViewName|Privilege
+func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = '|'
-	dataIdentifiers := [][]string{{grantID.ResourceName, grantID.SchemaName, grantID.ViewName, grantID.Privilege}}
+	csvWriter.Comma = grantIDDelimiter
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ViewName, gi.Privilege}}
 	err := csvWriter.WriteAll(dataIdentifiers)
-
 	if err != nil {
 		return "", err
 	}
-
-	return buf.String(), nil
+	strGrantID := strings.TrimSpace(buf.String())
+	return strGrantID, nil
 }
 
+// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ViewName|Privilege
+// and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = '|'
+	reader.Comma = grantIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Not CSV compatible")
 	}
 
-	if len(lines) != 1 || len(lines[0]) != 4 {
-		return nil, fmt.Errorf("ID %v is invalid", stringID)
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per grant")
+	}
+	if len(lines[0]) != 4 {
+		return nil, fmt.Errorf("4 fields allowed")
 	}
 
 	grantResult := &grantID{
@@ -95,24 +105,6 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	}
 	return grantResult, nil
 }
-
-// // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
-// // returns the object name and privilege.
-// func splitGrantID(v string) (string, string, string, string, error) {
-// 	reader := csv.NewReader(strings.NewReader(v))
-// 	reader.Comma = '|'
-
-// 	lines, err := reader.ReadAll()
-// 	if err != nil {
-// 		return "", "", "", "", err
-// 	}
-
-// 	if len(lines) != 1 || len(lines[0]) != 4 {
-// 		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
-// 	}
-
-// 	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
-// }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)

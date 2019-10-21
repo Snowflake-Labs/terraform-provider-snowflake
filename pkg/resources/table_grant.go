@@ -112,7 +112,6 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>|<table_name>|<privilege>
 	// table_name is empty when on_future = true
 	grantID := &grantID{
 		ResourceName: dbName,

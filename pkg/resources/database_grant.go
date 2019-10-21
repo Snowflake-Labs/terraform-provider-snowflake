@@ -68,7 +68,6 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|||<privilege>
 	grant := &grantID{
 		ResourceName: dbName,
 		Privilege:    priv,

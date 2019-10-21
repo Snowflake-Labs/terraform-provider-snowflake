@@ -108,8 +108,6 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>|<view_name>|<privilege> or <db_name>|||<privilege>
-
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,

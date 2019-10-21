@@ -61,7 +61,6 @@ func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <warehouse_name>|||<privilege>
 	grant := &grantID{
 		ResourceName: w,
 		Privilege:    priv,
