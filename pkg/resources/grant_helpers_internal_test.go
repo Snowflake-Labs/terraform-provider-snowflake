@@ -45,14 +45,14 @@ func TestSplitGrantID(t *testing.T) {
 
 	// Bad ID
 	id = "database|name-privilege"
-	grant, err = grantIDFromString(id)
+	_, err = grantIDFromString(id)
 	if err == nil {
 		t.Error("Expected an error, got none")
 	}
 
 	// Bad ID
 	id = "database||||name-privilege"
-	grant, err = grantIDFromString(id)
+	_, err = grantIDFromString(id)
 	if err == nil {
 		t.Error("Expected an error, got none")
 	}
