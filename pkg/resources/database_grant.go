@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -69,41 +71,33 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <db_name>|||<privilege>
-	grant := &grantID{
-		ResourceName: dbName,
-		Privilege:    priv,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	data.SetId(dataIDInput)
+	data.SetId(fmt.Sprintf("%v|||%v", dbName, priv))
 
 	return ReadDatabaseGrant(data, meta)
 }
 
 // ReadDatabaseGrant implements schema.ReadFunc
 func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	dbName, _, _, priv, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-	err = data.Set("database_name", grantID.ResourceName)
+	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", grantID.Privilege)
+	err = data.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
 
 	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
 	// that it is still there. Just exit for now
-	if grantID.Privilege == "IMPORTED PRIVILEGES" {
+	if priv == "IMPORTED PRIVILEGES" {
 		return nil
 	}
 
-	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+	builder := snowflake.DatabaseGrant(dbName)
 
 	return readGenericGrant(data, meta, builder, false)
 }

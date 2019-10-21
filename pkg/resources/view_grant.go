@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"bytes"
+	"encoding/csv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
@@ -108,34 +111,37 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>|<view_name>|<privilege> or <db_name>|||<privilege>
+	// ID format is <db_name>|<schema_name>|<view_name>|<privilege>
+	dataIdentifiers := make([][]string, 1)
+	dataIdentifiers[0] = make([]string, 4)
+	dataIdentifiers[0][0] = dbName
+	dataIdentifiers[0][1] = schemaName
+	dataIdentifiers[0][2] = viewName
+	dataIdentifiers[0][3] = priv
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ViewName:     viewName,
-		Privilege:    priv,
-	}
-	dataIDInput, err := grant.String()
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = '|'
+	err = csvWriter.WriteAll(dataIdentifiers)
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+
+	if err := csvWriter.Error(); err != nil {
+		return err
+	}
+
+	data.SetId(buf.String())
 
 	return ReadViewGrant(data, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc
 func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	dbName, schemaName, viewName, priv, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	viewName := grantID.ViewName
-	priv := grantID.Privilege
-
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -173,13 +179,10 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc
 func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	dbName, schemaName, viewName, _, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	viewName := grantID.ViewName
 
 	futureViews := false
 	if viewName == "" {

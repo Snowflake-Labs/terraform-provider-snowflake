@@ -7,52 +7,52 @@ import (
 func TestSplitGrantID(t *testing.T) {
 	// Vanilla
 	id := "database_name|schema|view_name|privilege"
-	grant, err := grantIDFromString(id)
+	db, schema, view, priv, err := splitGrantID(id)
 	if err != nil {
 		t.Error(err)
 	}
-	if grant.ResourceName != "database_name" {
-		t.Errorf("Expected db to be database_name, got %v", grant.ResourceName)
+	if db != "database_name" {
+		t.Errorf("Expected db to be database_name, got %v", db)
 	}
-	if grant.SchemaName != "schema" {
-		t.Errorf("Expected schema to be schema, got %v", grant.SchemaName)
+	if schema != "schema" {
+		t.Errorf("Expected schema to be schema, got %v", schema)
 	}
-	if grant.ViewName != "view_name" {
-		t.Errorf("Expected view to be view_name, got %v", grant.ViewName)
+	if view != "view_name" {
+		t.Errorf("Expected view to be view_name, got %v", view)
 	}
-	if grant.Privilege != "privilege" {
-		t.Errorf("Expected priv to be privilege, got %v", grant.Privilege)
+	if priv != "privilege" {
+		t.Errorf("Expected priv to be privilege, got %v", priv)
 	}
 
 	// No view
 	id = "database_name|||privilege"
-	grant, err = grantIDFromString(id)
+	db, schema, view, priv, err = splitGrantID(id)
 	if err != nil {
 		t.Error(err)
 	}
-	if grant.ResourceName != "database_name" {
-		t.Errorf("Expected db to be database_name, got %v", grant.ResourceName)
+	if db != "database_name" {
+		t.Errorf("Expected db to be database_name, got %v", db)
 	}
-	if grant.SchemaName != "" {
-		t.Errorf("Expected schema to be blank, got %v", grant.SchemaName)
+	if schema != "" {
+		t.Errorf("Expected schema to be blank, got %v", schema)
 	}
-	if grant.ViewName != "" {
-		t.Errorf("Expected view to be blank, got %v", grant.ViewName)
+	if view != "" {
+		t.Errorf("Expected view to be blank, got %v", view)
 	}
-	if grant.Privilege != "privilege" {
-		t.Errorf("Expected priv to be privilege, got %v", grant.Privilege)
+	if priv != "privilege" {
+		t.Errorf("Expected priv to be privilege, got %v", priv)
 	}
 
 	// Bad ID
 	id = "database|name-privilege"
-	grant, err = grantIDFromString(id)
+	_, _, _, _, err = splitGrantID(id)
 	if err == nil {
 		t.Error("Expected an error, got none")
 	}
 
 	// Bad ID
 	id = "database||||name-privilege"
-	grant, err = grantIDFromString(id)
+	_, _, _, _, err = splitGrantID(id)
 	if err == nil {
 		t.Error("Expected an error, got none")
 	}

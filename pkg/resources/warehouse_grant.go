@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -62,28 +64,17 @@ func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// ID format is <warehouse_name>|||<privilege>
-	grant := &grantID{
-		ResourceName: w,
-		Privilege:    priv,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	data.SetId(dataIDInput)
+	data.SetId(fmt.Sprintf("%v|||%v", w, priv))
 
 	return ReadWarehouseGrant(data, meta)
 }
 
 // ReadWarehouseGrant implements schema.ReadFunc
 func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	w, _, _, priv, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
-	priv := grantID.Privilege
-
 	err = data.Set("warehouse_name", w)
 	if err != nil {
 		return err
@@ -100,11 +91,10 @@ func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteWarehouseGrant implements schema.DeleteFunc
 func DeleteWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	w, _, _, _, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
 
 	builder := snowflake.WarehouseGrant(w)
 

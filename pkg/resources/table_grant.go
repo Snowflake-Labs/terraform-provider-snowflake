@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
@@ -114,34 +116,21 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 
 	// ID format is <db_name>|<schema_name>|<table_name>|<privilege>
 	// table_name is empty when on_future = true
-	grantID := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		Privilege:    priv,
-	}
-	if !onFuture {
-		grantID.ViewName = tableName
+	if onFuture {
+		data.SetId(fmt.Sprintf("%v|%v||%v", dbName, schemaName, priv))
+	} else {
+		data.SetId(fmt.Sprintf("%v|%v|%v|%v", dbName, schemaName, tableName, priv))
 	}
 
-	dataIDInput, err := grantID.String()
-	if err != nil {
-		return err
-	}
-	data.SetId(dataIDInput)
 	return ReadTableGrant(data, meta)
 }
 
 // ReadTableGrant implements schema.ReadFunc
 func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+	dbName, schemaName, tableName, priv, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
-
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tableName := grantID.ViewName
-	priv := grantID.Privilege
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -170,24 +159,20 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureTableGrant(dbName, schemaName)
+		return readGenericGrant(data, meta, builder, true)
 	} else {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
+		return readGenericGrant(data, meta, builder, false)
 	}
-
-	return readGenericGrant(data, meta, builder, onFuture)
 }
 
 // DeleteTableGrant implements schema.DeleteFunc
 func DeleteTableGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
-
+	dbName, schemaName, tableName, _, err := splitGrantID(data.Id())
 	if err != nil {
 		return err
 	}
 
-	tableName := grantID.ViewName
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
 	onFuture := false
 	if tableName == "" {
 		onFuture = true

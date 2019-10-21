@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
@@ -53,66 +52,23 @@ type grant struct {
 	GrantOption bool
 }
 
-// grantID contains identifying elements that allow unique access privileges
-type grantID struct {
-	ResourceName string
-	SchemaName   string
-	ViewName     string
-	Privilege    string
-}
-
-func (grantID *grantID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = '|'
-	dataIdentifiers := [][]string{{grantID.ResourceName, grantID.SchemaName, grantID.ViewName, grantID.Privilege}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-
-func grantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
+// splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
+// returns the object name and privilege.
+func splitGrantID(v string) (string, string, string, string, error) {
+	reader := csv.NewReader(strings.NewReader(v))
 	reader.Comma = '|'
+
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		return "", "", "", "", err
 	}
 
 	if len(lines) != 1 || len(lines[0]) != 4 {
-		return nil, fmt.Errorf("ID %v is invalid", stringID)
+		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
 	}
 
-	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ViewName:     lines[0][2],
-		Privilege:    lines[0][3],
-	}
-	return grantResult, nil
+	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
 }
-
-// // splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
-// // returns the object name and privilege.
-// func splitGrantID(v string) (string, string, string, string, error) {
-// 	reader := csv.NewReader(strings.NewReader(v))
-// 	reader.Comma = '|'
-
-// 	lines, err := reader.ReadAll()
-// 	if err != nil {
-// 		return "", "", "", "", err
-// 	}
-
-// 	if len(lines) != 1 || len(lines[0]) != 4 {
-// 		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
-// 	}
-
-// 	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
-// }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
