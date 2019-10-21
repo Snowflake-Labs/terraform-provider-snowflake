@@ -155,6 +155,9 @@ func CreateSchema(data *schema.ResourceData, meta interface{}) error {
 		SchemaName:   name,
 	}
 	dataIDInput, err := schemaID.String()
+	if err != nil {
+		return err
+	}
 	data.SetId(dataIDInput)
 
 	return ReadSchema(data, meta)
