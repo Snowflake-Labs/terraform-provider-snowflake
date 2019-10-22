@@ -16,7 +16,7 @@ func TestGrantIDFromString(t *testing.T) {
 
 	r.Equal("database_name", grant.ResourceName)
 	r.Equal("schema", grant.SchemaName)
-	r.Equal("view_name", grant.ViewName)
+	r.Equal("view_name", grant.ViewOrTable)
 	r.Equal("privilege", grant.Privilege)
 
 	// No view
@@ -25,7 +25,7 @@ func TestGrantIDFromString(t *testing.T) {
 	r.NoError(err)
 	r.Equal("database_name", grant.ResourceName)
 	r.Equal("", grant.SchemaName)
-	r.Equal("", grant.ViewName)
+	r.Equal("", grant.ViewOrTable)
 	r.Equal("privilege", grant.Privilege)
 
 	// Bad ID -- not enough fields
@@ -62,7 +62,7 @@ func TestGrantStruct(t *testing.T) {
 	grant := &grantID{
 		ResourceName: "database_name",
 		SchemaName:   "schema",
-		ViewName:     "view_name",
+		ViewOrTable:  "view_name",
 		Privilege:    "priv",
 	}
 	gID, err := grant.String()
@@ -79,7 +79,7 @@ func TestGrantStruct(t *testing.T) {
 	grant = &grantID{
 		ResourceName: "database|name",
 		SchemaName:   "schema|name",
-		ViewName:     "view|name",
+		ViewOrTable:  "view|name",
 		Privilege:    "priv",
 	}
 	gID, err = grant.String()
@@ -88,6 +88,6 @@ func TestGrantStruct(t *testing.T) {
 	r.NoError(err)
 	r.Equal("database|name", newGrant.ResourceName)
 	r.Equal("schema|name", newGrant.SchemaName)
-	r.Equal("view|name", newGrant.ViewName)
+	r.Equal("view|name", newGrant.ViewOrTable)
 	r.Equal("priv", newGrant.Privilege)
 }
