@@ -84,8 +84,10 @@ func TestGrantStruct(t *testing.T) {
 	}
 	gID, err = grant.String()
 	r.NoError(err)
-	r.Equal("database|name", grant.ResourceName)
-	r.Equal("schema|name", grant.SchemaName)
-	r.Equal("view|name", grant.ViewName)
-	r.Equal("priv", grant.Privilege)
+	newGrant, err := grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("database|name", newGrant.ResourceName)
+	r.Equal("schema|name", newGrant.SchemaName)
+	r.Equal("view|name", newGrant.ViewName)
+	r.Equal("priv", newGrant.Privilege)
 }
