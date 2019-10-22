@@ -179,7 +179,6 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 // DeleteTableGrant implements schema.DeleteFunc
 func DeleteTableGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(data.Id())
-
 	if err != nil {
 		return err
 	}
