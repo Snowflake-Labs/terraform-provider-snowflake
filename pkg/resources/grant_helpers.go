@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
@@ -12,6 +13,10 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+)
+
+const (
+	grantIDDelimiter = '|'
 )
 
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
@@ -52,22 +57,53 @@ type grant struct {
 	GrantOption bool
 }
 
-// splitGrantID takes the <db_name>|<schema_name>|<view_name>|<privilege> ID and
-// returns the object name and privilege.
-func splitGrantID(v string) (string, string, string, string, error) {
-	reader := csv.NewReader(strings.NewReader(v))
-	reader.Comma = '|'
+// grantID contains identifying elements that allow unique access privileges
+type grantID struct {
+	ResourceName string
+	SchemaName   string
+	ViewOrTable  string
+	Privilege    string
+}
 
+// String() takes in a grantID object and returns a pipe-delimited string:
+// resourceName|schemaName|ViewOrTable|Privilege
+func (gi *grantID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = grantIDDelimiter
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ViewOrTable, gi.Privilege}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strGrantID := strings.TrimSpace(buf.String())
+	return strGrantID, nil
+}
+
+// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ViewOrTable|Privilege
+// and returns a grantID object
+func grantIDFromString(stringID string) (*grantID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = grantIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return "", "", "", "", err
+		return nil, fmt.Errorf("Not CSV compatible")
 	}
 
-	if len(lines) != 1 || len(lines[0]) != 4 {
-		return "", "", "", "", fmt.Errorf("ID %v is invalid", v)
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per grant")
+	}
+	if len(lines[0]) != 4 {
+		return nil, fmt.Errorf("4 fields allowed")
 	}
 
-	return lines[0][0], lines[0][1], lines[0][2], lines[0][3], nil
+	grantResult := &grantID{
+		ResourceName: lines[0][0],
+		SchemaName:   lines[0][1],
+		ViewOrTable:  lines[0][2],
+		Privilege:    lines[0][3],
+	}
+	return grantResult, nil
 }
 
 func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {

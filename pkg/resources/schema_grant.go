@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -91,44 +89,52 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>||<privilege>
-	data.SetId(fmt.Sprintf("%v|%v||%v", db, schema, priv))
+	grantID := &grantID{
+		ResourceName: db,
+		SchemaName:   schema,
+		Privilege:    priv,
+	}
+	dataIDInput, err := grantID.String()
+	if err != nil {
+		return err
+	}
+	data.SetId(dataIDInput)
 
 	return ReadSchemaGrant(data, meta)
 }
 
 // ReadSchemaGrant implements schema.ReadFunc
 func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	db, schema, _, priv, err := splitGrantID(data.Id())
+	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
-	err = data.Set("database_name", db)
+	err = data.Set("database_name", grantID.ResourceName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schema)
+	err = data.Set("schema_name", grantID.SchemaName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = data.Set("privilege", grantID.Privilege)
 	if err != nil {
 		return err
 	}
 
-	builder := snowflake.SchemaGrant(db, schema)
+	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
 
 	return readGenericGrant(data, meta, builder, false)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc
 func DeleteSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	db, schema, _, _, err := splitGrantID(data.Id())
+	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 
-	builder := snowflake.SchemaGrant(db, schema)
+	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
 
 	return deleteGenericGrant(data, meta, builder)
 }
