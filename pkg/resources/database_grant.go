@@ -9,7 +9,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validDatabasePrivileges = []string{
+var ValidDatabasePrivileges = []string{
 	"ALL", "CREATE SCHEMA", "IMPORTED PRIVILEGES", "MODIFY", "MONITOR",
 	"OWNERSHIP", "REFERENCE_USAGE", "USAGE",
 }
@@ -26,7 +26,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validDatabasePrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges, true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{

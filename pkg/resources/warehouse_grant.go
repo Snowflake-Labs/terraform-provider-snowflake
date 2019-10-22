@@ -9,7 +9,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validWarehousePrivileges = []string{
+var ValidWarehousePrivileges = []string{
 	"ALL", "MODIFY", "MONITOR", "OPERATE", "OWNERSHIP", "USAGE",
 }
 
@@ -25,7 +25,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validWarehousePrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidWarehousePrivileges, true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{

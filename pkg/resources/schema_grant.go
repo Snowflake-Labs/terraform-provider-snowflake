@@ -11,7 +11,7 @@ import (
 
 // Intentionally exclude the "ALL" alias because it is not a real privilege and
 // might not interact well with this provider.
-var validSchemaPrivileges = []string{
+var ValidSchemaPrivileges = []string{
 	"MODIFY",
 	"MONITOR",
 	"OWNERSHIP",
@@ -46,7 +46,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the schema.  Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validSchemaPrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidSchemaPrivileges, true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{

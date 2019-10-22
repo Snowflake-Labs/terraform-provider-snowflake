@@ -15,7 +15,7 @@ setup: ## setup development dependencies
 .PHONY: setup
 
 lint: ## run the fast go linters
-	./bin/golangci-lint run
+	./bin/golangci-lint run --timeout=3m
 .PHONY: lint
 
 release: ## run a release
