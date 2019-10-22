@@ -33,8 +33,13 @@ func TestGrantIDFromString(t *testing.T) {
 	_, err = grantIDFromString(id)
 	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
-	// Bad ID
+	// Bad ID -- privilege in wrong area
 	id = "database||||name-privilege"
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
+
+	// too many fields
+	id = "database_name|schema|view_name|privilege|extra"
 	_, err = grantIDFromString(id)
 	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
@@ -52,6 +57,8 @@ func TestGrantIDFromString(t *testing.T) {
 
 func TestGrantStruct(t *testing.T) {
 	r := require.New(t)
+
+	// Vanilla
 	grant := &grantID{
 		ResourceName: "database_name",
 		SchemaName:   "schema",
@@ -62,9 +69,23 @@ func TestGrantStruct(t *testing.T) {
 	r.NoError(err)
 	r.Equal("database_name|schema|view_name|priv", gID)
 
+	// Empty grant
 	grant = &grantID{}
 	gID, err = grant.String()
 	r.NoError(err)
 	r.Equal("|||", gID)
 
+	// Grant with extra delimiters
+	grant = &grantID{
+		ResourceName: "database|name",
+		SchemaName:   "schema|name",
+		ViewName:     "view|name",
+		Privilege:    "priv",
+	}
+	gID, err = grant.String()
+	r.NoError(err)
+	r.Equal("database|name", grant.ResourceName)
+	r.Equal("schema|name", grant.SchemaName)
+	r.Equal("view|name", grant.ViewName)
+	r.Equal("priv", grant.Privilege)
 }
