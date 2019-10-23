@@ -26,7 +26,7 @@ TODO fogg config
 
 ## Authentication
 
-We currently only support username + password auth and suggest that you only do so via environment variables. So a config something like–
+We currently support username + password and keypair auth and suggest that you do so via environment variables. Define a config with something like-
 
 ```hcl
 provider "snowflake" {
@@ -36,13 +36,28 @@ provider "snowflake" {
 }
 ```
 
-and
+### Keypair Authentication Environment Variables
+You should generate the public and private keys and set up environment variables. 
 
+```shell
+cd ~/.ssh
+openssl genrsa -out snowflake_key 2048
+openssl rsa -in snowflake_key -pubout -out snowflake_key.pub
+```
+
+To export the variables into your provider:
+```shell
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+### Username and Password Environment Variables
+If you choose to use Username and Password Authentication, export these credentials:
 ```shell
 export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
-terraform ...
 ```
+
 
 ## Resources
 

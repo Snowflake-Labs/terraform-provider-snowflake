@@ -15,7 +15,7 @@ setup: ## setup development dependencies
 .PHONY: setup
 
 lint: ## run the fast go linters
-	./bin/golangci-lint run
+	./bin/golangci-lint run --timeout=3m
 .PHONY: lint
 
 release: ## run a release
@@ -49,14 +49,14 @@ test: deps ## run the tests
 .PHONY: test
 
 test-acceptance: deps ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_SHARE_TESTS=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 test-acceptance-ci: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_SHARE_TESTS=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
-deps: 
+deps:
 	go mod tidy
 	go mod vendor
 .PHONY: deps

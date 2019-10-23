@@ -1,59 +1,93 @@
 package resources
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestSplitGrantID(t *testing.T) {
+func TestGrantIDFromString(t *testing.T) {
+	r := require.New(t)
 	// Vanilla
 	id := "database_name|schema|view_name|privilege"
-	db, schema, view, priv, err := splitGrantID(id)
-	if err != nil {
-		t.Error(err)
-	}
-	if db != "database_name" {
-		t.Errorf("Expected db to be database_name, got %v", db)
-	}
-	if schema != "schema" {
-		t.Errorf("Expected schema to be schema, got %v", schema)
-	}
-	if view != "view_name" {
-		t.Errorf("Expected view to be view_name, got %v", view)
-	}
-	if priv != "privilege" {
-		t.Errorf("Expected priv to be privilege, got %v", priv)
-	}
+	grant, err := grantIDFromString(id)
+	r.NoError(err)
+
+	r.Equal("database_name", grant.ResourceName)
+	r.Equal("schema", grant.SchemaName)
+	r.Equal("view_name", grant.ViewOrTable)
+	r.Equal("privilege", grant.Privilege)
 
 	// No view
 	id = "database_name|||privilege"
-	db, schema, view, priv, err = splitGrantID(id)
-	if err != nil {
-		t.Error(err)
-	}
-	if db != "database_name" {
-		t.Errorf("Expected db to be database_name, got %v", db)
-	}
-	if schema != "" {
-		t.Errorf("Expected schema to be blank, got %v", schema)
-	}
-	if view != "" {
-		t.Errorf("Expected view to be blank, got %v", view)
-	}
-	if priv != "privilege" {
-		t.Errorf("Expected priv to be privilege, got %v", priv)
-	}
+	grant, err = grantIDFromString(id)
+	r.NoError(err)
+	r.Equal("database_name", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ViewOrTable)
+	r.Equal("privilege", grant.Privilege)
 
-	// Bad ID
+	// Bad ID -- not enough fields
 	id = "database|name-privilege"
-	_, _, _, _, err = splitGrantID(id)
-	if err == nil {
-		t.Error("Expected an error, got none")
-	}
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
-	// Bad ID
+	// Bad ID -- privilege in wrong area
 	id = "database||||name-privilege"
-	_, _, _, _, err = splitGrantID(id)
-	if err == nil {
-		t.Error("Expected an error, got none")
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
+
+	// too many fields
+	id = "database_name|schema|view_name|privilege|extra"
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
+
+	// 0 lines
+	id = ""
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("1 line per grant"), err)
+
+	// 2 lines
+	id = `database_name|schema|view_name|privilege
+	database_name|schema|view_name|privilege`
+	_, err = grantIDFromString(id)
+	r.Equal(fmt.Errorf("1 line per grant"), err)
+}
+
+func TestGrantStruct(t *testing.T) {
+	r := require.New(t)
+
+	// Vanilla
+	grant := &grantID{
+		ResourceName: "database_name",
+		SchemaName:   "schema",
+		ViewOrTable:  "view_name",
+		Privilege:    "priv",
 	}
+	gID, err := grant.String()
+	r.NoError(err)
+	r.Equal("database_name|schema|view_name|priv", gID)
+
+	// Empty grant
+	grant = &grantID{}
+	gID, err = grant.String()
+	r.NoError(err)
+	r.Equal("|||", gID)
+
+	// Grant with extra delimiters
+	grant = &grantID{
+		ResourceName: "database|name",
+		SchemaName:   "schema|name",
+		ViewOrTable:  "view|name",
+		Privilege:    "priv",
+	}
+	gID, err = grant.String()
+	r.NoError(err)
+	newGrant, err := grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("database|name", newGrant.ResourceName)
+	r.Equal("schema|name", newGrant.SchemaName)
+	r.Equal("view|name", newGrant.ViewOrTable)
+	r.Equal("priv", newGrant.Privilege)
 }

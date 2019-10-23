@@ -1,16 +1,14 @@
 package resources
 
 import (
-	"fmt"
-
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validViewPrivileges = []string{"SELECT"}
+var ValidViewPrivileges = []string{"SELECT"}
 
 var viewGrantSchema = map[string]*schema.Schema{
 	"view_name": &schema.Schema{
@@ -37,7 +35,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validViewPrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidViewPrivileges, true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
@@ -55,11 +53,11 @@ var viewGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": &schema.Schema{
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
 	},
 }
@@ -91,8 +89,11 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	futureViews := data.Get("on_future").(bool)
 
-	if (viewName == "") && (futureViews == false) {
+	if (viewName == "") && !futureViews {
 		return errors.New("view_name must be set unless on_future is true.")
+	}
+	if (viewName != "") && futureViews {
+		return errors.New("view_name must be empty if on_future is true.")
 	}
 
 	var builder snowflake.GrantBuilder
@@ -107,23 +108,32 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// ID format is <db_name>|<schema_name>|<view_name>|<privilege>
-	// view_name is empty when on_future = true
-	if futureViews {
-		data.SetId(fmt.Sprintf("%v|%v||%v", dbName, schemaName, priv))
-	} else {
-		data.SetId(fmt.Sprintf("%v|%v|%v|%v", dbName, schemaName, viewName, priv))
+	grant := &grantID{
+		ResourceName: dbName,
+		SchemaName:   schemaName,
+		ViewOrTable:  viewName,
+		Privilege:    priv,
 	}
+	dataIDInput, err := grant.String()
+	if err != nil {
+		return err
+	}
+	data.SetId(dataIDInput)
 
 	return ReadViewGrant(data, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc
 func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, viewName, priv, err := splitGrantID(data.Id())
+	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	viewName := grantID.ViewOrTable
+	priv := grantID.Privilege
+
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -161,10 +171,13 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc
 func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName, schemaName, viewName, _, err := splitGrantID(data.Id())
+	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	viewName := grantID.ViewOrTable
 
 	futureViews := false
 	if viewName == "" {
