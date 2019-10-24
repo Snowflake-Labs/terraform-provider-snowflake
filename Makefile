@@ -26,8 +26,7 @@ release: ## run a release
 .PHONY: release
 
 release-prerelease: build ## release to github as a 'pre-release'
-	version=`./terraform-provider-snowflake version`; \
-	git tag v"$$version"; \
+	git tag v$(VERSION)
 	git push
 	git push --tags
 	goreleaser release -f .goreleaser.prerelease.yml --debug
