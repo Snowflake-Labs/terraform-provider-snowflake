@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -40,6 +41,9 @@ func doc() {
 	for _, name := range names {
 		resource := resources[name]
 		fmt.Printf("\n### %s\n\n", name)
+		if strings.Contains(name, "_grant") {
+			fmt.Printf("Each grant resource is unique\n\n")
+		}
 		fmt.Printf("#### properties\n\n")
 
 		table := tablewriter.NewWriter(os.Stdout)
