@@ -26,7 +26,7 @@ cfmt: setup
 
 # Lint (internally used)
 clint: setup
-	@echo "Running staticcheck" && staticcheck || echo "No staticcheck run, because Go1.8 is not supported."
+	@echo "Running staticcheck" && staticcheck
 	@echo "Running go vet and lint"
 	@for pkg in $$(go list ./... | grep -v /vendor/); do \
 		echo "Verifying $$pkg"; \
