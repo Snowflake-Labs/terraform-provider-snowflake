@@ -157,7 +157,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		case "ROLE":
 			roles = append(roles, grant.GranteeName)
 		case "SHARE":
-			shares = append(shares, grant.GranteeName)
+			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
+			shares = append(shares, granteeNameStrippedAccount)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
