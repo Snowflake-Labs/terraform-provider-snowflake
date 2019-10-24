@@ -26,7 +26,7 @@ release: ## run a release
 .PHONY: release
 
 release-prerelease: build ## release to github as a 'pre-release'
-	version=`./terraform-provider-snowflake version`; \
+	version=`./$(BINARY_NAME) version`; \
 	git tag v"$$version"; \
 	git push
 	git push --tags

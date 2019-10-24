@@ -3,7 +3,7 @@ before:
     - make clean
 
 builds:
-  - binary: terraform-provider-snowflake_{{ .ShortCommit }}
+  - binary: terraform-provider-snowflake_{{ .Version }}
     env:
       - CGO_ENABLED=0
     goos:
@@ -16,10 +16,7 @@ builds:
 
 archive:
   files:
-    - none*
+  - none*
 
 release:
   prerelease: true
-
-env_files:
-  github_token: ~/.config/goreleaser/github_token
