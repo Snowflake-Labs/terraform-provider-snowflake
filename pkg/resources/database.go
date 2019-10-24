@@ -34,6 +34,12 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		ForceNew:    true,
 	},
+	"from_database": &schema.Schema{
+		Type:        schema.TypeString,
+		Description: "Specify a database to create a clone from.",
+		Optional:    true,
+		ForceNew:    true,
+	},
 }
 
 var databaseProperties = []string{"comment", "data_retention_time_in_days"}
@@ -55,10 +61,18 @@ func Database() *schema.Resource {
 
 // CreateDatabase implements schema.CreateFunc
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
-	_, ok := data.GetOk("from_share")
-	if ok {
-		return createDatabaseFromShare(data, meta)
+	_, okShare := data.GetOk("from_share")
+	_, okDatabase := data.GetOk("from_database")
+	if okShare {
+		if okDatabase {
+			return fmt.Errorf("from_share and from_database cant be used at the same time")
+		} else {
+			return createDatabaseFromShare(data, meta)
+		}
+	} else if okDatabase {
+		return createDatabaseFromDatabase(data, meta)
 	}
+
 	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
 }
 
@@ -78,6 +92,23 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 	err := DBExec(db, builder.Create())
 	if err != nil {
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+	}
+
+	data.SetId(name)
+
+	return ReadDatabase(data, meta)
+}
+
+func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) error {
+	sourceDb := data.Get("from_database").(string)
+
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+	builder := snowflake.DatabaseFromDatabase(name, sourceDb.(string))
+
+	err := DBExec(db, builder.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating a clone database %v from database %v", name, sourceDb)
 	}
 
 	data.SetId(name)
