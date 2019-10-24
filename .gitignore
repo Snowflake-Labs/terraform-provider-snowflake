@@ -13,7 +13,7 @@ coverage.txt
 *.out
 
 .vscode
-terraform-provider-snowflake
+terraform-provider-snowflake_*
 
 .DS_Store
 *tfstate*
