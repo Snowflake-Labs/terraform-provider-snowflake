@@ -3,7 +3,7 @@ before:
     - make clean
 
 builds:
-  - binary: terraform-provider-snowflake
+  - binary: terraform-provider-snowflake_{{ .Version }}
     env:
       - CGO_ENABLED=0
     goos:
