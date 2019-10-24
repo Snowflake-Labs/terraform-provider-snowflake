@@ -24,11 +24,6 @@ You can also just download a binary from our [releases](https://github.com/chanz
 
 TODO fogg config
 
-### Using it with snowflake-infra
-If you are making changes to your terraform-provider-snowflake repo and want to test your changes with snowflake-infra:
-1. delete the snowflake-infra/terraform.d/plugins/darwin_amd64/terraform-provider-snowflake file
-2. run `make install-tf` in the root of the terraform-provider-snowflake repo
-
 ## Authentication
 
 We currently support username + password and keypair auth and suggest that you do so via environment variables. Define a config with something like-
