@@ -289,12 +289,3 @@ func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
 	}
 	return roles, shares
 }
-
-func stringInSlice(v string, sl []string) bool {
-	for _, s := range sl {
-		if s == v {
-			return true
-		}
-	}
-	return false
-}
