@@ -15,16 +15,31 @@ import (
 	"github.com/google/uuid"
 )
 
+// HTTP headers
 const (
 	headerSnowflakeToken   = "Snowflake Token=\"%v\""
 	headerAuthorizationKey = "Authorization"
 
 	headerContentTypeApplicationJSON     = "application/json"
 	headerAcceptTypeApplicationSnowflake = "application/snowflake"
+)
 
+// Snowflake Server Error code
+const (
 	sessionExpiredCode       = "390112"
 	queryInProgressCode      = "333333"
 	queryInProgressAsyncCode = "333334"
+)
+
+// Snowflake Server Endpoints
+const (
+	loginRequestPath         = "/session/v1/login-request"
+	queryRequestPath         = "/queries/v1/query-request"
+	tokenRequestPath         = "/session/token-request"
+	abortRequestPath         = "/queries/v1/abort-request"
+	authenticatorRequestPath = "/session/authenticator-request"
+	sessionRequestPath       = "/session"
+	heartBeatPath            = "/session/heartbeat"
 )
 
 type snowflakeRestful struct {
@@ -41,14 +56,14 @@ type snowflakeRestful struct {
 	HeartBeat   *heartbeat
 
 	Connection          *snowflakeConn
-	FuncPostQuery       func(context.Context, *snowflakeRestful, *url.Values, map[string]string, []byte, time.Duration) (*execResponse, error)
-	FuncPostQueryHelper func(context.Context, *snowflakeRestful, *url.Values, map[string]string, []byte, time.Duration, string) (*execResponse, error)
-	FuncPost            func(context.Context, *snowflakeRestful, string, map[string]string, []byte, time.Duration, bool) (*http.Response, error)
-	FuncGet             func(context.Context, *snowflakeRestful, string, map[string]string, time.Duration) (*http.Response, error)
+	FuncPostQuery       func(context.Context, *snowflakeRestful, *url.Values, map[string]string, []byte, time.Duration, *uuid.UUID) (*execResponse, error)
+	FuncPostQueryHelper func(context.Context, *snowflakeRestful, *url.Values, map[string]string, []byte, time.Duration, *uuid.UUID) (*execResponse, error)
+	FuncPost            func(context.Context, *snowflakeRestful, *url.URL, map[string]string, []byte, time.Duration, bool) (*http.Response, error)
+	FuncGet             func(context.Context, *snowflakeRestful, *url.URL, map[string]string, time.Duration) (*http.Response, error)
 	FuncRenewSession    func(context.Context, *snowflakeRestful) error
 	FuncPostAuth        func(*snowflakeRestful, *url.Values, map[string]string, []byte, time.Duration) (*authResponse, error)
 	FuncCloseSession    func(*snowflakeRestful) error
-	FuncCancelQuery     func(*snowflakeRestful, string) error
+	FuncCancelQuery     func(*snowflakeRestful, *uuid.UUID) error
 
 	FuncPostAuthSAML func(*snowflakeRestful, map[string]string, []byte, time.Duration) (*authResponse, error)
 	FuncPostAuthOKTA func(*snowflakeRestful, map[string]string, []byte, string, time.Duration) (*authOKTAResponse, error)
@@ -60,6 +75,18 @@ func (sr *snowflakeRestful) getURL() *url.URL {
 		Scheme: sr.Protocol,
 		Host:   sr.Host + ":" + strconv.Itoa(sr.Port),
 	}
+}
+
+func (sr *snowflakeRestful) getFullURL(path string, params *url.Values) *url.URL {
+	ret := &url.URL{
+		Scheme: sr.Protocol,
+		Host:   sr.Host + ":" + strconv.Itoa(sr.Port),
+		Path:   path,
+	}
+	if params != nil {
+		ret.RawQuery = params.Encode()
+	}
+	return ret
 }
 
 type renewSessionResponse struct {
@@ -87,23 +114,25 @@ type cancelQueryResponse struct {
 func postRestful(
 	ctx context.Context,
 	sr *snowflakeRestful,
-	fullURL string,
+	fullURL *url.URL,
 	headers map[string]string,
 	body []byte,
 	timeout time.Duration,
 	raise4XX bool) (
 	*http.Response, error) {
-	return retryHTTP(ctx, sr.Client, http.NewRequest, "POST", fullURL, headers, body, timeout, raise4XX)
+	return newRetryHTTP(
+		ctx, sr.Client, http.NewRequest, fullURL, headers, timeout).doPost().setBody(body).doRaise4XX(raise4XX).execute()
 }
 
 func getRestful(
 	ctx context.Context,
 	sr *snowflakeRestful,
-	fullURL string,
+	fullURL *url.URL,
 	headers map[string]string,
 	timeout time.Duration) (
 	*http.Response, error) {
-	return retryHTTP(ctx, sr.Client, http.NewRequest, "GET", fullURL, headers, nil, timeout, false)
+	return newRetryHTTP(
+		ctx, sr.Client, http.NewRequest, fullURL, headers, timeout).execute()
 }
 
 func postRestfulQuery(
@@ -112,10 +141,9 @@ func postRestfulQuery(
 	params *url.Values,
 	headers map[string]string,
 	body []byte,
-	timeout time.Duration) (
+	timeout time.Duration,
+	requestID *uuid.UUID) (
 	data *execResponse, err error) {
-
-	requestID := uuid.New().String()
 
 	data, err = sr.FuncPostQueryHelper(ctx, sr, params, headers, body, timeout, requestID)
 
@@ -139,17 +167,16 @@ func postRestfulQueryHelper(
 	headers map[string]string,
 	body []byte,
 	timeout time.Duration,
-	requestID string) (
+	requestID *uuid.UUID) (
 	data *execResponse, err error) {
 	glog.V(2).Infof("params: %v", params)
-	params.Add("requestId", requestID)
+	params.Add(requestIDKey, requestID.String())
+	params.Add("clientStartTime", strconv.FormatInt(time.Now().Unix(), 10))
 	params.Add(requestGUIDKey, uuid.New().String())
 	if sr.Token != "" {
 		headers[headerAuthorizationKey] = fmt.Sprintf(headerSnowflakeToken, sr.Token)
 	}
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port,
-		"/queries/v1/query-request?"+params.Encode())
+	fullURL := sr.getFullURL(queryRequestPath, params)
 	resp, err := sr.FuncPost(ctx, sr, fullURL, headers, body, timeout, false)
 	if err != nil {
 		return nil, err
@@ -169,7 +196,7 @@ func postRestfulQueryHelper(
 			if err != nil {
 				return nil, err
 			}
-			return sr.FuncPostQuery(ctx, sr, params, headers, body, timeout)
+			return sr.FuncPostQuery(ctx, sr, params, headers, body, timeout, requestID)
 		}
 
 		var resultURL string
@@ -184,8 +211,7 @@ func postRestfulQueryHelper(
 			glog.V(2).Info("ping pong")
 			glog.Flush()
 			headers[headerAuthorizationKey] = fmt.Sprintf(headerSnowflakeToken, sr.Token)
-			fullURL := fmt.Sprintf(
-				"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port, resultURL)
+			fullURL := sr.getFullURL(resultURL, nil)
 
 			resp, err = sr.FuncGet(ctx, sr, fullURL, headers, timeout)
 			if err != nil {
@@ -233,10 +259,9 @@ func closeSession(sr *snowflakeRestful) error {
 	glog.V(2).Info("close session")
 	params := &url.Values{}
 	params.Add("delete", "true")
-	params.Add("requestId", uuid.New().String())
+	params.Add(requestIDKey, uuid.New().String())
 	params.Add(requestGUIDKey, uuid.New().String())
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port, "/session?"+params.Encode())
+	fullURL := sr.getFullURL(sessionRequestPath, params)
 
 	headers := make(map[string]string)
 	headers["Content-Type"] = headerContentTypeApplicationJSON
@@ -289,10 +314,9 @@ func closeSession(sr *snowflakeRestful) error {
 func renewRestfulSession(ctx context.Context, sr *snowflakeRestful) error {
 	glog.V(2).Info("start renew session")
 	params := &url.Values{}
-	params.Add("requestId", uuid.New().String())
+	params.Add(requestIDKey, uuid.New().String())
 	params.Add(requestGUIDKey, uuid.New().String())
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port, "/session/token-request?"+params.Encode())
+	fullURL := sr.getFullURL(tokenRequestPath, params)
 
 	headers := make(map[string]string)
 	headers["Content-Type"] = headerContentTypeApplicationJSON
@@ -354,13 +378,13 @@ func renewRestfulSession(ctx context.Context, sr *snowflakeRestful) error {
 	}
 }
 
-func cancelQuery(sr *snowflakeRestful, requestID string) error {
+func cancelQuery(sr *snowflakeRestful, requestID *uuid.UUID) error {
 	glog.V(2).Info("cancel query")
 	params := &url.Values{}
-	params.Add("requestId", uuid.New().String())
+	params.Add(requestIDKey, uuid.New().String())
 	params.Add(requestGUIDKey, uuid.New().String())
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port, "/queries/v1/abort-request?"+params.Encode())
+
+	fullURL := sr.getFullURL(abortRequestPath, params)
 
 	headers := make(map[string]string)
 	headers["Content-Type"] = headerContentTypeApplicationJSON
@@ -369,7 +393,7 @@ func cancelQuery(sr *snowflakeRestful, requestID string) error {
 	headers[headerAuthorizationKey] = fmt.Sprintf(headerSnowflakeToken, sr.Token)
 
 	req := make(map[string]string)
-	req["requestId"] = requestID
+	req[requestIDKey] = requestID.String()
 
 	reqByte, err := json.Marshal(req)
 	if err != nil {

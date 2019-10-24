@@ -16,7 +16,10 @@ builds:
 
 archive:
   files:
-  - none*
+    - none*
 
 release:
   prerelease: true
+
+env_files:
+  github_token: ~/.config/goreleaser/github_token

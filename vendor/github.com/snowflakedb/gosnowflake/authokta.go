@@ -204,10 +204,11 @@ func postAuthSAML(
 	body []byte,
 	timeout time.Duration) (
 	data *authResponse, err error) {
-	requestID := fmt.Sprintf("requestId=%v", uuid.New().String())
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port,
-		"/session/authenticator-request?"+requestID)
+
+	params := &url.Values{}
+	params.Add(requestIDKey, uuid.New().String())
+	fullURL := sr.getFullURL(authenticatorRequestPath, params)
+
 	glog.V(2).Infof("fullURL: %v", fullURL)
 	resp, err := sr.FuncPost(context.TODO(), sr, fullURL, headers, body, timeout, true)
 	if err != nil {
@@ -266,7 +267,11 @@ func postAuthOKTA(
 	timeout time.Duration) (
 	data *authOKTAResponse, err error) {
 	glog.V(2).Infof("fullURL: %v", fullURL)
-	resp, err := sr.FuncPost(context.TODO(), sr, fullURL, headers, body, timeout, false)
+	targetURL, err := url.Parse(fullURL)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := sr.FuncPost(context.TODO(), sr, targetURL, headers, body, timeout, false)
 	if err != nil {
 		return nil, err
 	}
@@ -303,10 +308,14 @@ func getSSO(
 	sr *snowflakeRestful,
 	params *url.Values,
 	headers map[string]string,
-	url string,
+	ssoURL string,
 	timeout time.Duration) (
 	bd []byte, err error) {
-	fullURL := fmt.Sprintf("%s?%s", url, params.Encode())
+	fullURL, err := url.Parse(ssoURL)
+	if err != nil {
+		return nil, err
+	}
+	fullURL.RawQuery = params.Encode()
 	glog.V(2).Infof("fullURL: %v", fullURL)
 	resp, err := sr.FuncGet(context.TODO(), sr, fullURL, headers, timeout)
 	if err != nil {
