@@ -80,6 +80,8 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
+Each grant resource is unique
+
 #### properties
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -132,6 +134,8 @@ You can see a number of examples [here](examples).
 
 ### snowflake_role_grants
 
+Each grant resource is unique
+
 #### properties
 
 |   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -155,6 +159,8 @@ You can see a number of examples [here](examples).
 
 ### snowflake_schema_grant
 
+Each grant resource is unique
+
 #### properties
 
 |     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -176,6 +182,8 @@ You can see a number of examples [here](examples).
 | name     | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    | <nil>   |
 
 ### snowflake_table_grant
+
+Each grant resource is unique
 
 #### properties
 
@@ -223,6 +231,8 @@ You can see a number of examples [here](examples).
 
 ### snowflake_view_grant
 
+Each grant resource is unique
+
 #### properties
 
 |     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
@@ -254,6 +264,8 @@ You can see a number of examples [here](examples).
 | warehouse_size        | string |                                                                                                                                          | true     | false     | true     | <nil>   |
 
 ### snowflake_warehouse_grant
+
+Each grant resource is unique
 
 #### properties
 
