@@ -90,7 +90,7 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 	})
 }
 
-func TestDatabaseCreateFromShare(t *testing.T) {
+func TestDatabaseCreateFromDatabase(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
