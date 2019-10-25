@@ -28,7 +28,26 @@ func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
 	}
 }
 
-// Create returns the SQL statement required to create a DB from a share
+// Create returns the SQL statement required to create a database from a share
 func (dsb *DatabaseShareBuilder) Create() string {
 	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share)
+}
+
+// DatabaseCloneBuilder is a basic builder that just creates databases from a source database
+type DatabaseCloneBuilder struct {
+	name     string
+	database string
+}
+
+// DatabaseFromDatabase returns a pointer to a builder that can create a database from a source database
+func DatabaseFromDatabase(name, database string) *DatabaseCloneBuilder {
+	return &DatabaseCloneBuilder{
+		name:     name,
+		database: database,
+	}
+}
+
+// Create returns the SQL statement required to create a database from a source database
+func (dsb *DatabaseCloneBuilder) Create() string {
+	return fmt.Sprintf(`CREATE DATABASE "%v" CLONE "%v"`, dsb.name, dsb.database)
 }
