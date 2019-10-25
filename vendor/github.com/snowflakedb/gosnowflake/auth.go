@@ -115,7 +115,13 @@ var platform = fmt.Sprintf("%v-%v", runtime.Compiler, runtime.GOARCH)
 var operatingSystem = runtime.GOOS
 
 // userAgent shows up in User-Agent HTTP header
-var userAgent = fmt.Sprintf("%v/%v/%v/%v", clientType, SnowflakeGoDriverVersion, runtime.Version(), platform)
+var userAgent = fmt.Sprintf("%v/%v/%v/%v/%v-%v",
+	clientType,
+	SnowflakeGoDriverVersion,
+	runtime.Compiler,
+	runtime.Version(),
+	operatingSystem,
+	runtime.GOARCH)
 
 type authRequestClientEnvironment struct {
 	Application string `json:"APPLICATION"`
@@ -134,7 +140,7 @@ type authRequestData struct {
 	ExtAuthnDuoMethod       string                       `json:"EXT_AUTHN_DUO_METHOD,omitempty"`
 	Passcode                string                       `json:"PASSCODE,omitempty"`
 	Authenticator           string                       `json:"AUTHENTICATOR,omitempty"`
-	SessionParameters       map[string]string            `json:"SESSION_PARAMETERS,omitempty"`
+	SessionParameters       map[string]interface{}       `json:"SESSION_PARAMETERS,omitempty"`
 	ClientEnvironment       authRequestClientEnvironment `json:"CLIENT_ENVIRONMENT"`
 	BrowserModeRedirectPort string                       `json:"BROWSER_MODE_REDIRECT_PORT,omitempty"`
 	ProofKey                string                       `json:"PROOF_KEY,omitempty"`
@@ -189,11 +195,10 @@ func postAuth(
 	body []byte,
 	timeout time.Duration) (
 	data *authResponse, err error) {
-	params.Add("requestId", uuid.New().String())
+	params.Add(requestIDKey, uuid.New().String())
 	params.Add(requestGUIDKey, uuid.New().String())
-	fullURL := fmt.Sprintf(
-		"%s://%s:%d%s", sr.Protocol, sr.Host, sr.Port,
-		"/session/v1/login-request?"+params.Encode())
+
+	fullURL := sr.getFullURL(loginRequestPath, params)
 	glog.V(2).Infof("full URL: %v", fullURL)
 	resp, err := sr.FuncPost(context.TODO(), sr, fullURL, headers, body, timeout, true)
 	if err != nil {
@@ -270,11 +275,13 @@ func authenticate(
 		OCSPMode:    sc.cfg.ocspMode(),
 	}
 
-	sessionParameters := make(map[string]string)
+	sessionParameters := make(map[string]interface{})
 	for k, v := range sc.cfg.Params {
 		// upper casing to normalize keys
 		sessionParameters[strings.ToUpper(k)] = *v
 	}
+
+	sessionParameters[sessionClientValidateDefaultParameters] = sc.cfg.ValidateDefaultParameters != ConfigBoolFalse
 
 	requestMain := authRequestData{
 		ClientAppID:       clientType,

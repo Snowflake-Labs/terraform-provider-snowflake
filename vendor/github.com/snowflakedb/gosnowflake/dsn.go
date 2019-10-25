@@ -20,17 +20,33 @@ const (
 	defaultDomain         = ".snowflakecomputing.com"
 )
 
+// ConfigBool is a type to represent true or false in the Config
+type ConfigBool uint8
+
+const (
+	configBoolNotSet ConfigBool = iota // Reserved for unset to let default value fall into this category
+	// ConfigBoolTrue represents true for the config field
+	ConfigBoolTrue
+	// ConfigBoolFalse represents false for the config field
+	ConfigBoolFalse
+)
+
 // Config is a set of configuration parameters
 type Config struct {
-	Account   string             // Account name
-	User      string             // Username
-	Password  string             // Password (requires User)
-	Database  string             // Database name
-	Schema    string             // Schema
-	Warehouse string             // Warehouse
-	Role      string             // Role
-	Region    string             // Region
-	Params    map[string]*string // other connection parameters
+	Account   string // Account name
+	User      string // Username
+	Password  string // Password (requires User)
+	Database  string // Database name
+	Schema    string // Schema
+	Warehouse string // Warehouse
+	Role      string // Role
+	Region    string // Region
+
+	// ValidateDefaultParameters disable the validation checks for Database, Schema, Warehouse and Role
+	// at the time a connection is established
+	ValidateDefaultParameters ConfigBool
+
+	Params map[string]*string // other connection parameters
 
 	Protocol string // http or https (optional)
 	Host     string // hostname (optional)
@@ -153,6 +169,10 @@ func DSN(cfg *Config) (dsn string, err error) {
 		keyBase64 := base64.URLEncoding.EncodeToString(privateKeyInBytes)
 		params.Add("privateKey", keyBase64)
 	}
+
+	params.Add("ocspFailOpen", strconv.FormatBool(cfg.OCSPFailOpen != OCSPFailOpenFalse))
+
+	params.Add("validateDefaultParameters", strconv.FormatBool(cfg.ValidateDefaultParameters != ConfigBoolFalse))
 
 	dsn = fmt.Sprintf("%v:%v@%v:%v", url.QueryEscape(cfg.User), url.QueryEscape(cfg.Password), cfg.Host, cfg.Port)
 	if params.Encode() != "" {
@@ -349,15 +369,21 @@ func fillMissingConfigParameters(cfg *Config) error {
 	if strings.Trim(cfg.Application, " ") == "" {
 		cfg.Application = clientType
 	}
+
+	if cfg.OCSPFailOpen == ocspFailOpenNotSet {
+		cfg.OCSPFailOpen = OCSPFailOpenTrue
+	}
+
+	if cfg.ValidateDefaultParameters == configBoolNotSet {
+		cfg.ValidateDefaultParameters = ConfigBoolTrue
+	}
+
 	if strings.HasSuffix(cfg.Host, defaultDomain) && len(cfg.Host) == len(defaultDomain) {
 		return &SnowflakeError{
 			Number:      ErrCodeFailedToParseHost,
 			Message:     errMsgFailedToParseHost,
 			MessageArgs: []interface{}{cfg.Host},
 		}
-	}
-	if cfg.OCSPFailOpen == ocspFailOpenNotSet {
-		cfg.OCSPFailOpen = OCSPFailOpenTrue
 	}
 	return nil
 }
@@ -515,6 +541,17 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 			cfg.PrivateKey, err = parsePKCS8PrivateKey(block)
 			if err != nil {
 				return err
+			}
+		case "validateDefaultParameters":
+			var vv bool
+			vv, err = strconv.ParseBool(value)
+			if err != nil {
+				return
+			}
+			if vv {
+				cfg.ValidateDefaultParameters = ConfigBoolTrue
+			} else {
+				cfg.ValidateDefaultParameters = ConfigBoolFalse
 			}
 		default:
 			if cfg.Params == nil {

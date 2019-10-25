@@ -2,7 +2,6 @@ package snowflake
 
 import (
 	"fmt"
-	"log"
 )
 
 // Database returns a pointer to a Builder for a database
@@ -31,6 +30,5 @@ func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
 
 // Create returns the SQL statement required to create a DB from a share
 func (dsb *DatabaseShareBuilder) Create() string {
-	log.Printf("[DEBUG] CREATE DATABASE HERE")
 	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share)
 }

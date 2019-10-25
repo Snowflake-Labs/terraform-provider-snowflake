@@ -24,8 +24,8 @@ type execResponseRowType struct {
 	ByteLength int64  `json:"byteLength"`
 	Length     int64  `json:"length"`
 	Type       string `json:"type"`
-	Scale      int64  `json:"scale"`
 	Precision  int64  `json:"precision"`
+	Scale      int64  `json:"scale"`
 	Nullable   bool   `json:"nullable"`
 }
 

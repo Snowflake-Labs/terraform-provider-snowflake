@@ -2,7 +2,6 @@ package snowflake
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -163,7 +162,6 @@ func (sb *SchemaBuilder) Use() string {
 
 // Show returns the SQL query that will show a schema.
 func (sb *SchemaBuilder) Show() string {
-	log.Printf("[DEBUG] SHOW SCHEMA HERE")
 	q := strings.Builder{}
 
 	q.WriteString(fmt.Sprintf(`SHOW SCHEMAS LIKE '%v'`, sb.name))
