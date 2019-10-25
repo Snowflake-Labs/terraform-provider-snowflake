@@ -33,12 +33,14 @@ var databaseSchema = map[string]*schema.Schema{
 		Description: "Specify a provider and a share in this map to create a database from a share.",
 		Optional:    true,
 		ForceNew:    true,
+		ConflictsWith: []string{"from_database"},
 	},
 	"from_database": &schema.Schema{
 		Type:        schema.TypeString,
 		Description: "Specify a database to create a clone from.",
 		Optional:    true,
 		ForceNew:    true,
+		ConflictsWith: []string{"from_share"},
 	},
 }
 
@@ -61,15 +63,11 @@ func Database() *schema.Resource {
 
 // CreateDatabase implements schema.CreateFunc
 func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
-	_, okShare := data.GetOk("from_share")
-	_, okDatabase := data.GetOk("from_database")
-	if okShare {
-		if okDatabase {
-			return fmt.Errorf("from_share and from_database cant be used at the same time")
-		} else {
-			return createDatabaseFromShare(data, meta)
-		}
-	} else if okDatabase {
+	if _, ok := data.GetOk("from_share"); ok {
+		return createDatabaseFromShare(data, meta)
+	}
+	
+	if _, ok := data.GetOk("from_database"); ok {
 		return createDatabaseFromDatabase(data, meta)
 	}
 
