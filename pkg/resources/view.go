@@ -85,7 +85,7 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := data.GetOk("statement"); ok {
-		builder.WithComment(v.(string))
+		builder.WithStatement(v.(string))
 	}
 
 	q := builder.Create()
