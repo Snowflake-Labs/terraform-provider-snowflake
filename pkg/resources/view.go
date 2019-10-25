@@ -129,6 +129,16 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = data.Set("statement", text.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("database", databaseName.String)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
