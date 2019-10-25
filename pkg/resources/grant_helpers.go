@@ -175,7 +175,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				continue
 			}
 
-			shares = append(shares, grant.GranteeName)
+			shares = append(shares, granteeNameStrippedAccount)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}

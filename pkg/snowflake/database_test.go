@@ -47,3 +47,10 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 	q := db.Create()
 	a.Equal(`CREATE DATABASE "db1" FROM SHARE "abc123"."share1"`, q)
 }
+
+func TestDatabaseCreateFromDatabase(t *testing.T) {
+	a := assert.New(t)
+	db := snowflake.DatabaseFromDatabase("db1", "abc123")
+	q := db.Create()
+	a.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)
+}

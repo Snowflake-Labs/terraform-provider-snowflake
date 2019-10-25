@@ -89,3 +89,21 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 		a.NoError(err)
 	})
 }
+
+func TestDatabaseCreateFromDatabase(t *testing.T) {
+	a := assert.New(t)
+
+	in := map[string]interface{}{
+		"name": "good_name",
+		"from_database": "abc123",
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	a.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		a.NoError(err)
+	})
+}
