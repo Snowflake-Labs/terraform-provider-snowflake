@@ -75,6 +75,7 @@ You can see a number of examples [here](examples).
 |-----------------------------|--------|-------------------------------------------------------------------------------|----------|-----------|----------|---------|
 | comment                     | string |                                                                               | true     | false     | false    | ""      |
 | data_retention_time_in_days | int    |                                                                               | true     | false     | true     | <nil>   |
+| from_database               | string | Specify a database to create a clone from.                                    | true     | false     | false    | <nil>   |
 | from_share                  | map    | Specify a provider and a share in this map to create a database from a share. | true     | false     | false    | <nil>   |
 | name                        | string |                                                                               | false    | true      | false    | <nil>   |
 
