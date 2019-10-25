@@ -80,7 +80,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
-**Note**: snowflake_database_grant are unique for a given snowflake_database
+**Note**: snowflake_database_grant are unique for a given snowflake_database.
 #### properties
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -156,7 +156,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_schema_grant
 
-**Note**: snowflake_schema_grant are unique for a given snowflake_schem
+**Note**: snowflake_schema_grant are unique for a given snowflake_schem.
 #### properties
 
 |     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -179,7 +179,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_table_grant
 
-**Note**: snowflake_table_grant are unique for a given snowflake_table
+**Note**: snowflake_table_grant are unique for a given snowflake_table.
 #### properties
 
 |     NAME      |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
@@ -226,7 +226,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_view_grant
 
-**Note**: snowflake_view_grant are unique for a given snowflake_view
+**Note**: snowflake_view_grant are unique for a given snowflake_view.
 #### properties
 
 |     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
@@ -259,7 +259,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_warehouse_grant
 
-**Note**: snowflake_warehouse_grant are unique for a given snowflake_warehouse
+**Note**: snowflake_warehouse_grant are unique for a given snowflake_warehouse.
 #### properties
 
 |      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
