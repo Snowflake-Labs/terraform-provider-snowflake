@@ -80,7 +80,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
-Each grant resource is unique
+snowflake_database_grant are unique for a given snowflake_database
 
 #### properties
 
@@ -134,7 +134,7 @@ Each grant resource is unique
 
 ### snowflake_role_grants
 
-Each grant resource is unique
+snowflake_role_grants are unique for a given snowflake_role_grants
 
 #### properties
 
@@ -159,7 +159,7 @@ Each grant resource is unique
 
 ### snowflake_schema_grant
 
-Each grant resource is unique
+snowflake_schema_grant are unique for a given snowflake_schem
 
 #### properties
 
@@ -183,7 +183,7 @@ Each grant resource is unique
 
 ### snowflake_table_grant
 
-Each grant resource is unique
+snowflake_table_grant are unique for a given snowflake_table
 
 #### properties
 
@@ -231,7 +231,7 @@ Each grant resource is unique
 
 ### snowflake_view_grant
 
-Each grant resource is unique
+snowflake_view_grant are unique for a given snowflake_view
 
 #### properties
 
@@ -265,7 +265,7 @@ Each grant resource is unique
 
 ### snowflake_warehouse_grant
 
-Each grant resource is unique
+snowflake_warehouse_grant are unique for a given snowflake_warehouse
 
 #### properties
 

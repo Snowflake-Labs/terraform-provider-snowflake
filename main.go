@@ -42,7 +42,7 @@ func doc() {
 		resource := resources[name]
 		fmt.Printf("\n### %s\n\n", name)
 		if strings.Contains(name, "_grant") {
-			fmt.Printf("Each grant resource is unique\n\n")
+			fmt.Printf("%s are unique for a given %s\n\n", name, strings.Trim(name, "_grant"))
 		}
 		fmt.Printf("#### properties\n\n")
 
