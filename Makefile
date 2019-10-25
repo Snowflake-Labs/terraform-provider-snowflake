@@ -3,7 +3,7 @@ VERSION=$(shell cat VERSION)
 DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
 # TODO add release flag
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/util.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/util.Dirty=${DIRTY}"
-BINARY_NAME="terraform-provider-snowflake_$(VERSION)"
+BASE_BINARY_NAME=terraform-provider-snowflake
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 
@@ -26,7 +26,7 @@ release: ## run a release
 .PHONY: release
 
 release-prerelease: build ## release to github as a 'pre-release'
-	version=`./$(BINARY_NAME) version`; \
+	version=`./$(BASE_BINARY_NAME) version`; \
 	git tag v"$$version"; \
 	git push
 	git push --tags
@@ -38,7 +38,7 @@ release-snapshot: ## run a release
 .PHONY: release-snapshot
 
 build: ## build the binary
-	go build ${LDFLAGS} -o $(BINARY_NAME) .
+	go build ${LDFLAGS} -o $(BASE_BINARY_NAME) .
 .PHONY: build
 
 coverage: ## run the go coverage tool, reading file coverage.out
@@ -68,7 +68,7 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 
 install-tf: build ## installs plugin where terraform can find it
 	mkdir -p $(HOME)/.terraform.d/plugins
-	cp ./$(BINARY_NAME) $(HOME)/.terraform.d/plugins
+	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)_$(VERSION)+$(SHA)
 .PHONY: install-tf
 
 help: ## display help for this makefile
