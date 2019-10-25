@@ -2,7 +2,6 @@ package snowflake
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 )
@@ -25,7 +24,6 @@ type Builder struct {
 }
 
 func (b *Builder) Show() string {
-	log.Printf("SHOW %sS LIKE '%s'", b.entityType, b.name)
 	return fmt.Sprintf(`SHOW %sS LIKE '%s'`, b.entityType, b.name)
 }
 
