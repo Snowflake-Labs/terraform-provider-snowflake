@@ -80,9 +80,7 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
-snowflake_database_grant are unique for a given snowflake_database
-
-#### properties
+**Note** snowflake_database_grant are unique for a given snowflake_database\n#### properties
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
@@ -134,8 +132,6 @@ snowflake_database_grant are unique for a given snowflake_database
 
 ### snowflake_role_grants
 
-snowflake_role_grants are unique for a given snowflake_role_grants
-
 #### properties
 
 |   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
@@ -159,9 +155,7 @@ snowflake_role_grants are unique for a given snowflake_role_grants
 
 ### snowflake_schema_grant
 
-snowflake_schema_grant are unique for a given snowflake_schem
-
-#### properties
+**Note** snowflake_schema_grant are unique for a given snowflake_schem\n#### properties
 
 |     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
@@ -183,9 +177,7 @@ snowflake_schema_grant are unique for a given snowflake_schem
 
 ### snowflake_table_grant
 
-snowflake_table_grant are unique for a given snowflake_table
-
-#### properties
+**Note** snowflake_table_grant are unique for a given snowflake_table\n#### properties
 
 |     NAME      |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -231,9 +223,7 @@ snowflake_table_grant are unique for a given snowflake_table
 
 ### snowflake_view_grant
 
-snowflake_view_grant are unique for a given snowflake_view
-
-#### properties
+**Note** snowflake_view_grant are unique for a given snowflake_view\n#### properties
 
 |     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -265,9 +255,7 @@ snowflake_view_grant are unique for a given snowflake_view
 
 ### snowflake_warehouse_grant
 
-snowflake_warehouse_grant are unique for a given snowflake_warehouse
-
-#### properties
+**Note** snowflake_warehouse_grant are unique for a given snowflake_warehouse\n#### properties
 
 |      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|

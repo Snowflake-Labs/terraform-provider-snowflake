@@ -41,8 +41,9 @@ func doc() {
 	for _, name := range names {
 		resource := resources[name]
 		fmt.Printf("\n### %s\n\n", name)
-		if strings.Contains(name, "_grant") {
-			fmt.Printf("%s are unique for a given %s\n\n", name, strings.Trim(name, "_grant"))
+		if strings.HasSuffix(name, "_grant") {
+			grant_resource_name := strings.Trim(name, "_grant")
+			fmt.Printf(`**Note** %s are unique for a given %s\n`, name, grant_resource_name)
 		}
 		fmt.Printf("#### properties\n\n")
 
