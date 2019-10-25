@@ -104,6 +104,7 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	name := data.Id()
 
 	stmt := snowflake.Database(name).Show()
+
 	log.Printf("[DEBUG] stmt %s", stmt)
 	row := sdb.QueryRowx(stmt)
 
