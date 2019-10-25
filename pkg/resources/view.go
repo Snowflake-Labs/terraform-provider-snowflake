@@ -84,10 +84,6 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := data.GetOk("statement"); ok {
-		builder.WithStatement(v.(string))
-	}
-
 	q := builder.Create()
 
 	err := DBExec(db, q)
