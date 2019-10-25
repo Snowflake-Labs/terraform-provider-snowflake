@@ -3,7 +3,7 @@ VERSION=$(shell cat VERSION)
 DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
 # TODO add release flag
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty=${DIRTY}"
-BASE_BINARY_NAME=terraform-provider-snowflake
+BASE_BINARY_NAME=terraform-provider-snowflake_$(VERSION)
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 
