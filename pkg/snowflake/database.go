@@ -40,10 +40,10 @@ type DatabaseCloneBuilder struct {
 }
 
 // DatabaseFromDatabase returns a pointer to a builder that can create a database from a source database
-func DatabaseFromDatabase(name, provider, share string) *DatabaseShareBuilder {
+func DatabaseFromDatabase(name, database string) *DatabaseCloneBuilder {
 	return &DatabaseCloneBuilder{
 		name:     name,
-		database: provider,
+		database: database,
 	}
 }
 

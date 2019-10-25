@@ -104,7 +104,7 @@ func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) err
 
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
-	builder := snowflake.DatabaseFromDatabase(name, sourceDb.(string))
+	builder := snowflake.DatabaseFromDatabase(name, sourceDb)
 
 	err := DBExec(db, builder.Create())
 	if err != nil {
