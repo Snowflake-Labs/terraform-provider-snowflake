@@ -43,7 +43,7 @@ func doc() {
 		fmt.Printf("\n### %s\n\n", name)
 		if strings.HasSuffix(name, "_grant") {
 			grant_resource_name := strings.Trim(name, "_grant")
-			fmt.Printf(`**Note** %s are unique for a given %s\n`, name, grant_resource_name)
+			fmt.Printf("**Note**: %s are unique for a given %s\n", name, grant_resource_name)
 		}
 		fmt.Printf("#### properties\n\n")
 
