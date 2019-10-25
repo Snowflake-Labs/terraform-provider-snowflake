@@ -67,8 +67,9 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 .PHONY: install
 
 install-tf: build ## installs plugin where terraform can find it
+	version=`./$(BASE_BINARY_NAME) -version`;
 	mkdir -p $(HOME)/.terraform.d/plugins
-	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)_$(VERSION)+$(SHA)
+	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
 .PHONY: install-tf
 
 help: ## display help for this makefile
