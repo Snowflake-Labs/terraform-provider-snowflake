@@ -130,8 +130,8 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// #HACK(adoami): Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-	indexOfSelect := strings.Index(text.String, " AS SELECT")
-	substringOfQuery := text.String[indexOfSelect+4:]
+	indexOfSelect := strings.Index(strings.ToUpper(text.String), " AS SELECT")
+	substringOfQuery := text.String[(indexOfSelect + 4):]
 	err = data.Set("statement", substringOfQuery)
 	if err != nil {
 		return err
