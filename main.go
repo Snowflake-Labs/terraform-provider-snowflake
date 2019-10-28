@@ -43,7 +43,13 @@ func doc() {
 		fmt.Printf("\n### %s\n\n", name)
 		if strings.HasSuffix(name, "_grant") {
 			grant_resource_name := strings.Trim(name, "_grant")
-			fmt.Printf("**Note**: %s are unique for a given %s.\n", name, grant_resource_name)
+			fmt.Printf(`
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single %s resource. This means that even any %s that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			`, name, grant_resource_name)
 		}
 		fmt.Printf("#### properties\n\n")
 
