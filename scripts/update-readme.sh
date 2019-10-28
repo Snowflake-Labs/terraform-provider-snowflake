@@ -7,7 +7,8 @@ CMD="$1"
 
 TMP=`mktemp`
 TMP2=`mktemp`
-./terraform-provider-snowflake -doc > "$TMP"
+VERSION="$(cat VERSION)"
+./terraform-provider-snowflake_"$VERSION" -doc > "$TMP"
 sed '/^<!-- START -->$/,/<!-- END -->/{//!d;}' README.md | sed "/^<!-- START -->$/r $TMP" > $TMP2
 
 case "$CMD" in
