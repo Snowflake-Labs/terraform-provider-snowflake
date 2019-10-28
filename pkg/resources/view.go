@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -84,6 +85,10 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := data.GetOk("schema"); ok {
+		builder.WithSchema(v.(string))
+	}
+
 	q := builder.Create()
 
 	err := DBExec(db, q)
@@ -125,6 +130,26 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("comment", comment.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("schema", schemaName.String)
+	if err != nil {
+		return err
+	}
+
+	// #HACK(adoami): Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
+	space := regexp.MustCompile(`\s+`)
+	cleanString := space.ReplaceAllString(text.String, " ")
+	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
+	substringOfQuery := cleanString[indexOfSelect+4:]
+	err = data.Set("statement", substringOfQuery)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("database", databaseName.String)
 	if err != nil {
 		return err
 	}
