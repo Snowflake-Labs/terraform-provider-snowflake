@@ -81,8 +81,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
-**Note**: snowflake_database_grant are unique for a given snowflake_database.
-#### properties
+
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single snowflake_database_grant resource. This means that even any snowflake_database that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			#### properties
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
@@ -157,8 +162,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_schema_grant
 
-**Note**: snowflake_schema_grant are unique for a given snowflake_schem.
-#### properties
+
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single snowflake_schema_grant resource. This means that even any snowflake_schem that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			#### properties
 
 |     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
@@ -180,8 +190,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_table_grant
 
-**Note**: snowflake_table_grant are unique for a given snowflake_table.
-#### properties
+
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single snowflake_table_grant resource. This means that even any snowflake_table that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			#### properties
 
 |     NAME      |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -227,8 +242,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_view_grant
 
-**Note**: snowflake_view_grant are unique for a given snowflake_view.
-#### properties
+
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single snowflake_view_grant resource. This means that even any snowflake_view that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			#### properties
 
 |     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -260,8 +280,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_warehouse_grant
 
-**Note**: snowflake_warehouse_grant are unique for a given snowflake_warehouse.
-#### properties
+
+			**Note**: The grant resource create exclusive attachments of grants.
+			Across the entire AWS account, all of the users/roles/groups to which a single grant is attached must be declared
+			by a single snowflake_warehouse_grant resource. This means that even any snowflake_warehouse that have the attached
+			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+			These resources do not enforce exclusive attachment of a grant.\n
+			#### properties
 
 |      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
