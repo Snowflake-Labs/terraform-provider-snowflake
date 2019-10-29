@@ -50,7 +50,7 @@ func doc() {
 			by a single %s resource. This means that even any %s that have the attached
 			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			`, granted_to_name, name, grant_resource_name)
+			`, name, granted_to_name, name, grant_resource_name)
 		}
 		fmt.Printf("#### properties\n\n")
 
