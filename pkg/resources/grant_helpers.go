@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -134,10 +133,6 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func d(in interface{}) {
-	log.Printf("[DEBUG]%#v\n", in)
-}
-
 func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
@@ -152,45 +147,30 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	}
 	priv := data.Get("privilege").(string)
 
-	rolesIn, sharesIn := expandRolesAndShares(data)
-
 	var roles, shares []string
-	d("foo")
 	for _, grant := range grants {
 		// Skip if wrong privilege
 		if grant.Privilege != priv {
 			continue
 		}
-		d(grant)
 		switch grant.GranteeType {
 		case "ROLE":
-			if !stringInSlice(grant.GranteeName, rolesIn) {
-				continue
-			}
 			roles = append(roles, grant.GranteeName)
 		case "SHARE":
-			// Shares get the account appended to their name, remove this
 			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
-			if !stringInSlice(granteeNameStrippedAccount, sharesIn) {
-				continue
-			}
-
 			shares = append(shares, granteeNameStrippedAccount)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
 	}
-
 	err = data.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-
 	err = data.Set("roles", roles)
 	if err != nil {
 		return err
 	}
-
 	err = data.Set("shares", shares)
 	if err != nil {
 		// warehouses and future grants don't use shares - check for this error
@@ -308,13 +288,4 @@ func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
 		shares = expandStringList(data.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
-}
-
-func stringInSlice(v string, sl []string) bool {
-	for _, s := range sl {
-		if s == v {
-			return true
-		}
-	}
-	return false
 }
