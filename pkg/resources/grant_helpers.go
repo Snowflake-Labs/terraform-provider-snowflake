@@ -147,15 +147,25 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	}
 	priv := data.Get("privilege").(string)
 
+	rolePrivileges := map[string]map[string]struct{}{}
+	// sharePrivileges := map[string]map[string]struct{}{}
+
 	var roles, shares []string
 	for _, grant := range grants {
-		// Skip if wrong privilege
-		if grant.Privilege != priv {
-			continue
-		}
 		switch grant.GranteeType {
 		case "ROLE":
-			roles = append(roles, grant.GranteeName)
+			roleName := grant.GranteeName
+			// Find set of privileges
+			privileges, ok := rolePrivileges[roleName]
+			if !ok {
+				// If not there, create an empty set
+				privileges = map[string]struct{}{}
+			}
+			// Add privilege to the set
+			privileges[grant.Privilege] = struct{}{}
+			// Reassign set back
+			rolePrivileges[roleName] = privileges
+		// TODO: do something for shares
 		case "SHARE":
 			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
 			shares = append(shares, granteeNameStrippedAccount)
@@ -163,6 +173,21 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
 	}
+
+	// Now see which roles have our privilege
+	for roleName, privileges := range rolePrivileges {
+		// Where priv is not all so it should match exactly
+		if _, ok := privileges[priv]; ok {
+			roles = append(roles, roleName)
+		}
+		// TODO: these list of privs might include all and ownnership -- exclude those from
+		// 	     from our calculation
+		// TODO: can't just use validschemaprivilegse, parameterize and pass in as fn arg
+		if len(privileges) == len(ValidSchemaPrivileges) {
+			roles = append(roles, roleName)
+		}
+	}
+
 	err = data.Set("privilege", priv)
 	if err != nil {
 		return err
@@ -178,7 +203,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			return err
 		}
 	}
-
 	return nil
 }
 
