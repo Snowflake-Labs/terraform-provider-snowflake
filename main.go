@@ -45,7 +45,7 @@ func doc() {
 			grant_resource_name := strings.Replace(name, "_grant", "", -1)
 			granted_to_name := strings.Replace(grant_resource_name, "snowflake_", "", -1)
 			fmt.Printf(`
-			**Note**: The grant resource creates exclusive attachments of grants.
+			**Note**: The %s resource creates exclusive attachments of grants.
 			Across the entire Snowflake account, all of the %ss to which a single grant is attached must be declared
 			by a single %s resource. This means that even any %s that have the attached
 			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
