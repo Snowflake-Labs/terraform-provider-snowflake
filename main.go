@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sort"
-	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version"
@@ -27,7 +27,7 @@ func main() {
 
 	if *ver {
 		verString, err := version.VersionString()
-		if (err != nil) {
+		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(verString)
