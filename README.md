@@ -81,13 +81,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_database_grant
 
+**Note**: The snowflake_database_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the databases to which a single grant is attached must be declared
+by a single snowflake_database_grant resource. This means that even any snowflake_database that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
 
-			**Note**: The snowflake_database_grant resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the databases to which a single grant is attached must be declared
-			by a single snowflake_database_grant resource. This means that even any snowflake_database that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			#### properties
+#### properties
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
@@ -162,13 +162,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_schema_grant
 
+**Note**: The snowflake_schema_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the schemas to which a single grant is attached must be declared
+by a single snowflake_schema_grant resource. This means that even any snowflake_schema that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
 
-			**Note**: The snowflake_schema_grant resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the schemas to which a single grant is attached must be declared
-			by a single snowflake_schema_grant resource. This means that even any snowflake_schema that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			#### properties
+#### properties
 
 |     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
@@ -190,13 +190,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_table_grant
 
+**Note**: The snowflake_table_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the tables to which a single grant is attached must be declared
+by a single snowflake_table_grant resource. This means that even any snowflake_table that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
 
-			**Note**: The snowflake_table_grant resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the tables to which a single grant is attached must be declared
-			by a single snowflake_table_grant resource. This means that even any snowflake_table that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			#### properties
+#### properties
 
 |     NAME      |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -242,13 +242,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_view_grant
 
+**Note**: The snowflake_view_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the views to which a single grant is attached must be declared
+by a single snowflake_view_grant resource. This means that even any snowflake_view that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
 
-			**Note**: The snowflake_view_grant resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the views to which a single grant is attached must be declared
-			by a single snowflake_view_grant resource. This means that even any snowflake_view that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			#### properties
+#### properties
 
 |     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
 |---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
@@ -280,13 +280,13 @@ You can see a number of examples [here](examples).
 
 ### snowflake_warehouse_grant
 
+**Note**: The snowflake_warehouse_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the warehouses to which a single grant is attached must be declared
+by a single snowflake_warehouse_grant resource. This means that even any snowflake_warehouse that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
 
-			**Note**: The snowflake_warehouse_grant resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the warehouses to which a single grant is attached must be declared
-			by a single snowflake_warehouse_grant resource. This means that even any snowflake_warehouse that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			#### properties
+#### properties
 
 |      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|

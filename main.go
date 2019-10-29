@@ -44,13 +44,14 @@ func doc() {
 		if strings.HasSuffix(name, "_grant") {
 			grant_resource_name := strings.Replace(name, "_grant", "", -1)
 			granted_to_name := strings.Replace(grant_resource_name, "snowflake_", "", -1)
-			fmt.Printf(`
-			**Note**: The %s resource creates exclusive attachments of grants.
-			Across the entire Snowflake account, all of the %ss to which a single grant is attached must be declared
-			by a single %s resource. This means that even any %s that have the attached
-			grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
-			These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.\n
-			`, name, granted_to_name, name, grant_resource_name)
+			fmt.Printf(
+				`**Note**: The %s resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the %ss to which a single grant is attached must be declared
+by a single %s resource. This means that even any %s that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+`, name, granted_to_name, name, grant_resource_name)
+			fmt.Println("")
 		}
 		fmt.Printf("#### properties\n\n")
 
