@@ -192,8 +192,17 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		}
 		// TODO: these list of privs might include all and ownnership -- exclude those from
 		// 	     from our calculation
-		if len(privileges) == len(validprivileges) && priv == "ALL" {
-			roles = append(roles, roleName)
+		containsAllPrivs := true
+		if priv == "ALL" {
+			for _, p := range validprivileges {
+				if _, ok := privileges[p]; !ok {
+					containsAllPrivs = false
+					break
+				}
+			}
+			if containsAllPrivs {
+				roles = append(roles, roleName)
+			}
 		}
 	}
 
