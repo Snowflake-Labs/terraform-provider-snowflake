@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -72,6 +73,9 @@ func (ss stringSet) add(s string) {
 
 func (ss stringSet) setEquals(validPrivs []string) bool {
 	for _, p := range validPrivs {
+		if p == "ALL" || p == "OWNERSHIP" {
+			continue
+		}
 		if _, ok := ss[p]; !ok {
 			return false
 		}
@@ -161,6 +165,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		return err
 	}
 	priv := data.Get("privilege").(string)
+	log.Println(priv)
 
 	// Map of roles to privileges
 	rolePrivileges := map[string]stringSet{}
@@ -208,11 +213,10 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		// TODO: these list of privs might include all and ownnership -- exclude those from
 		// 	     from our calculation
 
-		if priv == "ALL" {
-			if privileges.setEquals(validprivileges) {
-				roles = append(roles, roleName)
-			}
+		if privileges.setEquals(validprivileges) {
+			roles = append(roles, roleName)
 		}
+
 	}
 
 	err = data.Set("privilege", priv)
