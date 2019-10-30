@@ -64,6 +64,8 @@ type grantID struct {
 	Privilege    string
 }
 
+type stringSet map[string]struct{}
+
 // String() takes in a grantID object and returns a pipe-delimited string:
 // resourceName|schemaName|ViewOrTable|Privilege
 func (gi *grantID) String() (string, error) {
@@ -148,8 +150,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	priv := data.Get("privilege").(string)
 
 	// Map of roles to privileges
-	rolePrivileges := map[string]map[string]struct{}{}
-	sharePrivileges := map[string]map[string]struct{}{}
+	rolePrivileges := map[string]stringSet{}
+	sharePrivileges := map[string]stringSet{}
 
 	// List of all grants for each schema_database
 	for _, grant := range grants {
