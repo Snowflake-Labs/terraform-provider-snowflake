@@ -173,7 +173,7 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
 	}
 
-	return readGenericGrant(data, meta, builder, onFuture)
+	return readGenericGrant(data, meta, builder, onFuture, validTablePrivileges)
 }
 
 // DeleteTableGrant implements schema.DeleteFunc

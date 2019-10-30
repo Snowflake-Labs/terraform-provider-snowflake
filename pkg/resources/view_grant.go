@@ -162,10 +162,10 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	var builder snowflake.GrantBuilder
 	if futureViews {
 		builder = snowflake.FutureViewGrant(dbName, schemaName)
-		return readGenericGrant(data, meta, builder, true)
+		return readGenericGrant(data, meta, builder, true, ValidViewPrivileges)
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
-		return readGenericGrant(data, meta, builder, false)
+		return readGenericGrant(data, meta, builder, false, ValidViewPrivileges)
 	}
 }
 

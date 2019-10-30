@@ -133,7 +133,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validprivileges []string) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -147,10 +147,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	}
 	priv := data.Get("privilege").(string)
 
+	// Map of roles to privileges
 	rolePrivileges := map[string]map[string]struct{}{}
-	// sharePrivileges := map[string]map[string]struct{}{}
+	sharePrivileges := map[string]map[string]struct{}{}
 
-	var roles, shares []string
+	// List of all grants for each schema_database
 	for _, grant := range grants {
 		switch grant.GranteeType {
 		case "ROLE":
@@ -168,12 +169,23 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		// TODO: do something for shares
 		case "SHARE":
 			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
-			shares = append(shares, granteeNameStrippedAccount)
+			// Find set of privileges
+			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
+			if !ok {
+				// If not there, create an empty set
+				privileges = map[string]struct{}{}
+			}
+			// Add privilege to the set
+			privileges[grant.Privilege] = struct{}{}
+			// Reassign set back
+			sharePrivileges[granteeNameStrippedAccount] = privileges
+			// shares = append(shares, granteeNameStrippedAccount)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
 	}
 
+	var roles, shares []string
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
@@ -182,8 +194,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		}
 		// TODO: these list of privs might include all and ownnership -- exclude those from
 		// 	     from our calculation
-		// TODO: can't just use validschemaprivilegse, parameterize and pass in as fn arg
-		if len(privileges) == len(ValidSchemaPrivileges) {
+		if len(privileges) == len(validprivileges) {
 			roles = append(roles, roleName)
 		}
 	}
