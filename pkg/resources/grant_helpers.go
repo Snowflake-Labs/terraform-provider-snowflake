@@ -135,7 +135,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validprivileges []string) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validprivileges stringSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
