@@ -66,8 +66,17 @@ type grantID struct {
 
 type stringSet map[string]struct{}
 
-func (ss stringSet) Add(s string) {
+func (ss stringSet) add(s string) {
 	ss[s] = struct{}{}
+}
+
+func (ss stringSet) setEquals(validPrivs []string) bool {
+	for _, p := range validPrivs {
+		if _, ok := ss[p]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
@@ -139,7 +148,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validprivileges stringSet) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validprivileges []string) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -169,7 +178,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				privileges = stringSet{}
 			}
 			// Add privilege to the set
-			privileges.Add(grant.Privilege)
+			privileges.add(grant.Privilege)
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
@@ -181,7 +190,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				privileges = stringSet{}
 			}
 			// Add privilege to the set
-			privileges.Add(grant.Privilege)
+			privileges.add(grant.Privilege)
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
 		default:
@@ -198,15 +207,9 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		}
 		// TODO: these list of privs might include all and ownnership -- exclude those from
 		// 	     from our calculation
-		containsAllPrivs := true
+
 		if priv == "ALL" {
-			for _, p := range validprivileges {
-				if _, ok := privileges[p]; !ok {
-					containsAllPrivs = false
-					break
-				}
-			}
-			if containsAllPrivs {
+			if privileges.setEquals(validprivileges) {
 				roles = append(roles, roleName)
 			}
 		}
