@@ -162,7 +162,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges, ok := rolePrivileges[roleName]
 			if !ok {
 				// If not there, create an empty set
-				privileges = map[string]struct{}{}
+				privileges = stringSet{}
 			}
 			// Add privilege to the set
 			privileges[grant.Privilege] = struct{}{}
