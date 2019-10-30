@@ -166,7 +166,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges[grant.Privilege] = struct{}{}
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
-		// TODO: do something for shares
 		case "SHARE":
 			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
 			// Find set of privileges
@@ -179,7 +178,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges[grant.Privilege] = struct{}{}
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
-			// shares = append(shares, granteeNameStrippedAccount)
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
@@ -194,7 +192,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		}
 		// TODO: these list of privs might include all and ownnership -- exclude those from
 		// 	     from our calculation
-		if len(privileges) == len(validprivileges) {
+		if len(privileges) == len(validprivileges) && priv == "ALL" {
 			roles = append(roles, roleName)
 		}
 	}
