@@ -66,6 +66,10 @@ type grantID struct {
 
 type stringSet map[string]struct{}
 
+func (ss stringSet) Add(s string) {
+	ss[s] = struct{}{}
+}
+
 // String() takes in a grantID object and returns a pipe-delimited string:
 // resourceName|schemaName|ViewOrTable|Privilege
 func (gi *grantID) String() (string, error) {
@@ -165,7 +169,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				privileges = stringSet{}
 			}
 			// Add privilege to the set
-			privileges[grant.Privilege] = struct{}{}
+			privileges.Add(grant.Privilege)
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
@@ -174,10 +178,10 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
 			if !ok {
 				// If not there, create an empty set
-				privileges = map[string]struct{}{}
+				privileges = stringSet{}
 			}
 			// Add privilege to the set
-			privileges[grant.Privilege] = struct{}{}
+			privileges.Add(grant.Privilege)
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
 		default:
