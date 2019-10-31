@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -124,7 +123,6 @@ func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 				continue
 			}
 			if _, ok := privs[p]; !ok {
-				log.Printf("deletedRole: %v missing %s has %v\n", databaseSchemaRole, p, privs)
 				delete(groupedByRole, databaseSchemaRole)
 				break
 			}
