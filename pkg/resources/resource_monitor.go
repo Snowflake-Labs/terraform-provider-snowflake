@@ -181,7 +181,7 @@ func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Credit quota is the only integer
+	// Credit quota is a float
 	if rm.CreditQuota.Valid {
 		err = data.Set("credit_quota", rm.CreditQuota.Float64)
 	} else {

@@ -29,7 +29,13 @@ func TestResourceMonitor(t *testing.T) {
 	cb := snowflake.ResourceMonitor("resource_monitor").Create()
 	cb.NotifyAt(80).NotifyAt(90).SuspendAt(95).SuspendImmediatelyAt(100)
 	cb.SetString("frequency", "YEARLY")
+
 	cb.SetFloat("credit_quota", 666.66666666)
 	q = cb.Statement()
 	a.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666.666667 TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
+
+	// Check if credit quota can be parsed correctly to float if given an integer
+	cb.SetFloat("credit_quota", 666)
+	q = cb.Statement()
+	a.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666.000000 TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
 }
