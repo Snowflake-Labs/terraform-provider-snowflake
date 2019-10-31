@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -15,21 +17,33 @@ import (
 )
 
 func main() {
-	b := flag.Bool("doc", false, "spit out docs for resources here")
+	doc := flag.Bool("doc", false, "spit out docs for resources here")
+	ver := flag.Bool("version", false, "spit out version for resources here")
 	flag.Parse()
 
-	if *b {
-		doc()
-	} else {
-		plugin.Serve(&plugin.ServeOpts{
-			ProviderFunc: func() terraform.ResourceProvider {
-				return provider.Provider()
-			},
-		})
+	if *doc {
+		generateDocs()
+		return
 	}
+
+	if *ver {
+		verString, err := version.VersionString()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(verString)
+		return
+	}
+
+	plugin.Serve(&plugin.ServeOpts{
+		ProviderFunc: func() terraform.ResourceProvider {
+			return provider.Provider()
+		},
+	})
+
 }
 
-func doc() {
+func generateDocs() {
 	// schema := provider.Provider().Schema
 	resources := provider.Provider().ResourcesMap
 
