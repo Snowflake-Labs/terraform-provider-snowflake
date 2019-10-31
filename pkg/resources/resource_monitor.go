@@ -44,7 +44,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Type:        schema.TypeFloat,
 		Optional:    true,
 		Computed:    true,
-		Description: "The amount of credits allocated monthly to the resource monitor.",
+		Description: "The amount of credits allocated monthly to the resource monitor, round up to 2 decimal places.",
 		ForceNew:    true,
 	},
 	"frequency": &schema.Schema{
