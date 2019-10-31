@@ -9,7 +9,12 @@ import (
 	"github.com/vmihailenco/msgpack/codes"
 )
 
-var extTypes = make(map[int8]reflect.Type)
+type extInfo struct {
+	Type    reflect.Type
+	Decoder decoderFunc
+}
+
+var extTypes = make(map[int8]extInfo)
 
 var bufferPool = &sync.Pool{
 	New: func() interface{} {
@@ -34,19 +39,20 @@ func RegisterExt(id int8, value interface{}) {
 		panic(fmt.Errorf("msgpack: ext with id=%d is already registered", id))
 	}
 
-	registerExt(id, ptr, getEncoder(ptr), nil)
+	registerExt(id, ptr, getEncoder(ptr), getDecoder(ptr))
 	registerExt(id, typ, getEncoder(typ), getDecoder(typ))
 }
 
 func registerExt(id int8, typ reflect.Type, enc encoderFunc, dec decoderFunc) {
-	if dec != nil {
-		extTypes[id] = typ
-	}
 	if enc != nil {
 		typEncMap[typ] = makeExtEncoder(id, enc)
 	}
 	if dec != nil {
-		typDecMap[typ] = dec
+		extTypes[id] = extInfo{
+			Type:    typ,
+			Decoder: dec,
+		}
+		typDecMap[typ] = makeExtDecoder(id, dec)
 	}
 }
 
@@ -75,10 +81,36 @@ func makeExtEncoder(typeId int8, enc encoderFunc) encoderFunc {
 			return err
 		}
 
-		if err := e.EncodeExtHeader(typeId, buf.Len()); err != nil {
+		err = e.EncodeExtHeader(typeId, buf.Len())
+		if err != nil {
 			return err
 		}
 		return e.write(buf.Bytes())
+	}
+}
+
+func makeExtDecoder(typeId int8, dec decoderFunc) decoderFunc {
+	return func(d *Decoder, v reflect.Value) error {
+		c, err := d.PeekCode()
+		if err != nil {
+			return err
+		}
+
+		if !codes.IsExt(c) {
+			return dec(d, v)
+		}
+
+		id, extLen, err := d.DecodeExtHeader()
+		if err != nil {
+			return err
+		}
+
+		if int8(id) != typeId {
+			return fmt.Errorf("msgpack: got ext type=%d, wanted %d", int8(id), typeId)
+		}
+
+		d.extLen = extLen
+		return dec(d, v)
 	}
 }
 
@@ -96,10 +128,10 @@ func (e *Encoder) encodeExtLen(l int) error {
 		return e.writeCode(codes.FixExt16)
 	}
 	if l < 256 {
-		return e.write1(codes.Ext8, uint64(l))
+		return e.write1(codes.Ext8, uint8(l))
 	}
 	if l < 65536 {
-		return e.write2(codes.Ext16, uint64(l))
+		return e.write2(codes.Ext16, uint16(l))
 	}
 	return e.write4(codes.Ext32, uint32(l))
 }
@@ -158,15 +190,15 @@ func (d *Decoder) extInterface(c codes.Code) (interface{}, error) {
 		return nil, err
 	}
 
-	typ, ok := extTypes[extId]
+	info, ok := extTypes[extId]
 	if !ok {
-		return nil, fmt.Errorf("msgpack: unregistered ext id=%d", extId)
+		return nil, fmt.Errorf("msgpack: unknown ext id=%d", extId)
 	}
 
-	v := reflect.New(typ)
+	v := reflect.New(info.Type)
 
 	d.extLen = extLen
-	err = d.DecodeValue(v.Elem())
+	err = info.Decoder(d, v.Elem())
 	d.extLen = 0
 	if err != nil {
 		return nil, err
