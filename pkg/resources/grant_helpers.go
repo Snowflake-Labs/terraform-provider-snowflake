@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -84,19 +82,19 @@ func (ss stringSet) setEquals(validPrivs []string) bool {
 	return true
 }
 
-func writeToFile(filename string, data string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+// func writeToFile(filename string, data string) error {
+// 	file, err := os.Create(filename)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer file.Close()
 
-	_, err = io.WriteString(file, data)
-	if err != nil {
-		return err
-	}
-	return file.Sync()
-}
+// 	_, err = io.WriteString(file, data)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return file.Sync()
+// }
 
 func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 	// For each database_schema_role, figure out if the grant has all of the privileges
