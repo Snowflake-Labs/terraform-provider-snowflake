@@ -36,7 +36,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100.00 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
+			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100.000000 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadResourceMonitor(mock)
