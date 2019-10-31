@@ -142,15 +142,15 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	futureViews := false
+	futureViewsEnabled := false
 	if viewName == "" {
-		futureViews = true
+		futureViewsEnabled = true
 	}
 	err = data.Set("view_name", viewName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureViews)
+	err = data.Set("on_future", futureViewsEnabled)
 	if err != nil {
 		return err
 	}
@@ -160,13 +160,9 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
-		builder = snowflake.FutureViewGrant(dbName, schemaName)
-		return readGenericGrant(data, meta, builder, true, ValidViewPrivileges)
-	} else {
-		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
-		return readGenericGrant(data, meta, builder, false, ValidViewPrivileges)
-	}
+	builder = snowflake.FutureViewGrant(dbName, schemaName)
+	return readGenericGrant(data, meta, builder, futureViewsEnabled, ValidViewPrivileges)
+
 }
 
 // DeleteViewGrant implements schema.DeleteFunc

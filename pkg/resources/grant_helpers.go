@@ -264,8 +264,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		if _, ok := privileges[priv]; ok || privileges.ALLPrivsPresent(validPrivileges) {
 			roles = append(roles, roleName)
 		}
-		// TODO: these list of privs might include all and ownnership -- exclude those from
-		// 	     from our calculation
 	}
 
 	err = data.Set("privilege", priv)
