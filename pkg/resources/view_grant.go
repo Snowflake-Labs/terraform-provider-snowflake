@@ -8,7 +8,9 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = []string{"SELECT"}
+var ValidViewPrivileges = []string{
+	"SELECT",
+}
 
 var viewGrantSchema = map[string]*schema.Schema{
 	"view_name": &schema.Schema{
