@@ -159,8 +159,7 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var builder snowflake.GrantBuilder
-	builder = snowflake.FutureViewGrant(dbName, schemaName)
+	var builder snowflake.GrantBuilder = snowflake.FutureViewGrant(dbName, schemaName)
 	return readGenericGrant(data, meta, builder, futureViewsEnabled, ValidViewPrivileges)
 
 }
