@@ -37,7 +37,7 @@ provider "snowflake" {
 ```
 
 ### Keypair Authentication Environment Variables
-You should generate the public and private keys and set up environment variables. 
+You should generate the public and private keys and set up environment variables.
 
 ```shell
 cd ~/.ssh
@@ -119,7 +119,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 |            NAME            |  TYPE  |                                                                   DESCRIPTION                                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| credit_quota               | int    | The number of credits allocated monthly to the resource monitor.                                                                                | true     | false     | true     | <nil>   |
+| credit_quota               | float  | The amount of credits allocated monthly to the resource monitor.                                                                                | true     | false     | true     | <nil>   |
 | end_timestamp              | string | The date and time when the resource monitor suspends the assigned warehouses.                                                                   | true     | false     | false    | <nil>   |
 | frequency                  | string | The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP. | true     | false     | true     | <nil>   |
 | name                       | string | Identifier for the resource monitor; must be unique for your account.                                                                           | false    | true      | false    | <nil>   |
