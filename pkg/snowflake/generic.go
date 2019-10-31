@@ -41,6 +41,7 @@ type AlterPropertiesBuilder struct {
 	stringProperties map[string]string
 	boolProperties   map[string]bool
 	intProperties    map[string]int
+	floatProperties  map[string]float64
 }
 
 func (b *Builder) Alter() *AlterPropertiesBuilder {
@@ -50,6 +51,7 @@ func (b *Builder) Alter() *AlterPropertiesBuilder {
 		stringProperties: make(map[string]string),
 		boolProperties:   make(map[string]bool),
 		intProperties:    make(map[string]int),
+		floatProperties:  make(map[string]float64),
 	}
 }
 
@@ -63,6 +65,10 @@ func (ab *AlterPropertiesBuilder) SetBool(key string, value bool) {
 
 func (ab *AlterPropertiesBuilder) SetInt(key string, value int) {
 	ab.intProperties[key] = value
+}
+
+func (ab *AlterPropertiesBuilder) SetFloat(key string, value float64) {
+	ab.floatProperties[key] = value
 }
 
 func (ab *AlterPropertiesBuilder) Statement() string {
@@ -81,6 +87,10 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), v))
 	}
 
+	for k, v := range ab.floatProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), v))
+	}
+
 	return sb.String()
 }
 
@@ -90,6 +100,7 @@ type CreateBuilder struct {
 	stringProperties map[string]string
 	boolProperties   map[string]bool
 	intProperties    map[string]int
+	floatProperties  map[string]float64
 }
 
 func (b *Builder) Create() *CreateBuilder {
@@ -99,6 +110,7 @@ func (b *Builder) Create() *CreateBuilder {
 		stringProperties: make(map[string]string),
 		boolProperties:   make(map[string]bool),
 		intProperties:    make(map[string]int),
+		floatProperties:  make(map[string]float64),
 	}
 }
 
@@ -112,6 +124,10 @@ func (b *CreateBuilder) SetBool(key string, value bool) {
 
 func (b *CreateBuilder) SetInt(key string, value int) {
 	b.intProperties[key] = value
+}
+
+func (b *CreateBuilder) SetFloat(key string, value float64) {
+	b.floatProperties[key] = value
 }
 
 func (b *CreateBuilder) Statement() string {
@@ -146,6 +162,16 @@ func (b *CreateBuilder) Statement() string {
 
 	for _, k := range sortedIntProperties {
 		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), b.intProperties[k]))
+	}
+
+	sortedFloatProperties := make([]string, 0)
+	for k := range b.floatProperties {
+		sortedFloatProperties = append(sortedFloatProperties, k)
+	}
+	sort.Strings(sortedFloatProperties)
+
+	for _, k := range sortedFloatProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), b.floatProperties[k]))
 	}
 
 	return sb.String()
