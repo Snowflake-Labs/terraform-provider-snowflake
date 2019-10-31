@@ -64,13 +64,13 @@ type grantID struct {
 	Privilege    string
 }
 
-type stringSet map[string]struct{}
+type privilegeSet map[string]struct{}
 
-func (ss stringSet) add(s string) {
+func (ss privilegeSet) add(s string) {
 	ss[s] = struct{}{}
 }
 
-func (ss stringSet) setEquals(validPrivs []string) bool {
+func (ss privilegeSet) ALLPrivsPresent(validPrivs []string) bool {
 	for _, p := range validPrivs {
 		if p == "ALL" || p == "OWNERSHIP" || p == "CREATE STREAM" {
 			continue
@@ -82,20 +82,10 @@ func (ss stringSet) setEquals(validPrivs []string) bool {
 	return true
 }
 
-// func writeToFile(filename string, data string) error {
-// 	file, err := os.Create(filename)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
-
-// 	_, err = io.WriteString(file, data)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return file.Sync()
-// }
-
+// Because none of the grants currently have a privilege of "ALL", rather they explicitly say
+// each privilege for each database_schema pair, we want to collapse them into one grant that has
+// the privilege of "ALL". filterAllGrants allows us to filter the grants and reassign their privilege
+// to "ALL".
 func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 	// For each database_schema_role, figure out if the grant has all of the privileges
 	type databaseSchemaRole struct {
@@ -103,7 +93,7 @@ func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 		GranteeType string
 		GranteeName string
 	}
-	groupedByRole := map[databaseSchemaRole]map[string]struct{}{}
+	groupedByRole := map[databaseSchemaRole]privilegeSet{}
 	for _, g := range grantList {
 		id := databaseSchemaRole{
 			GrantName:   g.GrantName,
@@ -116,14 +106,8 @@ func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 		groupedByRole[id][g.Privilege] = struct{}{}
 	}
 	for databaseSchemaRole, privs := range groupedByRole {
-		for _, p := range validPrivs {
-			if p == "ALL" || p == "OWNERSHIP" || p == "CREATE STREAM" {
-				continue
-			}
-			if _, ok := privs[p]; !ok {
-				delete(groupedByRole, databaseSchemaRole)
-				break
-			}
+		if !privs.ALLPrivsPresent(validPrivs) {
+			delete(groupedByRole, databaseSchemaRole)
 		}
 	}
 	filteredGrants := []*grant{}
@@ -238,8 +222,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	priv := data.Get("privilege").(string)
 
 	// Map of roles to privileges
-	rolePrivileges := map[string]stringSet{}
-	sharePrivileges := map[string]stringSet{}
+	rolePrivileges := map[string]privilegeSet{}
+	sharePrivileges := map[string]privilegeSet{}
 
 	// List of all grants for each schema_database
 	for _, grant := range grants {
@@ -250,7 +234,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges, ok := rolePrivileges[roleName]
 			if !ok {
 				// If not there, create an empty set
-				privileges = stringSet{}
+				privileges = privilegeSet{}
 			}
 			// Add privilege to the set
 			privileges.add(grant.Privilege)
@@ -262,7 +246,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
 			if !ok {
 				// If not there, create an empty set
-				privileges = stringSet{}
+				privileges = privilegeSet{}
 			}
 			// Add privilege to the set
 			privileges.add(grant.Privilege)
@@ -277,7 +261,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
-		if _, ok := privileges[priv]; ok || privileges.setEquals(validPrivileges) {
+		if _, ok := privileges[priv]; ok || privileges.ALLPrivsPresent(validPrivileges) {
 			roles = append(roles, roleName)
 		}
 		// TODO: these list of privs might include all and ownnership -- exclude those from
