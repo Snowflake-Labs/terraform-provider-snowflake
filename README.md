@@ -41,7 +41,7 @@ You should generate the public and private keys and set up environment variables
 
 ```shell
 cd ~/.ssh
-openssl genrsa -out snowflake_key 2048
+openssl genrsa -out snowflake_key 4096
 openssl rsa -in snowflake_key -pubout -out snowflake_key.pub
 ```
 
