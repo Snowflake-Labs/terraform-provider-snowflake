@@ -88,7 +88,7 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 	}
 
 	for k, v := range ab.floatProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%f", strings.ToUpper(k), v))
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), v))
 	}
 
 	return sb.String()
@@ -171,7 +171,7 @@ func (b *CreateBuilder) Statement() string {
 	sort.Strings(sortedFloatProperties)
 
 	for _, k := range sortedFloatProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%f", strings.ToUpper(k), b.floatProperties[k]))
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), b.floatProperties[k]))
 	}
 
 	return sb.String()

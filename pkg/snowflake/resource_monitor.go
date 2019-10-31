@@ -100,7 +100,7 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	}
 
 	for k, v := range rcb.floatProperties {
-		sb.WriteString(fmt.Sprintf(` %v=%f`, strings.ToUpper(k), v))
+		sb.WriteString(fmt.Sprintf(` %v=%.2f`, strings.ToUpper(k), v))
 	}
 
 	if len(rcb.triggers) > 0 {
