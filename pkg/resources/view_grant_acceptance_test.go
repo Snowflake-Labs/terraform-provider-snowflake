@@ -28,9 +28,6 @@ func TestAccViewGrantBasic(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// I don't understand why ImportStateVerifyIgnore is needed, but
-				// adding this is the only way to make acceptance tests pass.
-				ImportStateVerifyIgnore: []string{"roles", "shares"},
 			},
 		},
 	})
@@ -60,9 +57,6 @@ func TestAccViewGrantShares(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// I don't understand why ImportStateVerifyIgnore is needed, but
-				// adding this is the only way to make acceptance tests pass.
-				ImportStateVerifyIgnore: []string{"roles", "shares"},
 			},
 		},
 	})
@@ -97,9 +91,6 @@ func TestAccFutureViewGrantChange(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// I don't understand why ImportStateVerifyIgnore is needed, but
-				// adding this is the only way to make acceptance tests pass.
-				ImportStateVerifyIgnore: []string{"roles"},
 			},
 		},
 	})

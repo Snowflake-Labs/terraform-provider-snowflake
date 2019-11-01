@@ -10,6 +10,7 @@ import (
 // Intentionally exclude the "ALL" alias because it is not a real privilege and
 // might not interact well with this provider.
 var ValidSchemaPrivileges = []string{
+	"ALL",
 	"MODIFY",
 	"MONITOR",
 	"OWNERSHIP",
@@ -124,7 +125,7 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
 
-	return readGenericGrant(data, meta, builder, false)
+	return readGenericGrant(data, meta, builder, false, ValidSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc

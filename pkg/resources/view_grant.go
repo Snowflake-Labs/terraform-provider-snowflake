@@ -8,7 +8,9 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = []string{"SELECT"}
+var ValidViewPrivileges = []string{
+	"SELECT",
+}
 
 var viewGrantSchema = map[string]*schema.Schema{
 	"view_name": &schema.Schema{
@@ -142,15 +144,15 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	futureViews := false
+	futureViewsEnabled := false
 	if viewName == "" {
-		futureViews = true
+		futureViewsEnabled = true
 	}
 	err = data.Set("view_name", viewName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureViews)
+	err = data.Set("on_future", futureViewsEnabled)
 	if err != nil {
 		return err
 	}
@@ -160,12 +162,12 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	if futureViewsEnabled {
 		builder = snowflake.FutureViewGrant(dbName, schemaName)
-		return readGenericGrant(data, meta, builder, true)
+		return readGenericGrant(data, meta, builder, true, ValidViewPrivileges)
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
-		return readGenericGrant(data, meta, builder, false)
+		return readGenericGrant(data, meta, builder, false, ValidViewPrivileges)
 	}
 }
 
