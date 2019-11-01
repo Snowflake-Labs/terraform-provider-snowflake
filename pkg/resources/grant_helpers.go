@@ -218,8 +218,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	if err != nil {
 		return err
 	}
-	grants = filterALLGrants(grants, validPrivileges)
 	priv := data.Get("privilege").(string)
+
+	if priv == "ALL" {
+		grants = filterALLGrants(grants, validPrivileges)
+	}
 
 	// Map of roles to privileges
 	rolePrivileges := map[string]privilegeSet{}
