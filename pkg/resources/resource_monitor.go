@@ -15,20 +15,20 @@ import (
 )
 
 type resourceMonitor struct {
-	Name                 sql.NullString `db:"name"`
-	CreditQuota          sql.NullInt64  `db:"credit_quota"`
-	UsedCredits          sql.NullString `db:"used_credits"`
-	RemainingCredits     sql.NullString `db:"remaining_credits"`
-	Level                sql.NullString `db:"level"`
-	Frequency            sql.NullString `db:"frequency"`
-	StartTime            sql.NullString `db:"start_time"`
-	EndTime              sql.NullString `db:"end_time"`
-	NotifyAt             sql.NullString `db:"notify_at"`
-	SuspendAt            sql.NullString `db:"suspend_at"`
-	SuspendImmediatelyAt sql.NullString `db:"suspend_immediately_at"`
-	CreatedOn            sql.NullString `db:"created_on"`
-	Owner                sql.NullString `db:"owner"`
-	Comment              sql.NullString `db:"comment"`
+	Name                 sql.NullString  `db:"name"`
+	CreditQuota          sql.NullFloat64 `db:"credit_quota"`
+	UsedCredits          sql.NullString  `db:"used_credits"`
+	RemainingCredits     sql.NullString  `db:"remaining_credits"`
+	Level                sql.NullString  `db:"level"`
+	Frequency            sql.NullString  `db:"frequency"`
+	StartTime            sql.NullString  `db:"start_time"`
+	EndTime              sql.NullString  `db:"end_time"`
+	NotifyAt             sql.NullString  `db:"notify_at"`
+	SuspendAt            sql.NullString  `db:"suspend_at"`
+	SuspendImmediatelyAt sql.NullString  `db:"suspend_immediately_at"`
+	CreatedOn            sql.NullString  `db:"created_on"`
+	Owner                sql.NullString  `db:"owner"`
+	Comment              sql.NullString  `db:"comment"`
 }
 
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
@@ -41,10 +41,10 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"credit_quota": &schema.Schema{
-		Type:        schema.TypeInt,
+		Type:        schema.TypeFloat,
 		Optional:    true,
 		Computed:    true,
-		Description: "The number of credits allocated monthly to the resource monitor.",
+		Description: "The amount of credits allocated monthly to the resource monitor, round up to 2 decimal places.",
 		ForceNew:    true,
 	},
 	"frequency": &schema.Schema{
@@ -115,7 +115,7 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 	cb := snowflake.ResourceMonitor(name).Create()
 	// Set optionals
 	if v, ok := data.GetOk("credit_quota"); ok {
-		cb.SetInt("credit_quota", v.(int))
+		cb.SetFloat("credit_quota", v.(float64))
 	}
 	if v, ok := data.GetOk("frequency"); ok {
 		cb.SetString("frequency", v.(string))
@@ -181,11 +181,11 @@ func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Credit quota is the only integer
+	// Credit quota is a float
 	if rm.CreditQuota.Valid {
-		err = data.Set("credit_quota", rm.CreditQuota.Int64)
+		err = data.Set("credit_quota", rm.CreditQuota.Float64)
 	} else {
-		err = data.Set("credit_quota", 0) // not sure if this is the right approach
+		err = data.Set("credit_quota", 0.0) // not sure if this is the right approach
 	}
 	if err != nil {
 		return err
