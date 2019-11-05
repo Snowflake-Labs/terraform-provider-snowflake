@@ -219,6 +219,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		return err
 	}
 	priv := data.Get("privilege").(string)
+
+	// We re-aggregate grants that would be equivalent to the "ALL" grant
 	grants = filterALLGrants(grants, validPrivileges)
 
 	// Map of roles to privileges
