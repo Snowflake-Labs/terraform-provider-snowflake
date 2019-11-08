@@ -143,24 +143,31 @@ func viewGrantConfigFuture(n string, role string, future bool) string {
 	return fmt.Sprintf(`
 
 resource "snowflake_database" "test" {
-  name = "%v"
+  name = "%s"
+}
+
+resource "snowflake_schema" test" {
+	name = "%s"
+	database = snowflake_database.test.name
 }
 
 resource "snowflake_view" "test" {
-  name      = "%v"
-  database  = snowflake_database.test.name
+  name      = "%s"
+	database  = snowflake_database.test.name
+	schema    = snowflake_schema.test.name
   statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
   is_secure = true
 }
 
 resource "snowflake_role" "test" {
-  name = "%v"
+  name = "%r"
 }
 
 resource "snowflake_view_grant" "test" {
-  %v
+  %s
   database_name = snowflake_view.test.database
-  roles         = [snowflake_role.test.name]
+	roles         = [snowflake_role.test.name]
+	schema_name   = snowflake_schema.test.name
 }
 `, n, n, role, view_name_config)
 }
