@@ -140,8 +140,7 @@ func viewGrantConfigFuture(n string, role string, future bool) string {
 	if future {
 		view_name_config = "on_future = true"
 	}
-	return fmt.Sprintf(`
-
+	config := fmt.Sprintf(`
 resource "snowflake_database" "test" {
   name = "%s"
 }
@@ -170,4 +169,7 @@ resource "snowflake_view_grant" "test" {
 	schema_name   = snowflake_schema.test.name
 }
 `, n, n, n, role, view_name_config)
+
+	fmt.Println(config)
+	return config
 }
