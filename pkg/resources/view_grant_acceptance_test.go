@@ -24,11 +24,11 @@ func TestAccViewGrantBasic(t *testing.T) {
 				),
 			},
 			// IMPORT
-			{
-				ResourceName:      "snowflake_view_grant.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			// {
+			// ResourceName:      "snowflake_view_grant.test",
+			// ImportState:       true,
+			// ImportStateVerify: true,
+			// },
 		},
 	})
 }

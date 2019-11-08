@@ -94,10 +94,6 @@ var validParentCodes = map[string]struct{}{
 	ErrCodeRead:          {},
 }
 
-type temporaryError interface {
-	Temporary() bool
-}
-
 func isNestedErrorRetryable(parentErr awserr.Error) bool {
 	if parentErr == nil {
 		return false
@@ -116,7 +112,7 @@ func isNestedErrorRetryable(parentErr awserr.Error) bool {
 		return isCodeRetryable(aerr.Code())
 	}
 
-	if t, ok := err.(temporaryError); ok {
+	if t, ok := err.(temporary); ok {
 		return t.Temporary() || isErrConnectionReset(err)
 	}
 
@@ -126,6 +122,9 @@ func isNestedErrorRetryable(parentErr awserr.Error) bool {
 // IsErrorRetryable returns whether the error is retryable, based on its Code.
 // Returns false if error is nil.
 func IsErrorRetryable(err error) bool {
+	if err == nil {
+		return false
+	}
 	return shouldRetryError(err)
 }
 
@@ -216,13 +215,20 @@ func IsErrorExpiredCreds(err error) bool {
 //
 // Alias for the utility function IsErrorRetryable
 func (r *Request) IsErrorRetryable() bool {
-	if r.Error == nil {
-		return false
-	}
 	if isErrCode(r.Error, r.RetryErrorCodes) {
 		return true
 	}
 
+	// HTTP response status code 501 should not be retried.
+	// 501 represents Not Implemented which means the request method is not
+	// supported by the server and cannot be handled.
+	if r.HTTPResponse != nil {
+		// HTTP response status code 500 represents internal server error and
+		// should be retried without any throttle.
+		if r.HTTPResponse.StatusCode == 500 {
+			return true
+		}
+	}
 	return IsErrorRetryable(r.Error)
 }
 
@@ -237,7 +243,11 @@ func (r *Request) IsErrorThrottle() bool {
 
 	if r.HTTPResponse != nil {
 		switch r.HTTPResponse.StatusCode {
-		case 429, 502, 503, 504:
+		case
+			429, // error caused due to too many requests
+			502, // Bad Gateway error should be throttled
+			503, // caused when service is unavailable
+			504: // error occurred due to gateway timeout
 			return true
 		}
 	}
@@ -246,7 +256,7 @@ func (r *Request) IsErrorThrottle() bool {
 }
 
 func isErrCode(err error, codes []string) bool {
-	if aerr, ok := err.(awserr.Error); ok {
+	if aerr, ok := err.(awserr.Error); ok && aerr != nil {
 		for _, code := range codes {
 			if code == aerr.Code() {
 				return true
