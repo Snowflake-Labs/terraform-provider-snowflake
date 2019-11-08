@@ -160,7 +160,7 @@ resource "snowflake_view" "test" {
 }
 
 resource "snowflake_role" "test" {
-  name = "%r"
+  name = "%s"
 }
 
 resource "snowflake_view_grant" "test" {
@@ -169,5 +169,5 @@ resource "snowflake_view_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 }
-`, n, n, role, view_name_config)
+`, n, n, n, role, view_name_config)
 }
