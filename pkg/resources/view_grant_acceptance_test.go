@@ -145,7 +145,7 @@ resource "snowflake_database" "test" {
   name = "%s"
 }
 
-resource "snowflake_schema" test" {
+resource "snowflake_schema" "test" {
 	name = "%s"
 	database = snowflake_database.test.name
 }
