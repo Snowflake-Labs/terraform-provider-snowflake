@@ -1,16 +1,19 @@
 package resources
 
 import (
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidWarehousePrivileges = []string{
-	"ALL", "MODIFY", "MONITOR", "OPERATE", "OWNERSHIP", "USAGE",
-}
-
+var validWarehousePrivileges = newPrivilegeSet(
+	privilegeAll,
+	privilegeModify,
+	privilegeMonitor,
+	privilegeOperate,
+	privilegeOwnership,
+	privilegeUsage,
+)
 var warehouseGrantSchema = map[string]*schema.Schema{
 	"warehouse_name": &schema.Schema{
 		Type:        schema.TypeString,
@@ -23,7 +26,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidWarehousePrivileges, true),
+		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
@@ -94,7 +97,7 @@ func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.WarehouseGrant(w)
 
-	return readGenericGrant(data, meta, builder, false, ValidWarehousePrivileges)
+	return readGenericGrant(data, meta, builder, false, validWarehousePrivileges)
 }
 
 // DeleteWarehouseGrant implements schema.DeleteFunc

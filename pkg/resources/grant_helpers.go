@@ -8,10 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jmoiron/sqlx"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
 const (
@@ -64,46 +63,28 @@ type grantID struct {
 	Privilege    string
 }
 
-type privilegeSet map[string]struct{}
-
-func (ss privilegeSet) add(s string) {
-	ss[s] = struct{}{}
-}
-
-func (ss privilegeSet) ALLPrivsPresent(validPrivs []string) bool {
-	for _, p := range validPrivs {
-		if p == "ALL" || p == "OWNERSHIP" || p == "CREATE STREAM" {
-			continue
-		}
-		if _, ok := ss[p]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
 // Because none of the grants currently have a privilege of "ALL", rather they explicitly say
 // each privilege for each database_schema pair, we want to collapse them into one grant that has
 // the privilege of "ALL". filterAllGrants allows us to filter the grants and reassign their privilege
 // to "ALL".
-func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
-	// For each database_schema_role, figure out if the grant has all of the privileges
-	type databaseSchemaRole struct {
-		GrantName   string
-		GranteeType string
-		GranteeName string
+func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
+	// We only filter if ALL is in validPrivs.
+	_, ok := validPrivs[privilegeAll]
+	if !ok {
+		return grantList
 	}
-	groupedByRole := map[databaseSchemaRole]privilegeSet{}
+
+	groupedByRole := map[grant]privilegeSet{}
 	for _, g := range grantList {
-		id := databaseSchemaRole{
+		id := grant{
 			GrantName:   g.GrantName,
 			GranteeType: g.GranteeType,
 			GranteeName: g.GranteeName,
 		}
 		if _, ok := groupedByRole[id]; !ok {
-			groupedByRole[id] = map[string]struct{}{}
+			groupedByRole[id] = privilegeSet{}
 		}
-		groupedByRole[id][g.Privilege] = struct{}{}
+		groupedByRole[id].addString(g.Privilege)
 	}
 	for databaseSchemaRole, privs := range groupedByRole {
 		if !privs.ALLPrivsPresent(validPrivs) {
@@ -116,14 +97,14 @@ func filterALLGrants(grantList []*grant, validPrivs []string) []*grant {
 	for databaseSchemaRole := range groupedByRole {
 		filteredGrants = append(filteredGrants, &grant{
 			GrantName:   databaseSchemaRole.GrantName,
-			Privilege:   "ALL",
+			Privilege:   privilegeAll.string(),
 			GranteeType: databaseSchemaRole.GranteeType,
 			GranteeName: databaseSchemaRole.GranteeName,
 		})
 	}
 
 	for _, g := range grantList {
-		id := databaseSchemaRole{
+		id := grant{
 			GrantName:   g.GrantName,
 			GranteeType: g.GranteeType,
 			GranteeName: g.GranteeName,
@@ -206,7 +187,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges []string) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges privilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -220,9 +201,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	}
 	priv := data.Get("privilege").(string)
 
-	if priv == "ALL" {
-		grants = filterALLGrants(grants, validPrivileges)
-	}
+	// We re-aggregate grants that would be equivalent to the "ALL" grant
+	grants = filterALLGrants(grants, validPrivileges)
 
 	// Map of roles to privileges
 	rolePrivileges := map[string]privilegeSet{}
@@ -240,7 +220,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				privileges = privilegeSet{}
 			}
 			// Add privilege to the set
-			privileges.add(grant.Privilege)
+			privileges.addString(grant.Privilege)
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
@@ -252,7 +232,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				privileges = privilegeSet{}
 			}
 			// Add privilege to the set
-			privileges.add(grant.Privilege)
+			privileges.addString(grant.Privilege)
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
 		default:
@@ -264,7 +244,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
-		if _, ok := privileges[priv]; ok || privileges.ALLPrivsPresent(validPrivileges) {
+		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
 			roles = append(roles, roleName)
 		}
 	}

@@ -9,23 +9,23 @@ import (
 
 // Intentionally exclude the "ALL" alias because it is not a real privilege and
 // might not interact well with this provider.
-var ValidSchemaPrivileges = []string{
-	"ALL",
-	"MODIFY",
-	"MONITOR",
-	"OWNERSHIP",
-	"USAGE",
-	"CREATE TABLE",
-	"CREATE VIEW",
-	"CREATE FILE FORMAT",
-	"CREATE STAGE",
-	"CREATE PIPE",
-	"CREATE STREAM",
-	"CREATE TASK",
-	"CREATE SEQUENCE",
-	"CREATE FUNCTION",
-	"CREATE PROCEDURE",
-}
+var validSchemaPrivileges = newPrivilegeSet(
+	privilegeAll,
+	privilegeModify,
+	privilegeMonitor,
+	privilegeOwnership,
+	privilegeUsage,
+	privilegeCreateTable,
+	privilegeCreateView,
+	privilegeCreateFileFormat,
+	privilegeCreateStage,
+	privilegeCreatePipe,
+	privilegeCreateStream,
+	privilegeCreateTask,
+	privilegeCreateSequence,
+	privilegeCreateFunction,
+	privilegeCreateProcedure,
+)
 
 var schemaGrantSchema = map[string]*schema.Schema{
 	"schema_name": &schema.Schema{
@@ -45,7 +45,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the schema.  Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidSchemaPrivileges, true),
+		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
@@ -125,7 +125,7 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
 
-	return readGenericGrant(data, meta, builder, false, ValidSchemaPrivileges)
+	return readGenericGrant(data, meta, builder, false, validSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc

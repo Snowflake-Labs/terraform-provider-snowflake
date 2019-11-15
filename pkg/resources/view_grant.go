@@ -8,9 +8,9 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = []string{
-	"SELECT",
-}
+var ValidViewPrivileges = newPrivilegeSet(
+	privilegeSelect,
+)
 
 var viewGrantSchema = map[string]*schema.Schema{
 	"view_name": &schema.Schema{
@@ -37,7 +37,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(ValidViewPrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidViewPrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
@@ -164,11 +164,11 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	var builder snowflake.GrantBuilder
 	if futureViewsEnabled {
 		builder = snowflake.FutureViewGrant(dbName, schemaName)
-		return readGenericGrant(data, meta, builder, true, ValidViewPrivileges)
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
-		return readGenericGrant(data, meta, builder, false, ValidViewPrivileges)
 	}
+
+	return readGenericGrant(data, meta, builder, futureViewsEnabled, ValidViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc
@@ -181,10 +181,7 @@ func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	viewName := grantID.ViewOrTable
 
-	futureViews := false
-	if viewName == "" {
-		futureViews = true
-	}
+	futureViews := (viewName == "")
 
 	var builder snowflake.GrantBuilder
 	if futureViews {
