@@ -1,27 +1,24 @@
 package jws
 
 import (
-	"net/http"
 	"time"
 
-	"github.com/SermoDigital/jose"
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/SermoDigital/jose/jwt"
 )
 
+// Claims represents a set of JOSE Claims.
+type Claims jwt.Claims
+
 // NewJWT creates a new JWT with the given claims.
 func NewJWT(claims Claims, method crypto.SigningMethod) jwt.JWT {
-	j, ok := New(claims, method).(*jws)
-	if !ok {
-		panic("jws.NewJWT: runtime panic: New(...).(*jws) != true")
-	}
-	j.sb[0].protected.Set("typ", "JWT")
+	j := New(claims, method)
 	j.isJWT = true
 	return j
 }
 
 // Serialize helps implements jwt.JWT.
-func (j *jws) Serialize(key interface{}) ([]byte, error) {
+func (j *JWS) Serialize(key interface{}) ([]byte, error) {
 	if j.isJWT {
 		return j.Compact(key)
 	}
@@ -29,7 +26,7 @@ func (j *jws) Serialize(key interface{}) ([]byte, error) {
 }
 
 // Claims helps implements jwt.JWT.
-func (j *jws) Claims() jwt.Claims {
+func (j *JWS) Claims() jwt.Claims {
 	if j.isJWT {
 		if c, ok := j.payload.v.(Claims); ok {
 			return jwt.Claims(c)
@@ -38,78 +35,75 @@ func (j *jws) Claims() jwt.Claims {
 	return nil
 }
 
-// ParseJWTFromRequest tries to find the JWT in an http.Request.
-// This method will call ParseMultipartForm if there's no token in the header.
-func ParseJWTFromRequest(req *http.Request) (jwt.JWT, error) {
-	if b, ok := fromHeader(req); ok {
-		return ParseJWT(b)
-	}
-	if b, ok := fromForm(req); ok {
-		return ParseJWT(b)
-	}
-	return nil, ErrNoTokenInRequest
-}
-
 // ParseJWT parses a serialized jwt.JWT into a physical jwt.JWT.
 // If its payload isn't a set of claims (or able to be coerced into
 // a set of claims) it'll return an error stating the
 // JWT isn't a JWT.
 func ParseJWT(encoded []byte) (jwt.JWT, error) {
-	t, err := parseCompact(encoded, true)
+	t, err := ParseCompact(encoded)
 	if err != nil {
 		return nil, err
 	}
-	c, ok := t.Payload().(map[string]interface{})
+	c, ok := t.payload.v.(map[string]interface{})
 	if !ok {
 		return nil, ErrIsNotJWT
 	}
-	t.SetPayload(Claims(c))
+	t.payload.v = Claims(c)
+	t.isJWT = true
 	return t, nil
 }
 
 // IsJWT returns true if the JWS is a JWT.
-func (j *jws) IsJWT() bool {
-	return j.isJWT
-}
+func (j *JWS) IsJWT() bool { return j.isJWT }
 
-func (j *jws) Validate(key interface{}, m crypto.SigningMethod, v ...*jwt.Validator) error {
+// Verify helps implement jwt.JWT.
+func (j *JWS) Verify(key interface{}, m crypto.SigningMethod, o ...jwt.Opts) error {
 	if j.isJWT {
-		if err := j.Verify(key, m); err != nil {
+		if err := j.Validate(key, m); err != nil {
 			return err
-		}
-		var v1 jwt.Validator
-		if len(v) > 0 {
-			v1 = *v[0]
 		}
 		c, ok := j.payload.v.(Claims)
 		if ok {
-			if err := v1.Validate(j); err != nil {
-				return err
+			var p jwt.Opts
+			if len(o) > 0 {
+				p = o[0]
 			}
-			return jwt.Claims(c).Validate(jose.Now(), v1.EXP, v1.NBF)
+
+			if p.Fn != nil {
+				if err := p.Fn(jwt.Claims(c)); err != nil {
+					return err
+				}
+			}
+			return jwt.Claims(c).Validate(time.Now().Unix(), p.EXP, p.NBF)
 		}
 	}
 	return ErrIsNotJWT
 }
 
-// Conv converts a func(Claims) error to type jwt.ValidateFunc.
-func Conv(fn func(Claims) error) jwt.ValidateFunc {
-	if fn == nil {
-		return nil
-	}
-	return func(c jwt.Claims) error {
-		return fn(Claims(c))
-	}
+// Opts represents some of the validation options.
+// It mimics jwt.Opts.
+type Opts struct {
+	EXP int64 // EXPLeeway
+	NBF int64 // NBFLeeway
+	Fn  func(Claims) error
+	_   struct{}
 }
 
-// NewValidator returns a jwt.Validator.
-func NewValidator(c Claims, exp, nbf time.Duration, fn func(Claims) error) *jwt.Validator {
-	return &jwt.Validator{
-		Expected: jwt.Claims(c),
-		EXP:      exp,
-		NBF:      nbf,
-		Fn:       Conv(fn),
+// C is shorthand for Convert(fn).
+func (o Opts) C() jwt.Opts { return o.Convert() }
+
+// Convert converts Opts into jwt.Opts.
+func (o Opts) Convert() jwt.Opts {
+	p := jwt.Opts{
+		EXP: o.EXP,
+		NBF: o.NBF,
 	}
+	if o.Fn != nil {
+		p.Fn = func(c jwt.Claims) error {
+			return o.Fn(Claims(c))
+		}
+	}
+	return p
 }
 
-var _ jwt.JWT = (*jws)(nil)
+var _ jwt.JWT = (*JWS)(nil)

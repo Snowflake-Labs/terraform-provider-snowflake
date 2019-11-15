@@ -21,8 +21,8 @@ github.com/ExpansiveWorlds/instrumentedsql v0.0.0-20171218214018-45abb4b1947d h1
 github.com/ExpansiveWorlds/instrumentedsql v0.0.0-20171218214018-45abb4b1947d/go.mod h1:Lm6NFlzU3HvZIo5l8GykZn6MH8/wq/A/X/d+7P/hgZU=
 github.com/Pallinder/go-randomdata v1.2.0 h1:DZ41wBchNRb/0GfsePLiSwb0PHZmT67XY00lCDlaYPg=
 github.com/Pallinder/go-randomdata v1.2.0/go.mod h1:yHmJgulpD2Nfrm0cR9tI/+oAgRqCQQixsA8HyRZfV9Y=
-github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc h1:MhBvG7RLaLqlyjxMR6of35vt6MVQ+eXMcgn9X/sy0FE=
-github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc/go.mod h1:ARgCUhI1MHQH+ONky/PAtmVHQrP5JlGY0F3poXOp/fA=
+github.com/SermoDigital/jose v0.9.1 h1:atYaHPD3lPICcbK1owly3aPm0iaJGSGPi0WD4vLznv8=
+github.com/SermoDigital/jose v0.9.1/go.mod h1:ARgCUhI1MHQH+ONky/PAtmVHQrP5JlGY0F3poXOp/fA=
 github.com/agext/levenshtein v1.2.1/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
@@ -259,8 +259,8 @@ golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACk
 golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
-golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6 h1:VsmCukA2gDdC3Mu6evOIT0QjLSQWiJIwzv1Bdj4jdzU=
-golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708 h1:pXVtWnwHkrWD9ru3sDxY/qFK/bfc0egRovX91EjWjf4=
+golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522 h1:OeRHuibLsmZkFj773W4LcfAGsSxJgfPONhr8cmO+eLA=
 golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522/go.mod h1:ZjyILWgesfNpC6sMxTJOJm9Kp84zZh5NQWvqDGG3Qr8=

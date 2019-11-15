@@ -37,11 +37,13 @@ func (p *payload) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if p.u != nil {
 		err := p.u.UnmarshalJSON(b2)
 		p.v = p.u
 		return err
 	}
+
 	return json.Unmarshal(b2, &p.v)
 }
 
