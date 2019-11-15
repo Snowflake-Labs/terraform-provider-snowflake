@@ -1,16 +1,21 @@
 package resources
 
 import (
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidDatabasePrivileges = []string{
-	"ALL", "CREATE SCHEMA", "IMPORTED PRIVILEGES", "MODIFY", "MONITOR",
-	"OWNERSHIP", "REFERENCE_USAGE", "USAGE",
-}
+var ValidDatabasePrivileges = newPrivilegeSet(
+	privilegeAll,
+	privilegeCreateSchema,
+	privilegeImportedPrivileges,
+	privilegeModify,
+	privilegeMonitor,
+	privilegeOwnership,
+	privilegeReferenceUsage,
+	privilegeUsage,
+)
 
 var databaseGrantSchema = map[string]*schema.Schema{
 	"database_name": &schema.Schema{
@@ -24,7 +29,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges, true),
+		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{

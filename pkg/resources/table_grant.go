@@ -8,14 +8,14 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validTablePrivileges = []string{
-	"SELECT",
-	"INSERT",
-	"UPDATE",
-	"DELETE",
-	"TRUNCATE",
-	"REFERENCES",
-}
+var validTablePrivileges = newPrivilegeSet(
+	privilegeSelect,
+	privilegeInsert,
+	privilegeUpdate,
+	privilegeDelete,
+	privilegeTruncate,
+	privilegeReferences,
+)
 
 var tableGrantSchema = map[string]*schema.Schema{
 	"table_name": &schema.Schema{
@@ -42,7 +42,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validTablePrivileges, true),
+		ValidateFunc: validation.StringInSlice(validTablePrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": &schema.Schema{
