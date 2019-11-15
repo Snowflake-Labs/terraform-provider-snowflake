@@ -7,7 +7,7 @@ import (
 
 // Flat serializes the JWS to its "flattened" form per
 // https://tools.ietf.org/html/rfc7515#section-7.2.2
-func (j *JWS) Flat(key interface{}) ([]byte, error) {
+func (j *jws) Flat(key interface{}) ([]byte, error) {
 	if len(j.sb) < 1 {
 		return nil, ErrNotEnoughMethods
 	}
@@ -29,7 +29,7 @@ func (j *JWS) Flat(key interface{}) ([]byte, error) {
 // If only one key is passed it's used for all the provided
 // crypto.SigningMethods. Otherwise, len(keys) must equal the number
 // of crypto.SigningMethods added.
-func (j *JWS) General(keys ...interface{}) ([]byte, error) {
+func (j *jws) General(keys ...interface{}) ([]byte, error) {
 	if err := j.sign(keys...); err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (j *JWS) General(keys ...interface{}) ([]byte, error) {
 
 // Compact serializes the JWS into its "compact" form per
 // https://tools.ietf.org/html/rfc7515#section-7.1
-func (j *JWS) Compact(key interface{}) ([]byte, error) {
+func (j *jws) Compact(key interface{}) ([]byte, error) {
 	if len(j.sb) < 1 {
 		return nil, ErrNotEnoughMethods
 	}
@@ -65,7 +65,7 @@ func (j *JWS) Compact(key interface{}) ([]byte, error) {
 }
 
 // sign signs each index of j's sb member.
-func (j *JWS) sign(keys ...interface{}) error {
+func (j *jws) sign(keys ...interface{}) error {
 	if err := j.cache(); err != nil {
 		return err
 	}
@@ -100,36 +100,28 @@ func (j *JWS) sign(keys ...interface{}) error {
 }
 
 // cache marshals the payload, but only if it's changed since the last cache.
-func (j *JWS) cache() error {
+func (j *jws) cache() (err error) {
 	if !j.clean {
-		var err error
 		j.plcache, err = j.payload.Base64()
 		j.clean = err == nil
-		return err
 	}
-	return nil
+	return err
 }
 
 // cache marshals the protected and unprotected headers, but only if
 // they've changed since their last cache.
-func (s *sigHead) cache() error {
+func (s *sigHead) cache() (err error) {
 	if !s.clean {
-		var err error
-
 		s.Protected, err = s.protected.Base64()
 		if err != nil {
-			goto err_return
+			return err
 		}
-
 		s.Unprotected, err = s.unprotected.Base64()
 		if err != nil {
-			goto err_return
+			return err
 		}
-
-	err_return:
-		s.clean = err == nil
-		return err
 	}
+	s.clean = true
 	return nil
 }
 
