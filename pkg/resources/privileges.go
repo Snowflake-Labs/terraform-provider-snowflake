@@ -63,7 +63,7 @@ func (ps privilegeSet) hasString(s string) bool {
 
 func (ps privilegeSet) ALLPrivsPresent(validPrivs privilegeSet) bool {
 	for p := range validPrivs {
-		if p == "ALL" || p == "OWNERSHIP" || p == "CREATE STREAM" {
+		if p == privilegeAll || p == privilegeOwnership || p == privilegeCreateStream {
 			continue
 		}
 		if _, ok := ps[p]; !ok {

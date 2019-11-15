@@ -69,7 +69,7 @@ type grantID struct {
 // to "ALL".
 func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 	// We only filter if ALL is in validPrivs.
-	_, ok := validPrivs["ALL"]
+	_, ok := validPrivs[privilegeAll]
 	if !ok {
 		return grantList
 	}
