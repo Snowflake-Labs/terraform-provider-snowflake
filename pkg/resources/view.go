@@ -47,6 +47,14 @@ var viewSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the query used to create the view.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			space := regexp.MustCompile(`\s+`)
+			oldCollapseSpaces := space.ReplaceAllString(old, " ")
+			newCollapseSpaces := space.ReplaceAllString(new, " ")
+
+			return oldCollapseSpaces == newCollapseSpaces
+
+		},
 	},
 }
 
