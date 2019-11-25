@@ -6,11 +6,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/pkg/errors"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
+
+var space = regexp.MustCompile(`\s+`)
 
 var viewSchema = map[string]*schema.Schema{
 	"name": &schema.Schema{
@@ -48,7 +49,6 @@ var viewSchema = map[string]*schema.Schema{
 		Description: "Specifies the query used to create the view.",
 		ForceNew:    true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			space := regexp.MustCompile(`\s+`)
 			oldCollapseSpaces := space.ReplaceAllString(old, " ")
 			newCollapseSpaces := space.ReplaceAllString(new, " ")
 
@@ -147,8 +147,7 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// #HACK(adoami): Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-	space := regexp.MustCompile(`\s+`)
+	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
 	cleanString := space.ReplaceAllString(text.String, " ")
 	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
 	substringOfQuery := cleanString[indexOfSelect+4:]
@@ -157,12 +156,7 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("database", databaseName.String)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return data.Set("database", databaseName.String)
 }
 
 // UpdateView implements schema.UpdateFunc
