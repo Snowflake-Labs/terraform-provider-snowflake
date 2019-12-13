@@ -31,4 +31,4 @@ matrix:
         - make check-docs
     - name: linter check
       script:
-        - make lint
+        - make lint-ci
