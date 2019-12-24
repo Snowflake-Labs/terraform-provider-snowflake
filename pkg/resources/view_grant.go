@@ -113,7 +113,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ViewOrTable:  viewName,
+		ObjectName:  viewName,
 		Privilege:    priv,
 	}
 	dataIDInput, err := grant.String()
@@ -133,7 +133,7 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	viewName := grantID.ViewOrTable
+	viewName := grantID.ObjectName
 	priv := grantID.Privilege
 
 	err = data.Set("database_name", dbName)
@@ -179,7 +179,7 @@ func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	viewName := grantID.ViewOrTable
+	viewName := grantID.ObjectName
 
 	futureViews := (viewName == "")
 
