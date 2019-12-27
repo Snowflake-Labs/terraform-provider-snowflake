@@ -223,7 +223,7 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("url", stageDesc.url)
+	err = data.Set("schema", schema)
 	if err != nil {
 		return err
 	}
