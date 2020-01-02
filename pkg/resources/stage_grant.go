@@ -8,7 +8,12 @@ import (
 )
 
 var ValidStagePrivileges = newPrivilegeSet(
+	privilegeAll,
+	privilegeOwnership,
 	privilegeUsage,
+	// These privileges are only valid for internal stages
+	privilegeRead,
+	privilegeWrite,
 )
 
 var stageGrantSchema = map[string]*schema.Schema{
