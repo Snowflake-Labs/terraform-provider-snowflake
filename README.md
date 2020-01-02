@@ -216,14 +216,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|---------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|----------|
-| database_name | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    | <nil>    |
-| privilege     | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE"  |
-| roles         | set    | Grants privilege to these roles.                                                    | true     | false     | false    | <nil>    |
-| schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | true     | false     | false    | "PUBLIC" |
-| shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>    |
-| stage_name    | string | The name of the stage on which to grant privileges.                                 | true     | false     | false    | <nil>    |
+|     NAME      |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege     | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                                                    | true     | false     | false    | <nil>   |
+| schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
+| stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
 
 ### snowflake_table_grant
 
