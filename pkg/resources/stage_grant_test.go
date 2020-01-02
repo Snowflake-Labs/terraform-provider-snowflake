@@ -25,7 +25,7 @@ func TestStageGrantCreate(t *testing.T) {
 
 	in := map[string]interface{}{
 		"stage_name":    "test-stage",
-		"schema_name":   "PUBLIC",
+		"schema_name":   "test-schema",
 		"database_name": "test-db",
 		"privilege":     "USAGE",
 		"roles":         []interface{}{"test-role-1", "test-role-2"},
@@ -35,10 +35,10 @@ func TestStageGrantCreate(t *testing.T) {
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."PUBLIC"."test-stage" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."PUBLIC"."test-stage" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."PUBLIC"."test-stage" TO SHARE "test-share-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."PUBLIC"."test-stage" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadStageGrant(mock)
 		err := resources.CreateStageGrant(d, db)
 		a.NoError(err)
@@ -57,5 +57,5 @@ func expectReadStageGrant(mock sqlmock.Sqlmock) {
 	).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "STAGE", "test-stage", "SHARE", "test-share-2", false, "bob",
 	)
-	mock.ExpectQuery(`^SHOW GRANTS ON STAGE "test-db"."PUBLIC"."test-stage"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW GRANTS ON STAGE "test-db"."test-schema"."test-stage"$`).WillReturnRows(rows)
 }

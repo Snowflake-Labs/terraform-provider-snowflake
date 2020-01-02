@@ -14,14 +14,13 @@ var ValidStagePrivileges = newPrivilegeSet(
 var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": &schema.Schema{
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The name of the stage on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"schema_name": &schema.Schema{
 		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "PUBLIC",
+		Required:    true,
 		Description: "The name of the schema containing the current stage on which to grant privileges.",
 		ForceNew:    true,
 	},
