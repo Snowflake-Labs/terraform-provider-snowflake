@@ -328,3 +328,4 @@ If you are making a PR from a forked repo, you can set up Travis to build it by 
 * `SNOWFLAKE_USER` - A snowflake user for running tests.
 * `SNOWFLAKE_PASSWORD` - Password for that user.
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
+* `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
