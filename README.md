@@ -26,7 +26,7 @@ TODO fogg config
 
 ## Authentication
 
-We currently support username + password and keypair auth and suggest that you do so via environment variables. Define a config with something like-
+We currently support username + password, browser and keypair authenthication. We suggest that you do so via environment variables. Define a config with the non-senstive field like-
 
 ```hcl
 provider "snowflake" {
@@ -35,6 +35,8 @@ provider "snowflake" {
   region  = "..."
 }
 ```
+
+Then set `SNOWFLAKE_USER` and either `SNOWFLAKE_PASSWORD` or `SNOWFLAKE_PRIVATE_KEY_PATH`.
 
 ### Keypair Authentication Environment Variables
 You should generate the public and private keys and set up environment variables.
@@ -58,10 +60,9 @@ export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
 
-
 ## Resources
 
-We support managing a subset of snowflakedb resources, with a focus on access control and management.
+We support managing a subset of snowflakedb resources, with a focus on access control and management. We've built and support the resources we use. If you are lookig for others to be supported we are more than happy to get PRs merged.
 
 You can see a number of examples [here](examples).
 
@@ -299,9 +300,9 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 To do development you need Go installed, this repo cloned and that's about it. It has not been tested on Windows, so if you find problems let us know.
 
-If you want to build and test the provider localling there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
+If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
 
-### Testing
+## Testing
 
 For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
 
@@ -315,4 +316,16 @@ The 'acceptance' tests run the full stack, creating, modifying and destroying re
 
 To run all tests, including the acceptance tests, run `make test-acceptance`.
 
-Note that we also run all tests in our [Travis-CI account](https://travis-ci.com/chanzuckerberg/terraform-provider-snowflake).
+We also run all tests in our [Travis-CI account](https://travis-ci.com/chanzuckerberg/terraform-provider-snowflake).
+
+### Pull Request CI
+
+Our CI jobs run the full acceptence test suite, which involves creating and destroying resources in a live snowflake account. Travis-CI is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
+
+If you are making a PR from a forked repo, you can set up Travis to build it by setting these environement variables:
+
+* `SNOWFLAKE_ACCOUNT` - The account name
+* `SNOWFLAKE_USER` - A snowflake user for running tests.
+* `SNOWFLAKE_PASSWORD` - Password for that user.
+* `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
+* `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
