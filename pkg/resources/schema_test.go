@@ -46,6 +46,6 @@ func TestSchemaCreate(t *testing.T) {
 func expectReadSchema(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "is_default", "is_current", "database_name", "owner", "comment", "options", "retention_time"},
-	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "N", "Y", "test_db", "admin", "great comment", "TRANSIENT, MANAGED", 1)
+	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "N", "Y", "test_db", "admin", "great comment", "TRANSIENT, MANAGED ACCESS", 1)
 	mock.ExpectQuery(`^SHOW SCHEMAS LIKE 'good_name' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }

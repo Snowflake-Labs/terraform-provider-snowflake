@@ -223,7 +223,7 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return err
 				}
-			case "MANAGED":
+			case "MANAGED ACCESS":
 				err = data.Set("is_managed", true)
 				if err != nil {
 					return err
