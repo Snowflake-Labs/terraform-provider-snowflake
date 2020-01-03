@@ -192,19 +192,19 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
-| aws_external_id    | string |                                                                                                                   | true     | false     | true     | <nil>    |
-| comment            | string | Specifies a comment for the stage.                                                                                | true     | false     | false    | <nil>    |
-| copy_options       | string | Specifies the copy optionos for the stage.                                                                        | true     | false     | false    | <nil>    |
-| credentials        | string | Specifies the credentials for the stage.                                                                          | true     | false     | false    | <nil>    |
-| database           | string | The database in which to create the stage.                                                                        | false    | true      | false    | <nil>    |
-| encryption         | string | Specifies the encryption settings for the stage.                                                                  | true     | false     | false    | <nil>    |
-| file_format        | string | Specifies the file format for the stage.                                                                          | true     | false     | false    | <nil>    |
-| name               | string | Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created. | false    | true      | false    | <nil>    |
-| schema             | string | The schema in which to create the stage.                                                                          | true     | false     | false    | "PUBLIC" |
-| snowflake_iam_user | string |                                                                                                                   | true     | false     | true     | <nil>    |
-| url                | string | Specifies the URL for the stage.                                                                                  | true     | false     | false    | <nil>    |
+|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| aws_external_id    | string |                                                                                                                   | true     | false     | true     | <nil>   |
+| comment            | string | Specifies a comment for the stage.                                                                                | true     | false     | false    | <nil>   |
+| copy_options       | string | Specifies the copy options for the stage.                                                                         | true     | false     | false    | <nil>   |
+| credentials        | string | Specifies the credentials for the stage.                                                                          | true     | false     | false    | <nil>   |
+| database           | string | The database in which to create the stage.                                                                        | false    | true      | false    | <nil>   |
+| encryption         | string | Specifies the encryption settings for the stage.                                                                  | true     | false     | false    | <nil>   |
+| file_format        | string | Specifies the file format for the stage.                                                                          | true     | false     | false    | <nil>   |
+| name               | string | Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created. | false    | true      | false    | <nil>   |
+| schema             | string | The schema in which to create the stage.                                                                          | false    | true      | false    | <nil>   |
+| snowflake_iam_user | string |                                                                                                                   | true     | false     | true     | <nil>   |
+| url                | string | Specifies the URL for the stage.                                                                                  | true     | false     | false    | <nil>   |
 
 ### snowflake_stage_grant
 
