@@ -91,3 +91,9 @@ func TestStageDescribe(t *testing.T) {
 	s := Stage("test_stage", "test_db", "test_schema")
 	a.Equal(s.Describe(), `DESCRIBE STAGE "test_db"."test_schema"."test_stage"`)
 }
+
+func TestStageShow(t *testing.T) {
+	a := assert.New(t)
+	s := Stage("test_stage", "test_db", "test_schema")
+	a.Equal(s.Show(), `SHOW STAGES LIKE 'test_stage' IN DATABASE "test_db"`)
+}

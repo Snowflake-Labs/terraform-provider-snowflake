@@ -31,9 +31,8 @@ var stageSchema = map[string]*schema.Schema{
 	},
 	"schema": &schema.Schema{
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The schema in which to create the stage.",
-		Default:     "PUBLIC",
 		ForceNew:    true,
 	},
 	"url": &schema.Schema{
@@ -54,7 +53,7 @@ var stageSchema = map[string]*schema.Schema{
 	"copy_options": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the copy optionos for the stage.",
+		Description: "Specifies the copy options for the stage.",
 	},
 	"encryption": &schema.Schema{
 		Type:        schema.TypeString,
@@ -196,6 +195,7 @@ func CreateStage(data *schema.ResourceData, meta interface{}) error {
 }
 
 // ReadStage implements schema.ReadFunc
+// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE
 func ReadStage(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stageID, err := stageIDFromString(data.Id())
@@ -209,6 +209,12 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := descStage(db, q)
+	if err != nil {
+		return err
+	}
+
+	sq := snowflake.Stage(stage, dbName, schema).Show()
+	stageShow, err := showStage(db, sq)
 	if err != nil {
 		return err
 	}
@@ -229,6 +235,21 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("url", stageDesc.url)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("file_format", stageDesc.fileFormat)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("copy_options", stageDesc.copyOptions)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("comment", stageShow.comment)
 	if err != nil {
 		return err
 	}
@@ -325,7 +346,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		data.SetPartial("comment")
 	}
 
-	return ReadSchema(data, meta)
+	return ReadStage(data, meta)
 }
 
 // DeleteStage implements schema.DeleteFunc
@@ -378,14 +399,57 @@ func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	return false, nil
 }
 
+type showStageResult struct {
+	createdOn        string
+	name             string
+	databaseName     string
+	schemaName       string
+	url              string
+	hasCredentials   string
+	hasEncryptionKey string
+	owner            string
+	comment          string
+	region           string
+	stageType        string
+	cloud            string
+}
+
+func showStage(db *sql.DB, query string) (showStageResult, error) {
+	var r showStageResult
+	row := db.QueryRow(query)
+	err := row.Scan(
+		&r.createdOn,
+		&r.name,
+		&r.databaseName,
+		&r.schemaName,
+		&r.url,
+		&r.hasCredentials,
+		&r.hasEncryptionKey,
+		&r.owner,
+		&r.comment,
+		&r.region,
+		&r.stageType,
+		&r.cloud,
+	)
+	if err != nil {
+		return r, err
+	}
+
+	return r, nil
+}
+
 type descStageResult struct {
 	url              string
 	awsExternalID    string
 	snowflakeIamUser string
+	fileFormat       string
+	copyOptions      string
 }
 
 func descStage(db *sql.DB, query string) (descStageResult, error) {
 	var r descStageResult
+	var ff []string
+	var co []string
 	rows, err := db.Query(query)
 	if err != nil {
 		return r, err
@@ -409,6 +473,20 @@ func descStage(db *sql.DB, query string) (descStageResult, error) {
 		case "SNOWFLAKE_IAM_USER":
 			r.snowflakeIamUser = propertyValue
 		}
+
+		switch parentProperty {
+		case "STAGE_FILE_FORMAT":
+			if propertyValue != propertyDefault {
+				ff = append(ff, fmt.Sprintf("%s = %s", property, propertyValue))
+			}
+		case "STAGE_COPY_OPTIONS":
+			if propertyValue != propertyDefault {
+				co = append(co, fmt.Sprintf("%s = %s", property, propertyValue))
+			}
+		}
 	}
+
+	r.fileFormat = strings.Join(ff, " ")
+	r.copyOptions = strings.Join(co, " ")
 	return r, nil
 }

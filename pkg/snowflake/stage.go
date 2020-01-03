@@ -169,3 +169,8 @@ func (sb *StageBuilder) Undrop() string {
 func (sb *StageBuilder) Describe() string {
 	return fmt.Sprintf(`DESCRIBE STAGE %v`, sb.QualifiedName())
 }
+
+// Show returns the SQL query that will show a stage.
+func (sb *StageBuilder) Show() string {
+	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+}

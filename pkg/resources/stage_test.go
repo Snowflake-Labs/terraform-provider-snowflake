@@ -37,6 +37,7 @@ func TestStageCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadStage(mock)
+		expectReadStageShow(mock)
 		err := resources.CreateStage(d, db)
 		a.NoError(err)
 	})
@@ -45,6 +46,15 @@ func TestStageCreate(t *testing.T) {
 func expectReadStage(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"parent_property", "property", "property_type", "property_value", "property_default"},
-	).AddRow("STAGE_LOCATION", "URL", "string", `["s3://load/test/"]`, "").AddRow("STAGE_CREDENTIALS", "AWS_EXTERNAL_ID", "string", "test", "")
+	).AddRow("STAGE_LOCATION", "URL", "string", `["s3://load/test/"]`, "").
+		AddRow("STAGE_CREDENTIALS", "AWS_EXTERNAL_ID", "string", "test", "").
+		AddRow("STAGE_FILE_FORMAT", "FORMAT_NAME", "string", "CSV", "")
 	mock.ExpectQuery(`^DESCRIBE STAGE "test_db"."test_schema"."test_stage"$`).WillReturnRows(rows)
+}
+
+func expectReadStageShow(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud"},
+	).AddRow("2019-12-23 17:20:50.088 +0000", "test_stage", "test_db", "test_schema", "s3://load/test/", "N", "Y", "test", "great comment", "us-east-1", "EXTERNAL", "AWS")
+	mock.ExpectQuery(`^SHOW STAGES LIKE 'test_stage' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }
