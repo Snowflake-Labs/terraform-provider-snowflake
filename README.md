@@ -189,6 +189,43 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | comment  | string | Specifies a comment for the managed account.                                                          | true     | false     | false    | <nil>   |
 | name     | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    | <nil>   |
 
+### snowflake_stage
+
+#### properties
+
+|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| aws_external_id    | string |                                                                                                                   | true     | false     | true     | <nil>   |
+| comment            | string | Specifies a comment for the stage.                                                                                | true     | false     | false    | <nil>   |
+| copy_options       | string | Specifies the copy options for the stage.                                                                         | true     | false     | false    | <nil>   |
+| credentials        | string | Specifies the credentials for the stage.                                                                          | true     | false     | false    | <nil>   |
+| database           | string | The database in which to create the stage.                                                                        | false    | true      | false    | <nil>   |
+| encryption         | string | Specifies the encryption settings for the stage.                                                                  | true     | false     | false    | <nil>   |
+| file_format        | string | Specifies the file format for the stage.                                                                          | true     | false     | false    | <nil>   |
+| name               | string | Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created. | false    | true      | false    | <nil>   |
+| schema             | string | The schema in which to create the stage.                                                                          | false    | true      | false    | <nil>   |
+| snowflake_iam_user | string |                                                                                                                   | true     | false     | true     | <nil>   |
+| url                | string | Specifies the URL for the stage.                                                                                  | true     | false     | false    | <nil>   |
+
+### snowflake_stage_grant
+
+**Note**: The snowflake_stage_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the stages to which a single grant is attached must be declared
+by a single snowflake_stage_grant resource. This means that even any snowflake_stage that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+
+#### properties
+
+|     NAME      |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege     | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                                                    | true     | false     | false    | <nil>   |
+| schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
+| stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
+
 ### snowflake_table_grant
 
 **Note**: The snowflake_table_grant resource creates exclusive attachments of grants.

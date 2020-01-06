@@ -9,6 +9,7 @@ type grantType string
 const (
 	databaseType  grantType = "DATABASE"
 	schemaType    grantType = "SCHEMA"
+	stageType     grantType = "STAGE"
 	viewType      grantType = "VIEW"
 	tableType     grantType = "TABLE"
 	warehouseType grantType = "WAREHOUSE"
@@ -56,6 +57,16 @@ func SchemaGrant(db, schema string) GrantBuilder {
 		grantType:     schemaType,
 	}
 }
+
+// StageGrant returns a pointer to a CurrentGrantBuilder for a stage
+func StageGrant(db, schema, stage string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          stage,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, stage),
+		grantType:     stageType,
+	}
+}
+
 
 // ViewGrant returns a pointer to a CurrentGrantBuilder for a view
 func ViewGrant(db, schema, view string) GrantBuilder {

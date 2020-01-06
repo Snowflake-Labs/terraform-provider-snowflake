@@ -119,7 +119,7 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 		Privilege:    priv,
 	}
 	if !onFuture {
-		grantID.ViewOrTable = tableName
+		grantID.ObjectName = tableName
 	}
 
 	dataIDInput, err := grantID.String()
@@ -139,7 +139,7 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	tableName := grantID.ViewOrTable
+	tableName := grantID.ObjectName
 	priv := grantID.Privilege
 	err = data.Set("database_name", dbName)
 	if err != nil {
@@ -183,7 +183,7 @@ func DeleteTableGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tableName := grantID.ViewOrTable
+	tableName := grantID.ObjectName
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	onFuture := false

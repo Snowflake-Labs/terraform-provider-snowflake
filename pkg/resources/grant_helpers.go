@@ -59,7 +59,7 @@ type grant struct {
 type grantID struct {
 	ResourceName string
 	SchemaName   string
-	ViewOrTable  string
+	ObjectName  string
 	Privilege    string
 }
 
@@ -119,12 +119,12 @@ func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ViewOrTable|Privilege
+// resourceName|schemaName|ObjectName|Privilege
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = grantIDDelimiter
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ViewOrTable, gi.Privilege}}
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege}}
 	err := csvWriter.WriteAll(dataIdentifiers)
 	if err != nil {
 		return "", err
@@ -133,7 +133,7 @@ func (gi *grantID) String() (string, error) {
 	return strGrantID, nil
 }
 
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ViewOrTable|Privilege
+// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
@@ -153,7 +153,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	grantResult := &grantID{
 		ResourceName: lines[0][0],
 		SchemaName:   lines[0][1],
-		ViewOrTable:  lines[0][2],
+		ObjectName:  lines[0][2],
 		Privilege:    lines[0][3],
 	}
 	return grantResult, nil
