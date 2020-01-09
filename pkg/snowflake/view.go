@@ -98,7 +98,7 @@ func (vb *ViewBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", vb.comment))
 	}
 
-	q.WriteString(fmt.Sprintf(" AS %v", vb.statement))
+	q.WriteString(fmt.Sprintf(" AS (%v)", vb.statement))
 
 	return q.String()
 }

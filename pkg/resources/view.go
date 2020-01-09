@@ -147,9 +147,9 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
+	// Want to only capture the query in () because before that is the Create part of the view which we no longer care about
 	cleanString := space.ReplaceAllString(text.String, " ")
-	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
+	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS (")
 	substringOfQuery := cleanString[indexOfSelect+4:]
 	err = data.Set("statement", substringOfQuery)
 	if err != nil {
