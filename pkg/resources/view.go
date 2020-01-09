@@ -224,17 +224,17 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if data.HasChange("statement") {
-		_, statement := data.GetChange("statement")
+	// if data.HasChange("statement") {
+	// 	_, statement := data.GetChange("statement")
 
-		if s := statement.(string); s != "" {
-			q := builder.Show()
-			err := DBExec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error changing statement %v", data.Id())
-			}
-		}
-	}
+	// 	if s := statement.(string); s != "" {
+	// 		q := builder.Show()
+	// 		err := DBExec(db, q)
+	// 		if err != nil {
+	// 			return errors.Wrapf(err, "error changing statement %v", data.Id())
+	// 		}
+	// 	}
+	// }
 
 	return ReadView(data, meta)
 }
