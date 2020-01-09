@@ -50,7 +50,7 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			oldCollapseSpaces := space.ReplaceAllString(old, " ")
-			newCollapseSpaces := space.ReplaceAllString(new, " ")
+			newCollapseSpaces := "(" + space.ReplaceAllString(new, " ") + ")"
 
 			return oldCollapseSpaces == newCollapseSpaces
 
