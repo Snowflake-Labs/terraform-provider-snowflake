@@ -224,6 +224,16 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if data.HasChange("statement") {
+		_, statement := data.GetChange("statement")
+
+		q := builder.WithStatement(statement.(string))
+		err := DBExec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error changing statement %v", data.Id())
+		}
+	}
+
 	return ReadView(data, meta)
 }
 
