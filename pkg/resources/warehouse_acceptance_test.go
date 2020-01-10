@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccWarehouse(t *testing.T) {
@@ -20,6 +20,7 @@ func TestAccWarehouse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 				),
 			},
@@ -29,6 +30,7 @@ func TestAccWarehouse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 				),
 			},
@@ -38,14 +40,16 @@ func TestAccWarehouse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "Small"),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_warehouse.w",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_warehouse.w",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning"},
 			},
 		},
 	})
@@ -54,8 +58,16 @@ func TestAccWarehouse(t *testing.T) {
 func wConfig(prefix string) string {
 	s := `
 resource "snowflake_warehouse" "w" {
-	name = "%s"
+	name    = "%s"
 	comment = "test comment"
+
+	auto_suspend          = 60
+	max_cluster_count     = 1
+	min_cluster_count     = 1
+	scaling_policy        = "STANDARD"
+	auto_resume           = true
+	initially_suspended   = true
+	wait_for_provisioning = false
 }
 `
 	return fmt.Sprintf(s, prefix)
@@ -64,9 +76,17 @@ resource "snowflake_warehouse" "w" {
 func wConfig2(prefix string) string {
 	s := `
 resource "snowflake_warehouse" "w" {
-	name = "%s"
-	comment = "test comment 2"
+	name           = "%s"
+	comment        = "test comment 2"
 	warehouse_size = "small"
+
+	auto_suspend          = 60
+	max_cluster_count     = 1
+	min_cluster_count     = 1
+	scaling_policy        = "STANDARD"
+	auto_resume           = true
+	initially_suspended   = true
+	wait_for_provisioning = false
 }
 `
 	return fmt.Sprintf(s, prefix)

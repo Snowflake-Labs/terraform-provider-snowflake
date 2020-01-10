@@ -3,9 +3,11 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
@@ -106,8 +108,17 @@ func CreateManagedAccount(data *schema.ResourceData, meta interface{}) error {
 		managedAccountProperties,
 		managedAccountSchema,
 		snowflake.ManagedAccount,
-		ReadManagedAccount,
+		initialReadManagedAccount,
 	)(data, meta)
+}
+
+// initialReadManagedAccount is used for the first read, since the locator takes
+// some time to appear. This is currently implemented as a sleep. @TODO actually
+// wait until the locator is generated.
+func initialReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
+	time.Sleep(10 * time.Second)
+	return ReadManagedAccount(data, meta)
 }
 
 // ReadManagedAccount implements schema.ReadFunc
@@ -183,6 +194,7 @@ func ManagedAccountExists(data *schema.ResourceData, meta interface{}) (bool, er
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
 	if rows.Next() {
 		return true, nil

@@ -24,8 +24,8 @@ type execResponseRowType struct {
 	ByteLength int64  `json:"byteLength"`
 	Length     int64  `json:"length"`
 	Type       string `json:"type"`
-	Scale      int64  `json:"scale"`
 	Precision  int64  `json:"precision"`
+	Scale      int64  `json:"scale"`
 	Nullable   bool   `json:"nullable"`
 }
 
@@ -59,9 +59,9 @@ type execResponseData struct {
 	ChunkHeaders       map[string]string     `json:"chunkHeaders,omitempty"`
 
 	// ping pong response data
-	GetResultURL         string        `json:"getResultUrl,omitempty"`
-	ProgressDesc         string        `json:"progressDesc,omitempty"`
-	QueryAbortsAfterSecs time.Duration `json:"queryAbortsAfterSecs,omitempty"`
+	GetResultURL      string        `json:"getResultUrl,omitempty"`
+	ProgressDesc      string        `json:"progressDesc,omitempty"`
+	QueryAbortTimeout time.Duration `json:"queryAbortsAfterSecs,omitempty"`
 }
 
 type execResponse struct {

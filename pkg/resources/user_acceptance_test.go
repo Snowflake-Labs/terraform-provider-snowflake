@@ -2,14 +2,15 @@ package resources_test
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/Pallinder/go-randomdata"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,6 +52,7 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
+					checkBool("snowflake_user.w", "must_change_password", true),
 				),
 			},
 			// RENAME
@@ -86,7 +88,7 @@ func TestAccUser(t *testing.T) {
 				ResourceName:            "snowflake_user.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2"},
+				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password"},
 			},
 		},
 	})
@@ -108,10 +110,11 @@ KEY
 	rsa_public_key_2 = <<KEY
 %s
 KEY
+	must_change_password = true
 }
 `
 	s = fmt.Sprintf(s, prefix, prefix, key1, key2)
-	fmt.Printf("[DEBUG] s %s", s)
+	log.Printf("[DEBUG] s %s", s)
 	return s
 }
 
@@ -128,6 +131,6 @@ resource "snowflake_user" "w" {
 	default_namespace="bar"
 }
 `
-	fmt.Printf("[DEBUG] s2 %s", s)
+	log.Printf("[DEBUG] s2 %s", s)
 	return fmt.Sprintf(s, prefix, prefix)
 }

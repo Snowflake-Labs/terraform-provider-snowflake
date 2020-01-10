@@ -1,28 +1,34 @@
 language: go
 go:
-  - '1.12'
+  - "1.13"
+
+env:
+  - GO111MODULE=on
 
 go_import_path: github.com/chanzuckerberg/terraform-provider-snowflake
 
 install:
-  - npm install -g snyk
+  # - npm install -g snyk
   - make setup
 
 script:
   - make
 
-jobs:
+matrix:
   include:
-    - stage: check
+    - name: unit/acceptance tests
       script:
-        - make test-acceptance
+        - make test-acceptance-ci
       after_success:
         - bash <(curl -s https://codecov.io/bash)
     # Disable snyk until https://github.com/snyk/snyk/issues/354 is resolved
-    # - stage: check
+    # - name: snyk
     #   script:
     #     - snyk monitor --org=czi
     #     - snyk test
-    - stage: check
+    - name: docs check
       script:
         - make check-docs
+    - name: linter check
+      script:
+        - make lint-ci

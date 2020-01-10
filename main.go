@@ -3,32 +3,47 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/plugin"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/olekukonko/tablewriter"
 )
 
 func main() {
-	b := flag.Bool("doc", false, "spit out docs for resources here")
+	doc := flag.Bool("doc", false, "spit out docs for resources here")
+	ver := flag.Bool("version", false, "spit out version for resources here")
 	flag.Parse()
 
-	if *b {
-		doc()
-	} else {
-		plugin.Serve(&plugin.ServeOpts{
-			ProviderFunc: func() terraform.ResourceProvider {
-				return provider.Provider()
-			},
-		})
+	if *doc {
+		generateDocs()
+		return
 	}
+
+	if *ver {
+		verString, err := version.VersionString()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(verString)
+		return
+	}
+
+	plugin.Serve(&plugin.ServeOpts{
+		ProviderFunc: func() terraform.ResourceProvider {
+			return provider.Provider()
+		},
+	})
+
 }
 
-func doc() {
+func generateDocs() {
 	// schema := provider.Provider().Schema
 	resources := provider.Provider().ResourcesMap
 
@@ -40,6 +55,18 @@ func doc() {
 	for _, name := range names {
 		resource := resources[name]
 		fmt.Printf("\n### %s\n\n", name)
+		if strings.HasSuffix(name, "_grant") {
+			grant_resource_name := strings.Replace(name, "_grant", "", -1)
+			granted_to_name := strings.Replace(grant_resource_name, "snowflake_", "", -1)
+			fmt.Printf(
+				`**Note**: The %s resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the %ss to which a single grant is attached must be declared
+by a single %s resource. This means that even any %s that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+`, name, granted_to_name, name, grant_resource_name)
+			fmt.Println("")
+		}
 		fmt.Printf("#### properties\n\n")
 
 		table := tablewriter.NewWriter(os.Stdout)

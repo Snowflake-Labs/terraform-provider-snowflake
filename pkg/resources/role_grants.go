@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -86,7 +86,7 @@ func grantRoleToUser(db *sql.DB, role1, user string) error {
 	return err
 }
 
-type grant struct {
+type roleGrant struct {
 	CreatedOn   sql.RawBytes   `db:"created_on"`
 	Role        sql.NullString `db:"role"`
 	GrantedTo   sql.NullString `db:"granted_to"`
@@ -133,7 +133,7 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
+func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 	sdb := sqlx.NewDb(db, "snowflake")
 
 	stmt := fmt.Sprintf(`SHOW GRANTS OF ROLE "%s"`, roleName)
@@ -143,9 +143,9 @@ func readGrants(db *sql.DB, roleName string) ([]*grant, error) {
 	}
 	defer rows.Close()
 
-	grants := make([]*grant, 0)
+	grants := make([]*roleGrant, 0)
 	for rows.Next() {
-		g := &grant{}
+		g := &roleGrant{}
 		err = rows.StructScan(g)
 		if err != nil {
 			return nil, err
@@ -248,16 +248,4 @@ func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	return ReadRoleGrants(data, meta)
-}
-
-// borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
-func expandStringList(configured []interface{}) []string {
-	vs := make([]string, 0, len(configured))
-	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, v.(string))
-		}
-	}
-	return vs
 }

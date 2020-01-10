@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var userProperties = []string{
@@ -18,10 +18,11 @@ var userProperties = []string{
 	"default_warehouse",
 	"rsa_public_key",
 	"rsa_public_key_2",
+	"must_change_password",
 }
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
-	return strings.ToUpper(old) == strings.ToUpper(new)
+	return strings.EqualFold(old, new)
 }
 
 var userSchema = map[string]*schema.Schema{
@@ -86,6 +87,11 @@ var userSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Will be true if user as an RSA key set.",
 	},
+	"must_change_password": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
+	},
 
 	//    DISPLAY_NAME = <string>
 	//    FIRST_NAME = <string>
@@ -134,6 +140,7 @@ func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
 	if rows.Next() {
 		return true, nil

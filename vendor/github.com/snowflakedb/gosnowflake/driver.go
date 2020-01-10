@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"net/http"
-	"strings"
 )
 
 // SnowflakeDriver is a context of Go Driver
@@ -28,9 +27,11 @@ func (d SnowflakeDriver) Open(dsn string) (driver.Conn, error) {
 	if sc.cfg.InsecureMode {
 		// no revocation check with OCSP. Think twice when you want to enable this option.
 		st = snowflakeInsecureTransport
-	}
-	if err != nil {
-		return nil, err
+	} else {
+		// set OCSP fail open mode
+		ocspResponseCacheLock.Lock()
+		ocspFailOpen = sc.cfg.OCSPFailOpen
+		ocspResponseCacheLock.Unlock()
 	}
 	// authenticate
 	sc.rest = &snowflakeRestful{
@@ -42,7 +43,6 @@ func (d SnowflakeDriver) Open(dsn string) (driver.Conn, error) {
 			Timeout:   defaultClientTimeout,
 			Transport: st,
 		},
-		Authenticator:       sc.cfg.Authenticator,
 		LoginTimeout:        sc.cfg.LoginTimeout,
 		RequestTimeout:      sc.cfg.RequestTimeout,
 		FuncPost:            postRestful,
@@ -61,13 +61,12 @@ func (d SnowflakeDriver) Open(dsn string) (driver.Conn, error) {
 	var samlResponse []byte
 	var proofKey []byte
 
-	authenticator := strings.ToUpper(sc.cfg.Authenticator)
-	glog.V(2).Infof("Authenticating via %v", authenticator)
-	switch authenticator {
-	case authenticatorExternalBrowser:
+	glog.V(2).Infof("Authenticating via %v", sc.cfg.Authenticator.String())
+	switch sc.cfg.Authenticator {
+	case AuthTypeExternalBrowser:
 		samlResponse, proofKey, err = authenticateByExternalBrowser(
 			sc.rest,
-			sc.cfg.Authenticator,
+			sc.cfg.Authenticator.String(),
 			sc.cfg.Application,
 			sc.cfg.Account,
 			sc.cfg.User,
@@ -76,16 +75,10 @@ func (d SnowflakeDriver) Open(dsn string) (driver.Conn, error) {
 			sc.cleanup()
 			return nil, err
 		}
-	case authenticatorOAuth:
-	case authenticatorSnowflake:
-	case authenticatorJWT:
-		// Nothing to do, parameters needed for auth should be already set in sc.cfg
-		break
-	default:
-		// this is actually okta, which is something misleading
+	case AuthTypeOkta:
 		samlResponse, err = authenticateBySAML(
 			sc.rest,
-			sc.cfg.Authenticator,
+			sc.cfg.OktaURL,
 			sc.cfg.Application,
 			sc.cfg.Account,
 			sc.cfg.User,
@@ -104,38 +97,9 @@ func (d SnowflakeDriver) Open(dsn string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	err = d.validateDefaultParameters(authData.SessionInfo.DatabaseName, &sc.cfg.Database)
-	if err != nil {
-		return nil, err
-	}
-	err = d.validateDefaultParameters(authData.SessionInfo.SchemaName, &sc.cfg.Schema)
-	if err != nil {
-		return nil, err
-	}
-	err = d.validateDefaultParameters(authData.SessionInfo.WarehouseName, &sc.cfg.Warehouse)
-	if err != nil {
-		return nil, err
-	}
-	err = d.validateDefaultParameters(authData.SessionInfo.RoleName, &sc.cfg.Role)
-	if err != nil {
-		return nil, err
-	}
 	sc.populateSessionParameters(authData.Parameters)
 	sc.startHeartBeat()
 	return sc, nil
-}
-
-func (d SnowflakeDriver) validateDefaultParameters(sessionValue string, defaultValue *string) error {
-	if *defaultValue != "" && strings.ToLower(*defaultValue) != strings.ToLower(sessionValue) {
-		return &SnowflakeError{
-			Number:      ErrCodeObjectNotExists,
-			SQLState:    SQLStateConnectionFailure,
-			Message:     errMsgObjectNotExists,
-			MessageArgs: []interface{}{*defaultValue},
-		}
-	}
-	*defaultValue = sessionValue
-	return nil
 }
 
 func init() {

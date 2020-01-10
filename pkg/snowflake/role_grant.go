@@ -6,13 +6,6 @@ type RoleGrantBuilder struct {
 	name string
 }
 
-type granteeType string
-
-const (
-	userType granteeType = "USER"
-	roleType granteeType = "ROLE"
-)
-
 type RoleGrantExecutable struct {
 	name        string
 	granteeType granteeType
