@@ -48,6 +48,7 @@ release-snapshot: ## run a release
 .PHONY: release-snapshot
 
 build: ## build the binary
+	echo $(BASE_BINARY_NAME)
 	go build ${LDFLAGS} -o $(BASE_BINARY_NAME) .
 .PHONY: build
 
@@ -95,11 +96,11 @@ docs: build ## generate some docs
 	./scripts/update-readme.sh update
 .PHONY: docs
 
-deps: ## installs and vendors dependencies
-	go get .
-	go mod tidy
-	go mod vendor
-.PHONY: deps
+# deps: ## installs and vendors dependencies
+# 	go get .
+# 	go mod tidy
+# 	go mod vendor
+# .PHONY: deps
 
 check-docs: build ## check that docs have been generated
 	./scripts/update-readme.sh check

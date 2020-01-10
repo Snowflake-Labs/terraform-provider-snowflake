@@ -137,3 +137,13 @@ func SecurityIntegrationExists(data *schema.ResourceData, meta interface{}) (boo
 	return rows.Next(), rows.Err()
 
 }
+
+func SetValidationFunc(data map[string]struct{}) schema.SchemaValidateFunc {
+
+}
+
+// map[string]struct{}{
+// 	"CUSTOM":          struct{}{},
+// 	"TABLEAU_DESKTOP": struct{}{},
+// 	"TABLEAU_SERVER":  struct{}{},
+// }
