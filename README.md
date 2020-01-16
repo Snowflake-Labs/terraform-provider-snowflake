@@ -226,6 +226,19 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
 | stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
 
+### snowflake_pipe
+
+#### properties
+
+|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| name               | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created.   | false    | true      | false    | <nil>   |
+| database           | string | The database in which to create the pipe.                                                                         | false    | true      | false    | <nil>   |
+| schema             | string | The schema in which to create the pipe.                                                                           | false    | true      | false    | <nil>   |
+| copy_statement     | string | Specifies the copy statement for the pipe.                                                                        | false    | true      | false    | <nil>   |
+| auto_ingest        | string | Specifies a auto_ingest param for the pipe.                                                                       | true     | false     | false    | false   |
+| comment            | string | Specifies a comment for the pipe.                                                                                 | true     | false     | false    | <nil>   |
+
 ### snowflake_table_grant
 
 **Note**: The snowflake_table_grant resource creates exclusive attachments of grants.
