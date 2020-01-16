@@ -114,6 +114,21 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | type           | string | Specifies the type of managed account.                                                                                                         | true     | false     | false    | "READER" |
 | url            | string | URL for accessing the managed account, particularly through the web interface.                                                                 | false    | false     | true     | <nil>    |
 
+### snowflake_pipe
+
+#### properties
+
+|         NAME         |  TYPE  |                                                   DESCRIPTION                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------------|--------|-----------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| auto_ingest          | bool   | Specifies a auto_ingest param for the pipe.                                                                     | true     | false     | false    | false   |
+| comment              | string | Specifies a comment for the pipe.                                                                               | true     | false     | false    | <nil>   |
+| copy_statement       | string | Specifies the copy statement for the pipe.                                                                      | false    | true      | false    | <nil>   |
+| database             | string | The database in which to create the pipe.                                                                       | false    | true      | false    | <nil>   |
+| name                 | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created. | false    | true      | false    | <nil>   |
+| notification_channel | string | Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.                      | false    | false     | true     | <nil>   |
+| owner                | string | Name of the role that owns the pipe.                                                                            | false    | false     | true     | <nil>   |
+| schema               | string | The schema in which to create the pipe.                                                                         | false    | true      | false    | <nil>   |
+
 ### snowflake_resource_monitor
 
 #### properties
@@ -225,19 +240,6 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
 | shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
 | stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
-
-### snowflake_pipe
-
-#### properties
-
-|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| name               | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created.   | false    | true      | false    | <nil>   |
-| database           | string | The database in which to create the pipe.                                                                         | false    | true      | false    | <nil>   |
-| schema             | string | The schema in which to create the pipe.                                                                           | false    | true      | false    | <nil>   |
-| copy_statement     | string | Specifies the copy statement for the pipe.                                                                        | false    | true      | false    | <nil>   |
-| auto_ingest        | string | Specifies a auto_ingest param for the pipe.                                                                       | true     | false     | false    | false   |
-| comment            | string | Specifies a comment for the pipe.                                                                                 | true     | false     | false    | <nil>   |
 
 ### snowflake_table_grant
 

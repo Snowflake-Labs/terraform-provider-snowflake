@@ -48,25 +48,3 @@ func expectReadPipe(mock sqlmock.Sqlmock) {
 	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment")
 	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }
-
-func TestPipeDelete(t *testing.T) {
-	a := assert.New(t)
-
-	in := map[string]interface{}{
-		"name":     "test_pipe",
-		"database": "test_db",
-		"schema":   "test_schema",
-		"comment":  "great comment",
-	}
-	d := schema.TestResourceDataRaw(t, resources.Pipe().Schema, in)
-	d.SetId("")
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		//mock.ExpectExec(
-		//	`^DROP PIPE "test_db"."test_schema"."test_pipe"$`,
-		//).WillReturnResult(sqlmock.NewResult(1, 1))
-
-		err := resources.DeletePipe(d, db)
-		a.NoError(err)
-	})
-}
