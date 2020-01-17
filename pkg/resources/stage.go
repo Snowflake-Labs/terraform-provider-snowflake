@@ -400,18 +400,18 @@ func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 }
 
 type showStageResult struct {
-	createdOn        string
-	name             string
-	databaseName     string
-	schemaName       string
-	url              string
-	hasCredentials   string
-	hasEncryptionKey string
-	owner            string
-	comment          string
-	region           string
-	stageType        string
-	cloud            string
+	createdOn        *string
+	name             *string
+	databaseName     *string
+	schemaName       *string
+	url              *string
+	hasCredentials   *string
+	hasEncryptionKey *string
+	owner            *string
+	comment          *string
+	region           *string
+	stageType        *string
+	cloud            *string
 }
 
 func showStage(db *sql.DB, query string) (showStageResult, error) {
