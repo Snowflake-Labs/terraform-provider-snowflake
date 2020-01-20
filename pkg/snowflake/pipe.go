@@ -83,7 +83,7 @@ func (pb *PipeBuilder) Create() string {
 	}
 
 	if pb.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, pb.comment))
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(pb.comment)))
 	}
 	if pb.copyStatement != "" {
 		q.WriteString(fmt.Sprintf(` AS %v`, pb.copyStatement))
@@ -94,7 +94,7 @@ func (pb *PipeBuilder) Create() string {
 
 // ChangeComment returns the SQL query that will update the comment on the pipe.
 func (pb *PipeBuilder) ChangeComment(c string) string {
-	return fmt.Sprintf(`ALTER PIPE %v SET COMMENT = '%v'`, pb.QualifiedName(), c)
+	return fmt.Sprintf(`ALTER PIPE %v SET COMMENT = '%v'`, pb.QualifiedName(), EscapeString(c))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the pipe.
