@@ -328,7 +328,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | name                         | string |                                                                                                                                          | false    | true      | false    | <nil>   |
 | resource_monitor             | string | Specifies the name of a resource monitor that is explicitly assigned to the warehouse.                                                   | true     | false     | true     | <nil>   |
 | scaling_policy               | string | Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.      | true     | false     | true     | <nil>   |
-| statement_timeout_in_seconds | int    | Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system                    | true     | false     | false    |    1000 |
+| statement_timeout_in_seconds | int    | Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system                    | true     | false     | false    |       0 |
 | wait_for_provisioning        | bool   | Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries. | true     | false     | false    | <nil>   |
 | warehouse_size               | string |                                                                                                                                          | true     | false     | true     | <nil>   |
 

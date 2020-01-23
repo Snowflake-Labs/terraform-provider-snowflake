@@ -135,7 +135,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"statement_timeout_in_seconds": &schema.Schema{
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     1000,
+		Default:     0,
 		ForceNew:    false,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
