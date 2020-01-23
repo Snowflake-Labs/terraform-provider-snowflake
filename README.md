@@ -114,6 +114,21 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | type           | string | Specifies the type of managed account.                                                                                                         | true     | false     | false    | "READER" |
 | url            | string | URL for accessing the managed account, particularly through the web interface.                                                                 | false    | false     | true     | <nil>    |
 
+### snowflake_pipe
+
+#### properties
+
+|         NAME         |  TYPE  |                                                   DESCRIPTION                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------------|--------|-----------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| auto_ingest          | bool   | Specifies a auto_ingest param for the pipe.                                                                     | true     | false     | false    | false   |
+| comment              | string | Specifies a comment for the pipe.                                                                               | true     | false     | false    | <nil>   |
+| copy_statement       | string | Specifies the copy statement for the pipe.                                                                      | false    | true      | false    | <nil>   |
+| database             | string | The database in which to create the pipe.                                                                       | false    | true      | false    | <nil>   |
+| name                 | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created. | false    | true      | false    | <nil>   |
+| notification_channel | string | Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.                      | false    | false     | true     | <nil>   |
+| owner                | string | Name of the role that owns the pipe.                                                                            | false    | false     | true     | <nil>   |
+| schema               | string | The schema in which to create the pipe.                                                                         | false    | true      | false    | <nil>   |
+
 ### snowflake_resource_monitor
 
 #### properties
@@ -360,10 +375,16 @@ We also run all tests in our [Travis-CI account](https://travis-ci.com/chanzucke
 
 Our CI jobs run the full acceptence test suite, which involves creating and destroying resources in a live snowflake account. Travis-CI is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
 
-If you are making a PR from a forked repo, you can set up Travis to build it by setting these environement variables:
+If you are making a PR from a forked repo, you can create a new Snowflake trial account and set up Travis to build it by setting these environement variables:
 
 * `SNOWFLAKE_ACCOUNT` - The account name
 * `SNOWFLAKE_USER` - A snowflake user for running tests.
 * `SNOWFLAKE_PASSWORD` - Password for that user.
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
 * `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
+
+If you are using the Standard Snowflake plan, it's recommended you also set up the following environment variables to skip tests for features not enabled for it:
+
+* `SKIP_DATABASE_TESTS` - to skip tests with retention time larger than 1 day
+* `SKIP_WAREHOUSE_TESTS` - to skip tests with multi warehouses
+

@@ -1,0 +1,50 @@
+package resources_test
+
+import (
+	"database/sql"
+	"testing"
+
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestPipe(t *testing.T) {
+	r := require.New(t)
+	err := resources.Pipe().InternalValidate(provider.Provider().Schema, true)
+	r.NoError(err)
+}
+
+func TestPipeCreate(t *testing.T) {
+	a := assert.New(t)
+
+	in := map[string]interface{}{
+		"name":     "test_pipe",
+		"database": "test_db",
+		"schema":   "test_schema",
+		"comment":  "great comment",
+	}
+	d := schema.TestResourceDataRaw(t, resources.Pipe().Schema, in)
+	a.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE PIPE "test_db"."test_schema"."test_pipe" COMMENT = 'great comment'$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadPipe(mock)
+		err := resources.CreatePipe(d, db)
+		a.NoError(err)
+	})
+}
+
+func expectReadPipe(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment"},
+	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment")
+	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"$`).WillReturnRows(rows)
+}
