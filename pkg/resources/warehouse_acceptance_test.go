@@ -54,7 +54,7 @@ func TestAccWarehouse(t *testing.T) {
 				ResourceName:            "snowflake_warehouse.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning"},
+				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning", "statement_timeout_in_seconds"},
 			},
 		},
 	})
