@@ -121,6 +121,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 |         NAME         |  TYPE  |                                                   DESCRIPTION                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------------|--------|-----------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
 | auto_ingest          | bool   | Specifies a auto_ingest param for the pipe.                                                                     | true     | false     | false    | false   |
+| aws_sns_topic        | string | Specifies the sns topic that will be associated with the pipes sqs queue.                                       | true     | false     | false    | <nil>   |
 | comment              | string | Specifies a comment for the pipe.                                                                               | true     | false     | false    | <nil>   |
 | copy_statement       | string | Specifies the copy statement for the pipe.                                                                      | false    | true      | false    | <nil>   |
 | database             | string | The database in which to create the pipe.                                                                       | false    | true      | false    | <nil>   |

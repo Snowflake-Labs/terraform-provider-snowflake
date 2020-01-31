@@ -16,11 +16,14 @@ func TestPipeCreate(t *testing.T) {
 	s.WithAutoIngest()
 	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE`)
 
+	s.WithAwsSnsTopic("test-topic")
+	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE AWS_SNS_TOPIC = 'test-topic'`)
+
 	s.WithComment("Yeehaw")
-	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE COMMENT = 'Yeehaw'`)
+	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE AWS_SNS_TOPIC = 'test-topic' COMMENT = 'Yeehaw'`)
 
 	s.WithCopyStatement("test copy statement ")
-	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE COMMENT = 'Yeehaw' AS test copy statement `)
+	a.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE AWS_SNS_TOPIC = 'test-topic' COMMENT = 'Yeehaw' AS test copy statement `)
 }
 
 func TestPipeChangeComment(t *testing.T) {

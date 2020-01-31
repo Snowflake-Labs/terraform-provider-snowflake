@@ -13,6 +13,7 @@ type PipeBuilder struct {
 	autoIngest    bool
 	comment       string
 	copyStatement string
+	awsSnsTopic   string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -39,6 +40,12 @@ func (pb *PipeBuilder) QualifiedName() string {
 // Transient adds the auto_ingest flag to the PipeBuilder
 func (pb *PipeBuilder) WithAutoIngest() *PipeBuilder {
 	pb.autoIngest = true
+	return pb
+}
+
+// WithAwsSnsTopic adds a aws sns topic to the PipeBuilder
+func (pb *PipeBuilder) WithAwsSnsTopic(a string) *PipeBuilder {
+	pb.awsSnsTopic = a
 	return pb
 }
 
@@ -81,7 +88,9 @@ func (pb *PipeBuilder) Create() string {
 	if pb.autoIngest {
 		q.WriteString(` AUTO_INGEST = TRUE`)
 	}
-
+	if pb.awsSnsTopic != "" {
+		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, pb.awsSnsTopic))
+	}
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(pb.comment)))
 	}

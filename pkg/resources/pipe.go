@@ -53,6 +53,11 @@ var pipeSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies a auto_ingest param for the pipe.",
 	},
+	"aws_sns_topic": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the sns topic that will be associated with the pipes sqs queue.",
+	},
 	"notification_channel": &schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -148,6 +153,10 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 		builder.WithAutoIngest()
 	}
 
+	if v, ok := data.GetOk("aws_sns_topic"); ok {
+		builder.WithAwsSnsTopic(v.(string))
+	}
+
 	q := builder.Create()
 
 	err := DBExec(db, q)
@@ -223,6 +232,11 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("auto_ingest", pipeShow.notificationChannel != "")
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("aws_sns_topic", pipeShow.awsSnsTopic)
 	if err != nil {
 		return err
 	}
@@ -320,6 +334,7 @@ type showPipeResult struct {
 	owner               string
 	notificationChannel string
 	comment             string
+	awsSnsTopic					string
 }
 
 func showPipe(db *sql.DB, query string) (showPipeResult, error) {
@@ -334,6 +349,7 @@ func showPipe(db *sql.DB, query string) (showPipeResult, error) {
 		&r.owner,
 		&r.notificationChannel,
 		&r.comment,
+		&r.awsSnsTopic,
 	)
 	if err != nil {
 		return r, err

@@ -27,13 +27,14 @@ func TestPipeCreate(t *testing.T) {
 		"database": "test_db",
 		"schema":   "test_schema",
 		"comment":  "great comment",
+		"aws_sns_topic": "some topic",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Pipe().Schema, in)
 	a.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE PIPE "test_db"."test_schema"."test_pipe" COMMENT = 'great comment'$`,
+			`^CREATE PIPE "test_db"."test_schema"."test_pipe" AWS_SNS_TOPIC = 'some topic' COMMENT = 'great comment'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadPipe(mock)
@@ -44,7 +45,7 @@ func TestPipeCreate(t *testing.T) {
 
 func expectReadPipe(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment"},
-	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment")
+		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment", "aws_sns_topic"},
+	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment", "some topic")
 	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }
