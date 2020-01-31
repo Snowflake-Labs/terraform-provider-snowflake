@@ -45,7 +45,7 @@ func TestPipeCreate(t *testing.T) {
 
 func expectReadPipe(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment", "aws_sns_topic"},
-	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment", "some topic")
+		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment"},
+	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment")
 	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }

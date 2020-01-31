@@ -236,7 +236,7 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("aws_sns_topic", pipeShow.awsSnsTopic)
+	err = data.Set("aws_sns_topic", data.Get("aws_sns_topic"))
 	if err != nil {
 		return err
 	}
@@ -334,7 +334,6 @@ type showPipeResult struct {
 	owner               string
 	notificationChannel string
 	comment             string
-	awsSnsTopic					string
 }
 
 func showPipe(db *sql.DB, query string) (showPipeResult, error) {
@@ -349,7 +348,6 @@ func showPipe(db *sql.DB, query string) (showPipeResult, error) {
 		&r.owner,
 		&r.notificationChannel,
 		&r.comment,
-		&r.awsSnsTopic,
 	)
 	if err != nil {
 		return r, err
