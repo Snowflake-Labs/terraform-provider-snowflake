@@ -56,6 +56,14 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
+func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	a := assert.New(t)
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
