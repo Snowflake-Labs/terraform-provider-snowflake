@@ -59,7 +59,7 @@ type grant struct {
 type grantID struct {
 	ResourceName string
 	SchemaName   string
-	ObjectName  string
+	ObjectName   string
 	Privilege    string
 }
 
@@ -153,7 +153,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	grantResult := &grantID{
 		ResourceName: lines[0][0],
 		SchemaName:   lines[0][1],
-		ObjectName:  lines[0][2],
+		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
 	}
 	return grantResult, nil

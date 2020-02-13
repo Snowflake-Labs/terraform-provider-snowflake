@@ -29,17 +29,17 @@ var databaseSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"from_share": &schema.Schema{
-		Type:        schema.TypeMap,
-		Description: "Specify a provider and a share in this map to create a database from a share.",
-		Optional:    true,
-		ForceNew:    true,
+		Type:          schema.TypeMap,
+		Description:   "Specify a provider and a share in this map to create a database from a share.",
+		Optional:      true,
+		ForceNew:      true,
 		ConflictsWith: []string{"from_database"},
 	},
 	"from_database": &schema.Schema{
-		Type:        schema.TypeString,
-		Description: "Specify a database to create a clone from.",
-		Optional:    true,
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Description:   "Specify a database to create a clone from.",
+		Optional:      true,
+		ForceNew:      true,
 		ConflictsWith: []string{"from_share"},
 	},
 }
@@ -66,7 +66,7 @@ func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
 	if _, ok := data.GetOk("from_share"); ok {
 		return createDatabaseFromShare(data, meta)
 	}
-	
+
 	if _, ok := data.GetOk("from_database"); ok {
 		return createDatabaseFromDatabase(data, meta)
 	}

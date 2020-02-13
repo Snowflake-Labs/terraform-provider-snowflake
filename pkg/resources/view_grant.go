@@ -113,7 +113,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:  viewName,
+		ObjectName:   viewName,
 		Privilege:    priv,
 	}
 	dataIDInput, err := grant.String()
