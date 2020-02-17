@@ -129,9 +129,9 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.StorageIntegration(data.Id()).Show()
 	row := db.QueryRow(stmt)
 
-	var name, integrationType, category, comment, createdOn sql.NullString
+	var name, integrationType, category, createdOn sql.NullString
 	var enabled sql.NullBool
-	err := row.Scan(&name, &integrationType, &category, &enabled, &comment, &createdOn)
+	err := row.Scan(&name, &integrationType, &category, &enabled, &createdOn)
 	if err != nil {
 		return err
 	}
@@ -142,10 +142,6 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("name", name.String)
-	if err != nil {
-		return err
-	}
-	err = data.Set("comment", comment.String)
 	if err != nil {
 		return err
 	}

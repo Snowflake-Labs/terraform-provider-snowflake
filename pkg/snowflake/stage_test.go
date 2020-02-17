@@ -30,6 +30,9 @@ func TestStageCreate(t *testing.T) {
 
 	s.WithComment("Yeehaw")
 	a.Equal(s.Create(), `CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yeehaw'`)
+
+	s.WithStorageIntegration("MY_INTEGRATION")
+	a.Equal(s.Create(), `CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') STORAGE_INTEGRATION = MY_INTEGRATION ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yeehaw'`)
 }
 
 func TestStageRename(t *testing.T) {
@@ -66,6 +69,12 @@ func TestStageChangeCredentials(t *testing.T) {
 	a := assert.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
 	a.Equal(s.ChangeCredentials("aws_role='arn:aws:iam::001234567890:role/mysnowflakerole'"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole')`)
+}
+
+func TestStageChangeStorageIntegration(t *testing.T) {
+	a := assert.New(t)
+	s := Stage("test_stage", "test_db", "test_schema")
+	a.Equal(s.ChangeStorageIntegration("MY_INTEGRATION"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = 'MY_INTEGRATION'`)
 }
 
 func TestStageChangeCopyOptions(t *testing.T) {
