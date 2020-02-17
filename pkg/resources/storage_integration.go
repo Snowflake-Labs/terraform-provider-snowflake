@@ -94,7 +94,7 @@ func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	stmt.SetString(`TYPE`, data.Get("type").(string))
 	stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
 
-	setStorageAllowedLocations(data, stmt)
+	stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(data.Get("storage_allowed_locations").([]interface{})))
 
 	// Set optional fields
 	if v, ok := data.GetOk("comment"); ok {
@@ -102,7 +102,7 @@ func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, ok := data.GetOk("storage_blocked_locations"); ok {
-		setStorageBlockedLocations(data, stmt)
+		stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(data.Get("storage_blocked_locations").([]interface{})))
 	}
 
 	// Now, set the storage provider
@@ -185,11 +185,11 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	}
 
 	if data.HasChange("storage_allowed_locations") {
-		setStorageAllowedLocations(data, stmt)
+		stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(data.Get("storage_allowed_locations").([]interface{})))
 	}
 
 	if data.HasChange("storage_blocked_locations") {
-		setStorageBlockedLocations(data, stmt)
+		stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(data.Get("storage_blocked_locations").([]interface{})))
 	}
 
 	if data.HasChange("storage_provider") {
@@ -232,16 +232,6 @@ func StorageIntegrationExists(data *schema.ResourceData, meta interface{}) (bool
 		return true, nil
 	}
 	return false, nil
-}
-
-func setStorageAllowedLocations(data *schema.ResourceData, stmt snowflake.SettingBuilder) {
-	allowed := expandStringListToStorageLocations(data.Get("storage_allowed_locations").([]interface{}))
-	stmt.SetString("STORAGE_ALLOWED_LOCATIONS", allowed)
-}
-
-func setStorageBlockedLocations(data *schema.ResourceData, stmt snowflake.SettingBuilder) {
-	blocked := expandStringListToStorageLocations(data.Get("storage_blocked_locations").([]interface{}))
-	stmt.SetString(`STORAGE_BLOCKED_LOCATIONS`, blocked)
 }
 
 func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {

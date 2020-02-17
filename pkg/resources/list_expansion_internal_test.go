@@ -18,12 +18,3 @@ func TestExpandStringList(t *testing.T) {
 	r.Equal("a", out[3])
 	r.Equal("test", out[4])
 }
-
-func TestExpandStringListToStorageLocations(t *testing.T) {
-	r := require.New(t)
-
-	in := []interface{}{"this", "is", "just", "a", "test"}
-	out := expandStringListToStorageLocations(in)
-
-	r.Equal("('this', 'is', 'just', 'a', 'test')", out)
-}

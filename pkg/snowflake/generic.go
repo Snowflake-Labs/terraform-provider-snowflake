@@ -1,9 +1,11 @@
 package snowflake
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
+	"text/template"
 )
 
 type EntityType string
@@ -39,33 +41,40 @@ func (b *Builder) Rename(newName string) string {
 // SettingBuilder is an interface for a builder that allows you to set key value pairs
 type SettingBuilder interface {
 	SetString(string, string)
+	SetStringList(string, []string)
 	SetBool(string, bool)
 	SetInt(string, int)
 	SetFloat(string, float64)
 }
 
 type AlterPropertiesBuilder struct {
-	name             string
-	entityType       EntityType
-	stringProperties map[string]string
-	boolProperties   map[string]bool
-	intProperties    map[string]int
-	floatProperties  map[string]float64
+	name                 string
+	entityType           EntityType
+	stringProperties     map[string]string
+	stringListProperties map[string][]string
+	boolProperties       map[string]bool
+	intProperties        map[string]int
+	floatProperties      map[string]float64
 }
 
 func (b *Builder) Alter() *AlterPropertiesBuilder {
 	return &AlterPropertiesBuilder{
-		name:             b.name,
-		entityType:       b.entityType,
-		stringProperties: make(map[string]string),
-		boolProperties:   make(map[string]bool),
-		intProperties:    make(map[string]int),
-		floatProperties:  make(map[string]float64),
+		name:                 b.name,
+		entityType:           b.entityType,
+		stringProperties:     make(map[string]string),
+		stringListProperties: make(map[string][]string),
+		boolProperties:       make(map[string]bool),
+		intProperties:        make(map[string]int),
+		floatProperties:      make(map[string]float64),
 	}
 }
 
 func (ab *AlterPropertiesBuilder) SetString(key, value string) {
 	ab.stringProperties[key] = value
+}
+
+func (ab *AlterPropertiesBuilder) SetStringList(key string, value []string) {
+	ab.stringListProperties[key] = value
 }
 
 func (ab *AlterPropertiesBuilder) SetBool(key string, value bool) {
@@ -88,6 +97,10 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
 	}
 
+	for k, v := range ab.stringListProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
+	}
+
 	for k, v := range ab.boolProperties {
 		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), v))
 	}
@@ -104,27 +117,33 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 }
 
 type CreateBuilder struct {
-	name             string
-	entityType       EntityType
-	stringProperties map[string]string
-	boolProperties   map[string]bool
-	intProperties    map[string]int
-	floatProperties  map[string]float64
+	name                 string
+	entityType           EntityType
+	stringProperties     map[string]string
+	stringListProperties map[string][]string
+	boolProperties       map[string]bool
+	intProperties        map[string]int
+	floatProperties      map[string]float64
 }
 
 func (b *Builder) Create() *CreateBuilder {
 	return &CreateBuilder{
-		name:             b.name,
-		entityType:       b.entityType,
-		stringProperties: make(map[string]string),
-		boolProperties:   make(map[string]bool),
-		intProperties:    make(map[string]int),
-		floatProperties:  make(map[string]float64),
+		name:                 b.name,
+		entityType:           b.entityType,
+		stringProperties:     make(map[string]string),
+		stringListProperties: make(map[string][]string),
+		boolProperties:       make(map[string]bool),
+		intProperties:        make(map[string]int),
+		floatProperties:      make(map[string]float64),
 	}
 }
 
 func (b *CreateBuilder) SetString(key, value string) {
 	b.stringProperties[key] = value
+}
+
+func (b *CreateBuilder) SetStringList(key string, value []string) {
+	b.stringListProperties[key] = value
 }
 
 func (b *CreateBuilder) SetBool(key string, value bool) {
@@ -151,6 +170,15 @@ func (b *CreateBuilder) Statement() string {
 
 	for _, k := range sortedStringProperties {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(b.stringProperties[k])))
+	}
+
+	sortedStringListProperties := make([]string, 0)
+	for k := range b.stringListProperties {
+		sortedStringListProperties = append(sortedStringListProperties, k)
+	}
+
+	for _, k := range sortedStringListProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(b.stringListProperties[k])))
 	}
 
 	sortedBoolProperties := make([]string, 0)
@@ -184,4 +212,20 @@ func (b *CreateBuilder) Statement() string {
 	}
 
 	return sb.String()
+}
+
+func formatStringList(list []string) string {
+	t, err := template.New("StringList").Funcs(template.FuncMap{
+		"escapeString": EscapeString,
+	}).Parse(`({{ range $i, $v := .}}{{ if $i }}, {{ end }}'{{ escapeString $v }}'{{ end }})`)
+	if err != nil {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	if err := t.Execute(&buf, list); err != nil {
+		return ""
+	}
+
+	return buf.String()
 }

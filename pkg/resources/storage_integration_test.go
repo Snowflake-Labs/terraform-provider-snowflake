@@ -34,7 +34,7 @@ func TestStorageIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE STORAGE INTEGRATION "test_storage_integration" COMMENT='great comment'`,
+			`^CREATE STORAGE INTEGRATION "test_storage_integration" COMMENT='great comment' STORAGE_AWS_ROLE_ARN='we-should-probably-validate-this-string' STORAGE_PROVIDER='S3' TYPE='EXTERNAL_STAGE' STORAGE_ALLOWED_LOCATIONS=\('s3://great-bucket/great-path/'\) ENABLED=true$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadStorageIntegration(mock)
 

@@ -1,10 +1,5 @@
 package resources
 
-import (
-	"bytes"
-	"text/template"
-)
-
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
 
 func expandIntList(configured []interface{}) []int {
@@ -26,20 +21,4 @@ func expandStringList(configured []interface{}) []string {
 		}
 	}
 	return vs
-}
-
-func expandStringListToStorageLocations(configured []interface{}) string {
-	list := expandStringList(configured)
-
-	t, err := template.New("StorageLocations").Parse(`({{ range $i, $v := .}}{{ if $i }}, {{ end }}'{{ $v }}'{{ end }})`)
-	if err != nil {
-		return ""
-	}
-	var buf bytes.Buffer
-
-	if err := t.Execute(&buf, list); err != nil {
-		return ""
-	}
-
-	return buf.String()
 }
