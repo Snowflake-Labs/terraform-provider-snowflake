@@ -48,7 +48,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	a := assert.New(t)
 
-	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
+	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES||", map[string]interface{}{
 		"database_name": "test-database",
 		"privilege":     "IMPORTED PRIVILIGES",
 		"roles":         []interface{}{"test-role-1", "test-role-2"},

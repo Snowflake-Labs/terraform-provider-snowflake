@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
+	"strconv"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -67,6 +68,14 @@ var tableGrantSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
 	},
+	"on_all": &schema.Schema{
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all tables or shares in the given schema.  The table_name and shares fields must be unset in order to use on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"table_name", "shares"},
+	},
 }
 
 // TableGrant returns a pointer to the resource representing a Table grant
@@ -95,14 +104,17 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	onFuture := data.Get("on_future").(bool)
+	onAll := data.Get("on_all").(bool)
 
-	if (tableName == "") && !onFuture {
-		return errors.New("table_name must be set unless on_future is true.")
+	if (tableName == "") && !onFuture && !onAll {
+		return errors.New("table_name must be set unless on_future or on_all is true.")
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureTableGrant(dbName, schemaName)
+	} else if onAll {
+		builder = snowflake.OnAllTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
 	}
@@ -116,10 +128,10 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
+		ObjectName:   tableName,
 		Privilege:    priv,
-	}
-	if !onFuture {
-		grantID.ObjectName = tableName
+		OnFuture:     strconv.FormatBool(onFuture),
+		OnAll:        strconv.FormatBool(onAll),
 	}
 
 	dataIDInput, err := grantID.String()
@@ -141,6 +153,8 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	tableName := grantID.ObjectName
 	priv := grantID.Privilege
+	onFuture, err := strconv.ParseBool(grantID.OnFuture)
+	onAll, err := strconv.ParseBool(grantID.OnAll)
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -149,15 +163,15 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	onFuture := false
-	if tableName == "" {
-		onFuture = true
-	}
 	err = data.Set("table_name", tableName)
 	if err != nil {
 		return err
 	}
 	err = data.Set("on_future", onFuture)
+	if err != nil {
+		return err
+	}
+	err = data.Set("on_all", onAll)
 	if err != nil {
 		return err
 	}
@@ -169,11 +183,13 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureTableGrant(dbName, schemaName)
+	} else if onAll {
+		builder = snowflake.OnAllTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
 	}
 
-	return readGenericGrant(data, meta, builder, onFuture, validTablePrivileges)
+	return readGenericGrant(data, meta, builder, onFuture, onAll, validTablePrivileges)
 }
 
 // DeleteTableGrant implements schema.DeleteFunc
@@ -186,14 +202,14 @@ func DeleteTableGrant(data *schema.ResourceData, meta interface{}) error {
 	tableName := grantID.ObjectName
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	onFuture := false
-	if tableName == "" {
-		onFuture = true
-	}
+	onFuture, err := strconv.ParseBool(grantID.OnFuture)
+	onAll, err := strconv.ParseBool(grantID.OnAll)
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureTableGrant(dbName, schemaName)
+	} else if onAll {
+		builder = snowflake.OnAllTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
 	}
