@@ -7,6 +7,7 @@ package snowflake
 //   - ALTER STORAGE INTEGRATION
 //   - DROP INTEGRATION
 //   - SHOW INTEGRATIONS
+//   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-user-security.html#storage-integrations)
 func StorageIntegration(name string) *Builder {

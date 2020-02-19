@@ -18,3 +18,11 @@ func TestExpandStringList(t *testing.T) {
 	r.Equal("a", out[3])
 	r.Equal("test", out[4])
 }
+
+func TestExpandBlankStringList(t *testing.T) {
+	r := require.New(t)
+	in := []interface{}{}
+	out := expandStringList(in)
+
+	r.Equal(len(out), 0)
+}

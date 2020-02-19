@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -49,6 +50,16 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE"}, false),
+	},
+	"storage_aws_external_id": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The external ID that Snowflake will use when assuming the AWS role.",
+	},
+	"storage_aws_iam_user_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
 	"storage_aws_role_arn": &schema.Schema{
 		Type:     schema.TypeString,
@@ -129,11 +140,11 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.StorageIntegration(data.Id()).Show()
 	row := db.QueryRow(stmt)
 
+	// Some properties can come from the SHOW INTEGRATION call
 	var name, integrationType, category, createdOn sql.NullString
 	var enabled sql.NullBool
-	err := row.Scan(&name, &integrationType, &category, &enabled, &createdOn)
-	if err != nil {
-		return err
+	if err := row.Scan(&name, &integrationType, &category, &enabled, &createdOn); err != nil {
+		return fmt.Errorf("Could not show storage integration: %w", err)
 	}
 
 	// Note: category must be STORAGE or something is broken
@@ -141,22 +152,65 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
 	}
 
-	err = data.Set("name", name.String)
-	if err != nil {
+	if err := data.Set("name", name.String); err != nil {
 		return err
 	}
 
-	err = data.Set("type", integrationType.String)
-	if err != nil {
+	if err := data.Set("type", integrationType.String); err != nil {
 		return err
 	}
 
-	err = data.Set("created_on", createdOn.String)
-	if err != nil {
+	if err := data.Set("created_on", createdOn.String); err != nil {
 		return err
 	}
 
-	err = data.Set("enabled", enabled.Bool)
+	if err := data.Set("enabled", enabled.Bool); err != nil {
+		return err
+	}
+
+	// Some properties come from the DESCRIBE INTEGRATION call
+	// We need to grab them in a loop
+	var k, pType string
+	var v, d interface{}
+	stmt = snowflake.StorageIntegration(data.Id()).Describe()
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return fmt.Errorf("Could not describe storage integration: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.Scan(&k, &pType, &v, &d); err != nil {
+			return err
+		}
+		switch k {
+		case "STORAGE_PROVIDER":
+			if err = data.Set("storage_provider", v.(string)); err != nil {
+				return err
+			}
+		case "STORAGE_ALLOWED_LOCATIONS":
+			if err = data.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
+				return err
+			}
+		case "STORAGE_BLOCKED_LOCATIONS":
+			if val := v.(string); val != "" {
+				if err = data.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
+					return err
+				}
+			}
+		case "STORAGE_AWS_IAM_USER_ARN":
+			if err = data.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
+				return err
+			}
+		case "STORAGE_AWS_ROLE_ARN":
+			if err = data.Set("storage_aws_role_arn", v.(string)); err != nil {
+				return err
+			}
+		case "STORAGE_AWS_EXTERNAL_ID":
+			if err = data.Set("storage_aws_external_id", v.(string)); err != nil {
+				return err
+			}
+		}
+	}
 
 	return err
 }
@@ -168,40 +222,66 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 
 	stmt := snowflake.StorageIntegration(id).Alter()
 
+	// This is required in case the only change is to UNSET STORAGE_ALLOWED_LOCATIONS.
+	// Not sure if there is a more elegant way of determining this
+	var runSetStatement bool
+
 	if data.HasChange("comment") {
+		runSetStatement = true
 		stmt.SetString("COMMENT", data.Get("comment").(string))
 	}
 
 	if data.HasChange("type") {
+		runSetStatement = true
 		stmt.SetString("TYPE", data.Get("type").(string))
 	}
 
 	if data.HasChange("enabled") {
+		runSetStatement = true
 		stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
 	}
 
 	if data.HasChange("storage_allowed_locations") {
+		runSetStatement = true
 		stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(data.Get("storage_allowed_locations").([]interface{})))
 	}
 
+	// We need to UNSET this if we remove all storage blocked locations. I don't think
+	// this is documented by Snowflake, but this is how it works.
+	//
+	// @TODO move the SQL back to the snowflake package
+	// @TODO fix it so that we can NOT do the second ALTER statement if this is the only change
 	if data.HasChange("storage_blocked_locations") {
-		stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(data.Get("storage_blocked_locations").([]interface{})))
+		v := data.Get("storage_blocked_locations").([]interface{})
+		if len(v) == 0 {
+			err := DBExec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
+			if err != nil {
+				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
+			}
+		} else {
+			runSetStatement = true
+			stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(v))
+		}
 	}
 
 	if data.HasChange("storage_provider") {
+		runSetStatement = true
 		setStorageProviderSettings(data, stmt)
 	} else {
 		if data.HasChange("storage_aws_role_arn") {
+			runSetStatement = true
 			stmt.SetString("STORAGE_AWS_ROLE_ARN", data.Get("storage_aws_role_arn").(string))
 		}
 		if data.HasChange("azure_tenant_id") {
+			runSetStatement = true
 			stmt.SetString("AZURE_TENANT_ID", data.Get("azure_tenant_id").(string))
 		}
 	}
 
-	err := DBExec(db, stmt.Statement())
-	if err != nil {
-		return fmt.Errorf("error updating storage integration: %w", err)
+	if runSetStatement {
+		if err := DBExec(db, stmt.Statement()); err != nil {
+			return fmt.Errorf("error updating storage integration: %w", err)
+		}
 	}
 
 	return ReadStorageIntegration(data, meta)

@@ -30,6 +30,10 @@ func (b *Builder) Show() string {
 	return fmt.Sprintf(`SHOW %sS LIKE '%s'`, b.entityType, b.name)
 }
 
+func (b *Builder) Describe() string {
+	return fmt.Sprintf(`DESCRIBE %s "%s"`, b.entityType, b.name)
+}
+
 func (b *Builder) Drop() string {
 	return fmt.Sprintf(`DROP %s "%s"`, b.entityType, b.name)
 }
