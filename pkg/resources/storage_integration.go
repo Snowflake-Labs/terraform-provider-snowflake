@@ -250,7 +250,6 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	// this is documented by Snowflake, but this is how it works.
 	//
 	// @TODO move the SQL back to the snowflake package
-	// @TODO fix it so that we can NOT do the second ALTER statement if this is the only change
 	if data.HasChange("storage_blocked_locations") {
 		v := data.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
