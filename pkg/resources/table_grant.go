@@ -9,6 +9,7 @@ import (
 )
 
 var validTablePrivileges = newPrivilegeSet(
+	privilegeAll,
 	privilegeSelect,
 	privilegeInsert,
 	privilegeUpdate,
