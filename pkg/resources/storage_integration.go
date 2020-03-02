@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -40,10 +41,10 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Description: "Explicitly limits external stages that use the integration to reference one or more storage locations.",
 	},
 	"storage_blocked_locations": &schema.Schema{
-		Type:     schema.TypeList,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Optional: true,
-		Description: "Explicitly prohibits external stages that use the integration from referencing one or more storage locations	.",
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Explicitly prohibits external stages that use the integration from referencing one or more storage locations.",
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"storage_provider": &schema.Schema{
@@ -183,6 +184,8 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		switch k {
+		case "ENABLED":
+			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "STORAGE_PROVIDER":
 			if err = data.Set("storage_provider", v.(string)); err != nil {
 				return err
@@ -209,6 +212,8 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 			if err = data.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
+		default:
+			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
 		}
 	}
 
@@ -326,6 +331,10 @@ func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.Settin
 			return fmt.Errorf("If you use the Azure storage provider you must specify an azure_tenant_id")
 		}
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
+	case "GCS":
+		// nothing to set here
+	default:
+		return fmt.Errorf("Unexpected provider %v", storageProvider)
 	}
 
 	return nil
