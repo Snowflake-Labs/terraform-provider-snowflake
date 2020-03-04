@@ -74,7 +74,7 @@ func TestStageChangeCredentials(t *testing.T) {
 func TestStageChangeStorageIntegration(t *testing.T) {
 	a := assert.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
-	a.Equal(s.ChangeStorageIntegration("MY_INTEGRATION"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = 'MY_INTEGRATION'`)
+	a.Equal(s.ChangeStorageIntegration("MY_INTEGRATION"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = MY_INTEGRATION`)
 }
 
 func TestStageChangeCopyOptions(t *testing.T) {
