@@ -36,6 +36,7 @@ const (
 	privilegeCreateProcedure        privilege = "CREATE PROCEDURE"
 	privilegeCreateExternalTable    privilege = "CREATE EXTERNAL TABLE"
 	privilegeCreateMaterializedView privilege = "CREATE MATERIALIZED VIEW"
+	privilegeCreateTemporaryTable   privilege = "CREATE TEMPORARY TABLE"
 )
 
 type privilegeSet map[privilege]struct{}
