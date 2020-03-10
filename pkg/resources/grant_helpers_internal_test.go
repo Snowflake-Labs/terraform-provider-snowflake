@@ -62,7 +62,7 @@ func TestGrantStruct(t *testing.T) {
 	grant := &grantID{
 		ResourceName: "database_name",
 		SchemaName:   "schema",
-		ObjectName:  "view_name",
+		ObjectName:   "view_name",
 		Privilege:    "priv",
 	}
 	gID, err := grant.String()
@@ -79,7 +79,7 @@ func TestGrantStruct(t *testing.T) {
 	grant = &grantID{
 		ResourceName: "database|name",
 		SchemaName:   "schema|name",
-		ObjectName:  "view|name",
+		ObjectName:   "view|name",
 		Privilege:    "priv",
 	}
 	gID, err = grant.String()

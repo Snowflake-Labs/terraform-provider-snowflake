@@ -67,7 +67,6 @@ func StageGrant(db, schema, stage string) GrantBuilder {
 	}
 }
 
-
 // ViewGrant returns a pointer to a CurrentGrantBuilder for a view
 func ViewGrant(db, schema, view string) GrantBuilder {
 	return &CurrentGrantBuilder{
