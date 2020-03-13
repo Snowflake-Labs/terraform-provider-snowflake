@@ -186,13 +186,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database containing the schema on which to grant privileges.                                                                  | false    | true      | false    | <nil>   |
-| privilege     | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
-| schema_name   | string | The name of the schema on which to grant privileges.                                                                                          | false    | true      | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                                                                                                             | true     | false     | false    | <nil>   |
+|     NAME      |  TYPE  |                                                                             DESCRIPTION                                                                             | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name | string | The name of the database containing the current or future schema on which to grant privileges.                                                                      | false    | true      | false    | <nil>   |
+| on_future     | bool   | When this is set to true, apply this grant on all future schemas in the given database.  The schema_name and shares fields must be unset in order to use on_future. | true     | false     | false    | false   |
+| privilege     | string | The privilege to grant on the current or future schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.     | true     | false     | false    | "USAGE" |
+| roles         | set    | Grants privilege to these roles.                                                                                                                                    | true     | false     | false    | <nil>   |
+| schema_name   | string | The name of the schema on which to grant privileges (only valid if on_future is unset).                                                                             | true     | false     | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                                | true     | false     | false    | <nil>   |
 
 ### snowflake_share
 
