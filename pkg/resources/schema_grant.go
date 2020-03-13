@@ -76,7 +76,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
+// SchemaGrant returns a pointer to the resource representing a schema grant
 func SchemaGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSchemaGrant,
