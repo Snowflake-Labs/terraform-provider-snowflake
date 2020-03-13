@@ -124,6 +124,7 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		Privilege:    priv,
 	}
 	if !onFuture {
+		grantID.SchemaName = schemaName
 		grantID.ObjectName = schemaName
 	}
 
