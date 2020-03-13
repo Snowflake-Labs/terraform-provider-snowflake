@@ -3,6 +3,7 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -33,20 +34,20 @@ var validSchemaPrivileges = newPrivilegeSet(
 var schemaGrantSchema = map[string]*schema.Schema{
 	"schema_name": &schema.Schema{
 		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the schema on which to grant privileges.",
+		Optional:    true,
+		Description: "The name of the schema on which to grant privileges (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
 	"database_name": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The name of the database containing the schema on which to grant privileges.",
+		Description: "The name of the database containing the current or future schema on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"privilege": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the schema.  Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
+		Description:  "The privilege to grant on the current or future schema.  Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.toList(), true),
 		ForceNew:     true,
@@ -62,8 +63,16 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
+	},
+	"on_future": &schema.Schema{
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all future schemas in the given database.  The schema_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"schema_name", "shares"},
 	},
 }
 
@@ -83,10 +92,27 @@ func SchemaGrant() *schema.Resource {
 
 // CreateSchemaGrant implements schema.CreateFunc
 func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	schema := data.Get("schema_name").(string)
-	db := data.Get("database_name").(string)
+	var schemaName string
+	if _, ok := data.GetOk("schema_name"); ok {
+		schemaName = data.Get("schema_name").(string)
+	} else {
+		schemaName = ""
+	}
+
+	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
-	builder := snowflake.SchemaGrant(db, schema)
+	onFuture := data.Get("on_future").(bool)
+
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
+
+	var builder snowflake.GrantBuilder
+	if onFuture {
+		builder = snowflake.FutureSchemaGrant(dbName)
+	} else {
+		builder = snowflake.SchemaGrant(dbName, schemaName)
+	}
 
 	err := createGenericGrant(data, meta, builder)
 	if err != nil {
@@ -94,10 +120,13 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	grantID := &grantID{
-		ResourceName: db,
-		SchemaName:   schema,
+		ResourceName: dbName,
 		Privilege:    priv,
 	}
+	if !onFuture {
+		grantID.ObjectName = schemaName
+	}
+
 	dataIDInput, err := grantID.String()
 	if err != nil {
 		return err
@@ -113,11 +142,21 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = data.Set("database_name", grantID.ResourceName)
+
+	dbName := grantID.ResourceName
+	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", grantID.SchemaName)
+
+	schemaName := grantID.SchemaName
+	onFuture := schemaName == ""
+
+	err = data.Set("schema_name", schemaName)
+	if err != nil {
+		return err
+	}
+	err = data.Set("on_future", onFuture)
 	if err != nil {
 		return err
 	}
@@ -126,9 +165,14 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
+	var builder snowflake.GrantBuilder
+	if onFuture {
+		builder = snowflake.FutureSchemaGrant(dbName)
+	} else {
+		builder = snowflake.SchemaGrant(dbName, schemaName)
+	}
 
-	return readGenericGrant(data, meta, builder, false, validSchemaPrivileges)
+	return readGenericGrant(data, meta, builder, onFuture, validSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc
@@ -138,7 +182,17 @@ func DeleteSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.SchemaGrant(grantID.ResourceName, grantID.SchemaName)
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+
+	onFuture := schemaName == ""
+
+	var builder snowflake.GrantBuilder
+	if onFuture {
+		builder = snowflake.FutureSchemaGrant(dbName)
+	} else {
+		builder = snowflake.SchemaGrant(dbName, schemaName)
+	}
 
 	return deleteGenericGrant(data, meta, builder)
 }
