@@ -7,6 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestFutureSchemaGrant(t *testing.T) {
+	a := assert.New(t)
+	fsg := snowflake.FutureSchemaGrant("test_db")
+	a.Equal(fsg.Name(), "test_db")
+
+	s := fsg.Show()
+	a.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+
+	s = fsg.Role("bob").Grant("USAGE")
+	a.Equal(`GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" TO ROLE "bob"`, s)
+
+	s = fsg.Role("bob").Revoke("USAGE")
+	a.Equal(`REVOKE USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+}
+
 func TestFutureTableGrant(t *testing.T) {
 	a := assert.New(t)
 	fvg := snowflake.FutureTableGrant("test_db", "PUBLIC")

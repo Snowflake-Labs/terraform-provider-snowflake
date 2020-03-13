@@ -5,11 +5,25 @@ import (
 )
 
 type futureGrantType string
+type containerType string
 
 const (
 	futureTableType futureGrantType = "TABLE"
 	futureViewType  futureGrantType = "VIEW"
+	futureSchemaType futureGrantType = "SCHEMA"
+
+	databaseContainer containerType = "DATABASE"
+	schemaContainer containerType = "SCHEMA"
 )
+
+func (fgt futureGrantType) ResourceContainer() containerType {
+  if fgt == futureSchemaType {
+    return databaseContainer
+  }
+
+  return schemaContainer
+}
+
 
 // FutureGrantBuilder abstracts the creation of FutureGrantExecutables
 type FutureGrantBuilder struct {
@@ -21,6 +35,15 @@ type FutureGrantBuilder struct {
 // Name returns the object name for this FutureGrantBuilder
 func (fgb *FutureGrantBuilder) Name() string {
 	return fgb.name
+}
+
+// FutureSchemaGrant returns a pointer to a FutureGrantBuilder for a schema
+func FutureSchemaGrant(db string) GrantBuilder {
+	return &FutureGrantBuilder{
+		name:            db,
+		qualifiedName:   fmt.Sprintf(`"%v"`, db),
+		futureGrantType: futureSchemaType,
+	}
 }
 
 // FutureTableGrant returns a pointer to a FutureGrantBuilder for a table
@@ -43,7 +66,8 @@ func FutureViewGrant(db, schema string) GrantBuilder {
 
 // Show returns the SQL that will show all privileges on the grant
 func (fgb *FutureGrantBuilder) Show() string {
-	return fmt.Sprintf(`SHOW FUTURE GRANTS IN SCHEMA %v`, fgb.qualifiedName)
+	return fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`,
+	    fgb.futureGrantType.ResourceContainer(), fgb.qualifiedName)
 }
 
 // FutureGrantExecutable abstracts the creation of SQL queries to build future grants for
@@ -70,17 +94,18 @@ func (gb *FutureGrantBuilder) Share(n string) GrantExecutable {
 
 // Grant returns the SQL that will grant future privileges on the grant to the grantee
 func (fge *FutureGrantExecutable) Grant(p string) string {
-	return fmt.Sprintf(`GRANT %v ON FUTURE %vS IN SCHEMA %v TO ROLE "%v"`,
-		p, fge.futureGrantType, fge.grantName, fge.granteeName)
+	return fmt.Sprintf(`GRANT %v ON FUTURE %vS IN %v %v TO ROLE "%v"`,
+		p, fge.futureGrantType, fge.futureGrantType.ResourceContainer(),
+		fge.grantName, fge.granteeName)
 }
 
 // Revoke returns the SQL that will revoke future privileges on the grant from the grantee
 func (fge *FutureGrantExecutable) Revoke(p string) string {
-	return fmt.Sprintf(`REVOKE %v ON FUTURE %vS IN SCHEMA %v FROM ROLE "%v"`,
-		p, fge.futureGrantType, fge.grantName, fge.granteeName)
+	return fmt.Sprintf(`REVOKE %v ON FUTURE %vS IN %v %v FROM ROLE "%v"`,
+		p, fge.futureGrantType, fge.futureGrantType.ResourceContainer(), fge.grantName, fge.granteeName)
 }
 
 // Show returns the SQL that will show all future grants on the schema
 func (fge *FutureGrantExecutable) Show() string {
-	return fmt.Sprintf(`SHOW FUTURE GRANTS IN SCHEMA %v`, fge.grantName)
+	return fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`, fge.futureGrantType.ResourceContainer(), fge.grantName)
 }
