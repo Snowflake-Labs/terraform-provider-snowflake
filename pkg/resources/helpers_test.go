@@ -28,6 +28,14 @@ func databaseGrant(t *testing.T, id string, params map[string]interface{}) *sche
 	return d
 }
 
+func accountGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func fixture(name string) (string, error) {
 	b, err := ioutil.ReadFile(filepath.Join("testdata", name))
 	return string(b), err
