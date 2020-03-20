@@ -11,9 +11,10 @@ var validIntegrationPrivileges = newPrivilegeSet(
 	privilegeUsage,
 )
 var integrationGrantSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"integration_name": &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
+		Description: "Identifier for the integration; must be unique for your account.",
 		ForceNew: true,
 	},
 	"privilege": &schema.Schema{
@@ -46,7 +47,7 @@ func IntegrationGrant() *schema.Resource {
 
 // CreateIntegrationGrant implements schema.CreateFunc
 func CreateIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
-	w := data.Get("name").(string)
+	w := data.Get("integration_name").(string)
 	priv := data.Get("privilege").(string)
 	builder := snowflake.IntegrationGrant(w)
 
@@ -77,7 +78,7 @@ func ReadIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
 	w := grantID.ResourceName
 	priv := grantID.Privilege
 
-	err = data.Set("name", w)
+	err = data.Set("integration_name", w)
 	if err != nil {
 		return err
 	}

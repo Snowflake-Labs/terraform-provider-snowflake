@@ -13,7 +13,7 @@ var validResourceMonitorPrivileges = newPrivilegeSet(
 )
 
 var resourceMonitorGrantSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"monitor_name": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the resource monitor; must be unique for your account.",
@@ -49,7 +49,7 @@ func ResourceMonitorGrant() *schema.Resource {
 
 // CreateResourceMonitorGrant implements schema.CreateFunc
 func CreateResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error {
-	w := data.Get("name").(string)
+	w := data.Get("monitor_name").(string)
 	priv := data.Get("privilege").(string)
 	builder := snowflake.ResourceMonitorGrant(w)
 
