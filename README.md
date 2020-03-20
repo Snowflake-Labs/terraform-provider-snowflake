@@ -78,10 +78,10 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|   NAME    |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|-----------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| privilege | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
-| roles     | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
+|   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------|--------|---------------------------------------|----------|-----------|----------|---------|
+| privilege | string | The privilege to grant on the schema. | true     | false     | false    | "USAGE" |
+| roles     | set    | Grants privilege to these roles.      | true     | false     | false    | <nil>   |
 
 ### snowflake_database
 
@@ -122,11 +122,11 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|       NAME       |  TYPE  |                DESCRIPTION                 | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|------------------|--------|--------------------------------------------|----------|-----------|----------|---------|
-| integration_name | string |                                            | false    | true      | false    | <nil>   |
-| privilege        | string | The privilege to grant on the integration. | true     | false     | false    | "USAGE" |
-| roles            | set    | Grants privilege to these roles.           | true     | false     | false    | <nil>   |
+|       NAME       |  TYPE  |                           DESCRIPTION                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|------------------|--------|------------------------------------------------------------------|----------|-----------|----------|---------|
+| integration_name | string | Identifier for the integration; must be unique for your account. | false    | true      | false    | <nil>   |
+| privilege        | string | The privilege to grant on the integration.                       | true     | false     | false    | "USAGE" |
+| roles            | set    | Grants privilege to these roles.                                 | true     | false     | false    | <nil>   |
 
 ### snowflake_managed_account
 
