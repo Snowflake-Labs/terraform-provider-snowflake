@@ -9,6 +9,7 @@ import (
 var validIntegrationPrivileges = newPrivilegeSet(
 	privilegeAll,
 	privilegeUsage,
+	privilegeOwnership,
 )
 var integrationGrantSchema = map[string]*schema.Schema{
 	"integration_name": &schema.Schema{
