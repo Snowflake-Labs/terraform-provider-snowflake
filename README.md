@@ -68,6 +68,21 @@ You can see a number of examples [here](examples).
 
 <!-- START -->
 
+### snowflake_account_grant
+
+**Note**: The snowflake_account_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the accounts to which a single grant is attached must be declared
+by a single snowflake_account_grant resource. This means that even any snowflake_account that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+
+#### properties
+
+|   NAME    |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-----------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| privilege | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
+| roles     | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
+
 ### snowflake_database
 
 #### properties
@@ -96,6 +111,22 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | privilege     | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
 | roles         | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
 | shares        | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+
+### snowflake_integration_grant
+
+**Note**: The snowflake_integration_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the integrations to which a single grant is attached must be declared
+by a single snowflake_integration_grant resource. This means that even any snowflake_integration that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+
+#### properties
+
+|       NAME       |  TYPE  |                DESCRIPTION                 | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|------------------|--------|--------------------------------------------|----------|-----------|----------|---------|
+| integration_name | string |                                            | false    | true      | false    | <nil>   |
+| privilege        | string | The privilege to grant on the integration. | true     | false     | false    | "USAGE" |
+| roles            | set    | Grants privilege to these roles.           | true     | false     | false    | <nil>   |
 
 ### snowflake_managed_account
 
@@ -143,6 +174,22 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | start_timestamp            | string | The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.                                         | true     | false     | true     | <nil>   |
 | suspend_immediate_triggers | set    | A list of percentage thresholds at which to immediately suspend all warehouses.                                                                 | true     | false     | false    | <nil>   |
 | suspend_triggers           | set    | A list of percentage thresholds at which to suspend all warehouses.                                                                             | true     | false     | false    | <nil>   |
+
+### snowflake_resource_monitor_grant
+
+**Note**: The snowflake_resource_monitor_grant resource creates exclusive attachments of grants.
+Across the entire Snowflake account, all of the resource_monitors to which a single grant is attached must be declared
+by a single snowflake_resource_monitor_grant resource. This means that even any snowflake_resource_monitor that have the attached
+grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
+These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
+
+#### properties
+
+|     NAME     |  TYPE  |                              DESCRIPTION                              | OPTIONAL | REQUIRED  | COMPUTED |  DEFAULT  |
+|--------------|--------|-----------------------------------------------------------------------|----------|-----------|----------|-----------|
+| monitor_name | string | Identifier for the resource monitor; must be unique for your account. | false    | true      | false    | <nil>     |
+| privilege    | string | The privilege to grant on the resource monitor.                       | true     | false     | false    | "MONITOR" |
+| roles        | set    | Grants privilege to these roles.                                      | true     | false     | false    | <nil>     |
 
 ### snowflake_role
 
