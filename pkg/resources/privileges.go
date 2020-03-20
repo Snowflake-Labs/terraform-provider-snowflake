@@ -38,13 +38,13 @@ const (
 	privilegeCreateMaterializedView privilege = "CREATE MATERIALIZED VIEW"
 	privilegeCreateTemporaryTable   privilege = "CREATE TEMPORARY TABLE"
 
-	privilegeCreateRole privilege =  "CREATE ROLE"
-	privilegeCreateUser privilege =  "CREATE USER"
-	privilegeCreateWarehouse privilege = "CREATE WAREHOUSE"
-	privilegeCreateDatabase privilege =  "CREATE DATABASE"
-	privilegeCreateIntegration privilege =  "CREATE INTEGRATION"
-	privilegeManageGrants privilege =  "MANAGE GRANTS"
-	privilegeMonitorUsage privilege =  "MONITOR USAGE"
+	privilegeCreateRole        privilege = "CREATE ROLE"
+	privilegeCreateUser        privilege = "CREATE USER"
+	privilegeCreateWarehouse   privilege = "CREATE WAREHOUSE"
+	privilegeCreateDatabase    privilege = "CREATE DATABASE"
+	privilegeCreateIntegration privilege = "CREATE INTEGRATION"
+	privilegeManageGrants      privilege = "MANAGE GRANTS"
+	privilegeMonitorUsage      privilege = "MONITOR USAGE"
 )
 
 type privilegeSet map[privilege]struct{}

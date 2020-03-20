@@ -7,10 +7,10 @@ import (
 type grantType string
 
 const (
-	accountType   grantType = "ACCOUNT"
+	accountType grantType = "ACCOUNT"
 
 	resourceMonitorType grantType = "RESOURCE MONITOR"
-	integrationType grantType = "INTEGRATION"
+	integrationType     grantType = "INTEGRATION"
 
 	databaseType  grantType = "DATABASE"
 	schemaType    grantType = "SCHEMA"
@@ -48,7 +48,7 @@ func (gb *CurrentGrantBuilder) Name() string {
 // AccountGrant returns a pointer to a CurrentGrantBuilder for an account
 func AccountGrant() GrantBuilder {
 	return &CurrentGrantBuilder{
-		grantType:     accountType,
+		grantType: accountType,
 	}
 }
 

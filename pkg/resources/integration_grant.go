@@ -12,10 +12,10 @@ var validIntegrationPrivileges = newPrivilegeSet(
 )
 var integrationGrantSchema = map[string]*schema.Schema{
 	"integration_name": &schema.Schema{
-		Type:     schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
 		Description: "Identifier for the integration; must be unique for your account.",
-		ForceNew: true,
+		ForceNew:    true,
 	},
 	"privilege": &schema.Schema{
 		Type:         schema.TypeString,
