@@ -33,13 +33,6 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	//"with_grant_option": &schema.Schema{
-		//Type:          schema.TypeBool,
-		//Optional:      true,
-		//Description:   "If specified, allows the recipient role to grant the privileges to other roles.",
-		//Default:       false,
-		//ForceNew:      true,
-	//},
 }
 
 // ViewGrant returns a pointer to the resource representing a view grant
