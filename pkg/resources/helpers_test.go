@@ -28,6 +28,22 @@ func databaseGrant(t *testing.T, id string, params map[string]interface{}) *sche
 	return d
 }
 
+func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func integrationGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	a := assert.New(t)
+	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Schema, params)
+	a.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func accountGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	a := assert.New(t)
 	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, params)

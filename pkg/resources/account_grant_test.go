@@ -26,8 +26,8 @@ func TestAccountGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"privilege":     "CREATE DATABASE",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"privilege": "CREATE DATABASE",
+		"roles":     []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, in)
 	a.NotNil(d)
@@ -45,8 +45,8 @@ func TestAccountGrantRead(t *testing.T) {
 	a := assert.New(t)
 
 	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS", map[string]interface{}{
-		"privilege":     "MANAGE GRANTS",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"privilege": "MANAGE GRANTS",
+		"roles":     []interface{}{"test-role-1", "test-role-2"},
 	})
 
 	a.NotNil(d)
@@ -68,4 +68,3 @@ func expectReadAccountGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON ACCOUNT$`).WillReturnRows(rows)
 }
-
