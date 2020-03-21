@@ -7,15 +7,16 @@ import (
 
 // StageBuilder abstracts the creation of SQL queries for a Snowflake stage
 type StageBuilder struct {
-	name        string
-	db          string
-	schema      string
-	url         string
-	credentials string
-	encryption  string
-	fileFormat  string
-	copyOptions string
-	comment     string
+	name               string
+	db                 string
+	schema             string
+	url                string
+	credentials        string
+	storageIntegration string
+	encryption         string
+	fileFormat         string
+	copyOptions        string
+	comment            string
 }
 
 // QualifiedName prepends the db and schema and escapes everything nicely
@@ -36,6 +37,12 @@ func (sb *StageBuilder) WithURL(u string) *StageBuilder {
 // WithCredentials adds credentials to the StageBuilder
 func (sb *StageBuilder) WithCredentials(c string) *StageBuilder {
 	sb.credentials = c
+	return sb
+}
+
+// WithStorageIntegration adds a storage integration to the StageBuilder
+func (sb *StageBuilder) WithStorageIntegration(s string) *StageBuilder {
+	sb.storageIntegration = s
 	return sb
 }
 
@@ -96,6 +103,10 @@ func (sb *StageBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` CREDENTIALS = (%v)`, sb.credentials))
 	}
 
+	if sb.storageIntegration != "" {
+		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = %v`, sb.storageIntegration))
+	}
+
 	if sb.encryption != "" {
 		q.WriteString(fmt.Sprintf(` ENCRYPTION = (%v)`, sb.encryption))
 	}
@@ -138,6 +149,11 @@ func (sb *StageBuilder) ChangeURL(u string) string {
 // ChangeCredentials returns the SQL query that will update the credentials on the stage.
 func (sb *StageBuilder) ChangeCredentials(c string) string {
 	return fmt.Sprintf(`ALTER STAGE %v SET CREDENTIALS = (%v)`, sb.QualifiedName(), c)
+}
+
+// ChangeStorageIntegration returns the SQL query that will update the storage integration on the stage.
+func (sb *StageBuilder) ChangeStorageIntegration(s string) string {
+	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = %v`, sb.QualifiedName(), s)
 }
 
 // ChangeEncryption returns the SQL query that will update the encryption on the stage.

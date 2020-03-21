@@ -45,6 +45,11 @@ var stageSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the credentials for the stage.",
 	},
+	"storage_integration": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.",
+	},
 	"file_format": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -157,6 +162,10 @@ func CreateStage(data *schema.ResourceData, meta interface{}) error {
 		builder.WithCredentials(v.(string))
 	}
 
+	if v, ok := data.GetOk("storage_integration"); ok {
+		builder.WithStorageIntegration(v.(string))
+	}
+
 	if v, ok := data.GetOk("file_format"); ok {
 		builder.WithFileFormat(v.(string))
 	}
@@ -249,6 +258,11 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = data.Set("storage_integration", stageShow.storageIntegration)
+	if err != nil {
+		return err
+	}
+
 	err = data.Set("comment", stageShow.comment)
 	if err != nil {
 		return err
@@ -305,6 +319,18 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 
 		data.SetPartial("credentials")
 	}
+
+	if data.HasChange("storage_integration") {
+		_, si := data.GetChange("storage_integration")
+		q := builder.ChangeStorageIntegration(si.(string))
+		err := DBExec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating stage storage integration on %v", data.Id())
+		}
+
+		data.SetPartial("storage_integration")
+	}
+
 	if data.HasChange("encryption") {
 		_, encryption := data.GetChange("encryption")
 		q := builder.ChangeEncryption(encryption.(string))

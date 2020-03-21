@@ -21,6 +21,9 @@ func TestDatabaseGrant(t *testing.T) {
 	s = dg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON DATABASE "testDB" FROM ROLE "bob"`, s)
 
+	s = dg.Role("bob").Grant("OWNERSHIP")
+	a.Equal(`GRANT OWNERSHIP ON DATABASE "testDB" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+
 	s = dg.Share("bob").Grant("USAGE")
 	a.Equal(`GRANT USAGE ON DATABASE "testDB" TO SHARE "bob"`, s)
 
@@ -47,6 +50,9 @@ func TestSchemaGrant(t *testing.T) {
 
 	s = sg.Share("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON SCHEMA "test_db"."testSchema" FROM SHARE "bob"`, s)
+
+	s = sg.Role("bob").Grant("OWNERSHIP")
+	a.Equal(`GRANT OWNERSHIP ON SCHEMA "test_db"."testSchema" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
 func TestViewGrant(t *testing.T) {
@@ -68,6 +74,9 @@ func TestViewGrant(t *testing.T) {
 
 	s = vg.Share("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP")
+	a.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
 func TestWarehouseGrant(t *testing.T) {
@@ -83,6 +92,10 @@ func TestWarehouseGrant(t *testing.T) {
 
 	s = wg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON WAREHOUSE "test_warehouse" FROM ROLE "bob"`, s)
+
+	s = wg.Role("bob").Grant("OWNERSHIP")
+	a.Equal(`GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+
 }
 
 func TestShowGrantsOf(t *testing.T) {

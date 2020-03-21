@@ -208,19 +208,20 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|        NAME        |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|--------------------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| aws_external_id    | string |                                                                                                                   | true     | false     | true     | <nil>   |
-| comment            | string | Specifies a comment for the stage.                                                                                | true     | false     | false    | <nil>   |
-| copy_options       | string | Specifies the copy options for the stage.                                                                         | true     | false     | false    | <nil>   |
-| credentials        | string | Specifies the credentials for the stage.                                                                          | true     | false     | false    | <nil>   |
-| database           | string | The database in which to create the stage.                                                                        | false    | true      | false    | <nil>   |
-| encryption         | string | Specifies the encryption settings for the stage.                                                                  | true     | false     | false    | <nil>   |
-| file_format        | string | Specifies the file format for the stage.                                                                          | true     | false     | false    | <nil>   |
-| name               | string | Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created. | false    | true      | false    | <nil>   |
-| schema             | string | The schema in which to create the stage.                                                                          | false    | true      | false    | <nil>   |
-| snowflake_iam_user | string |                                                                                                                   | true     | false     | true     | <nil>   |
-| url                | string | Specifies the URL for the stage.                                                                                  | true     | false     | false    | <nil>   |
+|        NAME         |  TYPE  |                                                                                     DESCRIPTION                                                                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| aws_external_id     | string |                                                                                                                                                                                     | true     | false     | true     | <nil>   |
+| comment             | string | Specifies a comment for the stage.                                                                                                                                                  | true     | false     | false    | <nil>   |
+| copy_options        | string | Specifies the copy options for the stage.                                                                                                                                           | true     | false     | false    | <nil>   |
+| credentials         | string | Specifies the credentials for the stage.                                                                                                                                            | true     | false     | false    | <nil>   |
+| database            | string | The database in which to create the stage.                                                                                                                                          | false    | true      | false    | <nil>   |
+| encryption          | string | Specifies the encryption settings for the stage.                                                                                                                                    | true     | false     | false    | <nil>   |
+| file_format         | string | Specifies the file format for the stage.                                                                                                                                            | true     | false     | false    | <nil>   |
+| name                | string | Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created.                                                                   | false    | true      | false    | <nil>   |
+| schema              | string | The schema in which to create the stage.                                                                                                                                            | false    | true      | false    | <nil>   |
+| snowflake_iam_user  | string |                                                                                                                                                                                     | true     | false     | true     | <nil>   |
+| storage_integration | string | Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity. | true     | false     | false    | <nil>   |
+| url                 | string | Specifies the URL for the stage.                                                                                                                                                    | true     | false     | false    | <nil>   |
 
 ### snowflake_stage_grant
 
@@ -240,6 +241,25 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
 | shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
 | stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
+
+### snowflake_storage_integration
+
+#### properties
+
+|           NAME            |  TYPE  |                                                  DESCRIPTION                                                  | OPTIONAL | REQUIRED  | COMPUTED |     DEFAULT      |
+|---------------------------|--------|---------------------------------------------------------------------------------------------------------------|----------|-----------|----------|------------------|
+| azure_tenant_id           | string |                                                                                                               | true     | false     | false    | ""               |
+| comment                   | string |                                                                                                               | true     | false     | false    | ""               |
+| created_on                | string | Date and time when the storage integration was created.                                                       | false    | false     | true     | <nil>            |
+| enabled                   | bool   |                                                                                                               | true     | false     | false    | true             |
+| name                      | string |                                                                                                               | false    | true      | false    | <nil>            |
+| storage_allowed_locations | list   | Explicitly limits external stages that use the integration to reference one or more storage locations.        | false    | true      | false    | <nil>            |
+| storage_aws_external_id   | string | The external ID that Snowflake will use when assuming the AWS role.                                           | false    | false     | true     | <nil>            |
+| storage_aws_iam_user_arn  | string | The Snowflake user that will attempt to assume the AWS role.                                                  | false    | false     | true     | <nil>            |
+| storage_aws_role_arn      | string |                                                                                                               | true     | false     | false    | ""               |
+| storage_blocked_locations | list   | Explicitly prohibits external stages that use the integration from referencing one or more storage locations. | true     | false     | false    | <nil>            |
+| storage_provider          | string |                                                                                                               | false    | true      | false    | <nil>            |
+| type                      | string |                                                                                                               | true     | false     | false    | "EXTERNAL_STAGE" |
 
 ### snowflake_table_grant
 

@@ -67,7 +67,6 @@ func StageGrant(db, schema, stage string) GrantBuilder {
 	}
 }
 
-
 // ViewGrant returns a pointer to a CurrentGrantBuilder for a view
 func ViewGrant(db, schema, view string) GrantBuilder {
 	return &CurrentGrantBuilder{
@@ -139,7 +138,13 @@ func (gb *CurrentGrantBuilder) Share(n string) GrantExecutable {
 
 // Grant returns the SQL that will grant privileges on the grant to the grantee
 func (ge *CurrentGrantExecutable) Grant(p string) string {
-	return fmt.Sprintf(`GRANT %v ON %v %v TO %v "%v"`,
+	var template string
+	if p == `OWNERSHIP` {
+		template = `GRANT %v ON %v %v TO %v "%v" COPY CURRENT GRANTS`
+	} else {
+		template = `GRANT %v ON %v %v TO %v "%v"`
+	}
+	return fmt.Sprintf(template,
 		p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName)
 }
 

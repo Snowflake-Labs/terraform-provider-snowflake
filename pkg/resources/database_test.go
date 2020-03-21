@@ -94,7 +94,7 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"name": "good_name",
+		"name":          "good_name",
 		"from_database": "abc123",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
