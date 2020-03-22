@@ -26,6 +26,7 @@ func TestAccSchemaGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", sName),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "with_grant_option", false),
 				),
 			},
 			// IMPORT

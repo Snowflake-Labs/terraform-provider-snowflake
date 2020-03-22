@@ -51,6 +51,7 @@ func TestAccDatabaseGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database_grant.test", "with_grant_option", false),
 					testRolesAndShares("snowflake_database_grant.test", []string{roleName}, []string{shareName}),
 				),
 			},

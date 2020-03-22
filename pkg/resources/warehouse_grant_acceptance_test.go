@@ -24,6 +24,7 @@ func TestAccWarehouseGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "warehouse_name", wName),
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "privilege", "USAGE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "with_grant_option", false),
 				),
 			},
 			// // IMPORT

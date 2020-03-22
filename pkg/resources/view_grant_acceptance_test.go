@@ -68,6 +68,7 @@ func TestAccFutureViewGrantChange(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "false"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "with_grant_option", false),
 				),
 			},
 			// CHANGE FROM CURRENT TO FUTURE VIEWS
@@ -77,6 +78,7 @@ func TestAccFutureViewGrantChange(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", ""),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "with_grant_option", false),
 				),
 			},
 			// IMPORT
