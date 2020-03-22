@@ -16,7 +16,7 @@ const (
 )
 
 type GrantExecutable interface {
-	Grant(p string) string
+	Grant(p string, grantOption bool) string
 	Revoke(p string) string
 	Show() string
 }
@@ -137,12 +137,16 @@ func (gb *CurrentGrantBuilder) Share(n string) GrantExecutable {
 }
 
 // Grant returns the SQL that will grant privileges on the grant to the grantee
-func (ge *CurrentGrantExecutable) Grant(p string) string {
+func (ge *CurrentGrantExecutable) Grant(p string, grantOption bool) string {
 	var template string
 	if p == `OWNERSHIP` {
 		template = `GRANT %v ON %v %v TO %v "%v" COPY CURRENT GRANTS`
 	} else {
-		template = `GRANT %v ON %v %v TO %v "%v"`
+		if grantOption {
+			template = `GRANT %v ON %v %v TO %v "%v" WITH GRANT OPTION`
+		} else {
+			template = `GRANT %v ON %v %v TO %v "%v"`
+		}
 	}
 	return fmt.Sprintf(template,
 		p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName)

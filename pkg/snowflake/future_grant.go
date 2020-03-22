@@ -69,9 +69,12 @@ func (gb *FutureGrantBuilder) Share(n string) GrantExecutable {
 }
 
 // Grant returns the SQL that will grant future privileges on the grant to the grantee
-func (fge *FutureGrantExecutable) Grant(p string) string {
-	return fmt.Sprintf(`GRANT %v ON FUTURE %vS IN SCHEMA %v TO ROLE "%v"`,
-		p, fge.futureGrantType, fge.grantName, fge.granteeName)
+func (fge *FutureGrantExecutable) Grant(p string, grantOption bool) string {
+	template := `GRANT %v ON FUTURE %vS IN SCHEMA %v TO ROLE "%v"`
+	if grantOption {
+		template = `GRANT %v ON FUTURE %vS IN SCHEMA %v TO ROLE "%v" WITH GRANT OPTION`
+	}
+	return fmt.Sprintf(template, p, fge.futureGrantType, fge.grantName, fge.granteeName)
 }
 
 // Revoke returns the SQL that will revoke future privileges on the grant from the grantee

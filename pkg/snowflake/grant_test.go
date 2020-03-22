@@ -15,17 +15,23 @@ func TestDatabaseGrant(t *testing.T) {
 	s := dg.Show()
 	a.Equal(`SHOW GRANTS ON DATABASE "testDB"`, s)
 
-	s = dg.Role("bob").Grant("USAGE")
+	s = dg.Role("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON DATABASE "testDB" TO ROLE "bob"`, s)
+
+	s = dg.Role("bob").Grant("USAGE", true)
+	a.Equal(`GRANT USAGE ON DATABASE "testDB" TO ROLE "bob" WITH GRANT OPTION`, s)
 
 	s = dg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON DATABASE "testDB" FROM ROLE "bob"`, s)
 
-	s = dg.Role("bob").Grant("OWNERSHIP")
+	s = dg.Role("bob").Grant("OWNERSHIP", false)
 	a.Equal(`GRANT OWNERSHIP ON DATABASE "testDB" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	s = dg.Share("bob").Grant("USAGE")
+	s = dg.Share("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON DATABASE "testDB" TO SHARE "bob"`, s)
+
+	s = dg.Share("bob").Grant("USAGE", true)
+	a.Equal(`GRANT USAGE ON DATABASE "testDB" TO SHARE "bob" WITH GRANT OPTION`, s)
 
 	s = dg.Share("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON DATABASE "testDB" FROM SHARE "bob"`, s)
@@ -39,19 +45,19 @@ func TestSchemaGrant(t *testing.T) {
 	s := sg.Show()
 	a.Equal(`SHOW GRANTS ON SCHEMA "test_db"."testSchema"`, s)
 
-	s = sg.Role("bob").Grant("USAGE")
+	s = sg.Role("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON SCHEMA "test_db"."testSchema" TO ROLE "bob"`, s)
 
 	s = sg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON SCHEMA "test_db"."testSchema" FROM ROLE "bob"`, s)
 
-	s = sg.Share("bob").Grant("USAGE")
+	s = sg.Share("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON SCHEMA "test_db"."testSchema" TO SHARE "bob"`, s)
 
 	s = sg.Share("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON SCHEMA "test_db"."testSchema" FROM SHARE "bob"`, s)
 
-	s = sg.Role("bob").Grant("OWNERSHIP")
+	s = sg.Role("bob").Grant("OWNERSHIP", false)
 	a.Equal(`GRANT OWNERSHIP ON SCHEMA "test_db"."testSchema" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
@@ -63,19 +69,22 @@ func TestViewGrant(t *testing.T) {
 	s := vg.Show()
 	a.Equal(`SHOW GRANTS ON VIEW "test_db"."PUBLIC"."testView"`, s)
 
-	s = vg.Role("bob").Grant("USAGE")
+	s = vg.Role("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob"`, s)
 
 	s = vg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM ROLE "bob"`, s)
 
-	s = vg.Share("bob").Grant("USAGE")
+	s = vg.Share("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON VIEW "test_db"."PUBLIC"."testView" TO SHARE "bob"`, s)
 
 	s = vg.Share("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON VIEW "test_db"."PUBLIC"."testView" FROM SHARE "bob"`, s)
 
-	s = vg.Role("bob").Grant("OWNERSHIP")
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	a.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", true)
 	a.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
@@ -87,13 +96,13 @@ func TestWarehouseGrant(t *testing.T) {
 	s := wg.Show()
 	a.Equal(`SHOW GRANTS ON WAREHOUSE "test_warehouse"`, s)
 
-	s = wg.Role("bob").Grant("USAGE")
+	s = wg.Role("bob").Grant("USAGE", false)
 	a.Equal(`GRANT USAGE ON WAREHOUSE "test_warehouse" TO ROLE "bob"`, s)
 
 	s = wg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON WAREHOUSE "test_warehouse" FROM ROLE "bob"`, s)
 
-	s = wg.Role("bob").Grant("OWNERSHIP")
+	s = wg.Role("bob").Grant("OWNERSHIP", false)
 	a.Equal(`GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
 }
