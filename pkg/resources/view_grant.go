@@ -62,6 +62,13 @@ var viewGrantSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
 	},
+	"with_grant_option": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "The privilege to grant this privilege to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // ViewGrant returns a pointer to the resource representing a view grant
@@ -90,6 +97,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	futureViews := data.Get("on_future").(bool)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	if (viewName == "") && !futureViews {
 		return errors.New("view_name must be set unless on_future is true.")
@@ -115,6 +123,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		SchemaName:   schemaName,
 		ObjectName:   viewName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
@@ -135,6 +144,7 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	viewName := grantID.ObjectName
 	priv := grantID.Privilege
+	grantOption := grantID.GrantOption
 
 	err = data.Set("database_name", dbName)
 	if err != nil {
@@ -157,6 +167,10 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantOption)
 	if err != nil {
 		return err
 	}

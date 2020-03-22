@@ -26,12 +26,13 @@ func TestTableGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"table_name":    "test-table",
-		"schema_name":   "PUBLIC",
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
-		"shares":        []interface{}{"test-share-1", "test-share-2"},
+		"table_name":        "test-table",
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option": false,
 	}
 	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
 	a.NotNil(d)

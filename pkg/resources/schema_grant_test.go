@@ -26,11 +26,12 @@ func TestSchemaGrantCreate(t *testing.T) {
 
 	for _, test_priv := range []string{"USAGE", "MODIFY"} {
 		in := map[string]interface{}{
-			"schema_name":   "test-schema",
-			"database_name": "test-db",
-			"privilege":     test_priv,
-			"roles":         []interface{}{"test-role-1", "test-role-2"},
-			"shares":        []interface{}{"test-share-1", "test-share-2"},
+			"schema_name":       "test-schema",
+			"database_name":     "test-db",
+			"privilege":         test_priv,
+			"roles":             []interface{}{"test-role-1", "test-role-2"},
+			"shares":            []interface{}{"test-share-1", "test-share-2"},
+			"with_grant_option": false,
 		}
 		d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
 		a.NotNil(d)

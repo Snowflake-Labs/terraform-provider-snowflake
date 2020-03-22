@@ -10,7 +10,7 @@ import (
 func TestGrantIDFromString(t *testing.T) {
 	r := require.New(t)
 	// Vanilla
-	id := "database_name|schema|view_name|privilege"
+	id := "database_name|schema|view_name|privilege|GRANT"
 	grant, err := grantIDFromString(id)
 	r.NoError(err)
 
@@ -18,30 +18,32 @@ func TestGrantIDFromString(t *testing.T) {
 	r.Equal("schema", grant.SchemaName)
 	r.Equal("view_name", grant.ObjectName)
 	r.Equal("privilege", grant.Privilege)
+	r.Equal(true, grant.GrantOption)
 
 	// No view
-	id = "database_name|||privilege"
+	id = "database_name|||privilege|blah"
 	grant, err = grantIDFromString(id)
 	r.NoError(err)
 	r.Equal("database_name", grant.ResourceName)
 	r.Equal("", grant.SchemaName)
 	r.Equal("", grant.ObjectName)
 	r.Equal("privilege", grant.Privilege)
+	r.Equal(false, grant.GrantOption)
 
 	// Bad ID -- not enough fields
 	id = "database|name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 fields allowed"), err)
+	r.Equal(fmt.Errorf("5 fields allowed"), err)
 
 	// Bad ID -- privilege in wrong area
-	id = "database||||name-privilege"
+	id = "database|||||name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 fields allowed"), err)
+	r.Equal(fmt.Errorf("5 fields allowed"), err)
 
 	// too many fields
-	id = "database_name|schema|view_name|privilege|extra"
+	id = "database_name|schema|view_name|privilege|extra|foo"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 fields allowed"), err)
+	r.Equal(fmt.Errorf("5 fields allowed"), err)
 
 	// 0 lines
 	id = ""
@@ -67,13 +69,13 @@ func TestGrantStruct(t *testing.T) {
 	}
 	gID, err := grant.String()
 	r.NoError(err)
-	r.Equal("database_name|schema|view_name|priv", gID)
+	r.Equal("database_name|schema|view_name|priv|", gID)
 
 	// Empty grant
 	grant = &grantID{}
 	gID, err = grant.String()
 	r.NoError(err)
-	r.Equal("|||", gID)
+	r.Equal("||||", gID)
 
 	// Grant with extra delimiters
 	grant = &grantID{
@@ -90,4 +92,5 @@ func TestGrantStruct(t *testing.T) {
 	r.Equal("schema|name", newGrant.SchemaName)
 	r.Equal("view|name", newGrant.ObjectName)
 	r.Equal("priv", newGrant.Privilege)
+	r.Equal(false, newGrant.GrantOption)
 }

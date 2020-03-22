@@ -26,9 +26,10 @@ func TestWarehouseGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"warehouse_name": "test-warehouse",
-		"privilege":      "USAGE",
-		"roles":          []interface{}{"test-role-1", "test-role-2"},
+		"warehouse_name":    "test-warehouse",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
 	}
 	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Schema, in)
 	a.NotNil(d)

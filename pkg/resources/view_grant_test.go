@@ -24,12 +24,13 @@ func TestViewGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"view_name":     "test-view",
-		"schema_name":   "PUBLIC",
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
-		"shares":        []interface{}{"test-share-1", "test-share-2"},
+		"view_name":         "test-view",
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option": false,
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	a.NotNil(d)
@@ -64,11 +65,12 @@ func TestFutureViewGrantCreate(t *testing.T) {
 	a := assert.New(t)
 
 	in := map[string]interface{}{
-		"on_future":     true,
-		"schema_name":   "PUBLIC",
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"on_future":         true,
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	a.NotNil(d)

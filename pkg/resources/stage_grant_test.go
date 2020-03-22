@@ -26,12 +26,13 @@ func TestStageGrantCreate(t *testing.T) {
 
 	for _, test_priv := range []string{"USAGE", "READ"} {
 		in := map[string]interface{}{
-			"stage_name":    "test-stage",
-			"schema_name":   "test-schema",
-			"database_name": "test-db",
-			"privilege":     test_priv,
-			"roles":         []interface{}{"test-role-1", "test-role-2"},
-			"shares":        []interface{}{"test-share-1", "test-share-2"},
+			"stage_name":        "test-stage",
+			"schema_name":       "test-schema",
+			"database_name":     "test-db",
+			"privilege":         test_priv,
+			"roles":             []interface{}{"test-role-1", "test-role-2"},
+			"shares":            []interface{}{"test-share-1", "test-share-2"},
+			"with_grant_option": false,
 		}
 		d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, in)
 		a.NotNil(d)

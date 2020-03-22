@@ -57,6 +57,13 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these shares.",
 		ForceNew:    true,
 	},
+	"with_grant_option": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "The privilege to grant this privilege to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // StageGrant returns a pointer to the resource representing a stage grant
@@ -84,6 +91,7 @@ func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := data.Get("schema_name").(string)
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
 	builder = snowflake.StageGrant(dbName, schemaName, stageName)
@@ -98,6 +106,7 @@ func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
 		SchemaName:   schemaName,
 		ObjectName:   stageName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
@@ -132,6 +141,10 @@ func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
