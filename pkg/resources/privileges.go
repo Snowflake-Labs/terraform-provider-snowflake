@@ -39,12 +39,12 @@ const (
 	privilegeCreateTemporaryTable   privilege = "CREATE TEMPORARY TABLE"
 )
 
-type privilegeSet map[privilege]struct{}
+type privilegeSet map[privilege]bool
 
 func newPrivilegeSet(privileges ...privilege) privilegeSet {
 	ps := privilegeSet{}
 	for _, priv := range privileges {
-		ps[priv] = struct{}{}
+		ps[priv] = false
 	}
 	return ps
 }
@@ -57,8 +57,20 @@ func (ps privilegeSet) toList() []string {
 	return privs
 }
 
+func (ps privilegeSet) addGrantedString(s string, grant bool) {
+	ps[privilege(s)] = grant
+}
+
+func (ps privilegeSet) hasGrantedString(s string, grantOption bool) bool {
+	if option, ok := ps[privilege(s)]; ok {
+	  return option == grantOption
+	}
+
+	return false
+}
+
 func (ps privilegeSet) addString(s string) {
-	ps[privilege(s)] = struct{}{}
+	ps.addGrantedString(s, false)
 }
 
 func (ps privilegeSet) hasString(s string) bool {
