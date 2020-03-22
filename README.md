@@ -90,12 +90,13 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database on which to grant privileges. | false    | true      | false    | <nil>   |
-| privilege     | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+|       NAME        |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
+| database_name     | string | The name of the database on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege         | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
+| shares            | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.  | true     | false     | false    | false   |
 
 ### snowflake_managed_account
 
@@ -186,13 +187,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database containing the schema on which to grant privileges.                                                                  | false    | true      | false    | <nil>   |
-| privilege     | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
-| schema_name   | string | The name of the schema on which to grant privileges.                                                                                          | false    | true      | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                                                                                                             | true     | false     | false    | <nil>   |
+|       NAME        |  TYPE  |                                                                  DESCRIPTION                                                                  | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name     | string | The name of the database containing the schema on which to grant privileges.                                                                  | false    | true      | false    | <nil>   |
+| privilege         | string | The privilege to grant on the schema.  Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access. | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                                                                              | true     | false     | false    | <nil>   |
+| schema_name       | string | The name of the schema on which to grant privileges.                                                                                          | false    | true      | false    | <nil>   |
+| shares            | set    | Grants privilege to these shares.                                                                                                             | true     | false     | false    | <nil>   |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.                                                                                         | true     | false     | false    | false   |
 
 ### snowflake_share
 
@@ -233,14 +235,15 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    | <nil>   |
-| privilege     | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                                                    | true     | false     | false    | <nil>   |
-| schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
-| stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
+|       NAME        |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name     | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    | <nil>   |
+| privilege         | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                    | true     | false     | false    | <nil>   |
+| schema_name       | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    | <nil>   |
+| shares            | set    | Grants privilege to these shares.                                                   | true     | false     | false    | <nil>   |
+| stage_name        | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    | <nil>   |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.                               | true     | false     | false    | false   |
 
 ### snowflake_storage_integration
 
@@ -271,15 +274,16 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|---------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
-| database_name | string | The name of the database containing the current or future tables on which to grant privileges.                                                                  | false    | true      | false    | <nil>    |
-| on_future     | bool   | When this is set to true, apply this grant on all future tables in the given schema.  The table_name and shares fields must be unset in order to use on_future. | true     | false     | false    | false    |
-| privilege     | string | The privilege to grant on the current or future table.                                                                                                          | true     | false     | false    | "SELECT" |
-| roles         | set    | Grants privilege to these roles.                                                                                                                                | true     | false     | false    | <nil>    |
-| schema_name   | string | The name of the schema containing the current or future tables on which to grant privileges.                                                                    | true     | false     | false    | "PUBLIC" |
-| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                            | true     | false     | false    | <nil>    |
-| table_name    | string | The name of the table on which to grant privileges immediately (only valid if on_future is unset).                                                              | true     | false     | false    | <nil>    |
+|       NAME        |  TYPE  |                                                                           DESCRIPTION                                                                           | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|-------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| database_name     | string | The name of the database containing the current or future tables on which to grant privileges.                                                                  | false    | true      | false    | <nil>    |
+| on_future         | bool   | When this is set to true, apply this grant on all future tables in the given schema.  The table_name and shares fields must be unset in order to use on_future. | true     | false     | false    | false    |
+| privilege         | string | The privilege to grant on the current or future table.                                                                                                          | true     | false     | false    | "SELECT" |
+| roles             | set    | Grants privilege to these roles.                                                                                                                                | true     | false     | false    | <nil>    |
+| schema_name       | string | The name of the schema containing the current or future tables on which to grant privileges.                                                                    | true     | false     | false    | "PUBLIC" |
+| shares            | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                            | true     | false     | false    | <nil>    |
+| table_name        | string | The name of the table on which to grant privileges immediately (only valid if on_future is unset).                                                              | true     | false     | false    | <nil>    |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.                                                                                                           | true     | false     | false    | false    |
 
 ### snowflake_user
 
@@ -323,15 +327,16 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|     NAME      |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
-| database_name | string | The name of the database containing the current or future views on which to grant privileges.                                                                 | false    | true      | false    | <nil>    |
-| on_future     | bool   | When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future. | true     | false     | false    | false    |
-| privilege     | string | The privilege to grant on the current or future view.                                                                                                         | true     | false     | false    | "SELECT" |
-| roles         | set    | Grants privilege to these roles.                                                                                                                              | true     | false     | false    | <nil>    |
-| schema_name   | string | The name of the schema containing the current or future views on which to grant privileges.                                                                   | true     | false     | false    | "PUBLIC" |
-| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                          | true     | false     | false    | <nil>    |
-| view_name     | string | The name of the view on which to grant privileges immediately (only valid if on_future is unset).                                                             | true     | false     | false    | <nil>    |
+|       NAME        |  TYPE  |                                                                          DESCRIPTION                                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|-------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| database_name     | string | The name of the database containing the current or future views on which to grant privileges.                                                                 | false    | true      | false    | <nil>    |
+| on_future         | bool   | When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future. | true     | false     | false    | false    |
+| privilege         | string | The privilege to grant on the current or future view.                                                                                                         | true     | false     | false    | "SELECT" |
+| roles             | set    | Grants privilege to these roles.                                                                                                                              | true     | false     | false    | <nil>    |
+| schema_name       | string | The name of the schema containing the current or future views on which to grant privileges.                                                                   | true     | false     | false    | "PUBLIC" |
+| shares            | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                          | true     | false     | false    | <nil>    |
+| view_name         | string | The name of the view on which to grant privileges immediately (only valid if on_future is unset).                                                             | true     | false     | false    | <nil>    |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.                                                                                                         | true     | false     | false    | false    |
 
 ### snowflake_warehouse
 
@@ -362,11 +367,12 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
-| privilege      | string | The privilege to grant on the warehouse.                | true     | false     | false    | "USAGE" |
-| roles          | set    | Grants privilege to these roles.                        | true     | false     | false    | <nil>   |
-| warehouse_name | string | The name of the warehouse on which to grant privileges. | false    | true      | false    | <nil>   |
+|       NAME        |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
+| privilege         | string | The privilege to grant on the warehouse.                | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                        | true     | false     | false    | <nil>   |
+| warehouse_name    | string | The name of the warehouse on which to grant privileges. | false    | true      | false    | <nil>   |
+| with_grant_option | bool   | The privilege to grant this privilege to other roles.   | true     | false     | false    | false   |
 <!-- END -->
 
 ## Development
