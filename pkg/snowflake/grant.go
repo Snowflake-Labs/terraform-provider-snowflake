@@ -7,6 +7,11 @@ import (
 type grantType string
 
 const (
+	accountType grantType = "ACCOUNT"
+
+	resourceMonitorType grantType = "RESOURCE MONITOR"
+	integrationType     grantType = "INTEGRATION"
+
 	databaseType  grantType = "DATABASE"
 	schemaType    grantType = "SCHEMA"
 	stageType     grantType = "STAGE"
@@ -38,6 +43,13 @@ type CurrentGrantBuilder struct {
 // Name returns the object name for this CurrentGrantBuilder
 func (gb *CurrentGrantBuilder) Name() string {
 	return gb.name
+}
+
+// AccountGrant returns a pointer to a CurrentGrantBuilder for an account
+func AccountGrant() GrantBuilder {
+	return &CurrentGrantBuilder{
+		grantType: accountType,
+	}
 }
 
 // DatabaseGrant returns a pointer to a CurrentGrantBuilder for a database
@@ -82,6 +94,24 @@ func TableGrant(db, schema, table string) GrantBuilder {
 		name:          table,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, table),
 		grantType:     tableType,
+	}
+}
+
+// ResourceMonitorGrant returns a pointer to a CurrentGrantBuilder for a warehouse
+func ResourceMonitorGrant(w string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          w,
+		qualifiedName: fmt.Sprintf(`"%v"`, w),
+		grantType:     resourceMonitorType,
+	}
+}
+
+// IntegrationGrant returns a pointer to a CurrentGrantBuilder for a warehouse
+func IntegrationGrant(w string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          w,
+		qualifiedName: fmt.Sprintf(`"%v"`, w),
+		grantType:     integrationType,
 	}
 }
 
