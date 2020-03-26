@@ -26,6 +26,10 @@ func TestUserCreate(t *testing.T) {
 		"comment":              "great comment",
 		"password":             "awesomepassword",
 		"login_name":           "gname",
+		"display_name":         "Display Name",
+		"first_name":           "Marcin",
+		"last_name":            "Zukowski",
+		"email":                "fake@email.com",
 		"disabled":             true,
 		"default_warehouse":    "mywarehouse",
 		"default_namespace":    "mynamespace",
@@ -38,7 +42,7 @@ func TestUserCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' DISPLAY_NAME='Display Name' EMAIL='fake@email.com' FIRST_NAME='Marcin' LAST_NAME='Zukowski' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		r.NoError(err)
