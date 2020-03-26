@@ -98,6 +98,57 @@ func TestWarehouseGrant(t *testing.T) {
 
 }
 
+func TestAccountGrant(t *testing.T) {
+	a := assert.New(t)
+	wg := snowflake.AccountGrant()
+	a.Equal(wg.Name(), "")
+
+	// There's an extra space after "ACCOUNT"
+	//  because accounts don't have names
+
+	s := wg.Show()
+	a.Equal("SHOW GRANTS ON ACCOUNT ", s)
+
+	s = wg.Role("bob").Grant("MANAGE GRANTS")
+	a.Equal(`GRANT MANAGE GRANTS ON ACCOUNT  TO ROLE "bob"`, s)
+
+	s = wg.Role("bob").Revoke("MONITOR USAGE")
+	a.Equal(`REVOKE MONITOR USAGE ON ACCOUNT  FROM ROLE "bob"`, s)
+}
+
+func TestIntegrationGrant(t *testing.T) {
+	a := assert.New(t)
+	wg := snowflake.IntegrationGrant("test_integration")
+	a.Equal(wg.Name(), "test_integration")
+
+	s := wg.Show()
+	a.Equal(`SHOW GRANTS ON INTEGRATION "test_integration"`, s)
+
+	s = wg.Role("bob").Grant("USAGE")
+	a.Equal(`GRANT USAGE ON INTEGRATION "test_integration" TO ROLE "bob"`, s)
+
+	s = wg.Role("bob").Revoke("USAGE")
+	a.Equal(`REVOKE USAGE ON INTEGRATION "test_integration" FROM ROLE "bob"`, s)
+
+	s = wg.Role("bob").Grant("OWNERSHIP")
+	a.Equal(`GRANT OWNERSHIP ON INTEGRATION "test_integration" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestResourceMonitorGrant(t *testing.T) {
+	a := assert.New(t)
+	wg := snowflake.ResourceMonitorGrant("test_monitor")
+	a.Equal(wg.Name(), "test_monitor")
+
+	s := wg.Show()
+	a.Equal(`SHOW GRANTS ON RESOURCE MONITOR "test_monitor"`, s)
+
+	s = wg.Role("bob").Grant("MONITOR")
+	a.Equal(`GRANT MONITOR ON RESOURCE MONITOR "test_monitor" TO ROLE "bob"`, s)
+
+	s = wg.Role("bob").Revoke("MODIFY")
+	a.Equal(`REVOKE MODIFY ON RESOURCE MONITOR "test_monitor" FROM ROLE "bob"`, s)
+}
+
 func TestShowGrantsOf(t *testing.T) {
 	a := assert.New(t)
 	s := snowflake.ViewGrant("test_db", "PUBLIC", "testView").Role("testRole").Show()
