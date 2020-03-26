@@ -80,6 +80,14 @@ You can see a number of examples [here](examples).
 | from_share                  | map    | Specify a provider and a share in this map to create a database from a share. | true     | false     | false    | <nil>   |
 | name                        | string |                                                                               | false    | true      | false    | <nil>   |
 
+#### import
+
+Databases are simply identified by their name:
+
+```shell
+terraform import snowflake_database.foobar FOOBAR
+```
+
 ### snowflake_database_grant
 
 **Note**: The snowflake_database_grant resource creates exclusive attachments of grants.
@@ -96,6 +104,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | privilege     | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
 | roles         | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
 | shares        | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+
+#### import
+
+Database grants are identified by the database name and privilege separated by three pipe characters:
+
+```shell
+terraform import snowflake_database_grant.usage_on_foobar 'FOOBAR|||USAGE'
+```
 
 ### snowflake_managed_account
 
@@ -153,6 +169,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | comment | string |             | true     | false     | false    | <nil>   |
 | name    | string |             | false    | true      | false    | <nil>   |
 
+#### import
+
+Roles are simply identified by their name:
+
+```shell
+terraform import snowflake_role.sales_role SALES
+```
+
 ### snowflake_role_grants
 
 #### properties
@@ -175,6 +199,13 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | is_managed          | bool   | Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.                                                                                                                                              | true     | false     | false    | false   |
 | is_transient        | bool   | Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss. | true     | false     | false    | false   |
 | name                | string | Specifies the identifier for the schema; must be unique for the database in which the schema is created.                                                                                                                                               | false    | true      | false    | <nil>   |
+#### import
+
+Schemas are identified by their database name and schema name delimited by a pipe character:
+
+```shell
+terraform import snowflake_schema.sales_schema 'DATA_MARTS|SALES'
+```
 
 ### snowflake_schema_grant
 
@@ -300,6 +331,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | rsa_public_key       | string | Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.                                                                                                       | true     | false     | false    | <nil>   |
 | rsa_public_key_2     | string | Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer. | true     | false     | false    | <nil>   |
 
+#### import
+
+Users are simply identified by their name:
+
+```shell
+terraform import snowflake_user.foobar FOOBAR
+```
+
 ### snowflake_view
 
 #### properties
@@ -312,6 +351,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | name      | string | Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character. | false    | true      | false    | <nil>    |
 | schema    | string | The schema in which to create the view. Don't use the | character.                                                            | true     | false     | false    | "PUBLIC" |
 | statement | string | Specifies the query used to create the view.                                                                                  | false    | true      | false    | <nil>    |
+
+#### import
+
+Views are identified by the following format: `database|schema|name`.  For example:
+
+```shell
+terraform import snowflake_view.foobar 'DATA_MARTS|SALES|FOOBAR'
+```
 
 ### snowflake_view_grant
 
@@ -351,6 +398,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | statement_timeout_in_seconds | int    | Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system                    | true     | false     | false    |       0 |
 | wait_for_provisioning        | bool   | Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries. | true     | false     | false    | <nil>   |
 | warehouse_size               | string |                                                                                                                                          | true     | false     | true     | <nil>   |
+
+#### import
+
+Warehouses are simply identified by their name:
+
+```shell
+terraform import snowflake_warehouse.foobar FOOBAR
+```
 
 ### snowflake_warehouse_grant
 
