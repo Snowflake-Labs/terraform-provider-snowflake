@@ -10,7 +10,7 @@ import (
 func TestGrantIDFromString(t *testing.T) {
 	r := require.New(t)
 	// Vanilla
-	id := "database_name|schema|view_name|privilege|on_future|on_all"
+	id := "database_name|schema|view_name|privilege"
 	grant, err := grantIDFromString(id)
 	r.NoError(err)
 
@@ -18,11 +18,9 @@ func TestGrantIDFromString(t *testing.T) {
 	r.Equal("schema", grant.SchemaName)
 	r.Equal("view_name", grant.ObjectName)
 	r.Equal("privilege", grant.Privilege)
-	r.Equal("on_future", grant.OnFuture)
-	r.Equal("on_all", grant.OnAll)
 
 	// No view
-	id = "database_name|||privilege|on_future|on_all"
+	id = "database_name|||privilege"
 	grant, err = grantIDFromString(id)
 	r.NoError(err)
 	r.Equal("database_name", grant.ResourceName)
@@ -33,17 +31,17 @@ func TestGrantIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database|name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
-	// Bad ID -- on_all in wrong area
-	id = "database||||||on_all"
+	// Bad ID -- privilege in wrong area
+	id = "database||||name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
 	// too many fields
-	id = "database_name|schema|view_name|privilege|on_future|on_all|extra"
+	id = "database_name|schema|view_name|privilege|extra"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 fields allowed"), err)
 
 	// 0 lines
 	id = ""
@@ -66,18 +64,16 @@ func TestGrantStruct(t *testing.T) {
 		SchemaName:   "schema",
 		ObjectName:   "view_name",
 		Privilege:    "priv",
-		OnFuture:     "on_future",
-		OnAll:        "on_all",
 	}
 	gID, err := grant.String()
 	r.NoError(err)
-	r.Equal("database_name|schema|view_name|priv|on_future|on_all", gID)
+	r.Equal("database_name|schema|view_name|priv", gID)
 
 	// Empty grant
 	grant = &grantID{}
 	gID, err = grant.String()
 	r.NoError(err)
-	r.Equal("|||||", gID)
+	r.Equal("|||", gID)
 
 	// Grant with extra delimiters
 	grant = &grantID{
@@ -85,8 +81,6 @@ func TestGrantStruct(t *testing.T) {
 		SchemaName:   "schema|name",
 		ObjectName:   "view|name",
 		Privilege:    "priv",
-		OnFuture:     "on|future",
-		OnAll:        "on|all",
 	}
 	gID, err = grant.String()
 	r.NoError(err)
@@ -96,6 +90,4 @@ func TestGrantStruct(t *testing.T) {
 	r.Equal("schema|name", newGrant.SchemaName)
 	r.Equal("view|name", newGrant.ObjectName)
 	r.Equal("priv", newGrant.Privilege)
-	r.Equal("on|future", newGrant.OnFuture)
-	r.Equal("on|all", newGrant.OnAll)
 }

@@ -61,8 +61,6 @@ type grantID struct {
 	SchemaName   string
 	ObjectName   string
 	Privilege    string
-	OnFuture     string
-	OnAll        string
 }
 
 // Because none of the grants currently have a privilege of "ALL", rather they explicitly say
@@ -121,12 +119,12 @@ func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|OnFuture|OnAll
+// resourceName|schemaName|ObjectName|Privilege
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = grantIDDelimiter
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, gi.OnFuture, gi.OnAll}}
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege}}
 	err := csvWriter.WriteAll(dataIdentifiers)
 	if err != nil {
 		return "", err
@@ -135,7 +133,7 @@ func (gi *grantID) String() (string, error) {
 	return strGrantID, nil
 }
 
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|OnFuture|OnAll
+// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
@@ -148,8 +146,8 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 6 {
-		return nil, fmt.Errorf("6 fields allowed")
+	if len(lines[0]) != 4 {
+		return nil, fmt.Errorf("4 fields allowed")
 	}
 
 	grantResult := &grantID{
@@ -157,8 +155,6 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		SchemaName:   lines[0][1],
 		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
-		OnFuture:     lines[0][4],
-		OnAll:        lines[0][5],
 	}
 	return grantResult, nil
 }
@@ -191,14 +187,12 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, onAllObjects bool, validPrivileges privilegeSet) error {
+func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges privilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
 	if futureObjects {
 		grants, err = readGenericFutureGrants(db, builder)
-	} else if onAllObjects {
-		grants, err = readGenericOnAllGrants(data, db, builder)
 	} else {
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
@@ -341,41 +335,6 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 		grants = append(grants, grant)
 	}
 
-	return grants, nil
-}
-
-func readGenericOnAllGrants(data *schema.ResourceData, db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
-	conn := sqlx.NewDb(db, "snowflake")
-
-	roles, _ := expandRolesAndShares(data)
-
-	var grants []*grant
-	for _, role := range roles {
-		stmt := builder.Role(role).Show()
-		rows, err := conn.Queryx(stmt)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			currentGrant := &currentGrant{}
-			err := rows.StructScan(currentGrant)
-			if err != nil {
-				return nil, err
-			}
-			grant := &grant{
-				CreatedOn:   currentGrant.CreatedOn,
-				Privilege:   currentGrant.Privilege,
-				GrantType:   currentGrant.GrantType,
-				GrantName:   currentGrant.GrantName,
-				GranteeType: currentGrant.GranteeType,
-				GranteeName: currentGrant.GranteeName,
-				GrantOption: currentGrant.GrantOption,
-			}
-			grants = append(grants, grant)
-		}
-	}
 	return grants, nil
 }
 

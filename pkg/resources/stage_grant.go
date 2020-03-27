@@ -138,7 +138,7 @@ func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.StageGrant(dbName, schemaName, stageName)
 
-	return readGenericGrant(data, meta, builder, false, false, ValidStagePrivileges)
+	return readGenericGrant(data, meta, builder, false, ValidStagePrivileges)
 }
 
 // DeleteStageGrant implements schema.DeleteFunc
