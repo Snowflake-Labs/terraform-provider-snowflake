@@ -14,9 +14,9 @@ builds:
     ldflags:
       - "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha={{.Commit}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version={{.Version}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty={{.Env.DIRTY}}"
 
-archive:
-  files:
-  - none*
+archives:
+  - files:
+    - none*
 
 release:
   prerelease: true
