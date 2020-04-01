@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go/pubsub v1.0.1 // indirect
-	github.com/DATA-DOG/go-sqlmock v1.3.3
+	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/ExpansiveWorlds/instrumentedsql v0.0.0-20171218214018-45abb4b1947d
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
