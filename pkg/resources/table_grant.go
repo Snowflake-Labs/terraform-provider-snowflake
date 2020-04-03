@@ -27,7 +27,6 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"schema_name": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "PUBLIC",
 		Description: "The name of the schema containing the current or future tables on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -62,7 +61,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_future": &schema.Schema{
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all future tables in the given schema.  The table_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -85,16 +84,27 @@ func TableGrant() *schema.Resource {
 
 // CreateTableGrant implements schema.CreateFunc
 func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
-	var tableName string
+	var (
+		tableName  string
+		schemaName string
+	)
 	if _, ok := data.GetOk("table_name"); ok {
 		tableName = data.Get("table_name").(string)
 	} else {
 		tableName = ""
 	}
-	schemaName := data.Get("schema_name").(string)
+	if _, ok := data.GetOk("schema_name"); ok {
+		schemaName = data.Get("schema_name").(string)
+	} else {
+		schemaName = ""
+	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	onFuture := data.Get("on_future").(bool)
+
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
 
 	if (tableName == "") && !onFuture {
 		return errors.New("table_name must be set unless on_future is true.")

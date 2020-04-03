@@ -22,7 +22,6 @@ var viewGrantSchema = map[string]*schema.Schema{
 	"schema_name": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "PUBLIC",
 		Description: "The name of the schema containing the current or future views on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -57,7 +56,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 	"on_future": &schema.Schema{
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all future views in the given schema.  The view_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
@@ -80,16 +79,27 @@ func ViewGrant() *schema.Resource {
 
 // CreateViewGrant implements schema.CreateFunc
 func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
-	var viewName string
+	var (
+		viewName   string
+		schemaName string
+	)
 	if _, ok := data.GetOk("view_name"); ok {
 		viewName = data.Get("view_name").(string)
 	} else {
 		viewName = ""
 	}
-	schemaName := data.Get("schema_name").(string)
+	if _, ok := data.GetOk("schema_name"); ok {
+		schemaName = data.Get("schema_name").(string)
+	} else {
+		schemaName = ""
+	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	futureViews := data.Get("on_future").(bool)
+
+	if (schemaName == "") && !futureViews {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
 
 	if (viewName == "") && !futureViews {
 		return errors.New("view_name must be set unless on_future is true.")

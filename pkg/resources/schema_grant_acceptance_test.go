@@ -22,9 +22,19 @@ func TestAccSchemaGrant(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: schemaGrantConfig(sName, roleName, shareName),
+				Config: schemaGrantConfig(sName, roleName, shareName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", sName),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_future", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
+				),
+			},
+			// FUTURE
+			{
+				Config: schemaGrantConfig(sName, roleName, shareName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", ""),
+					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
 				),
 			},
@@ -38,7 +48,14 @@ func TestAccSchemaGrant(t *testing.T) {
 	})
 }
 
-func schemaGrantConfig(n, role, share string) string {
+func schemaGrantConfig(n, role, share string, future bool) string {
+	schema_name_config := `schema_name   = snowflake_schema.test.name
+  shares        = [snowflake_share.test.name]`
+
+	if future {
+		schema_name_config = "on_future     = true"
+	}
+
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
   name = "%v"
@@ -65,12 +82,11 @@ resource "snowflake_database_grant" "test" {
 }
 
 resource "snowflake_schema_grant" "test" {
-  schema_name   = snowflake_schema.test.name
   database_name = snowflake_schema.test.database
+  %v
   roles         = [snowflake_role.test.name]
-  shares        = [snowflake_share.test.name]
 
   depends_on = [snowflake_database_grant.test]
 }
-`, n, n, role, share)
+`, n, n, role, share, schema_name_config)
 }

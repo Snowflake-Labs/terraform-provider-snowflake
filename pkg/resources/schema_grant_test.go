@@ -69,3 +69,39 @@ func expectReadSchemaGrant(mock sqlmock.Sqlmock, test_priv string) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON SCHEMA "test-db"."test-schema"$`).WillReturnRows(rows)
 }
+
+func TestFutureSchemaGrantCreate(t *testing.T) {
+	a := assert.New(t)
+
+	in := map[string]interface{}{
+		"on_future":     true,
+		"database_name": "test-db",
+		"privilege":     "USAGE",
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+	}
+	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
+	a.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test-db" TO ROLE "test-role-1"$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test-db" TO ROLE "test-role-2"$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadFutureSchemaGrant(mock)
+		err := resources.CreateSchemaGrant(d, db)
+		a.NoError(err)
+	})
+}
+
+func expectReadFutureSchemaGrant(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
+	}).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "SCHEMA", "test-db.<SCHEMA>", "ROLE", "test-role-1", false,
+	).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "SCHEMA", "test-db.<SCHEMA>", "ROLE", "test-role-2", false,
+	)
+	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
+}
