@@ -63,7 +63,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
 	"on_future": &schema.Schema{

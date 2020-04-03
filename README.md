@@ -240,7 +240,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | privilege     | string | The privilege to grant on the current or future schema. Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.     | true     | false     | false    | "USAGE" |
 | roles         | set    | Grants privilege to these roles.                                                                                                                                   | true     | false     | false    | <nil>   |
 | schema_name   | string | The name of the schema on which to grant privileges.                                                                                                               | true     | false     | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                                                                                                                                  | true     | false     | false    | <nil>   |
+| shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                               | true     | false     | false    | <nil>   |
 
 ### snowflake_share
 
