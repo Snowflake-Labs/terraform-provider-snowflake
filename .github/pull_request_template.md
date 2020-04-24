@@ -4,9 +4,9 @@
 
 ## Test Plan
 <!-- detail ways in which this PR has been tested or needs to be tested -->
-[ ] acceptance tests
+* [ ] acceptance tests
 <!-- add more below if you think they are relevant -->
-[ ]
+* [ ]
 
 ## References
 <!-- issues documentation links, etc  -->
