@@ -1,7 +1,0 @@
-{
-  "Exclude": [
-    "exported (\\w+) ([\\w\\.]+) should have comment or be unexported",
-    "templates/templates-packr.go",
-    "error return value not checked \\(defer"
-  ]
-}

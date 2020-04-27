@@ -1,8 +1,6 @@
 package resources_test
 
 import (
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -50,11 +48,6 @@ func accountGrant(t *testing.T, id string, params map[string]interface{}) *schem
 	a.NotNil(d)
 	d.SetId(id)
 	return d
-}
-
-func fixture(name string) (string, error) {
-	b, err := ioutil.ReadFile(filepath.Join("testdata", name))
-	return string(b), err
 }
 
 func providers() map[string]terraform.ResourceProvider {
