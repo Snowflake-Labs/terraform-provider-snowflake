@@ -29,6 +29,9 @@ matrix:
     - name: docs check
       script:
         - make check-docs
+    - name: modules check
+      script:
+        - make check-mod
     - name: linter check
       script:
         - make lint-ci

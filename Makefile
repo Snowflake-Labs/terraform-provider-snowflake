@@ -4,7 +4,6 @@ export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else 
 # TODO add release flag
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
-export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 
 all: test docs install
@@ -69,7 +68,6 @@ test-acceptance-ci: ## runs all tests, including the acceptance tests which crea
 
 deps:
 	go mod tidy
-	go mod vendor
 .PHONY: deps
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
@@ -98,3 +96,8 @@ docs: build ## generate some docs
 check-docs: build ## check that docs have been generated
 	./scripts/update-readme.sh check
 .PHONY: check-docs
+
+check-mod:
+	go mod tidy
+	git diff --exit-code -- go.mod go.sum
+.PHONY: check-mod
