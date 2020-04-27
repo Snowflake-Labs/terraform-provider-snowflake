@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,20 +19,20 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestDatabaseCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":    "good_name",
 		"comment": "great comment",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
@@ -43,34 +42,34 @@ func expectRead(mock sqlmock.Sqlmock) {
 }
 
 func TestDatabaseRead(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectRead(mock)
 		err := resources.ReadDatabase(d, db)
-		a.NoError(err)
-		a.Equal("good_name", d.Get("name").(string))
-		a.Equal("mock comment", d.Get("comment").(string))
-		a.Equal(1, d.Get("data_retention_time_in_days").(int))
+		r.NoError(err)
+		r.Equal("good_name", d.Get("name").(string))
+		r.Equal("mock comment", d.Get("comment").(string))
+		r.Equal(1, d.Get("data_retention_time_in_days").(int))
 	})
 }
 
 func TestDatabaseDelete(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP DATABASE "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteDatabase(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",
@@ -80,30 +79,30 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 		},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" FROM SHARE "abc123"."my_share"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestDatabaseCreateFromDatabase(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":          "good_name",
 		"from_database": "abc123",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }

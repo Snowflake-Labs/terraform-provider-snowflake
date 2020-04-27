@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestTableGrant(t *testing.T) {
 }
 
 func TestTableGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"table_name":    "test-table",
@@ -34,7 +33,7 @@ func TestTableGrantCreate(t *testing.T) {
 		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -43,7 +42,7 @@ func TestTableGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadTableGrant(mock)
 		err := resources.CreateTableGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
@@ -63,7 +62,7 @@ func expectReadTableGrant(mock sqlmock.Sqlmock) {
 }
 
 func TestFutureTableGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"on_future":     true,
@@ -73,7 +72,7 @@ func TestFutureTableGrantCreate(t *testing.T) {
 		"roles":         []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -84,10 +83,10 @@ func TestFutureTableGrantCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureTableGrant(mock)
 		err := resources.CreateTableGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 
-	b := assert.New(t)
+	b := require.New(t)
 
 	in = map[string]interface{}{
 		"on_future":     true,

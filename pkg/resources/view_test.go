@@ -10,7 +10,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +20,7 @@ func TestView(t *testing.T) {
 }
 
 func TestViewCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":      "good_name",
@@ -31,7 +30,7 @@ func TestViewCreate(t *testing.T) {
 		"is_secure": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -40,7 +39,7 @@ func TestViewCreate(t *testing.T) {
 
 		expectReadView(mock)
 		err := resources.CreateView(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

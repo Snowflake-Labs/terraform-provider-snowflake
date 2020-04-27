@@ -6,7 +6,6 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -21,7 +20,7 @@ func TestManagedAccount(t *testing.T) {
 }
 
 func TestManagedAccountCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":           "test-account",
@@ -30,13 +29,13 @@ func TestManagedAccountCreate(t *testing.T) {
 		"comment":        "great comment",
 	}
 	d := schema.TestResourceDataRaw(t, resources.ManagedAccount().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^CREATE MANAGED ACCOUNT "test-account" ADMIN_NAME='bob' ADMIN_PASSWORD='abc123ABC' COMMENT='great comment' TYPE='READER'$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadManagedAccount(mock)
 		err := resources.CreateManagedAccount(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

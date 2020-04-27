@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestIntegrationGrant(t *testing.T) {
 }
 
 func TestIntegrationGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"integration_name": "test-integration",
@@ -31,19 +30,19 @@ func TestIntegrationGrantCreate(t *testing.T) {
 		"roles":            []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadIntegrationGrant(mock)
 		err := resources.CreateIntegrationGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestIntegrationGrantRead(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES", map[string]interface{}{
 		"integration_name": "test-integration",
@@ -51,12 +50,12 @@ func TestIntegrationGrantRead(t *testing.T) {
 		"roles":            []interface{}{"test-role-1", "test-role-2"},
 	})
 
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadIntegrationGrant(mock)
 		err := resources.ReadIntegrationGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestWarehouseGrant(t *testing.T) {
 }
 
 func TestWarehouseGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"warehouse_name": "test-warehouse",
@@ -31,14 +30,14 @@ func TestWarehouseGrantCreate(t *testing.T) {
 		"roles":          []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT USAGE ON WAREHOUSE "test-warehouse" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT USAGE ON WAREHOUSE "test-warehouse" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadWarehouseGrant(mock)
 		err := resources.CreateWarehouseGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

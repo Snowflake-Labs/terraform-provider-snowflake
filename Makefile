@@ -15,7 +15,7 @@ setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 .PHONY: setup
 
-lint: ## run the fast go linters
+lint: fmt ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff master"
 .PHONY: lint
 
@@ -23,7 +23,7 @@ lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -reporter=github-pr-review
 .PHONY: lint-ci
 
-lint-all: ## run the fast go linters
+lint-all: fmt ## run the fast go linters
 	# doesn't seem to be a way to get reviewdog to not filter by diff
 	./bin/golangci-lint run
 .PHONY: lint-all
@@ -54,11 +54,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test: deps ## run the tests
+test: fmt deps ## run the tests
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test
 
-test-acceptance: deps ## runs all tests, including the acceptance tests which create and destroys real resources
+test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
 	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
@@ -101,3 +101,7 @@ check-mod:
 	go mod tidy
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
+
+fmt:
+	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
+.PHONY: fmt
