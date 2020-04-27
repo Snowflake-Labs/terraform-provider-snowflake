@@ -64,8 +64,8 @@ func TestDiffSuppressStatement(t *testing.T) {
 		want bool
 	}{
 		{"select", args{"", "select * from foo;", "select * from foo;", nil}, true},
-		{"view 1", args{"", testhelpers.Fixture("view_1a.sql"), testhelpers.Fixture("view_1b.sql"), nil}, true},
-		{"view 2", args{"", testhelpers.Fixture("view_2a.sql"), testhelpers.Fixture("view_2b.sql"), nil}, true},
+		{"view 1", args{"", testhelpers.MustFixture("view_1a.sql"), testhelpers.MustFixture("view_1b.sql"), nil}, true},
+		{"view 2", args{"", testhelpers.MustFixture("view_2a.sql"), testhelpers.MustFixture("view_2b.sql"), nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

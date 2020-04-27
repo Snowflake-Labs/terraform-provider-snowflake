@@ -34,9 +34,9 @@ func TestAccUser(t *testing.T) {
 	a := assert.New(t)
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := randomdata.Email()
-	sshkey1, err := testhelpers.FixtureE("userkey1")
+	sshkey1, err := testhelpers.Fixture("userkey1")
 	a.NoError(err)
-	sshkey2, err := testhelpers.FixtureE("userkey2")
+	sshkey2, err := testhelpers.Fixture("userkey2")
 	a.NoError(err)
 
 	resource.Test(t, resource.TestCase{
