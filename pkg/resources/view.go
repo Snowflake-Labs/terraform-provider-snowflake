@@ -44,18 +44,30 @@ var viewSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the view.",
 	},
 	"statement": &schema.Schema{
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the query used to create the view.",
-		ForceNew:    true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			oldCollapseSpaces := space.ReplaceAllString(old, " ")
-			newCollapseSpaces := space.ReplaceAllString(new, " ")
-
-			return oldCollapseSpaces == newCollapseSpaces
-
-		},
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the query used to create the view.",
+		ForceNew:         true,
+		DiffSuppressFunc: DiffSuppressStatement,
 	},
+}
+
+func normalizeQuery(str string) string {
+	return strings.TrimSpace(space.ReplaceAllString(str, " "))
+}
+
+// DiffSuppressStatement will suppress diffs between statemens if they differ in only case or in
+// runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully
+// round-trip queries so we cannot do a simple character-wise comparison to detect changes.
+//
+// Warnings: We will have false positives in cases where a change in case or run of whitespace is
+// semantically significant.
+//
+// If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
+// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldnt'
+// find such a library.
+func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
+	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
 }
 
 // View returns a pointer to the resource representing a view
