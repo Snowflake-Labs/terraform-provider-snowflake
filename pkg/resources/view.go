@@ -63,7 +63,7 @@ func normalizeQuery(str string) string {
 // Warnings: We will have false positives in cases where a change in case or run of whitespace is
 // semantically significant.
 //
-// If we can find a sql parser that can handle the snowflake dialect then we should switch to pasing
+// If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
 // queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldnt'
 // find such a library.
 func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
