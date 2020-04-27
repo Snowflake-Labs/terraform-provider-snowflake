@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk v1.3.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/olekukonko/tablewriter v0.0.2
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
 	github.com/pkg/errors v0.9.1
