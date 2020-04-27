@@ -8,8 +8,8 @@ import (
 )
 
 func TestEscapeString(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
-	a.Equal(`\'`, snowflake.EscapeString(`'`))
-	a.Equal(`\\\'`, snowflake.EscapeString(`\'`))
+	r.Equal(`\'`, snowflake.EscapeString(`'`))
+	r.Equal(`\\\'`, snowflake.EscapeString(`\'`))
 }

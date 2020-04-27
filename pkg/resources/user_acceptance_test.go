@@ -31,13 +31,13 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 }
 
 func TestAccUser(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	prefix2 := randomdata.Email()
 	sshkey1, err := testhelpers.Fixture("userkey1")
-	a.NoError(err)
+	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")
-	a.NoError(err)
+	r.NoError(err)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),

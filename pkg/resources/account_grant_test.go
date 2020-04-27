@@ -22,38 +22,38 @@ func TestAccountGrant(t *testing.T) {
 }
 
 func TestAccountGrantCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"privilege": "CREATE DATABASE",
 		"roles":     []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadAccountGrant(mock)
 		err := resources.CreateAccountGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestAccountGrantRead(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS", map[string]interface{}{
 		"privilege": "MANAGE GRANTS",
 		"roles":     []interface{}{"test-role-1", "test-role-2"},
 	})
 
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadAccountGrant(mock)
 		err := resources.ReadAccountGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

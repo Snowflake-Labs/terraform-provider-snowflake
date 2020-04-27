@@ -19,7 +19,7 @@ func TestSchema(t *testing.T) {
 }
 
 func TestSchemaCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":         "good_name",
@@ -29,7 +29,7 @@ func TestSchemaCreate(t *testing.T) {
 		"is_managed":   true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -38,7 +38,7 @@ func TestSchemaCreate(t *testing.T) {
 
 		expectReadSchema(mock)
 		err := resources.CreateSchema(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

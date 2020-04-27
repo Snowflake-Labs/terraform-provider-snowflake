@@ -20,7 +20,7 @@ func TestResourceMonitor(t *testing.T) {
 }
 
 func TestResourceMonitorCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":                       "good_name",
@@ -31,7 +31,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -40,7 +40,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 		expectReadResourceMonitor(mock)
 		err := resources.CreateResourceMonitor(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
@@ -56,7 +56,7 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 }
 
 func TestResourceMonitorDelete(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",
@@ -69,12 +69,12 @@ func TestResourceMonitorDelete(t *testing.T) {
 		mock.ExpectExec(`^DROP RESOURCE MONITOR "good_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := resources.DeleteResourceMonitor(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestResourceMonitorExists(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",
@@ -87,7 +87,7 @@ func TestResourceMonitorExists(t *testing.T) {
 		expectReadResourceMonitor(mock)
 
 		ok, err := resources.ResourceMonitorExists(d, db)
-		a.NoError(err)
-		a.True(ok)
+		r.NoError(err)
+		r.True(ok)
 	})
 }

@@ -22,7 +22,7 @@ func TestDatabaseGrant(t *testing.T) {
 }
 
 func TestDatabaseGrantCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"database_name": "test-database",
@@ -31,7 +31,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -40,12 +40,12 @@ func TestDatabaseGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadDatabaseGrant(mock)
 		err := resources.CreateDatabaseGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestDatabaseGrantRead(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
 		"database_name": "test-database",
@@ -54,12 +54,12 @@ func TestDatabaseGrantRead(t *testing.T) {
 		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	})
 
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadDatabaseGrant(mock)
 		err := resources.ReadDatabaseGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

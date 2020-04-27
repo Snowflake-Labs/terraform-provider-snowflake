@@ -8,33 +8,33 @@ import (
 )
 
 func TestFutureSchemaGrant(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	fvg := snowflake.FutureSchemaGrant("test_db")
-	a.Equal(fvg.Name(), "test_db")
+	r.Equal(fvg.Name(), "test_db")
 
 	s := fvg.Show()
-	a.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 
 	s = fvg.Role("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" TO ROLE "bob"`, s)
+	r.Equal(`GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	r.Equal(`REVOKE USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" FROM ROLE "bob"`, s)
 }
 
 func TestFutureTableGrant(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	fvg := snowflake.FutureTableGrant("test_db", "PUBLIC")
-	a.Equal(fvg.Name(), "PUBLIC")
+	r.Equal(fvg.Name(), "PUBLIC")
 
 	s := fvg.Show()
-	a.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
 	s = fvg.Role("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
+	r.Equal(`GRANT USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	r.Equal(`REVOKE USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureTableGrant("test_db", "")
@@ -51,18 +51,18 @@ func TestFutureTableGrant(t *testing.T) {
 }
 
 func TestFutureViewGrant(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	fvg := snowflake.FutureViewGrant("test_db", "PUBLIC")
-	a.Equal(fvg.Name(), "PUBLIC")
+	r.Equal(fvg.Name(), "PUBLIC")
 
 	s := fvg.Show()
-	a.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
 	s = fvg.Role("bob").Grant("USAGE")
-	a.Equal(`GRANT USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
+	r.Equal(`GRANT USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
-	a.Equal(`REVOKE USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	r.Equal(`REVOKE USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureViewGrant("test_db", "")
@@ -79,16 +79,16 @@ func TestFutureViewGrant(t *testing.T) {
 }
 
 func TestShowFutureGrantsInSchema(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	s := snowflake.FutureTableGrant("test_db", "PUBLIC").Role("testRole").Show()
-	a.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
 	s = snowflake.FutureTableGrant("test_db", "").Role("testRole").Show()
-	a.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 
 	s = snowflake.FutureViewGrant("test_db", "PUBLIC").Role("testRole").Show()
-	a.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
 	s = snowflake.FutureViewGrant("test_db", "").Role("testRole").Show()
-	a.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+	r.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 }

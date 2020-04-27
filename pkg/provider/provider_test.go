@@ -10,13 +10,13 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 	err := provider.Provider().InternalValidate()
-	a.NoError(err)
+	r.NoError(err)
 }
 
 // func TestConfigureProvider(t *testing.T) {
-// 	// a := require.New(t)
+// 	// r := require.New(t)
 // }
 
 func TestDSN(t *testing.T) {
@@ -49,7 +49,7 @@ func TestDSN(t *testing.T) {
 }
 
 func resourceData(t *testing.T, account, username, password, region, role string) *schema.ResourceData {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"account":  account,
@@ -60,6 +60,6 @@ func resourceData(t *testing.T, account, username, password, region, role string
 	}
 
 	d := schema.TestResourceDataRaw(t, provider.Provider().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 	return d
 }

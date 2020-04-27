@@ -21,7 +21,7 @@ func TestSchemaGrant(t *testing.T) {
 }
 
 func TestSchemaGrantCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	for _, test_priv := range []string{"USAGE", "MODIFY"} {
 		in := map[string]interface{}{
@@ -32,7 +32,7 @@ func TestSchemaGrantCreate(t *testing.T) {
 			"shares":        []interface{}{"test-share-1", "test-share-2"},
 		}
 		d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
-		a.NotNil(d)
+		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 			mock.ExpectExec(
@@ -49,7 +49,7 @@ func TestSchemaGrantCreate(t *testing.T) {
 			).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadSchemaGrant(mock, test_priv)
 			err := resources.CreateSchemaGrant(d, db)
-			a.NoError(err)
+			r.NoError(err)
 		})
 	}
 }
@@ -70,7 +70,7 @@ func expectReadSchemaGrant(mock sqlmock.Sqlmock, test_priv string) {
 }
 
 func TestFutureSchemaGrantCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"on_future":     true,
@@ -79,7 +79,7 @@ func TestFutureSchemaGrantCreate(t *testing.T) {
 		"roles":         []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -90,7 +90,7 @@ func TestFutureSchemaGrantCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureSchemaGrant(mock)
 		err := resources.CreateSchemaGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

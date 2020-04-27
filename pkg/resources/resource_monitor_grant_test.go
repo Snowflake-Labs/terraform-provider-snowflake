@@ -22,7 +22,7 @@ func TestResourceMonitorGrant(t *testing.T) {
 }
 
 func TestResourceMonitorGrantCreate(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"monitor_name": "test-monitor",
@@ -30,19 +30,19 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 		"roles":        []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT MONITOR ON RESOURCE MONITOR "test-monitor" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT MONITOR ON RESOURCE MONITOR "test-monitor" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadResourceMonitorGrant(mock)
 		err := resources.CreateResourceMonitorGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestResourceMonitorGrantRead(t *testing.T) {
-	a := require.New(t)
+	r := require.New(t)
 
 	d := resourceMonitorGrant(t, "test-monitor|||MONITOR", map[string]interface{}{
 		"monitor_name": "test-monitor",
@@ -50,12 +50,12 @@ func TestResourceMonitorGrantRead(t *testing.T) {
 		"roles":        []interface{}{"test-role-1", "test-role-2"},
 	})
 
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadResourceMonitorGrant(mock)
 		err := resources.ReadResourceMonitorGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
