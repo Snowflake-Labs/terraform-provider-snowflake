@@ -11,7 +11,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +21,7 @@ func TestStageGrant(t *testing.T) {
 }
 
 func TestStageGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	for _, test_priv := range []string{"USAGE", "READ"} {
 		in := map[string]interface{}{
@@ -34,7 +33,7 @@ func TestStageGrantCreate(t *testing.T) {
 			"shares":        []interface{}{"test-share-1", "test-share-2"},
 		}
 		d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, in)
-		a.NotNil(d)
+		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -43,7 +42,7 @@ func TestStageGrantCreate(t *testing.T) {
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-2"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadStageGrant(mock, test_priv)
 			err := resources.CreateStageGrant(d, db)
-			a.NoError(err)
+			r.NoError(err)
 		})
 	}
 }

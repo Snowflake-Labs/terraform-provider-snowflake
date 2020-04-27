@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStorageIntegration(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 	builder := snowflake.StorageIntegration("aws")
-	a.NotNil(builder)
+	r.NotNil(builder)
 
 	q := builder.Show()
-	a.Equal("SHOW STORAGE INTEGRATIONS LIKE 'aws'", q)
+	r.Equal("SHOW STORAGE INTEGRATIONS LIKE 'aws'", q)
 
 	c := builder.Create()
 
@@ -22,5 +22,5 @@ func TestStorageIntegration(t *testing.T) {
 	c.SetBool(`enabled`, true)
 	q = c.Statement()
 
-	a.Equal(`CREATE STORAGE INTEGRATION "aws" TYPE='EXTERNAL_STAGE' STORAGE_ALLOWED_LOCATIONS=('s3://my-bucket/my-path/', 's3://another-bucket/') ENABLED=true`, q)
+	r.Equal(`CREATE STORAGE INTEGRATION "aws" TYPE='EXTERNAL_STAGE' STORAGE_ALLOWED_LOCATIONS=('s3://my-bucket/my-path/', 's3://another-bucket/') ENABLED=true`, q)
 }

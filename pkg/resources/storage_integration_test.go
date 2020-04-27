@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestStorageIntegration(t *testing.T) {
 }
 
 func TestStorageIntegrationCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":                      "test_storage_integration",
@@ -30,7 +29,7 @@ func TestStorageIntegrationCreate(t *testing.T) {
 		"storage_aws_role_arn":      "we-should-probably-validate-this-string",
 	}
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -39,12 +38,12 @@ func TestStorageIntegrationCreate(t *testing.T) {
 		expectReadStorageIntegration(mock)
 
 		err := resources.CreateStorageIntegration(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestStorageIntegrationRead(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := storageIntegration(t, "test_storage_integration", map[string]interface{}{"name": "test_storage_integration"})
 
@@ -52,19 +51,19 @@ func TestStorageIntegrationRead(t *testing.T) {
 		expectReadStorageIntegration(mock)
 
 		err := resources.ReadStorageIntegration(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
 func TestStorageIntegrationDelete(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := storageIntegration(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP STORAGE INTEGRATION "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteStorageIntegration(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
