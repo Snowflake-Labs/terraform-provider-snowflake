@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestRoleGrants(t *testing.T) {
 }
 
 func TestRoleGrantsCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
@@ -55,7 +54,7 @@ func expectReadRoleGrants(mock sqlmock.Sqlmock) {
 }
 
 func TestRoleGrantsRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
@@ -73,7 +72,7 @@ func TestRoleGrantsRead(t *testing.T) {
 }
 
 func TestRoleGrantsDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{
 		"role_name": "drop_it",

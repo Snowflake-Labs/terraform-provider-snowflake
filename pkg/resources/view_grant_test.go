@@ -10,7 +10,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +20,7 @@ func TestViewGrant(t *testing.T) {
 }
 
 func TestViewGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"view_name":     "test-view",
@@ -61,7 +60,7 @@ func expectReadViewGrant(mock sqlmock.Sqlmock) {
 }
 
 func TestFutureViewGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"on_future":     true,
@@ -85,7 +84,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		a.NoError(err)
 	})
 
-	b := assert.New(t)
+	b := require.New(t)
 
 	in = map[string]interface{}{
 		"on_future":     true,

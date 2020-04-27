@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestTableGrant(t *testing.T) {
 }
 
 func TestTableGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"table_name":    "test-table",
@@ -63,7 +62,7 @@ func expectReadTableGrant(mock sqlmock.Sqlmock) {
 }
 
 func TestFutureTableGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"on_future":     true,
@@ -87,7 +86,7 @@ func TestFutureTableGrantCreate(t *testing.T) {
 		a.NoError(err)
 	})
 
-	b := assert.New(t)
+	b := require.New(t)
 
 	in = map[string]interface{}{
 		"on_future":     true,

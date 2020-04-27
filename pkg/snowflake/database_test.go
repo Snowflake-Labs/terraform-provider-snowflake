@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDatabase(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	db := snowflake.Database("db1")
 	a.NotNil(db)
 
@@ -42,14 +42,14 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	db := snowflake.DatabaseFromShare("db1", "abc123", "share1")
 	q := db.Create()
 	a.Equal(`CREATE DATABASE "db1" FROM SHARE "abc123"."share1"`, q)
 }
 
 func TestDatabaseCreateFromDatabase(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	db := snowflake.DatabaseFromDatabase("db1", "abc123")
 	q := db.Create()
 	a.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)

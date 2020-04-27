@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestStorageIntegration(t *testing.T) {
 }
 
 func TestStorageIntegrationCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":                      "test_storage_integration",
@@ -44,7 +43,7 @@ func TestStorageIntegrationCreate(t *testing.T) {
 }
 
 func TestStorageIntegrationRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := storageIntegration(t, "test_storage_integration", map[string]interface{}{"name": "test_storage_integration"})
 
@@ -57,7 +56,7 @@ func TestStorageIntegrationRead(t *testing.T) {
 }
 
 func TestStorageIntegrationDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := storageIntegration(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 

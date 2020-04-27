@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestAccountGrant(t *testing.T) {
 }
 
 func TestAccountGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"privilege": "CREATE DATABASE",
@@ -42,7 +41,7 @@ func TestAccountGrantCreate(t *testing.T) {
 }
 
 func TestAccountGrantRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS", map[string]interface{}{
 		"privilege": "MANAGE GRANTS",

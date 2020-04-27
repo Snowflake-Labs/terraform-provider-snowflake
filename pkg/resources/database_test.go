@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestDatabaseCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":    "good_name",
@@ -43,7 +42,7 @@ func expectRead(mock sqlmock.Sqlmock) {
 }
 
 func TestDatabaseRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
 
@@ -58,7 +57,7 @@ func TestDatabaseRead(t *testing.T) {
 }
 
 func TestDatabaseDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := database(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 
@@ -70,7 +69,7 @@ func TestDatabaseDelete(t *testing.T) {
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",
@@ -91,7 +90,7 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 }
 
 func TestDatabaseCreateFromDatabase(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":          "good_name",

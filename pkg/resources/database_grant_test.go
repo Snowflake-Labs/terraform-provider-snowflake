@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestDatabaseGrant(t *testing.T) {
 }
 
 func TestDatabaseGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"database_name": "test-database",
@@ -46,7 +45,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 }
 
 func TestDatabaseGrantRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
 		"database_name": "test-database",

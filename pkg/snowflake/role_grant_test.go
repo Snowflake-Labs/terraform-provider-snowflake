@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRoleGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	rg := snowflake.RoleGrant("role1")
 
 	u := rg.User("user1").Grant()

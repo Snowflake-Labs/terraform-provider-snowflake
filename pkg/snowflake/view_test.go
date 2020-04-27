@@ -3,11 +3,11 @@ package snowflake
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestView(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	v := View("test")
 	a.NotNil(v)
 	a.False(v.secure)
@@ -62,7 +62,7 @@ func TestView(t *testing.T) {
 }
 
 func TestQualifiedName(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	v := View("view")
 	a.Equal(v.QualifiedName(), `"view"`)
 
@@ -77,7 +77,7 @@ func TestQualifiedName(t *testing.T) {
 }
 
 func TestRename(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	v := View("test")
 
 	q := v.Rename("test2")

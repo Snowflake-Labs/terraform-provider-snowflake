@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestResourceMonitorGrant(t *testing.T) {
 }
 
 func TestResourceMonitorGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"monitor_name": "test-monitor",
@@ -43,7 +42,7 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 }
 
 func TestResourceMonitorGrantRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := resourceMonitorGrant(t, "test-monitor|||MONITOR", map[string]interface{}{
 		"monitor_name": "test-monitor",

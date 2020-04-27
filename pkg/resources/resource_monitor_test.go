@@ -6,7 +6,6 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -21,7 +20,7 @@ func TestResourceMonitor(t *testing.T) {
 }
 
 func TestResourceMonitorCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":                       "good_name",
@@ -57,7 +56,7 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 }
 
 func TestResourceMonitorDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",
@@ -75,7 +74,7 @@ func TestResourceMonitorDelete(t *testing.T) {
 }
 
 func TestResourceMonitorExists(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name": "good_name",

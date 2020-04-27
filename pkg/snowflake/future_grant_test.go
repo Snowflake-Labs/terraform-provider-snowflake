@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFutureSchemaGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	fvg := snowflake.FutureSchemaGrant("test_db")
 	a.Equal(fvg.Name(), "test_db")
 
@@ -23,7 +23,7 @@ func TestFutureSchemaGrant(t *testing.T) {
 }
 
 func TestFutureTableGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	fvg := snowflake.FutureTableGrant("test_db", "PUBLIC")
 	a.Equal(fvg.Name(), "PUBLIC")
 
@@ -36,7 +36,7 @@ func TestFutureTableGrant(t *testing.T) {
 	s = fvg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
 
-	b := assert.New(t)
+	b := require.New(t)
 	fvgd := snowflake.FutureTableGrant("test_db", "")
 	b.Equal(fvgd.Name(), "test_db")
 
@@ -51,7 +51,7 @@ func TestFutureTableGrant(t *testing.T) {
 }
 
 func TestFutureViewGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	fvg := snowflake.FutureViewGrant("test_db", "PUBLIC")
 	a.Equal(fvg.Name(), "PUBLIC")
 
@@ -64,7 +64,7 @@ func TestFutureViewGrant(t *testing.T) {
 	s = fvg.Role("bob").Revoke("USAGE")
 	a.Equal(`REVOKE USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
 
-	b := assert.New(t)
+	b := require.New(t)
 	fvgd := snowflake.FutureViewGrant("test_db", "")
 	b.Equal(fvgd.Name(), "test_db")
 
@@ -79,7 +79,7 @@ func TestFutureViewGrant(t *testing.T) {
 }
 
 func TestShowFutureGrantsInSchema(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := snowflake.FutureTableGrant("test_db", "PUBLIC").Role("testRole").Show()
 	a.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 

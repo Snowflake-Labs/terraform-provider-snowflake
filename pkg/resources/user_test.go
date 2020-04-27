@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestUserCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":                 "good_name",
@@ -57,7 +56,7 @@ func expectReadUser(mock sqlmock.Sqlmock) {
 }
 
 func TestUserRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
 
@@ -72,7 +71,7 @@ func TestUserRead(t *testing.T) {
 }
 
 func TestUserExists(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
 
@@ -85,7 +84,7 @@ func TestUserExists(t *testing.T) {
 }
 
 func TestUserDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 

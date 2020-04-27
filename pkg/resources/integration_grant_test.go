@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -23,7 +22,7 @@ func TestIntegrationGrant(t *testing.T) {
 }
 
 func TestIntegrationGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"integration_name": "test-integration",
@@ -43,7 +42,7 @@ func TestIntegrationGrantCreate(t *testing.T) {
 }
 
 func TestIntegrationGrantRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES", map[string]interface{}{
 		"integration_name": "test-integration",

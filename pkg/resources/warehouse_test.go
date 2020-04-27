@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestWarehouse(t *testing.T) {
 }
 
 func TestWarehouseCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":    "good_name",
@@ -43,7 +42,7 @@ func expectReadWarehouse(mock sqlmock.Sqlmock) {
 }
 
 func TestWarehouseRead(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := warehouse(t, "good_name", map[string]interface{}{"name": "good_name"})
 
@@ -56,7 +55,7 @@ func TestWarehouseRead(t *testing.T) {
 }
 
 func TestWarehouseDelete(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	d := warehouse(t, "drop_it", map[string]interface{}{"name": "drop_it"})
 

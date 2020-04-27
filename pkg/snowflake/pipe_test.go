@@ -3,11 +3,11 @@ package snowflake
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPipeCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
 	a.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_pipe"`)
 
@@ -24,25 +24,25 @@ func TestPipeCreate(t *testing.T) {
 }
 
 func TestPipeChangeComment(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
 	a.Equal(s.ChangeComment("worst pipe ever"), `ALTER PIPE "test_db"."test_schema"."test_pipe" SET COMMENT = 'worst pipe ever'`)
 }
 
 func TestPipeRemoveComment(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
 	a.Equal(s.RemoveComment(), `ALTER PIPE "test_db"."test_schema"."test_pipe" UNSET COMMENT`)
 }
 
 func TestPipeDrop(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
 	a.Equal(s.Drop(), `DROP PIPE "test_db"."test_schema"."test_pipe"`)
 }
 
 func TestPipeShow(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
 	a.Equal(s.Show(), `SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"`)
 }

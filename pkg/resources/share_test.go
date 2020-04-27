@@ -6,7 +6,6 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -21,7 +20,7 @@ func TestShare(t *testing.T) {
 }
 
 func TestShareCreate(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	in := map[string]interface{}{
 		"name":     "test-share",
@@ -53,7 +52,7 @@ func expectReadShare(mock sqlmock.Sqlmock) {
 }
 
 func TestStripAccountFromName(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := "yt12345.my_share"
 	a.Equal("my_share", resources.StripAccountFromName(s))
 

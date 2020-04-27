@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceMonitor(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	rm := snowflake.ResourceMonitor("resource_monitor")
 	a.NotNil(rm)
 

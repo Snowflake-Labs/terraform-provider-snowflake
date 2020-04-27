@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDatabaseGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	dg := snowflake.DatabaseGrant("testDB")
 	a.Equal(dg.Name(), "testDB")
 
@@ -32,7 +32,7 @@ func TestDatabaseGrant(t *testing.T) {
 }
 
 func TestSchemaGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	sg := snowflake.SchemaGrant("test_db", "testSchema")
 	a.Equal(sg.Name(), "testSchema")
 
@@ -56,7 +56,7 @@ func TestSchemaGrant(t *testing.T) {
 }
 
 func TestViewGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	vg := snowflake.ViewGrant("test_db", "PUBLIC", "testView")
 	a.Equal(vg.Name(), "testView")
 
@@ -80,7 +80,7 @@ func TestViewGrant(t *testing.T) {
 }
 
 func TestWarehouseGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	wg := snowflake.WarehouseGrant("test_warehouse")
 	a.Equal(wg.Name(), "test_warehouse")
 
@@ -99,7 +99,7 @@ func TestWarehouseGrant(t *testing.T) {
 }
 
 func TestAccountGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	wg := snowflake.AccountGrant()
 	a.Equal(wg.Name(), "")
 
@@ -117,7 +117,7 @@ func TestAccountGrant(t *testing.T) {
 }
 
 func TestIntegrationGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	wg := snowflake.IntegrationGrant("test_integration")
 	a.Equal(wg.Name(), "test_integration")
 
@@ -135,7 +135,7 @@ func TestIntegrationGrant(t *testing.T) {
 }
 
 func TestResourceMonitorGrant(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	wg := snowflake.ResourceMonitorGrant("test_monitor")
 	a.Equal(wg.Name(), "test_monitor")
 
@@ -150,7 +150,7 @@ func TestResourceMonitorGrant(t *testing.T) {
 }
 
 func TestShowGrantsOf(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	s := snowflake.ViewGrant("test_db", "PUBLIC", "testView").Role("testRole").Show()
 	a.Equal(`SHOW GRANTS OF ROLE "testRole"`, s)
 

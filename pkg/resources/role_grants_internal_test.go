@@ -6,11 +6,11 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_grantToRole(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`GRANT ROLE "foo" TO ROLE "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -20,7 +20,7 @@ func Test_grantToRole(t *testing.T) {
 }
 
 func Test_grantToUser(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`GRANT ROLE "foo" TO USER "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -30,7 +30,7 @@ func Test_grantToUser(t *testing.T) {
 }
 
 func Test_readGrants(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		rows := sqlmock.NewRows([]string{"created_on", "role", "granted_to", "grantee_name", "granted_by"}).AddRow("_", "foo", "ROLE", "bam", "")
@@ -45,7 +45,7 @@ func Test_readGrants(t *testing.T) {
 }
 
 func Test_revokeRoleFromRole(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM ROLE "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := revokeRoleFromRole(db, "foo", "bar")
@@ -55,7 +55,7 @@ func Test_revokeRoleFromRole(t *testing.T) {
 
 }
 func Test_revokeRoleFromUser(t *testing.T) {
-	a := assert.New(t)
+	a := require.New(t)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM USER "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := revokeRoleFromUser(db, "foo", "bar")
