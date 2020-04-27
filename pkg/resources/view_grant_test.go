@@ -10,7 +10,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +20,7 @@ func TestViewGrant(t *testing.T) {
 }
 
 func TestViewGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"view_name":     "test-view",
@@ -32,7 +31,7 @@ func TestViewGrantCreate(t *testing.T) {
 		"shares":        []interface{}{"test-share-1", "test-share-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -41,7 +40,7 @@ func TestViewGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
@@ -61,7 +60,7 @@ func expectReadViewGrant(mock sqlmock.Sqlmock) {
 }
 
 func TestFutureViewGrantCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"on_future":     true,
@@ -71,7 +70,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		"roles":         []interface{}{"test-role-1", "test-role-2"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -82,10 +81,10 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 
-	b := assert.New(t)
+	b := require.New(t)
 
 	in = map[string]interface{}{
 		"on_future":     true,

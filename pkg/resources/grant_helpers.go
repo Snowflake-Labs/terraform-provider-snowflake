@@ -285,10 +285,10 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 			return nil, err
 		}
 		if currentGrant.GrantedBy == "" {
-		  // If GrantedBy is empty string, terraform can't
-		  // manage the grant because the grant is a default
-		  // grant seeded by Snowflake.
-		  continue
+			// If GrantedBy is empty string, terraform can't
+			// manage the grant because the grant is a default
+			// grant seeded by Snowflake.
+			continue
 		}
 
 		grant := &grant{

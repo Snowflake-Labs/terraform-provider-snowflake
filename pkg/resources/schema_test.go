@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestSchema(t *testing.T) {
 }
 
 func TestSchemaCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":         "good_name",
@@ -30,7 +29,7 @@ func TestSchemaCreate(t *testing.T) {
 		"is_managed":   true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -39,7 +38,7 @@ func TestSchemaCreate(t *testing.T) {
 
 		expectReadSchema(mock)
 		err := resources.CreateSchema(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

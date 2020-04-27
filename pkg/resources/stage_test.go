@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestStage(t *testing.T) {
 }
 
 func TestStageCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	in := map[string]interface{}{
 		"name":     "test_stage",
@@ -29,7 +28,7 @@ func TestStageCreate(t *testing.T) {
 		"comment":  "great comment",
 	}
 	d := schema.TestResourceDataRaw(t, resources.Stage().Schema, in)
-	a.NotNil(d)
+	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
@@ -39,7 +38,7 @@ func TestStageCreate(t *testing.T) {
 		expectReadStage(mock)
 		expectReadStageShow(mock)
 		err := resources.CreateStage(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 

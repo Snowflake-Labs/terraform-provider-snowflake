@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,7 @@ func TestRoleGrants(t *testing.T) {
 }
 
 func TestRoleGrantsCreate(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
@@ -35,7 +34,7 @@ func TestRoleGrantsCreate(t *testing.T) {
 		mock.ExpectExec(`GRANT ROLE "good_name" TO USER "user2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRoleGrants(mock)
 		err := resources.CreateRoleGrants(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
 
@@ -55,7 +54,7 @@ func expectReadRoleGrants(mock sqlmock.Sqlmock) {
 }
 
 func TestRoleGrantsRead(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := roleGrants(t, "good_name", map[string]interface{}{
 		"role_name": "good_name",
@@ -66,14 +65,14 @@ func TestRoleGrantsRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadRoleGrants(mock)
 		err := resources.ReadRoleGrants(d, db)
-		a.NoError(err)
-		a.Len(d.Get("users").(*schema.Set).List(), 2)
-		a.Len(d.Get("roles").(*schema.Set).List(), 2)
+		r.NoError(err)
+		r.Len(d.Get("users").(*schema.Set).List(), 2)
+		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
 
 func TestRoleGrantsDelete(t *testing.T) {
-	a := assert.New(t)
+	r := require.New(t)
 
 	d := roleGrants(t, "drop_it", map[string]interface{}{
 		"role_name": "drop_it",
@@ -88,6 +87,6 @@ func TestRoleGrantsDelete(t *testing.T) {
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM USER "user1"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM USER "user2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteRoleGrants(d, db)
-		a.NoError(err)
+		r.NoError(err)
 	})
 }
