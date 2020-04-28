@@ -74,3 +74,24 @@ func TestDiffSuppressStatement(t *testing.T) {
 		})
 	}
 }
+
+func Test_extractViewStatement(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"select", args{"create view asdf as select * from foo"}, "select * from foo"},
+		{"cte", args{"create view jkl as with roles as (SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES) select * from roles;"}, "with roles as (SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES) select * from roles;"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resources.ExtractViewStatement(tt.args.input); got != tt.want {
+				t.Errorf("extractViewStatement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

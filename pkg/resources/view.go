@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -159,16 +160,25 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-	cleanString := space.ReplaceAllString(text.String, " ")
-	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
-	substringOfQuery := cleanString[indexOfSelect+4:]
+	substringOfQuery := ExtractViewStatement(text.String)
 	err = data.Set("statement", substringOfQuery)
 	if err != nil {
 		return err
 	}
 
 	return data.Set("database", databaseName.String)
+}
+
+func ExtractViewStatement(input string) string {
+	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
+	cleanString := space.ReplaceAllString(input, " ")
+	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
+	log.Printf("[DEBUG] indexOfSelect: %d", indexOfSelect)
+	if indexOfSelect == -1 {
+		indexOfSelect = strings.Index(strings.ToUpper(cleanString), " AS WITH")
+		log.Printf("[DEBUG] indexOfSelect: %d", indexOfSelect)
+	}
+	return cleanString[indexOfSelect+4:]
 }
 
 // UpdateView implements schema.UpdateFunc
