@@ -19,6 +19,8 @@ create view foo as
 select *
 from bar;`
 
+	secure := "create secure view foo as select * from bar;"
+
 	type args struct {
 		input string
 	}
@@ -32,6 +34,7 @@ from bar;`
 		{"parens", args{parens}, "(select * from bar);", false},
 		{"multiline", args{multiline}, "select *\nfrom bar;", false},
 		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
+		{"secure", args{secure}, "select * from bar;", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
