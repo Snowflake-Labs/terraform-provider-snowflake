@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
