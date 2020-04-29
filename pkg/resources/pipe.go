@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -45,6 +46,12 @@ var pipeSchema = map[string]*schema.Schema{
 		Required:    true,
 		ForceNew:    true,
 		Description: "Specifies the copy statement for the pipe.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.TrimSuffix(old, "\n") == strings.TrimSuffix(new, "\n") {
+				return true
+			}
+			return false
+		},
 	},
 	"auto_ingest": &schema.Schema{
 		Type:        schema.TypeBool,
@@ -338,6 +345,8 @@ func showPipe(db *sql.DB, query string) (showPipeResult, error) {
 	if err != nil {
 		return r, err
 	}
+
+	log.Print(r.definition)
 
 	return r, nil
 }
