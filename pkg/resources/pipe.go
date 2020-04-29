@@ -345,8 +345,5 @@ func showPipe(db *sql.DB, query string) (showPipeResult, error) {
 	if err != nil {
 		return r, err
 	}
-
-	log.Print(r.definition)
-
 	return r, nil
 }
