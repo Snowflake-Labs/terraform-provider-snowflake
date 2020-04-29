@@ -6,6 +6,19 @@ import (
 )
 
 func TestViewSelectStatementExtractor_Extract(t *testing.T) {
+	basic := "create view foo as select * from bar;"
+	parens := "create view foo as (select * from bar);"
+	multiline := `
+create view foo as
+select *
+from bar;`
+
+	multilineComment := `
+create view foo as
+-- comment
+select *
+from bar;`
+
 	type args struct {
 		input string
 	}
@@ -15,7 +28,10 @@ func TestViewSelectStatementExtractor_Extract(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"basic", args{"create view foo as select * from bar;"}, "select * from bar;", false},
+		{"basic", args{basic}, "select * from bar;", false},
+		{"parens", args{parens}, "(select * from bar);", false},
+		{"multiline", args{multiline}, "select *\nfrom bar;", false},
+		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -26,7 +42,7 @@ func TestViewSelectStatementExtractor_Extract(t *testing.T) {
 				return
 			}
 			if got != tt.want {
-				t.Errorf("ViewSelectStatementExtractor.Extract() = '%v', want %v", got, tt.want)
+				t.Errorf("ViewSelectStatementExtractor.Extract() = '%v', want '%v'", got, tt.want)
 			}
 		})
 	}

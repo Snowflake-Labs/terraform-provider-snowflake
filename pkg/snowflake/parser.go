@@ -19,6 +19,7 @@ func NewViewSelectStatementExtractor(input string) *ViewSelectStatementExtractor
 }
 
 func (e *ViewSelectStatementExtractor) Extract() (string, error) {
+	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()
 	e.consumeToken("view")
@@ -32,6 +33,7 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 }
 
 func (e *ViewSelectStatementExtractor) consumeToken(t string) {
+	fmt.Printf("consume token %s\n", t)
 	found := 0
 	for i, r := range t {
 		fmt.Printf("e.pos %d r %s\n", e.pos, string(r))
