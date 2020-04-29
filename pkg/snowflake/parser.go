@@ -1,81 +1,76 @@
 package snowflake
 
 import (
-	"strings"
+	"fmt"
+	"unicode"
 )
 
 // ViewSelectStatementExtractor is a simplistic parser that only exists to extract the select statement from a
 // create view statement
 type ViewSelectStatementExtractor struct {
-	input string
+	input []rune
 	pos   int
 }
 
 func NewViewSelectStatementExtractor(input string) *ViewSelectStatementExtractor {
 	return &ViewSelectStatementExtractor{
-		input: input,
+		input: []rune(input),
 	}
 }
 
 func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeToken("create")
-	// e.consumeSpace()
+	e.consumeSpace()
+	e.consumeToken("view")
+	e.consumeSpace()
+	e.consumeIdentifier()
+	e.consumeSpace()
+	e.consumeToken("as")
+	e.consumeSpace()
 
-	return "", nil
-}
-
-func (e *ViewSelectStatementExtractor) remainingString() string {
-	if e.pos >= len(e.input) {
-		return ""
-	}
-	return e.input[e.pos:]
-}
-
-func max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func (e *ViewSelectStatementExtractor) nextN(n int) string {
-	if e.pos >= len(e.input) {
-		return ""
-	}
-
-	if e.pos+n > len(e.input) {
-		n = len(e.input) - e.pos
-	}
-	return e.input[e.pos : e.pos+n]
+	return string(e.input[e.pos:]), nil
 }
 
 func (e *ViewSelectStatementExtractor) consumeToken(t string) {
-	lenT := len(t)
-
-	if len(e.remainingString()) < lenT {
-		return
+	found := 0
+	for i, r := range t {
+		fmt.Printf("e.pos %d r %s\n", e.pos, string(r))
+		if e.pos+i > len(e.input) || r != e.input[e.pos+i] {
+			break
+		}
+		found += 1
 	}
+	fmt.Printf("found %d\n", found)
 
-	if strings.EqualFold(e.nextN(lenT), t) {
+	if found == len(t) {
 		e.pos += len(t)
 	}
 }
 
-func (e *ViewSelectStatementExtractor) done() bool {
-	return e.pos >= len(e.input)
+func (e *ViewSelectStatementExtractor) consumeSpace() {
+	found := 0
+	for {
+		fmt.Printf("e.pos %d found %d r %s\n", e.pos, found, string(e.input[e.pos+found]))
+		if e.pos+found > len(e.input)-1 || !unicode.IsSpace(e.input[e.pos+found]) {
+			break
+		}
+		found += 1
+	}
+	e.pos += found
 }
 
-// only safe to call if you know done() is not true
-func (e *ViewSelectStatementExtractor) peek() byte {
-	return e.input[e.pos]
+func (e *ViewSelectStatementExtractor) consumeIdentifier() {
+	// TODO quoted identifiers
+	e.consumeNonSpace()
 }
 
-// func (e *ViewSelectStatementExtractor) consumeSpace() {
-// 	for {
-// 		if e.done() || !unicode.IsSpace(e.peek()) {
-// 			return
-// 		}
-
-// 		e.pos += 1
-// 	}
-// }
+func (e *ViewSelectStatementExtractor) consumeNonSpace() {
+	found := 0
+	for {
+		if e.pos+found > len(e.input)-1 || unicode.IsSpace(e.input[e.pos+found]) {
+			break
+		}
+		found += 1
+	}
+	e.pos += found
+}
