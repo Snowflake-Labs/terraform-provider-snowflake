@@ -25,6 +25,8 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()
+	e.consumeToken("or replace")
+	e.consumeSpace()
 	e.consumeToken("secure")
 	e.consumeSpace()
 	e.consumeToken("view")
