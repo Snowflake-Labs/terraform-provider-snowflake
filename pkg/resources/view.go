@@ -171,14 +171,27 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 
 func ExtractViewStatement(input string) string {
 	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-	cleanString := space.ReplaceAllString(input, " ")
-	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
-	log.Printf("[DEBUG] indexOfSelect: %d", indexOfSelect)
-	if indexOfSelect == -1 {
-		indexOfSelect = strings.Index(strings.ToUpper(cleanString), " AS WITH")
-		log.Printf("[DEBUG] indexOfSelect: %d", indexOfSelect)
+	targetStrings := []string{
+		" AS SELECT",
+		" AS WITH",
+		" AS (SELECT",
+		" AS (WITH",
 	}
-	return cleanString[indexOfSelect+4:]
+
+	cleanString := space.ReplaceAllString(input, " ")
+
+	var indexOfStatement = -1
+
+	for _, target := range targetStrings {
+		idx := strings.Index(strings.ToUpper(cleanString), target)
+		if idx > 0 {
+			indexOfStatement = idx
+			break
+		}
+	}
+	log.Printf("[DEBUG] indexOfSelect: %d", indexOfStatement)
+
+	return cleanString[indexOfStatement+4:]
 }
 
 // UpdateView implements schema.UpdateFunc
