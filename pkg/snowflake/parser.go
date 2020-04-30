@@ -53,10 +53,8 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 // consumeToken will move e.pos forward iff the token is the next part of the input. Comparison is
 // case-insensitive. Will return true if consumed.
 func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
-	fmt.Printf("consume token %s\n", t)
 	found := 0
 	for i, r := range t {
-		fmt.Printf("e.pos %d r %s\n", e.pos, string(r))
 		// it is annoying that we have to convert the runes back to strings to do a case-insensitive
 		// comparison. Hopefully I am just missing something in the docs.
 		if e.pos+i > len(e.input) || !strings.EqualFold(string(r), string(e.input[e.pos+i])) {
@@ -64,7 +62,6 @@ func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
 		}
 		found += 1
 	}
-	fmt.Printf("found %d\n", found)
 
 	if found == len(t) {
 		e.pos += len(t)
@@ -123,7 +120,6 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 		if e.pos+found > len(e.input)-1 {
 			break
 		}
-		fmt.Printf("e.pos %d found %d escaped %t r %s\n", e.pos, found, escaped, string(e.input[e.pos+found]))
 
 		if escaped {
 			escaped = false
