@@ -82,7 +82,6 @@ func (e *ViewSelectStatementExtractor) consumeSpace() {
 }
 
 func (e *ViewSelectStatementExtractor) consumeIdentifier() {
-	// TODO quoted identifiers
 	e.consumeNonSpace()
 }
 
