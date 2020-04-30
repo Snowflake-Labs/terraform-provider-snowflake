@@ -24,6 +24,9 @@ from bar;`
 	recursive := "create recursive view foo as select * from bar;"
 	ine := "create view if not exists foo as select * from bar;"
 
+	comment := `create view foo comment='asdf' as select * from bar;`
+	commentEscape := `create view foo comment='asdf\'s are fun' as select * from bar;`
+
 	type args struct {
 		input string
 	}
@@ -41,6 +44,8 @@ from bar;`
 		{"replace", args{replace}, "select * from bar;", false},
 		{"recursive", args{recursive}, "select * from bar;", false},
 		{"ine", args{ine}, "select * from bar;", false},
+		{"comment", args{comment}, "select * from bar;", false},
+		{"commentEscape", args{commentEscape}, "select * from bar;", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -112,6 +117,34 @@ func TestViewSelectStatementExtractor_consumeSpace(t *testing.T) {
 				pos:   tt.fields.pos,
 			}
 			e.consumeSpace()
+
+			if e.pos != tt.posAfter {
+				t.Errorf("pos after = %v, want %v", e.pos, tt.posAfter)
+			}
+		})
+	}
+}
+
+func TestViewSelectStatementExtractor_consumeComment(t *testing.T) {
+	type fields struct {
+		input []rune
+		pos   int
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		posAfter int
+	}{
+		{"basic", fields{[]rune("comment='foo'"), 0}, 13},
+		{"escaped", fields{[]rune(`comment='fo\'o'`), 0}, 15},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := &ViewSelectStatementExtractor{
+				input: tt.fields.input,
+				pos:   tt.fields.pos,
+			}
+			e.consumeComment()
 
 			if e.pos != tt.posAfter {
 				t.Errorf("pos after = %v, want %v", e.pos, tt.posAfter)

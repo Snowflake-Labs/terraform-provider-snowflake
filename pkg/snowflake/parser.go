@@ -36,6 +36,11 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeToken("if not exists")
 	e.consumeSpace()
 	e.consumeIdentifier()
+	// TODO column list
+	// TODO copy grants
+	e.consumeComment()
+	e.consumeSpace()
+	e.consumeComment()
 	e.consumeSpace()
 	e.consumeToken("as")
 	e.consumeSpace()
@@ -43,7 +48,9 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	return string(e.input[e.pos:]), nil
 }
 
-func (e *ViewSelectStatementExtractor) consumeToken(t string) {
+// consumeToken will move e.pos forward iff the token is the next part of the input. Comparison is
+// case-insensitive. Will return true if consumed.
+func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
 	fmt.Printf("consume token %s\n", t)
 	found := 0
 	for i, r := range t {
@@ -57,7 +64,9 @@ func (e *ViewSelectStatementExtractor) consumeToken(t string) {
 
 	if found == len(t) {
 		e.pos += len(t)
+		return true
 	}
+	return false
 }
 
 func (e *ViewSelectStatementExtractor) consumeSpace() {
@@ -85,4 +94,44 @@ func (e *ViewSelectStatementExtractor) consumeNonSpace() {
 		found += 1
 	}
 	e.pos += found
+}
+func (e *ViewSelectStatementExtractor) consumeComment() {
+	if c := e.consumeToken("comment"); !c {
+		return
+	}
+
+	e.consumeSpace()
+
+	if c := e.consumeToken("="); !c {
+		return
+	}
+
+	e.consumeSpace()
+
+	if c := e.consumeToken("'"); !c {
+		return
+	}
+
+	found := 0
+	escaped := false
+	for {
+		if e.pos+found > len(e.input)-1 {
+			break
+		}
+		fmt.Printf("e.pos %d found %d escaped %t r %s\n", e.pos, found, escaped, string(e.input[e.pos+found]))
+
+		if escaped {
+			escaped = false
+		} else if e.input[e.pos+found] == '\\' {
+			escaped = true
+		} else if e.input[e.pos+found] == '\'' {
+			break
+		}
+		found += 1
+	}
+	e.pos += found
+
+	if c := e.consumeToken("'"); !c {
+		return
+	}
 }
