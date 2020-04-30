@@ -20,8 +20,9 @@ select *
 from bar;`
 
 	secure := "create secure view foo as select * from bar;"
-
 	replace := "create or replace view foo as select * from bar;"
+	recursive := "create recursive view foo as select * from bar;"
+	ine := "create view if not exists foo as select * from bar;"
 
 	type args struct {
 		input string
@@ -38,6 +39,8 @@ from bar;`
 		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
 		{"secure", args{secure}, "select * from bar;", false},
 		{"replace", args{replace}, "select * from bar;", false},
+		{"recursive", args{recursive}, "select * from bar;", false},
+		{"ine", args{ine}, "select * from bar;", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

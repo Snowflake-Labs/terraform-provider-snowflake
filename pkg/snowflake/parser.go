@@ -29,7 +29,11 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeSpace()
 	e.consumeToken("secure")
 	e.consumeSpace()
+	e.consumeToken("recursive")
+	e.consumeSpace()
 	e.consumeToken("view")
+	e.consumeSpace()
+	e.consumeToken("if not exists")
 	e.consumeSpace()
 	e.consumeIdentifier()
 	e.consumeSpace()
@@ -59,7 +63,6 @@ func (e *ViewSelectStatementExtractor) consumeToken(t string) {
 func (e *ViewSelectStatementExtractor) consumeSpace() {
 	found := 0
 	for {
-		fmt.Printf("e.pos %d found %d r %s\n", e.pos, found, string(e.input[e.pos+found]))
 		if e.pos+found > len(e.input)-1 || !unicode.IsSpace(e.input[e.pos+found]) {
 			break
 		}
