@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 )
 
@@ -22,6 +23,7 @@ func NewViewSelectStatementExtractor(input string) *ViewSelectStatementExtractor
 }
 
 func (e *ViewSelectStatementExtractor) Extract() (string, error) {
+	fmt.Printf("[DEBUG] extracting view query %s\n", string(e.input))
 	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()
@@ -55,7 +57,9 @@ func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
 	found := 0
 	for i, r := range t {
 		fmt.Printf("e.pos %d r %s\n", e.pos, string(r))
-		if e.pos+i > len(e.input) || r != e.input[e.pos+i] {
+		// it is annoying that we have to convert the runes back to strings to do a case-insensitive
+		// comparison. Hopefully I am just missing something in the docs.
+		if e.pos+i > len(e.input) || !strings.EqualFold(string(r), string(e.input[e.pos+i])) {
 			break
 		}
 		found += 1
@@ -95,6 +99,7 @@ func (e *ViewSelectStatementExtractor) consumeNonSpace() {
 	}
 	e.pos += found
 }
+
 func (e *ViewSelectStatementExtractor) consumeComment() {
 	if c := e.consumeToken("comment"); !c {
 		return

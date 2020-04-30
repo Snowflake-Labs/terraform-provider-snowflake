@@ -55,7 +55,7 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
