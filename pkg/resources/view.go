@@ -163,7 +163,6 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 
 	extractor := snowflake.NewViewSelectStatementExtractor(text.String)
 	substringOfQuery, err := extractor.Extract()
-
 	if err != nil {
 		return err
 	}
