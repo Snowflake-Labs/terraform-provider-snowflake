@@ -55,7 +55,7 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
@@ -77,6 +77,10 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 install-tf: build ## installs plugin where terraform can find it
 	mkdir -p $(HOME)/.terraform.d/plugins
 	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
+.PHONY: install-tf
+
+uninstall-tf: build ## uninstalls plugin from where terraform can find it
+	rm $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME) 2>/dev/null
 .PHONY: install-tf
 
 help: ## display help for this makefile

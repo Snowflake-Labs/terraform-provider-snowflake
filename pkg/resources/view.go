@@ -160,9 +160,13 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-	cleanString := space.ReplaceAllString(text.String, " ")
-	indexOfSelect := strings.Index(strings.ToUpper(cleanString), " AS SELECT")
-	substringOfQuery := cleanString[indexOfSelect+4:]
+
+	extractor := snowflake.NewViewSelectStatementExtractor(text.String)
+	substringOfQuery, err := extractor.Extract()
+	if err != nil {
+		return err
+	}
+
 	err = data.Set("statement", substringOfQuery)
 	if err != nil {
 		return err
