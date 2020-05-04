@@ -15,7 +15,22 @@ func TestAccView(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName),
+				Config: viewConfig(accName, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
+					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+				),
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfig(accName, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%';"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", accName),
@@ -27,7 +42,7 @@ func TestAccView(t *testing.T) {
 	})
 }
 
-func viewConfig(n string) string {
+func viewConfig(n string, q string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%v"
@@ -38,7 +53,7 @@ resource "snowflake_view" "test" {
 	comment   = "Terraform test resource"
 	database  = snowflake_database.test.name
 	is_secure = true
-	statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	statement = "%s"
 }
-`, n, n)
+`, n, n, q)
 }

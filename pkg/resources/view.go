@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -110,7 +111,7 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-
+	log.Print("[DEBUG] xxx ", q)
 	err := DBExec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)

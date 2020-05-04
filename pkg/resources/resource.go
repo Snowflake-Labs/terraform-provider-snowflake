@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -133,10 +132,9 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 	}
 }
 
-func DBExec(db *sql.DB, query string, args ...interface{}) error {
-	stmt := fmt.Sprintf(query, args...)
-	log.Printf("[DEBUG] stmt %s", stmt)
+func DBExec(db *sql.DB, query string) error {
+	log.Print("[DEBUG] stmt ", query)
 
-	_, err := db.Exec(stmt)
+	_, err := db.Exec(query)
 	return err
 }
