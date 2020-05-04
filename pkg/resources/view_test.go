@@ -42,6 +42,29 @@ func TestViewCreate(t *testing.T) {
 		r.NoError(err)
 	})
 }
+func TestViewCreateAmpersand(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":      "good_name",
+		"database":  "test_db",
+		"comment":   "great comment",
+		"statement": "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'",
+		"is_secure": true,
+	}
+	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE SECURE VIEW "test_db"."PUBLIC"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadView(mock)
+		err := resources.CreateView(d, db)
+		r.NoError(err)
+	})
+}
 
 func expectReadView(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
