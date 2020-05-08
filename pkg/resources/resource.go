@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -38,7 +37,7 @@ func CreateResource(
 				}
 			}
 		}
-		err := DBExec(db, qb.Statement())
+		err := snowflake.Exec(db, qb.Statement())
 
 		if err != nil {
 			return errors.Wrapf(err, "error creating %s", t)
@@ -70,7 +69,7 @@ func UpdateResource(
 
 			stmt := builder(oldName).Rename(newName)
 
-			err := DBExec(db, stmt)
+			err := snowflake.Exec(db, stmt)
 			if err != nil {
 				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
 			}
@@ -106,7 +105,7 @@ func UpdateResource(
 				}
 			}
 
-			err := DBExec(db, qb.Statement())
+			err := snowflake.Exec(db, qb.Statement())
 			if err != nil {
 				return errors.Wrapf(err, "error altering %s", t)
 			}
@@ -122,7 +121,7 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 
 		stmt := builder(name).Drop()
 
-		err := DBExec(db, stmt)
+		err := snowflake.Exec(db, stmt)
 		if err != nil {
 			return errors.Wrapf(err, "error dropping %s %s", t, name)
 		}
@@ -130,11 +129,4 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 		data.SetId("")
 		return nil
 	}
-}
-
-func DBExec(db *sql.DB, query string) error {
-	log.Print("[DEBUG] stmt ", query)
-
-	_, err := db.Exec(query)
-	return err
 }

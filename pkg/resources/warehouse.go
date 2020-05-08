@@ -2,14 +2,12 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/jmoiron/sqlx"
 )
 
 // warehouse is a go representation of a grant that can be used in conjunction
@@ -165,12 +163,9 @@ func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
 // ReadWarehouse implements schema.ReadFunc
 func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	sdb := sqlx.NewDb(db, "snowflake")
-
 	stmt := snowflake.Warehouse(data.Id()).Show()
 
-	log.Printf("[DEBUG] stmt %v\n", stmt)
-	row := sdb.QueryRowx(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
 	w := &warehouse{}
 

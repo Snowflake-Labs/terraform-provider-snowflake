@@ -156,7 +156,7 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating pipe %v", name)
 	}
@@ -256,7 +256,7 @@ func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("comment") {
 		_, comment := data.GetChange("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating pipe comment on %v", data.Id())
 		}
@@ -281,7 +281,7 @@ func DeletePipe(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Pipe(pipe, dbName, schema).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting pipe %v", data.Id())
 	}

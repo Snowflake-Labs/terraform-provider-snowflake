@@ -2,13 +2,11 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -142,7 +140,7 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := cb.Statement()
 
-	err := DBExec(db, stmt)
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error creating resource monitor %v", name)
 	}
@@ -155,15 +153,11 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 // ReadResourceMonitor implements schema.ReadFunc
 func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	sdb := sqlx.NewDb(db, "snowflake")
-
 	stmt := snowflake.ResourceMonitor(data.Id()).Show()
 
-	log.Printf("[DEBUG] stmt %v\n", stmt)
-	row := sdb.QueryRowx(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
 	rm := &resourceMonitor{}
-
 	err := row.StructScan(rm)
 	if err != nil {
 		return err
@@ -258,7 +252,7 @@ func DeleteResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.ResourceMonitor(data.Id()).Drop()
 
-	err := DBExec(db, stmt)
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting resource monitor %v", data.Id())
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -87,7 +86,7 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 	name := data.Get("name").(string)
 	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
 
-	err := DBExec(db, builder.Create())
+	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
 	}
@@ -104,7 +103,7 @@ func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) err
 	name := data.Get("name").(string)
 	builder := snowflake.DatabaseFromDatabase(name, sourceDb)
 
-	err := DBExec(db, builder.Create())
+	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
 		return errors.Wrapf(err, "error creating a clone database %v from database %v", name, sourceDb)
 	}
@@ -128,14 +127,10 @@ type database struct {
 
 func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	sdb := sqlx.NewDb(db, "snowflake")
-
 	name := data.Id()
 
 	stmt := snowflake.Database(name).Show()
-
-	log.Printf("[DEBUG] stmt %s", stmt)
-	row := sdb.QueryRowx(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
 	database := &database{}
 	err := row.StructScan(database)

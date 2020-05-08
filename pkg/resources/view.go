@@ -112,7 +112,7 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 	log.Print("[DEBUG] xxx ", q)
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
@@ -193,7 +193,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, name := data.GetChange("name")
 
 		q := builder.Rename(name.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
 		}
@@ -207,13 +207,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
 			}
 		} else {
 			q := builder.ChangeComment(c)
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
 			}
@@ -228,13 +228,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if secure.(bool) {
 			q := builder.Secure()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
 			}
 		} else {
 			q := builder.Unsecure()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
 			}
@@ -254,7 +254,7 @@ func DeleteView(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting view %v", data.Id())
 	}

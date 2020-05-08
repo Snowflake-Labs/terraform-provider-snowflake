@@ -171,14 +171,14 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	}
 
 	for _, role := range roles {
-		err := DBExec(db, builder.Role(role).Grant(priv))
+		err := snowflake.Exec(db, builder.Role(role).Grant(priv))
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := DBExec(db, builder.Share(share).Grant(priv))
+		err := snowflake.Exec(db, builder.Share(share).Grant(priv))
 		if err != nil {
 			return err
 		}
@@ -353,14 +353,14 @@ func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	}
 
 	for _, role := range roles {
-		err := DBExec(db, builder.Role(role).Revoke(priv))
+		err := snowflake.Exec(db, builder.Role(role).Revoke(priv))
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := DBExec(db, builder.Share(share).Revoke(priv))
+		err := snowflake.Exec(db, builder.Share(share).Revoke(priv))
 		if err != nil {
 			return err
 		}

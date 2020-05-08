@@ -123,7 +123,7 @@ func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = DBExec(db, stmt.Statement())
+	err = snowflake.Exec(db, stmt.Statement())
 	if err != nil {
 		return fmt.Errorf("error creating storage integration: %w", err)
 	}
@@ -258,7 +258,7 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	if data.HasChange("storage_blocked_locations") {
 		v := data.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
-			err := DBExec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
+			err := snowflake.Exec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
 			if err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
 			}
@@ -283,7 +283,7 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	}
 
 	if runSetStatement {
-		if err := DBExec(db, stmt.Statement()); err != nil {
+		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 			return fmt.Errorf("error updating storage integration: %w", err)
 		}
 	}

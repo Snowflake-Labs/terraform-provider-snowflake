@@ -184,7 +184,7 @@ func CreateStage(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating stage %v", name)
 	}
@@ -301,7 +301,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("url") {
 		_, url := data.GetChange("url")
 		q := builder.ChangeURL(url.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage url on %v", data.Id())
 		}
@@ -312,7 +312,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("credentials") {
 		_, credentials := data.GetChange("credentials")
 		q := builder.ChangeCredentials(credentials.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage credentials on %v", data.Id())
 		}
@@ -323,7 +323,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("storage_integration") {
 		_, si := data.GetChange("storage_integration")
 		q := builder.ChangeStorageIntegration(si.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage storage integration on %v", data.Id())
 		}
@@ -334,7 +334,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("encryption") {
 		_, encryption := data.GetChange("encryption")
 		q := builder.ChangeEncryption(encryption.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage encryption on %v", data.Id())
 		}
@@ -344,7 +344,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("file_format") {
 		_, fileFormat := data.GetChange("file_format")
 		q := builder.ChangeFileFormat(fileFormat.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage file formaat on %v", data.Id())
 		}
@@ -354,7 +354,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("copy_options") {
 		_, copyOptions := data.GetChange("copy_options")
 		q := builder.ChangeCopyOptions(copyOptions.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage copy options on %v", data.Id())
 		}
@@ -364,7 +364,7 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("comment") {
 		_, comment := data.GetChange("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage comment on %v", data.Id())
 		}
@@ -389,7 +389,7 @@ func DeleteStage(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting stage %v", data.Id())
 	}
