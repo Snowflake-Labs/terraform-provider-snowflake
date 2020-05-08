@@ -11,8 +11,9 @@ require (
 	github.com/chanzuckerberg/go-misc v0.0.0-20200507183956-c0dee2967ccc
 	github.com/hashicorp/terraform-plugin-sdk v1.12.0
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/olekukonko/tablewriter v0.0.2
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/snowflakedb/gosnowflake v1.3.2
