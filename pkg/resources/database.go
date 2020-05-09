@@ -113,18 +113,6 @@ func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) err
 	return ReadDatabase(data, meta)
 }
 
-type database struct {
-	CreatedOn     sql.NullString `db:"created_on"`
-	DBName        sql.NullString `db:"name"`
-	IsDefault     sql.NullString `db:"is_default"`
-	IsCurrent     sql.NullString `db:"is_current"`
-	Origin        sql.NullString `db:"origin"`
-	Owner         sql.NullString `db:"owner"`
-	Comment       sql.NullString `db:"comment"`
-	Options       sql.NullString `db:"options"`
-	RetentionTime sql.NullString `db:"retention_time"`
-}
-
 func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
@@ -132,8 +120,7 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.Database(name).Show()
 	row := snowflake.QueryRow(db, stmt)
 
-	database := &database{}
-	err := row.StructScan(database)
+	database, err := snowflake.ScanDatabase(row)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

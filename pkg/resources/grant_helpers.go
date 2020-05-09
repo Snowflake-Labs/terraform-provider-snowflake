@@ -268,10 +268,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 }
 
 func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
-	conn := sqlx.NewDb(db, "snowflake")
-
 	stmt := builder.Show()
-	rows, err := conn.Queryx(stmt)
+	rows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		return nil, err
 	}

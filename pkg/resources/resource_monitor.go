@@ -12,23 +12,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-type resourceMonitor struct {
-	Name                 sql.NullString  `db:"name"`
-	CreditQuota          sql.NullFloat64 `db:"credit_quota"`
-	UsedCredits          sql.NullString  `db:"used_credits"`
-	RemainingCredits     sql.NullString  `db:"remaining_credits"`
-	Level                sql.NullString  `db:"level"`
-	Frequency            sql.NullString  `db:"frequency"`
-	StartTime            sql.NullString  `db:"start_time"`
-	EndTime              sql.NullString  `db:"end_time"`
-	NotifyAt             sql.NullString  `db:"notify_at"`
-	SuspendAt            sql.NullString  `db:"suspend_at"`
-	SuspendImmediatelyAt sql.NullString  `db:"suspend_immediately_at"`
-	CreatedOn            sql.NullString  `db:"created_on"`
-	Owner                sql.NullString  `db:"owner"`
-	Comment              sql.NullString  `db:"comment"`
-}
-
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
 
 var resourceMonitorSchema = map[string]*schema.Schema{
@@ -157,8 +140,7 @@ func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, stmt)
 
-	rm := &resourceMonitor{}
-	err := row.StructScan(rm)
+	rm, err := snowflake.ScanResourceMonitor(row)
 	if err != nil {
 		return err
 	}

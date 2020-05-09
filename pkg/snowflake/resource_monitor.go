@@ -1,8 +1,11 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // ResourceMonitorBuilder extends the generic builder to provide support for triggers
@@ -112,4 +115,27 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	}
 
 	return sb.String()
+}
+
+type resourceMonitor struct {
+	Name                 sql.NullString  `db:"name"`
+	CreditQuota          sql.NullFloat64 `db:"credit_quota"`
+	UsedCredits          sql.NullString  `db:"used_credits"`
+	RemainingCredits     sql.NullString  `db:"remaining_credits"`
+	Level                sql.NullString  `db:"level"`
+	Frequency            sql.NullString  `db:"frequency"`
+	StartTime            sql.NullString  `db:"start_time"`
+	EndTime              sql.NullString  `db:"end_time"`
+	NotifyAt             sql.NullString  `db:"notify_at"`
+	SuspendAt            sql.NullString  `db:"suspend_at"`
+	SuspendImmediatelyAt sql.NullString  `db:"suspend_immediately_at"`
+	CreatedOn            sql.NullString  `db:"created_on"`
+	Owner                sql.NullString  `db:"owner"`
+	Comment              sql.NullString  `db:"comment"`
+}
+
+func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {
+	rm := &resourceMonitor{}
+	err := row.StructScan(rm)
+	return rm, err
 }
