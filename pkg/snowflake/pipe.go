@@ -3,6 +3,8 @@ package snowflake
 import (
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // PipeBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -110,4 +112,21 @@ func (pb *PipeBuilder) Drop() string {
 // Show returns the SQL query that will show a pipe.
 func (pb *PipeBuilder) Show() string {
 	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN DATABASE "%v"`, pb.name, pb.db)
+}
+
+type pipe struct {
+	Createdon           string `db:"created_on"`
+	Name                string `db:"name"`
+	DatabaseName        string `db:"database_name"`
+	SchemaName          string `db:"schema_name"`
+	Definition          string `db:"definition"`
+	Owner               string `db:"owner"`
+	NotificationChannel string `db:"notification_channel"`
+	Comment             string `db:"comment"`
+}
+
+func ScanPipe(row *sqlx.Row) (*pipe, error) {
+	p := &pipe{}
+	e := row.StructScan(p)
+	return p, e
 }
