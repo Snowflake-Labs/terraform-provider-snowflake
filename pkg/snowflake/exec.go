@@ -20,7 +20,7 @@ func QueryRow(db *sql.DB, stmt string) *sqlx.Row {
 	return sdb.QueryRowx(stmt)
 }
 
-func Query(db *sql.DB, stmt string) (*sqlx.Rows, err) {
+func Query(db *sql.DB, stmt string) (*sqlx.Rows, error) {
 	sdb := sqlx.NewDb(db, "snowflake")
 	return sdb.Queryx(stmt)
 }
