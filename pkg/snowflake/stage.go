@@ -196,7 +196,7 @@ func (sb *StageBuilder) Show() string {
 
 type stage struct {
 	Name               *string `db:"name"`
-	DatabaseName       *string `db:"Database_name"`
+	DatabaseName       *string `db:"database_name"`
 	SchemaName         *string `db:"schema_name"`
 	Comment            *string `db:"comment"`
 	StorageIntegration *string `db:"storage_integration"`
@@ -217,11 +217,11 @@ type descStageResult struct {
 }
 
 type descStageRow struct {
-	parentProperty  string
-	property        string
-	propertyType    string
-	propertyValue   string
-	propertyDefault string
+	parentProperty  string `db:"parent_property"`
+	property        string `db:"property"`
+	propertyType    string `db:"property_type"`
+	propertyValue   string `db:"property_value"`
+	propertyDefault string `db:"property_default"`
 }
 
 func DescStage(db *sql.DB, query string) (descStageResult, error) {
