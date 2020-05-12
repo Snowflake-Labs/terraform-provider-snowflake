@@ -219,7 +219,6 @@ type descStageResult struct {
 type descStageRow struct {
 	parentProperty  string `db:"parent_property"`
 	property        string `db:"property"`
-	propertyType    string `db:"property_type"`
 	propertyValue   string `db:"property_value"`
 	propertyDefault string `db:"property_default"`
 }
