@@ -139,7 +139,6 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
 	err = data.Set("name", name.String)
 	if err != nil {
 		return err
