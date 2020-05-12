@@ -178,10 +178,10 @@ func (sb *SchemaBuilder) Show() string {
 
 type schema struct {
 	Name          sql.NullString `db:"name"`
-	DatabaseName  sql.NullString `db:"databaseName"`
+	DatabaseName  sql.NullString `db:"database_name"`
 	Comment       sql.NullString `db:"comment"`
 	Options       sql.NullString `db:"options"`
-	RetentionTime sql.NullInt64  `db:"retentionTime"`
+	RetentionTime sql.NullInt64  `db:"retention_time"`
 }
 
 func ScanSchema(row *sqlx.Row) (*schema, error) {

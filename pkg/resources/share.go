@@ -130,26 +130,23 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	stmt := snowflake.Share(id).Show()
-	row := db.QueryRow(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
-	var createdOn, kind, name, databaseName, to, owner, comment sql.NullString
-	err := row.Scan(&createdOn, &kind, &name, &databaseName, &to, &owner, &comment)
+	s, err := snowflake.ScanShare(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scanning in a struct
-	err = data.Set("name", StripAccountFromName(name.String))
+	err = data.Set("name", StripAccountFromName(s.Name.String))
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	// accs := strings.Split(to.String, ", ")
-	accs := strings.FieldsFunc(to.String, func(c rune) bool { return c == ',' })
+	accs := strings.FieldsFunc(s.To.String, func(c rune) bool { return c == ',' })
 	err = data.Set("accounts", accs)
 
 	return err
