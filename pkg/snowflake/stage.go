@@ -1,8 +1,11 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // StageBuilder abstracts the creation of SQL queries for a Snowflake stage
@@ -189,4 +192,77 @@ func (sb *StageBuilder) Describe() string {
 // Show returns the SQL query that will show a stage.
 func (sb *StageBuilder) Show() string {
 	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+}
+
+type stage struct {
+	Name               *string `db:"name"`
+	DatabaseName       *string `db:"Database_name"`
+	SchemaName         *string `db:"schema_name"`
+	Comment            *string `db:"comment"`
+	StorageIntegration *string `db:"storage_integration"`
+}
+
+func ScanStageShow(row *sqlx.Row) (*stage, error) {
+	r := &stage{}
+	e := row.StructScan(r)
+	return r, e
+}
+
+type descStageResult struct {
+	Url              string
+	AwsExternalID    string
+	SnowflakeIamUser string
+	FileFormat       string
+	CopyOptions      string
+}
+
+type descStageRow struct {
+	parentProperty  string
+	property        string
+	propertyType    string
+	propertyValue   string
+	propertyDefault string
+}
+
+func DescStage(db *sql.DB, query string) (descStageResult, error) {
+	var r descStageResult
+	var ff []string
+	var co []string
+	rows, err := Query(db, query)
+	if err != nil {
+		return r, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		row := &descStageRow{}
+		if err := rows.StructScan(row); err != nil {
+			return r, err
+		}
+
+		switch row.property {
+		case "URL":
+			r.Url = strings.Trim(row.propertyValue, "[\"]")
+		case "AWS_EXTERNAL_ID":
+			r.AwsExternalID = row.propertyValue
+		case "SNOWFLAKE_IAM_USER":
+			r.SnowflakeIamUser = row.propertyValue
+		}
+
+		switch row.parentProperty {
+		case "STAGE_FILE_FORMAT":
+			if row.propertyValue != row.propertyDefault {
+				ff = append(ff, fmt.Sprintf("%s = %s", row.property, row.propertyValue))
+			}
+		case "STAGE_COPY_OPTIONS":
+			if row.propertyValue != row.propertyDefault {
+				co = append(co, fmt.Sprintf("%s = %s", row.property, row.propertyValue))
+			}
+		}
+	}
+
+	r.FileFormat = strings.Join(ff, " ")
+	r.CopyOptions = strings.Join(co, " ")
+	return r, nil
 }
