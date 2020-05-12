@@ -1,8 +1,11 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -171,4 +174,18 @@ func (sb *SchemaBuilder) Show() string {
 	}
 
 	return q.String()
+}
+
+type schema struct {
+	Name          sql.NullString `db:"name"`
+	DatabaseName  sql.NullString `db:"databaseName"`
+	Comment       sql.NullString `db:"comment"`
+	Options       sql.NullString `db:"options"`
+	RetentionTime sql.NullInt64  `db:"retentionTime"`
+}
+
+func ScanSchema(row *sqlx.Row) (*schema, error) {
+	r := &schema{}
+	e := row.StructScan(r)
+	return r, e
 }

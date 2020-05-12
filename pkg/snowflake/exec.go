@@ -16,11 +16,11 @@ func Exec(db *sql.DB, query string) error {
 
 func QueryRow(db *sql.DB, stmt string) *sqlx.Row {
 	log.Print("[DEBUG] stmt ", stmt)
-	sdb := sqlx.NewDb(db, "snowflake")
+	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
 	return sdb.QueryRowx(stmt)
 }
 
 func Query(db *sql.DB, stmt string) (*sqlx.Rows, error) {
-	sdb := sqlx.NewDb(db, "snowflake")
+	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
 	return sdb.Queryx(stmt)
 }

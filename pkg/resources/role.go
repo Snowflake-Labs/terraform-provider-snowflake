@@ -43,18 +43,17 @@ func ReadRole(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := data.Id()
 
-	row := db.QueryRow(fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
-	var createdOn, name, isDefault, isCurrent, isInherited, assignedToUsers, grantedToRoles, grantedRoles, owner, comment sql.NullString
-	err := row.Scan(&createdOn, &name, &isDefault, &isCurrent, &isInherited, &assignedToUsers, &grantedToRoles, &grantedRoles, &owner, &comment)
+	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
+	role, err := snowflake.ScanRole(row)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", name.String)
+	err = data.Set("name", role.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", role.Comment.String)
 	if err != nil {
 		return err
 	}

@@ -175,31 +175,30 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 	schema := schemaID.SchemaName
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
-	row := db.QueryRow(q)
-	var createdOn, name, isDefault, isCurrent, databaseName, owner, comment, options sql.NullString
-	var retentionTime sql.NullInt64
-	err = row.Scan(&createdOn, &name, &isDefault, &isCurrent, &databaseName, &owner, &comment, &options, &retentionTime)
+	row := snowflake.QueryRow(db, q)
+
+	s, err := snowflake.ScanSchema(row)
 	if err != nil {
 		return err
 	}
 
 	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", s.Name.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", databaseName.String)
+	err = data.Set("database", s.DatabaseName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("data_retention_days", retentionTime.Int64)
+	err = data.Set("data_retention_days", s.RetentionTime.Int64)
 	if err != nil {
 		return err
 	}
@@ -215,7 +214,7 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if opts := options.String; opts != "" {
+	if opts := s.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
 			switch opt {
 			case "TRANSIENT":
