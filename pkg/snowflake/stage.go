@@ -224,7 +224,7 @@ type descStageRow struct {
 }
 
 func DescStage(db *sql.DB, query string) (*descStageResult, error) {
-	var r descStageResult
+	r := &descStageResult{}
 	var ff []string
 	var co []string
 	rows, err := Query(db, query)
