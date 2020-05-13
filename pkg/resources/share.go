@@ -61,7 +61,7 @@ func CreateShare(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Share(name).Create()
 	builder.SetString("COMMENT", data.Get("comment").(string))
 
-	err := DBExec(db, builder.Statement())
+	err := snowflake.Exec(db, builder.Statement())
 	if err != nil {
 		return errors.Wrapf(err, "error creating share")
 	}
@@ -92,30 +92,30 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 		// 1. Create new temporary DB
 		tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
 		tempDB := snowflake.Database(tempName)
-		err := DBExec(db, tempDB.Create().Statement())
+		err := snowflake.Exec(db, tempDB.Create().Statement())
 		if err != nil {
 			return errors.Wrapf(err, "error creating temporary DB %v", tempName)
 		}
 
 		// 2. Create temporary DB grant to the share
 		tempDBGrant := snowflake.DatabaseGrant(tempName)
-		err = DBExec(db, tempDBGrant.Share(name).Grant("USAGE"))
+		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("USAGE"))
 		if err != nil {
 			return errors.Wrapf(err, "error creating temporary DB grant %v", tempName)
 		}
 		// 3. Add the accounts to the share
 		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-		err = DBExec(db, q)
+		err = snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error adding accounts to share %v", name)
 		}
 		// 4. Revoke temporary DB grant to the share
-		err = DBExec(db, tempDBGrant.Share(name).Revoke("USAGE"))
+		err = snowflake.Exec(db, tempDBGrant.Share(name).Revoke("USAGE"))
 		if err != nil {
 			return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
 		}
 		// 5. Remove the temporary DB
-		err = DBExec(db, tempDB.Drop())
+		err = snowflake.Exec(db, tempDB.Drop())
 		if err != nil {
 			return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
 		}
@@ -130,26 +130,23 @@ func ReadShare(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	stmt := snowflake.Share(id).Show()
-	row := db.QueryRow(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
-	var createdOn, kind, name, databaseName, to, owner, comment sql.NullString
-	err := row.Scan(&createdOn, &kind, &name, &databaseName, &to, &owner, &comment)
+	s, err := snowflake.ScanShare(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scanning in a struct
-	err = data.Set("name", StripAccountFromName(name.String))
+	err = data.Set("name", StripAccountFromName(s.Name.String))
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	// accs := strings.Split(to.String, ", ")
-	accs := strings.FieldsFunc(to.String, func(c rune) bool { return c == ',' })
+	accs := strings.FieldsFunc(s.To.String, func(c rune) bool { return c == ',' })
 	err = data.Set("accounts", accs)
 
 	return err

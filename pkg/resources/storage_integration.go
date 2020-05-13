@@ -123,7 +123,7 @@ func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = DBExec(db, stmt.Statement())
+	err = snowflake.Exec(db, stmt.Statement())
 	if err != nil {
 		return fmt.Errorf("error creating storage integration: %w", err)
 	}
@@ -139,33 +139,33 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	stmt := snowflake.StorageIntegration(data.Id()).Show()
-	row := db.QueryRow(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
-	var name, integrationType, category, createdOn sql.NullString
-	var enabled sql.NullBool
-	if err := row.Scan(&name, &integrationType, &category, &enabled, &createdOn); err != nil {
+
+	s, err := snowflake.ScanStorageIntegration(row)
+	if err != nil {
 		return fmt.Errorf("Could not show storage integration: %w", err)
 	}
 
 	// Note: category must be STORAGE or something is broken
-	if c := category.String; c != "STORAGE" {
+	if c := s.Category.String; c != "STORAGE" {
 		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
 	}
 
-	if err := data.Set("name", name.String); err != nil {
+	if err := data.Set("name", s.Name.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("type", integrationType.String); err != nil {
+	if err := data.Set("type", s.IntegrationType.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("created_on", createdOn.String); err != nil {
+	if err := data.Set("created_on", s.CreatedOn.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("enabled", enabled.Bool); err != nil {
+	if err := data.Set("enabled", s.Enabled.Bool); err != nil {
 		return err
 	}
 
@@ -258,7 +258,7 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	if data.HasChange("storage_blocked_locations") {
 		v := data.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
-			err := DBExec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
+			err := snowflake.Exec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
 			if err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
 			}
@@ -283,7 +283,7 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	}
 
 	if runSetStatement {
-		if err := DBExec(db, stmt.Statement()); err != nil {
+		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 			return fmt.Errorf("error updating storage integration: %w", err)
 		}
 	}

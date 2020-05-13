@@ -1,7 +1,10 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // Database returns a pointer to a Builder for a database
@@ -50,4 +53,22 @@ func DatabaseFromDatabase(name, database string) *DatabaseCloneBuilder {
 // Create returns the SQL statement required to create a database from a source database
 func (dsb *DatabaseCloneBuilder) Create() string {
 	return fmt.Sprintf(`CREATE DATABASE "%v" CLONE "%v"`, dsb.name, dsb.database)
+}
+
+type database struct {
+	CreatedOn     sql.NullString `db:"created_on"`
+	DBName        sql.NullString `db:"name"`
+	IsDefault     sql.NullString `db:"is_default"`
+	IsCurrent     sql.NullString `db:"is_current"`
+	Origin        sql.NullString `db:"origin"`
+	Owner         sql.NullString `db:"owner"`
+	Comment       sql.NullString `db:"comment"`
+	Options       sql.NullString `db:"options"`
+	RetentionTime sql.NullString `db:"retention_time"`
+}
+
+func ScanDatabase(row *sqlx.Row) (*database, error) {
+	d := &database{}
+	e := row.StructScan(d)
+	return d, e
 }

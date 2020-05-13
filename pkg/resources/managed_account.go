@@ -127,45 +127,42 @@ func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	stmt := snowflake.ManagedAccount(id).Show()
-	row := db.QueryRow(stmt)
-	var name, cloud, region, locator, createdOn, url, comment sql.NullString
-	var isReader bool
-	err := row.Scan(&name, &cloud, &region, &locator, &createdOn, &url, &isReader, &comment)
+	row := snowflake.QueryRow(db, stmt)
+	a, err := snowflake.ScanManagedAccount(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", a.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("cloud", cloud.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("region", region.String)
+	err = data.Set("cloud", a.Cloud.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("locator", locator.String)
+	err = data.Set("region", a.Region.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("created_on", createdOn.String)
+	err = data.Set("locator", a.Locator.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("url", url.String)
+	err = data.Set("created_on", a.CreatedOn.String)
 	if err != nil {
 		return err
 	}
 
-	if isReader {
+	err = data.Set("url", a.Url.String)
+	if err != nil {
+		return err
+	}
+
+	if a.IsReader {
 		err = data.Set("type", "READER")
 		if err != nil {
 			return err
@@ -174,7 +171,7 @@ func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to determine the account type")
 	}
 
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", a.Comment.String)
 
 	return err
 }

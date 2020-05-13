@@ -145,7 +145,7 @@ func CreateSchema(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating schema %v", name)
 	}
@@ -175,31 +175,29 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 	schema := schemaID.SchemaName
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
-	row := db.QueryRow(q)
-	var createdOn, name, isDefault, isCurrent, databaseName, owner, comment, options sql.NullString
-	var retentionTime sql.NullInt64
-	err = row.Scan(&createdOn, &name, &isDefault, &isCurrent, &databaseName, &owner, &comment, &options, &retentionTime)
+	row := snowflake.QueryRow(db, q)
+
+	s, err := snowflake.ScanSchema(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", s.Name.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", databaseName.String)
+	err = data.Set("database", s.DatabaseName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("data_retention_days", retentionTime.Int64)
+	err = data.Set("data_retention_days", s.RetentionTime.Int64)
 	if err != nil {
 		return err
 	}
@@ -215,7 +213,7 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if opts := options.String; opts != "" {
+	if opts := s.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
 			switch opt {
 			case "TRANSIENT":
@@ -254,7 +252,7 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("comment") {
 		_, comment := data.GetChange("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating schema comment on %v", data.Id())
 		}
@@ -271,7 +269,7 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 			q = builder.Unmanage()
 		}
 
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error changing management state on %v", data.Id())
 		}
@@ -284,7 +282,7 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 		_, days := data.GetChange("data_retention_days")
 
 		q := builder.ChangeDataRetentionDays(days.(int))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating data retention days on %v", data.Id())
 		}
@@ -306,7 +304,7 @@ func DeleteSchema(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Schema(schema).WithDB(dbName).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting schema %v", data.Id())
 	}

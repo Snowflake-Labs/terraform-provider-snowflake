@@ -112,7 +112,7 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 	log.Print("[DEBUG] xxx ", q)
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
@@ -131,38 +131,35 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
-	row := db.QueryRow(q)
-	var createdOn, name, reserved, databaseName, schemaName, owner, comment, text sql.NullString
-	var isSecure, isMaterialized bool
-	err = row.Scan(&createdOn, &name, &reserved, &databaseName, &schemaName, &owner, &comment, &text, &isSecure, &isMaterialized)
+	row := snowflake.QueryRow(db, q)
+	v, err := snowflake.ScanView(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", v.Name.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("is_secure", isSecure)
+	err = data.Set("is_secure", v.IsSecure)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", comment.String)
+	err = data.Set("comment", v.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schema", schemaName.String)
+	err = data.Set("schema", v.SchemaName.String)
 	if err != nil {
 		return err
 	}
 
 	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
 
-	extractor := snowflake.NewViewSelectStatementExtractor(text.String)
+	extractor := snowflake.NewViewSelectStatementExtractor(v.Text.String)
 	substringOfQuery, err := extractor.Extract()
 	if err != nil {
 		return err
@@ -173,7 +170,7 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return data.Set("database", databaseName.String)
+	return data.Set("database", v.DatabaseName.String)
 }
 
 // UpdateView implements schema.UpdateFunc
@@ -193,7 +190,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		_, name := data.GetChange("name")
 
 		q := builder.Rename(name.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", data.Id())
 		}
@@ -207,13 +204,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
 			}
 		} else {
 			q := builder.ChangeComment(c)
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
 			}
@@ -228,13 +225,13 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 
 		if secure.(bool) {
 			q := builder.Secure()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
 			}
 		} else {
 			q := builder.Unsecure()
-			err := DBExec(db, q)
+			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
 			}
@@ -254,7 +251,7 @@ func DeleteView(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting view %v", data.Id())
 	}

@@ -153,50 +153,48 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	id := data.Id()
 
 	stmt := snowflake.User(id).Show()
-	row := db.QueryRow(stmt)
-	var name, createdOn, loginName, displayName, firstName, lastName, email, minsToUnlock, daysToExpiry, comment, mustChangePassword, snowflakeLock, defaultWarehouse, defaultNamespace, defaultRole, extAuthnDuo, extAuthnUID, minsToBypassMfa, owner, lastSuccessLogin, expiresAtTime, lockedUntilTime, hasPassword sql.NullString
-	var disabled, hasRsaPublicKey bool
-	err := row.Scan(&name, &createdOn, &loginName, &displayName, &firstName, &lastName, &email, &minsToUnlock, &daysToExpiry, &comment, &disabled, &mustChangePassword, &snowflakeLock, &defaultWarehouse, &defaultNamespace, &defaultRole, &extAuthnDuo, &extAuthnUID, &minsToBypassMfa, &owner, &lastSuccessLogin, &expiresAtTime, &lockedUntilTime, &hasPassword, &hasRsaPublicKey)
+	row := snowflake.QueryRow(db, stmt)
+
+	u, err := snowflake.ScanUser(row)
 	if err != nil {
 		return err
 	}
 
-	// TODO turn this into a loop after we switch to scaning in a struct
-	err = data.Set("name", name.String)
+	err = data.Set("name", u.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", comment.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("login_name", loginName.String)
+	err = data.Set("comment", u.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("disabled", disabled)
+	err = data.Set("login_name", u.LoginName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_role", defaultRole.String)
+	err = data.Set("disabled", u.Disabled)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_namespace", defaultNamespace.String)
+	err = data.Set("default_role", u.DefaultRole.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_warehouse", defaultWarehouse.String)
+	err = data.Set("default_namespace", u.DefaultNamespace.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("has_rsa_public_key", hasRsaPublicKey)
+	err = data.Set("default_warehouse", u.DefaultWarehouse.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("has_rsa_public_key", u.HasRsaPublicKey)
 
 	return err
 }

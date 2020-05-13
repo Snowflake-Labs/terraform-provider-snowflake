@@ -2,34 +2,15 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
-
-type resourceMonitor struct {
-	Name                 sql.NullString  `db:"name"`
-	CreditQuota          sql.NullFloat64 `db:"credit_quota"`
-	UsedCredits          sql.NullString  `db:"used_credits"`
-	RemainingCredits     sql.NullString  `db:"remaining_credits"`
-	Level                sql.NullString  `db:"level"`
-	Frequency            sql.NullString  `db:"frequency"`
-	StartTime            sql.NullString  `db:"start_time"`
-	EndTime              sql.NullString  `db:"end_time"`
-	NotifyAt             sql.NullString  `db:"notify_at"`
-	SuspendAt            sql.NullString  `db:"suspend_at"`
-	SuspendImmediatelyAt sql.NullString  `db:"suspend_immediately_at"`
-	CreatedOn            sql.NullString  `db:"created_on"`
-	Owner                sql.NullString  `db:"owner"`
-	Comment              sql.NullString  `db:"comment"`
-}
 
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
 
@@ -142,7 +123,7 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := cb.Statement()
 
-	err := DBExec(db, stmt)
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error creating resource monitor %v", name)
 	}
@@ -155,16 +136,11 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 // ReadResourceMonitor implements schema.ReadFunc
 func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	sdb := sqlx.NewDb(db, "snowflake")
-
 	stmt := snowflake.ResourceMonitor(data.Id()).Show()
 
-	log.Printf("[DEBUG] stmt %v\n", stmt)
-	row := sdb.QueryRowx(stmt)
+	row := snowflake.QueryRow(db, stmt)
 
-	rm := &resourceMonitor{}
-
-	err := row.StructScan(rm)
+	rm, err := snowflake.ScanResourceMonitor(row)
 	if err != nil {
 		return err
 	}
@@ -258,7 +234,7 @@ func DeleteResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.ResourceMonitor(data.Id()).Drop()
 
-	err := DBExec(db, stmt)
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting resource monitor %v", data.Id())
 	}

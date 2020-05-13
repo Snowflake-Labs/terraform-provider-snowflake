@@ -156,7 +156,7 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := DBExec(db, q)
+	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating pipe %v", name)
 	}
@@ -185,50 +185,51 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 
 	dbName := pipeID.DatabaseName
 	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
+	name := pipeID.PipeName
 
-	sq := snowflake.Pipe(pipe, dbName, schema).Show()
-	pipeShow, err := showPipe(db, sq)
+	sq := snowflake.Pipe(name, dbName, schema).Show()
+	row := snowflake.QueryRow(db, sq)
+	pipe, err := snowflake.ScanPipe(row)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", pipe)
+	err = data.Set("name", pipe.Name)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", dbName)
+	err = data.Set("database", pipe.DatabaseName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schema", schema)
+	err = data.Set("schema", pipe.SchemaName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("copy_statement", pipeShow.definition)
+	err = data.Set("copy_statement", pipe.Definition)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("owner", pipeShow.owner)
+	err = data.Set("owner", pipe.Owner)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", pipeShow.comment)
+	err = data.Set("comment", pipe.Comment)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("notification_channel", pipeShow.notificationChannel)
+	err = data.Set("notification_channel", pipe.NotificationChannel)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("auto_ingest", pipeShow.notificationChannel != "")
+	err = data.Set("auto_ingest", pipe.NotificationChannel != "")
 	if err != nil {
 		return err
 	}
@@ -256,7 +257,7 @@ func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("comment") {
 		_, comment := data.GetChange("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := DBExec(db, q)
+		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating pipe comment on %v", data.Id())
 		}
@@ -281,7 +282,7 @@ func DeletePipe(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Pipe(pipe, dbName, schema).Drop()
 
-	err = DBExec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting pipe %v", data.Id())
 	}
@@ -315,34 +316,4 @@ func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	}
 
 	return false, nil
-}
-
-type showPipeResult struct {
-	createdOn           string
-	name                string
-	databaseName        string
-	schemaName          string
-	definition          string
-	owner               string
-	notificationChannel string
-	comment             string
-}
-
-func showPipe(db *sql.DB, query string) (showPipeResult, error) {
-	var r showPipeResult
-	row := db.QueryRow(query)
-	err := row.Scan(
-		&r.createdOn,
-		&r.name,
-		&r.databaseName,
-		&r.schemaName,
-		&r.definition,
-		&r.owner,
-		&r.notificationChannel,
-		&r.comment,
-	)
-	if err != nil {
-		return r, err
-	}
-	return r, nil
 }

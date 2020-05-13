@@ -1,8 +1,11 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View
@@ -145,4 +148,19 @@ func (vb *ViewBuilder) Show() string {
 // Drop returns the SQL query that will drop the row representing this view.
 func (vb *ViewBuilder) Drop() string {
 	return fmt.Sprintf(`DROP VIEW %v`, vb.QualifiedName())
+}
+
+type view struct {
+	Comment      sql.NullString `db:"comment"`
+	IsSecure     bool           `db:"is_secure"`
+	Name         sql.NullString `db:"name"`
+	SchemaName   sql.NullString `db:"schema_name"`
+	Text         sql.NullString `db:"text"`
+	DatabaseName sql.NullString `db:"database_name"`
+}
+
+func ScanView(row *sqlx.Row) (*view, error) {
+	r := &view{}
+	err := row.StructScan(r)
+	return r, err
 }

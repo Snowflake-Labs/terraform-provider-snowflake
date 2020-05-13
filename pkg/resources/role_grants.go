@@ -76,13 +76,13 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
 	g := snowflake.RoleGrant(role1)
-	err := DBExec(db, g.Role(role2).Grant())
+	err := snowflake.Exec(db, g.Role(role2).Grant())
 	return err
 }
 
 func grantRoleToUser(db *sql.DB, role1, user string) error {
 	g := snowflake.RoleGrant(role1)
-	err := DBExec(db, g.User(user).Grant())
+	err := snowflake.Exec(db, g.User(user).Grant())
 	return err
 }
 
@@ -193,13 +193,13 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 
 func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 	rg := snowflake.RoleGrant(role1).Role(role2)
-	err := DBExec(db, rg.Revoke())
+	err := snowflake.Exec(db, rg.Revoke())
 	return err
 }
 
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	rg := snowflake.RoleGrant(role1).User(user)
-	err := DBExec(db, rg.Revoke())
+	err := snowflake.Exec(db, rg.Revoke())
 	return err
 }
 
