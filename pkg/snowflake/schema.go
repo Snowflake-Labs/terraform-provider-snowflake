@@ -186,6 +186,6 @@ type schema struct {
 
 func ScanSchema(row *sqlx.Row) (*schema, error) {
 	r := &schema{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }
