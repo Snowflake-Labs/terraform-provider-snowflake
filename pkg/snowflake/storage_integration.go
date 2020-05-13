@@ -33,6 +33,6 @@ type storageIntegration struct {
 
 func ScanStorageIntegration(row *sqlx.Row) (*storageIntegration, error) {
 	r := &storageIntegration{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }

@@ -49,6 +49,6 @@ type warehouse struct {
 
 func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
 	w := &warehouse{}
-	e := row.StructScan(w)
-	return w, e
+	err := row.StructScan(w)
+	return w, err
 }

@@ -204,8 +204,8 @@ type stage struct {
 
 func ScanStageShow(row *sqlx.Row) (*stage, error) {
 	r := &stage{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }
 
 type descStageResult struct {
@@ -223,7 +223,7 @@ type descStageRow struct {
 	propertyDefault string `db:"property_default"`
 }
 
-func DescStage(db *sql.DB, query string) (descStageResult, error) {
+func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	var r descStageResult
 	var ff []string
 	var co []string

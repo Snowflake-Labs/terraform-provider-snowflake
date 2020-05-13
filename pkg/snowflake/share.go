@@ -31,6 +31,6 @@ type share struct {
 
 func ScanShare(row *sqlx.Row) (*share, error) {
 	r := &share{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }

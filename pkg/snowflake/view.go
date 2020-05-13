@@ -161,6 +161,6 @@ type view struct {
 
 func ScanView(row *sqlx.Row) (*view, error) {
 	r := &view{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }

@@ -26,6 +26,6 @@ type user struct {
 
 func ScanUser(row *sqlx.Row) (*user, error) {
 	r := &user{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }
