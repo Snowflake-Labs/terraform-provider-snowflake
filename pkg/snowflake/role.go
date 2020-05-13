@@ -20,6 +20,6 @@ type role struct {
 
 func ScanRole(row *sqlx.Row) (*role, error) {
 	r := &role{}
-	e := row.StructScan(r)
-	return r, e
+	err := row.StructScan(r)
+	return r, err
 }
