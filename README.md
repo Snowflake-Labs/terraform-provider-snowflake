@@ -329,6 +329,24 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                                                                                                                                                                       | true     | false     | false    | <nil>    |
 | table_name    | string | The name of the table on which to grant privileges immediately (only valid if on_future is unset).                                                                                                                                                                                                         | true     | false     | false    | <nil>    |
 
+### snowflake_task
+
+#### properties
+
+|         NAME         |  TYPE  |                                                                                       DESCRIPTION                                                                                        | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|----------------------|--------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| after                | string | Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). | true     | false     | false    | <nil>   |
+| comment              | string | Specifies a comment for the task.                                                                                                                                                        | true     | false     | false    | <nil>   |
+| database             | string | The database in which to create the task.                                                                                                                                                | false    | true      | false    | <nil>   |
+| name                 | string | Specifies the identifier for the task; must be unique for the database and schema in which the task is created.                                                                          | false    | true      | false    | <nil>   |
+| schedule             | string | The schedule for periodically running the task. This can be a cron or interval in minutes.                                                                                               | true     | false     | false    | <nil>   |
+| schema               | string | The schema in which to create the task.                                                                                                                                                  | false    | true      | false    | <nil>   |
+| session_parameters   | set    | Specifies a comma-separated list of session parameters to set for the session when the task runs. A task supports all session parameters.                                                | true     | false     | false    | <nil>   |
+| sql_statement        | string | Any single SQL statement, or a call to a stored procedure, executed when the task runs.                                                                                                  | false    | true      | false    | <nil>   |
+| user_task_timeout_ms | int    | Specifies the time limit on a single run of the task before it times out (in milliseconds).                                                                                              | true     | false     | false    | <nil>   |
+| warehouse            | string | The warehouse the task will use.                                                                                                                                                         | false    | true      | false    | <nil>   |
+| when                 | string | Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.                                                                                                | true     | false     | false    | <nil>   |
+
 ### snowflake_user
 
 #### properties
