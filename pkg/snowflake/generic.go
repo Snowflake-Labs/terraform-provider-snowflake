@@ -19,7 +19,6 @@ const (
 	StorageIntegrationType EntityType = "STORAGE INTEGRATION"
 	UserType               EntityType = "USER"
 	WarehouseType          EntityType = "WAREHOUSE"
-	TaskType               EntityType = "TASK"
 )
 
 type Builder struct {
