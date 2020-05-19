@@ -38,7 +38,7 @@ func (pb *PipeBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// Transient adds the auto_ingest flag to the PipeBuilder
+// WithAutoIngest adds the auto_ingest flag to the PipeBuilder
 func (pb *PipeBuilder) WithAutoIngest() *PipeBuilder {
 	pb.autoIngest = true
 	return pb
@@ -50,7 +50,7 @@ func (pb *PipeBuilder) WithComment(c string) *PipeBuilder {
 	return pb
 }
 
-// WithURL adds a URL to the PipeBuilder
+// WithCopyStatement adds a URL to the PipeBuilder
 func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	pb.copyStatement = s
 	return pb

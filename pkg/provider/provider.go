@@ -82,6 +82,7 @@ func Provider() *schema.Provider {
 			"snowflake_table_grant":            resources.TableGrant(),
 			"snowflake_warehouse":              resources.Warehouse(),
 			"snowflake_warehouse_grant":        resources.WarehouseGrant(),
+			"snowflake_task":                   resources.Task(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{},
 		ConfigureFunc:  ConfigureProvider,
