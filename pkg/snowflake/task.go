@@ -106,7 +106,7 @@ func (tb *TaskBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(`CREATE TASK %v `, tb.QualifiedName()))
 
 	if tb.warehouse != "" {
-		q.WriteString(fmt.Sprintf(`WAREHOUSE = '%v' `, EscapeString(tb.warehouse)))
+		q.WriteString(fmt.Sprintf(`WAREHOUSE = "%v" `, EscapeString(tb.warehouse)))
 	}
 
 	if tb.schedule != "" {

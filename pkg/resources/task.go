@@ -53,8 +53,6 @@ var taskSchema = map[string]*schema.Schema{
 	},
 	"user_task_timeout_ms": &schema.Schema{
 		Type:         schema.TypeInt,
-		Default:      3600000,
-		Required:     false,
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 86400000),
 	},
@@ -207,9 +205,11 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("comment", task.Comment.String)
-	if err != nil {
-		return err
+	if task.Comment.String != "" {
+		err = data.Set("comment", task.Comment.String)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = data.Set("warehouse", task.Warehouse)
@@ -217,19 +217,25 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("schedule", task.Schedule.String)
-	if err != nil {
-		return err
+	if task.Schedule.String != "" {
+		err = data.Set("schedule", task.Schedule.String)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = data.Set("after", task.Predecessor.String)
-	if err != nil {
-		return err
+	if task.Predecessor.String != "" {
+		err = data.Set("after", task.Predecessor.String)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = data.Set("when", task.Condition.String)
-	if err != nil {
-		return err
+	if task.Condition.String != "" {
+		err = data.Set("when", task.Condition.String)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = data.Set("enabled", strings.ToLower(task.State) == "started")
@@ -254,6 +260,24 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.Task(name, schema, database)
 
+	activateRoot := false
+	var rootBuilder *snowflake.TaskBuilder
+	if data.Get("after").(string) != "" {
+		root, err := getRootTask(data.Get("after").(string), schema, database, db)
+		rootBuilder = snowflake.Task(root.TaskName, schema, database)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to retrieve the root task: %v", rootBuilder.QualifiedName())
+		}
+
+		if root.IsEnabled() {
+			activateRoot = true
+			err := deactivateTask(rootBuilder, db)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to deactivate root task: %v", rootBuilder.QualifiedName())
+			}
+		}
+	}
+
 	q := builder.Drop()
 	err := snowflake.Exec(db, q)
 	if err != nil {
@@ -261,6 +285,13 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	data.SetId("")
+
+	if activateRoot && rootBuilder != nil {
+		err := activateTask(rootBuilder, db)
+		if err != nil {
+			return errors.Wrapf(err, "failed to reactivate task: %v", rootBuilder.QualifiedName())
+		}
+	}
 
 	return nil
 }
