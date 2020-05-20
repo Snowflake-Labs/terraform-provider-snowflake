@@ -372,7 +372,18 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if data.HasChange("warehouse") || data.HasChange("schedule") {
+	if data.HasChange("when") {
+		_, when := data.GetChange("when")
+
+		builder.WithConditional(when.(string))
+		q := builder.UpdateConditional()
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return err
+		}
+	}
+
+	if data.HasChange("warehouse") || data.HasChange("schedule") || data.HasChange("comment") {
 		if data.HasChange("warehouse") {
 			_, warehouse := data.GetChange("warehouse")
 			builder.WithWarehouse(warehouse.(string))
@@ -383,8 +394,16 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			builder.WithSchedule(schedule.(string))
 		}
 
+		if data.HasChange("comment") {
+			_, comment := data.GetChange("comment")
+			builder.WithComment(comment.(string))
+		}
+
 		q := builder.ChangeWarehouseAndSchedule()
-		snowflake.Exec(db, q)
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return err
+		}
 	}
 
 	if data.HasChange("sql") {

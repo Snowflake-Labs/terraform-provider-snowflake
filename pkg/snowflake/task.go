@@ -154,6 +154,14 @@ func (tb *TaskBuilder) ChangeWarehouseAndSchedule() string {
 		q.WriteString(fmt.Sprintf(`WAREHOUSE = '%v' `, tb.warehouse))
 	}
 
+	if tb.commentSet {
+		if tb.comment == "" {
+			q.WriteString("COMMENT = NULL ")
+		} else {
+			q.WriteString(fmt.Sprintf(`COMMENT = '%v' `, tb.comment))
+		}
+	}
+
 	if tb.scheduleSet { // Schedule has been set we need to at least remove it if not update
 		if tb.schedule == "" {
 			q.WriteString("SCHEDULE = NULL ")

@@ -19,6 +19,8 @@ type (
 		RootTask *TaskSettings
 
 		ChildTask *TaskSettings
+
+		SoloTask *TaskSettings
 	}
 
 	TaskSettings struct {
@@ -27,6 +29,8 @@ type (
 		Schema   string
 		SQL      string
 		Schedule string
+		Comment  string
+		When     string
 	}
 )
 
@@ -35,6 +39,7 @@ var (
 	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	rootname      = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	childname     = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	soloname      = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	initialState = &AccTaskTestSettings{
 		WarehouseName: warehousename,
@@ -51,6 +56,15 @@ var (
 		ChildTask: &TaskSettings{
 			Name:    childname,
 			SQL:     "SELECT 1",
+			Enabled: false,
+			Comment: "initial state",
+		},
+
+		SoloTask: &TaskSettings{
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT 1",
+			When:    "TRUE",
 			Enabled: false,
 		},
 	}
@@ -72,6 +86,15 @@ var (
 			Name:    childname,
 			SQL:     "SELECT *",
 			Enabled: true,
+			Comment: "secondary state",
+		},
+
+		SoloTask: &TaskSettings{
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT *",
+			When:    "TRUE",
+			Enabled: true,
 		},
 	}
 
@@ -92,6 +115,15 @@ var (
 			Name:    childname,
 			SQL:     "SELECT 1",
 			Enabled: true,
+			Comment: "third state",
+		},
+
+		SoloTask: &TaskSettings{
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT *",
+			When:    "FALSE",
+			Enabled: true,
 		},
 	}
 
@@ -111,6 +143,15 @@ var (
 			Name:    childname,
 			SQL:     "SELECT 1",
 			Enabled: false,
+			Comment: "reset",
+		},
+
+		SoloTask: &TaskSettings{
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT 1",
+			When:    "TRUE",
+			Enabled: true,
 		},
 	}
 )
@@ -133,6 +174,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql", initialState.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql", initialState.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "after", initialState.RootTask.Name),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
 				),
 			},
 			{
@@ -148,6 +190,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", "PUBLIC"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql", stepOne.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql", stepOne.ChildTask.SQL),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepOne.ChildTask.Comment),
 				),
 			},
 			{
@@ -163,6 +206,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", "PUBLIC"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql", stepTwo.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql", stepTwo.ChildTask.SQL),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepTwo.ChildTask.Comment),
 				),
 			},
 			{
@@ -178,6 +222,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", "PUBLIC"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql", stepThree.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql", stepThree.ChildTask.SQL),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepThree.ChildTask.Comment),
 				),
 			},
 			{
@@ -193,6 +238,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", "PUBLIC"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql", initialState.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql", initialState.ChildTask.SQL),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
 				),
 			},
 		},
@@ -227,6 +273,17 @@ resource "snowflake_task" "child_task" {
 	sql       = "{{ .ChildTask.SQL }}"
 	enabled   = {{ .ChildTask.Enabled }}
 	after     = snowflake_task.root_task.name
+	comment = "{{ .ChildTask.Comment }}"
+}
+
+resource "snowflake_task" "solo_task" {
+	name      = "{{ .SoloTask.Name }}"
+	database  = snowflake_database.test_db.name
+	schema    = "{{ .SoloTask.Schema }}"
+	warehouse = snowflake_warehouse.test_wh.name
+	sql       = "{{ .SoloTask.SQL }}"
+	enabled   = {{ .SoloTask.Enabled }}
+	when      = "{{ .SoloTask.When }}"
 }
 	`)
 
