@@ -329,6 +329,31 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | shares        | set    | Grants privilege to these shares (only valid if on_future is unset).                                                                                                                                                                                                                                       | true     | false     | false    | <nil>    |
 | table_name    | string | The name of the table on which to grant privileges immediately (only valid if on_future is unset).                                                                                                                                                                                                         | true     | false     | false    | <nil>    |
 
+
+### snowflake_task
+
+**Note**: The snowflake_task resource supports simple tasks trees. It will discover the root task of a tree during sub task
+modification and temporarily suspend the root task to enable modification of the nodes of the tree. Nodes with no after clause
+will also be suspended since if they are root they can't be modified while active and there doesn't seem to be a way to tell if
+node is a part of a tree if it doesn't have an after clause.
+
+#### properties
+
+| NAME              | TYPE   | DESCRIPTION                                                             | OPTIONAL | REQUIRED | COMPUTED | DEFAULT |
+|-------------------|--------|-------------------------------------------------------------------------|----------|----------|----------|---------|
+| name              | string | The name of the task                                                    | false    | true     | false    | <nil>   |
+| schema            | string | The schema to create the task in                                        | false    | true     | false    | <nil>   |
+| database          | string | The database to place the task into                                     | false    | true     | false    | <nil>   |
+| enabled           | bool   | The state of the task. true == Started and false == Suspended           | true     | false    | false    | false   |
+| owner             | string | The owning role of the task                                             | false    | false    | true     | <nil>   |
+| warehouse         | string | The warehouse used to execute the task                                  | false    | true     | false    | <nil>   |
+| sql               | string | The SQL statement to be executed by the task                            | false    | true     | false    | <nil>   |
+| schedule          | string | The schedule to execute the task based on. (i.e. "5 Minute")            | true     | false    | false    | <nil>   |
+| user_task_time_ms | num    | Maximum time task can be executing for                                  | true     | false    | false    | <nil>   |
+| comment           | string |                                                                         | true     | false    | false    | <nil>   |
+| when              | string | Boolean statement used to determine if a task should run when triggered | true     | false    | false    | <nil>   |
+
+
 ### snowflake_user
 
 #### properties
