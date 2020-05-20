@@ -98,6 +98,24 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.Task(name, schema, database)
 
+	activateRoot := false
+	var rootBuilder *snowflake.TaskBuilder
+	if data.Get("after").(string) != "" {
+		root, err := getRootTask(data.Get("after").(string), schema, database, db)
+		rootBuilder = snowflake.Task(root.TaskName, schema, database)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to retrieve the root task: %v", rootBuilder.QualifiedName())
+		}
+
+		if root.IsEnabled() {
+			activateRoot = true
+			err := deactivateTask(rootBuilder, db)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to deactivate root task: %v", rootBuilder.QualifiedName())
+			}
+		}
+	}
+
 	builder.WithSQL(data.Get("sql").(string))
 	builder.WithWarehouse(data.Get("warehouse").(string))
 
@@ -137,6 +155,13 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 		err = snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to activate task: %v", builder.QualifiedName())
+		}
+	}
+
+	if activateRoot && rootBuilder != nil {
+		err := activateTask(rootBuilder, db)
+		if err != nil {
+			return errors.Wrapf(err, "failed to reactivate task: %v", rootBuilder.QualifiedName())
 		}
 	}
 
@@ -250,15 +275,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Task(name, schema, database)
 
 	var rootBuilder *snowflake.TaskBuilder
-
-	// I am the root node
-	// if one of the changes is to disable the task then we just run disable changes first
-	// if one of the chagnes is to enable then run it last
-	// if none of the changes are state make sure to deactivate if needed and reactivate
-
-	/// The root node is something else
-	// if root node is enabled enable then disable at the end
-	// if root node is disabled then don't do anything
 
 	rootNode := false
 	activateRoot := false
@@ -396,6 +412,11 @@ func deactivateTask(builder *snowflake.TaskBuilder, db *sql.DB) error {
 
 func splitQualifiedName(qualifiedName string) (name, schema, database string) {
 	split := strings.Split(qualifiedName, ".")
+	if len(split) != 3 {
+		name = qualifiedName
+		return
+	}
+
 	database = strings.Trim(split[0], "\\\"")
 	schema = strings.Trim(split[1], "\\\"")
 	name = strings.Trim(split[2], "\\\"")
