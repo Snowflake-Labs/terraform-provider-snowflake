@@ -47,10 +47,10 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "The schedule for periodically running the task. This can be a cron or interval in minutes.",
 	},
 	"session_parameters": &schema.Schema{
-		Type:        schema.TypeSet,
+		Type:        schema.TypeMap,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies a comma-separated list of session parameters to set for the session when the task runs. A task supports all session parameters.",
+		Description: "Specifies session parameters to set for the session when the task runs. A task supports all session parameters.",
 	},
 	"user_task_timeout_ms": &schema.Schema{
 		Type:        schema.TypeInt,
@@ -84,6 +84,17 @@ type taskID struct {
 	DatabaseName string
 	SchemaName   string
 	TaskName     string
+}
+
+// difference find keys in a but not in b
+func difference(a, b map[string]interface{}) map[string]interface{} {
+	diff := make(map[string]interface{})
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			diff[k] = a[k]
+		}
+	}
+	return diff
 }
 
 //String() takes in a taskID object and returns a pipe-delimited string:
@@ -231,7 +242,7 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := data.GetOk("session_parameters"); ok {
-		builder.WithSessionParameters(expandStringList(v.(*schema.Set).List()))
+		builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := data.GetOk("user_task_timeout_ms"); ok {
@@ -385,16 +396,16 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		o, n := data.GetChange("session_parameters")
 
 		if o == nil {
-			o = new(schema.Set)
+			o = make(map[string]interface{})
 		}
 		if n == nil {
-			n = new(schema.Set)
+			n = make(map[string]interface{})
 		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os := o.(map[string]interface{})
+		ns := n.(map[string]interface{})
 
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := difference(os, ns)
+		add := difference(ns, os)
 
 		if len(remove) > 0 {
 			q = builder.RemoveSessionParameters(remove)

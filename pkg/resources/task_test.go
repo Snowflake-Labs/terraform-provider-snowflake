@@ -35,7 +35,11 @@ func TestTaskCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = much_warehouse COMMENT = 'wow comment' AS select hi from hello$`,
+			`^CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "much_warehouse" COMMENT = 'wow comment' AS select hi from hello$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(
+			`^ALTER TASK "test_db"."test_schema"."test_task" RESUME$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTask(mock)

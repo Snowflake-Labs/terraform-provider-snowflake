@@ -2,7 +2,7 @@ package snowflake
 
 import (
 	"fmt"
-	"log"
+	"sort"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -15,7 +15,7 @@ type TaskBuilder struct {
 	schema               string
 	warehouse            string
 	schedule             string
-	session_parameters   []string
+	session_parameters   map[string]interface{}
 	user_task_timeout_ms int
 	comment              string
 	after                string
@@ -50,7 +50,7 @@ func (tb *TaskBuilder) WithSchedule(s string) *TaskBuilder {
 }
 
 // WithSessionParameters adds session parameters to the TaskBuilder
-func (tb *TaskBuilder) WithSessionParameters(params []string) *TaskBuilder {
+func (tb *TaskBuilder) WithSessionParameters(params map[string]interface{}) *TaskBuilder {
 	tb.session_parameters = params
 	return tb
 }
@@ -115,7 +115,17 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	if len(tb.session_parameters) > 0 {
-		q.WriteString(fmt.Sprintf(` %v`, strings.Join(tb.session_parameters, ", ")))
+		sp := make([]string, 0)
+		sortedKeys := make([]string, 0)
+		for k := range tb.session_parameters {
+			sortedKeys = append(sortedKeys, k)
+		}
+		sort.Strings(sortedKeys)
+
+		for _, k := range sortedKeys {
+			sp = append(sp, EscapeString(fmt.Sprintf(`%v = %v`, k, tb.session_parameters[k])))
+		}
+		q.WriteString(fmt.Sprintf(` %v`, strings.Join(sp, ", ")))
 	}
 
 	if tb.comment != "" {
@@ -139,16 +149,6 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	return q.String()
-}
-
-// getSessionParameters gets the actual parameter
-func getSessionParameters(params []string) []string {
-	out := make([]string, 0)
-	for _, p := range params {
-		s := strings.Split(p, "=")
-		out = append(out, strings.TrimSpace(s[0]))
-	}
-	return out
 }
 
 // ChangeWarehouse returns the sql that will change the warehouse for the task.
@@ -197,16 +197,30 @@ func (tb *TaskBuilder) RemoveDependency(after string) string {
 }
 
 // AddSessionParameters returns the sql that will remove the session parameters for the task
-func (tb *TaskBuilder) AddSessionParameters(params []string) string {
-	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(params, ", "))
+func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) string {
+	p := make([]string, 0)
+	sortedKeys := make([]string, 0)
+	for k := range params {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, k := range sortedKeys {
+		p = append(p, EscapeString(fmt.Sprintf(`%v = %v`, k, params[k])))
+	}
+
+	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
 }
 
 // RemoveSessionParameters returns the sql that will remove the session parameters for the task
-func (tb *TaskBuilder) RemoveSessionParameters(params []string) string {
-	p := getSessionParameters(params)
-	log.Println(p)
-	log.Println(len(p))
-	return fmt.Sprintf(`ALTER TASK %v UNSET %v`, tb.QualifiedName(), strings.Join(p, ", "))
+func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) string {
+	sortedKeys := make([]string, 0)
+	for k := range params {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	return fmt.Sprintf(`ALTER TASK %v UNSET %v`, tb.QualifiedName(), strings.Join(sortedKeys, ", "))
 }
 
 // ChangeCondition returns the sql that will update the when condition for the task.
