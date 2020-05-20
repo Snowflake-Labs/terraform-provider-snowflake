@@ -251,10 +251,15 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating task %v", name)
+	}
+
+	q = builder.Resume()
+	err = snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error resuming task %v", name)
 	}
 
 	taskID := &taskID{
