@@ -225,7 +225,8 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if task.Predecessor.String != "" {
-		err = data.Set("after", task.Predecessor.String)
+		name, _, _ := splitQualifiedName(task.Predecessor.String)
+		err = data.Set("after", name)
 		if err != nil {
 			return err
 		}
@@ -444,7 +445,7 @@ func deactivateTask(builder *snowflake.TaskBuilder, db *sql.DB) error {
 func splitQualifiedName(qualifiedName string) (name, schema, database string) {
 	split := strings.Split(qualifiedName, ".")
 	if len(split) != 3 {
-		name = qualifiedName
+		name = strings.Trim(qualifiedName, "\\\"")
 		return
 	}
 
