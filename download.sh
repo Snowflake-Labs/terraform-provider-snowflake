@@ -50,7 +50,7 @@ execute() {
   srcdir="${tmpdir}"
   (cd "${tmpdir}" && untar "${TARBALL}")
   install -d "${BINDIR}"
-  for binexe in "terraform-provider-snowflake" ; do
+  for binexe in "terraform-provider-snowflake_${TAG}" ; do
     if [ "$OS" = "windows" ]; then
       binexe="${binexe}.exe"
     fi
