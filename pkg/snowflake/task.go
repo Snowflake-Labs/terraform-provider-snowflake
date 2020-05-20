@@ -216,7 +216,14 @@ func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
 
 // ChangeSqlStatement returns the sql that will update the sql the task executes.
 func (tb *TaskBuilder) ChangeSqlStatement(newStatement string) string {
-	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), newStatement)
+// Suspend returns the sql that will suspend the task.
+func (tb *TaskBuilder) Suspend() string {
+	return fmt.Sprintf(`ALTER TASK %v SUSPEND`, tb.QualifiedName())
+}
+
+// Resume returns the sql that will resume the task.
+func (tb *TaskBuilder) Resume() string {
+	return fmt.Sprintf(`ALTER TASK %v RESUME`, tb.QualifiedName())
 }
 
 // Drop returns the sql that will remove the task.
