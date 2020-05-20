@@ -370,6 +370,13 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error adding after dependency on task %v", data.Id())
 			}
 		}
+
+		// Resume task after changing dependency
+		q = builder.Resume()
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error resuming task %v", data.Id())
+		}
 		data.SetPartial("after")
 	}
 
