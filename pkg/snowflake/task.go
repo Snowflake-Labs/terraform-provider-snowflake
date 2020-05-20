@@ -108,10 +108,10 @@ func (tb *TaskBuilder) Create() string {
 	q.WriteString(`CREATE`)
 
 	q.WriteString(fmt.Sprintf(` TASK %v`, tb.QualifiedName()))
-	q.WriteString(fmt.Sprintf(` WAREHOUSE = %v`, tb.warehouse))
+	q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
 
 	if tb.schedule != "" {
-		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, tb.schedule))
+		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, EscapeString(tb.schedule)))
 	}
 
 	if len(tb.session_parameters) > 0 {
@@ -119,7 +119,7 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	if tb.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, tb.comment))
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
 	if tb.user_task_timeout_ms > 0 {
@@ -131,11 +131,11 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	if tb.when != "" {
-		q.WriteString(fmt.Sprintf(` WHEN %v`, tb.when))
+		q.WriteString(fmt.Sprintf(` WHEN %v`, EscapeString(tb.when)))
 	}
 
 	if tb.sql_statement != "" {
-		q.WriteString(fmt.Sprintf(` AS %v`, tb.sql_statement))
+		q.WriteString(fmt.Sprintf(` AS %v`, EscapeString(tb.sql_statement)))
 	}
 
 	return q.String()
@@ -153,12 +153,12 @@ func getSessionParameters(params []string) []string {
 
 // ChangeWarehouse returns the sql that will change the warehouse for the task.
 func (tb *TaskBuilder) ChangeWarehouse(newWh string) string {
-	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = %v`, tb.QualifiedName(), newWh)
+	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = "%v"`, tb.QualifiedName(), EscapeString(newWh))
 }
 
 // ChangeSchedule returns the sql that will change the schedule for the task.
 func (tb *TaskBuilder) ChangeSchedule(newSchedule string) string {
-	return fmt.Sprintf(`ALTER TASK %v SET SCHEDULE = '%v'`, tb.QualifiedName(), newSchedule)
+	return fmt.Sprintf(`ALTER TASK %v SET SCHEDULE = '%v'`, tb.QualifiedName(), EscapeString(newSchedule))
 }
 
 // RemoveSchedule returns the sql that will remove the schedule for the task.
@@ -178,7 +178,7 @@ func (tb *TaskBuilder) RemoveTimeout() string {
 
 // ChangeComment returns the sql that will change the comment for the task.
 func (tb *TaskBuilder) ChangeComment(newComment string) string {
-	return fmt.Sprintf(`ALTER TASK %v SET COMMENT = '%v'`, tb.QualifiedName(), newComment)
+	return fmt.Sprintf(`ALTER TASK %v SET COMMENT = '%v'`, tb.QualifiedName(), EscapeString(newComment))
 }
 
 // RemoveComment returns the sql that will remove the comment for the task.
@@ -211,11 +211,14 @@ func (tb *TaskBuilder) RemoveSessionParameters(params []string) string {
 
 // ChangeCondition returns the sql that will update the when condition for the task.
 func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
-	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), newCondition)
+	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), EscapeString(newCondition))
 }
 
 // ChangeSqlStatement returns the sql that will update the sql the task executes.
 func (tb *TaskBuilder) ChangeSqlStatement(newStatement string) string {
+	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), EscapeString(newStatement))
+}
+
 // Suspend returns the sql that will suspend the task.
 func (tb *TaskBuilder) Suspend() string {
 	return fmt.Sprintf(`ALTER TASK %v SUSPEND`, tb.QualifiedName())
@@ -238,7 +241,7 @@ func (tb *TaskBuilder) Describe() string {
 
 // Show returns the sql that will show a task.
 func (tb *TaskBuilder) Show() string {
-	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN DATABASE "%v"`, tb.name, tb.db)
+	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN DATABASE "%v"`, EscapeString(tb.name), EscapeString(tb.db))
 }
 
 type task struct {

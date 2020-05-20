@@ -12,34 +12,34 @@ func TestTaskCreate(t *testing.T) {
 	r.Equal(st.QualifiedName(), `"test_db"."test_schema"."test_task"`)
 
 	st.WithWarehouse("test_wh")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh"`)
 
 	st.WithSchedule("USING CRON 0 9-17 * * SUN America/Los_Angeles")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles'`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles'`)
 
 	st.WithSessionParameters([]string{"TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24'"})
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24'`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24'`)
 
 	st.WithComment("test comment")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment'`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment'`)
 
 	st.WithTimeout(12)
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12`)
 
 	st.WithDependency("other_task")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task"`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task"`)
 
 	st.WithCondition("SYSTEM$STREAM_HAS_DATA('MYSTREAM')")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM')`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\')`)
 
 	st.WithStatement("INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = test_wh SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\') AS INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)`)
 }
 
 func TestChangeWarehouse(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.ChangeWarehouse("much_wh"), `ALTER TASK "test_db"."test_schema"."test_task" SET WAREHOUSE = much_wh`)
+	r.Equal(st.ChangeWarehouse("much_wh"), `ALTER TASK "test_db"."test_schema"."test_task" SET WAREHOUSE = "much_wh"`)
 }
 
 func TestChangeSchedule(t *testing.T) {
