@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -17,6 +18,12 @@ const (
 )
 
 var taskSchema = map[string]*schema.Schema{
+	"enabled": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies if the task should be started (enabled) after creation or should remain suspended (default).",
+	},
 	"name": &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
@@ -86,17 +93,6 @@ type taskID struct {
 	TaskName     string
 }
 
-// difference find keys in a but not in b
-func difference(a, b map[string]interface{}) map[string]interface{} {
-	diff := make(map[string]interface{})
-	for k := range a {
-		if _, ok := b[k]; !ok {
-			diff[k] = a[k]
-		}
-	}
-	return diff
-}
-
 //String() takes in a taskID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|TaskName
 func (t *taskID) String() (string, error) {
@@ -110,6 +106,97 @@ func (t *taskID) String() (string, error) {
 	}
 	strTaskID := strings.TrimSpace(buf.String())
 	return strTaskID, nil
+}
+
+// difference find keys in a but not in b
+func difference(a, b map[string]interface{}) map[string]interface{} {
+	diff := make(map[string]interface{})
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			diff[k] = a[k]
+		}
+	}
+	return diff
+}
+
+// getRootTask tries to retrieve the root of current task or returns the current (standalone) task
+func getRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
+	log.Println("[DEBUG] retrieving root task")
+
+	db := meta.(*sql.DB)
+	var (
+		database = data.Get("database").(string)
+		dbSchema = data.Get("schema").(string)
+		name     = data.Get("name").(string)
+		after    = data.Get("after").(string)
+	)
+
+	if name == "" {
+		return nil, nil
+	}
+
+	// always start from first predecessor
+	// or the current task when standalone
+	if after != "" {
+		name = after
+	}
+
+	for {
+
+		builder := snowflake.Task(name, database, dbSchema)
+		q := builder.Show()
+		row := snowflake.QueryRow(db, q)
+		task, err := snowflake.ScanTask(row)
+
+		if err != nil && name != data.Get("name").(string) {
+			return nil, errors.Wrapf(err, "failed to locate the root node of: %v", name)
+		}
+
+		if task.Predecessors == nil {
+			log.Println(fmt.Sprintf("[DEBUG] found root task: %v", name))
+			// we only want to deal with suspending the root task when its enabled (started)
+			if task.IsEnabled() {
+				return snowflake.Task(name, database, dbSchema), nil
+			}
+			return nil, nil
+		}
+
+		name = task.GetPredecessorName()
+	}
+}
+
+// getRootTaskAndSuspend retrieves the root task and suspends it
+func getRootTaskAndSuspend(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
+	db := meta.(*sql.DB)
+	name := data.Get("name").(string)
+
+	root, err := getRootTask(data, meta)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error retrieving root task %v", name)
+	}
+
+	if root != nil {
+		qr := root.Suspend()
+		err = snowflake.Exec(db, qr)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error suspending root task %v", name)
+		}
+	}
+
+	return root, nil
+}
+
+func resumeTask(root *snowflake.TaskBuilder, meta interface{}) {
+	if root == nil {
+		return
+	}
+
+	db := meta.(*sql.DB)
+	qr := root.Resume()
+	err := snowflake.Exec(db, qr)
+	if err != nil {
+		log.Fatal(errors.Wrapf(err, "error resuming root task %v", root.QualifiedName()))
+	}
 }
 
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
@@ -172,6 +259,11 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = data.Set("enabled", t.IsEnabled())
+	if err != nil {
+		return err
+	}
+
 	err = data.Set("name", t.Name)
 	if err != nil {
 		return err
@@ -203,8 +295,7 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if t.Predecessors != nil {
-		pre := strings.Split(*t.Predecessors, ".")
-		err = data.Set("after", pre[len(pre)-1])
+		err = data.Set("after", t.GetPredecessorName())
 		if err != nil {
 			return err
 		}
@@ -225,12 +316,16 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 
 // CreateTask implements schema.CreateFunc
 func CreateTask(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	dbSchema := data.Get("schema").(string)
-	name := data.Get("name").(string)
-	warehouse := data.Get("warehouse").(string)
-	sql := data.Get("sql_statement").(string)
+	var (
+		err       error
+		db        = meta.(*sql.DB)
+		database  = data.Get("database").(string)
+		dbSchema  = data.Get("schema").(string)
+		name      = data.Get("name").(string)
+		warehouse = data.Get("warehouse").(string)
+		sql       = data.Get("sql_statement").(string)
+		enabled   = data.Get("enabled").(bool)
+	)
 
 	builder := snowflake.Task(name, database, dbSchema)
 	builder.WithWarehouse(warehouse)
@@ -254,6 +349,12 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := data.GetOk("after"); ok {
+		root, err := getRootTaskAndSuspend(data, meta)
+		if err != nil {
+			return err
+		}
+		defer resumeTask(root, meta)
+
 		builder.WithDependency(v.(string))
 	}
 
@@ -262,15 +363,17 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-	err := snowflake.Exec(db, q)
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating task %v", name)
 	}
 
-	q = builder.Resume()
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error resuming task %v", name)
+	if enabled {
+		q = builder.Resume()
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error starting task %v", name)
+		}
 	}
 
 	taskID := &taskID{
@@ -292,17 +395,24 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
 	data.Partial(true)
 
-	db := meta.(*sql.DB)
 	taskID, err := taskIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 
-	database := taskID.DatabaseName
-	dbSchema := taskID.SchemaName
-	name := taskID.TaskName
+	var (
+		db       = meta.(*sql.DB)
+		database = taskID.DatabaseName
+		dbSchema = taskID.SchemaName
+		name     = taskID.TaskName
+		builder  = snowflake.Task(name, database, dbSchema)
+	)
 
-	builder := snowflake.Task(name, database, dbSchema)
+	root, err := getRootTaskAndSuspend(data, meta)
+	if err != nil {
+		return err
+	}
+	defer resumeTask(root, meta)
 
 	if data.HasChange("warehouse") {
 		_, new := data.GetChange("warehouse")
@@ -361,10 +471,20 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 
 	if data.HasChange("after") {
 		var (
-			q   string
-			err error
+			q        string
+			err      error
+			old, new = data.GetChange("after")
+			enabled  = data.Get("enabled").(bool)
 		)
-		old, new := data.GetChange("after")
+
+		if enabled {
+			q = builder.Suspend()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error suspending task %v", data.Id())
+			}
+			defer resumeTask(builder, meta)
+		}
 
 		if old != "" {
 			q = builder.RemoveDependency(old.(string))
@@ -382,12 +502,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		// Resume task after changing dependency
-		q = builder.Resume()
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error resuming task %v", data.Id())
-		}
 		data.SetPartial("after")
 	}
 
@@ -446,13 +560,35 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		data.SetPartial("sql_statement")
 	}
 
+	if data.HasChange("enabled") {
+		var (
+			q      string
+			_, n   = data.GetChange("enabled")
+			enable = n.(bool)
+		)
+
+		if enable {
+			q = builder.Resume()
+		} else {
+			q = builder.Suspend()
+		}
+
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating task state %v", data.Id())
+		}
+		data.SetPartial("enabled")
+	}
+
 	return ReadTask(data, meta)
 }
 
 // DeleteTask implements schema.DeleteFunc
 func DeleteTask(data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
+	var (
+		db          = meta.(*sql.DB)
+		taskID, err = taskIDFromString(data.Id())
+	)
 	if err != nil {
 		return err
 	}
@@ -461,8 +597,17 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	q := snowflake.Task(name, database, schema).Drop()
+	root, err := getRootTaskAndSuspend(data, meta)
+	if err != nil {
+		return err
+	}
 
+	// only resume the root when not a standalone task
+	if name != root.Name() {
+		defer resumeTask(root, meta)
+	}
+
+	q := snowflake.Task(name, database, schema).Drop()
 	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting task %v", data.Id())
@@ -471,7 +616,6 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	data.SetId("")
 
 	return nil
-
 }
 
 // TaskExists implements schema.ExistsFunc

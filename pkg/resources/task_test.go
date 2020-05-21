@@ -22,6 +22,7 @@ func TestTaskCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
+		"enabled":       true,
 		"name":          "test_task",
 		"database":      "test_db",
 		"schema":        "test_schema",

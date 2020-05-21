@@ -37,6 +37,11 @@ func (tb *TaskBuilder) QualifiedName() string {
 	return tb.GetFullName(tb.name)
 }
 
+// GetName returns the name of the task
+func (tb *TaskBuilder) Name() string {
+	return tb.name
+}
+
 // WithWarehouse adds a warehouse to the TaskBuilder
 func (tb *TaskBuilder) WithWarehouse(s string) *TaskBuilder {
 	tb.warehouse = s
@@ -271,6 +276,19 @@ type task struct {
 	State        string  `db:"state"`
 	Definition   string  `db:"definition"`
 	Condition    *string `db:"condition"`
+}
+
+func (t *task) IsEnabled() bool {
+	return strings.ToLower(t.State) == "started"
+}
+
+func (t *task) GetPredecessorName() string {
+	if t.Predecessors == nil {
+		return ""
+	}
+
+	pre := strings.Split(*t.Predecessors, ".")
+	return pre[len(pre)-1]
 }
 
 // ScanTask turns a sql row into a task object
