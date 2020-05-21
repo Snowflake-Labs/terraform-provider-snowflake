@@ -252,13 +252,15 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	q := snowflake.Task(name, database, schema).Show()
+	builder := snowflake.Task(name, database, schema)
+	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
 	if err != nil {
 		return err
 	}
 
+	data.SetId(t.Id)
 	err = data.Set("enabled", t.IsEnabled())
 	if err != nil {
 		return err
@@ -309,6 +311,30 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 	err = data.Set("sql_statement", t.Definition)
 	if err != nil {
 		return err
+	}
+
+	q = builder.ShowParameters()
+	paramRows, err := snowflake.Query(db, q)
+	if err != nil {
+		return err
+	}
+	params, err := snowflake.ScanTaskParameters(paramRows)
+	if err != nil {
+		return err
+	}
+
+	if len(params) > 0 {
+		paramMap := map[string]interface{}{}
+		for _, param := range params {
+			log.Printf("[TRACE] %+v\n", param)
+			if param.Value == param.DefaultValue {
+				continue
+			}
+
+			paramMap[param.Key] = param.Value
+		}
+
+		data.Set("session_parameters", paramMap)
 	}
 
 	return nil
@@ -571,12 +597,18 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			q = builder.Resume()
 		} else {
 			q = builder.Suspend()
+			// make sure defer doesn't enable task again
+			// when standalone or root task is disabled
+			if builder.Name() == root.Name() {
+				root = nil
+			}
 		}
 
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", data.Id())
 		}
+
 		data.SetPartial("enabled")
 	}
 

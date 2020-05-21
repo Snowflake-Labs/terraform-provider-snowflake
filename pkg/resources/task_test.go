@@ -44,6 +44,7 @@ func TestTaskCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTask(mock)
+		expectReadTaskParams(mock)
 		err := resources.CreateTask(d, db)
 		r.NoError(err)
 	})
@@ -54,4 +55,11 @@ func expectReadTask(mock sqlmock.Sqlmock) {
 		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition"},
 	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "")
 	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN DATABASE "test_db"$`).WillReturnRows(rows)
+}
+
+func expectReadTaskParams(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"key", "value", "default", "level", "description", "type"},
+	).AddRow("ABORT_DETACHED_QUERY", "false", "false", "", "wow desc", "BOOLEAN")
+	mock.ExpectQuery(`^SHOW PARAMETERS IN TASK "test_db"."test_schema"."test_task"$`).WillReturnRows(rows)
 }
