@@ -258,32 +258,32 @@ resource "snowflake_database" "test_db" {
 	name = "{{ .DatabaseName }}"
 }
 resource "snowflake_task" "root_task" {
-	name      = "{{ .RootTask.Name }}"
-	database  = snowflake_database.test_db.name
-	schema    = "{{ .RootTask.Schema }}"
-	warehouse = snowflake_warehouse.test_wh.name
-	sql       = "{{ .RootTask.SQL }}"
-	enabled   = {{ .RootTask.Enabled }}
-	schedule  = "{{ .RootTask.Schedule }}"
+	name     	  = "{{ .RootTask.Name }}"
+	database  	  = snowflake_database.test_db.name
+	schema   	  = "{{ .RootTask.Schema }}"
+	warehouse 	  = snowflake_warehouse.test_wh.name
+	sql_statement = "{{ .RootTask.SQL }}"
+	enabled  	  = {{ .RootTask.Enabled }}
+	schedule 	  = "{{ .RootTask.Schedule }}"
 }
 resource "snowflake_task" "child_task" {
-	name      = "{{ .ChildTask.Name }}"
-	database  = snowflake_task.root_task.database
-	schema    = snowflake_task.root_task.schema
-	warehouse = snowflake_task.root_task.warehouse
-	sql       = "{{ .ChildTask.SQL }}"
-	enabled   = {{ .ChildTask.Enabled }}
-	after     = snowflake_task.root_task.name
-	comment = "{{ .ChildTask.Comment }}"
+	name     	  = "{{ .ChildTask.Name }}"
+	database   	  = snowflake_task.root_task.database
+	schema    	  = snowflake_task.root_task.schema
+	warehouse 	  = snowflake_task.root_task.warehouse
+	sql_statement = "{{ .ChildTask.SQL }}"
+	enabled  	  = {{ .ChildTask.Enabled }}
+	after    	  = snowflake_task.root_task.name
+	comment 	  = "{{ .ChildTask.Comment }}"
 }
 resource "snowflake_task" "solo_task" {
-	name      = "{{ .SoloTask.Name }}"
-	database  = snowflake_database.test_db.name
-	schema    = "{{ .SoloTask.Schema }}"
-	warehouse = snowflake_warehouse.test_wh.name
-	sql       = "{{ .SoloTask.SQL }}"
-	enabled   = {{ .SoloTask.Enabled }}
-	when      = "{{ .SoloTask.When }}"
+	name     	  = "{{ .SoloTask.Name }}"
+	database  	  = snowflake_database.test_db.name
+	schema    	  = "{{ .SoloTask.Schema }}"
+	warehouse 	  = snowflake_warehouse.test_wh.name
+	sql_statement = "{{ .SoloTask.SQL }}"
+	enabled  	  = {{ .SoloTask.Enabled }}
+	when     	  = "{{ .SoloTask.When }}"
 	{{ if .SoloTask.SessionParams}}
 	session_parameters = {
 		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
