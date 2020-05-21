@@ -18,22 +18,22 @@ func TestTaskCreate(t *testing.T) {
 	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles'`)
 
 	st.WithSessionParameters(map[string]interface{}{"TIMESTAMP_INPUT_FORMAT": "'YYYY-MM-DD HH24'"})
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\'`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24'`)
 
 	st.WithComment("test comment")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\' COMMENT = 'test comment'`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment'`)
 
 	st.WithTimeout(12)
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12`)
 
 	st.WithDependency("other_task")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task"`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task"`)
 
 	st.WithCondition("SYSTEM$STREAM_HAS_DATA('MYSTREAM')")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\')`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\')`)
 
 	st.WithStatement("INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)")
-	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\') AS INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)`)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA(\'MYSTREAM\') AS INSERT INTO mytable(ts) VALUES(CURRENT_TIMESTAMP)`)
 }
 
 func TestChangeWarehouse(t *testing.T) {
@@ -94,7 +94,7 @@ func TestAddSessionParameters(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
 	params := map[string]interface{}{"TIMESTAMP_INPUT_FORMAT": "'YYYY-MM-DD HH24'", "CLIENT_TIMESTAMP_TYPE_MAPPING": "TIMESTAMP_LTZ"}
-	r.Equal(st.AddSessionParameters(params), `ALTER TASK "test_db"."test_schema"."test_task" SET CLIENT_TIMESTAMP_TYPE_MAPPING = TIMESTAMP_LTZ, TIMESTAMP_INPUT_FORMAT = \'YYYY-MM-DD HH24\'`)
+	r.Equal(st.AddSessionParameters(params), `ALTER TASK "test_db"."test_schema"."test_task" SET CLIENT_TIMESTAMP_TYPE_MAPPING = TIMESTAMP_LTZ, TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24'`)
 }
 
 func TestRemoveSessionParameters(t *testing.T) {

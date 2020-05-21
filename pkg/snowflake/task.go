@@ -128,7 +128,7 @@ func (tb *TaskBuilder) Create() string {
 		sort.Strings(sortedKeys)
 
 		for _, k := range sortedKeys {
-			sp = append(sp, EscapeString(fmt.Sprintf(`%v = %v`, k, tb.session_parameters[k])))
+			sp = append(sp, fmt.Sprintf(`%v = %v`, k, tb.session_parameters[k]))
 		}
 		q.WriteString(fmt.Sprintf(` %v`, strings.Join(sp, ", ")))
 	}
@@ -211,7 +211,7 @@ func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) strin
 	sort.Strings(sortedKeys)
 
 	for _, k := range sortedKeys {
-		p = append(p, EscapeString(fmt.Sprintf(`%v = %v`, k, params[k])))
+		p = append(p, fmt.Sprintf(`%v = %v`, k, params[k]))
 	}
 
 	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
