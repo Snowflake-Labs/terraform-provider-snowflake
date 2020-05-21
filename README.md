@@ -339,19 +339,20 @@ node is a part of a tree if it doesn't have an after clause.
 
 #### properties
 
-| NAME              | TYPE   | DESCRIPTION                                                             | OPTIONAL | REQUIRED | COMPUTED | DEFAULT |
-|-------------------|--------|-------------------------------------------------------------------------|----------|----------|----------|---------|
-| name              | string | The name of the task                                                    | false    | true     | false    | <nil>   |
-| schema            | string | The schema to create the task in                                        | false    | true     | false    | <nil>   |
-| database          | string | The database to place the task into                                     | false    | true     | false    | <nil>   |
-| enabled           | bool   | The state of the task. true == Started and false == Suspended           | true     | false    | false    | false   |
-| owner             | string | The owning role of the task                                             | false    | false    | true     | <nil>   |
-| warehouse         | string | The warehouse used to execute the task                                  | false    | true     | false    | <nil>   |
-| sql               | string | The SQL statement to be executed by the task                            | false    | true     | false    | <nil>   |
-| schedule          | string | The schedule to execute the task based on. (i.e. "5 Minute")            | true     | false    | false    | <nil>   |
-| user_task_time_ms | num    | Maximum time task can be executing for                                  | true     | false    | false    | <nil>   |
-| comment           | string |                                                                         | true     | false    | false    | <nil>   |
-| when              | string | Boolean statement used to determine if a task should run when triggered | true     | false    | false    | <nil>   |
+| NAME              | TYPE        | DESCRIPTION                                                                                                     | OPTIONAL | REQUIRED | COMPUTED | DEFAULT |
+|-------------------|-------------|-----------------------------------------------------------------------------------------------------------------|----------|----------|----------|---------|
+| name              | string      | The name of the task                                                                                            | false    | true     | false    | <nil>   |
+| schema            | string      | The schema to create the task in                                                                                | false    | true     | false    | <nil>   |
+| database          | string      | The database to place the task into                                                                             | false    | true     | false    | <nil>   |
+| enabled           | bool        | The state of the task. true == Started and false == Suspended                                                   | true     | false    | false    | false   |
+| owner             | string      | The owning role of the task                                                                                     | false    | false    | true     | <nil>   |
+| warehouse         | string      | The warehouse used to execute the task                                                                          | false    | true     | false    | <nil>   |
+| sql               | string      | The SQL statement to be executed by the task                                                                    | false    | true     | false    | <nil>   |
+| schedule          | string      | The schedule to execute the task based on. (i.e. "5 Minute")                                                    | true     | false    | false    | <nil>   |
+| user_task_time_ms | num         | Maximum time task can be executing for                                                                          | true     | false    | false    | <nil>   |
+| comment           | string      |                                                                                                                 | true     | false    | false    | <nil>   |
+| when              | string      | Boolean statement used to determine if a task should run when triggered                                         | true     | false    | false    | <nil>   |
+| session_parameters| map<string> | Specifies session parameters to set for the session when the task runs. A task supports all session parameters. | true     | false    | false    | <nil>   |
 
 
 ### snowflake_user
