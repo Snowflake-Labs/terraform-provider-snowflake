@@ -128,7 +128,7 @@ func (tb *TaskBuilder) Create() string {
 		sort.Strings(sortedKeys)
 
 		for _, k := range sortedKeys {
-			sp = append(sp, fmt.Sprintf(`%v = %v`, k, tb.session_parameters[k]))
+			sp = append(sp, EscapeString(fmt.Sprintf(`%v = "%v"`, k, tb.session_parameters[k])))
 		}
 		q.WriteString(fmt.Sprintf(` %v`, strings.Join(sp, ", ")))
 	}
@@ -211,7 +211,7 @@ func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) strin
 	sort.Strings(sortedKeys)
 
 	for _, k := range sortedKeys {
-		p = append(p, fmt.Sprintf(`%v = %v`, k, params[k]))
+		p = append(p, EscapeString(fmt.Sprintf(`%v = "%v"`, k, params[k])))
 	}
 
 	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
@@ -263,7 +263,13 @@ func (tb *TaskBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN DATABASE "%v"`, EscapeString(tb.name), EscapeString(tb.db))
 }
 
+// ShowParameters returns the query to show the session parameters for the task
+func (tb *TaskBuilder) ShowParameters() string {
+	return fmt.Sprintf(`SHOW PARAMETERS IN TASK %v`, tb.QualifiedName())
+}
+
 type task struct {
+	Id           string  `db:"id"`
 	CreatedOn    string  `db:"created_on"`
 	Name         string  `db:"name"`
 	DatabaseName string  `db:"database_name"`
@@ -296,4 +302,29 @@ func ScanTask(row *sqlx.Row) (*task, error) {
 	t := &task{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+// taskParams struct to represent a row of parameters
+type taskParams struct {
+	Key          string `db:"key"`
+	Value        string `db:"value"`
+	DefaultValue string `db:"default"`
+	Level        string `db:"level"`
+	Description  string `db:"description"`
+}
+
+// ScanTaskParameters takes a database row and converts it to a task parameter pointer
+func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
+	t := []*taskParams{}
+
+	for rows.Next() {
+		r := &taskParams{}
+		err := rows.StructScan(r)
+		if err != nil {
+			return nil, err
+		}
+		t = append(t, r)
+
+	}
+	return t, nil
 }
