@@ -323,22 +323,23 @@ func TestTaskRow_IsEnabled(t *testing.T) {
 
 func TestTaskBuilder_Create(t *testing.T) {
 	type fields struct {
-		name           string
-		schema         string
-		database       string
-		warehouse      string
-		schedule       string
-		scheduleSet    bool
-		timeout        int
-		timeoutSet     bool
-		comment        string
-		commentSet     bool
-		predecessor    string
-		predecessorSet bool
-		conditional    string
-		conditionalSet bool
-		definition     string
-		enabled        bool
+		name              string
+		schema            string
+		database          string
+		warehouse         string
+		schedule          string
+		scheduleSet       bool
+		timeout           int
+		timeoutSet        bool
+		comment           string
+		commentSet        bool
+		predecessor       string
+		predecessorSet    bool
+		conditional       string
+		conditionalSet    bool
+		definition        string
+		enabled           bool
+		sessionParameters map[string]interface{}
 	}
 	tests := []struct {
 		name   string
@@ -354,7 +355,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				warehouse:  "wh",
 				definition: "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" AS select * from table",
 		},
 		{
 			name: "include-schedule",
@@ -366,7 +367,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				schedule:   "5 MINUTE",
 				definition: "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' SCHEDULE = '5 MINUTE' AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" SCHEDULE = '5 MINUTE' AS select * from table",
 		},
 		{
 			name: "include-comment",
@@ -378,7 +379,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				comment:    "simple task (test)",
 				definition: "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' COMMENT = 'simple task (test)' AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" COMMENT = 'simple task (test)' AS select * from table",
 		},
 		{
 			name: "include-predecessor",
@@ -390,7 +391,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				predecessor: "ROOT_TASK",
 				definition:  "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' AFTER \"db\".\"sch\".ROOT_TASK AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" AFTER \"db\".\"sch\".ROOT_TASK AS select * from table",
 		},
 		{
 			name: "include-task-timeout",
@@ -403,7 +404,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				timeoutSet: true,
 				definition: "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' USER_TASK_TIMEOUT_MS = 600 AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" USER_TASK_TIMEOUT_MS = 600 AS select * from table",
 		},
 		{
 			name: "include-conditional",
@@ -416,7 +417,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				conditionalSet: true,
 				definition:     "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
 		},
 		{
 			name: "include-conditional-predecessor",
@@ -430,7 +431,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				conditionalSet: true,
 				definition:     "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' AFTER \"db\".\"sch\".\"root_task\" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" AFTER \"db\".\"sch\".\"root_task\" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
 		},
 		{
 			name: "include-conditional-schedule",
@@ -444,7 +445,7 @@ func TestTaskBuilder_Create(t *testing.T) {
 				conditionalSet: true,
 				definition:     "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' SCHEDULE = '5 MINUTE' WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" SCHEDULE = '5 MINUTE' WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
 		},
 		{
 			name: "include-conditional-schedule-timeout",
@@ -460,28 +461,44 @@ func TestTaskBuilder_Create(t *testing.T) {
 				conditionalSet: true,
 				definition:     "select * from table",
 			},
-			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = 'wh' SCHEDULE = '5 MINUTE' USER_TASK_TIMEOUT_MS = 600 WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" SCHEDULE = '5 MINUTE' USER_TASK_TIMEOUT_MS = 600 WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS select * from table",
+		},
+		{
+			name: "include-session-parameters",
+			fields: fields{
+				name:       "task",
+				schema:     "sch",
+				database:   "db",
+				warehouse:  "wh",
+				schedule:   "5 MINUTE",
+				definition: "select * from table",
+				sessionParameters: map[string]interface{}{
+					"TIMESTAMP_INPUT_FORMAT": "YYYY-MM-DD HH24",
+				},
+			},
+			want: "CREATE TASK \"db\".\"sch\".\"task\" WAREHOUSE = \"wh\" SCHEDULE = '5 MINUTE' TIMESTAMP_INPUT_FORMAT = 'YYYY-MM-DD HH24' AS select * from table",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tb := &TaskBuilder{
-				name:           tt.fields.name,
-				schema:         tt.fields.schema,
-				database:       tt.fields.database,
-				warehouse:      tt.fields.warehouse,
-				schedule:       tt.fields.schedule,
-				scheduleSet:    tt.fields.scheduleSet,
-				timeout:        tt.fields.timeout,
-				timeoutSet:     tt.fields.timeoutSet,
-				comment:        tt.fields.comment,
-				commentSet:     tt.fields.commentSet,
-				predecessor:    tt.fields.predecessor,
-				predecessorSet: tt.fields.predecessorSet,
-				conditional:    tt.fields.conditional,
-				conditionalSet: tt.fields.conditionalSet,
-				definition:     tt.fields.definition,
-				enabled:        tt.fields.enabled,
+				name:              tt.fields.name,
+				schema:            tt.fields.schema,
+				database:          tt.fields.database,
+				warehouse:         tt.fields.warehouse,
+				schedule:          tt.fields.schedule,
+				scheduleSet:       tt.fields.scheduleSet,
+				timeout:           tt.fields.timeout,
+				timeoutSet:        tt.fields.timeoutSet,
+				comment:           tt.fields.comment,
+				commentSet:        tt.fields.commentSet,
+				predecessor:       tt.fields.predecessor,
+				predecessorSet:    tt.fields.predecessorSet,
+				conditional:       tt.fields.conditional,
+				conditionalSet:    tt.fields.conditionalSet,
+				definition:        tt.fields.definition,
+				enabled:           tt.fields.enabled,
+				sessionParameters: tt.fields.sessionParameters,
 			}
 			if got := tb.Create(); got != tt.want {
 				t.Errorf("TaskBuilder.Create() = %v, want %v", got, tt.want)

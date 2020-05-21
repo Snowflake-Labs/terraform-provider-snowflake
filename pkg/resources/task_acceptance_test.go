@@ -24,13 +24,14 @@ type (
 	}
 
 	TaskSettings struct {
-		Name     string
-		Enabled  bool
-		Schema   string
-		SQL      string
-		Schedule string
-		Comment  string
-		When     string
+		Name          string
+		Enabled       bool
+		Schema        string
+		SQL           string
+		Schedule      string
+		Comment       string
+		When          string
+		SessionParams bool
 	}
 )
 
@@ -61,11 +62,12 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:    soloname,
-			Schema:  "PUBLIC",
-			SQL:     "SELECT 1",
-			When:    "TRUE",
-			Enabled: false,
+			Name:          soloname,
+			Schema:        "PUBLIC",
+			SQL:           "SELECT 1",
+			When:          "TRUE",
+			Enabled:       false,
+			SessionParams: true,
 		},
 	}
 
@@ -90,11 +92,12 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:    soloname,
-			Schema:  "PUBLIC",
-			SQL:     "SELECT *",
-			When:    "TRUE",
-			Enabled: true,
+			Name:          soloname,
+			Schema:        "PUBLIC",
+			SQL:           "SELECT *",
+			When:          "TRUE",
+			Enabled:       true,
+			SessionParams: false,
 		},
 	}
 
@@ -147,11 +150,12 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:    soloname,
-			Schema:  "PUBLIC",
-			SQL:     "SELECT 1",
-			When:    "TRUE",
-			Enabled: true,
+			Name:          soloname,
+			Schema:        "PUBLIC",
+			SQL:           "SELECT 1",
+			When:          "TRUE",
+			Enabled:       true,
+			SessionParams: true,
 		},
 	}
 )
@@ -284,6 +288,12 @@ resource "snowflake_task" "solo_task" {
 	sql       = "{{ .SoloTask.SQL }}"
 	enabled   = {{ .SoloTask.Enabled }}
 	when      = "{{ .SoloTask.When }}"
+
+	{{ if .SoloTask.SessionParams}}
+	session_parameters = {
+		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
+	}
+	{{- end }}
 }
 	`)
 

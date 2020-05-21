@@ -3,6 +3,7 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -10,22 +11,23 @@ import (
 
 // TaskBuilder struct for building the query
 type TaskBuilder struct {
-	name           string
-	schema         string
-	database       string
-	warehouse      string
-	schedule       string
-	scheduleSet    bool
-	timeout        int
-	timeoutSet     bool
-	comment        string
-	commentSet     bool
-	predecessor    string
-	predecessorSet bool
-	conditional    string
-	conditionalSet bool
-	definition     string
-	enabled        bool
+	name              string
+	schema            string
+	database          string
+	warehouse         string
+	schedule          string
+	scheduleSet       bool
+	timeout           int
+	timeoutSet        bool
+	comment           string
+	commentSet        bool
+	predecessor       string
+	predecessorSet    bool
+	conditional       string
+	conditionalSet    bool
+	definition        string
+	enabled           bool
+	sessionParameters map[string]interface{}
 }
 
 // QualifiedName prepends name with the db and schema when specified
@@ -88,6 +90,12 @@ func (tb *TaskBuilder) WithConditional(conditional string) *TaskBuilder {
 	return tb
 }
 
+// WithSessionParameters adds session parameters to the TaskBuilder
+func (tb *TaskBuilder) WithSessionParameters(params map[string]interface{}) *TaskBuilder {
+	tb.sessionParameters = params
+	return tb
+}
+
 // WithSQL Adds the task sql statement to the TaskBuilder
 func (tb *TaskBuilder) WithSQL(definition string) *TaskBuilder {
 	tb.definition = definition
@@ -111,6 +119,20 @@ func (tb *TaskBuilder) Create() string {
 
 	if tb.schedule != "" {
 		q.WriteString(fmt.Sprintf(`SCHEDULE = '%v' `, tb.schedule))
+	}
+
+	if len(tb.sessionParameters) > 0 {
+		sp := make([]string, 0)
+		sortedKeys := make([]string, 0)
+		for k := range tb.sessionParameters {
+			sortedKeys = append(sortedKeys, k)
+		}
+		sort.Strings(sortedKeys)
+
+		for _, k := range sortedKeys {
+			sp = append(sp, fmt.Sprintf("%v = '%v'", k, tb.sessionParameters[k]))
+		}
+		q.WriteString(fmt.Sprintf(`%v `, strings.Join(sp, ", ")))
 	}
 
 	if tb.timeoutSet {
@@ -141,6 +163,33 @@ func (tb *TaskBuilder) ChangeState() string {
 		state = "RESUME"
 	}
 	return fmt.Sprintf("ALTER TASK %v %v", tb.QualifiedName(), state)
+}
+
+// AddSessionParameters returns the sql that will remove the session parameters for the task
+func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) string {
+	p := make([]string, 0)
+	sortedKeys := make([]string, 0)
+	for k := range params {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, k := range sortedKeys {
+		p = append(p, fmt.Sprintf(`%v = '%v'`, k, params[k]))
+	}
+
+	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
+}
+
+// RemoveSessionParameters returns the sql that will remove the session parameters for the task
+func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) string {
+	sortedKeys := make([]string, 0)
+	for k := range params {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	return fmt.Sprintf(`ALTER TASK %v UNSET %v`, tb.QualifiedName(), strings.Join(sortedKeys, ", "))
 }
 
 // ChangeWarehouseAndSchedule method that returns a query to update the warehouse and schedule of a task
@@ -206,6 +255,11 @@ func (tb *TaskBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN "%v"."%v"`, tb.name, tb.database, tb.schema)
 }
 
+// ShowParameters returns the query to show the session parameters for the task
+func (tb *TaskBuilder) ShowParameters() string {
+	return fmt.Sprintf(`SHOW PARAMETERS IN TASK %v`, tb.QualifiedName())
+}
+
 // Drop Returns the Query to drop/delete a task
 func (tb *TaskBuilder) Drop() string {
 	return fmt.Sprintf("DROP TASK %v", tb.QualifiedName())
@@ -226,6 +280,31 @@ type TaskRow struct {
 	State        string         `db:"state"`
 	Definition   string         `db:"definition"`
 	Condition    sql.NullString `db:"condition"`
+}
+
+// TaskSessionParameterRow  Struct to represent a row of parameters
+type TaskSessionParameterRow struct {
+	Key          string `db:"key"`
+	Value        string `db:"value"`
+	DefaultValue string `db:"default"`
+	Level        string `db:"level"`
+	Description  string `db:"description"`
+}
+
+// ScanTaskParameters takes a database row and converts it to a task parameter pointer
+func ScanTaskParameters(rows *sqlx.Rows) ([]*TaskSessionParameterRow, error) {
+	t := []*TaskSessionParameterRow{}
+
+	for rows.Next() {
+		r := &TaskSessionParameterRow{}
+		err := rows.StructScan(r)
+		if err != nil {
+			return nil, err
+		}
+		t = append(t, r)
+
+	}
+	return t, nil
 }
 
 // ScanTask Takes a database row and converts it to a task pointer object

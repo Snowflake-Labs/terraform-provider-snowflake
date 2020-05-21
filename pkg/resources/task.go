@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -73,6 +74,12 @@ var taskSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"session_parameters": &schema.Schema{
+		Type:        schema.TypeMap,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Specifies session parameters to set for the session when the task runs. A task supports all session parameters.",
+	},
 }
 
 // Task returns a pointer to the resource representing a task
@@ -119,6 +126,10 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := data.GetOk("schedule"); ok {
 		builder.WithSchedule(v.(string))
+	}
+
+	if v, ok := data.GetOk("session_parameters"); ok {
+		builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := data.GetOk("after"); ok {
@@ -249,6 +260,31 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	q = builder.ShowParameters()
+
+	paramRows, err := snowflake.Query(db, q)
+	if err != nil {
+		return err
+	}
+	params, err := snowflake.ScanTaskParameters(paramRows)
+	if err != nil {
+		return err
+	}
+
+	if len(params) > 0 {
+		paramMap := map[string]interface{}{}
+		for _, param := range params {
+			log.Printf("[TRACE] %+v\n", param)
+			if param.Value == param.DefaultValue {
+				continue
+			}
+
+			paramMap[param.Key] = param.Value
+		}
+
+		data.Set("session_parameters", paramMap)
+	}
+
 	return nil
 }
 
@@ -350,6 +386,8 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	data.Partial(true)
+
 	if data.HasChange("after") {
 		curAfter, newAfter := data.GetChange("after")
 
@@ -370,6 +408,8 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 				errors.Wrapf(err, "Failed to set the after value: %v", builder.QualifiedName())
 			}
 		}
+
+		data.SetPartial("after")
 	}
 
 	if data.HasChange("when") {
@@ -381,6 +421,7 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+		data.SetPartial("after")
 	}
 
 	if data.HasChange("warehouse") || data.HasChange("schedule") || data.HasChange("comment") {
@@ -404,6 +445,46 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+
+		data.SetPartial("warehouse")
+		data.SetPartial("schedule")
+		data.SetPartial("comment")
+	}
+
+	if data.HasChange("session_parameters") {
+		var q string
+		o, n := data.GetChange("session_parameters")
+
+		if o == nil {
+			o = make(map[string]interface{})
+		}
+		if n == nil {
+			n = make(map[string]interface{})
+		}
+		os := o.(map[string]interface{})
+		ns := n.(map[string]interface{})
+
+		remove := difference(os, ns)
+		add := difference(ns, os)
+
+		if len(remove) > 0 {
+			q = builder.RemoveSessionParameters(remove)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing session_parameters on task %v", data.Id())
+			}
+		}
+
+		if len(add) > 0 {
+			q = builder.AddSessionParameters(add)
+			log.Printf("[DEBUG] %v", q)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding session_parameters to task %v", data.Id())
+			}
+		}
+
+		data.SetPartial("session_parameters")
 	}
 
 	if data.HasChange("sql") {
@@ -416,6 +497,8 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "Failed to update the sql definition %v", builder.QualifiedName())
 		}
+
+		data.SetPartial("sql")
 	}
 
 	if (activateRoot && rootNode) || data.Get("enabled").(bool) {
@@ -430,6 +513,8 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	data.SetPartial("enabled")
+
 	if activateRoot && rootBuilder != nil {
 		err := activateTask(rootBuilder, db)
 		if err != nil {
@@ -437,8 +522,21 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	data.Partial(false)
+
 	// ensure state is correct
 	return ReadTask(data, meta)
+}
+
+// difference find keys in a but not in b
+func difference(a, b map[string]interface{}) map[string]interface{} {
+	diff := make(map[string]interface{})
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			diff[k] = a[k]
+		}
+	}
+	return diff
 }
 
 func activateTask(builder *snowflake.TaskBuilder, db *sql.DB) error {
