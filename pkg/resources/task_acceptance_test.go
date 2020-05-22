@@ -13,14 +13,10 @@ import (
 type (
 	AccTaskTestSettings struct {
 		WarehouseName string
-
-		DatabaseName string
-
-		RootTask *TaskSettings
-
-		ChildTask *TaskSettings
-
-		SoloTask *TaskSettings
+		DatabaseName  string
+		RootTask      *TaskSettings
+		ChildTask     *TaskSettings
+		SoloTask      *TaskSettings
 	}
 
 	TaskSettings struct {
@@ -177,7 +173,7 @@ func Test_AccTask(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", "PUBLIC"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", initialState.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", initialState.ChildTask.SQL),
-					resource.TestCheckResourceAttr("snowflake_task.child_task", "after", initialState.RootTask.Name),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "after", rootname),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
 				),
 			},

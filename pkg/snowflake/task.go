@@ -3,6 +3,7 @@ package snowflake
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func (tb *TaskBuilder) QualifiedName() string {
 	return tb.GetFullName(tb.name)
 }
 
-// GetName returns the name of the task
+// Name returns the name of the task
 func (tb *TaskBuilder) Name() string {
 	return tb.name
 }
@@ -72,7 +73,7 @@ func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	return tb
 }
 
-// WithDepedency adds an after task dependency to the TaskBuilder
+// WithDependency adds an after task dependency to the TaskBuilder
 func (tb *TaskBuilder) WithDependency(after string) *TaskBuilder {
 	tb.after = after
 	return tb
@@ -146,7 +147,7 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	if tb.when != "" {
-		q.WriteString(fmt.Sprintf(` WHEN %v`, EscapeString(tb.when)))
+		q.WriteString(fmt.Sprintf(` WHEN %v`, tb.when))
 	}
 
 	if tb.sql_statement != "" {
@@ -230,7 +231,7 @@ func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) st
 
 // ChangeCondition returns the sql that will update the when condition for the task.
 func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
-	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), EscapeString(newCondition))
+	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), newCondition)
 }
 
 // ChangeSqlStatement returns the sql that will update the sql the task executes.
@@ -294,7 +295,8 @@ func (t *task) GetPredecessorName() string {
 	}
 
 	pre := strings.Split(*t.Predecessors, ".")
-	return pre[len(pre)-1]
+	name, _ := strconv.Unquote(pre[len(pre)-1])
+	return name
 }
 
 // ScanTask turns a sql row into a task object
