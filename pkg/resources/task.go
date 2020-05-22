@@ -260,7 +260,6 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	data.SetId(t.Id)
 	err = data.Set("enabled", t.IsEnabled())
 	if err != nil {
 		return err
@@ -617,10 +616,8 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 
 // DeleteTask implements schema.DeleteFunc
 func DeleteTask(data *schema.ResourceData, meta interface{}) error {
-	var (
-		db          = meta.(*sql.DB)
-		taskID, err = taskIDFromString(data.Id())
-	)
+	db := meta.(*sql.DB)
+	taskID, err := taskIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
