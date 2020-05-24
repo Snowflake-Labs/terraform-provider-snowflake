@@ -32,11 +32,11 @@ type (
 )
 
 var (
+	rootname      = "root_task"
+	childname     = "child_task"
+	soloname      = "standalone_task"
 	warehousename = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	rootname      = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	childname     = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	soloname      = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	initialState = &AccTaskTestSettings{
 		WarehouseName: warehousename,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -60,9 +61,10 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Specifies session parameters to set for the session when the task runs. A task supports all session parameters.",
 	},
 	"user_task_timeout_ms": &schema.Schema{
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntBetween(0, 86400000),
+		Description:  "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
 	},
 	"comment": &schema.Schema{
 		Type:        schema.TypeString,
@@ -188,6 +190,10 @@ func getRootTaskAndSuspend(data *schema.ResourceData, meta interface{}) (*snowfl
 
 func resumeTask(root *snowflake.TaskBuilder, meta interface{}) {
 	if root == nil {
+		return
+	}
+
+	if root.IsDisabled() {
 		return
 	}
 
@@ -597,9 +603,9 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.Suspend()
 			// make sure defer doesn't enable task again
-			// when standalone or root task is disabled
-			if builder.Name() == root.Name() {
-				root = nil
+			// when standalone or root task and status is supsended
+			if root != nil && builder.QualifiedName() == root.QualifiedName() {
+				root = root.SetDisabled()
 			}
 		}
 
@@ -632,7 +638,7 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// only resume the root when not a standalone task
-	if name != root.Name() {
+	if root != nil && name != root.Name() {
 		defer resumeTask(root, meta)
 	}
 

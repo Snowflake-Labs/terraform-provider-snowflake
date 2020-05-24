@@ -22,6 +22,7 @@ type TaskBuilder struct {
 	after                string
 	when                 string
 	sql_statement        string
+	disabled             bool
 }
 
 // GetFullName prepends db and schema to in parameter
@@ -102,9 +103,10 @@ func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/tasks-intro.html#task-ddl)
 func Task(name, db, schema string) *TaskBuilder {
 	return &TaskBuilder{
-		name:   name,
-		db:     db,
-		schema: schema,
+		name:     name,
+		db:       db,
+		schema:   schema,
+		disabled: false, // helper for when started root or standalone task gets supspended
 	}
 }
 
@@ -267,6 +269,17 @@ func (tb *TaskBuilder) Show() string {
 // ShowParameters returns the query to show the session parameters for the task
 func (tb *TaskBuilder) ShowParameters() string {
 	return fmt.Sprintf(`SHOW PARAMETERS IN TASK %v`, tb.QualifiedName())
+}
+
+// SetDisabled disables the task builder
+func (tb *TaskBuilder) SetDisabled() *TaskBuilder {
+	tb.disabled = true
+	return tb
+}
+
+// IsDisabled returns if the task builder is disabled
+func (tb *TaskBuilder) IsDisabled() bool {
+	return tb.disabled
 }
 
 type task struct {
