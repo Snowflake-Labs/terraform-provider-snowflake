@@ -99,7 +99,7 @@ func (pb *PipeBuilder) Create() string {
 	}
 
 	if pb.integration != "" {
-		q.WriteString(fmt.Sprintf(`INTEGRATION = '%v'`, EscapeString(pb.integration)))
+		q.WriteString(fmt.Sprintf(` INTEGRATION = '%v'`, EscapeString(pb.integration)))
 	}
 
 	if pb.awsSnsTopicArn != "" {
