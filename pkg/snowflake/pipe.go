@@ -16,6 +16,7 @@ type PipeBuilder struct {
 	awsSnsTopicArn string
 	comment        string
 	copyStatement  string
+	integration   string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -63,6 +64,12 @@ func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	return pb
 }
 
+/// WithIntegration adds Integration specification to the PipeBuilder
+func (pb *PipeBuilder) WithIntegration(s string) *PipeBuilder {
+	pb.integration = s
+	return pb
+}
+
 // Pipe returns a pointer to a Builder that abstracts the DDL operations for a pipe.
 //
 // Supported DDL operations are:
@@ -89,6 +96,10 @@ func (pb *PipeBuilder) Create() string {
 
 	if pb.autoIngest {
 		q.WriteString(` AUTO_INGEST = TRUE`)
+	}
+
+	if pb.integration != "" {
+		q.WriteString(fmt.Sprintf(`INTEGRATION = '%v'`, EscapeString(pb.integration)))
 	}
 
 	if pb.awsSnsTopicArn != "" {
@@ -134,6 +145,7 @@ type pipe struct {
 	Owner               string  `db:"owner"`
 	NotificationChannel *string `db:"notification_channel"`
 	Comment             string  `db:"comment"`
+	Integration         string `db:"integration"`
 }
 
 func ScanPipe(row *sqlx.Row) (*pipe, error) {
