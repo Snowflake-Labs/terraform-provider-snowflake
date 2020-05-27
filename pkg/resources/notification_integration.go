@@ -115,9 +115,9 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Could not show notification integration: %w", err)
 	}
 
-	// Note: category must be STORAGE or something is broken
-	if c := s.Category.String; c != "STORAGE" {
-		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
+	// Note: category must be NOTIFICATION or something is broken
+	if c := s.Category.String; c != "NOTIFICATION" {
+		return fmt.Errorf("Expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
 
 	if err := data.Set("name", s.Name.String); err != nil {
