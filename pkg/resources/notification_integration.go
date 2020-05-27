@@ -47,6 +47,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "",
 	},
+	"created_on": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Date and time when the notification integration was created.",
+	},
 }
 
 // NotificationIntegration returns a pointer to the resource representing a notification integration
