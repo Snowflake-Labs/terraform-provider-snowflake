@@ -221,7 +221,7 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return fmt.Errorf("error updating storage integration: %w", err)
+			return fmt.Errorf("error updating notification integration: %w", err)
 		}
 	}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NotificationIntegration returns a pointer to a Builder that abstracts the DDL operations for a storage integration.
+// NotificationIntegration returns a pointer to a Builder that abstracts the DDL operations for a notification integration.
 //
 // Supported DDL operations are:
 //   - CREATE NOTIFICATION INTEGRATION
