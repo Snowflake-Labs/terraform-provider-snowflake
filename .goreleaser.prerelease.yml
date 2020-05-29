@@ -23,3 +23,16 @@ release:
 
 env_files:
   github_token: ~/.config/goreleaser/github_token
+
+signs:
+  - artifacts: checksum
+    cmd: keybase
+    args:
+      - pgp
+      - sign
+      - "--key"
+      - "E29CCA1AAD621CDE"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
