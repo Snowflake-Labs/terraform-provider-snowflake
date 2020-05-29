@@ -32,7 +32,7 @@ signs:
       - sign
       - "--key"
       - "E29CCA1AAD621CDE"
-      - "--output"
+      - "--outfile"
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
