@@ -38,9 +38,9 @@ release: ## run a release
 release-prerelease: build ## release to github as a 'pre-release'
 	version=`./$(BASE_BINARY_NAME) -version`; \
 	git tag v"$$version"; \
-	git push
+	# git push
 	git push --tags
-	goreleaser release -f .goreleaser.prerelease.yml --debug
+	goreleaser release -f .goreleaser.prerelease.yml --debug --rm-dist
 .PHONY: release-prerelease
 
 release-snapshot: ## run a release
