@@ -35,4 +35,5 @@ signs:
       - "--outfile"
       - "${signature}"
       - "--detached"
+      - "--infile"
       - "${artifact}"
