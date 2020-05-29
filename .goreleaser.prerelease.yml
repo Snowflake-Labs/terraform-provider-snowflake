@@ -34,5 +34,5 @@ signs:
       - "E29CCA1AAD621CDE"
       - "--outfile"
       - "${signature}"
-      - "--detach-sign"
+      - "--detached"
       - "${artifact}"
