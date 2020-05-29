@@ -1,28 +1,34 @@
-before:
-  hooks:
-    - make clean
-
 builds:
-  - binary: terraform-provider-snowflake_{{ .Tag }}
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - darwin
-      - linux
-    goarch:
-      - amd64
-    ldflags:
-      - "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha={{.Commit}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version={{.Version}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty={{.Env.DIRTY}}"
+- env:
+  - CGO_ENABLED=0
+  goos:
+    - freebsd
+    - openbsd
+    - solaris
+    - windows
+    - linux
+    - darwin
+  goarch:
+    - amd64
+    - '386'
+    - arm
+    - arm64
+  ignore:
+    - goos: darwin
+      goarch: '386'
+    - goos: openbsd
+      goarch: arm
+    - goos: openbsd
+      goarch: arm64
+  binary: '{{ .ProjectName }}_v{{ .Version }}'
 
 archives:
-  - files:
-    - none*
+  - format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 
-release:
-  prerelease: true
-
-env_files:
-  github_token: ~/.config/goreleaser/github_token
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
 
 signs:
   - artifacts: checksum
@@ -37,3 +43,6 @@ signs:
       - "--detached"
       - "--infile"
       - "${artifact}"
+
+release:
+  prerlease: true
