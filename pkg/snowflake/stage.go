@@ -217,10 +217,10 @@ type descStageResult struct {
 }
 
 type descStageRow struct {
-	parentProperty  string `db:"parent_property"`
-	property        string `db:"property"`
-	propertyValue   string `db:"property_value"`
-	propertyDefault string `db:"property_default"`
+	ParentProperty  string `db:"parent_property"`
+	Property        string `db:"property"`
+	PropertyValue   string `db:"property_value"`
+	PropertyDefault string `db:"property_default"`
 }
 
 func DescStage(db *sql.DB, query string) (*descStageResult, error) {
@@ -240,23 +240,23 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 			return r, err
 		}
 
-		switch row.property {
+		switch row.Property {
 		case "URL":
-			r.Url = strings.Trim(row.propertyValue, "[\"]")
+			r.Url = strings.Trim(row.PropertyValue, "[\"]")
 		case "AWS_EXTERNAL_ID":
-			r.AwsExternalID = row.propertyValue
+			r.AwsExternalID = row.PropertyValue
 		case "SNOWFLAKE_IAM_USER":
-			r.SnowflakeIamUser = row.propertyValue
+			r.SnowflakeIamUser = row.PropertyValue
 		}
 
-		switch row.parentProperty {
+		switch row.ParentProperty {
 		case "STAGE_FILE_FORMAT":
-			if row.propertyValue != row.propertyDefault {
-				ff = append(ff, fmt.Sprintf("%s = %s", row.property, row.propertyValue))
+			if row.PropertyValue != row.PropertyDefault {
+				ff = append(ff, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
 			}
 		case "STAGE_COPY_OPTIONS":
-			if row.propertyValue != row.propertyDefault {
-				co = append(co, fmt.Sprintf("%s = %s", row.property, row.propertyValue))
+			if row.PropertyValue != row.PropertyDefault {
+				co = append(co, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
 			}
 		}
 	}
