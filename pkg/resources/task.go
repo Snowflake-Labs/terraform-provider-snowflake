@@ -121,17 +121,15 @@ func difference(a, b map[string]interface{}) map[string]interface{} {
 	return diff
 }
 
-// getRootTask tries to retrieve the root of current task or returns the current (standalone) task
-func getRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
+// getActiveRootTask tries to retrieve the root of current task or returns the current (standalone) task
+func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
 	log.Println("[DEBUG] retrieving root task")
 
 	db := meta.(*sql.DB)
-	var (
-		database = data.Get("database").(string)
-		dbSchema = data.Get("schema").(string)
-		name     = data.Get("name").(string)
-		after    = data.Get("after").(string)
-	)
+	database := data.Get("database").(string)
+	dbSchema := data.Get("schema").(string)
+	name := data.Get("name").(string)
+	after := data.Get("after").(string)
 
 	if name == "" {
 		return nil, nil
@@ -144,7 +142,6 @@ func getRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBu
 	}
 
 	for {
-
 		builder := snowflake.Task(name, database, dbSchema)
 		q := builder.Show()
 		row := snowflake.QueryRow(db, q)
@@ -167,12 +164,12 @@ func getRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBu
 	}
 }
 
-// getRootTaskAndSuspend retrieves the root task and suspends it
-func getRootTaskAndSuspend(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
+// getActiveRootTaskAndSuspend retrieves the root task and suspends it
+func getActiveRootTaskAndSuspend(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
 
-	root, err := getRootTask(data, meta)
+	root, err := getActiveRootTask(data, meta)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error retrieving root task %v", name)
 	}
@@ -347,16 +344,15 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 
 // CreateTask implements schema.CreateFunc
 func CreateTask(data *schema.ResourceData, meta interface{}) error {
-	var (
-		err       error
-		db        = meta.(*sql.DB)
-		database  = data.Get("database").(string)
-		dbSchema  = data.Get("schema").(string)
-		name      = data.Get("name").(string)
-		warehouse = data.Get("warehouse").(string)
-		sql       = data.Get("sql_statement").(string)
-		enabled   = data.Get("enabled").(bool)
-	)
+
+	var err error
+	db := meta.(*sql.DB)
+	database := data.Get("database").(string)
+	dbSchema := data.Get("schema").(string)
+	name := data.Get("name").(string)
+	warehouse := data.Get("warehouse").(string)
+	sql := data.Get("sql_statement").(string)
+	enabled := data.Get("enabled").(bool)
 
 	builder := snowflake.Task(name, database, dbSchema)
 	builder.WithWarehouse(warehouse)
@@ -380,7 +376,7 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := data.GetOk("after"); ok {
-		root, err := getRootTaskAndSuspend(data, meta)
+		root, err := getActiveRootTaskAndSuspend(data, meta)
 		if err != nil {
 			return err
 		}
@@ -431,15 +427,13 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var (
-		db       = meta.(*sql.DB)
-		database = taskID.DatabaseName
-		dbSchema = taskID.SchemaName
-		name     = taskID.TaskName
-		builder  = snowflake.Task(name, database, dbSchema)
-	)
+	db := meta.(*sql.DB)
+	database := taskID.DatabaseName
+	dbSchema := taskID.SchemaName
+	name := taskID.TaskName
+	builder := snowflake.Task(name, database, dbSchema)
 
-	root, err := getRootTaskAndSuspend(data, meta)
+	root, err := getActiveRootTaskAndSuspend(data, meta)
 	if err != nil {
 		return err
 	}
@@ -502,11 +496,12 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 
 	if data.HasChange("after") {
 		var (
-			q        string
-			err      error
-			old, new = data.GetChange("after")
-			enabled  = data.Get("enabled").(bool)
+			q   string
+			err error
 		)
+
+		old, new := data.GetChange("after")
+		enabled := data.Get("enabled").(bool)
 
 		if enabled {
 			q = builder.Suspend()
@@ -592,11 +587,9 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if data.HasChange("enabled") {
-		var (
-			q      string
-			_, n   = data.GetChange("enabled")
-			enable = n.(bool)
-		)
+		var q string
+		_, n := data.GetChange("enabled")
+		enable := n.(bool)
 
 		if enable {
 			q = builder.Resume()
@@ -632,7 +625,7 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	root, err := getRootTaskAndSuspend(data, meta)
+	root, err := getActiveRootTaskAndSuspend(data, meta)
 	if err != nil {
 		return err
 	}
