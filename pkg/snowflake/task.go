@@ -308,7 +308,10 @@ func (t *task) GetPredecessorName() string {
 	}
 
 	pre := strings.Split(*t.Predecessors, ".")
-	name, _ := strconv.Unquote(pre[len(pre)-1])
+	name, err := strconv.Unquote(pre[len(pre)-1])
+	if err != nil {
+		return pre[len(pre)-1]
+	}
 	return name
 }
 
