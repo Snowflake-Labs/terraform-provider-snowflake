@@ -71,7 +71,7 @@ You can see a number of examples [here](examples).
 ### snowflake_account_grant
 
 **Note**: The snowflake_account_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the accounts to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the accounts to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_account_grant resource. This means that even any snowflake_account that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -98,7 +98,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_database_grant
 
 **Note**: The snowflake_database_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the databases to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the databases to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_database_grant resource. This means that even any snowflake_database that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -115,7 +115,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_integration_grant
 
 **Note**: The snowflake_integration_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the integrations to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the integrations to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_integration_grant resource. This means that even any snowflake_integration that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -178,7 +178,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_resource_monitor_grant
 
 **Note**: The snowflake_resource_monitor_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the resource_monitors to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the resource_monitors to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_resource_monitor_grant resource. This means that even any snowflake_resource_monitor that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -226,7 +226,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_schema_grant
 
 **Note**: The snowflake_schema_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the schemas to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the schemas to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_schema_grant resource. This means that even any snowflake_schema that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -274,7 +274,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_stage_grant
 
 **Note**: The snowflake_stage_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the stages to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the stages to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_stage_grant resource. This means that even any snowflake_stage that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -312,7 +312,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_table_grant
 
 **Note**: The snowflake_table_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the tables to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the tables to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_table_grant resource. This means that even any snowflake_table that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -364,7 +364,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_view_grant
 
 **Note**: The snowflake_view_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the views to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the views to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_view_grant resource. This means that even any snowflake_view that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
@@ -403,7 +403,7 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 ### snowflake_warehouse_grant
 
 **Note**: The snowflake_warehouse_grant resource creates exclusive attachments of grants.
-Across the entire Snowflake account, all of the warehouses to which a single grant is attached must be declared
+Across the entire Snowflake account, all of the warehouses to which a specific (e.g. ALL) grant is attached must be declared
 by a single snowflake_warehouse_grant resource. This means that even any snowflake_warehouse that have the attached
 grant via any other mechanism (including other Terraform resources) will have that attached grant revoked by this resource.
 These resources do not enforce exclusive attachment of a grant, it is the user's responsibility to enforce this.
