@@ -60,6 +60,7 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 func TestListDatabases(t *testing.T) {
 	r := require.New(t)
 	mockDB, mock, err := sqlmock.New()
+	r.NoError(err)
 	defer mockDB.Close()
 	sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
 	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("", "", "", "", "", "", "", "", "")
