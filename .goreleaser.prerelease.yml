@@ -14,7 +14,7 @@ builds:
     - arm
     - arm64
   ldflags:
-    - "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha={{.Commit}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version={{.Version}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty={{.Dirty}}"
+    - "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha={{.Commit}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version={{.Version}} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty={{.env.DIRTY}}"
   ignore:
     - goos: darwin
       goarch: '386'
