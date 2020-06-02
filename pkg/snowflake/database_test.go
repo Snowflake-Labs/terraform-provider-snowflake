@@ -60,10 +60,10 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 func TestListDatabases(t *testing.T) {
 	r := require.New(t)
 	mockDB, mock, err := sqlmock.New()
-	r.NoError(err)
 	defer mockDB.Close()
 	sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
+	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("", "", "", "", "", "", "", "", "")
+	mock.ExpectQuery(`SHOW DATABASES`).WillReturnRows(rows)
 	_, err = snowflake.ListDatabases(sqlxDB)
 	r.NoError(err)
-	mock.ExpectExec("SHOW DATABASES").WillReturnResult(sqlmock.NewResult(1, 1))
 }
