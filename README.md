@@ -52,6 +52,14 @@ To export the variables into your provider:
 export SNOWFLAKE_USER="..."
 export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
 ```
+### OAuth Access Token
+If you have an OAuth access token, export these credentials as environment variables:
+```shell
+export SNOWFLAKE_USER='...''
+export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...''
+```
+
+Note that once this access token expires, you'll need to request a new one through an external application.
 
 ### Username and Password Environment Variables
 If you choose to use Username and Password Authentication, export these credentials:

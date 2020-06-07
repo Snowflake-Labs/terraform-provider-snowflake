@@ -48,15 +48,80 @@ func TestDSN(t *testing.T) {
 	}
 }
 
-func resourceData(t *testing.T, account, username, password, region, role string) *schema.ResourceData {
+func resourceData(t *testing.T, account, username, token, region, role string) *schema.ResourceData {
 	r := require.New(t)
 
 	in := map[string]interface{}{
 		"account":  account,
 		"username": username,
-		"password": password,
+		"password": token,
 		"region":   region,
 		"role":     role,
+	}
+
+	d := schema.TestResourceDataRaw(t, provider.Provider().Schema, in)
+	r.NotNil(d)
+	return d
+}
+
+func TestOAuthDSN(t *testing.T) {
+	type args struct {
+		s *schema.ResourceData
+	}
+	pseudorandom_access_token := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"simple_oauth", args{oauthResourceData(t, "acct", "user", pseudorandom_access_token, "region", "role")},
+			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+		{"oauth_over_password", args{oauthResourceDataWithPassword(t, "acct", "user", pseudorandom_access_token, "region", "role")},
+			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+		{"empty_token_no_password_errors_out", args{oauthResourceData(t, "acct", "user", "", "region", "role")},
+			"", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := provider.DSN(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DSN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func oauthResourceData(t *testing.T, account, username, token, region, role string) *schema.ResourceData {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"account":            account,
+		"username":           username,
+		"oauth_access_token": token,
+		"region":             region,
+		"role":               role,
+	}
+
+	d := schema.TestResourceDataRaw(t, provider.Provider().Schema, in)
+	r.NotNil(d)
+	return d
+}
+
+func oauthResourceDataWithPassword(t *testing.T, account, username, token, region, role string) *schema.ResourceData {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"account":            account,
+		"username":           username,
+		"oauth_access_token": token,
+		"password":           "shouldnotbeused",
+		"region":             region,
+		"role":               role,
 	}
 
 	d := schema.TestResourceDataRaw(t, provider.Provider().Schema, in)
