@@ -153,7 +153,7 @@ func (tb *TaskBuilder) Create() string {
 	}
 
 	if tb.sql_statement != "" {
-		q.WriteString(fmt.Sprintf(` AS %v`, tb.sql_statement))
+		q.WriteString(fmt.Sprintf(` AS %v`, UnescapeString(tb.sql_statement)))
 	}
 
 	return q.String()
@@ -238,7 +238,7 @@ func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
 
 // ChangeSqlStatement returns the sql that will update the sql the task executes.
 func (tb *TaskBuilder) ChangeSqlStatement(newStatement string) string {
-	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), newStatement)
+	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), UnescapeString(newStatement))
 }
 
 // Suspend returns the sql that will suspend the task.
