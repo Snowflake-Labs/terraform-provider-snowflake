@@ -9,3 +9,10 @@ func EscapeString(in string) string {
 	out = strings.Replace(out, `'`, `\'`, -1)
 	return out
 }
+
+// UnescapeString reverses EscapeString
+func UnescapeString(in string) string {
+	out := strings.Replace(in, `\\`, `\`, -1)
+	out = strings.Replace(out, `\'`, `'`, -1)
+	return out
+}
