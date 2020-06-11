@@ -41,13 +41,12 @@ signs:
       - "-b"
       - "-d"
       - "-i"
-      - "terraform-provider-snowflake_{{ .Version }}_SHA256SUMS"
+      - "${artifact}"
       - "-o"
       - "${signature}"
       - "-k"
       - "E29CCA1AAD621CDE"
 
-# 
 
 release:
   prerelease: true
