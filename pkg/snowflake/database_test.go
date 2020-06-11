@@ -3,7 +3,9 @@ package snowflake_test
 import (
 	"testing"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,4 +55,16 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 	db := snowflake.DatabaseFromDatabase("db1", "abc123")
 	q := db.Create()
 	r.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)
+}
+
+func TestListDatabases(t *testing.T) {
+	r := require.New(t)
+	mockDB, mock, err := sqlmock.New()
+	r.NoError(err)
+	defer mockDB.Close()
+	sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
+	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("", "", "", "", "", "", "", "", "")
+	mock.ExpectQuery(`SHOW DATABASES`).WillReturnRows(rows)
+	_, err = snowflake.ListDatabases(sqlxDB)
+	r.NoError(err)
 }

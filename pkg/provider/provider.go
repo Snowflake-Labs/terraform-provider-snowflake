@@ -34,19 +34,26 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "private_key_path"},
 			},
+			"oauth_access_token": &schema.Schema{
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "password"},
+			},
 			"browser_auth": &schema.Schema{
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "private_key_path"},
+				ConflictsWith: []string{"password", "private_key_path", "oauth_access_token"},
 			},
 			"private_key_path": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "password"},
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
 			},
 			"role": &schema.Schema{
 				Type:        schema.TypeString,
@@ -110,6 +117,7 @@ func DSN(s *schema.ResourceData) (string, error) {
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
 	privateKeyPath := s.Get("private_key_path").(string)
+	oauthAccessToken := s.Get("oauth_access_token").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
@@ -137,6 +145,9 @@ func DSN(s *schema.ResourceData) (string, error) {
 
 	} else if browserAuth {
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
+	} else if oauthAccessToken != "" {
+		config.Authenticator = gosnowflake.AuthTypeOAuth
+		config.Token = oauthAccessToken
 	} else {
 		config.Password = password
 	}
