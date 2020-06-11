@@ -38,13 +38,16 @@ signs:
     args:
       - pgp
       - sign
-      - "--key"
-      - "E29CCA1AAD621CDE"
-      - "--outfile"
+      - "-b"
+      - "-d"
+      - "-i"
+      - "terraform-provider-snowflake_{{ .Version }}_SHA256SUMS"
+      - "-o"
       - "${signature}"
-      - "--detached"
-      - "--infile"
-      - "${artifact}"
+      - "-k"
+      - "E29CCA1AAD621CDE"
+
+# 
 
 release:
   prerelease: true
