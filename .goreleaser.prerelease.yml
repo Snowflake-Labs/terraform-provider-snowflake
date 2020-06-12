@@ -45,7 +45,7 @@ signs:
       - "-o"
       - "${signature}"
       - "-k"
-      - "E29CCA1AAD621CDE"
+      - "{{.Env.KEYBASE_KEY_ID}}"
 
 
 release:
