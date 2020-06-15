@@ -43,7 +43,7 @@ release: check-release-prereqs ## run a release
 release-prerelease: check-release-prereqs build ## release to github as a 'pre-release'
 	version=`./$(BASE_BINARY_NAME) -version`; \
 	git tag v"$$version"; \
-	# git push
+	git push
 	git push --tags
 	goreleaser release -f .goreleaser.prerelease.yml --debug --rm-dist
 .PHONY: release-prerelease
