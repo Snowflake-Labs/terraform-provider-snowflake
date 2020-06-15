@@ -1,7 +1,6 @@
 SHA=$(shell git rev-parse --short HEAD)
 VERSION=$(shell cat VERSION)
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-# TODO add release flag
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
@@ -29,13 +28,19 @@ lint-all: fmt ## run the fast go linters
 	./bin/golangci-lint run
 .PHONY: lint-all
 
-release: ## run a release
+check-release-prereqs:
+ifndef KEYBASE_KEY_ID
+	$(error KEYBASE_KEY_ID is undefined)
+endif
+.PHONY: check-release-prereqs
+
+release: check-release-prereqs ## run a release
 	./bin/bff bump
 	git push
 	goreleaser release
 .PHONY: release
 
-release-prerelease: build ## release to github as a 'pre-release'
+release-prerelease: check-release-prereqs build ## release to github as a 'pre-release'
 	version=`./$(BASE_BINARY_NAME) -version`; \
 	git tag v"$$version"; \
 	# git push
