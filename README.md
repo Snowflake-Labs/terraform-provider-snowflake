@@ -483,3 +483,10 @@ If you are using the Standard Snowflake plan, it's recommended you also set up t
 * `SKIP_DATABASE_TESTS` - to skip tests with retention time larger than 1 day
 * `SKIP_WAREHOUSE_TESTS` - to skip tests with multi warehouses
 
+## Releasing
+
+**Note: Currently only @ryanking and @edulop91 have keys that are whitelisted in the terraform registry, so only they can do releases.**
+
+Releases are done by [goreleaser](https://goreleaser.com/) and run by our make files. There two goreleaser configs, `.goreleaser.yml` for regular releases and `.goreleaser.prerelease.yml` for doing prereleases (for testing).
+
+As of recently releases are also [published to the terraform registry](https://registry.terraform.io/providers/chanzuckerberg/snowflake/latest). That publishing requires that releases by signed. We do that signing via goreleaser using individual keybase keys. They key you want to use to sign must be passed in with the `KEYBASE_KEY_ID` environment variable.
