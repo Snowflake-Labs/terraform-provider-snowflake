@@ -37,7 +37,7 @@ endif
 release: check-release-prereqs ## run a release
 	./bin/bff bump
 	git push
-	goreleaser release
+	goreleaser release --debug --rm-dist
 .PHONY: release
 
 release-prerelease: check-release-prereqs build ## release to github as a 'pre-release'
