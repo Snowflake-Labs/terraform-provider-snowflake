@@ -57,6 +57,40 @@ func TestAccountGrantRead(t *testing.T) {
 	})
 }
 
+func TestMonitorExecution(t *testing.T) {
+	r := require.New(t)
+
+	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION", map[string]interface{}{
+		"privilege": "MONITOR EXECUTION",
+		"roles":     []interface{}{"test-role-1", "test-role-2"},
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadAccountGrant(mock)
+		err := resources.ReadAccountGrant(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestExecuteTask(t *testing.T) {
+	r := require.New(t)
+
+	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK", map[string]interface{}{
+		"privilege": "EXECUTE TASK",
+		"roles":     []interface{}{"test-role-1", "test-role-2"},
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadAccountGrant(mock)
+		err := resources.ReadAccountGrant(d, db)
+		r.NoError(err)
+	})
+}
+
 func expectReadAccountGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
