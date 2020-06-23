@@ -341,7 +341,7 @@ PROJECT_NAME="terraform-provider-snowflake"
 OWNER=chanzuckerberg
 REPO="terraform-provider-snowflake"
 BINARY=terraform-provider-snowflake
-FORMAT=tar.gz
+FORMAT=zip
 OS=$(uname_os)
 ARCH=$(uname_arch)
 PREFIX="$OWNER/$REPO"
@@ -373,7 +373,7 @@ log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 NAME=${PROJECT_NAME}_${VERSION}_${OS}_${ARCH}
 TARBALL=${NAME}.${FORMAT}
 TARBALL_URL=${GITHUB_DOWNLOAD}/${TAG}/${TARBALL}
-CHECKSUM=${PROJECT_NAME}_${VERSION}_checksums.txt
+CHECKSUM=${PROJECT_NAME}_${VERSION}_SHA256SUMS
 CHECKSUM_URL=${GITHUB_DOWNLOAD}/${TAG}/${CHECKSUM}
 
 
