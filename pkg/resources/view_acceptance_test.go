@@ -53,6 +53,7 @@ resource "snowflake_view" "test" {
 	comment   = "Terraform test resource"
 	database  = snowflake_database.test.name
 	is_secure = true
+	or_replace = false
 	statement = "%s"
 }
 `, n, n, q)

@@ -33,6 +33,12 @@ var viewSchema = map[string]*schema.Schema{
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},
+	"or_replace": &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Overwrites the View if it exists.",
+	},
 	"is_secure": &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -98,16 +104,16 @@ func CreateView(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.View(name).WithDB(database).WithSchema(schema).WithStatement(s)
 
 	// Set optionals
+	if v, ok := data.GetOk("or_replace"); ok && v.(bool) {
+		builder.WithReplace()
+	}
+
 	if v, ok := data.GetOk("is_secure"); ok && v.(bool) {
 		builder.WithSecure()
 	}
 
 	if v, ok := data.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
-	}
-
-	if v, ok := data.GetOk("schema"); ok {
-		builder.WithSchema(v.(string))
 	}
 
 	q := builder.Create()
