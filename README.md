@@ -379,14 +379,15 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 
 #### properties
 
-|   NAME    |  TYPE  |                                                          DESCRIPTION                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
-|-----------|--------|-------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
-| comment   | string | Specifies a comment for the view.                                                                                             | true     | false     | false    | <nil>    |
-| database  | string | The database in which to create the view. Don't use the | character.                                                          | false    | true      | false    | <nil>    |
-| is_secure | bool   | Specifies that the view is secure.                                                                                            | true     | false     | false    | false    |
-| name      | string | Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character. | false    | true      | false    | <nil>    |
-| schema    | string | The schema in which to create the view. Don't use the | character.                                                            | true     | false     | false    | "PUBLIC" |
-| statement | string | Specifies the query used to create the view.                                                                                  | false    | true      | false    | <nil>    |
+|    NAME    |  TYPE  |                                                          DESCRIPTION                                                          | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT  |
+|------------|--------|-------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|----------|
+| comment    | string | Specifies a comment for the view.                                                                                             | true     | false     | false    | <nil>    |
+| database   | string | The database in which to create the view. Don't use the | character.                                                          | false    | true      | false    | <nil>    |
+| is_secure  | bool   | Specifies that the view is secure.                                                                                            | true     | false     | false    | false    |
+| name       | string | Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character. | false    | true      | false    | <nil>    |
+| or_replace | bool   | Overwrites the View if it exists.                                                                                             | true     | false     | false    | false    |
+| schema     | string | The schema in which to create the view. Don't use the | character.                                                            | true     | false     | false    | "PUBLIC" |
+| statement  | string | Specifies the query used to create the view.                                                                                  | false    | true      | false    | <nil>    |
 
 ### snowflake_view_grant
 
