@@ -46,12 +46,12 @@ func TestViewCreateOrReplace(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":      "good_name",
-		"database":  "test_db",
-		"comment":   "great comment",
-		"statement": "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
-		"is_secure": true,
-    "or_replace": true,
+		"name":       "good_name",
+		"database":   "test_db",
+		"comment":    "great comment",
+		"statement":  "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
+		"is_secure":  true,
+		"or_replace": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
 	r.NotNil(d)
