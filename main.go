@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/chanzuckerberg/go-misc/ver"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -18,7 +18,7 @@ import (
 
 func main() {
 	doc := flag.Bool("doc", false, "spit out docs for resources here")
-	ver := flag.Bool("version", false, "spit out version for resources here")
+	version := flag.Bool("version", false, "spit out version for resources here")
 	flag.Parse()
 
 	if *doc {
@@ -26,8 +26,8 @@ func main() {
 		return
 	}
 
-	if *ver {
-		verString, err := version.VersionString()
+	if *version {
+		verString, err := ver.VersionStr()
 		if err != nil {
 			log.Fatal(err)
 		}
