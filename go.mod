@@ -7,7 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/ExpansiveWorlds/instrumentedsql v0.0.0-20171218214018-45abb4b1947d
 	github.com/Pallinder/go-randomdata v1.2.0
-	github.com/chanzuckerberg/go-misc v0.0.0-20200507183956-c0dee2967ccc
+	github.com/chanzuckerberg/go-misc v0.0.0-20200713173723-57227b556dd0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.12.0
 	github.com/jmoiron/sqlx v1.2.0
@@ -19,5 +19,5 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.4
 	github.com/stretchr/testify v1.5.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+	golang.org/x/crypto v0.0.0-20200707235045-ab33eee955e0
 )
