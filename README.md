@@ -231,6 +231,13 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | is_transient        | bool   | Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss. | true     | false     | false    | false   |
 | name                | string | Specifies the identifier for the schema; must be unique for the database in which the schema is created.                                                                                                                                               | false    | true      | false    | <nil>   |
 
+#### import 
+Snowflake schemas can be imported using the ID of the stage.  The ID is made up as "DATABASE_NAME|SCHEMA_NAME".  The | delimiters must be shell escaped, e.g.
+
+````hcl
+terraform import snowflake_stage.test_stage "TEST_DB|TEST_SCHEMA"
+````
+
 ### snowflake_schema_grant
 
 **Note**: The snowflake_schema_grant resource creates exclusive attachments of grants.
@@ -278,6 +285,14 @@ These resources do not enforce exclusive attachment of a grant, it is the user's
 | snowflake_iam_user  | string |                                                                                                                                                                                     | true     | false     | true     | <nil>   |
 | storage_integration | string | Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity. | true     | false     | false    | <nil>   |
 | url                 | string | Specifies the URL for the stage.                                                                                                                                                    | true     | false     | false    | <nil>   |
+
+#### import
+
+Snowflake stages can be imported using the ID of the stage.  The ID is made up as "DATABASE_NAME|SCHEMA_NAME|STAGE_NAME".  The | delimiters must be shell escaped, e.g.
+
+````hcl
+terraform import snowflake_stage.test_stage "TEST_DB|TEST_SCHEMA|TEST_STAGE"
+````
 
 ### snowflake_stage_grant
 
