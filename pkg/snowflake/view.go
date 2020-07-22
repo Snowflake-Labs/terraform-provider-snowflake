@@ -14,6 +14,7 @@ type ViewBuilder struct {
 	db        string
 	schema    string
 	secure    bool
+	replace   bool
 	comment   string
 	statement string
 }
@@ -48,6 +49,12 @@ func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
 // WithDB adds the name of the database to the ViewBuilder
 func (vb *ViewBuilder) WithDB(db string) *ViewBuilder {
 	vb.db = db
+	return vb
+}
+
+// WithReplace adds the "OR REPLACE" option to the ViewBuilder
+func (vb *ViewBuilder) WithReplace() *ViewBuilder {
+	vb.replace = true
 	return vb
 }
 
@@ -91,6 +98,11 @@ func (vb *ViewBuilder) Create() string {
 	var q strings.Builder
 
 	q.WriteString("CREATE")
+
+	if vb.replace {
+		q.WriteString(" OR REPLACE")
+	}
+
 	if vb.secure {
 		q.WriteString(" SECURE")
 	}

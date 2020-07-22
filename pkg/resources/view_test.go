@@ -42,6 +42,30 @@ func TestViewCreate(t *testing.T) {
 		r.NoError(err)
 	})
 }
+func TestViewCreateOrReplace(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":       "good_name",
+		"database":   "test_db",
+		"comment":    "great comment",
+		"statement":  "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
+		"is_secure":  true,
+		"or_replace": true,
+	}
+	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE OR REPLACE SECURE VIEW "test_db"."PUBLIC"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadView(mock)
+		err := resources.CreateView(d, db)
+		r.NoError(err)
+	})
+}
 func TestViewCreateAmpersand(t *testing.T) {
 	r := require.New(t)
 
