@@ -32,7 +32,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "oauth_access_token"},
 			},
 			"oauth_access_token": &schema.Schema{
 				Type:          schema.TypeString,
