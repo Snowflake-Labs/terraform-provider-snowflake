@@ -80,7 +80,7 @@ func StageGrant(db, schema, stage string) GrantBuilder {
 	}
 }
 
-// PipeGrant returns a pointer to a CurrentGrantBuilder for a stage
+// PipeGrant returns a pointer to a CurrentGrantBuilder for a pipe
 func PipeGrant(db, schema, pipe string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          pipe,
