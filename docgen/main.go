@@ -24,7 +24,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		defer f.Close()
 
 		f.WriteString(fmt.Sprintf("\n# %s\n\n", name))
 
@@ -60,6 +59,7 @@ func main() {
 			table.Append([]string{property, typeString(s.Type), s.Description, boolString(s.Optional), boolString(s.Required), boolString(s.Computed), interfaceString(s.Default)})
 		}
 		table.Render()
+		f.Close()
 	}
 }
 
