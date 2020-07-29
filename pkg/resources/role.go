@@ -10,11 +10,11 @@ import (
 
 var roleProperties = []string{"comment"}
 var roleSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		// TODO validation

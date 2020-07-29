@@ -19,16 +19,16 @@ var warehouseProperties = []string{
 }
 
 var warehouseSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"warehouse_size": &schema.Schema{
+	"warehouse_size": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
@@ -44,28 +44,28 @@ var warehouseSchema = map[string]*schema.Schema{
 			return normalize(old) == normalize(new)
 		},
 	},
-	"max_cluster_count": &schema.Schema{
+	"max_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
-	"min_cluster_count": &schema.Schema{
+	"min_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
-	"scaling_policy": &schema.Schema{
+	"scaling_policy": {
 		Type:         schema.TypeString,
 		Description:  "Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "ECONOMY"}, true),
 	},
-	"auto_suspend": &schema.Schema{
+	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
@@ -73,29 +73,29 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntAtLeast(60),
 	},
 	// @TODO add a disable_auto_suspend property that sets the value of auto_suspend to NULL
-	"auto_resume": &schema.Schema{
+	"auto_resume": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
 		Optional:    true,
 		Computed:    true,
 	},
-	"initially_suspended": &schema.Schema{
+	"initially_suspended": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:    true,
 	},
-	"resource_monitor": &schema.Schema{
+	"resource_monitor": {
 		Type:        schema.TypeString,
 		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:    true,
 		Computed:    true,
 	},
-	"wait_for_provisioning": &schema.Schema{
+	"wait_for_provisioning": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
 	},
-	"statement_timeout_in_seconds": &schema.Schema{
+	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Default:     0,

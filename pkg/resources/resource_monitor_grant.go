@@ -13,13 +13,13 @@ var validResourceMonitorPrivileges = newPrivilegeSet(
 )
 
 var resourceMonitorGrantSchema = map[string]*schema.Schema{
-	"monitor_name": &schema.Schema{
+	"monitor_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the resource monitor; must be unique for your account.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the resource monitor.",
@@ -27,7 +27,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
