@@ -13,66 +13,66 @@ import (
 
 var storageIntegrationSchema = map[string]*schema.Schema{
 	// The first part of the schema is shared between all integration vendors
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"type": &schema.Schema{
+	"type": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      "EXTERNAL_STAGE",
 		ValidateFunc: validation.StringInSlice([]string{"EXTERNAL_STAGE"}, true),
 	},
-	"enabled": &schema.Schema{
+	"enabled": {
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
 	},
-	"storage_allowed_locations": &schema.Schema{
+	"storage_allowed_locations": {
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		Description: "Explicitly limits external stages that use the integration to reference one or more storage locations.",
 	},
-	"storage_blocked_locations": &schema.Schema{
+	"storage_blocked_locations": {
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Explicitly prohibits external stages that use the integration from referencing one or more storage locations.",
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
-	"storage_provider": &schema.Schema{
+	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE"}, false),
 	},
-	"storage_aws_external_id": &schema.Schema{
+	"storage_aws_external_id": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role.",
 	},
-	"storage_aws_iam_user_arn": &schema.Schema{
+	"storage_aws_iam_user_arn": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
-	"storage_aws_role_arn": &schema.Schema{
+	"storage_aws_role_arn": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"azure_tenant_id": &schema.Schema{
+	"azure_tenant_id": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"created_on": &schema.Schema{
+	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Date and time when the storage integration was created.",

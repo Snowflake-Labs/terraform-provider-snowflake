@@ -17,56 +17,56 @@ const (
 )
 
 var stageSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created.",
 		ForceNew:    true,
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the stage.",
 		ForceNew:    true,
 	},
-	"schema": &schema.Schema{
+	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The schema in which to create the stage.",
 		ForceNew:    true,
 	},
-	"url": &schema.Schema{
+	"url": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the URL for the stage.",
 	},
-	"credentials": &schema.Schema{
+	"credentials": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the credentials for the stage.",
 		Sensitive:   true,
 	},
-	"storage_integration": &schema.Schema{
+	"storage_integration": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.",
 	},
-	"file_format": &schema.Schema{
+	"file_format": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the file format for the stage.",
 	},
-	"copy_options": &schema.Schema{
+	"copy_options": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the copy options for the stage.",
 	},
-	"encryption": &schema.Schema{
+	"encryption": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the encryption settings for the stage.",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the stage.",

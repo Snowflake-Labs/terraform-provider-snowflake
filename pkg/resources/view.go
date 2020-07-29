@@ -15,42 +15,42 @@ import (
 var space = regexp.MustCompile(`\s+`)
 
 var viewSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.",
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},
-	"schema": &schema.Schema{
+	"schema": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Default:     "PUBLIC",
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},
-	"or_replace": &schema.Schema{
+	"or_replace": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
-	"is_secure": &schema.Schema{
+	"is_secure": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies that the view is secure.",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the view.",
 	},
-	"statement": &schema.Schema{
+	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the query used to create the view.",
