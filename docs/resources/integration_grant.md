@@ -13,6 +13,6 @@
 
 |       NAME       |  TYPE  |                           DESCRIPTION                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |------------------|--------|------------------------------------------------------------------|----------|-----------|----------|---------|
-| integration_name | string | Identifier for the integration; must be unique for your account. | false    | true      | false    | <nil>   |
+| integration_name | string | Identifier for the integration; must be unique for your account. | false    | true      | false    |         |
 | privilege        | string | The privilege to grant on the integration.                       | true     | false     | false    | "USAGE" |
-| roles            | set    | Grants privilege to these roles.                                 | true     | false     | false    | <nil>   |
+| roles            | set    | Grants privilege to these roles.                                 | true     | false     | false    |         |

@@ -88,5 +88,8 @@ func boolString(t bool) string {
 }
 
 func interfaceString(t interface{}) string {
+	if t == nil {
+		return ""
+	}
 	return fmt.Sprintf("%#v", t)
 }

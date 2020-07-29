@@ -14,5 +14,5 @@
 |      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
 | privilege      | string | The privilege to grant on the warehouse.                | true     | false     | false    | "USAGE" |
-| roles          | set    | Grants privilege to these roles.                        | true     | false     | false    | <nil>   |
-| warehouse_name | string | The name of the warehouse on which to grant privileges. | false    | true      | false    | <nil>   |
+| roles          | set    | Grants privilege to these roles.                        | true     | false     | false    |         |
+| warehouse_name | string | The name of the warehouse on which to grant privileges. | false    | true      | false    |         |

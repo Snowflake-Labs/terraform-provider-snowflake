@@ -8,10 +8,10 @@
 |         NAME         |  TYPE  |                                                   DESCRIPTION                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------------|--------|-----------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
 | auto_ingest          | bool   | Specifies a auto_ingest param for the pipe.                                                                     | true     | false     | false    | false   |
-| comment              | string | Specifies a comment for the pipe.                                                                               | true     | false     | false    | <nil>   |
-| copy_statement       | string | Specifies the copy statement for the pipe.                                                                      | false    | true      | false    | <nil>   |
-| database             | string | The database in which to create the pipe.                                                                       | false    | true      | false    | <nil>   |
-| name                 | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created. | false    | true      | false    | <nil>   |
-| notification_channel | string | Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.                      | false    | false     | true     | <nil>   |
-| owner                | string | Name of the role that owns the pipe.                                                                            | false    | false     | true     | <nil>   |
-| schema               | string | The schema in which to create the pipe.                                                                         | false    | true      | false    | <nil>   |
+| comment              | string | Specifies a comment for the pipe.                                                                               | true     | false     | false    |         |
+| copy_statement       | string | Specifies the copy statement for the pipe.                                                                      | false    | true      | false    |         |
+| database             | string | The database in which to create the pipe.                                                                       | false    | true      | false    |         |
+| name                 | string | Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created. | false    | true      | false    |         |
+| notification_channel | string | Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.                      | false    | false     | true     |         |
+| owner                | string | Name of the role that owns the pipe.                                                                            | false    | false     | true     |         |
+| schema               | string | The schema in which to create the pipe.                                                                         | false    | true      | false    |         |

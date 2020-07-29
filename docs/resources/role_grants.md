@@ -7,6 +7,6 @@
 
 |   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |-----------|--------|---------------------------------------|----------|-----------|----------|---------|
-| role_name | string | The name of the role we are granting. | false    | true      | false    | <nil>   |
-| roles     | set    | Grants role to this specified role.   | true     | false     | false    | <nil>   |
-| users     | set    | Grants role to this specified user.   | true     | false     | false    | <nil>   |
+| role_name | string | The name of the role we are granting. | false    | true      | false    |         |
+| roles     | set    | Grants role to this specified role.   | true     | false     | false    |         |
+| users     | set    | Grants role to this specified user.   | true     | false     | false    |         |

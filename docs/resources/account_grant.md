@@ -14,4 +14,4 @@
 |   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |-----------|--------|---------------------------------------|----------|-----------|----------|---------|
 | privilege | string | The privilege to grant on the schema. | true     | false     | false    | "USAGE" |
-| roles     | set    | Grants privilege to these roles.      | true     | false     | false    | <nil>   |
+| roles     | set    | Grants privilege to these roles.      | true     | false     | false    |         |

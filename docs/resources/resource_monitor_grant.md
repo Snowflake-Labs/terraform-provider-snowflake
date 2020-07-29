@@ -13,6 +13,6 @@
 
 |     NAME     |  TYPE  |                              DESCRIPTION                              | OPTIONAL | REQUIRED  | COMPUTED |  DEFAULT  |
 |--------------|--------|-----------------------------------------------------------------------|----------|-----------|----------|-----------|
-| monitor_name | string | Identifier for the resource monitor; must be unique for your account. | false    | true      | false    | <nil>     |
+| monitor_name | string | Identifier for the resource monitor; must be unique for your account. | false    | true      | false    |           |
 | privilege    | string | The privilege to grant on the resource monitor.                       | true     | false     | false    | "MONITOR" |
-| roles        | set    | Grants privilege to these roles.                                      | true     | false     | false    | <nil>     |
+| roles        | set    | Grants privilege to these roles.                                      | true     | false     | false    |           |

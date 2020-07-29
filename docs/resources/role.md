@@ -7,5 +7,5 @@
 
 |  NAME   |  TYPE  | DESCRIPTION | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------|--------|-------------|----------|-----------|----------|---------|
-| comment | string |             | true     | false     | false    | <nil>   |
-| name    | string |             | false    | true      | false    | <nil>   |
+| comment | string |             | true     | false     | false    |         |
+| name    | string |             | false    | true      | false    |         |

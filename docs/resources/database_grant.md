@@ -13,7 +13,7 @@
 
 |     NAME      |  TYPE  |                      DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |---------------|--------|--------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database on which to grant privileges. | false    | true      | false    | <nil>   |
+| database_name | string | The name of the database on which to grant privileges. | false    | true      | false    |         |
 | privilege     | string | The privilege to grant on the database.                | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                       | true     | false     | false    | <nil>   |
-| shares        | set    | Grants privilege to these shares.                      | true     | false     | false    | <nil>   |
+| roles         | set    | Grants privilege to these roles.                       | true     | false     | false    |         |
+| shares        | set    | Grants privilege to these shares.                      | true     | false     | false    |         |

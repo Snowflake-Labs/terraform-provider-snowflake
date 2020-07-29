@@ -7,6 +7,6 @@
 
 |   NAME   |  TYPE  |                                              DESCRIPTION                                              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------|--------|-------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| accounts | list   | A list of accounts to be added to the share.                                                          | true     | false     | false    | <nil>   |
-| comment  | string | Specifies a comment for the managed account.                                                          | true     | false     | false    | <nil>   |
-| name     | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    | <nil>   |
+| accounts | list   | A list of accounts to be added to the share.                                                          | true     | false     | false    |         |
+| comment  | string | Specifies a comment for the managed account.                                                          | true     | false     | false    |         |
+| name     | string | Specifies the identifier for the share; must be unique for the account in which the share is created. | false    | true      | false    |         |

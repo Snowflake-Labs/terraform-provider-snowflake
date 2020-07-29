@@ -9,13 +9,13 @@
 |---------------------------|--------|---------------------------------------------------------------------------------------------------------------|----------|-----------|----------|------------------|
 | azure_tenant_id           | string |                                                                                                               | true     | false     | false    | ""               |
 | comment                   | string |                                                                                                               | true     | false     | false    | ""               |
-| created_on                | string | Date and time when the storage integration was created.                                                       | false    | false     | true     | <nil>            |
+| created_on                | string | Date and time when the storage integration was created.                                                       | false    | false     | true     |                  |
 | enabled                   | bool   |                                                                                                               | true     | false     | false    | true             |
-| name                      | string |                                                                                                               | false    | true      | false    | <nil>            |
-| storage_allowed_locations | list   | Explicitly limits external stages that use the integration to reference one or more storage locations.        | false    | true      | false    | <nil>            |
-| storage_aws_external_id   | string | The external ID that Snowflake will use when assuming the AWS role.                                           | false    | false     | true     | <nil>            |
-| storage_aws_iam_user_arn  | string | The Snowflake user that will attempt to assume the AWS role.                                                  | false    | false     | true     | <nil>            |
+| name                      | string |                                                                                                               | false    | true      | false    |                  |
+| storage_allowed_locations | list   | Explicitly limits external stages that use the integration to reference one or more storage locations.        | false    | true      | false    |                  |
+| storage_aws_external_id   | string | The external ID that Snowflake will use when assuming the AWS role.                                           | false    | false     | true     |                  |
+| storage_aws_iam_user_arn  | string | The Snowflake user that will attempt to assume the AWS role.                                                  | false    | false     | true     |                  |
 | storage_aws_role_arn      | string |                                                                                                               | true     | false     | false    | ""               |
-| storage_blocked_locations | list   | Explicitly prohibits external stages that use the integration from referencing one or more storage locations. | true     | false     | false    | <nil>            |
-| storage_provider          | string |                                                                                                               | false    | true      | false    | <nil>            |
+| storage_blocked_locations | list   | Explicitly prohibits external stages that use the integration from referencing one or more storage locations. | true     | false     | false    |                  |
+| storage_provider          | string |                                                                                                               | false    | true      | false    |                  |
 | type                      | string |                                                                                                               | true     | false     | false    | "EXTERNAL_STAGE" |
