@@ -15,6 +15,7 @@ const (
 	databaseType  grantType = "DATABASE"
 	schemaType    grantType = "SCHEMA"
 	stageType     grantType = "STAGE"
+	pipeType      grantType = "PIPE"
 	viewType      grantType = "VIEW"
 	tableType     grantType = "TABLE"
 	warehouseType grantType = "WAREHOUSE"
@@ -76,6 +77,15 @@ func StageGrant(db, schema, stage string) GrantBuilder {
 		name:          stage,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, stage),
 		grantType:     stageType,
+	}
+}
+
+// PipeGrant returns a pointer to a CurrentGrantBuilder for a stage
+func PipeGrant(db, schema, pipe string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          pipe,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, pipe),
+		grantType:     pipeType,
 	}
 }
 
