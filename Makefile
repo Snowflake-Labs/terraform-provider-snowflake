@@ -99,12 +99,12 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: build ## generate some docs
-	./scripts/update-readme.sh update
+docs: 
+	go run ./docgen
 .PHONY: docs
 
-check-docs: build ## check that docs have been generated
-	./scripts/update-readme.sh check
+check-docs: docs ## check that docs have been generated
+	git diff --exit-code -- docs
 .PHONY: check-docs
 
 check-mod:
