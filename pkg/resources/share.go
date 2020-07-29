@@ -17,17 +17,17 @@ var shareProperties = []string{
 }
 
 var shareSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the share; must be unique for the account in which the share is created.",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the managed account.",
 	},
-	"accounts": &schema.Schema{
+	"accounts": {
 		// Changed from Set to List to use DiffSuppressFunc: https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 		Type:             schema.TypeList,
 		Elem:             &schema.Schema{Type: schema.TypeString},

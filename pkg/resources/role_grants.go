@@ -18,7 +18,7 @@ func RoleGrants() *schema.Resource {
 		Update: UpdateRoleGrants,
 
 		Schema: map[string]*schema.Schema{
-			"role_name": &schema.Schema{
+			"role_name": {
 				Type:        schema.TypeString,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
@@ -27,13 +27,13 @@ func RoleGrants() *schema.Resource {
 					return snowflake.ValidateIdentifier(val)
 				},
 			},
-			"roles": &schema.Schema{
+			"roles": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified role.",
 			},
-			"users": &schema.Schema{
+			"users": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,

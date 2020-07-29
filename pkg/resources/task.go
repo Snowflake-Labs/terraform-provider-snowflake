@@ -19,69 +19,69 @@ const (
 )
 
 var taskSchema = map[string]*schema.Schema{
-	"enabled": &schema.Schema{
+	"enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies if the task should be started (enabled) after creation or should remain suspended (default).",
 	},
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the task; must be unique for the database and schema in which the task is created.",
 		ForceNew:    true,
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the task.",
 		ForceNew:    true,
 	},
-	"schema": &schema.Schema{
+	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The schema in which to create the task.",
 		ForceNew:    true,
 	},
-	"warehouse": &schema.Schema{
+	"warehouse": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The warehouse the task will use.",
 		ForceNew:    false,
 	},
-	"schedule": &schema.Schema{
+	"schedule": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The schedule for periodically running the task. This can be a cron or interval in minutes.",
 	},
-	"session_parameters": &schema.Schema{
+	"session_parameters": {
 		Type:        schema.TypeMap,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Specifies session parameters to set for the session when the task runs. A task supports all session parameters.",
 	},
-	"user_task_timeout_ms": &schema.Schema{
+	"user_task_timeout_ms": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 86400000),
 		Description:  "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the task.",
 	},
-	"after": &schema.Schema{
+	"after": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag).",
 	},
-	"when": &schema.Schema{
+	"when": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.",
 	},
-	"sql_statement": &schema.Schema{
+	"sql_statement": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
