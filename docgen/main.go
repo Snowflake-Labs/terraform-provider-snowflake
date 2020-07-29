@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/olekukonko/tablewriter"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/olekukonko/tablewriter"
 )
 
 func main() {
