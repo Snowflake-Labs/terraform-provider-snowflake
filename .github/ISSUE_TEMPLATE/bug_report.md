@@ -9,6 +9,12 @@ assignees: ''
 
 **Provider Version**
 
+The provider version you are using.
+
+**Terraform Version**
+
+The version of Terraform you were using when the bug was encountered.
+
 **Describe the bug**
 
 A clear and concise description of what the bug is.
