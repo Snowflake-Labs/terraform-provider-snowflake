@@ -41,6 +41,12 @@ func TestDatabase(t *testing.T) {
 	c.SetBool("bam", false)
 	q = c.Statement()
 	r.Equal(`CREATE DATABASE "db1" FOO='bar' BAM=false`, q)
+
+	// test escaping
+	c2 := db.Create()
+	c2.SetString("foo", "ba'r")
+	q = c2.Statement()
+	r.Equal(`CREATE DATABASE "db1" FOO='ba\'r'`, q)
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {

@@ -16,16 +16,14 @@ func TestView(t *testing.T) {
 	v.WithSecure()
 	r.True(v.secure)
 
-	v.WithComment("great comment")
-	r.Equal("great comment", v.comment)
-
+	v.WithComment("great' comment")
 	v.WithStatement("SELECT * FROM DUMMY LIMIT 1")
 	r.Equal("SELECT * FROM DUMMY LIMIT 1", v.statement)
 
 	v.WithStatement("SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1")
 
 	q := v.Create()
-	r.Equal(`CREATE SECURE VIEW "test" COMMENT = 'great comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q = v.Secure()
 	r.Equal(`ALTER VIEW "test" SET SECURE`, q)
@@ -33,8 +31,8 @@ func TestView(t *testing.T) {
 	q = v.Unsecure()
 	r.Equal(`ALTER VIEW "test" UNSET SECURE`, q)
 
-	q = v.ChangeComment("bad comment")
-	r.Equal(`ALTER VIEW "test" SET COMMENT = 'bad comment'`, q)
+	q = v.ChangeComment("bad' comment")
+	r.Equal(`ALTER VIEW "test" SET COMMENT = 'bad\' comment'`, q)
 
 	q = v.RemoveComment()
 	r.Equal(`ALTER VIEW "test" UNSET COMMENT`, q)
@@ -49,7 +47,7 @@ func TestView(t *testing.T) {
 	r.Equal(v.QualifiedName(), `"mydb".."test"`)
 
 	q = v.Create()
-	r.Equal(`CREATE SECURE VIEW "mydb".."test" COMMENT = 'great comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "mydb".."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q = v.Secure()
 	r.Equal(`ALTER VIEW "mydb".."test" SET SECURE`, q)
@@ -58,7 +56,7 @@ func TestView(t *testing.T) {
 	r.Equal(`SHOW VIEWS LIKE 'test' IN DATABASE "mydb"`, q)
 
 	q = v.Drop()
-	r.Equal(`DROP VIEW "mydb".."test"`, q)
+	r.Equal(`DROP VIEW "mydb".."test"`, q) // FIXME invalid query
 }
 
 func TestQualifiedName(t *testing.T) {
