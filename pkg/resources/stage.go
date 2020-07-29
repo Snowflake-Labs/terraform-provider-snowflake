@@ -44,6 +44,7 @@ var stageSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the credentials for the stage.",
+		Sensitive:   true,
 	},
 	"storage_integration": &schema.Schema{
 		Type:        schema.TypeString,
