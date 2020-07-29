@@ -99,8 +99,8 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: build 
-	./$(BASE_BINARY_NAME) -doc
+docs: 
+	go run ./docgen
 .PHONY: docs
 
 check-docs: docs ## check that docs have been generated
