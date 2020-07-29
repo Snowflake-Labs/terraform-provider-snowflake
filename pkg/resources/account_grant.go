@@ -20,7 +20,7 @@ var validAccountPrivileges = newPrivilegeSet(
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the schema.",
@@ -28,7 +28,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,

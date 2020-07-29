@@ -12,29 +12,29 @@ import (
 )
 
 var databaseSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: false,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"data_retention_time_in_days": &schema.Schema{
+	"data_retention_time_in_days": {
 		Type:     schema.TypeInt,
 		Optional: true,
 		Computed: true,
 	},
-	"from_share": &schema.Schema{
+	"from_share": {
 		Type:          schema.TypeMap,
 		Description:   "Specify a provider and a share in this map to create a database from a share.",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_database"},
 	},
-	"from_database": &schema.Schema{
+	"from_database": {
 		Type:          schema.TypeString,
 		Description:   "Specify a database to create a clone from.",
 		Optional:      true,

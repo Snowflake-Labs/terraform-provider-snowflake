@@ -18,13 +18,13 @@ var ValidDatabasePrivileges = newPrivilegeSet(
 )
 
 var databaseGrantSchema = map[string]*schema.Schema{
-	"database_name": &schema.Schema{
+	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
@@ -32,14 +32,14 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": &schema.Schema{
+	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,

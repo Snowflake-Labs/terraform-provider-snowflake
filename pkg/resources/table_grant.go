@@ -18,25 +18,25 @@ var validTablePrivileges = newPrivilegeSet(
 )
 
 var tableGrantSchema = map[string]*schema.Schema{
-	"table_name": &schema.Schema{
+	"table_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the table on which to grant privileges immediately (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
-	"schema_name": &schema.Schema{
+	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the schema containing the current or future tables on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"database_name": &schema.Schema{
+	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the current or future tables on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
@@ -44,21 +44,21 @@ var tableGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validTablePrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": &schema.Schema{
+	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
-	"on_future": &schema.Schema{
+	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
