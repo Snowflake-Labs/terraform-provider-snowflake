@@ -125,7 +125,7 @@ func (sb *SchemaBuilder) ChangeComment(c string) string {
 
 // RemoveComment returns the SQL query that will remove the comment on the schema.
 func (sb *SchemaBuilder) RemoveComment() string {
-	return fmt.Sprintf(`ALTER SCHEMA %v UNSET COMMENT`, EscapeString(sb.QualifiedName()))
+	return fmt.Sprintf(`ALTER SCHEMA %v UNSET COMMENT`, sb.QualifiedName())
 }
 
 // ChangeDataRetentionDays returns the SQL query that will update the data retention days on the schema.
