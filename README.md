@@ -30,7 +30,28 @@ In-depth docs are available [on the Terraform registry](https://registry.terrafo
 
 ## Development
 
-To do development you need Go installed, this repo cloned and that's about it. It has not been tested on Windows, so if you find problems let us know.
+If you're new to Go:
+
+1. Install Go `brew install golang`
+2. Make a Go development directory wherever you like `mkdir go_projects`
+3. Add the following config to your profile
+```
+export GOPATH=$HOME/../go_projects # edit with your go_projects dir
+export GOROOT=/usr/local/opt/go/libexec
+export PATH=$PATH:$GOPATH/bin
+export PATH=$PATH:$GOROOT/bin
+```
+4. Fork this repo and clone it into `go_projects`
+5. cd to `terraform-provider-snowflake` and install all the required packages
+```
+make setup
+```
+6. You should now be able to successfully run the tests with
+```
+make test
+```
+
+It has not been tested on Windows, so if you find problems let us know.
 
 If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
 
