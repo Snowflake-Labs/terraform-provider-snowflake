@@ -11,8 +11,9 @@
 		
 ## properties
 
-|     NAME     |  TYPE  |                              DESCRIPTION                              | OPTIONAL | REQUIRED  | COMPUTED |  DEFAULT  |
-|--------------|--------|-----------------------------------------------------------------------|----------|-----------|----------|-----------|
-| monitor_name | string | Identifier for the resource monitor; must be unique for your account. | false    | true      | false    |           |
-| privilege    | string | The privilege to grant on the resource monitor.                       | true     | false     | false    | "MONITOR" |
-| roles        | set    | Grants privilege to these roles.                                      | true     | false     | false    |           |
+|       NAME        |  TYPE  |                                         DESCRIPTION                                         | OPTIONAL | REQUIRED  | COMPUTED |  DEFAULT  |
+|-------------------|--------|---------------------------------------------------------------------------------------------|----------|-----------|----------|-----------|
+| monitor_name      | string | Identifier for the resource monitor; must be unique for your account.                       | false    | true      | false    |           |
+| privilege         | string | The privilege to grant on the resource monitor.                                             | true     | false     | false    | "MONITOR" |
+| roles             | set    | Grants privilege to these roles.                                                            | true     | false     | false    |           |
+| with_grant_option | bool   | When this is set to true, allows the recipient role to grant the privileges to other roles. | true     | false     | false    | false     |

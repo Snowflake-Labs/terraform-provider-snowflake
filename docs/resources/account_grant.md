@@ -11,7 +11,8 @@
 		
 ## properties
 
-|   NAME    |  TYPE  |              DESCRIPTION              | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|-----------|--------|---------------------------------------|----------|-----------|----------|---------|
-| privilege | string | The privilege to grant on the schema. | true     | false     | false    | "USAGE" |
-| roles     | set    | Grants privilege to these roles.      | true     | false     | false    |         |
+|       NAME        |  TYPE  |                                         DESCRIPTION                                         | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|---------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| privilege         | string | The privilege to grant on the schema.                                                       | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                            | true     | false     | false    |         |
+| with_grant_option | bool   | When this is set to true, allows the recipient role to grant the privileges to other roles. | true     | false     | false    | false   |
