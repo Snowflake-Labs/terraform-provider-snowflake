@@ -66,6 +66,13 @@ var tableGrantSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
 	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // TableGrant returns a pointer to the resource representing a Table grant
@@ -101,6 +108,7 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	onFuture := data.Get("on_future").(bool)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !onFuture {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -127,6 +135,7 @@ func CreateTableGrant(data *schema.ResourceData, meta interface{}) error {
 		ResourceName: dbName,
 		SchemaName:   schemaName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	if !onFuture {
 		grantID.ObjectName = tableName
@@ -151,6 +160,7 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	tableName := grantID.ObjectName
 	priv := grantID.Privilege
+
 	err = data.Set("database_name", dbName)
 	if err != nil {
 		return err
@@ -172,6 +182,10 @@ func ReadTableGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}

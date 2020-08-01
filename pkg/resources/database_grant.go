@@ -46,6 +46,13 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these shares.",
 		ForceNew:    true,
 	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // DatabaseGrant returns a pointer to the resource representing a database grant
@@ -67,6 +74,7 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	dbName := data.Get("database_name").(string)
 	builder := snowflake.DatabaseGrant(dbName)
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	err := createGenericGrant(data, meta, builder)
 	if err != nil {
@@ -76,6 +84,7 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
@@ -97,6 +106,10 @@ func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", grantID.Privilege)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}

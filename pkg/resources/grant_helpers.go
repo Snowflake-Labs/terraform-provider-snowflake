@@ -61,6 +61,7 @@ type grantID struct {
 	SchemaName   string
 	ObjectName   string
 	Privilege    string
+	GrantOption  bool
 }
 
 // Because none of the grants currently have a privilege of "ALL", rather they explicitly say
@@ -80,6 +81,7 @@ func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 			GrantName:   g.GrantName,
 			GranteeType: g.GranteeType,
 			GranteeName: g.GranteeName,
+			GrantOption: g.GrantOption,
 		}
 		if _, ok := groupedByRole[id]; !ok {
 			groupedByRole[id] = privilegeSet{}
@@ -108,6 +110,7 @@ func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 			GrantName:   g.GrantName,
 			GranteeType: g.GranteeType,
 			GranteeName: g.GranteeName,
+			GrantOption: g.GrantOption,
 		}
 		// Already added it with the "ALL" privilege, so skip
 		if _, ok := groupedByRole[id]; ok {
@@ -119,12 +122,13 @@ func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege
+// resourceName|schemaName|ObjectName|Privilege|GrantOption
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = grantIDDelimiter
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege}}
+	grantOption := fmt.Sprintf("%v", gi.GrantOption)
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, grantOption}}
 	err := csvWriter.WriteAll(dataIdentifiers)
 	if err != nil {
 		return "", err
@@ -146,8 +150,8 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 4 {
-		return nil, fmt.Errorf("4 fields allowed")
+	if len(lines[0]) != 5 {
+		return nil, fmt.Errorf("5 fields allowed")
 	}
 
 	grantResult := &grantID{
@@ -155,6 +159,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		SchemaName:   lines[0][1],
 		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
+		GrantOption:  lines[0][4] == "true",
 	}
 	return grantResult, nil
 }
@@ -163,6 +168,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	db := meta.(*sql.DB)
 
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	roles, shares := expandRolesAndShares(data)
 
@@ -171,14 +177,14 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	}
 
 	for _, role := range roles {
-		err := snowflake.Exec(db, builder.Role(role).Grant(priv))
+		err := snowflake.Exec(db, builder.Role(role).Grant(priv, grantOption))
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := snowflake.Exec(db, builder.Share(share).Grant(priv))
+		err := snowflake.Exec(db, builder.Share(share).Grant(priv, grantOption))
 		if err != nil {
 			return err
 		}
@@ -200,6 +206,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		return err
 	}
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	// We re-aggregate grants that would be equivalent to the "ALL" grant
 	grants = filterALLGrants(grants, validPrivileges)
@@ -263,6 +270,10 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
 			return err
 		}
+	}
+	err = data.Set("with_grant_option", grantOption)
+	if err != nil {
+		return err
 	}
 	return nil
 }
