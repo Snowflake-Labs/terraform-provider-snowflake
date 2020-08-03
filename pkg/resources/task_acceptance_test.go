@@ -157,7 +157,7 @@ var (
 )
 
 func Test_AccTask(t *testing.T) {
-	t.Skip("broken by a change to snowflake")
+	t.Skip("broken by a change to snowflake. see example https://travis-ci.com/github/chanzuckerberg/terraform-provider-snowflake/jobs/367972245#L676")
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
