@@ -101,7 +101,7 @@ func (sb *SchemaBuilder) Create() string {
 	}
 
 	if sb.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, sb.comment))
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(sb.comment)))
 	}
 
 	return q.String()
@@ -120,7 +120,7 @@ func (sb *SchemaBuilder) Swap(targetSchema string) string {
 
 // ChangeComment returns the SQL query that will update the comment on the schema.
 func (sb *SchemaBuilder) ChangeComment(c string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v SET COMMENT = '%v'`, sb.QualifiedName(), c)
+	return fmt.Sprintf(`ALTER SCHEMA %v SET COMMENT = '%v'`, sb.QualifiedName(), EscapeString(c))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the schema.
