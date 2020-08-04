@@ -110,7 +110,7 @@ func (vb *ViewBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` VIEW %v`, vb.QualifiedName()))
 
 	if vb.comment != "" {
-		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", vb.comment))
+		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(vb.comment)))
 	}
 
 	q.WriteString(fmt.Sprintf(" AS %v", vb.statement))
@@ -139,7 +139,7 @@ func (vb *ViewBuilder) Unsecure() string {
 // Note that comment is the only parameter, if more are released this should be
 // abstracted as per the generic builder.
 func (vb *ViewBuilder) ChangeComment(c string) string {
-	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, vb.QualifiedName(), c)
+	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, vb.QualifiedName(), EscapeString(c))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the view.
