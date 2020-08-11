@@ -14,6 +14,7 @@ type ViewBuilder struct {
 	db        string
 	schema    string
 	secure    bool
+	replace   bool
 	comment   string
 	statement string
 }
@@ -48,6 +49,12 @@ func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
 // WithDB adds the name of the database to the ViewBuilder
 func (vb *ViewBuilder) WithDB(db string) *ViewBuilder {
 	vb.db = db
+	return vb
+}
+
+// WithReplace adds the "OR REPLACE" option to the ViewBuilder
+func (vb *ViewBuilder) WithReplace() *ViewBuilder {
+	vb.replace = true
 	return vb
 }
 
@@ -91,6 +98,11 @@ func (vb *ViewBuilder) Create() string {
 	var q strings.Builder
 
 	q.WriteString("CREATE")
+
+	if vb.replace {
+		q.WriteString(" OR REPLACE")
+	}
+
 	if vb.secure {
 		q.WriteString(" SECURE")
 	}
@@ -98,7 +110,7 @@ func (vb *ViewBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` VIEW %v`, vb.QualifiedName()))
 
 	if vb.comment != "" {
-		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", vb.comment))
+		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(vb.comment)))
 	}
 
 	q.WriteString(fmt.Sprintf(" AS %v", vb.statement))
@@ -127,7 +139,7 @@ func (vb *ViewBuilder) Unsecure() string {
 // Note that comment is the only parameter, if more are released this should be
 // abstracted as per the generic builder.
 func (vb *ViewBuilder) ChangeComment(c string) string {
-	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, vb.QualifiedName(), c)
+	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, vb.QualifiedName(), EscapeString(c))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the view.

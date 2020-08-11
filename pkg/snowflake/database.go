@@ -3,8 +3,10 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // Database returns a pointer to a Builder for a database
@@ -71,4 +73,21 @@ func ScanDatabase(row *sqlx.Row) (*database, error) {
 	d := &database{}
 	e := row.StructScan(d)
 	return d, e
+}
+
+func ListDatabases(sdb *sqlx.DB) ([]database, error) {
+	stmt := "SHOW DATABASES"
+	rows, err := sdb.Queryx(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []database{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no databases found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

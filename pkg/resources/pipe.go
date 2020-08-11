@@ -17,30 +17,30 @@ const (
 )
 
 var pipeSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
 		Description: "Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created.",
 	},
-	"schema": &schema.Schema{
+	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
 		Description: "The schema in which to create the pipe.",
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
 		Description: "The database in which to create the pipe.",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the pipe.",
 	},
-	"copy_statement": &schema.Schema{
+	"copy_statement": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
@@ -52,19 +52,19 @@ var pipeSchema = map[string]*schema.Schema{
 			return false
 		},
 	},
-	"auto_ingest": &schema.Schema{
+	"auto_ingest": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		ForceNew:    true,
 		Description: "Specifies a auto_ingest param for the pipe.",
 	},
-	"notification_channel": &schema.Schema{
+	"notification_channel": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.",
 	},
-	"owner": &schema.Schema{
+	"owner": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Name of the role that owns the pipe.",

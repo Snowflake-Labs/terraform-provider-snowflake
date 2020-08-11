@@ -25,19 +25,19 @@ var managedAccountProperties = []string{
 }
 
 var managedAccountSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the managed account; must be unique for your account.",
 		ForceNew:    true,
 	},
-	"admin_name": &schema.Schema{
+	"admin_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier, as well as login name, for the initial user in the managed account. This user serves as the account administrator for the account.",
 		ForceNew:    true,
 	},
-	"admin_password": &schema.Schema{
+	"admin_password": {
 		Type:         schema.TypeString,
 		Required:     true,
 		Sensitive:    true,
@@ -45,7 +45,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 		ValidateFunc: snowflakeValidation.ValidatePassword,
 		ForceNew:     true,
 	},
-	"type": &schema.Schema{
+	"type": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      SnowflakeReaderAccountType,
@@ -53,33 +53,33 @@ var managedAccountSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{SnowflakeReaderAccountType}, true),
 		ForceNew:     true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the managed account.",
 		ForceNew:    true,
 	},
-	"cloud": &schema.Schema{
+	"cloud": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Cloud in which the managed account is located.",
 	},
-	"region": &schema.Schema{
+	"region": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Snowflake Region in which the managed account is located.",
 	},
-	"locator": &schema.Schema{
+	"locator": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Display name of the managed account.",
 	},
-	"created_on": &schema.Schema{
+	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Date and time when the managed account was created.",
 	},
-	"url": &schema.Schema{
+	"url": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "URL for accessing the managed account, particularly through the web interface.",

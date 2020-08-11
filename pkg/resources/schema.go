@@ -19,37 +19,37 @@ const (
 )
 
 var schemaSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
 		ForceNew:    true,
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the schema.",
 		ForceNew:    true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the schema.",
 	},
-	"is_transient": &schema.Schema{
+	"is_transient": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 		ForceNew:    true,
 	},
-	"is_managed": &schema.Schema{
+	"is_managed": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
-	"data_retention_days": &schema.Schema{
+	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      1,

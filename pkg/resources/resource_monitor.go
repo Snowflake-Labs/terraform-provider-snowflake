@@ -15,20 +15,20 @@ import (
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
 
 var resourceMonitorSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the resource monitor; must be unique for your account.",
 		ForceNew:    true,
 	},
-	"credit_quota": &schema.Schema{
+	"credit_quota": {
 		Type:        schema.TypeFloat,
 		Optional:    true,
 		Computed:    true,
 		Description: "The amount of credits allocated monthly to the resource monitor, round up to 2 decimal places.",
 		ForceNew:    true,
 	},
-	"frequency": &schema.Schema{
+	"frequency": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Computed:     true,
@@ -36,34 +36,34 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validFrequencies, false),
 		ForceNew:     true,
 	},
-	"start_timestamp": &schema.Schema{
+	"start_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
 		Description: "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.",
 		ForceNew:    true,
 	},
-	"end_timestamp": &schema.Schema{
+	"end_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
 		ForceNew:    true,
 	},
-	"suspend_triggers": &schema.Schema{
+	"suspend_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to suspend all warehouses.",
 		ForceNew:    true,
 	},
-	"suspend_immediate_triggers": &schema.Schema{
+	"suspend_immediate_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
 		ForceNew:    true,
 	},
-	"notify_triggers": &schema.Schema{
+	"notify_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,

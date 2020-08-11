@@ -123,7 +123,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, sb.comment))
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(sb.comment)))
 	}
 
 	return q.String()

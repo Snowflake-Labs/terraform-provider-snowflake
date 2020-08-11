@@ -45,6 +45,8 @@ const (
 	privilegeCreateIntegration privilege = "CREATE INTEGRATION"
 	privilegeManageGrants      privilege = "MANAGE GRANTS"
 	privilegeMonitorUsage      privilege = "MONITOR USAGE"
+	privilegeMonitorExecution  privilege = "MONITOR EXECUTION"
+	privilegeExecuteTask       privilege = "EXECUTE TASK"
 )
 
 type privilegeSet map[privilege]struct{}

@@ -17,43 +17,50 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"account": &schema.Schema{
+			"account": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "oauth_access_token"},
 			},
-			"browser_auth": &schema.Schema{
+			"oauth_access_token": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "password"},
+			},
+			"browser_auth": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "private_key_path"},
+				ConflictsWith: []string{"password", "private_key_path", "oauth_access_token"},
 			},
-			"private_key_path": &schema.Schema{
+			"private_key_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "password"},
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
 			},
-			"role": &schema.Schema{
+			"role": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
 			},
-			"region": &schema.Schema{
+			"region": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
@@ -90,7 +97,16 @@ func Provider() *schema.Provider {
 }
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
-	dsn, err := DSN(s)
+	account := s.Get("account").(string)
+	user := s.Get("username").(string)
+	password := s.Get("password").(string)
+	browserAuth := s.Get("browser_auth").(bool)
+	privateKeyPath := s.Get("private_key_path").(string)
+	oauthAccessToken := s.Get("oauth_access_token").(string)
+	region := s.Get("region").(string)
+	role := s.Get("role").(string)
+
+	dsn, err := DSN(account, user, password, browserAuth, privateKeyPath, oauthAccessToken, region, role)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
@@ -104,14 +120,15 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	return db, nil
 }
 
-func DSN(s *schema.ResourceData) (string, error) {
-	account := s.Get("account").(string)
-	user := s.Get("username").(string)
-	password := s.Get("password").(string)
-	browserAuth := s.Get("browser_auth").(bool)
-	privateKeyPath := s.Get("private_key_path").(string)
-	region := s.Get("region").(string)
-	role := s.Get("role").(string)
+func DSN(
+	account,
+	user,
+	password string,
+	browserAuth bool,
+	privateKeyPath,
+	oauthAccessToken,
+	region,
+	role string) (string, error) {
 
 	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -137,8 +154,13 @@ func DSN(s *schema.ResourceData) (string, error) {
 
 	} else if browserAuth {
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
-	} else {
+	} else if oauthAccessToken != "" {
+		config.Authenticator = gosnowflake.AuthTypeOAuth
+		config.Token = oauthAccessToken
+	} else if password != "" {
 		config.Password = password
+	} else {
+		return "", errors.New("no authentication method provided")
 	}
 
 	return gosnowflake.DSN(&config)

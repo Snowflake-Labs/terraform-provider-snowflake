@@ -1,8 +1,7 @@
 SHA=$(shell git rev-parse --short HEAD)
 VERSION=$(shell cat VERSION)
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-# TODO add release flag
-LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.GitSha=${SHA} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Version=${VERSION} -X github.com/chanzuckerberg/terraform-provider-snowflake/pkg/version.Dirty=${DIRTY}"
+LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
 
@@ -29,18 +28,24 @@ lint-all: fmt ## run the fast go linters
 	./bin/golangci-lint run
 .PHONY: lint-all
 
-release: ## run a release
+check-release-prereqs:
+ifndef KEYBASE_KEY_ID
+	$(error KEYBASE_KEY_ID is undefined)
+endif
+.PHONY: check-release-prereqs
+
+release: check-release-prereqs ## run a release
 	./bin/bff bump
 	git push
-	goreleaser release
+	goreleaser release --debug --rm-dist
 .PHONY: release
 
-release-prerelease: build ## release to github as a 'pre-release'
+release-prerelease: check-release-prereqs build ## release to github as a 'pre-release'
 	version=`./$(BASE_BINARY_NAME) -version`; \
 	git tag v"$$version"; \
 	git push
 	git push --tags
-	goreleaser release -f .goreleaser.prerelease.yml --debug
+	goreleaser release -f .goreleaser.prerelease.yml --debug --rm-dist
 .PHONY: release-prerelease
 
 release-snapshot: ## run a release
@@ -94,12 +99,12 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: build ## generate some docs
-	./scripts/update-readme.sh update
+docs: 
+	go run ./docgen
 .PHONY: docs
 
-check-docs: build ## check that docs have been generated
-	./scripts/update-readme.sh check
+check-docs: docs ## check that docs have been generated
+	git diff --exit-code -- docs
 .PHONY: check-docs
 
 check-mod:
