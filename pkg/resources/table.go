@@ -1,0 +1,304 @@
+package resources
+
+import (
+	"bytes"
+	"database/sql"
+	"encoding/csv"
+	"fmt"
+	"strings"
+
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/pkg/errors"
+)
+
+const (
+	tableIDDelimiter = '|'
+)
+
+var tableSchema = map[string]*schema.Schema{
+	"name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the pipe is created.",
+	},
+	"schema": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The schema in which to create the table.",
+	},
+	"database": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The database in which to create the table.",
+	},
+	"columns": {
+		Type:        schema.TypeMap,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The column names and types to create.",
+	},
+	"comment": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies a comment for the table.",
+	},
+	"owner": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Name of the role that owns the pipe.",
+	},
+}
+
+func Table() *schema.Resource {
+	return &schema.Resource{
+		Create: CreateTable,
+		Read:   ReadTable,
+		Update: UpdateTable,
+		Delete: DeleteTable,
+		Exists: TableExists,
+
+		Schema: tableSchema,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+	}
+}
+
+type tableID struct {
+	DatabaseName string
+	SchemaName   string
+	TableName    string
+}
+
+//String() takes in a tableID object and returns a pipe-delimited string:
+//DatabaseName|SchemaName|TableName
+func (si *tableID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = tableIDDelimiter
+	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.TableName}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strTableID := strings.TrimSpace(buf.String())
+	return strTableID, nil
+}
+
+// tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
+// and returns a tableID object
+func tableIDFromString(stringID string) (*tableID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = tableIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line at a time")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	tableResult := &tableID{
+		DatabaseName: lines[0][0],
+		SchemaName:   lines[0][1],
+		TableName:    lines[0][2],
+	}
+	return tableResult, nil
+}
+
+// CreateTable implements schema.CreateFunc
+func CreateTable(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	database := data.Get("database").(string)
+	schema := data.Get("schema").(string)
+	name := data.Get("name").(string)
+	columns := data.Get("columns").(map[string]interface{})
+
+	columnDefinitions := map[string]string{}
+	for columnName, columnType := range columns {
+		columnDefinitions[columnName] = columnType.(string)
+	}
+
+	builder := snowflake.TableWithColumnDefinition(name, database, schema, columnDefinitions)
+
+	// Set optionals
+	if v, ok := data.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+
+	q := builder.Create()
+
+	err := snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error creating table %v", name)
+	}
+
+	tableID := &tableID{
+		DatabaseName: database,
+		SchemaName:   schema,
+		TableName:    name,
+	}
+	dataIDInput, err := tableID.String()
+	if err != nil {
+		return err
+	}
+	data.SetId(dataIDInput)
+
+	return ReadTable(data, meta)
+}
+
+// ReadTable implements schema.ReadFunc
+func ReadTable(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	tableID, err := tableIDFromString(data.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := tableID.DatabaseName
+	schema := tableID.SchemaName
+	name := tableID.TableName
+
+	sq := snowflake.Table(name, dbName, schema).Show()
+	row := snowflake.QueryRow(db, sq)
+	table, err := snowflake.ScanTable(row)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("name", table.Name)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("type", table.Type)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("kind", table.Kind)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("null?", table.Null)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("primary key", table.PrimaryKey)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("unique key", table.UniqueKey)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("check", table.Check)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("expression", table.Expression)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("comment", table.Comment)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateTable implements schema.UpdateFunc
+func UpdateTable(data *schema.ResourceData, meta interface{}) error {
+	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
+	data.Partial(true)
+
+	tableID, err := tableIDFromString(data.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := tableID.DatabaseName
+	schema := tableID.SchemaName
+	tableName := tableID.TableName
+
+	builder := snowflake.Table(tableName, dbName, schema)
+
+	db := meta.(*sql.DB)
+	if data.HasChange("comment") {
+		_, comment := data.GetChange("comment")
+		q := builder.ChangeComment(comment.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table comment on %v", data.Id())
+		}
+
+		data.SetPartial("comment")
+	}
+
+	return ReadTable(data, meta)
+}
+
+// DeleteTable implements schema.DeleteFunc
+func DeleteTable(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	tableID, err := tableIDFromString(data.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := tableID.DatabaseName
+	schema := tableID.SchemaName
+	tableName := tableID.TableName
+
+	q := snowflake.Table(tableName, dbName, schema).Drop()
+
+	err = snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error deleting pipe %v", data.Id())
+	}
+
+	data.SetId("")
+
+	return nil
+}
+
+// TableExists implements schema.ExistsFunc
+func TableExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+	db := meta.(*sql.DB)
+	tableID, err := tableIDFromString(data.Id())
+	if err != nil {
+		return false, err
+	}
+
+	dbName := tableID.DatabaseName
+	schema := tableID.SchemaName
+	tableName := tableID.TableName
+
+	q := snowflake.Table(tableName, dbName, schema).Show()
+	rows, err := db.Query(q)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		return true, nil
+	}
+
+	return false, nil
+}
