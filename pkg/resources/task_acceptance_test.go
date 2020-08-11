@@ -94,6 +94,7 @@ var (
 			When:          "TRUE",
 			Enabled:       true,
 			SessionParams: false,
+			Schedule:      "5 MINUTE",
 		},
 	}
 
@@ -118,11 +119,12 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:    soloname,
-			Schema:  "PUBLIC",
-			SQL:     "SELECT *",
-			When:    "FALSE",
-			Enabled: true,
+			Name:     soloname,
+			Schema:   "PUBLIC",
+			SQL:      "SELECT *",
+			When:     "FALSE",
+			Enabled:  true,
+			Schedule: "15 MINUTE",
 		},
 	}
 
@@ -152,13 +154,12 @@ var (
 			When:          "TRUE",
 			Enabled:       true,
 			SessionParams: true,
+			Schedule:      "5 MINUTE",
 		},
 	}
 )
 
 func Test_AccTask(t *testing.T) {
-	t.Skip("broken by a change to snowflake. see example https://travis-ci.com/github/chanzuckerberg/terraform-provider-snowflake/jobs/367972245#L676")
-
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
@@ -282,6 +283,9 @@ resource "snowflake_task" "solo_task" {
 	sql_statement = "{{ .SoloTask.SQL }}"
 	enabled  	  = {{ .SoloTask.Enabled }}
 	when     	  = "{{ .SoloTask.When }}"
+	{{ if .SoloTask.Schedule }}
+	schedule    = "{{ .SoloTask.Schedule }}"
+	{{- end }}
 	{{ if .SoloTask.SessionParams}}
 	session_parameters = {
 		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
