@@ -150,8 +150,13 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 5 {
-		return nil, fmt.Errorf("5 fields allowed")
+	if len(lines[0]) != 4 && len(lines[0]) != 5 {
+		return nil, fmt.Errorf("4 or 5 fields allowed")
+	}
+
+	grantOption := false
+	if len(lines[0]) == 5 && lines[0][4] == "true" {
+		grantOption = true
 	}
 
 	grantResult := &grantID{
@@ -159,7 +164,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		SchemaName:   lines[0][1],
 		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
-		GrantOption:  lines[0][4] == "true",
+		GrantOption:  grantOption,
 	}
 	return grantResult, nil
 }
