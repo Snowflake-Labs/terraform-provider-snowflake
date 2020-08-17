@@ -51,6 +51,42 @@ var tableSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the pipe.",
 	},
+	"type": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Data type.",
+	},
+	"kind": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Kind of object.",
+	},
+	"null": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"default": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"primary_key": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Is this a primary key?",
+	},
+	"unique_key": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Is this a unique key?",
+	},
+	"check": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"expression": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 }
 
 func Table() *schema.Resource {
@@ -189,32 +225,37 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("null?", table.Null)
+	err = data.Set("null", table.Null)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("primary key", table.PrimaryKey)
+	err = data.Set("default", table.Default.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("unique key", table.UniqueKey)
+	err = data.Set("primary_key", table.PrimaryKey == "Y")
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("check", table.Check)
+	err = data.Set("unique_key", table.UniqueKey == "Y")
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("expression", table.Expression)
+	err = data.Set("check", table.Check.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", table.Comment)
+	err = data.Set("expression", table.Expression.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("comment", table.Comment.String)
 	if err != nil {
 		return err
 	}

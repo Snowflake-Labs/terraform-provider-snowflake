@@ -1,13 +1,12 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
-
-//CREATE TABLE "FULFIL_TEST"."PUBLIC"."TABLENAME" ("C1" STRING);
 
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema
 type TableBuilder struct {
@@ -118,15 +117,16 @@ func (tb *TableBuilder) Show() string {
 }
 
 type table struct {
-	Name       string `db:"name"`
-	Type       string `db:"type"`
-	Kind       string `db:"kind"`
-	Null       string `db:"null?"`
-	PrimaryKey string `db:"primary key"`
-	UniqueKey  string `db:"unique key"`
-	Check      string `db:"check"`
-	Expression string `db:"expression"`
-	Comment    string `db:"comment"`
+	Name       string         `db:"name"`
+	Type       string         `db:"type"`
+	Kind       string         `db:"kind"`
+	Null       string         `db:"null?"`
+	Default    sql.NullString `db:"default"`
+	PrimaryKey string         `db:"primary key"`
+	UniqueKey  string         `db:"unique key"`
+	Check      sql.NullString `db:"check"`
+	Expression sql.NullString `db:"expression"`
+	Comment    sql.NullString `db:"comment"`
 }
 
 func ScanTable(row *sqlx.Row) (*table, error) {

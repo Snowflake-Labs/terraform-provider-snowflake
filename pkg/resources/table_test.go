@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -22,15 +23,17 @@ func TestTableCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":    "good_name",
-		"comment": "great comment",
-		"columns": map[string]interface{}{"column1": "VARCHAR"},
+		"name":     "test_name",
+		"database": "test_db",
+		"schema":   "test_schema",
+		"comment":  "great comment",
+		"columns":  map[string]interface{}{"column1": "VARCHAR"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Table().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "good_name" ("column1" VARCHAR) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		fmt.Println(mock.ExpectExec(`CREATE TABLE "test_db"."test_schema"."test_name" ("column1" VARCHAR) COMMENT = 'great comment`).WillReturnResult(sqlmock.NewResult(1, 1)))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
@@ -38,8 +41,8 @@ func TestTableCreate(t *testing.T) {
 }
 
 func expectTableRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "primary key", "unique key", "check", "expression", "comment"}).AddRow("good_name", "VARCHAR()", "COLUMN", "Y", "NULL", "N", "N", "NULL", "mock comment")
-	mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN DATABASE "database_name"`).WillReturnRows(rows)
+	rows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "primary key", "unique key", "check", "expression", "comment"}).AddRow("good_name", "VARCHAR()", "COLUMN", "Y", "NULL", "NULL", "N", "N", "NULL", "mock comment")
+	fmt.Println(mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN DATABASE "database_name"`).WillReturnRows(rows))
 }
 
 func TestTableRead(t *testing.T) {

@@ -8,13 +8,13 @@ import (
 
 func TestTableCreate(t *testing.T) {
 	r := require.New(t)
-	s := TableWithColumnDefinition("test_table", "test_db", "test_schema", map[string]string{"column1": "OBJECT", "column2": "VARCHAR(255)"})
+	s := TableWithColumnDefinition("test_table", "test_db", "test_schema", map[string]string{"column1": "OBJECT"})
 	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
 
-	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR(255))`)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT)`)
 
 	s.WithComment("Test Comment")
-	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR(255)) COMMENT = 'Test Comment'`)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT) COMMENT = 'Test Comment'`)
 }
 
 func TestTableChangeComment(t *testing.T) {
