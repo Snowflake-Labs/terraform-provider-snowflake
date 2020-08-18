@@ -25,8 +25,8 @@ func TestSchemaCreate(t *testing.T) {
 	s.WithDataRetentionDays(7)
 	r.Equal(s.Create(), `CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7`)
 
-	s.WithComment("Yeehaw")
-	r.Equal(s.Create(), `CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yeehaw'`)
+	s.WithComment("Yee'haw")
+	r.Equal(`CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yee\'haw'`, s.Create())
 }
 
 func TestSchemaRename(t *testing.T) {
@@ -44,7 +44,7 @@ func TestSchemaSwap(t *testing.T) {
 func TestSchemaChangeComment(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.ChangeComment("worst schema ever"), `ALTER SCHEMA "test" SET COMMENT = 'worst schema ever'`)
+	r.Equal(`ALTER SCHEMA "test" SET COMMENT = 'worst\' schema ever'`, s.ChangeComment("worst' schema ever"))
 }
 
 func TestSchemaRemoveComment(t *testing.T) {
