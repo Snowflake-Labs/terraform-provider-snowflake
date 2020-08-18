@@ -21,7 +21,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the pipe is created.",
+		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the table is created.",
 	},
 	"schema": {
 		Type:        schema.TypeString,
@@ -39,7 +39,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeMap,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The column names and types to create.",
+		Description: "Map of the column names and types to create. e.g. { \"column1\" = \"OBJECT\", \"column2\" = \"VARCHAR\" }",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -49,43 +49,7 @@ var tableSchema = map[string]*schema.Schema{
 	"owner": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "Name of the role that owns the pipe.",
-	},
-	"type": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Data type.",
-	},
-	"kind": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Kind of object.",
-	},
-	"null": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"default": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"primary_key": {
-		Type:        schema.TypeBool,
-		Computed:    true,
-		Description: "Is this a primary key?",
-	},
-	"unique_key": {
-		Type:        schema.TypeBool,
-		Computed:    true,
-		Description: "Is this a unique key?",
-	},
-	"check": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"expression": {
-		Type:     schema.TypeString,
-		Computed: true,
+		Description: "Name of the role that owns the table.",
 	},
 }
 
@@ -170,9 +134,8 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	q := builder.Create()
-
-	err := snowflake.Exec(db, q)
+	stmt := builder.Create()
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error creating table %v", name)
 	}
@@ -203,8 +166,8 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	schema := tableID.SchemaName
 	name := tableID.TableName
 
-	sq := snowflake.Table(name, dbName, schema).Show()
-	row := snowflake.QueryRow(db, sq)
+	stmt := snowflake.Table(name, dbName, schema).Show()
+	row := snowflake.QueryRow(db, stmt)
 	table, err := snowflake.ScanTable(row)
 	if err != nil {
 		return err
@@ -215,47 +178,7 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("type", table.Type)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("kind", table.Kind)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("null", table.Null)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("default", table.Default.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("primary_key", table.PrimaryKey == "Y")
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("unique_key", table.UniqueKey == "Y")
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("check", table.Check.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("expression", table.Expression.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("comment", table.Comment.String)
+	err = data.Set("owner", table.Owner.String)
 	if err != nil {
 		return err
 	}

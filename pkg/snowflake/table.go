@@ -78,9 +78,8 @@ func TableWithColumnDefinition(name, db, schema string, columns map[string]strin
 // Create returns the SQL statement required to create a table
 func (tb *TableBuilder) Create() string {
 	q := strings.Builder{}
-	q.WriteString(`CREATE`)
+	q.WriteString(fmt.Sprintf(`CREATE TABLE %v`, tb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` TABLE %v`, tb.QualifiedName()))
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
 	for columnName, columnType := range tb.columns {
@@ -117,16 +116,19 @@ func (tb *TableBuilder) Show() string {
 }
 
 type table struct {
-	Name       string         `db:"name"`
-	Type       string         `db:"type"`
-	Kind       string         `db:"kind"`
-	Null       string         `db:"null?"`
-	Default    sql.NullString `db:"default"`
-	PrimaryKey string         `db:"primary key"`
-	UniqueKey  string         `db:"unique key"`
-	Check      sql.NullString `db:"check"`
-	Expression sql.NullString `db:"expression"`
-	Comment    sql.NullString `db:"comment"`
+	CreatedOn           sql.NullString `db:"created_on"`
+	Name                sql.NullString `db:"name"`
+	DatabaseName        sql.NullString `db:"database_name"`
+	SchemaName          sql.NullString `db:"schema_name"`
+	Kind                sql.NullString `db:"kind"`
+	Comment             sql.NullString `db:"comment"`
+	ClusterBy           sql.NullString `db:"cluster_by"`
+	Rows                sql.NullString `db:"row"`
+	Bytes               sql.NullString `db:"bytes"`
+	Owner               sql.NullString `db:"owner"`
+	RetentionTime       sql.NullString `db:"retention_time"`
+	AutomaticClustering sql.NullString `db:"automatic_clustering"`
+	ChangeTracking      sql.NullString `db:"change_tracking"`
 }
 
 func ScanTable(row *sqlx.Row) (*table, error) {

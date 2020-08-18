@@ -2,14 +2,12 @@ package resources_test
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,20 +27,20 @@ func TestTableCreate(t *testing.T) {
 		"comment":  "great comment",
 		"columns":  map[string]interface{}{"column1": "VARCHAR"},
 	}
-	d := schema.TestResourceDataRaw(t, resources.Table().Schema, in)
-	r.NotNil(d)
+	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		fmt.Println(mock.ExpectExec(`CREATE TABLE "test_db"."test_schema"."test_name" ("column1" VARCHAR) COMMENT = 'great comment`).WillReturnResult(sqlmock.NewResult(1, 1)))
+		mock.ExpectExec(`CREATE TABLE "test_db"."test_schema"."test_name" ("column1" VARCHAR) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
+		r.Equal("good_name", d.Get("name").(string))
 	})
 }
 
 func expectTableRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "primary key", "unique key", "check", "expression", "comment"}).AddRow("good_name", "VARCHAR()", "COLUMN", "Y", "NULL", "NULL", "N", "N", "NULL", "mock comment")
-	fmt.Println(mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN DATABASE "database_name"`).WillReturnRows(rows))
+	mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN DATABASE "database_name"`).WillReturnRows(rows)
 }
 
 func TestTableRead(t *testing.T) {
