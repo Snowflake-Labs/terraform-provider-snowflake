@@ -50,6 +50,8 @@ If you want to build and test the provider locally there is a make target `make 
 
 ## Testing
 
+**Note: PRs for new resources will not be accepted without passing acceptance tests.**
+
 For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
 
 The 'internal' tests are run in the `github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
