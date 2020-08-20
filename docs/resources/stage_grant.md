@@ -11,11 +11,12 @@
 		
 ## properties
 
-|     NAME      |  TYPE  |                                     DESCRIPTION                                     | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|---------------|--------|-------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database_name | string | The name of the database containing the current stage on which to grant privileges. | false    | true      | false    |         |
-| privilege     | string | The privilege to grant on the stage.                                                | true     | false     | false    | "USAGE" |
-| roles         | set    | Grants privilege to these roles.                                                    | true     | false     | false    |         |
-| schema_name   | string | The name of the schema containing the current stage on which to grant privileges.   | false    | true      | false    |         |
-| shares        | set    | Grants privilege to these shares.                                                   | true     | false     | false    |         |
-| stage_name    | string | The name of the stage on which to grant privileges.                                 | false    | true      | false    |         |
+|       NAME        |  TYPE  |                                         DESCRIPTION                                         | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|---------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| database_name     | string | The name of the database containing the current stage on which to grant privileges.         | false    | true      | false    |         |
+| privilege         | string | The privilege to grant on the stage.                                                        | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                            | true     | false     | false    |         |
+| schema_name       | string | The name of the schema containing the current stage on which to grant privileges.           | false    | true      | false    |         |
+| shares            | set    | Grants privilege to these shares.                                                           | true     | false     | false    |         |
+| stage_name        | string | The name of the stage on which to grant privileges.                                         | false    | true      | false    |         |
+| with_grant_option | bool   | When this is set to true, allows the recipient role to grant the privileges to other roles. | true     | false     | false    | false   |

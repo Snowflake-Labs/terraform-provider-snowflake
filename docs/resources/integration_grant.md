@@ -11,8 +11,9 @@
 		
 ## properties
 
-|       NAME       |  TYPE  |                           DESCRIPTION                            | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|------------------|--------|------------------------------------------------------------------|----------|-----------|----------|---------|
-| integration_name | string | Identifier for the integration; must be unique for your account. | false    | true      | false    |         |
-| privilege        | string | The privilege to grant on the integration.                       | true     | false     | false    | "USAGE" |
-| roles            | set    | Grants privilege to these roles.                                 | true     | false     | false    |         |
+|       NAME        |  TYPE  |                                         DESCRIPTION                                         | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|---------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| integration_name  | string | Identifier for the integration; must be unique for your account.                            | false    | true      | false    |         |
+| privilege         | string | The privilege to grant on the integration.                                                  | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                            | true     | false     | false    |         |
+| with_grant_option | bool   | When this is set to true, allows the recipient role to grant the privileges to other roles. | true     | false     | false    | false   |
