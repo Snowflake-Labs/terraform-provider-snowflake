@@ -21,16 +21,17 @@ func TestTableCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":     "test_name",
-		"database": "test_db",
-		"schema":   "test_schema",
+		"name":     "good_name",
+		"database": "database_name",
+		"schema":   "schema_name",
 		"comment":  "great comment",
 		"columns":  map[string]interface{}{"column1": "VARCHAR"},
 	}
 	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "test_db"."test_schema"."test_name" ("column1" VARCHAR) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		// mock.ExpectQuery(`CREATE TABLE "test_db"."test_schema"."test_name" ("column1" VARCHAR) COMMENT = 'great comment'`)
+		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" VARCHAR\) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
@@ -46,7 +47,7 @@ func expectTableRead(mock sqlmock.Sqlmock) {
 func TestTableRead(t *testing.T) {
 	r := require.New(t)
 
-	d := table(t, "database_name|schema_name|good_name", map[string]interface{}{"name": "good_name"})
+	d := table(t, "database_name|schema_name|good_name", map[string]interface{}{"name": "good_name", "comment": "mock comment"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectTableRead(mock)

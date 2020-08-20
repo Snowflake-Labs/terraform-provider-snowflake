@@ -39,7 +39,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeMap,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Map of the column names and types to create. e.g. { \"column1\" = \"OBJECT\", \"column2\" = \"VARCHAR\" }",
+		Description: "Map of the column names and types to create. e.g. { \"column1\" = \"VARIANT\", \"column2\" = \"VARCHAR\" }",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -173,7 +173,7 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", table.Name)
+	err = data.Set("name", table.Name.String)
 	if err != nil {
 		return err
 	}
