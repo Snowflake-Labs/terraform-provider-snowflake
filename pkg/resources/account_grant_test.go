@@ -25,15 +25,16 @@ func TestAccountGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"privilege": "CREATE DATABASE",
-		"roles":     []interface{}{"test-role-1", "test-role-2"},
+		"privilege":         "CREATE DATABASE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadAccountGrant(mock)
 		err := resources.CreateAccountGrant(d, db)
 		r.NoError(err)
@@ -43,9 +44,10 @@ func TestAccountGrantCreate(t *testing.T) {
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS", map[string]interface{}{
-		"privilege": "MANAGE GRANTS",
-		"roles":     []interface{}{"test-role-1", "test-role-2"},
+	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS|true", map[string]interface{}{
+		"privilege":         "MANAGE GRANTS",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
 	})
 
 	r.NotNil(d)
@@ -60,9 +62,10 @@ func TestAccountGrantRead(t *testing.T) {
 func TestMonitorExecution(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION", map[string]interface{}{
-		"privilege": "MONITOR EXECUTION",
-		"roles":     []interface{}{"test-role-1", "test-role-2"},
+	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION|true", map[string]interface{}{
+		"privilege":         "MONITOR EXECUTION",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
 	})
 
 	r.NotNil(d)
@@ -77,9 +80,10 @@ func TestMonitorExecution(t *testing.T) {
 func TestExecuteTask(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK", map[string]interface{}{
-		"privilege": "EXECUTE TASK",
-		"roles":     []interface{}{"test-role-1", "test-role-2"},
+	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK|false", map[string]interface{}{
+		"privilege":         "EXECUTE TASK",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
 	})
 
 	r.NotNil(d)

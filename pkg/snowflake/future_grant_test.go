@@ -15,7 +15,7 @@ func TestFutureSchemaGrant(t *testing.T) {
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 
-	s = fvg.Role("bob").Grant("USAGE")
+	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
@@ -30,7 +30,7 @@ func TestFutureTableGrant(t *testing.T) {
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
-	s = fvg.Role("bob").Grant("USAGE")
+	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
@@ -43,7 +43,7 @@ func TestFutureTableGrant(t *testing.T) {
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 
-	s = fvgd.Role("bob").Grant("USAGE")
+	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE TABLES IN DATABASE "test_db" TO ROLE "bob"`, s)
 
 	s = fvgd.Role("bob").Revoke("USAGE")
@@ -58,7 +58,7 @@ func TestFutureViewGrant(t *testing.T) {
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
 
-	s = fvg.Role("bob").Grant("USAGE")
+	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
 	s = fvg.Role("bob").Revoke("USAGE")
@@ -71,7 +71,7 @@ func TestFutureViewGrant(t *testing.T) {
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
 
-	s = fvgd.Role("bob").Grant("USAGE")
+	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE VIEWS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
 	s = fvgd.Role("bob").Revoke("USAGE")

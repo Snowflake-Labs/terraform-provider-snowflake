@@ -36,6 +36,13 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // WarehouseGrant returns a pointer to the resource representing a warehouse grant
@@ -57,6 +64,7 @@ func WarehouseGrant() *schema.Resource {
 func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 	w := data.Get("warehouse_name").(string)
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 	builder := snowflake.WarehouseGrant(w)
 
 	err := createGenericGrant(data, meta, builder)
@@ -67,6 +75,7 @@ func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: w,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
@@ -91,6 +100,10 @@ func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}

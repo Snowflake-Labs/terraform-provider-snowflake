@@ -11,8 +11,9 @@
 		
 ## properties
 
-|      NAME      |  TYPE  |                       DESCRIPTION                       | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|----------------|--------|---------------------------------------------------------|----------|-----------|----------|---------|
-| privilege      | string | The privilege to grant on the warehouse.                | true     | false     | false    | "USAGE" |
-| roles          | set    | Grants privilege to these roles.                        | true     | false     | false    |         |
-| warehouse_name | string | The name of the warehouse on which to grant privileges. | false    | true      | false    |         |
+|       NAME        |  TYPE  |                                         DESCRIPTION                                         | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|-------------------|--------|---------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
+| privilege         | string | The privilege to grant on the warehouse.                                                    | true     | false     | false    | "USAGE" |
+| roles             | set    | Grants privilege to these roles.                                                            | true     | false     | false    |         |
+| warehouse_name    | string | The name of the warehouse on which to grant privileges.                                     | false    | true      | false    |         |
+| with_grant_option | bool   | When this is set to true, allows the recipient role to grant the privileges to other roles. | true     | false     | false    | false   |

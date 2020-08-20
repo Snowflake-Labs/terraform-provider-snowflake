@@ -25,19 +25,20 @@ func TestDatabaseGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"database_name": "test-database",
-		"privilege":     "USAGE",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
-		"shares":        []interface{}{"test-share-1", "test-share-2"},
+		"database_name":     "test-database",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadDatabaseGrant(mock)
 		err := resources.CreateDatabaseGrant(d, db)
 		r.NoError(err)
@@ -47,11 +48,12 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES", map[string]interface{}{
-		"database_name": "test-database",
-		"privilege":     "IMPORTED PRIVILIGES",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
-		"shares":        []interface{}{"test-share-1", "test-share-2"},
+	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES|false", map[string]interface{}{
+		"database_name":     "test-database",
+		"privilege":         "IMPORTED PRIVILIGES",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option": false,
 	})
 
 	r.NotNil(d)
