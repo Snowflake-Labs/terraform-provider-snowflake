@@ -19,7 +19,11 @@ type user struct {
 	DefaultRole      sql.NullString `db:"default_role"`
 	DefaultWarehouse sql.NullString `db:"default_warehouse"`
 	Disabled         bool           `db:"disabled"`
+	DisplayName      sql.NullString `db:"display_name"`
+	Email            sql.NullString `db:"email"`
+	FirstName        sql.NullString `db:"first_name"`
 	HasRsaPublicKey  bool           `db:"has_rsa_public_key"`
+	LastName         sql.NullString `db:"last_name"`
 	LoginName        sql.NullString `db:"login_name"`
 	Name             sql.NullString `db:"name"`
 }
