@@ -99,7 +99,7 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 
 		// 2. Create temporary DB grant to the share
 		tempDBGrant := snowflake.DatabaseGrant(tempName)
-		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("USAGE"))
+		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("USAGE", false))
 		if err != nil {
 			return errors.Wrapf(err, "error creating temporary DB grant %v", tempName)
 		}

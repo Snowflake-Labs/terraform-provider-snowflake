@@ -25,21 +25,22 @@ func TestStageGrantCreate(t *testing.T) {
 
 	for _, test_priv := range []string{"USAGE", "READ"} {
 		in := map[string]interface{}{
-			"stage_name":    "test-stage",
-			"schema_name":   "test-schema",
-			"database_name": "test-db",
-			"privilege":     test_priv,
-			"roles":         []interface{}{"test-role-1", "test-role-2"},
-			"shares":        []interface{}{"test-share-1", "test-share-2"},
+			"stage_name":        "test-stage",
+			"schema_name":       "test-schema",
+			"database_name":     "test-db",
+			"privilege":         test_priv,
+			"roles":             []interface{}{"test-role-1", "test-role-2"},
+			"shares":            []interface{}{"test-share-1", "test-share-2"},
+			"with_grant_option": true,
 		}
 		d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, in)
 		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-2"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-1"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-2"$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
+			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
+			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-2" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
+			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-1" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
+			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-2" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadStageGrant(mock, test_priv)
 			err := resources.CreateStageGrant(d, db)
 			r.NoError(err)
