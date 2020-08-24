@@ -7,7 +7,7 @@
 
 |   NAME   |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| columns  | map    | Map of the column names and types to create. e.g. { "column1" = "VARIANT", "column2" = "VARCHAR" }                | false    | true      | false    |         |
+| column   | list   | Definitions of a column to create in the table. Minimum one required.                                             | false    | true      | false    |         |
 | comment  | string | Specifies a comment for the table.                                                                                | true     | false     | false    |         |
 | database | string | The database in which to create the table.                                                                        | false    | true      | false    |         |
 | name     | string | Specifies the identifier for the table; must be unique for the database and schema in which the table is created. | false    | true      | false    |         |

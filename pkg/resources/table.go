@@ -35,11 +35,26 @@ var tableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the table.",
 	},
-	"columns": {
-		Type:        schema.TypeMap,
+	"column": {
+		Type:        schema.TypeList,
 		Required:    true,
+		MinItems:    1,
 		ForceNew:    true,
-		Description: "Map of the column names and types to create. e.g. { \"column1\" = \"VARIANT\", \"column2\" = \"VARCHAR\" }",
+		Description: "Definitions of a column to create in the table. Minimum one required.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Column name",
+				},
+				"type": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Column type, e.g. VARIANT",
+				},
+			},
+		},
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -120,14 +135,23 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 	database := data.Get("database").(string)
 	schema := data.Get("schema").(string)
 	name := data.Get("name").(string)
-	columns := data.Get("columns").(map[string]interface{})
 
-	columnDefinitions := map[string]string{}
-	for columnName, columnType := range columns {
-		columnDefinitions[columnName] = columnType.(string)
+	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
+	// for data types in the HCL2ValueFromConfigValue method.
+	columns := []map[string]string{}
+	for _, column := range data.Get("column").([]interface{}) {
+		columnDef := map[string]string{}
+		for key, val := range column.(map[string]interface{}) {
+			columnDef[key] = val.(string)
+		}
+		columns = append(columns, columnDef)
 	}
+	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
 
-	builder := snowflake.TableWithColumnDefinition(name, database, schema, columnDefinitions)
+	// if len(columns) < 1 {
+	// 	return errors.New("At least one column definition is required")
+	// }
+	// builder.WithColumns(columns)
 
 	// Set optionals
 	if v, ok := data.GetOk("comment"); ok {
@@ -173,7 +197,7 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", table.Name.String)
+	err = data.Set("name", table.TableName.String)
 	if err != nil {
 		return err
 	}

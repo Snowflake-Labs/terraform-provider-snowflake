@@ -17,12 +17,10 @@ func TestAccTable(t *testing.T) {
 			{
 				Config: tableConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_table.test_table", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_table.test_table", "is_managed", false),
 				),
 			},
 		},
@@ -32,12 +30,12 @@ func TestAccTable(t *testing.T) {
 func tableConfig(name string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-	name    = "%v"
+	name    = "%s"
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_schema" "test_schema" {
-	name     = "%v"
+	name     = "%s"
 	database = snowflake_database.test_database.name
 	comment  = "Terraform acceptance test"
 }
@@ -45,13 +43,17 @@ resource "snowflake_schema" "test_schema" {
 resource "snowflake_table" "test_table" {
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
-	name     = "%v"
+	name     = "%s"
 	comment  = "Terraform acceptance test"
-	columns  = {
-		"column1" = "VARIANT",
-		"column2" = "VARCHAR"
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR"
 	}
 }
 `
-	return fmt.Sprintf(s, name)
+	return fmt.Sprintf(s, name, name, name)
 }

@@ -13,7 +13,7 @@ type TableBuilder struct {
 	name    string
 	db      string
 	schema  string
-	columns map[string]string
+	columns []map[string]string
 	comment string
 }
 
@@ -44,6 +44,12 @@ func (tb *TableBuilder) WithComment(c string) *TableBuilder {
 	return tb
 }
 
+// WithColumns sets the column definitions on the TableBuilder
+func (tb *TableBuilder) WithColumns(c []map[string]string) *TableBuilder {
+	tb.columns = c
+	return tb
+}
+
 // Table returns a pointer to a Builder that abstracts the DDL operations for a table.
 //
 // Supported DDL operations are:
@@ -66,7 +72,7 @@ func Table(name, db, schema string) *TableBuilder {
 //   - CREATE TABLE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-table.html)
-func TableWithColumnDefinition(name, db, schema string, columns map[string]string) *TableBuilder {
+func TableWithColumnDefinitions(name, db, schema string, columns []map[string]string) *TableBuilder {
 	return &TableBuilder{
 		name:    name,
 		db:      db,
@@ -82,8 +88,8 @@ func (tb *TableBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
-	for columnName, columnType := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v`, columnName, columnType))
+	for _, columnDefinition := range tb.columns {
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v`, columnDefinition["name"], columnDefinition["type"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
 	q.WriteString(fmt.Sprintf(`)`))
@@ -117,7 +123,7 @@ func (tb *TableBuilder) Show() string {
 
 type table struct {
 	CreatedOn           sql.NullString `db:"created_on"`
-	Name                sql.NullString `db:"name"`
+	TableName           sql.NullString `db:"name"`
 	DatabaseName        sql.NullString `db:"database_name"`
 	SchemaName          sql.NullString `db:"schema_name"`
 	Kind                sql.NullString `db:"kind"`
