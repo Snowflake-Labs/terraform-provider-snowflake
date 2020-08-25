@@ -1,6 +1,6 @@
 # Snowflake Provider
 
-This is a terraform provider plugin for managing [Snowflake](http://snowflakedb.com) accounts.
+This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 Coverage is focused on part of Snowflake related to access control.
 
 ## Example
