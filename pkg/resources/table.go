@@ -148,11 +148,6 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 	}
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
 
-	// if len(columns) < 1 {
-	// 	return errors.New("At least one column definition is required")
-	// }
-	// builder.WithColumns(columns)
-
 	// Set optionals
 	if v, ok := data.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
