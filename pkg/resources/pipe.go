@@ -59,6 +59,11 @@ var pipeSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies a auto_ingest param for the pipe.",
 	},
+	"aws_sns_topic_arn": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
+	},
 	"notification_channel": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -154,6 +159,10 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 		builder.WithAutoIngest()
 	}
 
+	if v, ok := data.GetOk("aws_sns_topic_arn"); ok {
+		builder.WithAwsSnsTopicArn(v.(string))
+	}
+
 	q := builder.Create()
 
 	err := snowflake.Exec(db, q)
@@ -231,6 +240,11 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 
 	err = data.Set("auto_ingest", pipe.NotificationChannel != "")
 	if err != nil {
+		return err
+	}
+
+	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
+		err = data.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}
 
