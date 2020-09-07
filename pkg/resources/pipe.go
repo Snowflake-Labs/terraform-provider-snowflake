@@ -46,7 +46,12 @@ var pipeSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the copy statement for the pipe.",
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if strings.TrimSuffix(old, "\n") == strings.TrimSuffix(new, "\n") {
+			// standardise line endings
+			old = strings.ReplaceAll(old, "\r\n", "\n")
+			new = strings.ReplaceAll(new, "\r\n", "\n")
+
+			// trim off any trailing line endings
+			if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
 				return true
 			}
 			return false
