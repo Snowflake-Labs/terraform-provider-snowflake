@@ -41,21 +41,11 @@ var pipeSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the pipe.",
 	},
 	"copy_statement": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the copy statement for the pipe.",
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// standardise line endings
-			old = strings.ReplaceAll(old, "\r\n", "\n")
-			new = strings.ReplaceAll(new, "\r\n", "\n")
-
-			// trim off any trailing line endings
-			if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
-				return true
-			}
-			return false
-		},
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the copy statement for the pipe.",
+		DiffSuppressFunc: pipeCopyStatementDiffSuppress,
 	},
 	"auto_ingest": {
 		Type:        schema.TypeBool,
@@ -89,6 +79,18 @@ func Pipe() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 	}
+}
+
+func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	// standardise line endings
+	old = strings.ReplaceAll(old, "\r\n", "\n")
+	new = strings.ReplaceAll(new, "\r\n", "\n")
+
+	// trim off any trailing line endings
+	if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
+		return true
+	}
+	return false
 }
 
 type pipeID struct {
