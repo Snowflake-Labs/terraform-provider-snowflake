@@ -9,12 +9,13 @@ import (
 
 // PipeBuilder abstracts the creation of SQL queries for a Snowflake schema
 type PipeBuilder struct {
-	name          string
-	db            string
-	schema        string
-	autoIngest    bool
-	comment       string
-	copyStatement string
+	name           string
+	db             string
+	schema         string
+	autoIngest     bool
+	awsSnsTopicArn string
+	comment        string
+	copyStatement  string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -38,9 +39,15 @@ func (pb *PipeBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// Transient adds the auto_ingest flag to the PipeBuilder
+// WithAutoIngest adds the auto_ingest flag to the PipeBuilder
 func (pb *PipeBuilder) WithAutoIngest() *PipeBuilder {
 	pb.autoIngest = true
+	return pb
+}
+
+// WithAwsSnsTopicArn adds the aws_sns_topic to the PipeBuilder
+func (pb *PipeBuilder) WithAwsSnsTopicArn(s string) *PipeBuilder {
+	pb.awsSnsTopicArn = s
 	return pb
 }
 
@@ -50,7 +57,7 @@ func (pb *PipeBuilder) WithComment(c string) *PipeBuilder {
 	return pb
 }
 
-// WithURL adds a URL to the PipeBuilder
+// WithCopyStatement adds a URL to the PipeBuilder
 func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	pb.copyStatement = s
 	return pb
@@ -82,6 +89,10 @@ func (pb *PipeBuilder) Create() string {
 
 	if pb.autoIngest {
 		q.WriteString(` AUTO_INGEST = TRUE`)
+	}
+
+	if pb.awsSnsTopicArn != "" {
+		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(pb.awsSnsTopicArn)))
 	}
 
 	if pb.comment != "" {
