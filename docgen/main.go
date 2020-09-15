@@ -14,10 +14,11 @@ import (
 )
 
 func main() {
-	docsPath := "docs/resources"
+	generateResourcesDocs("docs/data-sources", provider.Provider().DataSourcesMap)
+	generateResourcesDocs("docs/resources", provider.Provider().ResourcesMap)
+}
 
-	resources := provider.Provider().ResourcesMap
-
+func generateResourcesDocs(docsPath string, resources map[string]*schema.Resource) {
 	for name, resource := range resources {
 		shortName := strings.TrimPrefix(name, "snowflake_")
 
