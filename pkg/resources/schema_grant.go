@@ -29,6 +29,7 @@ var validSchemaPrivileges = newPrivilegeSet(
 	privilegeCreateExternalTable,
 	privilegeCreateMaterializedView,
 	privilegeCreateTemporaryTable,
+	privilegeCreateMaskingPolicy,
 )
 
 var schemaGrantSchema = map[string]*schema.Schema{
