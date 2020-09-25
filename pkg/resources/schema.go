@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -235,9 +235,6 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateSchema implements schema.UpdateFunc
 func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	schemaID, err := schemaIDFromString(data.Id())
 	if err != nil {
 		return err
@@ -256,8 +253,6 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating schema comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	if data.HasChange("is_managed") {
@@ -273,11 +268,8 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error changing management state on %v", data.Id())
 		}
-
-		data.SetPartial("is_managed")
 	}
 
-	data.Partial(false)
 	if data.HasChange("data_retention_days") {
 		_, days := data.GetChange("data_retention_days")
 

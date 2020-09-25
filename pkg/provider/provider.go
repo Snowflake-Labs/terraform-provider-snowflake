@@ -7,7 +7,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"

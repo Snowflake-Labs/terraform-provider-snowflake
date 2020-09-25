@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var systemGetAWSSNSIAMPolicySchema = map[string]*schema.Schema{

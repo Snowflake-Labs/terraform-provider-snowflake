@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -286,9 +286,6 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateStage implements schema.UpdateFunc
 func UpdateStage(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	stageID, err := stageIDFromString(data.Id())
 	if err != nil {
 		return err
@@ -308,8 +305,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage url on %v", data.Id())
 		}
-
-		data.SetPartial("url")
 	}
 
 	if data.HasChange("credentials") {
@@ -319,8 +314,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage credentials on %v", data.Id())
 		}
-
-		data.SetPartial("credentials")
 	}
 
 	if data.HasChange("storage_integration") {
@@ -330,8 +323,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage storage integration on %v", data.Id())
 		}
-
-		data.SetPartial("storage_integration")
 	}
 
 	if data.HasChange("encryption") {
@@ -341,8 +332,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage encryption on %v", data.Id())
 		}
-
-		data.SetPartial("encryption")
 	}
 	if data.HasChange("file_format") {
 		_, fileFormat := data.GetChange("file_format")
@@ -351,8 +340,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage file formaat on %v", data.Id())
 		}
-
-		data.SetPartial("file_format")
 	}
 	if data.HasChange("copy_options") {
 		_, copyOptions := data.GetChange("copy_options")
@@ -361,8 +348,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage copy options on %v", data.Id())
 		}
-
-		data.SetPartial("copy_options")
 	}
 	if data.HasChange("comment") {
 		_, comment := data.GetChange("comment")
@@ -371,8 +356,6 @@ func UpdateStage(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	return ReadStage(data, meta)

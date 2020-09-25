@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -260,9 +260,6 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 
 // UpdatePipe implements schema.UpdateFunc
 func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	pipeID, err := pipeIDFromString(data.Id())
 	if err != nil {
 		return err
@@ -282,8 +279,6 @@ func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating pipe comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	return ReadPipe(data, meta)
