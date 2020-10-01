@@ -48,6 +48,10 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
@@ -63,6 +67,10 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
@@ -77,6 +85,10 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "New Name"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Benoit"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Dageville"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.net"),
 					checkBool("snowflake_user.w", "disabled", true),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
@@ -101,6 +113,10 @@ resource "snowflake_user" "w" {
 	name = "%s"
 	comment = "test comment"
 	login_name = "%s_login"
+	display_name = "Display Name"
+	first_name = "Marcin"
+	last_name = "Zukowski"
+	email = "fake@email.com"
 	disabled = false
 	default_warehouse="foo"
 	default_role="foo"
@@ -126,6 +142,10 @@ resource "snowflake_user" "w" {
 	comment = "test comment 2"
 	password = "best password"
 	login_name = "%s_login"
+	display_name = "New Name"
+	first_name = "Benoit"
+	last_name = "Dageville"
+	email = "fake@email.net"
 	disabled = true
 	default_warehouse="bar"
 	default_role="bar"

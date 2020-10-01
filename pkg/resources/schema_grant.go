@@ -29,6 +29,7 @@ var validSchemaPrivileges = newPrivilegeSet(
 	privilegeCreateExternalTable,
 	privilegeCreateMaterializedView,
 	privilegeCreateTemporaryTable,
+	privilegeCreateMaskingPolicy,
 )
 
 var schemaGrantSchema = map[string]*schema.Schema{
@@ -74,6 +75,13 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
 	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // SchemaGrant returns a pointer to the resource representing a view grant
@@ -101,6 +109,7 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	db := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
 	onFuture := data.Get("on_future").(bool)
+	grantOption := data.Get("with_grant_option").(bool)
 
 	if (schema == "") && !onFuture {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -122,6 +131,7 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		ResourceName: db,
 		SchemaName:   schema,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grantID.String()
 	if err != nil {
@@ -158,6 +168,10 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = data.Set("privilege", grantID.Privilege)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}

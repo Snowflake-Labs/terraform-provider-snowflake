@@ -19,6 +19,10 @@ var userProperties = []string{
 	"rsa_public_key",
 	"rsa_public_key_2",
 	"must_change_password",
+	"email",
+	"display_name",
+	"first_name",
+	"last_name",
 }
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
@@ -91,6 +95,27 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
+	},
+	"email": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Email address for the user.",
+	},
+	"display_name": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Optional:    true,
+		Description: "Name displayed for the user in the Snowflake web interface.",
+	},
+	"first_name": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "First name of the user.",
+	},
+	"last_name": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Last name of the user.",
 	},
 
 	//    DISPLAY_NAME = <string>
@@ -195,6 +220,26 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("has_rsa_public_key", u.HasRsaPublicKey)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("email", u.Email.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("display_name", u.DisplayName.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("first_name", u.FirstName.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("last_name", u.LastName.String)
 
 	return err
 }

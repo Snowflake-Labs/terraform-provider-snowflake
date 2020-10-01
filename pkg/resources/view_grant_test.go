@@ -23,21 +23,22 @@ func TestViewGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"view_name":     "test-view",
-		"schema_name":   "PUBLIC",
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
-		"shares":        []interface{}{"test-share-1", "test-share-2"},
+		"view_name":         "test-view",
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
 		r.NoError(err)
@@ -63,21 +64,22 @@ func TestFutureViewGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"on_future":     true,
-		"schema_name":   "PUBLIC",
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"on_future":         true,
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^GRANT SELECT ON FUTURE VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-1"$`,
+			`^GRANT SELECT ON FUTURE VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-1" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(
-			`^GRANT SELECT ON FUTURE VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2"$`,
+			`^GRANT SELECT ON FUTURE VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
@@ -87,10 +89,11 @@ func TestFutureViewGrantCreate(t *testing.T) {
 	b := require.New(t)
 
 	in = map[string]interface{}{
-		"on_future":     true,
-		"database_name": "test-db",
-		"privilege":     "SELECT",
-		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"on_future":         true,
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
 	}
 	d = schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
 	b.NotNil(d)

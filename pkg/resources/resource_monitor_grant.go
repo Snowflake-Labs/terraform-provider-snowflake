@@ -34,6 +34,13 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant
@@ -51,6 +58,7 @@ func ResourceMonitorGrant() *schema.Resource {
 func CreateResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error {
 	w := data.Get("monitor_name").(string)
 	priv := data.Get("privilege").(string)
+	grantOption := data.Get("with_grant_option").(bool)
 	builder := snowflake.ResourceMonitorGrant(w)
 
 	err := createGenericGrant(data, meta, builder)
@@ -61,6 +69,7 @@ func CreateResourceMonitorGrant(data *schema.ResourceData, meta interface{}) err
 	grant := &grantID{
 		ResourceName: w,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
@@ -85,6 +94,10 @@ func ReadResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error
 		return err
 	}
 	err = data.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = data.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
