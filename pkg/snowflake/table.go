@@ -89,7 +89,7 @@ func (tb *TableBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v`, columnDefinition["name"], columnDefinition["type"]))
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"])))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
 	q.WriteString(fmt.Sprintf(`)`))
