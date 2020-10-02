@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"io/ioutil"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -92,8 +93,10 @@ func Provider() *schema.Provider {
 			"snowflake_warehouse":              resources.Warehouse(),
 			"snowflake_warehouse_grant":        resources.WarehouseGrant(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{},
-		ConfigureFunc:  ConfigureProvider,
+		DataSourcesMap: map[string]*schema.Resource{
+			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
+		},
+		ConfigureFunc: ConfigureProvider,
 	}
 }
 

@@ -80,7 +80,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `account` - (required) The name of the Snowflake account. Can also come from the
   `SNOWFLAKE_ACCOUNT` environment variable.
 * `username` - (required) Username for username+password authentication. Can come from the
-  `SNOWFLAKE_PASSWORD` environment variable.
+  `SNOWFLAKE_USER` environment variable.
 * `region` - (required) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Can be source from the `SNOWFLAKE_REGION` environment variable.
 * `password` - (optional) Password for username+password auth. Cannot be used with `browser_auth` or
   `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.

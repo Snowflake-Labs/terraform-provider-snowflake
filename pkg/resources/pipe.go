@@ -41,16 +41,11 @@ var pipeSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the pipe.",
 	},
 	"copy_statement": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the copy statement for the pipe.",
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if strings.TrimSuffix(old, "\n") == strings.TrimSuffix(new, "\n") {
-				return true
-			}
-			return false
-		},
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the copy statement for the pipe.",
+		DiffSuppressFunc: pipeCopyStatementDiffSuppress,
 	},
 	"auto_ingest": {
 		Type:        schema.TypeBool,
@@ -58,6 +53,11 @@ var pipeSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 		Description: "Specifies a auto_ingest param for the pipe.",
+	},
+	"aws_sns_topic_arn": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
 	},
 	"notification_channel": {
 		Type:        schema.TypeString,
@@ -84,6 +84,18 @@ func Pipe() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 	}
+}
+
+func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	// standardise line endings
+	old = strings.ReplaceAll(old, "\r\n", "\n")
+	new = strings.ReplaceAll(new, "\r\n", "\n")
+
+	// trim off any trailing line endings
+	if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
+		return true
+	}
+	return false
 }
 
 type pipeID struct {
@@ -152,6 +164,10 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := data.GetOk("auto_ingest"); ok && v.(bool) {
 		builder.WithAutoIngest()
+	}
+
+	if v, ok := data.GetOk("aws_sns_topic_arn"); ok {
+		builder.WithAwsSnsTopicArn(v.(string))
 	}
 
 	q := builder.Create()
@@ -231,6 +247,11 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 
 	err = data.Set("auto_ingest", pipe.NotificationChannel != "")
 	if err != nil {
+		return err
+	}
+
+	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
+		err = data.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}
 
