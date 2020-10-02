@@ -260,7 +260,6 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			roles = append(roles, roleName)
 		}
 	}
-
 	// Now see which shares have our privilege
 	for shareName, privileges := range sharePrivileges {
 		// Where priv is not all so it should match exactly
