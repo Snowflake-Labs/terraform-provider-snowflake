@@ -8,6 +8,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+func fixFileFormat(inputFileFormat string) string {
+        println("TFDEBUG - Fixing file format", inputFileFormat)
+	return strings.Replace(inputFileFormat, "NULL_IF = []", "NULL_IF = ()", 1)
+}
+
 // StageBuilder abstracts the creation of SQL queries for a Snowflake stage
 type StageBuilder struct {
 	name               string
@@ -115,7 +120,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.fileFormat != "" {
-		q.WriteString(fmt.Sprintf(` FILE_FORMAT = (%v)`, sb.fileFormat))
+		q.WriteString(fmt.Sprintf(` FILE_FORMAT = (%v)`, fixFileFormat(sb.fileFormat)))
 	}
 
 	if sb.copyOptions != "" {
@@ -166,7 +171,7 @@ func (sb *StageBuilder) ChangeEncryption(e string) string {
 
 // ChangeFileFormat returns the SQL query that will update the file format on the stage.
 func (sb *StageBuilder) ChangeFileFormat(f string) string {
-	return fmt.Sprintf(`ALTER STAGE %v SET FILE_FORMAT = (%v)`, sb.QualifiedName(), f)
+	return fmt.Sprintf(`ALTER STAGE %v SET FILE_FORMAT = (%v)`, sb.QualifiedName(), fixFileFormat(f))
 }
 
 // ChangeCopyOptions returns the SQL query that will update the copy options on the stage.
