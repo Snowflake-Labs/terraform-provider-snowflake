@@ -9,7 +9,6 @@ import (
 )
 
 func fixFileFormat(inputFileFormat string) string {
-        println("TFDEBUG - Fixing file format", inputFileFormat)
 	return strings.Replace(inputFileFormat, "NULL_IF = []", "NULL_IF = ()", 1)
 }
 
