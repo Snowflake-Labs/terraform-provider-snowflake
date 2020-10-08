@@ -1,6 +1,6 @@
 module github.com/chanzuckerberg/terraform-provider-snowflake
 
-go 1.13
+go 1.15
 
 require (
 	cloud.google.com/go/pubsub v1.0.1 // indirect
