@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"io/ioutil"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -73,6 +72,7 @@ func Provider() *schema.Provider {
 			"snowflake_database_grant":         resources.DatabaseGrant(),
 			"snowflake_integration_grant":      resources.IntegrationGrant(),
 			"snowflake_managed_account":        resources.ManagedAccount(),
+			"snowflake_network_policy":         resources.NetworkPolicy(),
 			"snowflake_pipe":                   resources.Pipe(),
 			"snowflake_resource_monitor":       resources.ResourceMonitor(),
 			"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
@@ -88,15 +88,12 @@ func Provider() *schema.Provider {
 			"snowflake_view":                   resources.View(),
 			"snowflake_view_grant":             resources.ViewGrant(),
 			"snowflake_task":                   resources.Task(),
-			"snowflake_table":                  resources.Table(),
 			"snowflake_table_grant":            resources.TableGrant(),
 			"snowflake_warehouse":              resources.Warehouse(),
 			"snowflake_warehouse_grant":        resources.WarehouseGrant(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
-		},
-		ConfigureFunc: ConfigureProvider,
+		DataSourcesMap: map[string]*schema.Resource{},
+		ConfigureFunc:  ConfigureProvider,
 	}
 }
 
