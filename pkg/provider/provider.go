@@ -4,7 +4,7 @@ import (
 	"crypto/rsa"
 	"io/ioutil"
 
-  "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
