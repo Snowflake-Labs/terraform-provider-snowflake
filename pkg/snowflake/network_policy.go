@@ -12,8 +12,26 @@ import (
 type NetworkPolicyBuilder struct {
 	name          string
 	comment       string
-	allowedIpList []string
-	blockedIpList []string
+	allowedIpList string
+	blockedIpList string
+}
+
+// WithComment adds a comment to the NetworkPolicyBuilder
+func (npb *NetworkPolicyBuilder) WithComment(c string) *NetworkPolicyBuilder {
+	npb.comment = EscapeString(c)
+	return npb
+}
+
+// WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder
+func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *NetworkPolicyBuilder {
+	npb.allowedIpList = IpListToString(allowedIps)
+	return npb
+}
+
+// WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder
+func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
+	npb.blockedIpList = IpListToString(blockedIps)
+	return npb
 }
 
 // NetworkPolicy returns a pointer to a Builder that abstracts the DDL operations for a network policy.
@@ -23,6 +41,11 @@ func NetworkPolicy(name string) *NetworkPolicyBuilder {
 	return &NetworkPolicyBuilder{
 		name: name,
 	}
+}
+
+// Create returns the SQL query that will create a network policy.
+func (npb *NetworkPolicyBuilder) Create() string {
+	return fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v BLOCKED_IP_LIST=%v COMMENT="%v"`, npb.name, npb.allowedIpList, npb.blockedIpList, npb.comment)
 }
 
 // ChangeComment returns the SQL query that will update the comment on the network policy.
@@ -71,7 +94,7 @@ func (npb *NetworkPolicyBuilder) Show(meta interface{}) (string, error) {
     show_output AS (SELECT * FROM TABLE(RESULT_SCAN('%v')) WHERE "name" = '%v'),
 	allowed_ips AS (SELECT "value" AS "allowed_ip_list" FROM desc_output WHERE "name" = 'ALLOWED_IP_LIST'),
 	blocked_ips AS (SELECT "value" AS "blocked_ip_list" FROM desc_output WHERE "name" = 'BLOCKED_IP_LIST')
-	SELECT * 
+	SELECT *
       FROM show_output
       LEFT JOIN allowed_ips ON TRUE
       LEFT JOIN blocked_ips ON TRUE

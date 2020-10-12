@@ -7,6 +7,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNetworkPolicyCreate(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.NetworkPolicy("test_network_policy")
+	r.NotNil(s)
+
+	s.WithComment("This is a test comment")
+
+	allowedIps := []string{"192.168.0.100/24", "192.168.0.200/18"}
+	s.WithAllowedIpList(allowedIps)
+
+	blockedIps := []string{"29.254.123.20"}
+	s.WithBlockedIpList(blockedIps)
+
+	q := s.Create()
+	r.Equal(`CREATE NETWORK POLICY "test_network_policy" ALLOWED_IP_LIST=('192.168.0.100/24', '192.168.0.200/18') BLOCKED_IP_LIST=('29.254.123.20') COMMENT="This is a test comment"`, q)
+}
+
 func TestNetworkPolicyDrop(t *testing.T) {
 	r := require.New(t)
 	s := snowflake.NetworkPolicy("test_network_policy")

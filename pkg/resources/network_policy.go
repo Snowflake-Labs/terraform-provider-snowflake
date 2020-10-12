@@ -71,18 +71,28 @@ func NetworkPolicy() *schema.Resource {
 // CreateNetworkPolicy implements schema.CreateFunc
 func CreateNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-
 	name := data.Get("name").(string)
-	allowedIps := snowflake.IpListToString(expandStringList(data.Get("allowed_ip_list").(*schema.Set).List()))
-	blockedIps := snowflake.IpListToString(expandStringList(data.Get("blocked_ip_list").(*schema.Set).List()))
-	comment := data.Get("comment").(string)
+	builder := snowflake.NetworkPolicy(name)
+
+	// Set optionals
+	if v, ok := data.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+
+	if v, ok := data.GetOk("allowed_ip_list"); ok {
+		builder.WithAllowedIpList(expandStringList(v.(*schema.Set).List()))
+	}
+
+	if v, ok := data.GetOk("blocked_ip_list"); ok {
+		builder.WithBlockedIpList(expandStringList(v.(*schema.Set).List()))
+	}
 
 	err := ensureUserAlterPrivileges(data, meta)
 	if err != nil {
 		return err
 	}
 
-	stmt := fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v BLOCKED_IP_LIST=%v COMMENT="%v"`, name, allowedIps, blockedIps, comment)
+	stmt := builder.Create()
 	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error creating network policy %v", name)
