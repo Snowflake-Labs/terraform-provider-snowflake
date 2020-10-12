@@ -29,6 +29,7 @@ func TestAccNetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "comment", networkPolicyComment),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "users.#", "1"),
 				),
 			},
 			// TODO (gp) figure out how to test UPDATE here
@@ -37,7 +38,7 @@ func TestAccNetworkPolicy(t *testing.T) {
 				ResourceName:            "snowflake_network_policy.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"set_for_account"},
+				ImportStateVerifyIgnore: []string{"set_for_account", "users"},
 			},
 		},
 	})
@@ -45,11 +46,17 @@ func TestAccNetworkPolicy(t *testing.T) {
 
 func networkPolicyConfig(name string) string {
 	return fmt.Sprintf(`
+
+resource "snowflake_user" "test_user" {
+  name = "TEST_USER"
+}
+
 resource "snowflake_network_policy" "test" {
 	name            = "%v"
 	comment         = "%v"
 	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 	blocked_ip_list = ["192.168.0.101"]
+	users           = [snowflake_user.test_user.name]
 }
 `, name, networkPolicyComment)
 }
