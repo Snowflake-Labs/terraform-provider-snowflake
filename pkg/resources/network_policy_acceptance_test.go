@@ -31,6 +31,7 @@ func TestAccNetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "users.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "set_for_account", "false"),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -42,6 +43,7 @@ func TestAccNetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "users.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "set_for_account", "false"),
 				),
 			},
 			// IMPORT
