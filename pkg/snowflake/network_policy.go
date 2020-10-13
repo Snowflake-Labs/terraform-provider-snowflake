@@ -50,7 +50,15 @@ func NetworkPolicy(name string) *NetworkPolicyBuilder {
 
 // Create returns the SQL query that will create a network policy.
 func (npb *NetworkPolicyBuilder) Create() string {
-	return fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v BLOCKED_IP_LIST=%v COMMENT="%v"`, npb.name, npb.allowedIpList, npb.blockedIpList, npb.comment)
+	createSql := fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v`, npb.name, npb.allowedIpList)
+	if npb.blockedIpList != "" {
+		createSql = createSql + fmt.Sprintf(" BLOCKED_IP_LIST=%v", npb.blockedIpList)
+	}
+	if npb.comment != "" {
+		createSql = createSql + fmt.Sprintf(` COMMENT="%v"`, npb.comment)
+	}
+
+	return createSql
 }
 
 // Describe returns the SQL query that will describe a network policy

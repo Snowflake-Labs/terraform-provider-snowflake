@@ -29,7 +29,7 @@ func TestAccNetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "comment", networkPolicyComment),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "users.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "set_for_account", "false"),
 				),
@@ -68,7 +68,6 @@ resource "snowflake_network_policy" "test" {
 	name            = "%v"
 	comment         = "%v"
 	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
-	blocked_ip_list = ["192.168.0.101"]
 	users           = [snowflake_user.test_user.name]
 }
 `, name, networkPolicyComment)

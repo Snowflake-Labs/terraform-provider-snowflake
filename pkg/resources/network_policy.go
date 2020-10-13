@@ -147,25 +147,6 @@ func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var (
-		allowedIpList string
-		blockedIpList string
-		name          string
-		value         string
-	)
-	for rows.Next() {
-		err := rows.Scan(&name, &value)
-		if err != nil {
-			return err
-		}
-
-		if name == "ALLOWED_IP_LIST" {
-			allowedIpList = value
-		} else if name == "BLOCKED_IP_LIST" {
-			blockedIpList = value
-		}
-	}
-
 	err = data.Set("name", s.Name.String)
 	if err != nil {
 		return err
@@ -176,14 +157,27 @@ func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("allowed_ip_list", strings.Split(allowedIpList, ","))
-	if err != nil {
-		return err
-	}
+	var (
+		name  string
+		value string
+	)
+	for rows.Next() {
+		err := rows.Scan(&name, &value)
+		if err != nil {
+			return err
+		}
 
-	err = data.Set("blocked_ip_list", strings.Split(blockedIpList, ","))
-	if err != nil {
-		return err
+		if name == "ALLOWED_IP_LIST" {
+			err = data.Set("allowed_ip_list", strings.Split(value, ","))
+			if err != nil {
+				return err
+			}
+		} else if name == "BLOCKED_IP_LIST" {
+			err = data.Set("blocked_ip_list", strings.Split(value, ","))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return err
