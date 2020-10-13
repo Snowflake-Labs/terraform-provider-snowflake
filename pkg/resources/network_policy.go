@@ -117,19 +117,53 @@ func CreateNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 // ReadNetworkPolicy implements schema.ReadFunc
 func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Id()
+	policyName := data.Id()
 
-	builder := snowflake.NetworkPolicy(name)
-	showSql, err := builder.Show(meta)
+	builder := snowflake.NetworkPolicy(policyName)
+
+	// There is no way to SHOW a single Network Policy, so we have to read *all* network policies and filter in memory
+	showSql := builder.ShowAllNetworkPolicies()
+
+	rows, err := snowflake.Query(db, showSql)
 	if err != nil {
 		return err
 	}
 
-	row := snowflake.QueryRow(db, showSql)
-
-	s, err := snowflake.ScanNetworkPolicy(row)
+	allPolicies, err := snowflake.ScanNetworkPolicies(rows)
 	if err != nil {
 		return err
+	}
+
+	var s *snowflake.NetworkPolicyStruct
+	for _, value := range allPolicies {
+		if value.Name.String == policyName {
+			s = value
+		}
+	}
+
+	descSql := builder.Describe()
+	rows, err = snowflake.Query(db, descSql)
+	if err != nil {
+		return err
+	}
+
+	var (
+		allowedIpList string
+		blockedIpList string
+		name          string
+		value         string
+	)
+	for rows.Next() {
+		err := rows.Scan(&name, &value)
+		if err != nil {
+			return err
+		}
+
+		if name == "ALLOWED_IP_LIST" {
+			allowedIpList = value
+		} else if name == "BLOCKED_IP_LIST" {
+			blockedIpList = value
+		}
 	}
 
 	err = data.Set("name", s.Name.String)
@@ -142,12 +176,12 @@ func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("allowed_ip_list", strings.Split(s.AllowedIpList.String, ","))
+	err = data.Set("allowed_ip_list", strings.Split(allowedIpList, ","))
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("blocked_ip_list", strings.Split(s.BlockedIpList.String, ","))
+	err = data.Set("blocked_ip_list", strings.Split(blockedIpList, ","))
 	if err != nil {
 		return err
 	}

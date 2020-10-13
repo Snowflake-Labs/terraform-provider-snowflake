@@ -36,7 +36,12 @@ func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *Network
 
 // NetworkPolicy returns a pointer to a Builder that abstracts the DDL operations for a network policy.
 //
-// [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy.html)
+// Supported DDL operations are:
+//   - CREATE NETWORK POLICY
+//   - DROP NETWORK POLICY
+//   - SHOW NETWORK POLICIES
+//
+// [Snowflake Reference](https://docs.snowflake.com/en/user-guide/network-policies.html)
 func NetworkPolicy(name string) *NetworkPolicyBuilder {
 	return &NetworkPolicyBuilder{
 		name: name,
@@ -46,6 +51,11 @@ func NetworkPolicy(name string) *NetworkPolicyBuilder {
 // Create returns the SQL query that will create a network policy.
 func (npb *NetworkPolicyBuilder) Create() string {
 	return fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v BLOCKED_IP_LIST=%v COMMENT="%v"`, npb.name, npb.allowedIpList, npb.blockedIpList, npb.comment)
+}
+
+// Describe returns the SQL query that will describe a network policy
+func (npb *NetworkPolicyBuilder) Describe() string {
+	return fmt.Sprintf(`DESC NETWORK POLICY "%v"`, npb.name)
 }
 
 // ChangeComment returns the SQL query that will update the comment on the network policy.
@@ -68,41 +78,6 @@ func (npb *NetworkPolicyBuilder) Drop() string {
 	return fmt.Sprintf(`DROP NETWORK POLICY "%v"`, npb.name)
 }
 
-// Show returns the SQL query that will show the network policy
-// Note: this requires a non-standard approach because Snowflake's implementation of Network Policies makes it
-//   difficult to read a given policy's details
-func (npb *NetworkPolicyBuilder) Show(meta interface{}) (string, error) {
-	db := meta.(*sql.DB)
-
-	// Run DESC + fetch Query ID because we'll later post-process the output separately via RESULT_SCAN
-	descSql := fmt.Sprintf(`DESC NETWORK POLICY "%v"`, npb.name)
-	descQueryId, err := ExecAndGetId(db, descSql)
-	if err != nil {
-		return "", err
-	}
-
-	// Run SHOW + fetch Query ID because we'll later post-process the output separately via RESULT_SCAN
-	// Snowflake SHOW only supports showing *all* network policies, so we have to filter with SQL later
-	showAllQueryID, err := ExecAndGetId(db, "SHOW NETWORK POLICIES")
-	if err != nil {
-		return "", err
-	}
-
-	sql := fmt.Sprintf(`
-	WITH
-	desc_output AS (SELECT * FROM TABLE(RESULT_SCAN('%v'))),
-    show_output AS (SELECT * FROM TABLE(RESULT_SCAN('%v')) WHERE "name" = '%v'),
-	allowed_ips AS (SELECT "value" AS "allowed_ip_list" FROM desc_output WHERE "name" = 'ALLOWED_IP_LIST'),
-	blocked_ips AS (SELECT "value" AS "blocked_ip_list" FROM desc_output WHERE "name" = 'BLOCKED_IP_LIST')
-	SELECT *
-      FROM show_output
-      LEFT JOIN allowed_ips ON TRUE
-      LEFT JOIN blocked_ips ON TRUE
-	`, descQueryId, showAllQueryID, npb.name)
-
-	return sql, nil
-}
-
 // SetOnAccount returns the SQL query that will set the network policy globally on your Snowflake account
 func (npb *NetworkPolicyBuilder) SetOnAccount() string {
 	return fmt.Sprintf(`ALTER ACCOUNT SET NETWORK_POLICY = "%v"`, npb.name)
@@ -123,6 +98,12 @@ func (npb *NetworkPolicyBuilder) UnsetOnUser(u string) string {
 	return fmt.Sprintf(`ALTER USER "%v" UNSET NETWORK_POLICY`, u)
 }
 
+// ShowAllNetworkPolicies returns the SQL query that will SHOW *all* network policies in the Snowflake account
+// Snowflake's implementation of SHOW for network policies does *not* support limiting results with LIKE
+func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
+	return fmt.Sprintf(`SHOW NETWORK POLICIES`)
+}
+
 // IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')
 func IpListToString(ips []string) string {
 	for index, element := range ips {
@@ -132,18 +113,25 @@ func IpListToString(ips []string) string {
 	return fmt.Sprintf("(%v)", strings.Join(ips, ", "))
 }
 
-type networkPolicy struct {
+type NetworkPolicyStruct struct {
 	CreatedOn              sql.NullString `db:"created_on"`
 	Name                   sql.NullString `db:"name"`
 	Comment                sql.NullString `db:"comment"`
 	EntriesInAllowedIpList sql.NullString `db:"entries_in_allowed_ip_list"`
 	EntriesInBlockedIpList sql.NullString `db:"entries_in_blocked_ip_list"`
-	AllowedIpList          sql.NullString `db:"allowed_ip_list"`
-	BlockedIpList          sql.NullString `db:"blocked_ip_list"`
 }
 
-func ScanNetworkPolicy(row *sqlx.Row) (*networkPolicy, error) {
-	r := &networkPolicy{}
-	err := row.StructScan(r)
-	return r, err
+// ScanNetworkPolicies takes database rows and converts them to a list of NetworkPolicyStruct pointers
+func ScanNetworkPolicies(rows *sqlx.Rows) ([]*NetworkPolicyStruct, error) {
+	var n []*NetworkPolicyStruct
+
+	for rows.Next() {
+		r := &NetworkPolicyStruct{}
+		err := rows.StructScan(r)
+		if err != nil {
+			return nil, err
+		}
+		n = append(n, r)
+	}
+	return n, nil
 }
