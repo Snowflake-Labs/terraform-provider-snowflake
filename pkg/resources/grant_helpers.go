@@ -261,6 +261,14 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 		}
 	}
 
+	// Now see which shares have our privilege
+	for shareName, privileges := range sharePrivileges {
+		// Where priv is not all so it should match exactly
+		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
+			shares = append(shares, shareName)
+		}
+	}
+
 	err = data.Set("privilege", priv)
 	if err != nil {
 		return err

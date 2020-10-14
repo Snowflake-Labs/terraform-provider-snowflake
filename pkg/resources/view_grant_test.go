@@ -45,6 +45,38 @@ func TestViewGrantCreate(t *testing.T) {
 	})
 }
 
+func TestViewGrantRead(t *testing.T) {
+	r := require.New(t)
+
+	d := viewGrant(t, "test-db|PUBLIC|test-view|SELECT|false", map[string]interface{}{
+		"view_name":         "test-view",
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
+		"with_grant_option": false,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadViewGrant(mock)
+		err := resources.ReadViewGrant(d, db)
+		r.NoError(err)
+	})
+
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
+}
+
 func expectReadViewGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
