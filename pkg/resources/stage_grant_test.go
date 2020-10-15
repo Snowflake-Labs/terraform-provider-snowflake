@@ -48,6 +48,38 @@ func TestStageGrantCreate(t *testing.T) {
 	}
 }
 
+func TestStageGrantRead(t *testing.T) {
+	r := require.New(t)
+
+	d := stageGrant(t, "test-db|test-schema|test-stage|USAGE|false", map[string]interface{}{
+		"stage_name":        "test-stage",
+		"schema_name":       "test-schema",
+		"database_name":     "test-db",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
+		"with_grant_option": false,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadStageGrant(mock, "USAGE")
+		err := resources.ReadStageGrant(d, db)
+		r.NoError(err)
+	})
+
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
+}
+
 func expectReadStageGrant(mock sqlmock.Sqlmock, test_priv string) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",

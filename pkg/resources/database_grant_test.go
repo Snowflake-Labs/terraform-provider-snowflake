@@ -48,11 +48,11 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES|false", map[string]interface{}{
+	d := databaseGrant(t, "test-database|||USAGE|false", map[string]interface{}{
 		"database_name":     "test-database",
-		"privilege":         "IMPORTED PRIVILIGES",
-		"roles":             []interface{}{"test-role-1", "test-role-2"},
-		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"privilege":         "USAGE",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
 		"with_grant_option": false,
 	})
 
@@ -63,6 +63,15 @@ func TestDatabaseGrantRead(t *testing.T) {
 		err := resources.ReadDatabaseGrant(d, db)
 		r.NoError(err)
 	})
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
 }
 
 func expectReadDatabaseGrant(mock sqlmock.Sqlmock) {

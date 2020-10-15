@@ -26,6 +26,38 @@ func databaseGrant(t *testing.T, id string, params map[string]interface{}) *sche
 	return d
 }
 
+func schemaGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func stageGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func tableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Schema, params)
