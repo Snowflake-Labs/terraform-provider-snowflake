@@ -81,6 +81,14 @@ func storageIntegration(t *testing.T, id string, params map[string]interface{}) 
 	return d
 }
 
+func table(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Table().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)

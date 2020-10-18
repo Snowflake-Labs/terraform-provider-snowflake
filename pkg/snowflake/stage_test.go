@@ -59,6 +59,12 @@ func TestStageChangeFileFormat(t *testing.T) {
 	r.Equal(s.ChangeFileFormat("format_name=my_csv_format"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET FILE_FORMAT = (format_name=my_csv_format)`)
 }
 
+func TestStageChangeFileFormatToEmptyList(t *testing.T) {
+	r := require.New(t)
+	s := Stage("test_stage", "test_db", "test_schema")
+	r.Equal(s.ChangeFileFormat("TYPE = parquet NULL_IF = [] COMPRESSION = none"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET FILE_FORMAT = (TYPE = parquet NULL_IF = () COMPRESSION = none)`)
+}
+
 func TestStageChangeEncryption(t *testing.T) {
 	r := require.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
