@@ -19,6 +19,7 @@ func TestAccResourceMonitor(t *testing.T) {
 				Config: resourceMonitorConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
 				),
 			},
 			// IMPORT
@@ -35,6 +36,7 @@ func resourceMonitorConfig(accName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {
 	name           = "%v"
+	credit_quota   = 100
 }
 `, accName)
 }

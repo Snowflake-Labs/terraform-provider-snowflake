@@ -55,6 +55,36 @@ func TestSchemaGrantCreate(t *testing.T) {
 	}
 }
 
+func TestSchemaGrantRead(t *testing.T) {
+	r := require.New(t)
+
+	d := schemaGrant(t, "test-db|test-schema||USAGE|false", map[string]interface{}{
+		"schema_name":       "test-schema",
+		"database_name":     "test-db",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
+		"with_grant_option": false,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadSchemaGrant(mock, "USAGE")
+		err := resources.ReadSchemaGrant(d, db)
+		r.NoError(err)
+	})
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
+}
+
 func expectReadSchemaGrant(mock sqlmock.Sqlmock, test_priv string) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",

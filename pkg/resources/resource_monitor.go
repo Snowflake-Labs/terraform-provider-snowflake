@@ -22,10 +22,10 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"credit_quota": {
-		Type:        schema.TypeFloat,
+		Type:        schema.TypeInt,
 		Optional:    true,
 		Computed:    true,
-		Description: "The amount of credits allocated monthly to the resource monitor, round up to 2 decimal places.",
+		Description: "The number of credits allocated monthly to the resource monitor.",
 		ForceNew:    true,
 	},
 	"frequency": {
@@ -96,7 +96,7 @@ func CreateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 	cb := snowflake.ResourceMonitor(name).Create()
 	// Set optionals
 	if v, ok := data.GetOk("credit_quota"); ok {
-		cb.SetFloat("credit_quota", v.(float64))
+		cb.SetInt("credit_quota", v.(int))
 	}
 	if v, ok := data.GetOk("frequency"); ok {
 		cb.SetString("frequency", v.(string))
@@ -157,14 +157,17 @@ func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Credit quota is a float
+	// Snowflake returns credit_quota as a float, but only accepts input as an int
 	if rm.CreditQuota.Valid {
-		err = data.Set("credit_quota", rm.CreditQuota.Float64)
-	} else {
-		err = data.Set("credit_quota", 0.0) // not sure if this is the right approach
-	}
-	if err != nil {
-		return err
+		cqf, err := strconv.ParseFloat(rm.CreditQuota.String, 64)
+		if err != nil {
+			return err
+		}
+
+		err = data.Set("credit_quota", int(cqf))
+		if err != nil {
+			return err
+		}
 	}
 
 	// Triggers

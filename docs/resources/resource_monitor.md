@@ -7,7 +7,7 @@
 
 |            NAME            |  TYPE  |                                                                   DESCRIPTION                                                                   | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
 |----------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| credit_quota               | float  | The amount of credits allocated monthly to the resource monitor, round up to 2 decimal places.                                                  | true     | false     | true     |         |
+| credit_quota               | int    | The number of credits allocated monthly to the resource monitor.                                                                                | true     | false     | true     |         |
 | end_timestamp              | string | The date and time when the resource monitor suspends the assigned warehouses.                                                                   | true     | false     | false    |         |
 | frequency                  | string | The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP. | true     | false     | true     |         |
 | name                       | string | Identifier for the resource monitor; must be unique for your account.                                                                           | false    | true      | false    |         |

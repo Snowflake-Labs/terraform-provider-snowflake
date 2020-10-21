@@ -46,6 +46,37 @@ func TestTableGrantCreate(t *testing.T) {
 		r.NoError(err)
 	})
 }
+func TestTableGrantRead(t *testing.T) {
+	r := require.New(t)
+
+	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT|false", map[string]interface{}{
+		"table_name":        "test-table",
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
+		"with_grant_option": false,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadTableGrant(mock)
+		err := resources.ReadTableGrant(d, db)
+		r.NoError(err)
+	})
+
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
+}
 
 func expectReadTableGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
