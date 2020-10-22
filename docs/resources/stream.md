@@ -5,12 +5,12 @@
 
 ## properties
 
-|   NAME   |  TYPE  |                                                    DESCRIPTION                                                    | OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
-|----------|--------|-------------------------------------------------------------------------------------------------------------------|----------|-----------|----------|---------|
-| database | string | The database in which to create the stream.                                                                        | false    | true      | false    |         |
-| schema   | string | The schema in which to create the stream.                                                                          | false    | true      | false    |         |
-| name     | string | Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. | false    | true      | false    |         |
-| comment  | string | Specifies a comment for the stream.                                                                                | true     | false     | false    |         |
-| on_table | list   | Name of the table the stream will monitor.                                                                         | false    | true      | false    |         |
-| append_only    | boolean | Type of the stream that will be created.                                                                    | true    | false     | false     |  false  |
+|   NAME        |  TYPE   |                                                    DESCRIPTION                                                      |  OPTIONAL | REQUIRED  | COMPUTED | DEFAULT |
+|---------------|---------|---------------------------------------------------------------------------------------------------------------------|-----------|-----------|----------|---------|
+| database      | string  | The database in which to create the stream.                                                                         | false     | true      | false    |         |
+| schema        | string  | The schema in which to create the stream.                                                                           | false     | true      | false    |         |
+| name          | string  | Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. | false     | true      | false    |         |
+| comment       | string  | Specifies a comment for the stream.                                                                                 | true      | false     | false    |         |
+| on_table      | list    | Name of the table the stream will monitor.                                                                          | false     | true      | false    |         |
+| append_only   | boolean | Type of the stream that will be created.                                                                            | true      | false     | false    |  false  |
 
