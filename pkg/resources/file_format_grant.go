@@ -47,20 +47,13 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
-		ForceNew:    true,
-	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
-		ConflictsWith: []string{"file_format_name", "shares"},
+		ConflictsWith: []string{"file_format_name"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
