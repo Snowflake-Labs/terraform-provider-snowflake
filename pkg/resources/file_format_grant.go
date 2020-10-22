@@ -165,4 +165,3 @@ func DeleteFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 
 	return deleteGenericGrant(data, meta, builder)
 }
-

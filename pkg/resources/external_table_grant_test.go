@@ -147,9 +147,9 @@ func expectReadFutureExternalTableGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
 	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.PUBLIC.<EXTERNAL TABLE>", "ROLE", "test-role-1", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.PUBLIC.<SCHEMA>", "ROLE", "test-role-1", false,
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.PUBLIC.<EXTERNAL TABLE>", "ROLE", "test-role-2", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.PUBLIC.<SCHEMA>", "ROLE", "test-role-2", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN SCHEMA "test-db"."PUBLIC"$`).WillReturnRows(rows)
 }
@@ -158,9 +158,9 @@ func expectReadFutureExternalTableDatabaseGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
 	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.<EXTERNAL TABLE>", "ROLE", "test-role-1", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.<SCHEMA>", "ROLE", "test-role-1", false,
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.<EXTERNAL TABLE>", "ROLE", "test-role-2", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "EXTERNAL TABLE", "test-db.<SCHEMA>", "ROLE", "test-role-2", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
 }

@@ -8,9 +8,8 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidExternalTablePrivileges = newPrivilegeSet(
-  privilegeAll,
-  privilegeOwnership,
+var validExternalTablePrivileges = newPrivilegeSet(
+	privilegeOwnership,
 	privilegeSelect,
 )
 
@@ -38,7 +37,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future external table.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(ValidExternalTablePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -193,7 +192,7 @@ func ReadExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureExternalTablesEnabled, ValidExternalTablePrivileges)
+	return readGenericGrant(data, meta, builder, futureExternalTablesEnabled, validExternalTablePrivileges)
 }
 
 // DeleteExternalTableGrant implements schema.DeleteFunc
