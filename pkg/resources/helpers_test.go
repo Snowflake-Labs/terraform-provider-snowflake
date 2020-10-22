@@ -136,3 +136,11 @@ func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.R
 	d.SetId(id)
 	return d
 }
+
+func externalTableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}

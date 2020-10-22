@@ -8,9 +8,10 @@ type futureGrantType string
 type futureGrantTarget string
 
 const (
-	futureSchemaType futureGrantType = "SCHEMA"
-	futureTableType  futureGrantType = "TABLE"
-	futureViewType   futureGrantType = "VIEW"
+	futureSchemaType        futureGrantType = "SCHEMA"
+	futureTableType         futureGrantType = "TABLE"
+	futureViewType          futureGrantType = "VIEW"
+	futureExternalTableType futureGrantType = "EXTERNAL TABLE"
 )
 
 const (
@@ -73,6 +74,17 @@ func FutureViewGrant(db, schema string) GrantBuilder {
 		name:              name,
 		qualifiedName:     qualifiedName,
 		futureGrantType:   futureViewType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a view
+func FutureExternalTableGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureExternalTableType,
 		futureGrantTarget: futureTarget,
 	}
 }

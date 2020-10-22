@@ -12,12 +12,14 @@ const (
 	resourceMonitorType grantType = "RESOURCE MONITOR"
 	integrationType     grantType = "INTEGRATION"
 
-	databaseType  grantType = "DATABASE"
-	schemaType    grantType = "SCHEMA"
-	stageType     grantType = "STAGE"
-	viewType      grantType = "VIEW"
-	tableType     grantType = "TABLE"
-	warehouseType grantType = "WAREHOUSE"
+	databaseType      grantType = "DATABASE"
+	schemaType        grantType = "SCHEMA"
+	stageType         grantType = "STAGE"
+	viewType          grantType = "VIEW"
+	tableType         grantType = "TABLE"
+	warehouseType     grantType = "WAREHOUSE"
+	externalTableType grantType = "EXTERNAL TABLE"
+	fileFormatType    grantType = "FILE FORMAT"
 )
 
 type GrantExecutable interface {
@@ -121,6 +123,24 @@ func WarehouseGrant(w string) GrantBuilder {
 		name:          w,
 		qualifiedName: fmt.Sprintf(`"%v"`, w),
 		grantType:     warehouseType,
+	}
+}
+
+// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for a view
+func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          externalTable,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, externalTable),
+		grantType:     externalTableType,
+	}
+}
+
+// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a view
+func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          fileFormat,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, fileFormat),
+		grantType:     fileFormatType,
 	}
 }
 
