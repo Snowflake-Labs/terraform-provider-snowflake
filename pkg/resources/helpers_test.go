@@ -89,6 +89,14 @@ func table(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 	return d
 }
 
+func stream(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Stream().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
