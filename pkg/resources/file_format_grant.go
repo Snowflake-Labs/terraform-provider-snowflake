@@ -3,12 +3,12 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidFileFormatPrivileges = newPrivilegeSet(
-	privilegeAll,
+var validFileFormatPrivileges = newPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 )
@@ -16,28 +16,28 @@ var ValidFileFormatPrivileges = newPrivilegeSet(
 var fileFormatGrantSchema = map[string]*schema.Schema{
 	"file_format_name": {
 		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the file format on which to grant privileges.",
+		Optional:    true,
+		Description: "The name of the file format on which to grant privileges immediately (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the schema containing the current file format on which to grant privileges.",
+		Optional:    true,
+		Description: "The name of the schema containing the current or future file formats on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The name of the database containing the current file format on which to grant privileges.",
+		Description: "The name of the database containing the current or future file formats on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the file format.",
-		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidFileFormatPrivileges.toList(), true),
+		Description:  "The privilege to grant on the current or future file format.",
+		Default:      "SELECT",
+		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.toList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -51,8 +51,16 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
+	},
+	"on_future": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"file_format_name", "shares"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -79,19 +87,42 @@ func FileFormatGrant() *schema.Resource {
 
 // CreateFileFormatGrant implements schema.CreateFunc
 func CreateFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
-	var fileFormatName string
+	var (
+		fileFormatName string
+		schemaName     string
+	)
 	if _, ok := data.GetOk("file_format_name"); ok {
 		fileFormatName = data.Get("file_format_name").(string)
 	} else {
 		fileFormatName = ""
 	}
-	schemaName := data.Get("schema_name").(string)
+	if _, ok := data.GetOk("schema_name"); ok {
+		schemaName = data.Get("schema_name").(string)
+	} else {
+		schemaName = ""
+	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
+	futureFileFormats := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
 
+	if (schemaName == "") && !futureFileFormats {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
+
+	if (fileFormatName == "") && !futureFileFormats {
+		return errors.New("file_format_name must be set unless on_future is true.")
+	}
+	if (fileFormatName != "") && futureFileFormats {
+		return errors.New("file_format_name must be empty if on_future is true.")
+	}
+
 	var builder snowflake.GrantBuilder
-	builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	if futureFileFormats {
+		builder = snowflake.FutureFileFormatGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	}
 
 	err := createGenericGrant(data, meta, builder)
 	if err != nil {
@@ -133,7 +164,15 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	futureFileFormatsEnabled := false
+	if fileFormatName == "" {
+		futureFileFormatsEnabled = true
+	}
 	err = data.Set("file_format_name", fileFormatName)
+	if err != nil {
+		return err
+	}
+	err = data.Set("on_future", futureFileFormatsEnabled)
 	if err != nil {
 		return err
 	}
@@ -146,9 +185,14 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	var builder snowflake.GrantBuilder
+	if futureFileFormatsEnabled {
+		builder = snowflake.FutureFileFormatGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	}
 
-	return readGenericGrant(data, meta, builder, false, ValidFileFormatPrivileges)
+	return readGenericGrant(data, meta, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
 }
 
 // DeleteFileFormatGrant implements schema.DeleteFunc
@@ -161,7 +205,13 @@ func DeleteFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	fileFormatName := grantID.ObjectName
 
-	builder := snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	futureFileFormats := (fileFormatName == "")
 
+	var builder snowflake.GrantBuilder
+	if futureFileFormats {
+		builder = snowflake.FutureFileFormatGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	}
 	return deleteGenericGrant(data, meta, builder)
 }
