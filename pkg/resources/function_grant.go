@@ -36,7 +36,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future function.",
-		Default:      "SELECT",
+		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.toList(), true),
 		ForceNew:     true,
 	},

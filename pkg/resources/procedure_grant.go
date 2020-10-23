@@ -36,7 +36,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future procedure.",
-		Default:      "SELECT",
+		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validProcedurePrivileges.toList(), true),
 		ForceNew:     true,
 	},
