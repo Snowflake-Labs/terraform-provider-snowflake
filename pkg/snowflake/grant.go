@@ -21,6 +21,7 @@ const (
 	externalTableType grantType = "EXTERNAL TABLE"
 	fileFormatType    grantType = "FILE FORMAT"
 	functionType      grantType = "FUNCTION"
+	procedureType     grantType = "PROCEDURE"
 )
 
 type GrantExecutable interface {
@@ -151,6 +152,15 @@ func FunctionGrant(db, schema, function string) GrantBuilder {
 		name:          function,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, function),
 		grantType:     functionType,
+	}
+}
+
+// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a view
+func ProcedureGrant(db, schema, procedure string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          procedure,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, procedure),
+		grantType:     procedureType,
 	}
 }
 

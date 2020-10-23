@@ -160,3 +160,11 @@ func functionGrant(t *testing.T, id string, params map[string]interface{}) *sche
 	d.SetId(id)
 	return d
 }
+
+func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}

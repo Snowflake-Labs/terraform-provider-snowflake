@@ -79,6 +79,54 @@ func TestViewGrant(t *testing.T) {
 	r.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
+func TestExternalTableGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.ExternalTableGrant("test_db", "PUBLIC", "testExternalTable")
+	r.Equal(vg.Name(), "testExternalTable")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable"`, s)
+
+	s = vg.Role("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestFileFormatGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.FileFormatGrant("test_db", "PUBLIC", "testFileFormat")
+	r.Equal(vg.Name(), "testFileFormat")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat"`, s)
+
+	s = vg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
 func TestWarehouseGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.WarehouseGrant("test_warehouse")

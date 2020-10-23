@@ -77,6 +77,7 @@ func Provider() *schema.Provider {
 			"snowflake_integration_grant":      resources.IntegrationGrant(),
 			"snowflake_managed_account":        resources.ManagedAccount(),
 			"snowflake_pipe":                   resources.Pipe(),
+			"snowflake_procedure_grant":        resources.ProcedureGrant(),
 			"snowflake_resource_monitor":       resources.ResourceMonitor(),
 			"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
 			"snowflake_role":                   resources.Role(),
