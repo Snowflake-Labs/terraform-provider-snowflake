@@ -82,9 +82,9 @@ func TestStreamOnTableIDFromString(t *testing.T) {
 	r.Equal("target_table_name", streamOnTable.OnTableName)
 
 	// Bad ID -- not enough fields
-	id = "database"
+	id = "database.schema"
 	_, err = streamOnTableIDFromString(id)
-	r.Equal(fmt.Errorf("invalid format for on_table: database , expected: <database_name.schema_name.target_table_name>"), err)
+	r.Equal(fmt.Errorf("invalid format for on_table: database.schema , expected: <database_name.schema_name.target_table_name>"), err)
 
 	// Bad ID
 	id = ".."

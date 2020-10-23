@@ -141,7 +141,7 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 	}
 	if len(lines[0]) != 3 {
 		//return nil, fmt.Errorf("on table format: database_name.schema_name.target_table_name")
-		return nil, fmt.Errorf("invalid format for on_table: %v , expected: <database_name.schema_name.target_table_name>", stringID)
+		return nil, fmt.Errorf("invalid format for on_table: %v , expected: <database_name.schema_name.target_table_name>", strings.Join(lines[0], "."))
 	}
 
 	streamOnTableResult := &streamOnTableID{
