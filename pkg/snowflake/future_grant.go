@@ -13,6 +13,7 @@ const (
 	futureViewType          futureGrantType = "VIEW"
 	futureExternalTableType futureGrantType = "EXTERNAL TABLE"
 	futureFileFormatType    futureGrantType = "FILE FORMAT"
+	futureFunctionType      futureGrantType = "FUNCTION"
 )
 
 const (
@@ -97,6 +98,17 @@ func FutureFileFormatGrant(db, schema string) GrantBuilder {
 		name:              name,
 		qualifiedName:     qualifiedName,
 		futureGrantType:   futureFileFormatType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a view
+func FutureFunctionGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureFunctionType,
 		futureGrantTarget: futureTarget,
 	}
 }

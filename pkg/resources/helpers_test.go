@@ -152,3 +152,11 @@ func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *sc
 	d.SetId(id)
 	return d
 }
+
+func functionGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}

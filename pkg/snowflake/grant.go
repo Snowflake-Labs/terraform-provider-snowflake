@@ -20,6 +20,7 @@ const (
 	warehouseType     grantType = "WAREHOUSE"
 	externalTableType grantType = "EXTERNAL TABLE"
 	fileFormatType    grantType = "FILE FORMAT"
+	functionType      grantType = "FUNCTION"
 )
 
 type GrantExecutable interface {
@@ -141,6 +142,15 @@ func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
 		name:          fileFormat,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, fileFormat),
 		grantType:     fileFormatType,
+	}
+}
+
+// FunctionGrant returns a pointer to a CurrentGrantBuilder for a view
+func FunctionGrant(db, schema, function string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          function,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, function),
+		grantType:     functionType,
 	}
 }
 
