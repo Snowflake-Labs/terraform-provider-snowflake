@@ -9,53 +9,66 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccNetworkPolicyAttachment(t *testing.T) {
+const (
+	networkPolicyComment = "Created by a Terraform acceptance test"
+)
+
+func TestAccNetworkPolicy(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccNetworkPolicyAttachment")
+		t.Skip("Skipping TestAccNetworkPolicy")
 	}
 
-	policyName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: networkPolicyAttachmentConfig(policyName),
+				Config: networkPolicyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyName),
-					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "set_for_account", "false"),
-					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "comment", networkPolicyComment),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
+				),
+			},
+			// CHANGE PROPERTIES
+			{
+				Config: networkPolicyConfig2(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "comment", networkPolicyComment),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "1"),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_network_policy_attachment.test",
+				ResourceName:      "snowflake_network_policy.test",
 				ImportState:       true,
-				ImportStateVerify: false,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func networkPolicyAttachmentConfig(policyName string) string {
+func networkPolicyConfig(name string) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "test-user1" {
-	name = "test-user1"
-}
-
-resource "snowflake_user" "test-user2" {
-	name = "test-user2"
-}
-
 resource "snowflake_network_policy" "test" {
 	name            = "%v"
+	comment         = "%v"
 	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 }
-
-resource "snowflake_network_policy_attachment" "test" {
-	network_policy_name = snowflake_network_policy.test.name
-	set_for_account     = false
-	users               = [snowflake_user.test-user1.name, snowflake_user.test-user2.name]
+`, name, networkPolicyComment)
 }
-`, policyName)
+
+func networkPolicyConfig2(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_network_policy" "test" {
+	name            = "%v"
+	comment         = "%v"
+	allowed_ip_list = ["192.168.0.100/24"]
+	blocked_ip_list = ["192.168.0.101"]
+}
+`, name, networkPolicyComment)
 }
