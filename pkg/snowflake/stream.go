@@ -3,8 +3,9 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
