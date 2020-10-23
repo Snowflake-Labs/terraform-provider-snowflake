@@ -31,7 +31,7 @@ func TestAccNetworkPolicyAttachment(t *testing.T) {
 			{
 				ResourceName:      "snowflake_network_policy_attachment.test",
 				ImportState:       true,
-				ImportStateVerify: false,
+				ImportStateVerify: true,
 			},
 		},
 	})
