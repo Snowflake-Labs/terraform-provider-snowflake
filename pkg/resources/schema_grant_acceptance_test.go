@@ -16,6 +16,8 @@ func TestAccSchemaGrant(t *testing.T) {
 
 	sName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleNameTable := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleNameView := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
@@ -38,6 +40,15 @@ func TestAccSchemaGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
 				),
 			},
+			// TABLE AND VIEW FUTURE GRANTS
+			{
+				Config: futureTableAndViewGrantConfig(sName, roleNameTable, roleNameView),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.select_on_future_views", "roles.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_table_grant.select_on_future_tables", "roles.#", "1")
+					resource.TestCheckResourceAttr("snowflake_view_grant.select_on_future_views", "privilege", "SELECT"),
+			//	),
+			//},
 			// IMPORT
 			{
 				ResourceName:      "snowflake_schema_grant.test",
@@ -46,6 +57,47 @@ func TestAccSchemaGrant(t *testing.T) {
 			},
 		},
 	})
+}
+
+func futureTableAndViewGrantConfig(n, role_table, role_view) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" { 
+  name = "%v" 
+}
+
+resource "snowflake_schema" "test" {   
+  name      = "%v"   
+  database  = snowflake_database.test.name   
+  comment   = "Terraform acceptance test" 
+}
+
+resource "snowflake_role" "table_reader" {
+  name = "%v"
+}
+
+resource "snowflake_role" "view_reader" {
+  name = "%v"
+}
+
+resource "snowflake_table_grant" "select_on_future_tables" {
+  database_name = snowflake_database.test.name
+  schema_name   = snowflake_schema.test.name
+  privilege     = "SELECT"
+  on_future     = true
+  roles         = [snowflake_role.table_reader.name]
+  depends_on    = [snowflake_schema.test, snowflake_role.test]
+}
+
+resource "snowflake_view_grant" "select_on_future_views" {
+  database_name = snowflake_database.test.name
+  schema_name   = snowflake_schema.test.name
+  privilege     = "SELECT"
+  on_future     = true
+  roles         = [snowflake_role.view_reader.name]
+  depends_on    = [snowflake_schema.test, snowflake_role.test]
+}
+
+`, n, n, role_table, role_view)
 }
 
 func schemaGrantConfig(n, role, share string, future bool) string {
