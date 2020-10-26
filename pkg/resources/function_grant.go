@@ -1,6 +1,10 @@
 package resources
 
 import (
+	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/pkg/errors"
@@ -18,6 +22,32 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is unset).",
+		ForceNew:    true,
+	},
+	"arguments": {
+		Type: schema.TypeList,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": &schema.Schema{
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The argument name",
+				},
+				"type": &schema.Schema{
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The argument type",
+				},
+			},
+		},
+		Optional:    true,
+		Description: "List of the arguments for the function (must be present if function_name is present)",
+		ForceNew:    true,
+	},
+	"return_type": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The return type of the function (must be present if function_name is present)",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -57,10 +87,10 @@ var functionGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name, arguments, return_type, and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
-		ConflictsWith: []string{"function_name", "shares"},
+		ConflictsWith: []string{"function_name", "arguments", "return_type", "shares"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -88,11 +118,24 @@ func FunctionGrant() *schema.Resource {
 // CreateFunctionGrant implements schema.CreateFunc
 func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
-		functionName string
-		schemaName   string
+		functionName      string
+		schemaName        string
+		arguments         []interface{}
+		returnType        string
+		functionSignature string
 	)
 	if _, ok := data.GetOk("function_name"); ok {
 		functionName = data.Get("function_name").(string)
+		if _, ok = data.GetOk("arguments"); ok {
+			arguments = data.Get("arguments").([]interface{})
+		} else {
+			return errors.New("arguments must be set when specifying function_name.")
+		}
+		if _, ok = data.GetOk("return_type"); ok {
+			returnType = strings.ToUpper(data.Get("return_type").(string))
+		} else {
+			return errors.New("return_type must be set when specifying function_name.")
+		}
 	} else {
 		functionName = ""
 	}
@@ -105,6 +148,18 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	futureFunctions := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
+	argumentSignatures := make([]string, len(arguments))
+	argumentNames := make([]string, len(arguments))
+	argumentTypes := make([]string, len(arguments))
+
+	if arguments != nil {
+		for i, arg := range arguments {
+			argMap := arg.(map[string]interface{})
+			argumentNames[i] = strings.ToUpper(argMap["name"].(string))
+			argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
+			argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
+		}
+	}
 
 	if (schemaName == "") && !futureFunctions {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -117,11 +172,17 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		return errors.New("function_name must be empty if on_future is true.")
 	}
 
+	if functionName != "" {
+		functionSignature = fmt.Sprintf(`%v(%v):%v`, functionName, strings.Join(argumentSignatures, ", "), returnType)
+	} else {
+		functionSignature = ""
+	}
+
 	var builder snowflake.GrantBuilder
 	if futureFunctions {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 
 	err := createGenericGrant(data, meta, builder)
@@ -132,7 +193,7 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:   functionName,
+		ObjectName:   functionSignature,
 		Privilege:    priv,
 		GrantOption:  grantOption,
 	}
@@ -147,13 +208,19 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 
 // ReadFunctionGrant implements schema.ReadFunc
 func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
+	var (
+		functionName  string
+		returnType    string
+		arguments     []interface{}
+		argumentTypes []string
+	)
 	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	functionName := grantID.ObjectName
+	functionSignature := grantID.ObjectName
 	priv := grantID.Privilege
 
 	err = data.Set("database_name", dbName)
@@ -165,10 +232,31 @@ func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	futureFunctionsEnabled := false
-	if functionName == "" {
+	if functionSignature == "" {
 		futureFunctionsEnabled = true
+		functionName = ""
+		returnType = ""
+		arguments = nil
+		argumentTypes = nil
+	} else {
+		functionSignatureMap, err := parseObjectName(functionSignature)
+		if err != nil {
+			return err
+		}
+		functionName = functionSignatureMap["functionName"].(string)
+		returnType = functionSignatureMap["returnType"].(string)
+		arguments = functionSignatureMap["arguments"].([]interface{})
+		argumentTypes = functionSignatureMap["argumentTypes"].([]string)
 	}
 	err = data.Set("function_name", functionName)
+	if err != nil {
+		return err
+	}
+	err = data.Set("arguments", arguments)
+	if err != nil {
+		return err
+	}
+	err = data.Set("return_type", returnType)
 	if err != nil {
 		return err
 	}
@@ -189,7 +277,7 @@ func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	if futureFunctionsEnabled {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 
 	return readGenericGrant(data, meta, builder, futureFunctionsEnabled, validFunctionPrivileges)
@@ -211,7 +299,40 @@ func DeleteFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	if futureFunctions {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, make([]string, 0))
 	}
 	return deleteGenericGrant(data, meta, builder)
+}
+
+func parseObjectName(objectName string) (map[string]interface{}, error) {
+	r := regexp.MustCompile(`(?P<function_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
+	matches := r.FindStringSubmatch(objectName)
+	if len(matches) == 0 {
+		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
+	}
+	functionSignatureMap := make(map[string]interface{})
+
+	argumentsSignatures := strings.Split(matches[2], ", ")
+
+	arguments := make([]interface{}, len(argumentsSignatures))
+	argumentTypes := make([]string, len(argumentsSignatures))
+	argumentNames := make([]string, len(argumentsSignatures))
+
+	for i, argumentSignature := range argumentsSignatures {
+		signatureComponents := strings.Split(argumentSignature, " ")
+		argumentNames[i] = signatureComponents[0]
+		argumentTypes[i] = signatureComponents[1]
+		arguments[i] = map[string]interface{}{
+			"name": argumentNames[i],
+			"type": argumentTypes[i],
+		}
+	}
+
+	functionSignatureMap["functionName"] = matches[1]
+	functionSignatureMap["arguments"] = arguments
+	functionSignatureMap["argumentTypes"] = argumentTypes
+	functionSignatureMap["argumentNames"] = argumentNames
+	functionSignatureMap["returnType"] = matches[3]
+
+	return functionSignatureMap, nil
 }

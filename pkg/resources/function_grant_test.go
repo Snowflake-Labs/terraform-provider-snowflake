@@ -23,7 +23,15 @@ func TestFunctionGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"function_name":     "test-function",
+		"function_name": "test-function",
+		"arguments": []interface{}{map[string]interface{}{
+			"name": "a",
+			"type": "array",
+		}, map[string]interface{}{
+			"name": "b",
+			"type": "string",
+		}},
+		"return_type":       "string",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
 		"privilege":         "USAGE",
@@ -35,10 +43,10 @@ func TestFunctionGrantCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function"\(ARRAY, STRING\) TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function"\(ARRAY, STRING\) TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function"\(ARRAY, STRING\) TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON FUNCTION "test-db"."PUBLIC"."test-function"\(ARRAY, STRING\) TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFunctionGrant(mock)
 		err := resources.CreateFunctionGrant(d, db)
 		r.NoError(err)
@@ -48,8 +56,16 @@ func TestFunctionGrantCreate(t *testing.T) {
 func TestFunctionGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := functionGrant(t, "test-db|PUBLIC|test-function|USAGE|false", map[string]interface{}{
-		"function_name":     "test-function",
+	d := functionGrant(t, "test-db|PUBLIC|test-function(A ARRAY, B STRING):STRING|USAGE|false", map[string]interface{}{
+		"function_name": "test-function",
+		"arguments": []interface{}{map[string]interface{}{
+			"name": "a",
+			"type": "array",
+		}, map[string]interface{}{
+			"name": "b",
+			"type": "string",
+		}},
+		"return_type":       "string",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
 		"privilege":         "USAGE",
@@ -81,15 +97,15 @@ func expectReadFunctionGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
 	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-function", "ROLE", "test-role-1", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-db.test-schema.\"test-function(A ARRAY, B STRING):STRING\"", "ROLE", "test-role-1", false, "bob",
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-function", "ROLE", "test-role-2", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-db.test-schema.\"test-function(A ARRAY, B STRING):STRING\"", "ROLE", "test-role-2", false, "bob",
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-function", "SHARE", "test-share-1", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-db.test-schema.\"test-function(A ARRAY, B STRING):STRING\"", "SHARE", "test-share-1", false, "bob",
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-function", "SHARE", "test-share-2", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FUNCTION", "test-db.test-schema.\"test-function(A ARRAY, B STRING):STRING\"", "SHARE", "test-share-2", false, "bob",
 	)
-	mock.ExpectQuery(`^SHOW GRANTS ON FUNCTION "test-db"."PUBLIC"."test-function"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW GRANTS ON FUNCTION "test-db"."PUBLIC"."test-function"\(ARRAY, STRING\)$`).WillReturnRows(rows)
 }
 
 func TestFutureFunctionGrantCreate(t *testing.T) {

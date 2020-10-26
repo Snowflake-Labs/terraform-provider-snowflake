@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"strings"
 )
 
 type grantType string
@@ -147,10 +148,10 @@ func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
 }
 
 // FunctionGrant returns a pointer to a CurrentGrantBuilder for a view
-func FunctionGrant(db, schema, function string) GrantBuilder {
+func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          function,
-		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, function),
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"(%v)`, db, schema, function, strings.Join(argumentTypes, ", ")),
 		grantType:     functionType,
 	}
 }
