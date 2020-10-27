@@ -45,10 +45,10 @@ func TestAccSchemaGrant(t *testing.T) {
 				Config: futureTableAndViewGrantConfig(sName, roleNameTable, roleNameView),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.select_on_future_views", "roles.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_table_grant.select_on_future_tables", "roles.#", "1")
+					resource.TestCheckResourceAttr("snowflake_table_grant.select_on_future_tables", "roles.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.select_on_future_views", "privilege", "SELECT"),
-			//	),
-			//},
+				),
+			},
 			// IMPORT
 			{
 				ResourceName:      "snowflake_schema_grant.test",
@@ -59,7 +59,7 @@ func TestAccSchemaGrant(t *testing.T) {
 	})
 }
 
-func futureTableAndViewGrantConfig(n, role_table, role_view) string {
+func futureTableAndViewGrantConfig(n, role_table, role_view string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" { 
   name = "%v" 
