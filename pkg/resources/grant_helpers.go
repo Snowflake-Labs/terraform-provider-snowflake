@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -402,4 +404,54 @@ func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
 		shares = expandStringList(data.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
+}
+
+func parseCallableObjectName(objectName string) (map[string]interface{}, error) {
+	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
+	matches := r.FindStringSubmatch(objectName)
+	if len(matches) == 0 {
+		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
+	}
+	callableSignatureMap := make(map[string]interface{})
+
+	argumentsSignatures := strings.Split(matches[2], ", ")
+
+	arguments := make([]interface{}, len(argumentsSignatures))
+	argumentTypes := make([]string, len(argumentsSignatures))
+	argumentNames := make([]string, len(argumentsSignatures))
+
+	for i, argumentSignature := range argumentsSignatures {
+		signatureComponents := strings.Split(argumentSignature, " ")
+		argumentNames[i] = signatureComponents[0]
+		argumentTypes[i] = signatureComponents[1]
+		arguments[i] = map[string]interface{}{
+			"name": argumentNames[i],
+			"type": argumentTypes[i],
+		}
+	}
+
+	callableSignatureMap["callableName"] = matches[1]
+	callableSignatureMap["arguments"] = arguments
+	callableSignatureMap["argumentTypes"] = argumentTypes
+	callableSignatureMap["argumentNames"] = argumentNames
+	callableSignatureMap["returnType"] = matches[3]
+
+	return callableSignatureMap, nil
+}
+
+func formatCallableObjectName(callableName string, returnType string, arguments []interface{}) (string, []string, []string) {
+	argumentSignatures := make([]string, len(arguments))
+	argumentNames := make([]string, len(arguments))
+	argumentTypes := make([]string, len(arguments))
+
+	if arguments != nil {
+		for i, arg := range arguments {
+			argMap := arg.(map[string]interface{})
+			argumentNames[i] = strings.ToUpper(argMap["name"].(string))
+			argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
+			argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
+		}
+	}
+
+	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
 }

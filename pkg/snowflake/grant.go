@@ -157,10 +157,10 @@ func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBui
 }
 
 // ProcedureGrant returns a pointer to a CurrentGrantBuilder for a view
-func ProcedureGrant(db, schema, procedure string) GrantBuilder {
+func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          procedure,
-		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, procedure),
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"(%v)`, db, schema, procedure, strings.Join(argumentTypes, ", ")),
 		grantType:     procedureType,
 	}
 }

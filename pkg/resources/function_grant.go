@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -123,6 +121,7 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		arguments         []interface{}
 		returnType        string
 		functionSignature string
+		argumentTypes     []string
 	)
 	if _, ok := data.GetOk("function_name"); ok {
 		functionName = data.Get("function_name").(string)
@@ -148,18 +147,6 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	futureFunctions := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
-	argumentSignatures := make([]string, len(arguments))
-	argumentNames := make([]string, len(arguments))
-	argumentTypes := make([]string, len(arguments))
-
-	if arguments != nil {
-		for i, arg := range arguments {
-			argMap := arg.(map[string]interface{})
-			argumentNames[i] = strings.ToUpper(argMap["name"].(string))
-			argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
-			argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
-		}
-	}
 
 	if (schemaName == "") && !futureFunctions {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -173,9 +160,10 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if functionName != "" {
-		functionSignature = fmt.Sprintf(`%v(%v):%v`, functionName, strings.Join(argumentSignatures, ", "), returnType)
+		functionSignature, _, argumentTypes = formatCallableObjectName(functionName, returnType, arguments)
 	} else {
 		functionSignature = ""
+		argumentTypes = make([]string, 0)
 	}
 
 	var builder snowflake.GrantBuilder
@@ -239,11 +227,11 @@ func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		arguments = nil
 		argumentTypes = nil
 	} else {
-		functionSignatureMap, err := parseObjectName(functionSignature)
+		functionSignatureMap, err := parseCallableObjectName(functionSignature)
 		if err != nil {
 			return err
 		}
-		functionName = functionSignatureMap["functionName"].(string)
+		functionName = functionSignatureMap["callableName"].(string)
 		returnType = functionSignatureMap["returnType"].(string)
 		arguments = functionSignatureMap["arguments"].([]interface{})
 		argumentTypes = functionSignatureMap["argumentTypes"].([]string)
@@ -291,48 +279,20 @@ func DeleteFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	functionName := grantID.ObjectName
 
-	futureFunctions := (functionName == "")
+	futureFunctions := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if futureFunctions {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, make([]string, 0))
+		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
+		if err != nil {
+			return err
+		}
+		functionName := functionSignatureMap["callableName"].(string)
+		argumentTypes := functionSignatureMap["argumentTypes"].([]string)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 	return deleteGenericGrant(data, meta, builder)
-}
-
-func parseObjectName(objectName string) (map[string]interface{}, error) {
-	r := regexp.MustCompile(`(?P<function_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
-	matches := r.FindStringSubmatch(objectName)
-	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
-	}
-	functionSignatureMap := make(map[string]interface{})
-
-	argumentsSignatures := strings.Split(matches[2], ", ")
-
-	arguments := make([]interface{}, len(argumentsSignatures))
-	argumentTypes := make([]string, len(argumentsSignatures))
-	argumentNames := make([]string, len(argumentsSignatures))
-
-	for i, argumentSignature := range argumentsSignatures {
-		signatureComponents := strings.Split(argumentSignature, " ")
-		argumentNames[i] = signatureComponents[0]
-		argumentTypes[i] = signatureComponents[1]
-		arguments[i] = map[string]interface{}{
-			"name": argumentNames[i],
-			"type": argumentTypes[i],
-		}
-	}
-
-	functionSignatureMap["functionName"] = matches[1]
-	functionSignatureMap["arguments"] = arguments
-	functionSignatureMap["argumentTypes"] = argumentTypes
-	functionSignatureMap["argumentNames"] = argumentNames
-	functionSignatureMap["returnType"] = matches[3]
-
-	return functionSignatureMap, nil
 }
