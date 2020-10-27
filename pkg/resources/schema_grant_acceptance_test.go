@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
@@ -14,11 +16,9 @@ func TestAccSchemaGrant(t *testing.T) {
 		t.Skip("Skipping TestAccSchemaGrant")
 	}
 
-	sName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleNameTable := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleNameView := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -31,7 +31,7 @@ func TestAccSchemaGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
 				),
 			},
-			// FUTURE
+			// FUTURE SHARES
 			{
 				Config: schemaGrantConfig(sName, roleName, shareName, true),
 				Check: resource.ComposeTestCheckFunc(
@@ -40,6 +40,25 @@ func TestAccSchemaGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_schema_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSchemaFutureGrants(t *testing.T) {
+
+	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleNameTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleNameView := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
 			// TABLE AND VIEW FUTURE GRANTS
 			{
 				Config: futureTableAndViewGrantConfig(sName, roleNameTable, roleNameView),
@@ -51,7 +70,7 @@ func TestAccSchemaGrant(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_schema_grant.test",
+				ResourceName:      "snowflake_view_grant.select_on_future_views",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -85,7 +104,7 @@ resource "snowflake_table_grant" "select_on_future_tables" {
   privilege     = "SELECT"
   on_future     = true
   roles         = [snowflake_role.table_reader.name]
-  depends_on    = [snowflake_schema.test, snowflake_role.test]
+  depends_on    = [snowflake_schema.test, snowflake_role.table_reader]
 }
 
 resource "snowflake_view_grant" "select_on_future_views" {
@@ -94,7 +113,7 @@ resource "snowflake_view_grant" "select_on_future_views" {
   privilege     = "SELECT"
   on_future     = true
   roles         = [snowflake_role.view_reader.name]
-  depends_on    = [snowflake_schema.test, snowflake_role.test]
+  depends_on    = [snowflake_schema.test, snowflake_role.view_reader]
 }
 
 `, n, n, role_table, role_view)
