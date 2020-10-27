@@ -214,14 +214,17 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	priv := data.Get("privilege").(string)
 	grantOption := data.Get("with_grant_option").(bool)
 
-	// When onlySelect will be true, it means its a future privilege on View, thus we ignore TABLE privileges
-	// This is the only way how I can test that this function is reading VIEW grants and not TABLE grants
+	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
+	// is checking what kind of builder we have. If it is future grant, then I doubple check if the
+	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
+	// Truncate then it must be Table
 	futureGrantOnViews := false
 	futureGrantOnTables := false
 	if reflect.TypeOf(builder) == reflect.TypeOf(&snowflake.FutureGrantBuilder{}) {
 		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
 			futureGrantOnViews = true
-		} else {
+		}
+		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 6 {
 			futureGrantOnTables = true
 		}
 	}
