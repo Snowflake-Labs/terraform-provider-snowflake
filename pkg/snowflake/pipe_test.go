@@ -47,5 +47,5 @@ func TestPipeDrop(t *testing.T) {
 func TestPipeShow(t *testing.T) {
 	r := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW PIPES LIKE 'test_pipe' IN SCHEMA "test_db"."test_schema"`)
 }
