@@ -58,6 +58,14 @@ func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 	return d
 }
 
+func materializedViewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Schema, params)
@@ -148,6 +156,22 @@ func externalTableGrant(t *testing.T, id string, params map[string]interface{}) 
 func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

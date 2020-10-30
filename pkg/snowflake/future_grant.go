@@ -8,13 +8,16 @@ type futureGrantType string
 type futureGrantTarget string
 
 const (
-	futureSchemaType        futureGrantType = "SCHEMA"
-	futureTableType         futureGrantType = "TABLE"
-	futureViewType          futureGrantType = "VIEW"
-	futureExternalTableType futureGrantType = "EXTERNAL TABLE"
-	futureFileFormatType    futureGrantType = "FILE FORMAT"
-	futureFunctionType      futureGrantType = "FUNCTION"
-	futureProcedureType     futureGrantType = "PROCEDURE"
+	futureSchemaType           futureGrantType = "SCHEMA"
+	futureTableType            futureGrantType = "TABLE"
+	futureViewType             futureGrantType = "VIEW"
+	futureMaterializedViewType futureGrantType = "MATERIALIZED VIEW"
+	futureExternalTableType    futureGrantType = "EXTERNAL TABLE"
+	futureFileFormatType       futureGrantType = "FILE FORMAT"
+	futureFunctionType         futureGrantType = "FUNCTION"
+	futureProcedureType        futureGrantType = "PROCEDURE"
+	futureSequenceType futureGrantType = "SEQUENCE"
+	futureStreamType           futureGrantType = "STREAM"
 )
 
 const (
@@ -81,6 +84,17 @@ func FutureViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
+// FutureMaterializedViewGrant returns a pointer to a FutureGrantBuilder for a view
+func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureMaterializedViewType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
 // FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a view
 func FutureExternalTableGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
@@ -121,6 +135,28 @@ func FutureProcedureGrant(db, schema string) GrantBuilder {
 		name:              name,
 		qualifiedName:     qualifiedName,
 		futureGrantType:   futureProcedureType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a view
+func FutureSequenceGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureSequenceType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureStreamGrant returns a pointer to a FutureGrantBuilder for a view
+func FutureStreamGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureStreamType,
 		futureGrantTarget: futureTarget,
 	}
 }

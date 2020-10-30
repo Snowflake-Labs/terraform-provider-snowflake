@@ -23,6 +23,8 @@ const (
 	fileFormatType    grantType = "FILE FORMAT"
 	functionType      grantType = "FUNCTION"
 	procedureType     grantType = "PROCEDURE"
+	sequenceType grantType = "SEQUENCE"
+	streamType        grantType = "STREAM"
 )
 
 type GrantExecutable interface {
@@ -162,6 +164,24 @@ func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantB
 		name:          procedure,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"(%v)`, db, schema, procedure, strings.Join(argumentTypes, ", ")),
 		grantType:     procedureType,
+	}
+}
+
+// SequenceGrant returns a pointer to a CurrentGrantBuilder for a view
+func SequenceGrant(db, schema, sequence string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          sequence,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, sequence),
+		grantType:     sequenceType,
+	}
+}
+
+// StreamGrant returns a pointer to a CurrentGrantBuilder for a view
+func StreamGrant(db, schema, stream string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          stream,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, stream),
+		grantType:     streamType,
 	}
 }
 
