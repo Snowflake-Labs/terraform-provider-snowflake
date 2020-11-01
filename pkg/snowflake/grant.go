@@ -23,7 +23,7 @@ const (
 	fileFormatType    grantType = "FILE FORMAT"
 	functionType      grantType = "FUNCTION"
 	procedureType     grantType = "PROCEDURE"
-	sequenceType grantType = "SEQUENCE"
+	sequenceType      grantType = "SEQUENCE"
 	streamType        grantType = "STREAM"
 )
 

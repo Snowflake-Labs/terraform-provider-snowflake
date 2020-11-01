@@ -23,7 +23,7 @@ func TestStreamGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"stream_name":  "test-stream",
+		"stream_name":       "test-stream",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
 		"privilege":         "SELECT",
@@ -46,7 +46,7 @@ func TestStreamGrantRead(t *testing.T) {
 	r := require.New(t)
 
 	d := streamGrant(t, "test-db|PUBLIC|test-stream|SELECT|false", map[string]interface{}{
-		"stream_name":  "test-stream",
+		"stream_name":       "test-stream",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
 		"privilege":         "SELECT",

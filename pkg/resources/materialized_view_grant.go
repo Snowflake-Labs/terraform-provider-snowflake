@@ -7,10 +7,11 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
+
 /*
 newPriviligeSet creates a set of privileges that are allowed
 They are used for validation in the schema object below.
- */
+*/
 
 var validMaterializedViewPrivileges = newPrivilegeSet(
 	privilegeSelect,
@@ -92,8 +93,8 @@ func MaterializedViewGrant() *schema.Resource {
 // CreateViewGrant implements schema.CreateFunc
 func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
-		materializedViewName   string
-		schemaName string
+		materializedViewName string
+		schemaName           string
 	)
 	if _, ok := data.GetOk("materialized_view_name"); ok {
 		materializedViewName = data.Get("materialized_view_name").(string)

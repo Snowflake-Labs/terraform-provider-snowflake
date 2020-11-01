@@ -23,7 +23,7 @@ func TestSequenceGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"sequence_name":  "test-sequence",
+		"sequence_name":     "test-sequence",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
 		"privilege":         "USAGE",

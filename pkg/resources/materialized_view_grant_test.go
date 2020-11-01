@@ -23,13 +23,13 @@ func TestMaterializedViewGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"materialized_view_name":         "test-view",
-		"schema_name":       "PUBLIC",
-		"database_name":     "test-db",
-		"privilege":         "SELECT",
-		"roles":             []interface{}{"test-role-1", "test-role-2"},
-		"shares":            []interface{}{"test-share-1", "test-share-2"},
-		"with_grant_option": true,
+		"materialized_view_name": "test-view",
+		"schema_name":            "PUBLIC",
+		"database_name":          "test-db",
+		"privilege":              "SELECT",
+		"roles":                  []interface{}{"test-role-1", "test-role-2"},
+		"shares":                 []interface{}{"test-share-1", "test-share-2"},
+		"with_grant_option":      true,
 	}
 	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Schema, in)
 	r.NotNil(d)
@@ -49,13 +49,13 @@ func TestMaterializedViewGrantRead(t *testing.T) {
 	r := require.New(t)
 
 	d := materializedViewGrant(t, "test-db|PUBLIC|test-materialized-view|SELECT|false", map[string]interface{}{
-		"materialized_view_name":         "test-materialized-view",
-		"schema_name":       "PUBLIC",
-		"database_name":     "test-db",
-		"privilege":         "SELECT",
-		"roles":             []interface{}{},
-		"shares":            []interface{}{},
-		"with_grant_option": false,
+		"materialized_view_name": "test-materialized-view",
+		"schema_name":            "PUBLIC",
+		"database_name":          "test-db",
+		"privilege":              "SELECT",
+		"roles":                  []interface{}{},
+		"shares":                 []interface{}{},
+		"with_grant_option":      false,
 	})
 
 	r.NotNil(d)
