@@ -10,6 +10,7 @@ import (
 
 var ValidViewPrivileges = newPrivilegeSet(
 	privilegeSelect,
+	privilegeOwnership,
 )
 
 var viewGrantSchema = map[string]*schema.Schema{

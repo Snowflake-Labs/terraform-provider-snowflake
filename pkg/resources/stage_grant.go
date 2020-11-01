@@ -19,7 +19,7 @@ var ValidStagePrivileges = newPrivilegeSet(
 var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The name of the stage on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -56,6 +56,14 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Grants privilege to these shares.",
 		ForceNew:    true,
+	},
+	"on_future": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stage_name", "shares"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,

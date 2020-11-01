@@ -12,11 +12,12 @@ const (
 	futureTableType            futureGrantType = "TABLE"
 	futureViewType             futureGrantType = "VIEW"
 	futureMaterializedViewType futureGrantType = "MATERIALIZED VIEW"
+	futureStageType            futureGrantType = "STAGE"
 	futureExternalTableType    futureGrantType = "EXTERNAL TABLE"
 	futureFileFormatType       futureGrantType = "FILE FORMAT"
 	futureFunctionType         futureGrantType = "FUNCTION"
 	futureProcedureType        futureGrantType = "PROCEDURE"
-	futureSequenceType futureGrantType = "SEQUENCE"
+	futureSequenceType         futureGrantType = "SEQUENCE"
 	futureStreamType           futureGrantType = "STREAM"
 )
 
@@ -91,6 +92,17 @@ func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
 		name:              name,
 		qualifiedName:     qualifiedName,
 		futureGrantType:   futureMaterializedViewType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureStageGrant returns a pointer to a FutureGrantBuilder for a table
+func FutureStageGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureStageType,
 		futureGrantTarget: futureTarget,
 	}
 }

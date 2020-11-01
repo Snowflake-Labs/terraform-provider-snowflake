@@ -15,6 +15,7 @@ var validTablePrivileges = newPrivilegeSet(
 	privilegeDelete,
 	privilegeTruncate,
 	privilegeReferences,
+	privilegeOwnership,
 )
 
 var tableGrantSchema = map[string]*schema.Schema{
