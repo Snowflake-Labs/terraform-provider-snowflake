@@ -14,6 +14,7 @@ They are used for validation in the schema object below.
 */
 
 var validMaterializedViewPrivileges = newPrivilegeSet(
+	privilegeOwnership,
 	privilegeSelect,
 )
 

@@ -9,6 +9,7 @@ import (
 )
 
 var validStreamPrivileges = newPrivilegeSet(
+	privilegeOwnership,
 	privilegeSelect,
 )
 

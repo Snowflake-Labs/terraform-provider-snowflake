@@ -9,6 +9,7 @@ import (
 )
 
 var validSequencePrivileges = newPrivilegeSet(
+	privilegeOwnership,
 	privilegeUsage,
 )
 
