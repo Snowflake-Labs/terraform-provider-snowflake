@@ -83,6 +83,7 @@ func Provider() *schema.Provider {
 			"snowflake_schema":                    resources.Schema(),
 			"snowflake_schema_grant":              resources.SchemaGrant(),
 			"snowflake_share":                     resources.Share(),
+			"snowflake_sql_script":                resources.SqlScript(),
 			"snowflake_stage":                     resources.Stage(),
 			"snowflake_stage_grant":               resources.StageGrant(),
 			"snowflake_storage_integration":       resources.StorageIntegration(),
