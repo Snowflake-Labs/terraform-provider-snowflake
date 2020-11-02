@@ -26,7 +26,7 @@ func TestSqlScriptCreate(t *testing.T) {
 		"lifecycle": []interface{}{
 			map[string]interface{}{
 				"create": "CREATE DATABASE good_name", // test arbitrary sql statement
-				"delete": "CREATE DATABASE good_name", // test arbitrary sql statement
+				"delete": "DROP DATABASE good_name",   // test arbitrary sql statement
 			},
 		},
 	}
@@ -40,6 +40,32 @@ func TestSqlScriptCreate(t *testing.T) {
 		// The mock works when you call snowflake.Exec directly but not via
 		// resources.CreateSqlScript. Not sure why that is.
 		// err := snowflake.Exec(db, "CREATE DATABASE good_name")
+		r.NoError(err)
+	})
+}
+
+func TestSqlScriptDelete(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name": "test_sql_script",
+		"lifecycle": []interface{}{
+			map[string]interface{}{
+				"create": "CREATE DATABASE good_name", // test arbitrary sql statement
+				"delete": "DROP DATABASE good_name",   // test arbitrary sql statement
+			},
+		},
+	}
+	d := schema.TestResourceDataRaw(t, resources.SqlScript().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec("DROP DATABASE good_name").WillReturnResult(sqlmock.NewResult(1, 1))
+
+		err := resources.DeleteSqlScript(d, db)
+		// The mock works when you call snowflake.Exec directly but not via
+		// resources.DeleteSqlScript. Not sure why that is.
+		// err := snowflake.Exec(db, "DROP DATABASE good_name")
 		r.NoError(err)
 	})
 }
