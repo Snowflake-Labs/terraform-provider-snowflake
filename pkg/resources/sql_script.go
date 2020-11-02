@@ -1,8 +1,8 @@
 package resources
 
 import (
-	"log"
 	"database/sql"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/pkg/errors"
@@ -60,7 +60,6 @@ func SqlScript() *schema.Resource {
 	}
 }
 
-// CreateSqlScript implements schema.CreateFunc
 func CreateSqlScript(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Get("name").(string)
@@ -68,61 +67,39 @@ func CreateSqlScript(data *schema.ResourceData, meta interface{}) error {
 	c := l[0].(map[string]interface{})
 	script := c["create"].(string)
 
-	log.Printf("[DEBUG] create sql script: %v", script)
 	err := snowflake.Exec(db, script)
 	if err != nil {
 		return errors.Wrapf(err, "error with create sql script '%v': %v", name, script)
 	}
 
 	data.SetId(name)
-	return nil
+	return ReadSqlScript(data, meta)
 }
 
-// ReadSqlScript implements schema.ReadFunc
 func ReadSqlScript(data *schema.ResourceData, meta interface{}) error {
-	// db := meta.(*sql.DB)
-	// name := data.Get("name").(string)
-	// l := data.Get("lifecycle_commands").([]interface{})
-	// c := l[0].(map[string]interface{})
-	// script := c["read"].(string)
+	l := data.Get("lifecycle_commands").([]interface{})
+	c := l[0].(map[string]interface{})
+	script := c["read"].(string)
 
-	// log.Printf("[DEBUG] read sql script: %v", script)
-	// rows, err := snowflake.Query(db, script)
-	// if err != nil {
-	// 	return errors.Wrapf(err, "error with read sql script '%v': %v", name, script)
-	// }
-
-	// err = data.Set("rows", rows)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil	
-}
-
-// UpdateSqlScript implements schema.UpdateFunc
-func UpdateSqlScript(data *schema.ResourceData, meta interface{}) error {
-	// db := meta.(*sql.DB)
-	// name := data.Get("name").(string)
-	// l := data.Get("lifecycle_commands").([]interface{})
-	// c := l[0].(map[string]interface{})
-	// script := c["update"].(string)
-
-	// log.Printf("[DEBUG] update sql script: %v", script)
-	// err := snowflake.Exec(db, script)
-	// if err != nil {
-	// 	return errors.Wrapf(err, "error with update sql script '%v': %v", name, script)
-	// }
-
-	// err = ReadSqlScript(data, meta)
-	// if err != nil {
-	// 	return err
-	// }
+	if len(script) != 0 {
+		log.Printf("[WARN] snowflake_sql read is not implemented and does nothing.")
+	}
 
 	return nil
 }
 
-// DeleteSqlScript implements schema.DeleteFunc
+func UpdateSqlScript(data *schema.ResourceData, meta interface{}) error {
+	l := data.Get("lifecycle_commands").([]interface{})
+	c := l[0].(map[string]interface{})
+	script := c["update"].(string)
+
+	if len(script) != 0 {
+		log.Printf("[WARN] snowflake_sql update is not implemented and does nothing.")
+	}
+
+	return nil
+}
+
 func DeleteSqlScript(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := data.Id()
@@ -130,7 +107,6 @@ func DeleteSqlScript(data *schema.ResourceData, meta interface{}) error {
 	c := l[0].(map[string]interface{})
 	script := c["delete"].(string)
 
-	log.Printf("[DEBUG] delete sql script: %v", script)
 	err := snowflake.Exec(db, script)
 	if err != nil {
 		return errors.Wrapf(err, "error with delete sql script '%v': %v", name, script)
@@ -139,4 +115,3 @@ func DeleteSqlScript(data *schema.ResourceData, meta interface{}) error {
 	data.SetId("")
 	return nil
 }
-
