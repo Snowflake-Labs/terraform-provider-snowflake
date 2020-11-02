@@ -122,7 +122,7 @@ func (pb *PipeBuilder) Drop() string {
 
 // Show returns the SQL query that will show a pipe.
 func (pb *PipeBuilder) Show() string {
-	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN DATABASE "%v"`, pb.name, pb.db)
+	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
 }
 
 type pipe struct {
