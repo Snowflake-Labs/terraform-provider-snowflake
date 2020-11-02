@@ -195,7 +195,7 @@ func (sb *StageBuilder) Describe() string {
 
 // Show returns the SQL query that will show a stage.
 func (sb *StageBuilder) Show() string {
-	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
 type stage struct {

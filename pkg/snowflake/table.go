@@ -118,7 +118,7 @@ func (tb *TableBuilder) Drop() string {
 
 // Show returns the SQL query that will show a table.
 func (tb *TableBuilder) Show() string {
-	return fmt.Sprintf(`SHOW TABLES LIKE '%v' IN DATABASE "%v"`, tb.name, tb.db)
+	return fmt.Sprintf(`SHOW TABLES LIKE '%v' IN SCHEMA "%v"."%v"`, tb.name, tb.db, tb.schema)
 }
 
 type table struct {

@@ -39,5 +39,5 @@ func TestTableDrop(t *testing.T) {
 func TestTableShow(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW TABLES LIKE 'test_table' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW TABLES LIKE 'test_table' IN SCHEMA "test_db"."test_schema"`)
 }
