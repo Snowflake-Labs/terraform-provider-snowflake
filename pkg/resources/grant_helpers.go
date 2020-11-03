@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -213,6 +214,21 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	priv := data.Get("privilege").(string)
 	grantOption := data.Get("with_grant_option").(bool)
 
+	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
+	// is checking what kind of builder we have. If it is future grant, then I doubple check if the
+	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
+	// Truncate then it must be Table
+	futureGrantOnViews := false
+	futureGrantOnTables := false
+	if reflect.TypeOf(builder) == reflect.TypeOf(&snowflake.FutureGrantBuilder{}) {
+		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
+			futureGrantOnViews = true
+		}
+		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 6 {
+			futureGrantOnTables = true
+		}
+	}
+
 	// We re-aggregate grants that would be equivalent to the "ALL" grant
 	grants = filterALLGrants(grants, validPrivileges)
 
@@ -231,8 +247,16 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				// If not there, create an empty set
 				privileges = privilegeSet{}
 			}
-			// Add privilege to the set
-			privileges.addString(grant.Privilege)
+			// Add privilege to the set but consider valid privileges only
+			// for VIEW in ReadViewGrant
+			// and for non-VIEW in ReadTableGrant
+			if futureGrantOnViews || futureGrantOnTables {
+				if (futureGrantOnViews && grant.GrantType == "VIEW") || (futureGrantOnTables && grant.GrantType == "TABLE") {
+					privileges.addString(grant.Privilege)
+				}
+			} else { // Other grants
+				privileges.addString(grant.Privilege)
+			}
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
