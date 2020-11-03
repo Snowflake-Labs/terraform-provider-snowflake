@@ -29,19 +29,19 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the schema containing the current or future views on which to grant privileges.",
+		Description: "The name of the schema containing the current or future materialized views on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The name of the database containing the current or future views on which to grant privileges.",
+		Description: "The name of the database containing the current or future materialized views on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future view.",
+		Description:  "The privilege to grant on the current or future materialized view view.",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.toList(), true),
 		ForceNew:     true,
@@ -63,7 +63,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The materialized_view_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all future materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"materialized_view_name", "shares"},
@@ -109,24 +109,30 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
-	futureViews := data.Get("on_future").(bool)
+	futureMaterializedViews := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
 
-	if (schemaName == "") && !futureViews {
+	if (schemaName == "") && !futureMaterializedViews {
 		return errors.New("schema_name must be set unless on_future is true.")
 	}
 
-	if (materializedViewName == "") && !futureViews {
+	if (materializedViewName == "") && !futureMaterializedViews {
 		return errors.New("materialized_view_name must be set unless on_future is true.")
 	}
-	if (materializedViewName != "") && futureViews {
+	if (materializedViewName != "") && futureMaterializedViews {
 		return errors.New("materialized_view_name must be empty if on_future is true.")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	if futureMaterializedViews {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
+		/*
+		Snowflake does not support GRANT syntax for non-future materialized views specifically.
+		e.g. the following will not work:
+		GRANT SELECT ON MATERIALIZED VIEW EXAMPLE_MATERIALIZED_VIEW TO ROLE PUBLIC
+		So, to keep a consistent Terraform resource syntax, just use view grant syntax for now.
+		*/
 		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)
 	}
 
@@ -170,15 +176,15 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
-	futureViewsEnabled := false
+	futureMaterializedViewsEnabled := false
 	if materializedViewName == "" {
-		futureViewsEnabled = true
+		futureMaterializedViewsEnabled = true
 	}
 	err = data.Set("materialized_view_name", materializedViewName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureViewsEnabled)
+	err = data.Set("on_future", futureMaterializedViewsEnabled)
 	if err != nil {
 		return err
 	}
@@ -192,13 +198,13 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViewsEnabled {
+	if futureMaterializedViewsEnabled {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureViewsEnabled, validMaterializedViewPrivileges)
+	return readGenericGrant(data, meta, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc
@@ -211,10 +217,10 @@ func DeleteMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	schemaName := grantID.SchemaName
 	materializedViewName := grantID.ObjectName
 
-	futureViews := (materializedViewName == "")
+	futureMaterializedViews := (materializedViewName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	if futureMaterializedViews {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)

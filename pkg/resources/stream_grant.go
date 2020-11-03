@@ -17,25 +17,25 @@ var streamGrantSchema = map[string]*schema.Schema{
 	"stream_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the file format on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the schema containing the current or future file formats on which to grant privileges.",
+		Description: "The name of the schema containing the current or future streams on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The name of the database containing the current or future file formats on which to grant privileges.",
+		Description: "The name of the database containing the current or future streams on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future file format.",
+		Description:  "The privilege to grant on the current or future stream.",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validStreamPrivileges.toList(), true),
 		ForceNew:     true,
@@ -50,7 +50,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The stream_name field must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future streams in the given schema. When this is true and no schema_name is provided apply this grant on all future streams in the given database. The stream_name field must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"stream_name"},
@@ -64,7 +64,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// StreamGrant returns a pointer to the resource representing a file format grant
+// StreamGrant returns a pointer to the resource representing a stream grant
 func StreamGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateStreamGrant,
@@ -78,16 +78,16 @@ func StreamGrant() *schema.Resource {
 	}
 }
 
-// CreateFileFormatGrant implements schema.CreateFunc
+// CreateStreamGrant implements schema.CreateFunc
 func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
-		fileFormatName string
+		streamName string
 		schemaName     string
 	)
 	if _, ok := data.GetOk("stream_name"); ok {
-		fileFormatName = data.Get("stream_name").(string)
+		streamName = data.Get("stream_name").(string)
 	} else {
-		fileFormatName = ""
+		streamName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
@@ -96,25 +96,25 @@ func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
-	futureFileFormats := data.Get("on_future").(bool)
+	futureStreams := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
 
-	if (schemaName == "") && !futureFileFormats {
+	if (schemaName == "") && !futureStreams {
 		return errors.New("schema_name must be set unless on_future is true.")
 	}
 
-	if (fileFormatName == "") && !futureFileFormats {
+	if (streamName == "") && !futureStreams {
 		return errors.New("stream_name must be set unless on_future is true.")
 	}
-	if (fileFormatName != "") && futureFileFormats {
+	if (streamName != "") && futureStreams {
 		return errors.New("stream_name must be empty if on_future is true.")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormats {
+	if futureStreams {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.StreamGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
 	}
 
 	err := createGenericGrant(data, meta, builder)
@@ -125,7 +125,7 @@ func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:   fileFormatName,
+		ObjectName:   streamName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
 	}
@@ -138,7 +138,7 @@ func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	return ReadStreamGrant(data, meta)
 }
 
-// ReadFileFormatGrant implements schema.ReadFunc
+// ReadStreamGrant implements schema.ReadFunc
 func ReadStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
@@ -146,7 +146,7 @@ func ReadStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	fileFormatName := grantID.ObjectName
+	streamName := grantID.ObjectName
 	priv := grantID.Privilege
 
 	err = data.Set("database_name", dbName)
@@ -157,15 +157,15 @@ func ReadStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	futureFileFormatsEnabled := false
-	if fileFormatName == "" {
-		futureFileFormatsEnabled = true
+	futureStreamsEnabled := false
+	if streamName == "" {
+		futureStreamsEnabled = true
 	}
-	err = data.Set("stream_name", fileFormatName)
+	err = data.Set("stream_name", streamName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureFileFormatsEnabled)
+	err = data.Set("on_future", futureStreamsEnabled)
 	if err != nil {
 		return err
 	}
@@ -179,16 +179,16 @@ func ReadStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormatsEnabled {
+	if futureStreamsEnabled {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.StreamGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureFileFormatsEnabled, validStreamPrivileges)
+	return readGenericGrant(data, meta, builder, futureStreamsEnabled, validStreamPrivileges)
 }
 
-// DeleteFileFormatGrant implements schema.DeleteFunc
+// DeleteStreamGrant implements schema.DeleteFunc
 func DeleteStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
@@ -196,15 +196,15 @@ func DeleteStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	fileFormatName := grantID.ObjectName
+	streamName := grantID.ObjectName
 
-	futureFileFormats := (fileFormatName == "")
+	futureStreams := (streamName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormats {
+	if futureStreams {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.StreamGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
 	}
 	return deleteGenericGrant(data, meta, builder)
 }

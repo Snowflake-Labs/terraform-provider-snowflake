@@ -17,25 +17,25 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	"sequence_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the file format on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the sequence on which to grant privileges immediately (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the schema containing the current or future file formats on which to grant privileges.",
+		Description: "The name of the schema containing the current or future sequences on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The name of the database containing the current or future file formats on which to grant privileges.",
+		Description: "The name of the database containing the current or future sequences on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future file format.",
+		Description:  "The privilege to grant on the current or future sequence.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validSequencePrivileges.toList(), true),
 		ForceNew:     true,
@@ -50,7 +50,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The sequence_name field must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future sequences in the given schema. When this is true and no schema_name is provided apply this grant on all future sequences in the given database. The sequence_name field must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"sequence_name"},
@@ -64,7 +64,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// SequenceGrant returns a pointer to the resource representing a file format grant
+// SequenceGrant returns a pointer to the resource representing a sequence grant
 func SequenceGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSequenceGrant,
@@ -78,16 +78,16 @@ func SequenceGrant() *schema.Resource {
 	}
 }
 
-// CreateFileFormatGrant implements schema.CreateFunc
+// CreateSequenceGrant implements schema.CreateFunc
 func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
-		fileFormatName string
+		sequenceName string
 		schemaName     string
 	)
 	if _, ok := data.GetOk("sequence_name"); ok {
-		fileFormatName = data.Get("sequence_name").(string)
+		sequenceName = data.Get("sequence_name").(string)
 	} else {
-		fileFormatName = ""
+		sequenceName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
@@ -96,25 +96,25 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
-	futureFileFormats := data.Get("on_future").(bool)
+	futureSequences := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
 
-	if (schemaName == "") && !futureFileFormats {
+	if (schemaName == "") && !futureSequences {
 		return errors.New("schema_name must be set unless on_future is true.")
 	}
 
-	if (fileFormatName == "") && !futureFileFormats {
+	if (sequenceName == "") && !futureSequences {
 		return errors.New("sequence_name must be set unless on_future is true.")
 	}
-	if (fileFormatName != "") && futureFileFormats {
+	if (sequenceName != "") && futureSequences {
 		return errors.New("sequence_name must be empty if on_future is true.")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormats {
+	if futureSequences {
 		builder = snowflake.FutureSequenceGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.SequenceGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
 	err := createGenericGrant(data, meta, builder)
@@ -125,7 +125,7 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:   fileFormatName,
+		ObjectName:   sequenceName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
 	}
@@ -138,7 +138,7 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	return ReadSequenceGrant(data, meta)
 }
 
-// ReadFileFormatGrant implements schema.ReadFunc
+// ReadSequenceGrant implements schema.ReadFunc
 func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
@@ -146,7 +146,7 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	fileFormatName := grantID.ObjectName
+	sequenceName := grantID.ObjectName
 	priv := grantID.Privilege
 
 	err = data.Set("database_name", dbName)
@@ -157,15 +157,15 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	futureFileFormatsEnabled := false
-	if fileFormatName == "" {
-		futureFileFormatsEnabled = true
+	futureSequencesEnabled := false
+	if sequenceName == "" {
+		futureSequencesEnabled = true
 	}
-	err = data.Set("sequence_name", fileFormatName)
+	err = data.Set("sequence_name", sequenceName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureFileFormatsEnabled)
+	err = data.Set("on_future", futureSequencesEnabled)
 	if err != nil {
 		return err
 	}
@@ -179,16 +179,16 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormatsEnabled {
+	if futureSequencesEnabled {
 		builder = snowflake.FutureSequenceGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.SequenceGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureFileFormatsEnabled, validSequencePrivileges)
+	return readGenericGrant(data, meta, builder, futureSequencesEnabled, validSequencePrivileges)
 }
 
-// DeleteFileFormatGrant implements schema.DeleteFunc
+// DeleteSequenceGrant implements schema.DeleteFunc
 func DeleteSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(data.Id())
 	if err != nil {
@@ -196,15 +196,15 @@ func DeleteSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	fileFormatName := grantID.ObjectName
+	sequenceName := grantID.ObjectName
 
-	futureFileFormats := (fileFormatName == "")
+	futureSequences := (sequenceName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureFileFormats {
+	if futureSequences {
 		builder = snowflake.FutureSequenceGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.SequenceGrant(dbName, schemaName, fileFormatName)
+		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 	return deleteGenericGrant(data, meta, builder)
 }
