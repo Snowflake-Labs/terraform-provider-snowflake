@@ -137,6 +137,14 @@ func user(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 	return d
 }
 
+func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)

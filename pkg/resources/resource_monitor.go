@@ -26,7 +26,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "The number of credits allocated monthly to the resource monitor.",
-		ForceNew:    true,
 	},
 	"frequency": {
 		Type:         schema.TypeString,
@@ -77,7 +76,7 @@ func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateResourceMonitor,
 		Read:   ReadResourceMonitor,
-		// Update: UpdateResourceMonitor, @TODO implement updates
+		Update: UpdateResourceMonitor,
 		Delete: DeleteResourceMonitor,
 		Exists: ResourceMonitorExists,
 
@@ -229,6 +228,28 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 		out = append(out, myInt)
 	}
 	return out, nil
+}
+
+// UpdateResourceMonitor implements schema.UpdateFunc
+func UpdateResourceMonitor(data *schema.ResourceData, meta interface{}) error {
+	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
+	data.Partial(true)
+
+	builder := snowflake.ResourceMonitor(data.Id())
+
+	db := meta.(*sql.DB)
+	if data.HasChange("credit_quota") {
+		_, creditQuota := data.GetChange("credit_quota")
+		q := builder.ChangeCreditQuota(creditQuota.(int))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating resourceMonitor credit_quota on %v", data.Id())
+		}
+
+		data.SetPartial("credit_quota")
+	}
+
+	return ReadResourceMonitor(data, meta)
 }
 
 // DeleteResourceMonitor implements schema.DeleteFunc

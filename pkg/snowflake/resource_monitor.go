@@ -117,6 +117,11 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	return sb.String()
 }
 
+// ChangeCreditQuota returns the SQL query that will update the credit_quota on the resource monitor.
+func (rb *ResourceMonitorBuilder) ChangeCreditQuota(cq int) string {
+	return fmt.Sprintf(`ALTER RESOURCE MONITOR %v SET CREDIT_QUOTA = %d`, rb.name, cq)
+}
+
 type resourceMonitor struct {
 	Name                 sql.NullString `db:"name"`
 	CreditQuota          sql.NullString `db:"credit_quota"`

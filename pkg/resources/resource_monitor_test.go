@@ -55,6 +55,23 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 	mock.ExpectQuery(`^SHOW RESOURCE MONITORS LIKE 'good_name'$`).WillReturnRows(rows)
 }
 
+func TestResourceMonitorUpdate(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":         "good_name",
+		"credit_quota": 50,
+	}
+
+	d := resourceMonitor(t, "good_name", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`ALTER RESOURCE MONITOR good_name SET CREDIT_QUOTA = 50`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadResourceMonitor(mock)
+		err := resources.UpdateResourceMonitor(d, db)
+		r.NoError(err)
+	})
+}
 func TestResourceMonitorDelete(t *testing.T) {
 	r := require.New(t)
 
