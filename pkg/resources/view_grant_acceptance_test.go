@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccViewGrantBasic(t *testing.T) {
+func TestAccMaterializedViewGrantBasic(t *testing.T) {
 	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
@@ -30,7 +30,7 @@ func TestAccViewGrantBasic(t *testing.T) {
 	})
 }
 
-func TestAccViewGrantShares(t *testing.T) {
+func TestAccMaterializedViewGrantShares(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccViewGrantShares")
 	}
@@ -54,7 +54,7 @@ func TestAccViewGrantShares(t *testing.T) {
 	})
 }
 
-func TestAccFutureViewGrantChange(t *testing.T) {
+func TestAccFutureMaterializedViewGrantChange(t *testing.T) {
 	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
@@ -89,7 +89,7 @@ func TestAccFutureViewGrantChange(t *testing.T) {
 	})
 }
 
-func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share string) string {
+func materializedViewGrantConfigShares(t *testing.T, database_name, view_name, role, share string) string {
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
@@ -143,7 +143,7 @@ resource "snowflake_view_grant" "test" {
 	return out.String()
 }
 
-func viewGrantConfigFuture(t *testing.T, database_name, view_name string, role string, future bool) string {
+func materializedViewGrantConfigFuture(t *testing.T, database_name, view_name string, role string, future bool) string {
 	r := require.New(t)
 
 	view_name_config := "view_name = snowflake_view.test.name"
