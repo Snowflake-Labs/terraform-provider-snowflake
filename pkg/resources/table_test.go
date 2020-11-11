@@ -40,7 +40,7 @@ func TestTableCreate(t *testing.T) {
 
 func expectTableRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "primary key", "unique key", "check", "expression", "comment"}).AddRow("good_name", "VARCHAR()", "COLUMN", "Y", "NULL", "NULL", "N", "N", "NULL", "mock comment")
-	mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN DATABASE "database_name"`).WillReturnRows(rows)
+	mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
 }
 
 func TestTableRead(t *testing.T) {
