@@ -82,7 +82,7 @@ func SequenceGrant() *schema.Resource {
 func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
 		sequenceName string
-		schemaName     string
+		schemaName   string
 	)
 	if _, ok := data.GetOk("sequence_name"); ok {
 		sequenceName = data.Get("sequence_name").(string)

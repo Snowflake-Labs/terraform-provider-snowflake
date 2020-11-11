@@ -82,7 +82,7 @@ func StreamGrant() *schema.Resource {
 func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	var (
 		streamName string
-		schemaName     string
+		schemaName string
 	)
 	if _, ok := data.GetOk("stream_name"); ok {
 		streamName = data.Get("stream_name").(string)
