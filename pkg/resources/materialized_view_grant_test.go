@@ -147,9 +147,9 @@ func expectReadFutureMaterializedViewGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
 	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "MATERIALIZED_VIEWS", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-1", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "MATERIALIZED_VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-1", false,
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "MATERIALIZED_VIEWS", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-2", false,
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "MATERIALIZED_VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-2", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN SCHEMA "test-db"."PUBLIC"$`).WillReturnRows(rows)
 }

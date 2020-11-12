@@ -53,6 +53,10 @@ func (fgb *FutureGrantBuilder) Name() string {
 	return fgb.name
 }
 
+func (fgb *FutureGrantBuilder) GrantType() string {
+	return string(fgb.futureGrantType)
+}
+
 // FutureSchemaGrant returns a pointer to a FutureGrantBuilder for a schema
 func FutureSchemaGrant(db string) GrantBuilder {
 	return &FutureGrantBuilder{

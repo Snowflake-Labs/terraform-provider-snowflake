@@ -35,6 +35,7 @@ type GrantExecutable interface {
 
 type GrantBuilder interface {
 	Name() string
+	GrantType() string
 	Role(string) GrantExecutable
 	Share(string) GrantExecutable
 	Show() string
@@ -50,6 +51,10 @@ type CurrentGrantBuilder struct {
 // Name returns the object name for this CurrentGrantBuilder
 func (gb *CurrentGrantBuilder) Name() string {
 	return gb.name
+}
+
+func (gb *CurrentGrantBuilder) GrantType() string {
+	return string(gb.grantType)
 }
 
 // AccountGrant returns a pointer to a CurrentGrantBuilder for an account
