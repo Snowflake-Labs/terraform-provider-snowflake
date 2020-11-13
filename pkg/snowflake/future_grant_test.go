@@ -50,6 +50,34 @@ func TestFutureTableGrant(t *testing.T) {
 	b.Equal(`REVOKE USAGE ON FUTURE TABLES IN DATABASE "test_db" FROM ROLE "bob"`, s)
 }
 
+func TestFutureMaterializedViewGrant(t *testing.T) {
+	r := require.New(t)
+	fvg := snowflake.FutureMaterializedViewGrant("test_db", "PUBLIC")
+	r.Equal(fvg.Name(), "PUBLIC")
+
+	s := fvg.Show()
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+
+	s = fvg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
+
+	s = fvg.Role("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+
+	b := require.New(t)
+	fvgd := snowflake.FutureMaterializedViewGrant("test_db", "")
+	b.Equal(fvgd.Name(), "test_db")
+
+	s = fvgd.Show()
+	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+
+	s = fvgd.Role("bob").Grant("USAGE", false)
+	b.Equal(`GRANT USAGE ON FUTURE MATERIALIZED VIEWS IN DATABASE "test_db" TO ROLE "bob"`, s)
+
+	s = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal(`REVOKE USAGE ON FUTURE MATERIALIZED VIEWS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+}
+
 func TestFutureViewGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureViewGrant("test_db", "PUBLIC")

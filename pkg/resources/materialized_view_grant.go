@@ -133,7 +133,7 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 			GRANT SELECT ON MATERIALIZED VIEW EXAMPLE_MATERIALIZED_VIEW TO ROLE PUBLIC
 			So, to keep a consistent Terraform resource syntax, just use view grant syntax for now.
 		*/
-		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 
 	err := createGenericGrant(data, meta, builder)
@@ -201,7 +201,7 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 	if futureMaterializedViewsEnabled {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 
 	return readGenericGrant(data, meta, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
@@ -223,7 +223,7 @@ func DeleteMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	if futureMaterializedViews {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.ViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 	return deleteGenericGrant(data, meta, builder)
 }

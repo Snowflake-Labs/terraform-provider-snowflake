@@ -17,6 +17,7 @@ const (
 	schemaType        grantType = "SCHEMA"
 	stageType         grantType = "STAGE"
 	viewType          grantType = "VIEW"
+	materializedViewType grantType = "MATERIALIZED VIEW"
 	tableType         grantType = "TABLE"
 	warehouseType     grantType = "WAREHOUSE"
 	externalTableType grantType = "EXTERNAL TABLE"
@@ -56,6 +57,58 @@ func (gb *CurrentGrantBuilder) Name() string {
 func (gb *CurrentGrantBuilder) GrantType() string {
 	return string(gb.grantType)
 }
+
+// Show returns the SQL that will show all privileges on the grant
+func (gb *CurrentGrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
+}
+
+///////////////////////////////////////////////
+// START CurrentMaterializedViewGrantBuilder //
+///////////////////////////////////////////////
+type CurrentMaterializedViewGrantBuilder struct {
+	name          string
+	qualifiedName string
+	grantType     grantType
+}
+
+// Name returns the object name for this CurrentGrantBuilder
+func (gb *CurrentMaterializedViewGrantBuilder) Name() string {
+	return gb.name
+}
+
+func (gb *CurrentMaterializedViewGrantBuilder) GrantType() string {
+	return string(gb.grantType)
+}
+
+// Show returns the SQL that will show all privileges on the grant
+func (gb *CurrentMaterializedViewGrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
+}
+
+// Role returns a pointer to a CurrentGrantExecutable for a role
+func (gb *CurrentMaterializedViewGrantBuilder) Role(n string) GrantExecutable {
+	return &CurrentGrantExecutable{
+		grantName:   gb.qualifiedName,
+		grantType:   viewType,
+		granteeName: n,
+		granteeType: roleType,
+	}
+}
+
+// Share returns a pointer to a CurrentGrantExecutable for a share
+func (gb *CurrentMaterializedViewGrantBuilder) Share(n string) GrantExecutable {
+	return &CurrentGrantExecutable{
+		grantName:   gb.qualifiedName,
+		grantType:   viewType,
+		granteeName: n,
+		granteeType: shareType,
+	}
+}
+
+///////////////////////////////////////////////
+/// END CurrentMaterializedViewGrantBuilder ///
+///////////////////////////////////////////////
 
 // AccountGrant returns a pointer to a CurrentGrantBuilder for an account
 func AccountGrant() GrantBuilder {
@@ -97,6 +150,15 @@ func ViewGrant(db, schema, view string) GrantBuilder {
 		name:          view,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view),
 		grantType:     viewType,
+	}
+}
+
+// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a view
+func MaterializedViewGrant(db, schema, view string) GrantBuilder {
+	return &CurrentMaterializedViewGrantBuilder{
+		name:          view,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view),
+		grantType:     materializedViewType,
 	}
 }
 
@@ -190,11 +252,6 @@ func StreamGrant(db, schema, stream string) GrantBuilder {
 	}
 }
 
-// Show returns the SQL that will show all privileges on the grant
-func (gb *CurrentGrantBuilder) Show() string {
-	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
-}
-
 type granteeType string
 
 const (
@@ -245,6 +302,7 @@ func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 	return fmt.Sprintf(template,
 		p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName)
 }
+
 
 // Revoke returns the SQL that will revoke privileges on the grant from the grantee
 func (ge *CurrentGrantExecutable) Revoke(p string) string {
