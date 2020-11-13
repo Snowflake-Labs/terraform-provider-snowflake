@@ -127,12 +127,6 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	if futureMaterializedViews {
 		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
 	} else {
-		/*
-			Snowflake does not support GRANT syntax for non-future materialized views specifically.
-			e.g. the following will not work:
-			GRANT SELECT ON MATERIALIZED VIEW EXAMPLE_MATERIALIZED_VIEW TO ROLE PUBLIC
-			So, to keep a consistent Terraform resource syntax, just use view grant syntax for now.
-		*/
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 
