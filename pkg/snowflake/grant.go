@@ -13,19 +13,19 @@ const (
 	resourceMonitorType grantType = "RESOURCE MONITOR"
 	integrationType     grantType = "INTEGRATION"
 
-	databaseType      grantType = "DATABASE"
-	schemaType        grantType = "SCHEMA"
-	stageType         grantType = "STAGE"
-	viewType          grantType = "VIEW"
+	databaseType         grantType = "DATABASE"
+	schemaType           grantType = "SCHEMA"
+	stageType            grantType = "STAGE"
+	viewType             grantType = "VIEW"
 	materializedViewType grantType = "MATERIALIZED VIEW"
-	tableType         grantType = "TABLE"
-	warehouseType     grantType = "WAREHOUSE"
-	externalTableType grantType = "EXTERNAL TABLE"
-	fileFormatType    grantType = "FILE FORMAT"
-	functionType      grantType = "FUNCTION"
-	procedureType     grantType = "PROCEDURE"
-	sequenceType      grantType = "SEQUENCE"
-	streamType        grantType = "STREAM"
+	tableType            grantType = "TABLE"
+	warehouseType        grantType = "WAREHOUSE"
+	externalTableType    grantType = "EXTERNAL TABLE"
+	fileFormatType       grantType = "FILE FORMAT"
+	functionType         grantType = "FUNCTION"
+	procedureType        grantType = "PROCEDURE"
+	sequenceType         grantType = "SEQUENCE"
+	streamType           grantType = "STREAM"
 )
 
 type GrantExecutable interface {
@@ -302,7 +302,6 @@ func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 	return fmt.Sprintf(template,
 		p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName)
 }
-
 
 // Revoke returns the SQL that will revoke privileges on the grant from the grantee
 func (ge *CurrentGrantExecutable) Revoke(p string) string {

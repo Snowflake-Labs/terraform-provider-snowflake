@@ -2,12 +2,13 @@ package resources_test
 
 import (
 	"bytes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 	"text/template"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccFileFormatGrantFuture(t *testing.T) {
@@ -19,7 +20,7 @@ func TestAccFileFormatGrantFuture(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatGrantConfigFuture(t, databaseName, schemaName ,roleName),
+				Config: fileFormatGrantConfigFuture(t, databaseName, schemaName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", schemaName),
@@ -63,12 +64,11 @@ resource "snowflake_file_format_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name":    database_name,
-		"schema_name":      schema_name,
-		"role_name":        role,
+		"database_name": database_name,
+		"schema_name":   schema_name,
+		"role_name":     role,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
-

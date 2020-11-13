@@ -2,12 +2,13 @@ package resources_test
 
 import (
 	"bytes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 	"text/template"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccStreamGrantBasic(t *testing.T) {
@@ -21,7 +22,7 @@ func TestAccStreamGrantBasic(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfigExisting(t, databaseName, schemaName , roleName, streamName, tableName),
+				Config: streamGrantConfigExisting(t, databaseName, schemaName, roleName, streamName, tableName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", schemaName),
@@ -44,7 +45,7 @@ func TestAccStreamGrantFuture(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfigFuture(t, databaseName, schemaName ,roleName),
+				Config: streamGrantConfigFuture(t, databaseName, schemaName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", schemaName),
@@ -58,7 +59,7 @@ func TestAccStreamGrantFuture(t *testing.T) {
 	})
 }
 
-func streamGrantConfigExisting(t *testing.T, database_name, schema_name, role , stream_name, table_name string) string {
+func streamGrantConfigExisting(t *testing.T, database_name, schema_name, role, stream_name, table_name string) string {
 	r := require.New(t)
 
 	config := `
@@ -111,11 +112,11 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name":    database_name,
-		"schema_name":      schema_name,
-		"role_name":        role,
-		"stream_name": 		stream_name,
-		"table_name": 		table_name,
+		"database_name": database_name,
+		"schema_name":   schema_name,
+		"role_name":     role,
+		"stream_name":   stream_name,
+		"table_name":    table_name,
 	})
 	r.NoError(err)
 
@@ -152,12 +153,11 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name":    database_name,
-		"schema_name":      schema_name,
-		"role_name":        role,
+		"database_name": database_name,
+		"schema_name":   schema_name,
+		"role_name":     role,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
-

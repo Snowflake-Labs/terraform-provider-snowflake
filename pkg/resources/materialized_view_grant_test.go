@@ -23,7 +23,7 @@ func TestMaterializedViewGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"materialized_view_name": "test-view",
+		"materialized_view_name": "test-materialized-view",
 		"schema_name":            "PUBLIC",
 		"database_name":          "test-db",
 		"privilege":              "SELECT",
@@ -35,11 +35,11 @@ func TestMaterializedViewGrantCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectReadViewGrant(mock)
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadMaterializedViewGrant(mock)
 		err := resources.CreateMaterializedViewGrant(d, db)
 		r.NoError(err)
 	})
@@ -89,7 +89,7 @@ func expectReadMaterializedViewGrant(mock sqlmock.Sqlmock) {
 	).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "MATERIALIZED_VIEW", "test-materialized-view", "SHARE", "test-share-2", false, "bob",
 	)
-	mock.ExpectQuery(`^SHOW GRANTS ON VIEW "test-db"."PUBLIC"."test-materialized-view"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW GRANTS ON MATERIALIZED VIEW "test-db"."PUBLIC"."test-materialized-view"$`).WillReturnRows(rows)
 }
 
 func TestFutureMaterializedViewGrantCreate(t *testing.T) {

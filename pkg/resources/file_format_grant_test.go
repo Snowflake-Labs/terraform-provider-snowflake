@@ -72,9 +72,9 @@ func expectReadFileFormatGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
 	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FILE FORMAT", "test-file-format", "ROLE", "test-role-1", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FILE_FORMAT", "test-file-format", "ROLE", "test-role-1", false, "bob",
 	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FILE FORMAT", "test-file-format", "ROLE", "test-role-2", false, "bob",
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "FILE_FORMAT", "test-file-format", "ROLE", "test-role-2", false, "bob",
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON FILE FORMAT "test-db"."PUBLIC"."test-file-format"$`).WillReturnRows(rows)
 }

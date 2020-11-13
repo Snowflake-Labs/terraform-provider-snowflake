@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"bytes"
+	"testing"
+	"text/template"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"text/template"
 )
 
 func TestAccExternalTableGrantFuture(t *testing.T) {
@@ -18,7 +19,7 @@ func TestAccExternalTableGrantFuture(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: externalTableGrantConfigFuture(t, databaseName, schemaName ,roleName),
+				Config: externalTableGrantConfigFuture(t, databaseName, schemaName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "schema_name", schemaName),
@@ -62,12 +63,11 @@ resource "snowflake_external_table_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name":    database_name,
-		"schema_name":      schema_name,
-		"role_name":        role,
+		"database_name": database_name,
+		"schema_name":   schema_name,
+		"role_name":     role,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
-
