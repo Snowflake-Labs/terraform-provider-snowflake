@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -14,7 +15,7 @@ func TestAccNetworkPolicyAttachment(t *testing.T) {
 		t.Skip("Skipping TestAccNetworkPolicyAttachment")
 	}
 
-	policyName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	policyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -40,11 +41,11 @@ func TestAccNetworkPolicyAttachment(t *testing.T) {
 func networkPolicyAttachmentConfig(policyName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_user" "test-user1" {
-	name = "test-user1"
+	name = "TEST-USER1"
 }
 
 resource "snowflake_user" "test-user2" {
-	name = "test-user2"
+	name = "TEST-USER2"
 }
 
 resource "snowflake_network_policy" "test" {
