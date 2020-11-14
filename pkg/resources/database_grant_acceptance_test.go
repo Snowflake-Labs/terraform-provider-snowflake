@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -36,9 +37,9 @@ func TestAccDatabaseGrant(t *testing.T) {
 		t.Skip("Skipping TestAccDatabaseGrant")
 	}
 
-	dbName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),

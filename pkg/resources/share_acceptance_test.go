@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -18,7 +19,7 @@ func TestAccShare(t *testing.T) {
 		t.Skip("Skipping TestAccShare")
 	}
 
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -45,7 +46,7 @@ func shareConfig(name string) string {
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
-	accounts       = ["PC37737"]
+//	accounts       = ["PC37737"]
 }
 `, name, shareComment)
 }

@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"text/template"
 
@@ -11,9 +12,9 @@ import (
 )
 
 func TestAccMaterializedViewGrantFuture(t *testing.T) {
-	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	schemaName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),

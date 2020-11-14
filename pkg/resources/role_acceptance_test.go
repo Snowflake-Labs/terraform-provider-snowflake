@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -9,8 +10,8 @@ import (
 )
 
 func TestAccRole(t *testing.T) {
-	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	prefix2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),

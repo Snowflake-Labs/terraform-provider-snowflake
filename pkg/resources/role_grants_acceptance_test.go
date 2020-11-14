@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -89,11 +90,11 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 }
 
 func TestAccGrantRole(t *testing.T) {
-	role1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	role3 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	role1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role3 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	basicChecks := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
