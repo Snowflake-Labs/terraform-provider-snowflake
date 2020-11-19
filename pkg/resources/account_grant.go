@@ -98,7 +98,7 @@ func ReadAccountGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.AccountGrant()
 
-	return readGenericGrant(data, meta, builder, false, validAccountPrivileges)
+	return readGenericGrant(data, meta, accountGrantSchema, builder, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc

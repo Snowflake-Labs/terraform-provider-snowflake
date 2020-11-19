@@ -110,5 +110,5 @@ func TestStageDescribe(t *testing.T) {
 func TestStageShow(t *testing.T) {
 	r := require.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW STAGES LIKE 'test_stage' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW STAGES LIKE 'test_stage' IN SCHEMA "test_db"."test_schema"`)
 }

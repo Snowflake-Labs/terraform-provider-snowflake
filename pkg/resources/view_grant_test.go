@@ -116,6 +116,14 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		expectReadFutureViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
 		r.NoError(err)
+
+		roles := d.Get("roles").(*schema.Set)
+		// After the CreateFutureViewGrant has been created a ReadViewGrant reads the current grants
+		// and this read should ignore test-role-3 what is returned by SHOW FUTURE GRANTS ON SCHEMA PUBLIC because
+		// test-role-3 has been granted to a SELECT on future TABLE and not on future VIEW
+		r.True(roles.Contains("test-role-1"))
+		r.True(roles.Contains("test-role-2"))
+		r.False(roles.Contains("test-role-3"))
 	})
 
 	b := require.New(t)
@@ -150,6 +158,8 @@ func expectReadFutureViewGrant(mock sqlmock.Sqlmock) {
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-1", false,
 	).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-2", false,
+	).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "TABLE", "test-db.PUBLIC.<TABLE>", "ROLE", "test-role-3", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN SCHEMA "test-db"."PUBLIC"$`).WillReturnRows(rows)
 }

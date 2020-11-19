@@ -103,8 +103,7 @@ func ReadResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error
 	}
 
 	builder := snowflake.ResourceMonitorGrant(w)
-
-	return readGenericGrant(data, meta, builder, false, validResourceMonitorPrivileges)
+	return readGenericGrant(data, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
 }
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc

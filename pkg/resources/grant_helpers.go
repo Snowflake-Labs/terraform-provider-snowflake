@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -198,7 +199,13 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges privilegeSet) error {
+func readGenericGrant(
+	data *schema.ResourceData,
+	meta interface{},
+	schema map[string]*schema.Schema,
+	builder snowflake.GrantBuilder,
+	futureObjects bool,
+	validPrivileges privilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -212,6 +219,21 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	}
 	priv := data.Get("privilege").(string)
 	grantOption := data.Get("with_grant_option").(bool)
+
+	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
+	// is checking what kind of builder we have. If it is future grant, then I double check if the
+	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
+	// Truncate then it must be Table
+	futureGrantOnViews := false
+	futureGrantOnTables := false
+	if reflect.TypeOf(builder) == reflect.TypeOf(&snowflake.FutureGrantBuilder{}) {
+		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
+			futureGrantOnViews = true
+		}
+		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 6 {
+			futureGrantOnTables = true
+		}
+	}
 
 	// We re-aggregate grants that would be equivalent to the "ALL" grant
 	grants = filterALLGrants(grants, validPrivileges)
@@ -231,8 +253,16 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 				// If not there, create an empty set
 				privileges = privilegeSet{}
 			}
-			// Add privilege to the set
-			privileges.addString(grant.Privilege)
+			// Add privilege to the set but consider valid privileges only
+			// for VIEW in ReadViewGrant
+			// and for non-VIEW in ReadTableGrant
+			if futureGrantOnViews || futureGrantOnTables {
+				if (futureGrantOnViews && grant.GrantType == "VIEW") || (futureGrantOnTables && grant.GrantType == "TABLE") {
+					privileges.addString(grant.Privilege)
+				}
+			} else { // Other grants
+				privileges.addString(grant.Privilege)
+			}
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
@@ -277,10 +307,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	if err != nil {
 		return err
 	}
-	err = data.Set("shares", shares)
-	if err != nil {
-		// warehouses and future grants don't use shares - check for this error
-		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
+
+	_, sharesOk := schema["shares"]
+	if sharesOk && !futureObjects {
+		err = data.Set("shares", shares)
+		if err != nil {
 			return err
 		}
 	}
