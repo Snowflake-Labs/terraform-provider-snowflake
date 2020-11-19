@@ -3,6 +3,7 @@ package resources
 import (
 	"bytes"
 	"database/sql"
+	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -210,6 +211,11 @@ func ReadStream(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] stream (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	stream, err := snowflake.ScanStream(row)
 	if err != nil {
 		return err

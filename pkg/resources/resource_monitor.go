@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"log"
 	"strconv"
 	"strings"
 
@@ -141,6 +142,11 @@ func ReadResourceMonitor(data *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	rm, err := snowflake.ScanResourceMonitor(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] resource monitor (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

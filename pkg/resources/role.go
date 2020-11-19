@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -45,6 +46,11 @@ func ReadRole(data *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
 	role, err := snowflake.ScanRole(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] role (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

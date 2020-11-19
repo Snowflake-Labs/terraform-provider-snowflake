@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -227,6 +228,12 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, sq)
 
 	s, err := snowflake.ScanStageShow(row)
+
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] stage (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

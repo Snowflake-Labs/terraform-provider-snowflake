@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -103,11 +104,18 @@ func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var s *snowflake.NetworkPolicyStruct
+	var s *snowflake.NetworkPolicyStruct = nil
 	for _, value := range allPolicies {
 		if value.Name.String == policyName {
 			s = value
 		}
+	}
+
+	if s == nil {
+		// The network policy was not found, the Terraform state does not reflect the Snowflake state
+		log.Printf("[WARN] network policy (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
 	}
 
 	descSql := builder.Describe()

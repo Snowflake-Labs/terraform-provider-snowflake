@@ -139,6 +139,11 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] view (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

@@ -258,6 +258,11 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Task(name, database, schema)
 	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] task (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	t, err := snowflake.ScanTask(row)
 	if err != nil {
 		return err

@@ -129,6 +129,12 @@ func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.ManagedAccount(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 	a, err := snowflake.ScanManagedAccount(row)
+
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] managed account (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
