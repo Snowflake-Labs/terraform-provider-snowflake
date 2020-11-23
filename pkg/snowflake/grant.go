@@ -12,12 +12,13 @@ const (
 	resourceMonitorType grantType = "RESOURCE MONITOR"
 	integrationType     grantType = "INTEGRATION"
 
-	databaseType  grantType = "DATABASE"
-	schemaType    grantType = "SCHEMA"
-	stageType     grantType = "STAGE"
-	viewType      grantType = "VIEW"
-	tableType     grantType = "TABLE"
-	warehouseType grantType = "WAREHOUSE"
+	databaseType      grantType = "DATABASE"
+	schemaType        grantType = "SCHEMA"
+	stageType         grantType = "STAGE"
+	viewType          grantType = "VIEW"
+	tableType         grantType = "TABLE"
+	externalTableType grantType = "EXTERNAL TABLE"
+	warehouseType     grantType = "WAREHOUSE"
 )
 
 type GrantExecutable interface {
@@ -31,6 +32,7 @@ type GrantBuilder interface {
 	Role(string) GrantExecutable
 	Share(string) GrantExecutable
 	Show() string
+  GetGrantType() string
 }
 
 // CurrentGrantBuilder abstracts the creation of GrantExecutables
@@ -38,6 +40,10 @@ type CurrentGrantBuilder struct {
 	name          string
 	qualifiedName string
 	grantType     grantType
+}
+
+func (builder CurrentGrantBuilder) GetGrantType() string {
+  return string(builder.grantType)
 }
 
 // Name returns the object name for this CurrentGrantBuilder
@@ -94,6 +100,15 @@ func TableGrant(db, schema, table string) GrantBuilder {
 		name:          table,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, table),
 		grantType:     tableType,
+	}
+}
+
+// TableGrant returns a pointer to a CurrentGrantBuilder for a table
+func ExternalTableGrant(db, schema, table string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          table,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, table),
+		grantType:     externalTableType,
 	}
 }
 

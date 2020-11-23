@@ -93,6 +93,7 @@ func Provider() *schema.Provider {
 			"snowflake_task":                      resources.Task(),
 			"snowflake_table":                     resources.Table(),
 			"snowflake_table_grant":               resources.TableGrant(),
+			"snowflake_external_table_grant":      resources.ExternalTableGrant(),
 			"snowflake_warehouse":                 resources.Warehouse(),
 			"snowflake_warehouse_grant":           resources.WarehouseGrant(),
 		},

@@ -218,11 +218,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	// is checking what kind of builder we have. If it is future grant, then I doubple check if the
 	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
 	// Truncate then it must be Table
-	futureGrantOnViews := false
+	futureGrantOnViewsOrExternalTables := false
 	futureGrantOnTables := false
 	if reflect.TypeOf(builder) == reflect.TypeOf(&snowflake.FutureGrantBuilder{}) {
 		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
-			futureGrantOnViews = true
+			futureGrantOnViewsOrExternalTables = true
 		}
 		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 6 {
 			futureGrantOnTables = true
@@ -250,8 +250,8 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 			// Add privilege to the set but consider valid privileges only
 			// for VIEW in ReadViewGrant
 			// and for non-VIEW in ReadTableGrant
-			if futureGrantOnViews || futureGrantOnTables {
-				if (futureGrantOnViews && grant.GrantType == "VIEW") || (futureGrantOnTables && grant.GrantType == "TABLE") {
+			if futureGrantOnViewsOrExternalTables || futureGrantOnTables {
+				if (futureGrantOnViewsOrExternalTables && strings.ReplaceAll(grant.GrantType, "_", " ") == builder.GetGrantType() && (grant.GrantType == "VIEW" || grant.GrantType == "EXTERNAL_TABLE")) || (futureGrantOnTables && grant.GrantType == "TABLE") {
 					privileges.addString(grant.Privilege)
 				}
 			} else { // Other grants
