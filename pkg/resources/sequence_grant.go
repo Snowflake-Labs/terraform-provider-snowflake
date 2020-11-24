@@ -86,13 +86,9 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	)
 	if _, ok := data.GetOk("sequence_name"); ok {
 		sequenceName = data.Get("sequence_name").(string)
-	} else {
-		sequenceName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)

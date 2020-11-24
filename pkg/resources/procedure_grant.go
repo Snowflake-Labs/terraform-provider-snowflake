@@ -135,13 +135,9 @@ func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		} else {
 			return errors.New("return_type must be set when specifying procedure_name.")
 		}
-	} else {
-		procedureName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
@@ -162,7 +158,6 @@ func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 	if procedureName != "" {
 		procedureSignature, _, argumentTypes = formatCallableObjectName(procedureName, returnType, arguments)
 	} else {
-		procedureSignature = ""
 		argumentTypes = make([]string, 0)
 	}
 
@@ -222,10 +217,6 @@ func ReadProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 	futureProceduresEnabled := false
 	if procedureSignature == "" {
 		futureProceduresEnabled = true
-		procedureName = ""
-		returnType = ""
-		arguments = nil
-		argumentTypes = nil
 	} else {
 		procedureSignatureMap, err := parseCallableObjectName(procedureSignature)
 		if err != nil {

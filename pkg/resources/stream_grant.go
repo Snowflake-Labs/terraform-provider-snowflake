@@ -86,13 +86,9 @@ func CreateStreamGrant(data *schema.ResourceData, meta interface{}) error {
 	)
 	if _, ok := data.GetOk("stream_name"); ok {
 		streamName = data.Get("stream_name").(string)
-	} else {
-		streamName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)

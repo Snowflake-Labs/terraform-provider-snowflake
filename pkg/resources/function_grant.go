@@ -135,13 +135,9 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		} else {
 			return errors.New("return_type must be set when specifying function_name.")
 		}
-	} else {
-		functionName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
@@ -162,7 +158,6 @@ func CreateFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	if functionName != "" {
 		functionSignature, _, argumentTypes = formatCallableObjectName(functionName, returnType, arguments)
 	} else {
-		functionSignature = ""
 		argumentTypes = make([]string, 0)
 	}
 
@@ -222,10 +217,6 @@ func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 	futureFunctionsEnabled := false
 	if functionSignature == "" {
 		futureFunctionsEnabled = true
-		functionName = ""
-		returnType = ""
-		arguments = nil
-		argumentTypes = nil
 	} else {
 		functionSignatureMap, err := parseCallableObjectName(functionSignature)
 		if err != nil {

@@ -99,13 +99,9 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	)
 	if _, ok := data.GetOk("materialized_view_name"); ok {
 		materializedViewName = data.Get("materialized_view_name").(string)
-	} else {
-		materializedViewName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
