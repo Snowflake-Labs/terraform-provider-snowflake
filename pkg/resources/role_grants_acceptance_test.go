@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,6 +28,7 @@ func extractList(in map[string]string, name string) ([]string, error) {
 	if err != nil {
 		return out, err
 	}
+	spew.Dump(in)
 	for k, v := range in {
 		if r.MatchString(k) {
 			log.Printf("[DEBUG] matched %s %s", k, v)
