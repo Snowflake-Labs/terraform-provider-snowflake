@@ -184,10 +184,17 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
+	// No rows then no table. Delete from state and end read
+	if err == sql.ErrNoRows {
+		data.SetId("")
+		return nil
+	}
+	// Check for other errors
 	if err != nil {
 		return err
 	}
 
+	// Describe the table to read the cols
 	tableDescriptionRows, err := snowflake.Query(db, builder.ShowColumns())
 	if err != nil {
 		return err
@@ -198,11 +205,18 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Set the relevant data in the state
 	err = data.Set("name", table.TableName.String)
 	if err != nil {
 		return err
 	}
+
 	err = data.Set("owner", table.Owner.String)
+	if err != nil {
+		return err
+	}
+
+	err = data.Set("comment", table.Comment.String)
 	if err != nil {
 		return err
 	}
