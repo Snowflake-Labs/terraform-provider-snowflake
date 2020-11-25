@@ -138,12 +138,12 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 
 	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
 	// for data types in the HCL2ValueFromConfigValue method.
-	columns := []map[string]string{}
+	columns := []snowflake.Column{}
+
 	for _, column := range data.Get("column").([]interface{}) {
-		columnDef := map[string]string{}
-		for key, val := range column.(map[string]interface{}) {
-			columnDef[key] = val.(string)
-		}
+		typed := column.(map[string]interface{})
+		columnDef := snowflake.Column{}
+		columnDef.WithName(typed["name"].(string)).WithType(typed["type"].(string))
 		columns = append(columns, columnDef)
 	}
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
@@ -180,14 +180,20 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	builder := snowflake.Table(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	name := tableID.TableName
-
-	stmt := snowflake.Table(name, dbName, schema).Show()
-	row := snowflake.QueryRow(db, stmt)
+	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
+	if err != nil {
+		return err
+	}
+
+	tableDescriptionRows, err := snowflake.Query(db, builder.ShowColumns())
+	if err != nil {
+		return err
+	}
+
+	tableDescription, err := snowflake.ScanTableDescription(tableDescriptionRows)
 	if err != nil {
 		return err
 	}
@@ -196,13 +202,12 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	err = data.Set("owner", table.Owner.String)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return data.Set("column", snowflake.NewColumns(tableDescription).Flatten())
 }
 
 // UpdateTable implements schema.UpdateFunc
