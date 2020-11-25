@@ -64,7 +64,7 @@ func (c Columns) getColumnDefinitions() string {
 	for _, column := range c {
 		columnDefinitions = append(columnDefinitions, column.getColumnDefinition())
 	}
-	return fmt.Sprintf("(%s)", strings.Join(columnDefinitions, ", "))
+	return fmt.Sprintf(" (%s) ", strings.Join(columnDefinitions, ", "))
 }
 
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema
