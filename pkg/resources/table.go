@@ -206,22 +206,22 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Set the relevant data in the state
-	err = data.Set("name", table.TableName.String)
-	if err != nil {
-		return err
+	toSet := map[string]interface{}{
+		"name":     table.TableName.String,
+		"owner":    table.Owner.String,
+		"database": tableID.DatabaseName,
+		"schema":   tableID.SchemaName,
+		"comment":  table.Comment.String,
+		"column":   snowflake.NewColumns(tableDescription).Flatten(),
 	}
 
-	err = data.Set("owner", table.Owner.String)
-	if err != nil {
-		return err
+	for key, val := range toSet {
+		err = data.Set(key, val)
+		if err != nil {
+			return err
+		}
 	}
-
-	err = data.Set("comment", table.Comment.String)
-	if err != nil {
-		return err
-	}
-
-	return data.Set("column", snowflake.NewColumns(tableDescription).Flatten())
+	return nil
 }
 
 // UpdateTable implements schema.UpdateFunc
