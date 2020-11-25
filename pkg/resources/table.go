@@ -138,12 +138,12 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 
 	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
 	// for data types in the HCL2ValueFromConfigValue method.
-	columns := []map[string]string{}
+	columns := []snowflake.Column{}
+
 	for _, column := range data.Get("column").([]interface{}) {
-		columnDef := map[string]string{}
-		for key, val := range column.(map[string]interface{}) {
-			columnDef[key] = val.(string)
-		}
+		typed := column.(map[string]interface{})
+		columnDef := snowflake.Column{}
+		columnDef.WithName(typed["name"].(string)).WithType(typed["type"].(string))
 		columns = append(columns, columnDef)
 	}
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
@@ -180,28 +180,47 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	builder := snowflake.Table(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	name := tableID.TableName
-
-	stmt := snowflake.Table(name, dbName, schema).Show()
-	row := snowflake.QueryRow(db, stmt)
+	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
+	// No rows then no table. Delete from state and end read
+	if err == sql.ErrNoRows {
+		data.SetId("")
+		return nil
+	}
+	// Check for other errors
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", table.TableName.String)
+	// Describe the table to read the cols
+	tableDescriptionRows, err := snowflake.Query(db, builder.ShowColumns())
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("owner", table.Owner.String)
+	tableDescription, err := snowflake.ScanTableDescription(tableDescriptionRows)
 	if err != nil {
 		return err
 	}
 
+	// Set the relevant data in the state
+	toSet := map[string]interface{}{
+		"name":     table.TableName.String,
+		"owner":    table.Owner.String,
+		"database": tableID.DatabaseName,
+		"schema":   tableID.SchemaName,
+		"comment":  table.Comment.String,
+		"column":   snowflake.NewColumns(tableDescription).Flatten(),
+	}
+
+	for key, val := range toSet {
+		err = data.Set(key, val)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
