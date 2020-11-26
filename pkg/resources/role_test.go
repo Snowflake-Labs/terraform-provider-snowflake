@@ -55,6 +55,11 @@ func TestRoleRead(t *testing.T) {
 		r.NoError(err)
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("role name", d.Get("name").(string))
+
+		// Test when resource is not found
+		mock.ExpectQuery(`SHOW ROLES LIKE 'good_name'`).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadRole(d, db)
+		r.Nil(err2)
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -39,6 +40,25 @@ func TestSchemaCreate(t *testing.T) {
 		expectReadSchema(mock)
 		err := resources.CreateSchema(d, db)
 		r.NoError(err)
+	})
+}
+
+func TestSchemaRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "good_name",
+		"database": "test_db",
+	}
+
+	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
+	d.SetId("test_db|good_name")
+	q := snowflake.Schema("good_name").WithDB("test_db").Show()
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadSchema(d, db)
+		r.Nil(err)
 	})
 }
 

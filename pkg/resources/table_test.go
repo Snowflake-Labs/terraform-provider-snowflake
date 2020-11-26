@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
@@ -55,6 +56,12 @@ func TestTableRead(t *testing.T) {
 		r.NoError(err)
 		r.Equal("good_name", d.Get("name").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
+
+		// Test when resource is not found
+		q := snowflake.Table("good_name", "database_name", "schema_name").Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadTable(d, db)
+		r.Nil(err2)
 	})
 }
 

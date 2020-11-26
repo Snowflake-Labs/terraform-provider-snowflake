@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -51,6 +52,12 @@ func TestWarehouseRead(t *testing.T) {
 		err := resources.ReadWarehouse(d, db)
 		r.NoError(err)
 		r.Equal("mock comment", d.Get("comment").(string))
+
+		// Test when resource is not found
+		q := snowflake.Warehouse(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadWarehouse(d, db)
+		r.Nil(err2)
 	})
 }
 

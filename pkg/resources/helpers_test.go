@@ -82,6 +82,54 @@ func accountGrant(t *testing.T, id string, params map[string]interface{}) *schem
 	return d
 }
 
+func managedAccount(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ManagedAccount().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func networkPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.NetworkPolicy().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func pipe(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Pipe().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func share(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Share().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func stage(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Stage().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func stream(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Stream().Schema, params)
@@ -129,9 +177,25 @@ func table(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 	return d
 }
 
+func task(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Task().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func view(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.View().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
