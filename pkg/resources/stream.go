@@ -211,12 +211,12 @@ func ReadStream(data *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
+	stream, err := snowflake.ScanStream(row)
 	if err == sql.ErrNoRows {
 		log.Printf("[WARN] stream (%s) not found, removing from state file", data.Id())
 		data.SetId("")
 		return nil
 	}
-	stream, err := snowflake.ScanStream(row)
 	if err != nil {
 		return err
 	}

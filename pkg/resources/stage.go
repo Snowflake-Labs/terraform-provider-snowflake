@@ -220,6 +220,11 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] stage (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -228,12 +233,6 @@ func ReadStage(data *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, sq)
 
 	s, err := snowflake.ScanStageShow(row)
-
-	if err == sql.ErrNoRows {
-		log.Printf("[WARN] stage (%s) not found, removing from state file", data.Id())
-		data.SetId("")
-		return nil
-	}
 	if err != nil {
 		return err
 	}

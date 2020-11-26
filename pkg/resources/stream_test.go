@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
@@ -51,11 +52,16 @@ func TestStreamRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectStreamRead(mock)
-
 		err := resources.ReadStream(d, db)
 		r.NoError(err)
 		r.Equal("stream_name", d.Get("name").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
+
+		// Test when resource is not found
+		q := snowflake.Stream("stream_name", "database_name", "schema_name").Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadStream(d, db)
+		r.Nil(err2)
 	})
 }
 
