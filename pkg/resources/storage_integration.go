@@ -235,11 +235,6 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetString("COMMENT", d.Get("comment").(string))
 	}
 
-	if d.HasChange("type") {
-		runSetStatement = true
-		stmt.SetString("TYPE", d.Get("type").(string))
-	}
-
 	if d.HasChange("enabled") {
 		runSetStatement = true
 		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
