@@ -99,10 +99,15 @@ func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := data.Get("schema_name").(string)
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
+	futureStages := data.Get("on_future").(bool)
 	grantOption := data.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
-	builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	err := createGenericGrant(data, meta, builder)
 	if err != nil {
@@ -144,7 +149,15 @@ func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	futureStagesEnabled := false
+	if stageName == "" {
+		futureStagesEnabled = true
+	}
 	err = data.Set("stage_name", stageName)
+	if err != nil {
+		return err
+	}
+	err = data.Set("on_future", futureStagesEnabled)
 	if err != nil {
 		return err
 	}
@@ -157,7 +170,12 @@ func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	var builder snowflake.GrantBuilder
+	if futureStagesEnabled {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	return readGenericGrant(data, meta, builder, false, ValidStagePrivileges)
 }
@@ -172,7 +190,14 @@ func DeleteStageGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	futureStages := (stageName == "")
+
+	var builder snowflake.GrantBuilder
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	return deleteGenericGrant(data, meta, builder)
 }
