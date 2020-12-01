@@ -61,7 +61,7 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
@@ -99,7 +99,7 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: 
+docs:
 	go run ./docgen
 .PHONY: docs
 
