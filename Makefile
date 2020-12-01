@@ -16,7 +16,7 @@ setup: ## setup development dependencies
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff master"
+	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
 
 lint-ci: ## run the fast go linters
