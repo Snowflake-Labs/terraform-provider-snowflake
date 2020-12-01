@@ -53,7 +53,7 @@ resource "snowflake_table" "test_stream_on_table" {
 	}
 	column {
 		name = "column2"
-		type = "VARCHAR"
+		type = "VARCHAR(16777216)"
 	}
 }
 
