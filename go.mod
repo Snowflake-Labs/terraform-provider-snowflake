@@ -7,7 +7,6 @@ require (
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/chanzuckerberg/go-misc v0.0.0-20200713202614-1c7b6844ebd6
-	github.com/davecgh/go-spew v1.1.1
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.3
 	github.com/jmoiron/sqlx v1.2.0
