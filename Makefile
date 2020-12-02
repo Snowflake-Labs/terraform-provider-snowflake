@@ -4,6 +4,7 @@ export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else 
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
+export TF_ACC_TERRAFORM_VERSION=0.12.29
 
 all: test docs install
 .PHONY: all
