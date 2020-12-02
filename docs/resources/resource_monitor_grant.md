@@ -24,4 +24,10 @@ description: |-
 - **roles** (Set of String, Optional) Grants privilege to these roles.
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_resource_monitor_grant.example name
+```
