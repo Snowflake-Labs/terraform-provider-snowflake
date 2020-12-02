@@ -16,7 +16,6 @@ jobs:
     - name: Branch based PR checkout
       uses: actions/checkout@v2
 
-    # Insert integration tests needing secrets
     strategy:
       matrix:
         target:
