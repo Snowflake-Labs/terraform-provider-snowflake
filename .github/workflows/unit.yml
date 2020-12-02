@@ -7,14 +7,13 @@ name: Unit tests
 jobs:
   unit:
     runs-on: ubuntu-latest
-    # Integration tests needing secrets
     strategy:
       matrix:
         target:
           - check-docs
           - check-mod
           - lint-ci
-          - test-acceptance-ci
+          - test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -24,11 +23,5 @@ jobs:
         run: make setup
 
       - name: make ${{ matrix.target }}
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
     - run: echo "Unit tests... success! ;-)"
