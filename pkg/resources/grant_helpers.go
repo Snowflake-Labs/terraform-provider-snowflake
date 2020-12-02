@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -199,7 +199,13 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges privilegeSet) error {
+func readGenericGrant(
+	data *schema.ResourceData,
+	meta interface{},
+	schema map[string]*schema.Schema,
+	builder snowflake.GrantBuilder,
+	futureObjects bool,
+	validPrivileges privilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -215,7 +221,7 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	grantOption := data.Get("with_grant_option").(bool)
 
 	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
-	// is checking what kind of builder we have. If it is future grant, then I doubple check if the
+	// is checking what kind of builder we have. If it is future grant, then I double check if the
 	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
 	// Truncate then it must be Table
 	futureGrantOnViews := false
@@ -301,10 +307,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	if err != nil {
 		return err
 	}
-	err = data.Set("shares", shares)
-	if err != nil {
-		// warehouses and future grants don't use shares - check for this error
-		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
+
+	_, sharesOk := schema["shares"]
+	if sharesOk && !futureObjects {
+		err = data.Set("shares", shares)
+		if err != nil {
 			return err
 		}
 	}

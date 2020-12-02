@@ -8,12 +8,73 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type Column struct {
+	name  string
+	_type string // type is reserved
+}
+
+func (c *Column) WithName(name string) *Column {
+	c.name = name
+	return c
+}
+func (c *Column) WithType(t string) *Column {
+	c._type = t
+	return c
+}
+
+func (c *Column) getColumnDefinition() string {
+	if c == nil {
+		return ""
+	}
+	return fmt.Sprintf(`"%v" %v`, EscapeString(c.name), EscapeString(c._type))
+}
+
+type Columns []Column
+
+// NewColumns generates columns from a table description
+func NewColumns(tds []tableDescription) Columns {
+	cs := []Column{}
+	for _, td := range tds {
+		if td.Kind.String != "COLUMN" {
+			continue
+		}
+		cs = append(cs, Column{
+			name:  td.Name.String,
+			_type: td.Type.String,
+		})
+	}
+	return Columns(cs)
+}
+
+func (c Columns) Flatten() []interface{} {
+	flattened := []interface{}{}
+	for _, col := range c {
+		flat := map[string]interface{}{}
+		flat["name"] = col.name
+		flat["type"] = col._type
+
+		flattened = append(flattened, flat)
+	}
+	return flattened
+}
+
+func (c Columns) getColumnDefinitions() string {
+	// TODO(el): verify Snowflake reflects column order back in desc table calls
+	columnDefinitions := []string{}
+	for _, column := range c {
+		columnDefinitions = append(columnDefinitions, column.getColumnDefinition())
+	}
+
+	// NOTE: intentionally blank leading space
+	return fmt.Sprintf(" (%s)", strings.Join(columnDefinitions, ", "))
+}
+
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema
 type TableBuilder struct {
 	name    string
 	db      string
 	schema  string
-	columns []map[string]string
+	columns Columns
 	comment string
 }
 
@@ -45,7 +106,7 @@ func (tb *TableBuilder) WithComment(c string) *TableBuilder {
 }
 
 // WithColumns sets the column definitions on the TableBuilder
-func (tb *TableBuilder) WithColumns(c []map[string]string) *TableBuilder {
+func (tb *TableBuilder) WithColumns(c Columns) *TableBuilder {
 	tb.columns = c
 	return tb
 }
@@ -72,7 +133,7 @@ func Table(name, db, schema string) *TableBuilder {
 //   - CREATE TABLE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-table.html)
-func TableWithColumnDefinitions(name, db, schema string, columns []map[string]string) *TableBuilder {
+func TableWithColumnDefinitions(name, db, schema string, columns Columns) *TableBuilder {
 	return &TableBuilder{
 		name:    name,
 		db:      db,
@@ -85,14 +146,7 @@ func TableWithColumnDefinitions(name, db, schema string, columns []map[string]st
 func (tb *TableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE TABLE %v`, tb.QualifiedName()))
-
-	q.WriteString(fmt.Sprintf(` (`))
-	columnDefinitions := []string{}
-	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"])))
-	}
-	q.WriteString(strings.Join(columnDefinitions, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
+	q.WriteString(tb.columns.getColumnDefinitions())
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
@@ -121,6 +175,10 @@ func (tb *TableBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TABLES LIKE '%v' IN SCHEMA "%v"."%v"`, tb.name, tb.db, tb.schema)
 }
 
+func (tb *TableBuilder) ShowColumns() string {
+	return fmt.Sprintf(`DESC TABLE %s`, tb.QualifiedName())
+}
+
 type table struct {
 	CreatedOn           sql.NullString `db:"created_on"`
 	TableName           sql.NullString `db:"name"`
@@ -141,4 +199,23 @@ func ScanTable(row *sqlx.Row) (*table, error) {
 	t := &table{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+type tableDescription struct {
+	Name sql.NullString `db:"name"`
+	Type sql.NullString `db:"type"`
+	Kind sql.NullString `db:"kind"`
+}
+
+func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
+	tds := []tableDescription{}
+	for rows.Next() {
+		td := tableDescription{}
+		err := rows.StructScan(&td)
+		if err != nil {
+			return nil, err
+		}
+		tds = append(tds, td)
+	}
+	return tds, rows.Err()
 }

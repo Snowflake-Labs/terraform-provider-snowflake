@@ -1,8 +1,8 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -191,7 +191,7 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureViewsEnabled, ValidViewPrivileges)
+	return readGenericGrant(data, meta, viewGrantSchema, builder, futureViewsEnabled, ValidViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc

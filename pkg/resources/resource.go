@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -57,9 +57,6 @@ func UpdateResource(
 	read func(*schema.ResourceData, interface{}) error,
 ) func(*schema.ResourceData, interface{}) error {
 	return func(data *schema.ResourceData, meta interface{}) error {
-		// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-		data.Partial(true)
-
 		db := meta.(*sql.DB)
 		if data.HasChange("name") {
 			// I wish this could be done on one line.
@@ -73,14 +70,10 @@ func UpdateResource(
 			if err != nil {
 				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
 			}
-
 			data.SetId(newName)
-			data.SetPartial("name")
 		}
-		data.Partial(false)
 
 		changes := []string{}
-
 		for _, prop := range properties {
 			if data.HasChange(prop) {
 				changes = append(changes, prop)

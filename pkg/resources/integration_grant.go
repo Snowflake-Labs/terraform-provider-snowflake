@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validIntegrationPrivileges = newPrivilegeSet(
@@ -103,7 +103,7 @@ func ReadIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.IntegrationGrant(w)
 
-	return readGenericGrant(data, meta, builder, false, validIntegrationPrivileges)
+	return readGenericGrant(data, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc

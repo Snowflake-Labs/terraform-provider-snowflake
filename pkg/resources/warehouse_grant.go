@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validWarehousePrivileges = newPrivilegeSet(
@@ -110,7 +110,7 @@ func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.WarehouseGrant(w)
 
-	return readGenericGrant(data, meta, builder, false, validWarehousePrivileges)
+	return readGenericGrant(data, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
 }
 
 // DeleteWarehouseGrant implements schema.DeleteFunc

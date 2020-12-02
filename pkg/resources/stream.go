@@ -3,14 +3,13 @@ package resources
 import (
 	"bytes"
 	"database/sql"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/pkg/errors"
-
 	"encoding/csv"
 	"fmt"
 	"strings"
+
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -276,8 +275,6 @@ func UpdateStream(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stream comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	return ReadStream(data, meta)

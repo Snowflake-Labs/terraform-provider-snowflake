@@ -5,8 +5,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,9 +89,9 @@ func stream(t *testing.T, id string, params map[string]interface{}) *schema.Reso
 	return d
 }
 
-func providers() map[string]terraform.ResourceProvider {
+func providers() map[string]*schema.Provider {
 	p := provider.Provider()
-	return map[string]terraform.ResourceProvider{
+	return map[string]*schema.Provider{
 		"snowflake": p,
 	}
 }
