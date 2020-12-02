@@ -94,14 +94,14 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant",
-		Default:     false,
+		Default:     true,
 		ForceNew:    true,
 	},
 	"auto_refresh": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Specifies whether to automatically refresh the external table metadata once, immediately after the external table is created.",
-		Default:     false,
+		Default:     true,
 		ForceNew:    true,
 	},
 	"copy_grants": {
