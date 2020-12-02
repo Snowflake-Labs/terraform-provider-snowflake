@@ -101,7 +101,7 @@ clean: ## clean the repo
 .PHONY: clean
 
 docs:
-	go run ./docgen
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
 check-docs: docs ## check that docs have been generated
