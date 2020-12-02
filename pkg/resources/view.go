@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -181,9 +181,6 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateView implements schema.UpdateFunc
 func UpdateView(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	dbName, schema, view, err := splitViewID(data.Id())
 	if err != nil {
 		return err
@@ -202,7 +199,6 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 		}
 
 		data.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
-		data.SetPartial("name")
 	}
 
 	if data.HasChange("comment") {
@@ -221,11 +217,7 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
 			}
 		}
-
-		data.SetPartial("comment")
 	}
-
-	data.Partial(false)
 	if data.HasChange("is_secure") {
 		_, secure := data.GetChange("is_secure")
 

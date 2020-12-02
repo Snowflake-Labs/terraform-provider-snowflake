@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	_ "github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )

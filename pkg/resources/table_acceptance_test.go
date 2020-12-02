@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccTable(t *testing.T) {
@@ -51,7 +51,7 @@ resource "snowflake_table" "test_table" {
 	}
 	column {
 		name = "column2"
-		type = "VARCHAR"
+		type = "VARCHAR(16777216)"
 	}
 }
 `

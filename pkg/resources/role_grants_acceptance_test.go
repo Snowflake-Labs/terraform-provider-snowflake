@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func MustParseInt(input string) int64 {
@@ -23,7 +23,7 @@ func MustParseInt(input string) int64 {
 
 func extractList(in map[string]string, name string) ([]string, error) {
 	out := make([]string, 0)
-	r, err := regexp.Compile(fmt.Sprintf(`^%s.\d+(.+)$`, name))
+	r, err := regexp.Compile(fmt.Sprintf(`^%s.\d+$`, name))
 	if err != nil {
 		return out, err
 	}
@@ -58,7 +58,6 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
-
 		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
