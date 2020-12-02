@@ -21,26 +21,26 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the identifier for the externalTable; must be unique for the database and schema in which the externalTable is created.",
+		Description: "Specifies the identifier for the external table; must be unique for the database and schema in which the externalTable is created.",
 	},
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The schema in which to create the externalTable.",
+		Description: "The schema in which to create the external table.",
 	},
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The database in which to create the externalTable.",
+		Description: "The database in which to create the external table.",
 	},
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
 		ForceNew:    true,
-		Description: "Definitions of a column to create in the externalTable. Minimum one required.",
+		Description: "Definitions of a column to create in the external table. Minimum one required.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -68,20 +68,20 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies a comment for the externalTable.",
+		Description: "Specifies a comment for the external table.",
 	},
 	"file_format": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the file format for the stage.",
+		Description: "Specifies the file format for the external table.",
 	},
 
 	"aws_sns_topic": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Specifies the file format for the stage.",
+		Description: "Specifies the file format for the external table.",
 	},
 	"partition_by": {
 		Type:        schema.TypeList,
@@ -115,13 +115,13 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Specifies a comment for the externalTable.",
+		Description: "Specifies a comment for the external table.",
 	},
 	"owner": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		ForceNew:    true,
-		Description: "Name of the role that owns the externalTable.",
+		Description: "Name of the role that owns the external table.",
 	},
 }
 
