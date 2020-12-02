@@ -92,13 +92,9 @@ func CreateExternalTableGrant(data *schema.ResourceData, meta interface{}) error
 	)
 	if _, ok := data.GetOk("external_table_name"); ok {
 		externalTableName = data.Get("external_table_name").(string)
-	} else {
-		externalTableName = ""
 	}
 	if _, ok := data.GetOk("schema_name"); ok {
 		schemaName = data.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
 	dbName := data.Get("database_name").(string)
 	priv := data.Get("privilege").(string)
