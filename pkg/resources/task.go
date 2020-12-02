@@ -238,7 +238,7 @@ func Task() *schema.Resource {
 
 		Schema: taskSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -336,7 +336,10 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 			paramMap[param.Key] = param.Value
 		}
 
-		data.Set("session_parameters", paramMap)
+		err := data.Set("session_parameters", paramMap)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

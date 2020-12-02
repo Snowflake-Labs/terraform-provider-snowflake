@@ -81,7 +81,7 @@ func Pipe() *schema.Resource {
 
 		Schema: pipeSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -92,10 +92,7 @@ func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) b
 	new = strings.ReplaceAll(new, "\r\n", "\n")
 
 	// trim off any trailing line endings
-	if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
-		return true
-	}
-	return false
+	return strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n")
 }
 
 type pipeID struct {

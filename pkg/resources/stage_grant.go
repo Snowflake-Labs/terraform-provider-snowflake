@@ -75,7 +75,7 @@ func StageGrant() *schema.Resource {
 
 		Schema: stageGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -93,8 +93,7 @@ func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
 	priv := data.Get("privilege").(string)
 	grantOption := data.Get("with_grant_option").(bool)
 
-	var builder snowflake.GrantBuilder
-	builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	builder := snowflake.StageGrant(dbName, schemaName, stageName)
 
 	err := createGenericGrant(data, meta, builder)
 	if err != nil {

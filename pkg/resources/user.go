@@ -96,23 +96,23 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
 	},
-	"email": &schema.Schema{
+	"email": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Email address for the user.",
 	},
-	"display_name": &schema.Schema{
+	"display_name": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Optional:    true,
 		Description: "Name displayed for the user in the Snowflake web interface.",
 	},
-	"first_name": &schema.Schema{
+	"first_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "First name of the user.",
 	},
-	"last_name": &schema.Schema{
+	"last_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Last name of the user.",
@@ -145,7 +145,7 @@ func User() *schema.Resource {
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

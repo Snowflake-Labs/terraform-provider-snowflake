@@ -90,7 +90,7 @@ func StorageIntegration() *schema.Resource {
 
 		Schema: storageIntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -270,7 +270,10 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 
 	if data.HasChange("storage_provider") {
 		runSetStatement = true
-		setStorageProviderSettings(data, stmt)
+		err := setStorageProviderSettings(data, stmt)
+		if err != nil {
+			return err
+		}
 	} else {
 		if data.HasChange("storage_aws_role_arn") {
 			runSetStatement = true

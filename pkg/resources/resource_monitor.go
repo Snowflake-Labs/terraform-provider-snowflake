@@ -83,7 +83,7 @@ func ResourceMonitor() *schema.Resource {
 
 		Schema: resourceMonitorSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

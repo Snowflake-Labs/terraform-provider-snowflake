@@ -41,6 +41,5 @@ func ReadSystemGetAWSSNSIAMPolicy(data *schema.ResourceData, meta interface{}) e
 	}
 
 	data.SetId(awsSNSTopicArn)
-	data.Set("aws_sns_topic_policy_json", policy.Policy)
-	return nil
+	return data.Set("aws_sns_topic_policy_json", policy.Policy)
 }

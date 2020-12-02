@@ -113,7 +113,7 @@ func Schema() *schema.Resource {
 
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

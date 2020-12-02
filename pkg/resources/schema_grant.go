@@ -93,7 +93,7 @@ func SchemaGrant() *schema.Resource {
 
 		Schema: schemaGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

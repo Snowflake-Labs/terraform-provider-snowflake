@@ -68,7 +68,7 @@ func Stream() *schema.Resource {
 
 		Schema: streamSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

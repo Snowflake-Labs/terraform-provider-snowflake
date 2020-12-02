@@ -79,7 +79,7 @@ func ViewGrant() *schema.Resource {
 
 		Schema: viewGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

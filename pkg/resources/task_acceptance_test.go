@@ -301,7 +301,7 @@ resource "snowflake_task" "solo_task" {
 	}
 
 	var result bytes.Buffer
-	config.Execute(&result, settings)
+	config.Execute(&result, settings) //nolint
 
 	return result.String()
 }

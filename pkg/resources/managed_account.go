@@ -96,7 +96,7 @@ func ManagedAccount() *schema.Resource {
 
 		Schema: managedAccountSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

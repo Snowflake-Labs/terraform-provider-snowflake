@@ -39,7 +39,7 @@ func NetworkPolicyAttachment() *schema.Resource {
 
 		Schema: networkPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -84,10 +84,14 @@ func ReadNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) er
 func UpdateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) error {
 	if data.HasChange("set_for_account") {
 		oldAcctFlag, newAcctFlag := data.GetChange("set_for_account")
-		if newAcctFlag.(bool) == true {
-			setOnAccount(data, meta)
-		} else if newAcctFlag.(bool) == false && oldAcctFlag == true {
-			unsetOnAccount(data, meta)
+		if newAcctFlag.(bool) {
+			if err := setOnAccount(data, meta); err != nil {
+				return err
+			}
+		} else if !newAcctFlag.(bool) && oldAcctFlag == true {
+			if err := unsetOnAccount(data, meta); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -110,14 +114,14 @@ func UpdateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) 
 		}
 
 		for _, user := range removedUsers {
-			unsetOnUser(user, data, meta)
+			err := unsetOnUser(user, data, meta)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, user := range addedUsers {
-			setOnUser(user, data, meta)
+			err := setOnUser(user, data, meta)
 			if err != nil {
 				return err
 			}

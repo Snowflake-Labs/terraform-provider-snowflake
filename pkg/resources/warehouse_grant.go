@@ -55,7 +55,7 @@ func WarehouseGrant() *schema.Resource {
 		Schema: warehouseGrantSchema,
 		// FIXME - tests for this don't currently work
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

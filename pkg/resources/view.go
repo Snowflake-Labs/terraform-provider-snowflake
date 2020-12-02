@@ -88,7 +88,7 @@ func View() *schema.Resource {
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

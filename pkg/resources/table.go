@@ -78,7 +78,7 @@ func Table() *schema.Resource {
 
 		Schema: tableSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

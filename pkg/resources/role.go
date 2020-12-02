@@ -30,7 +30,7 @@ func Role() *schema.Resource {
 
 		Schema: roleSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

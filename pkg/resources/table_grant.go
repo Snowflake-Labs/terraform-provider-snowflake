@@ -84,7 +84,7 @@ func TableGrant() *schema.Resource {
 
 		Schema: tableGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

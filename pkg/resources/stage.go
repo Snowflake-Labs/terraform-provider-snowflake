@@ -140,7 +140,7 @@ func Stage() *schema.Resource {
 
 		Schema: stageSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

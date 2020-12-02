@@ -114,7 +114,7 @@ func Warehouse() *schema.Resource {
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

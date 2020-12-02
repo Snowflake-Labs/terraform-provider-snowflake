@@ -48,7 +48,7 @@ func NetworkPolicy() *schema.Resource {
 
 		Schema: networkPolicySchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
