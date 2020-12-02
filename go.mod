@@ -13,7 +13,6 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/snowflakedb/gosnowflake v1.3.4
 	github.com/stretchr/testify v1.5.1
