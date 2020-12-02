@@ -1,8 +1,13 @@
-on: push
+# Run unit tests on any branch/fork pull request
+on:
+  pull_request
+
+name: Unit tests
 
 jobs:
-  run:
+  unit:
     runs-on: ubuntu-latest
+    # Integration tests needing secrets
     strategy:
       matrix:
         target:
@@ -26,3 +31,4 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
+    - run: echo "Unit tests... success! ;-)"
