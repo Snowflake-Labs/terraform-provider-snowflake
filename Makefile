@@ -25,8 +25,7 @@ lint-ci: ## run the fast go linters
 .PHONY: lint-ci
 
 lint-all: fmt ## run the fast go linters
-	# doesn't seem to be a way to get reviewdog to not filter by diff
-	./bin/golangci-lint run
+	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
 .PHONY: lint-all
 
 check-release-prereqs:

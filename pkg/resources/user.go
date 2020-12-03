@@ -152,8 +152,8 @@ func User() *schema.Resource {
 
 // func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
 
-func CreateUser(data *schema.ResourceData, meta interface{}) error {
-	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+func CreateUser(d *schema.ResourceData, meta interface{}) error {
+	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
 }
 
 func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
@@ -173,9 +173,9 @@ func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	return false, nil
 }
 
-func ReadUser(data *schema.ResourceData, meta interface{}) error {
+func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.User(id).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -185,69 +185,69 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", u.Name.String)
+	err = d.Set("name", u.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", u.Comment.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("login_name", u.LoginName.String)
+	err = d.Set("comment", u.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("disabled", u.Disabled)
+	err = d.Set("login_name", u.LoginName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_role", u.DefaultRole.String)
+	err = d.Set("disabled", u.Disabled)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_namespace", u.DefaultNamespace.String)
+	err = d.Set("default_role", u.DefaultRole.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_warehouse", u.DefaultWarehouse.String)
+	err = d.Set("default_namespace", u.DefaultNamespace.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("has_rsa_public_key", u.HasRsaPublicKey)
+	err = d.Set("default_warehouse", u.DefaultWarehouse.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("email", u.Email.String)
+	err = d.Set("has_rsa_public_key", u.HasRsaPublicKey)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("display_name", u.DisplayName.String)
+	err = d.Set("email", u.Email.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("first_name", u.FirstName.String)
+	err = d.Set("display_name", u.DisplayName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("last_name", u.LastName.String)
+	err = d.Set("first_name", u.FirstName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("last_name", u.LastName.String)
 
 	return err
 }
 
-func UpdateUser(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+func UpdateUser(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
 }
 
-func DeleteUser(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("user", snowflake.User)(data, meta)
+func DeleteUser(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("user", snowflake.User)(d, meta)
 }

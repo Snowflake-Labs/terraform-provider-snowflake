@@ -55,13 +55,13 @@ func ResourceMonitorGrant() *schema.Resource {
 }
 
 // CreateResourceMonitorGrant implements schema.CreateFunc
-func CreateResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error {
-	w := data.Get("monitor_name").(string)
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
+	w := d.Get("monitor_name").(string)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 	builder := snowflake.ResourceMonitorGrant(w)
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -75,40 +75,40 @@ func CreateResourceMonitorGrant(data *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadResourceMonitorGrant(data, meta)
+	return ReadResourceMonitorGrant(d, meta)
 }
 
 // ReadResourceMonitorGrant implements schema.ReadFunc
-func ReadResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 	w := grantID.ResourceName
 	priv := grantID.Privilege
 
-	err = data.Set("monitor_name", w)
+	err = d.Set("monitor_name", w)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
 	builder := snowflake.ResourceMonitorGrant(w)
-	return readGenericGrant(data, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
+	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
 }
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc
-func DeleteResourceMonitorGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -116,5 +116,5 @@ func DeleteResourceMonitorGrant(data *schema.ResourceData, meta interface{}) err
 
 	builder := snowflake.ResourceMonitorGrant(w)
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }
