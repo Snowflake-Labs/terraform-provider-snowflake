@@ -22,6 +22,5 @@ jobs:
           go-version: '1.15.2'
       - name: Install dependencies
         run: make setup
-
       - name: make ${{ matrix.target }}
         run: make ${{ matrix.target }}
