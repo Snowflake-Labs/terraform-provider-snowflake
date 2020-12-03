@@ -77,7 +77,6 @@ func Pipe() *schema.Resource {
 		Read:   ReadPipe,
 		Update: UpdatePipe,
 		Delete: DeletePipe,
-		Exists: PipeExists,
 
 		Schema: pipeSchema,
 		Importer: &schema.ResourceImporter{

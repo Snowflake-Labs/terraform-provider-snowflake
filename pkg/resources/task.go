@@ -234,7 +234,6 @@ func Task() *schema.Resource {
 		Read:   ReadTask,
 		Update: UpdateTask,
 		Delete: DeleteTask,
-		Exists: TaskExists,
 
 		Schema: taskSchema,
 		Importer: &schema.ResourceImporter{

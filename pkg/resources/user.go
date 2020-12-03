@@ -141,7 +141,6 @@ func User() *schema.Resource {
 		Read:   ReadUser,
 		Update: UpdateUser,
 		Delete: DeleteUser,
-		Exists: UserExists,
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{

@@ -74,7 +74,6 @@ func Table() *schema.Resource {
 		Read:   ReadTable,
 		Update: UpdateTable,
 		Delete: DeleteTable,
-		Exists: TableExists,
 
 		Schema: tableSchema,
 		Importer: &schema.ResourceImporter{

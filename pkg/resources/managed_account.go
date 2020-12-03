@@ -92,7 +92,6 @@ func ManagedAccount() *schema.Resource {
 		Create: CreateManagedAccount,
 		Read:   ReadManagedAccount,
 		Delete: DeleteManagedAccount,
-		Exists: ManagedAccountExists,
 
 		Schema: managedAccountSchema,
 		Importer: &schema.ResourceImporter{

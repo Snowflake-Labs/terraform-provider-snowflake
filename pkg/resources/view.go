@@ -84,7 +84,6 @@ func View() *schema.Resource {
 		Read:   ReadView,
 		Update: UpdateView,
 		Delete: DeleteView,
-		Exists: ViewExists,
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{

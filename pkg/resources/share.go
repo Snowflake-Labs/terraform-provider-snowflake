@@ -44,7 +44,6 @@ func Share() *schema.Resource {
 		Read:   ReadShare,
 		Update: UpdateShare,
 		Delete: DeleteShare,
-		Exists: ShareExists,
 
 		Schema: shareSchema,
 		Importer: &schema.ResourceImporter{

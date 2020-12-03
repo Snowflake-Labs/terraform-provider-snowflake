@@ -86,7 +86,6 @@ func StorageIntegration() *schema.Resource {
 		Read:   ReadStorageIntegration,
 		Update: UpdateStorageIntegration,
 		Delete: DeleteStorageIntegration,
-		Exists: StorageIntegrationExists,
 
 		Schema: storageIntegrationSchema,
 		Importer: &schema.ResourceImporter{

@@ -136,7 +136,6 @@ func Stage() *schema.Resource {
 		Read:   ReadStage,
 		Update: UpdateStage,
 		Delete: DeleteStage,
-		Exists: StageExists,
 
 		Schema: stageSchema,
 		Importer: &schema.ResourceImporter{

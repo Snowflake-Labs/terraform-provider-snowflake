@@ -79,7 +79,6 @@ func ResourceMonitor() *schema.Resource {
 		Read:   ReadResourceMonitor,
 		// Update: UpdateResourceMonitor, @TODO implement updates
 		Delete: DeleteResourceMonitor,
-		Exists: ResourceMonitorExists,
 
 		Schema: resourceMonitorSchema,
 		Importer: &schema.ResourceImporter{

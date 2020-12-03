@@ -109,7 +109,6 @@ func Schema() *schema.Resource {
 		Read:   ReadSchema,
 		Update: UpdateSchema,
 		Delete: DeleteSchema,
-		Exists: SchemaExists,
 
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
