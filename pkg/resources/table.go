@@ -226,9 +226,6 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTable implements schema.UpdateFunc
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	d.Partial(true)
-
 	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
 		return err

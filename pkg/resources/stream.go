@@ -253,9 +253,6 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStream implements schema.UpdateFunc
 func UpdateStream(d *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	d.Partial(true)
-
 	streamID, err := streamIDFromString(d.Id())
 	if err != nil {
 		return err
