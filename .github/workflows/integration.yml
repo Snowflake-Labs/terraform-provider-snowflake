@@ -15,9 +15,6 @@ jobs:
     strategy:
       matrix:
         target:
-          - check-docs
-          - check-mod
-          - lint-ci
           - test
     steps:
       - uses: actions/checkout@v2
@@ -47,9 +44,6 @@ jobs:
     strategy:
       matrix:
         target:
-          - check-docs
-          - check-mod
-          - lint-ci
           - test
     steps:
       - uses: actions/checkout@v2
