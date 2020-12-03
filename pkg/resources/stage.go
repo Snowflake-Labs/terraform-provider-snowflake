@@ -299,7 +299,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	if d.HasChange("url") {
-		_, url := d.GetChange("url")
+		url := d.Get("url")
 		q := builder.ChangeURL(url.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -308,7 +308,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("credentials") {
-		_, credentials := d.GetChange("credentials")
+		credentials := d.Get("credentials")
 		q := builder.ChangeCredentials(credentials.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -317,7 +317,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("storage_integration") {
-		_, si := d.GetChange("storage_integration")
+		si := d.Get("storage_integration")
 		q := builder.ChangeStorageIntegration(si.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -326,7 +326,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("encryption") {
-		_, encryption := d.GetChange("encryption")
+		encryption := d.Get("encryption")
 		q := builder.ChangeEncryption(encryption.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -334,7 +334,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("file_format") {
-		_, fileFormat := d.GetChange("file_format")
+		fileFormat := d.Get("file_format")
 		q := builder.ChangeFileFormat(fileFormat.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -342,7 +342,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("copy_options") {
-		_, copyOptions := d.GetChange("copy_options")
+		copyOptions := d.Get("copy_options")
 		q := builder.ChangeCopyOptions(copyOptions.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -350,7 +350,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("comment") {
-		_, comment := d.GetChange("comment")
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {

@@ -190,7 +190,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
-		_, name := d.GetChange("name")
+		name := d.Get("name")
 
 		q := builder.Rename(name.(string))
 		err := snowflake.Exec(db, q)
@@ -202,7 +202,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("comment") {
-		_, comment := d.GetChange("comment")
+		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
@@ -219,7 +219,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("is_secure") {
-		_, secure := d.GetChange("is_secure")
+		secure := d.Get("is_secure")
 
 		if secure.(bool) {
 			q := builder.Secure()

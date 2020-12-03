@@ -440,7 +440,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	defer resumeTask(root, meta)
 
 	if d.HasChange("warehouse") {
-		_, new := d.GetChange("warehouse")
+		new := d.Get("warehouse")
 		q := builder.ChangeWarehouse(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -559,7 +559,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("when") {
-		_, new := d.GetChange("when")
+		new := d.Get("when")
 		q := builder.ChangeCondition(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -568,7 +568,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("sql_statement") {
-		_, new := d.GetChange("sql_statement")
+		new := d.Get("sql_statement")
 		q := builder.ChangeSqlStatement(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -578,7 +578,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enabled") {
 		var q string
-		_, n := d.GetChange("enabled")
+		n := d.Get("enabled")
 		enable := n.(bool)
 
 		if enable {

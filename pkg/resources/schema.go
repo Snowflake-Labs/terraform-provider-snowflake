@@ -247,7 +247,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	if d.HasChange("comment") {
-		_, comment := d.GetChange("comment")
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
@@ -256,7 +256,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("is_managed") {
-		_, managed := d.GetChange("is_managed")
+		managed := d.Get("is_managed")
 		var q string
 		if managed.(bool) {
 			q = builder.Manage()
@@ -271,7 +271,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		_, days := d.GetChange("data_retention_days")
+		days := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetentionDays(days.(int))
 		err := snowflake.Exec(db, q)

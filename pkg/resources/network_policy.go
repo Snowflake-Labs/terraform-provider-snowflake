@@ -158,7 +158,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NetworkPolicy(name)
 
 	if d.HasChange("comment") {
-		_, comment := d.GetChange("comment")
+		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
@@ -213,7 +213,7 @@ func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ipChangeParser is a helper function to parse a given ip list change from ResourceData
 func ipChangeParser(data *schema.ResourceData, key string) []string {
-	_, ipChangeSet := data.GetChange(key)
+	ipChangeSet := data.Get(key)
 	ipList := ipChangeSet.(*schema.Set).List()
 	newIps := make([]string, len(ipList))
 	for idx, value := range ipList {

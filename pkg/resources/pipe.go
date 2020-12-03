@@ -270,7 +270,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	if d.HasChange("comment") {
-		_, comment := d.GetChange("comment")
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
