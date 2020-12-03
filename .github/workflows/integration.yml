@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - test
+          - test-acceptance
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - test
+          - test-acceptance
     steps:
       - uses: actions/checkout@v2
         with:
