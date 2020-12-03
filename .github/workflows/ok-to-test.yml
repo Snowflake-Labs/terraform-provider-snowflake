@@ -9,10 +9,6 @@ jobs:
   ok-to-test:
     runs-on: ubuntu-latest
     steps:
-    # Generate a GitHub App installation access token from an App ID and private key
-    # To create a new GitHub App:
-    #   https://developer.github.com/apps/building-github-apps/creating-a-github-app/
-    # See app.yml for an example app manifest
     - name: Generate token
       id: generate_token
       uses: tibdex/github-app-token@v1
