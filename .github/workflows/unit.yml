@@ -1,7 +1,7 @@
 # Run unit tests that don't require secrets on any branch/fork pull request
 on:
   pull_request:
-    types: [review_requested, edited]
+    types: [review_requested, edited, synchronized]
 
 name: Unit tests
 
