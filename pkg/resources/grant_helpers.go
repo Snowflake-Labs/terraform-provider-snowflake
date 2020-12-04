@@ -65,63 +65,6 @@ type grantID struct {
 	GrantOption  bool
 }
 
-// Because none of the grants currently have a privilege of "ALL", rather they explicitly say
-// each privilege for each database_schema pair, we want to collapse them into one grant that has
-// the privilege of "ALL". filterAllGrants allows us to filter the grants and reassign their privilege
-// to "ALL".
-func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
-	// We only filter if ALL is in validPrivs.
-	_, ok := validPrivs[privilegeAll]
-	if !ok {
-		return grantList
-	}
-
-	groupedByRole := map[grant]privilegeSet{}
-	for _, g := range grantList {
-		id := grant{
-			GrantName:   g.GrantName,
-			GranteeType: g.GranteeType,
-			GranteeName: g.GranteeName,
-			GrantOption: g.GrantOption,
-		}
-		if _, ok := groupedByRole[id]; !ok {
-			groupedByRole[id] = privilegeSet{}
-		}
-		groupedByRole[id].addString(g.Privilege)
-	}
-	for databaseSchemaRole, privs := range groupedByRole {
-		if !privs.ALLPrivsPresent(validPrivs) {
-			delete(groupedByRole, databaseSchemaRole)
-		}
-	}
-	filteredGrants := []*grant{}
-
-	// Roles with the "ALL" privilege
-	for databaseSchemaRole := range groupedByRole {
-		filteredGrants = append(filteredGrants, &grant{
-			GrantName:   databaseSchemaRole.GrantName,
-			Privilege:   privilegeAll.string(),
-			GranteeType: databaseSchemaRole.GranteeType,
-			GranteeName: databaseSchemaRole.GranteeName,
-		})
-	}
-
-	for _, g := range grantList {
-		id := grant{
-			GrantName:   g.GrantName,
-			GranteeType: g.GranteeType,
-			GranteeName: g.GranteeName,
-			GrantOption: g.GrantOption,
-		}
-		// Already added it with the "ALL" privilege, so skip
-		if _, ok := groupedByRole[id]; ok {
-			continue
-		}
-		filteredGrants = append(filteredGrants, g)
-	}
-	return filteredGrants
-}
-
 // String() takes in a grantID object and returns a pipe-delimited string:
 // resourceName|schemaName|ObjectName|Privilege|GrantOption
 func (gi *grantID) String() (string, error) {
@@ -205,7 +148,7 @@ func readGenericGrant(
 	schema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
-	validPrivileges privilegeSet) error {
+	validPrivileges PrivilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -235,12 +178,9 @@ func readGenericGrant(
 		}
 	}
 
-	// We re-aggregate grants that would be equivalent to the "ALL" grant
-	grants = filterALLGrants(grants, validPrivileges)
-
 	// Map of roles to privileges
-	rolePrivileges := map[string]privilegeSet{}
-	sharePrivileges := map[string]privilegeSet{}
+	rolePrivileges := map[string]PrivilegeSet{}
+	sharePrivileges := map[string]PrivilegeSet{}
 
 	// List of all grants for each schema_database
 	for _, grant := range grants {
@@ -251,7 +191,7 @@ func readGenericGrant(
 			privileges, ok := rolePrivileges[roleName]
 			if !ok {
 				// If not there, create an empty set
-				privileges = privilegeSet{}
+				privileges = PrivilegeSet{}
 			}
 			// Add privilege to the set but consider valid privileges only
 			// for VIEW in ReadViewGrant
@@ -271,7 +211,7 @@ func readGenericGrant(
 			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
 			if !ok {
 				// If not there, create an empty set
-				privileges = privilegeSet{}
+				privileges = PrivilegeSet{}
 			}
 			// Add privilege to the set
 			privileges.addString(grant.Privilege)
@@ -286,7 +226,7 @@ func readGenericGrant(
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
-		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
+		if privileges.hasString(priv) {
 			roles = append(roles, roleName)
 		}
 	}
@@ -294,7 +234,7 @@ func readGenericGrant(
 	// Now see which shares have our privilege
 	for shareName, privileges := range sharePrivileges {
 		// Where priv is not all so it should match exactly
-		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
+		if privileges.hasString(priv) {
 			shares = append(shares, shareName)
 		}
 	}

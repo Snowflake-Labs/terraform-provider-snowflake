@@ -8,10 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// Intentionally exclude the "ALL" alias because it is not a real privilege and
-// might not interact well with this provider.
-var validSchemaPrivileges = newPrivilegeSet(
-	privilegeAll,
+var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
 	privilegeOwnership,

@@ -6,8 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validWarehousePrivileges = newPrivilegeSet(
-	privilegeAll,
+var validWarehousePrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
 	privilegeOperate,
@@ -27,7 +26,8 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.toList(), true),
-		ForceNew:     true,
+		// ValidateDiagFunc:
+		ForceNew: true,
 	},
 	"roles": {
 		Type:        schema.TypeSet,

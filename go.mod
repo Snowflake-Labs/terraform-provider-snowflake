@@ -7,6 +7,7 @@ require (
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/chanzuckerberg/go-misc v0.0.0-20200713202614-1c7b6844ebd6
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-docs v0.2.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.3
@@ -17,7 +18,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.4
 	github.com/stretchr/testify v1.5.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	github.com/zclconf/go-cty v1.5.1 // indirect
+	github.com/zclconf/go-cty v1.5.1
 	golang.org/x/crypto v0.0.0-20200707235045-ab33eee955e0
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
