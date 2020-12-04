@@ -3,8 +3,8 @@ package resources
 import (
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -259,7 +259,7 @@ func ReadFunctionGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 
-	return readGenericGrant(data, meta, builder, futureFunctionsEnabled, validFunctionPrivileges)
+	return readGenericGrant(data, meta, functionGrantSchema, builder, futureFunctionsEnabled, validFunctionPrivileges)
 }
 
 // DeleteFunctionGrant implements schema.DeleteFunc

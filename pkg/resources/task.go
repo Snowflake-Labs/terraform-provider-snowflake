@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -419,9 +419,6 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateTask implements schema.UpdateFunc
 func UpdateTask(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	taskID, err := taskIDFromString(data.Id())
 	if err != nil {
 		return err
@@ -446,7 +443,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating warehouse on task %v", data.Id())
 		}
-		data.SetPartial("warehouse")
 	}
 
 	if data.HasChange("schedule") {
@@ -461,7 +457,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating schedule on task %v", data.Id())
 		}
-		data.SetPartial("schedule")
 	}
 
 	if data.HasChange("user_task_timeout_ms") {
@@ -476,7 +471,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating user task timeout on task %v", data.Id())
 		}
-		data.SetPartial("user_task_timeout_ms")
 	}
 
 	if data.HasChange("comment") {
@@ -491,7 +485,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating comment on task %v", data.Id())
 		}
-		data.SetPartial("comment")
 	}
 
 	if data.HasChange("after") {
@@ -527,8 +520,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error adding after dependency on task %v", data.Id())
 			}
 		}
-
-		data.SetPartial("after")
 	}
 
 	if data.HasChange("session_parameters") {
@@ -562,8 +553,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error adding session_parameters to task %v", data.Id())
 			}
 		}
-
-		data.SetPartial("session_parameters")
 	}
 
 	if data.HasChange("when") {
@@ -573,7 +562,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating when condition on task %v", data.Id())
 		}
-		data.SetPartial("when")
 	}
 
 	if data.HasChange("sql_statement") {
@@ -583,7 +571,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating sql statement on task %v", data.Id())
 		}
-		data.SetPartial("sql_statement")
 	}
 
 	if data.HasChange("enabled") {
@@ -606,8 +593,6 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", data.Id())
 		}
-
-		data.SetPartial("enabled")
 	}
 
 	return ReadTask(data, meta)

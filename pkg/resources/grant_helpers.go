@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -200,7 +200,13 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 	return nil
 }
 
-func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder, futureObjects bool, validPrivileges privilegeSet) error {
+func readGenericGrant(
+	data *schema.ResourceData,
+	meta interface{},
+	schema map[string]*schema.Schema,
+	builder snowflake.GrantBuilder,
+	futureObjects bool,
+	validPrivileges privilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -281,10 +287,11 @@ func readGenericGrant(data *schema.ResourceData, meta interface{}, builder snowf
 	if err != nil {
 		return err
 	}
-	err = data.Set("shares", shares)
-	if err != nil {
-		// warehouses and future grants don't use shares - check for this error
-		if !strings.HasPrefix(err.Error(), "Invalid address to set") {
+
+	_, sharesOk := schema["shares"]
+	if sharesOk && !futureObjects {
+		err = data.Set("shares", shares)
+		if err != nil {
 			return err
 		}
 	}

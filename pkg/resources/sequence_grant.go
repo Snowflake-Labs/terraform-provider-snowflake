@@ -1,8 +1,8 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -181,7 +181,7 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureSequencesEnabled, validSequencePrivileges)
+	return readGenericGrant(data, meta, sequenceGrantSchema, builder, futureSequencesEnabled, validSequencePrivileges)
 }
 
 // DeleteSequenceGrant implements schema.DeleteFunc

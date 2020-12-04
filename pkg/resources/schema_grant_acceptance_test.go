@@ -3,12 +3,11 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccSchemaGrant(t *testing.T) {
@@ -80,14 +79,14 @@ func TestAccSchemaFutureGrants(t *testing.T) {
 
 func futureTableAndViewGrantConfig(n, role_table, role_view string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" { 
-  name = "%v" 
+resource "snowflake_database" "test" {
+  name = "%v"
 }
 
-resource "snowflake_schema" "test" {   
-  name      = "%v"   
-  database  = snowflake_database.test.name   
-  comment   = "Terraform acceptance test" 
+resource "snowflake_schema" "test" {
+  name      = "%v"
+  database  = snowflake_database.test.name
+  comment   = "Terraform acceptance test"
 }
 
 resource "snowflake_role" "table_reader" {

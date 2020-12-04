@@ -1,11 +1,17 @@
+---
+page_title: "Provider: Snowflake"
+description: Manage SnowflakeDB with Terraform.
+---
+
 # Snowflake Provider
 
 This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 Coverage is focused on part of Snowflake related to access control.
 
-## Example
 
-```hcl
+## Example Provider Configuration
+
+```terraform
 provider snowflake {
   // required
   username = "..."
@@ -18,9 +24,28 @@ provider snowflake {
   private_key_path   = "..."
 
   // optional
-  role  = "..."
+  role = "..."
 }
 ```
+
+## Configuration Schema
+
+## Schema
+
+### Required
+
+- **account** (String, Required)
+- **username** (String, Required)
+
+### Optional
+
+- **browser_auth** (Boolean, Optional)
+- **oauth_access_token** (String, Optional)
+- **password** (String, Optional)
+- **private_key_path** (String, Optional)
+- **region** (String, Optional)
+- **role** (String, Optional)
+
 
 ## Authentication
 

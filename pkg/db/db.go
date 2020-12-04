@@ -7,7 +7,7 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/ExpansiveWorlds/instrumentedsql"
+	"github.com/luna-duclos/instrumentedsql"
 	"github.com/snowflakedb/gosnowflake"
 )
 

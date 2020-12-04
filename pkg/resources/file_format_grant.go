@@ -1,8 +1,8 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -181,7 +181,7 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
+	return readGenericGrant(data, meta, fileFormatGrantSchema, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
 }
 
 // DeleteFileFormatGrant implements schema.DeleteFunc

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccStream(t *testing.T) {
@@ -65,7 +65,7 @@ resource "snowflake_stream" "test_stream" {
 	comment  = "Terraform acceptance test"
 	on_table = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_table.test_stream_on_table.name}"
 	append_only = true
-	
+
 }
 `
 	return fmt.Sprintf(s, name, name, name)

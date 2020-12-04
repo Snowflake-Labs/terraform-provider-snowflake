@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -248,8 +248,6 @@ func UpdateTable(data *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating table comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	return ReadTable(data, meta)

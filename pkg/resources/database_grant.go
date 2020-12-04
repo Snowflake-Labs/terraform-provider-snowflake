@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var ValidDatabasePrivileges = newPrivilegeSet(
@@ -121,8 +121,7 @@ func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.DatabaseGrant(grantID.ResourceName)
-
-	return readGenericGrant(data, meta, builder, false, ValidDatabasePrivileges)
+	return readGenericGrant(data, meta, databaseGrantSchema, builder, false, ValidDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc

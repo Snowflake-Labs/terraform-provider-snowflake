@@ -4,6 +4,7 @@ export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else 
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
+export TF_ACC_TERRAFORM_VERSION=0.12.29
 
 all: test docs install
 .PHONY: all
@@ -16,7 +17,7 @@ setup: ## setup development dependencies
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff master"
+	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
 
 lint-ci: ## run the fast go linters
@@ -61,14 +62,10 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
-.PHONY: test-acceptance
-
-test-acceptance-ci: ## runs all tests, including the acceptance tests which create and destroys real resources
 	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
@@ -99,8 +96,8 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: 
-	go run ./docgen
+docs:
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
 check-docs: docs ## check that docs have been generated
@@ -113,5 +110,6 @@ check-mod:
 .PHONY: check-mod
 
 fmt:
+	go get golang.org/x/tools/cmd/goimports
 	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
 .PHONY: fmt

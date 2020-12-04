@@ -1,7 +1,12 @@
-on: push
+# Run unit tests that don't require secrets on any branch/fork pull request
+on:
+  pull_request:
+    types: [review_requested, edited, synchronized]
+
+name: Unit tests
 
 jobs:
-  run:
+  unit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -9,7 +14,7 @@ jobs:
           - check-docs
           - check-mod
           - lint-ci
-          - test-acceptance-ci
+          - test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -17,12 +22,5 @@ jobs:
           go-version: '1.15.2'
       - name: Install dependencies
         run: make setup
-
       - name: make ${{ matrix.target }}
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
