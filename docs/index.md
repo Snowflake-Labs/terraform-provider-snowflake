@@ -32,16 +32,19 @@ provider snowflake {
 
 ## Schema
 
+### Required
+
+- **account** (String, Required)
+- **username** (String, Required)
+
 ### Optional
 
-- **account** (String, Optional)
 - **browser_auth** (Boolean, Optional)
 - **oauth_access_token** (String, Optional)
 - **password** (String, Optional)
 - **private_key_path** (String, Optional)
 - **region** (String, Optional)
 - **role** (String, Optional)
-- **username** (String, Optional)
 
 
 ## Authentication
