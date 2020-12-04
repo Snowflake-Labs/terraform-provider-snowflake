@@ -215,7 +215,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for key, val := range toSet {
-		err = d.Set(key, val)
+		err = d.Set(key, val) //lintignore:R001
 		if err != nil {
 			return err
 		}

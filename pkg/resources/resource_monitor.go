@@ -200,9 +200,9 @@ func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullStr
 	for k, v := range ns {
 		var err error
 		if v.Valid {
-			err = data.Set(k, v.String)
+			err = data.Set(k, v.String) //lintignore:R001
 		} else {
-			err = data.Set(k, "")
+			err = data.Set(k, "") //lintignore:R001
 		}
 		if err != nil {
 			return err
