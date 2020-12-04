@@ -159,7 +159,7 @@ var (
 	}
 )
 
-func TestAccTask(t *testing.T) {
+func TestAcc_Task(t *testing.T) {
 	t.Skip("broken by a change to snowflake")
 
 	resource.Test(t, resource.TestCase{

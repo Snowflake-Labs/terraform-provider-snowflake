@@ -13,7 +13,7 @@ const (
 	managedAccountComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccManagedAccount(t *testing.T) {
+func TestAcc_ManagedAccount(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
 		t.Skip("Skipping TestAccManagedAccount")
 	}

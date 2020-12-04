@@ -13,7 +13,7 @@ const (
 	shareComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccShare(t *testing.T) {
+func TestAcc_Share(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccShare")
 	}

@@ -87,7 +87,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 	}
 }
 
-func TestAccGrantRole(t *testing.T) {
+func TestAcc_GrantRole(t *testing.T) {
 	role1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role3 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)

@@ -31,7 +31,7 @@ func testRolesAndShares(path string, roles, shares []string) func(*terraform.Sta
 	}
 }
 
-func TestAccDatabaseGrant(t *testing.T) {
+func TestAcc_DatabaseGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccDatabaseGrant")
 	}

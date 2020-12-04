@@ -98,7 +98,7 @@ func TestWarehouseGrant(t *testing.T) {
 
 }
 
-func TestAccountGrant(t *testing.T) {
+func TestAccountGrant(t *testing.T) { // lintignore
 	r := require.New(t)
 	wg := snowflake.AccountGrant()
 	r.Equal(wg.Name(), "")

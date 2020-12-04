@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccResourceMonitor(t *testing.T) {
+func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 

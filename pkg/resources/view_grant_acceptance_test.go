@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccViewGrantBasic(t *testing.T) {
+func TestAcc_ViewGrantBasic(t *testing.T) {
 	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
@@ -30,7 +30,7 @@ func TestAccViewGrantBasic(t *testing.T) {
 	})
 }
 
-func TestAccViewGrantShares(t *testing.T) {
+func TestAcc_ViewGrantShares(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccViewGrantShares")
 	}
@@ -54,7 +54,7 @@ func TestAccViewGrantShares(t *testing.T) {
 	})
 }
 
-func TestAccFutureViewGrantChange(t *testing.T) {
+func TestAcc_FutureViewGrantChange(t *testing.T) {
 	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
