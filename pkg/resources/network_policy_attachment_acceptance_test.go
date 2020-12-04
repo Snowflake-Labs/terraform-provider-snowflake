@@ -15,8 +15,8 @@ func TestAccNetworkPolicyAttachment(t *testing.T) {
 		t.Skip("Skipping TestAccNetworkPolicyAttachment")
 	}
 
-	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	policyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -43,19 +43,11 @@ func TestAccNetworkPolicyAttachment(t *testing.T) {
 func networkPolicyAttachmentConfig(user1, user2, policyName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_user" "test-user1" {
-<<<<<<< HEAD
-	name = "TEST-USER1"
-}
-
-resource "snowflake_user" "test-user2" {
-	name = "TEST-USER2"
-=======
 	name = "%s"
 }
 
 resource "snowflake_user" "test-user2" {
 	name = "%s"
->>>>>>> main
 }
 
 resource "snowflake_network_policy" "test" {
