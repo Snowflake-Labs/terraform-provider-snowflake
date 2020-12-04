@@ -1,4 +1,4 @@
-# If someone with write access comments "/ok-to-test sha=<head sha>" on a pull request, emit a repository_dispatch event
+# If someone with write access comments "/ok-to-test" on a pull request, emit a repository_dispatch event
 name: Label
 
 on:
