@@ -1,8 +1,6 @@
 # Run unit tests that don't require secrets on any branch/fork pull request
 on:
   pull_request:
-    types: [review_requested, edited, synchronized]
-
 name: Unit tests
 
 jobs:
@@ -13,7 +11,6 @@ jobs:
         target:
           - check-docs
           - check-mod
-          - lint-ci
           - test
     steps:
       - uses: actions/checkout@v2
