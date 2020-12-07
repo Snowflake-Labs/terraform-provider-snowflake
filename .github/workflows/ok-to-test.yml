@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Generate token
       id: generate_token
-      uses: chanzuckerberg/github-app-token@4609526
+      uses: chanzuckerberg/github-app-token@v1.1.2
       with:
         app_id: ${{ secrets.OK_TO_TEST_APP_ID }}
         private_key: ${{ secrets.OK_TO_TEST_PRIVATE_KEY }}
