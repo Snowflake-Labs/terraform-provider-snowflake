@@ -7,8 +7,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidStagePrivileges = newPrivilegeSet(
-	privilegeAll,
+var ValidStagePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 	// These privileges are only valid for internal stages
