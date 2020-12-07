@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Generate token
       id: generate_token
-      uses: chanzuckerberg/terraform-provider-snowflake
+      uses: chanzuckerberg/terraform-provider-snowflake@v1.1.1
       with:
         app_id: ${{ secrets.OK_TO_TEST_APP_ID }}
         private_key: ${{ secrets.OK_TO_TEST_PRIVATE_KEY }}
