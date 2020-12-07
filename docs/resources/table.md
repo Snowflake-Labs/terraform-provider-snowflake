@@ -37,4 +37,11 @@ Required:
 - **name** (String, Required) Column name
 - **type** (String, Required) Column type, e.g. VARIANT
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | table name
+terraform import snowflake_table.example
+```

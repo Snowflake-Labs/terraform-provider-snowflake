@@ -28,4 +28,10 @@ description: |-
 - **suspend_immediate_triggers** (Set of Number, Optional) A list of percentage thresholds at which to immediately suspend all warehouses.
 - **suspend_triggers** (Set of Number, Optional) A list of percentage thresholds at which to suspend all warehouses.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_resource_monitor.example
+```
