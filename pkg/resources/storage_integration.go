@@ -86,39 +86,38 @@ func StorageIntegration() *schema.Resource {
 		Read:   ReadStorageIntegration,
 		Update: UpdateStorageIntegration,
 		Delete: DeleteStorageIntegration,
-		Exists: StorageIntegrationExists,
 
 		Schema: storageIntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateStorageIntegration implements schema.CreateFunc
-func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error {
+func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 
 	stmt := snowflake.StorageIntegration(name).Create()
 
 	// Set required fields
-	stmt.SetString(`TYPE`, data.Get("type").(string))
-	stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
+	stmt.SetString(`TYPE`, d.Get("type").(string))
+	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 
-	stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(data.Get("storage_allowed_locations").([]interface{})))
+	stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(d.Get("storage_allowed_locations").([]interface{})))
 
 	// Set optional fields
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		stmt.SetString(`COMMENT`, v.(string))
 	}
 
-	if _, ok := data.GetOk("storage_blocked_locations"); ok {
-		stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(data.Get("storage_blocked_locations").([]interface{})))
+	if _, ok := d.GetOk("storage_blocked_locations"); ok {
+		stmt.SetStringList("STORAGE_BLOCKED_LOCATIONS", expandStringList(d.Get("storage_blocked_locations").([]interface{})))
 	}
 
 	// Now, set the storage provider
-	err := setStorageProviderSettings(data, stmt)
+	err := setStorageProviderSettings(d, stmt)
 	if err != nil {
 		return err
 	}
@@ -128,17 +127,17 @@ func CreateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error creating storage integration: %w", err)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadStorageIntegration(data, meta)
+	return ReadStorageIntegration(d, meta)
 }
 
 // ReadStorageIntegration implements schema.ReadFunc
-func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
+func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
-	stmt := snowflake.StorageIntegration(data.Id()).Show()
+	stmt := snowflake.StorageIntegration(d.Id()).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -153,63 +152,63 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
 	}
 
-	if err := data.Set("name", s.Name.String); err != nil {
+	if err := d.Set("name", s.Name.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("type", s.IntegrationType.String); err != nil {
+	if err := d.Set("type", s.IntegrationType.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("created_on", s.CreatedOn.String); err != nil {
+	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("enabled", s.Enabled.Bool); err != nil {
+	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
 		return err
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	// We need to grab them in a loop
 	var k, pType string
-	var v, d interface{}
-	stmt = snowflake.StorageIntegration(data.Id()).Describe()
+	var v, unused interface{}
+	stmt = snowflake.StorageIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("Could not describe storage integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &d); err != nil {
+		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
 			return err
 		}
 		switch k {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "STORAGE_PROVIDER":
-			if err = data.Set("storage_provider", v.(string)); err != nil {
+			if err = d.Set("storage_provider", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_ALLOWED_LOCATIONS":
-			if err = data.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
+			if err = d.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
 				return err
 			}
 		case "STORAGE_BLOCKED_LOCATIONS":
 			if val := v.(string); val != "" {
-				if err = data.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
+				if err = d.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_AWS_IAM_USER_ARN":
-			if err = data.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
+			if err = d.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_ROLE_ARN":
-			if err = data.Set("storage_aws_role_arn", v.(string)); err != nil {
+			if err = d.Set("storage_aws_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_EXTERNAL_ID":
-			if err = data.Set("storage_aws_external_id", v.(string)); err != nil {
+			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -221,9 +220,9 @@ func ReadStorageIntegration(data *schema.ResourceData, meta interface{}) error {
 }
 
 // UpdateStorageIntegration implements schema.UpdateFunc
-func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error {
+func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.StorageIntegration(id).Alter()
 
@@ -231,34 +230,34 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 	// Not sure if there is a more elegant way of determining this
 	var runSetStatement bool
 
-	if data.HasChange("comment") {
+	if d.HasChange("comment") {
 		runSetStatement = true
-		stmt.SetString("COMMENT", data.Get("comment").(string))
+		stmt.SetString("COMMENT", d.Get("comment").(string))
 	}
 
-	if data.HasChange("type") {
+	if d.HasChange("type") {
 		runSetStatement = true
-		stmt.SetString("TYPE", data.Get("type").(string))
+		stmt.SetString("TYPE", d.Get("type").(string))
 	}
 
-	if data.HasChange("enabled") {
+	if d.HasChange("enabled") {
 		runSetStatement = true
-		stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
+		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 	}
 
-	if data.HasChange("storage_allowed_locations") {
+	if d.HasChange("storage_allowed_locations") {
 		runSetStatement = true
-		stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(data.Get("storage_allowed_locations").([]interface{})))
+		stmt.SetStringList("STORAGE_ALLOWED_LOCATIONS", expandStringList(d.Get("storage_allowed_locations").([]interface{})))
 	}
 
 	// We need to UNSET this if we remove all storage blocked locations. I don't think
 	// this is documented by Snowflake, but this is how it works.
 	//
 	// @TODO move the SQL back to the snowflake package
-	if data.HasChange("storage_blocked_locations") {
-		v := data.Get("storage_blocked_locations").([]interface{})
+	if d.HasChange("storage_blocked_locations") {
+		v := d.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
-			err := snowflake.Exec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, data.Id()))
+			err := snowflake.Exec(db, fmt.Sprintf(`ALTER STORAGE INTEGRATION %v UNSET STORAGE_BLOCKED_LOCATIONS`, d.Id()))
 			if err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
 			}
@@ -268,17 +267,20 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if data.HasChange("storage_provider") {
+	if d.HasChange("storage_provider") {
 		runSetStatement = true
-		setStorageProviderSettings(data, stmt)
-	} else {
-		if data.HasChange("storage_aws_role_arn") {
-			runSetStatement = true
-			stmt.SetString("STORAGE_AWS_ROLE_ARN", data.Get("storage_aws_role_arn").(string))
+		err := setStorageProviderSettings(d, stmt)
+		if err != nil {
+			return err
 		}
-		if data.HasChange("azure_tenant_id") {
+	} else {
+		if d.HasChange("storage_aws_role_arn") {
 			runSetStatement = true
-			stmt.SetString("AZURE_TENANT_ID", data.Get("azure_tenant_id").(string))
+			stmt.SetString("STORAGE_AWS_ROLE_ARN", d.Get("storage_aws_role_arn").(string))
+		}
+		if d.HasChange("azure_tenant_id") {
+			runSetStatement = true
+			stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
 		}
 	}
 
@@ -288,18 +290,18 @@ func UpdateStorageIntegration(data *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return ReadStorageIntegration(data, meta)
+	return ReadStorageIntegration(d, meta)
 }
 
 // DeleteStorageIntegration implements schema.DeleteFunc
-func DeleteStorageIntegration(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.StorageIntegration)(data, meta)
+func DeleteStorageIntegration(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("", snowflake.StorageIntegration)(d, meta)
 }
 
 // StorageIntegrationExists implements schema.ExistsFunc
-func StorageIntegrationExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+func StorageIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.StorageIntegration(id).Show()
 	rows, err := db.Query(stmt)

@@ -133,7 +133,7 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 	}
 	e.pos += found
 
-	if c := e.consumeToken("'"); !c {
+	if !e.consumeToken("'") {
 		return
 	}
 }

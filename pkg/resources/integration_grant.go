@@ -54,13 +54,13 @@ func IntegrationGrant() *schema.Resource {
 }
 
 // CreateIntegrationGrant implements schema.CreateFunc
-func CreateIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
-	w := data.Get("integration_name").(string)
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
+	w := d.Get("integration_name").(string)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 	builder := snowflake.IntegrationGrant(w)
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -74,41 +74,41 @@ func CreateIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadIntegrationGrant(data, meta)
+	return ReadIntegrationGrant(d, meta)
 }
 
 // ReadIntegrationGrant implements schema.ReadFunc
-func ReadIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 	w := grantID.ResourceName
 	priv := grantID.Privilege
 
-	err = data.Set("integration_name", w)
+	err = d.Set("integration_name", w)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
 	builder := snowflake.IntegrationGrant(w)
 
-	return readGenericGrant(data, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
+	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc
-func DeleteIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -116,5 +116,5 @@ func DeleteIntegrationGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.IntegrationGrant(w)
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

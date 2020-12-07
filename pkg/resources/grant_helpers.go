@@ -170,13 +170,13 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	return grantResult, nil
 }
 
-func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
-	roles, shares := expandRolesAndShares(data)
+	roles, shares := expandRolesAndShares(d)
 
 	if len(roles)+len(shares) == 0 {
 		return fmt.Errorf("no roles or shares specified for this grant")
@@ -200,7 +200,7 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 }
 
 func readGenericGrant(
-	data *schema.ResourceData,
+	d *schema.ResourceData,
 	meta interface{},
 	schema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
@@ -217,8 +217,8 @@ func readGenericGrant(
 	if err != nil {
 		return err
 	}
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
 	// is checking what kind of builder we have. If it is future grant, then I double check if the
@@ -299,23 +299,23 @@ func readGenericGrant(
 		}
 	}
 
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("roles", roles)
+	err = d.Set("roles", roles)
 	if err != nil {
 		return err
 	}
 
 	_, sharesOk := schema["shares"]
 	if sharesOk && !futureObjects {
-		err = data.Set("shares", shares)
+		err = d.Set("shares", shares)
 		if err != nil {
 			return err
 		}
 	}
-	err = data.Set("with_grant_option", grantOption)
+	err = d.Set("with_grant_option", grantOption)
 	if err != nil {
 		return err
 	}
@@ -391,18 +391,18 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 	return grants, nil
 }
 
-func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
-	priv := data.Get("privilege").(string)
+	priv := d.Get("privilege").(string)
 
 	var roles, shares []string
-	if _, ok := data.GetOk("roles"); ok {
-		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	if _, ok := d.GetOk("roles"); ok {
+		roles = expandStringList(d.Get("roles").(*schema.Set).List())
 	}
 
-	if _, ok := data.GetOk("shares"); ok {
-		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	if _, ok := d.GetOk("shares"); ok {
+		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 
 	for _, role := range roles {
@@ -419,18 +419,18 @@ func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 		}
 	}
 
-	data.SetId("")
+	d.SetId("")
 	return nil
 }
 
-func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
+func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 	var roles, shares []string
-	if _, ok := data.GetOk("roles"); ok {
-		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	if _, ok := d.GetOk("roles"); ok {
+		roles = expandStringList(d.Get("roles").(*schema.Set).List())
 	}
 
-	if _, ok := data.GetOk("shares"); ok {
-		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	if _, ok := d.GetOk("shares"); ok {
+		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
 }
