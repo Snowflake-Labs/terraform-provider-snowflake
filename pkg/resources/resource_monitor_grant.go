@@ -6,8 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validResourceMonitorPrivileges = newPrivilegeSet(
-	privilegeAll,
+var validResourceMonitorPrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
 )

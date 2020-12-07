@@ -6,8 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validWarehousePrivileges = newPrivilegeSet(
-	privilegeAll,
+var validWarehousePrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
 	privilegeOperate,

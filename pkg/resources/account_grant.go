@@ -7,7 +7,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validAccountPrivileges = newPrivilegeSet(
+var validAccountPrivileges = NewPrivilegeSet(
 	privilegeCreateRole,
 	privilegeCreateUser,
 	privilegeCreateWarehouse,

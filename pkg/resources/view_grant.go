@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = newPrivilegeSet(
+var ValidViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
 )
 
