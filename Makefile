@@ -37,7 +37,7 @@ lint-all: fmt ## run the fast go linters
 .PHONY: lint-all
 
 lint-missing-acceptance-tests:
-	@for r in `ls pkg/resources/ | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
+	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
 		if [ ! -f pkg/resources/"$$r"_acceptance_test.go ]; then \
 			echo $$r; \
 		fi; \
