@@ -83,8 +83,8 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
 		"snowflake_schema_grant":           resources.SchemaGrant(),
 		"snowflake_stage_grant":            resources.StageGrant(),
-		"snowflake_view_grant":             resources.ViewGrant(),
 		"snowflake_table_grant":            resources.TableGrant(),
+		"snowflake_view_grant":             resources.ViewGrant(),
 		"snowflake_warehouse_grant":        resources.WarehouseGrant(),
 	}
 	return grants
@@ -92,24 +92,23 @@ func GetGrantResources() resources.TerraformGrantResources {
 
 func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
-		// Note: snowflake_role_grants intentionally in this list
-		"snowflake_role_grants":               resources.RoleGrants(),
 		"snowflake_database":                  resources.Database(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
-		"snowflake_network_policy":            resources.NetworkPolicy(),
 		"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
+		"snowflake_network_policy":            resources.NetworkPolicy(),
 		"snowflake_pipe":                      resources.Pipe(),
 		"snowflake_resource_monitor":          resources.ResourceMonitor(),
+		"snowflake_role_grants":               resources.RoleGrants(),
 		"snowflake_role":                      resources.Role(),
 		"snowflake_schema":                    resources.Schema(),
 		"snowflake_share":                     resources.Share(),
 		"snowflake_stage":                     resources.Stage(),
 		"snowflake_storage_integration":       resources.StorageIntegration(),
 		"snowflake_stream":                    resources.Stream(),
+		"snowflake_table":                     resources.Table(),
+		"snowflake_task":                      resources.Task(),
 		"snowflake_user":                      resources.User(),
 		"snowflake_view":                      resources.View(),
-		"snowflake_task":                      resources.Task(),
-		"snowflake_table":                     resources.Table(),
 		"snowflake_warehouse":                 resources.Warehouse(),
 	}
 
