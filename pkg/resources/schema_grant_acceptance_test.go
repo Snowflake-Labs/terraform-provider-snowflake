@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func Test_AccSchemaGrant(t *testing.T) {
+func TestAcc_SchemaGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccSchemaGrant")
 	}
