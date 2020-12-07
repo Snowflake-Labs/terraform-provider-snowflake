@@ -69,10 +69,6 @@ test-acceptance: fmt deps ## runs all tests, including the acceptance tests whic
 	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
-test-acceptance-ci: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
-.PHONY: test-acceptance
-
 deps:
 	go mod tidy
 .PHONY: deps
@@ -114,5 +110,6 @@ check-mod:
 .PHONY: check-mod
 
 fmt:
+	go get golang.org/x/tools/cmd/goimports
 	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
 .PHONY: fmt
