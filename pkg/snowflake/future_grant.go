@@ -109,7 +109,7 @@ func (gb *FutureGrantBuilder) Share(n string) GrantExecutable {
 // Grant returns the SQL that will grant future privileges on the grant to the grantee
 func (fge *FutureGrantExecutable) Grant(p string, w bool) string {
 	var template string
-	if w == true {
+	if w {
 		template = `GRANT %v ON FUTURE %vS IN %v %v TO ROLE "%v" WITH GRANT OPTION`
 	} else {
 		template = `GRANT %v ON FUTURE %vS IN %v %v TO ROLE "%v"`

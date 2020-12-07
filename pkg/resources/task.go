@@ -234,19 +234,18 @@ func Task() *schema.Resource {
 		Read:   ReadTask,
 		Update: UpdateTask,
 		Delete: DeleteTask,
-		Exists: TaskExists,
 
 		Schema: taskSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // ReadTask implements schema.ReadFunc
-func ReadTask(data *schema.ResourceData, meta interface{}) error {
+func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -263,54 +262,54 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("enabled", t.IsEnabled())
+	err = d.Set("enabled", t.IsEnabled())
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", t.Name)
+	err = d.Set("name", t.Name)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", t.DatabaseName)
+	err = d.Set("database", t.DatabaseName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schema", t.SchemaName)
+	err = d.Set("schema", t.SchemaName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("warehouse", t.Warehouse)
+	err = d.Set("warehouse", t.Warehouse)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schedule", t.Schedule)
+	err = d.Set("schedule", t.Schedule)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", t.Comment)
+	err = d.Set("comment", t.Comment)
 	if err != nil {
 		return err
 	}
 
 	if t.Predecessors != nil {
-		err = data.Set("after", t.GetPredecessorName())
+		err = d.Set("after", t.GetPredecessorName())
 		if err != nil {
 			return err
 		}
 	}
 
-	err = data.Set("when", t.Condition)
+	err = d.Set("when", t.Condition)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("sql_statement", t.Definition)
+	err = d.Set("sql_statement", t.Definition)
 	if err != nil {
 		return err
 	}
@@ -336,47 +335,50 @@ func ReadTask(data *schema.ResourceData, meta interface{}) error {
 			paramMap[param.Key] = param.Value
 		}
 
-		data.Set("session_parameters", paramMap)
+		err := d.Set("session_parameters", paramMap)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // CreateTask implements schema.CreateFunc
-func CreateTask(data *schema.ResourceData, meta interface{}) error {
+func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	dbSchema := data.Get("schema").(string)
-	name := data.Get("name").(string)
-	warehouse := data.Get("warehouse").(string)
-	sql := data.Get("sql_statement").(string)
-	enabled := data.Get("enabled").(bool)
+	database := d.Get("database").(string)
+	dbSchema := d.Get("schema").(string)
+	name := d.Get("name").(string)
+	warehouse := d.Get("warehouse").(string)
+	sql := d.Get("sql_statement").(string)
+	enabled := d.Get("enabled").(bool)
 
 	builder := snowflake.Task(name, database, dbSchema)
 	builder.WithWarehouse(warehouse)
 	builder.WithStatement(sql)
 
 	// Set optionals
-	if v, ok := data.GetOk("schedule"); ok {
+	if v, ok := d.GetOk("schedule"); ok {
 		builder.WithSchedule(v.(string))
 	}
 
-	if v, ok := data.GetOk("session_parameters"); ok {
+	if v, ok := d.GetOk("session_parameters"); ok {
 		builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
-	if v, ok := data.GetOk("user_task_timeout_ms"); ok {
+	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
 		builder.WithTimeout(v.(int))
 	}
 
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := data.GetOk("after"); ok {
-		root, err := getActiveRootTaskAndSuspend(data, meta)
+	if v, ok := d.GetOk("after"); ok {
+		root, err := getActiveRootTaskAndSuspend(d, meta)
 		if err != nil {
 			return err
 		}
@@ -385,7 +387,7 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 		builder.WithDependency(v.(string))
 	}
 
-	if v, ok := data.GetOk("when"); ok {
+	if v, ok := d.GetOk("when"); ok {
 		builder.WithCondition(v.(string))
 	}
 
@@ -412,14 +414,14 @@ func CreateTask(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadTask(data, meta)
+	return ReadTask(d, meta)
 }
 
 // UpdateTask implements schema.UpdateFunc
-func UpdateTask(data *schema.ResourceData, meta interface{}) error {
-	taskID, err := taskIDFromString(data.Id())
+func UpdateTask(d *schema.ResourceData, meta interface{}) error {
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -430,24 +432,24 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 	name := taskID.TaskName
 	builder := snowflake.Task(name, database, dbSchema)
 
-	root, err := getActiveRootTaskAndSuspend(data, meta)
+	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
 		return err
 	}
 	defer resumeTask(root, meta)
 
-	if data.HasChange("warehouse") {
-		_, new := data.GetChange("warehouse")
+	if d.HasChange("warehouse") {
+		new := d.Get("warehouse")
 		q := builder.ChangeWarehouse(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating warehouse on task %v", data.Id())
+			return errors.Wrapf(err, "error updating warehouse on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("schedule") {
+	if d.HasChange("schedule") {
 		var q string
-		old, new := data.GetChange("schedule")
+		old, new := d.GetChange("schedule")
 		if old != "" && new == "" {
 			q = builder.RemoveSchedule()
 		} else {
@@ -455,13 +457,13 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", data.Id())
+			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("user_task_timeout_ms") {
+	if d.HasChange("user_task_timeout_ms") {
 		var q string
-		old, new := data.GetChange("user_task_timeout_ms")
+		old, new := d.GetChange("user_task_timeout_ms")
 		if old.(int) > 0 && new.(int) == 0 {
 			q = builder.RemoveTimeout()
 		} else {
@@ -469,13 +471,13 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating user task timeout on task %v", data.Id())
+			return errors.Wrapf(err, "error updating user task timeout on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("comment") {
+	if d.HasChange("comment") {
 		var q string
-		old, new := data.GetChange("comment")
+		old, new := d.GetChange("comment")
 		if old != "" && new == "" {
 			q = builder.RemoveComment()
 		} else {
@@ -483,24 +485,24 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating comment on task %v", data.Id())
+			return errors.Wrapf(err, "error updating comment on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("after") {
+	if d.HasChange("after") {
 		var (
 			q   string
 			err error
 		)
 
-		old, new := data.GetChange("after")
-		enabled := data.Get("enabled").(bool)
+		old, new := d.GetChange("after")
+		enabled := d.Get("enabled").(bool)
 
 		if enabled {
 			q = builder.Suspend()
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error suspending task %v", data.Id())
+				return errors.Wrapf(err, "error suspending task %v", d.Id())
 			}
 			defer resumeTask(builder, meta)
 		}
@@ -509,7 +511,7 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			q = builder.RemoveDependency(old.(string))
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing old after dependency from task %v", data.Id())
+				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
 			}
 		}
 
@@ -517,14 +519,14 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			q = builder.AddDependency(new.(string))
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding after dependency on task %v", data.Id())
+				return errors.Wrapf(err, "error adding after dependency on task %v", d.Id())
 			}
 		}
 	}
 
-	if data.HasChange("session_parameters") {
+	if d.HasChange("session_parameters") {
 		var q string
-		o, n := data.GetChange("session_parameters")
+		o, n := d.GetChange("session_parameters")
 
 		if o == nil {
 			o = make(map[string]interface{})
@@ -542,7 +544,7 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			q = builder.RemoveSessionParameters(remove)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing session_parameters on task %v", data.Id())
+				return errors.Wrapf(err, "error removing session_parameters on task %v", d.Id())
 			}
 		}
 
@@ -550,32 +552,32 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 			q = builder.AddSessionParameters(add)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding session_parameters to task %v", data.Id())
+				return errors.Wrapf(err, "error adding session_parameters to task %v", d.Id())
 			}
 		}
 	}
 
-	if data.HasChange("when") {
-		_, new := data.GetChange("when")
+	if d.HasChange("when") {
+		new := d.Get("when")
 		q := builder.ChangeCondition(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating when condition on task %v", data.Id())
+			return errors.Wrapf(err, "error updating when condition on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("sql_statement") {
-		_, new := data.GetChange("sql_statement")
+	if d.HasChange("sql_statement") {
+		new := d.Get("sql_statement")
 		q := builder.ChangeSqlStatement(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating sql statement on task %v", data.Id())
+			return errors.Wrapf(err, "error updating sql statement on task %v", d.Id())
 		}
 	}
 
-	if data.HasChange("enabled") {
+	if d.HasChange("enabled") {
 		var q string
-		_, n := data.GetChange("enabled")
+		n := d.Get("enabled")
 		enable := n.(bool)
 
 		if enable {
@@ -591,17 +593,17 @@ func UpdateTask(data *schema.ResourceData, meta interface{}) error {
 
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating task state %v", data.Id())
+			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
 	}
 
-	return ReadTask(data, meta)
+	return ReadTask(d, meta)
 }
 
 // DeleteTask implements schema.DeleteFunc
-func DeleteTask(data *schema.ResourceData, meta interface{}) error {
+func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -610,7 +612,7 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	root, err := getActiveRootTaskAndSuspend(data, meta)
+	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
 		return err
 	}
@@ -623,10 +625,10 @@ func DeleteTask(data *schema.ResourceData, meta interface{}) error {
 	q := snowflake.Task(name, database, schema).Drop()
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting task %v", data.Id())
+		return errors.Wrapf(err, "error deleting task %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }

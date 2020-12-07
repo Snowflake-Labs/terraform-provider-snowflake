@@ -55,19 +55,19 @@ func WarehouseGrant() *schema.Resource {
 		Schema: warehouseGrantSchema,
 		// FIXME - tests for this don't currently work
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateWarehouseGrant implements schema.CreateFunc
-func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	w := data.Get("warehouse_name").(string)
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
+	w := d.Get("warehouse_name").(string)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 	builder := snowflake.WarehouseGrant(w)
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -81,41 +81,41 @@ func CreateWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadWarehouseGrant(data, meta)
+	return ReadWarehouseGrant(d, meta)
 }
 
 // ReadWarehouseGrant implements schema.ReadFunc
-func ReadWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 	w := grantID.ResourceName
 	priv := grantID.Privilege
 
-	err = data.Set("warehouse_name", w)
+	err = d.Set("warehouse_name", w)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
 	builder := snowflake.WarehouseGrant(w)
 
-	return readGenericGrant(data, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
+	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
 }
 
 // DeleteWarehouseGrant implements schema.DeleteFunc
-func DeleteWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -123,5 +123,5 @@ func DeleteWarehouseGrant(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.WarehouseGrant(w)
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }
