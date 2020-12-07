@@ -39,4 +39,10 @@ description: |-
 
 - **has_rsa_public_key** (Boolean, Read-only) Will be true if user as an RSA key set.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_user.example userName
+```

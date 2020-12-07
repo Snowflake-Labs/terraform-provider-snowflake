@@ -28,4 +28,11 @@ description: |-
 - **view_name** (String, Optional) The name of the view on which to grant privileges immediately (only valid if on_future is unset).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | view name | privilege | true/false for with_grant_option
+terraform import snowflake_view_grant.example 'dbName|schemaName|viewName|USAGE|false'
+```
