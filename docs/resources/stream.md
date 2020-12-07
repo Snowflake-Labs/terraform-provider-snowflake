@@ -30,4 +30,11 @@ description: |-
 
 - **owner** (String, Read-only) Name of the role that owns the stream.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | on table name
+terraform import snowflake_stream.example 'dbName|schemaName|tableName'
+```

@@ -33,4 +33,10 @@ description: |-
 - **region** (String, Read-only) Snowflake Region in which the managed account is located.
 - **url** (String, Read-only) URL for accessing the managed account, particularly through the web interface.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_managed_account.example name
+```

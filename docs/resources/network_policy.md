@@ -24,4 +24,10 @@ description: |-
 - **comment** (String, Optional) Specifies a comment for the network policy.
 - **id** (String, Optional) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_network_policy.example policyname
+```

@@ -35,4 +35,10 @@ description: |-
 - **storage_aws_external_id** (String, Read-only) The external ID that Snowflake will use when assuming the AWS role.
 - **storage_aws_iam_user_arn** (String, Read-only) The Snowflake user that will attempt to assume the AWS role.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_storage_integration.example name
+```
