@@ -1,0 +1,1 @@
+terraform import snowflake_role.example roleName

@@ -13,7 +13,7 @@ const (
 	networkPolicyComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccNetworkPolicy(t *testing.T) {
+func TestAcc_NetworkPolicy(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
 		t.Skip("Skipping TestAccNetworkPolicy")
 	}

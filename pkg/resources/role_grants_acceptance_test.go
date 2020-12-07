@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func MustParseInt(input string) int64 {
+func MustParseInt(t *testing.T, input string) int64 {
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	return i
 }
@@ -54,11 +54,10 @@ func listSetEqual(a, b []string) bool {
 	return true
 }
 
-func testCheckRolesAndUsers(path string, roles, users []string) func(state *terraform.State) error {
-
+func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
-		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(c) != int64(len(roles)) {
+		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
 		r, err := extractList(is.Attributes, "roles")
@@ -71,7 +70,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
 		}
 
-		if c, ok := is.Attributes["users.#"]; !ok || MustParseInt(c) != int64(len(users)) {
+		if c, ok := is.Attributes["users.#"]; !ok || MustParseInt(t, c) != int64(len(users)) {
 			return fmt.Errorf("expected users.# to equal %d but got %s", len(users), c)
 		}
 		u, err := extractList(is.Attributes, "users")
@@ -87,7 +86,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 	}
 }
 
-func TestAccGrantRole(t *testing.T) {
+func TestAcc_GrantRole(t *testing.T) {
 	role1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role3 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
@@ -105,7 +104,7 @@ func TestAccGrantRole(t *testing.T) {
 		ResourceName: "snowflake_role_grants.w",
 		Check: resource.ComposeTestCheckFunc(
 			basicChecks,
-			testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2, role3}, []string{user1, user2}),
+			testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2, role3}, []string{user1, user2}),
 		),
 	}
 
@@ -119,7 +118,7 @@ func TestAccGrantRole(t *testing.T) {
 				ResourceName: "snowflake_role_grants.w",
 				Check: resource.ComposeTestCheckFunc(
 					basicChecks,
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1, user2})),
+					testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2}, []string{user1, user2})),
 			},
 			// back to baseline, which means adding a role
 			baselineStep,
@@ -130,7 +129,7 @@ func TestAccGrantRole(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					basicChecks,
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2, role3}, []string{user1})),
+					testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2, role3}, []string{user1})),
 			},
 			// add the user back to get back to baseline
 			baselineStep,

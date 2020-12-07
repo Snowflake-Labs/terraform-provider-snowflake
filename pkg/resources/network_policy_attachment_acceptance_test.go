@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNetworkPolicyAttachment(t *testing.T) {
+func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
 		t.Skip("Skipping TestAccNetworkPolicyAttachment")
 	}

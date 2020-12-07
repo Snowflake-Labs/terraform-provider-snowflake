@@ -32,4 +32,11 @@ description: |-
 - **notification_channel** (String, Read-only) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
 - **owner** (String, Read-only) Name of the role that owns the pipe.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | pipe name
+terraform import snowflake_pipe.example 'dbName|schemaName|pipeName'
+```

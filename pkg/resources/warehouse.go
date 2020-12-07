@@ -114,21 +114,21 @@ func Warehouse() *schema.Resource {
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateWarehouse implements schema.CreateFunc
-func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
+func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	props := append(warehouseProperties, warehouseCreateProperties...)
-	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc
-func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
+func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.Warehouse(data.Id()).Show()
+	stmt := snowflake.Warehouse(d.Id()).Show()
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
@@ -136,49 +136,49 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", w.Name)
+	err = d.Set("name", w.Name)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", w.Comment)
+	err = d.Set("comment", w.Comment)
 	if err != nil {
 		return err
 	}
-	err = data.Set("warehouse_size", w.Size)
+	err = d.Set("warehouse_size", w.Size)
 	if err != nil {
 		return err
 	}
-	err = data.Set("max_cluster_count", w.MaxClusterCount)
+	err = d.Set("max_cluster_count", w.MaxClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("min_cluster_count", w.MinClusterCount)
+	err = d.Set("min_cluster_count", w.MinClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("scaling_policy", w.ScalingPolicy)
+	err = d.Set("scaling_policy", w.ScalingPolicy)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_suspend", w.AutoSuspend)
+	err = d.Set("auto_suspend", w.AutoSuspend)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_resume", w.AutoResume)
+	err = d.Set("auto_resume", w.AutoResume)
 	if err != nil {
 		return err
 	}
-	err = data.Set("resource_monitor", w.ResourceMonitor)
+	err = d.Set("resource_monitor", w.ResourceMonitor)
 
 	return err
 }
 
 // UpdateWarehouse implements schema.UpdateFunc
-func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc
-func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
+func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("warehouse", snowflake.Warehouse)(d, meta)
 }

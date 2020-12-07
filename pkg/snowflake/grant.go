@@ -171,7 +171,7 @@ func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if p == `OWNERSHIP` {
 		template = `GRANT %v ON %v %v TO %v "%v" COPY CURRENT GRANTS`
-	} else if w == true {
+	} else if w {
 		template = `GRANT %v ON %v %v TO %v "%v" WITH GRANT OPTION`
 	} else {
 		template = `GRANT %v ON %v %v TO %v "%v"`

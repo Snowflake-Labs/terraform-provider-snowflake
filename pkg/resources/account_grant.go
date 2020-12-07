@@ -56,13 +56,13 @@ func AccountGrant() *schema.Resource {
 }
 
 // CreateAccountGrant implements schema.CreateFunc
-func CreateAccountGrant(data *schema.ResourceData, meta interface{}) error {
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	builder := snowflake.AccountGrant()
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -76,34 +76,34 @@ func CreateAccountGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadAccountGrant(data, meta)
+	return ReadAccountGrant(d, meta)
 }
 
 // ReadAccountGrant implements schema.ReadFunc
-func ReadAccountGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", grantID.Privilege)
+	err = d.Set("privilege", grantID.Privilege)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
 	builder := snowflake.AccountGrant()
 
-	return readGenericGrant(data, meta, accountGrantSchema, builder, false, validAccountPrivileges)
+	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc
-func DeleteAccountGrant(data *schema.ResourceData, meta interface{}) error {
+func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }
