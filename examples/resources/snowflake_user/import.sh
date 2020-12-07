@@ -1,0 +1,1 @@
+terraform import snowflake_user.example userName

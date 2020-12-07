@@ -23,4 +23,10 @@ description: |-
 - **comment** (String, Optional) Specifies a comment for the managed account.
 - **id** (String, Optional) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_share.example name
+```
