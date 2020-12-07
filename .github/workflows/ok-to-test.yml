@@ -1,5 +1,5 @@
 # If someone with write access comments "/ok-to-test" on a pull request, emit repository_dispatch event
-name: Label
+name: ok-to-test
 
 on:
   issue_comment:
