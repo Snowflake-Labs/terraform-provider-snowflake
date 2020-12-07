@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccView(t *testing.T) {
+func TestAcc_View(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
@@ -25,6 +25,10 @@ func TestAccView(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_View2(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),

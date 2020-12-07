@@ -29,9 +29,9 @@ func SystemGetAWSSNSIAMPolicy() *schema.Resource {
 }
 
 // ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc
-func ReadSystemGetAWSSNSIAMPolicy(data *schema.ResourceData, meta interface{}) error {
+func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	awsSNSTopicArn := data.Get("aws_sns_topic_arn").(string)
+	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)
 
 	sel := snowflake.SystemGetAWSSNSIAMPolicy(awsSNSTopicArn).Select()
 	row := snowflake.QueryRow(db, sel)
@@ -40,7 +40,6 @@ func ReadSystemGetAWSSNSIAMPolicy(data *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	data.SetId(awsSNSTopicArn)
-	data.Set("aws_sns_topic_policy_json", policy.Policy)
-	return nil
+	d.SetId(awsSNSTopicArn)
+	return d.Set("aws_sns_topic_policy_json", policy.Policy)
 }

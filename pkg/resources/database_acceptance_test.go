@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDatabase(t *testing.T) {
+func TestAcc_Database(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
 		t.Skip("Skipping TestAccDatabase")
 	}

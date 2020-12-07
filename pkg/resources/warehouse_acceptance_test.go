@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccWarehouse(t *testing.T) {
+func TestAcc_Warehouse(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_TESTS"); ok {
 		t.Skip("Skipping TestAccWarehouse")
 	}
