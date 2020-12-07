@@ -22,4 +22,10 @@ description: |-
 - **comment** (String, Optional)
 - **id** (String, Optional) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_role.example roleName
+```

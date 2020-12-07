@@ -1,0 +1,1 @@
+terraform import snowflake_network_policy_attachment.example attachment_policyname
