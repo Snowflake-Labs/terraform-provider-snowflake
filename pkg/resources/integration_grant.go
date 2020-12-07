@@ -42,13 +42,16 @@ var integrationGrantSchema = map[string]*schema.Schema{
 }
 
 // IntegrationGrant returns a pointer to the resource representing a integration grant
-func IntegrationGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateIntegrationGrant,
-		Read:   ReadIntegrationGrant,
-		Delete: DeleteIntegrationGrant,
+func IntegrationGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateIntegrationGrant,
+			Read:   ReadIntegrationGrant,
+			Delete: DeleteIntegrationGrant,
 
-		Schema: integrationGrantSchema,
+			Schema: integrationGrantSchema,
+		},
+		ValidPrivs: validIntegrationPrivileges,
 	}
 }
 

@@ -43,13 +43,16 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 }
 
 // ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant
-func ResourceMonitorGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateResourceMonitorGrant,
-		Read:   ReadResourceMonitorGrant,
-		Delete: DeleteResourceMonitorGrant,
+func ResourceMonitorGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateResourceMonitorGrant,
+			Read:   ReadResourceMonitorGrant,
+			Delete: DeleteResourceMonitorGrant,
 
-		Schema: resourceMonitorGrantSchema,
+			Schema: resourceMonitorGrantSchema,
+		},
+		ValidPrivs: validResourceMonitorPrivileges,
 	}
 }
 

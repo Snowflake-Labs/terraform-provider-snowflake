@@ -1,10 +1,9 @@
 package resources
 
 import (
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var validAccountPrivileges = NewPrivilegeSet(
@@ -44,14 +43,17 @@ var accountGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
-func AccountGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateAccountGrant,
-		Read:   ReadAccountGrant,
-		Delete: DeleteAccountGrant,
+// AccountGrant returns a pointer to the resource representing an account grant
+func AccountGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateAccountGrant,
+			Read:   ReadAccountGrant,
+			Delete: DeleteAccountGrant,
 
-		Schema: accountGrantSchema,
+			Schema: accountGrantSchema,
+		},
+		ValidPrivs: validAccountPrivileges,
 	}
 }
 

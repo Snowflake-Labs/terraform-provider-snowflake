@@ -24,7 +24,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
-		Default:      "USAGE",
+		Default:      privilegeUsage.String(),
 		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.toList(), true),
 		ForceNew:     true,
 	},
@@ -45,17 +45,20 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 }
 
 // WarehouseGrant returns a pointer to the resource representing a warehouse grant
-func WarehouseGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateWarehouseGrant,
-		Read:   ReadWarehouseGrant,
-		Delete: DeleteWarehouseGrant,
+func WarehouseGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateWarehouseGrant,
+			Read:   ReadWarehouseGrant,
+			Delete: DeleteWarehouseGrant,
 
-		Schema: warehouseGrantSchema,
-		// FIXME - tests for this don't currently work
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: warehouseGrantSchema,
+			// FIXME - tests for this don't currently work
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validWarehousePrivileges,
 	}
 }
 

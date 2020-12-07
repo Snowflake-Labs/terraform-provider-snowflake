@@ -17,7 +17,7 @@ import (
 
 func TestWarehouseGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.WarehouseGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.WarehouseGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -29,7 +29,7 @@ func TestWarehouseGrantCreate(t *testing.T) {
 		"privilege":      "USAGE",
 		"roles":          []interface{}{"test-role-1", "test-role-2"},
 	}
-	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

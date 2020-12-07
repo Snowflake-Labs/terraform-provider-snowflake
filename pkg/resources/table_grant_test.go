@@ -17,7 +17,7 @@ import (
 
 func TestTableGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.TableGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.TableGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -33,7 +33,7 @@ func TestTableGrantCreate(t *testing.T) {
 		"shares":            []interface{}{"test-share-1", "test-share-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.TableGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -104,7 +104,7 @@ func TestFutureTableGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.TableGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -135,7 +135,7 @@ func TestFutureTableGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	}
-	d = schema.TestResourceDataRaw(t, resources.TableGrant().Schema, in)
+	d = schema.TestResourceDataRaw(t, resources.TableGrant().Resource.Schema, in)
 	b.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

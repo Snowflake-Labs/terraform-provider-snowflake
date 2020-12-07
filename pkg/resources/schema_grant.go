@@ -82,16 +82,19 @@ var schemaGrantSchema = map[string]*schema.Schema{
 }
 
 // SchemaGrant returns a pointer to the resource representing a view grant
-func SchemaGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateSchemaGrant,
-		Read:   ReadSchemaGrant,
-		Delete: DeleteSchemaGrant,
+func SchemaGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateSchemaGrant,
+			Read:   ReadSchemaGrant,
+			Delete: DeleteSchemaGrant,
 
-		Schema: schemaGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: schemaGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validSchemaPrivileges,
 	}
 }
 
