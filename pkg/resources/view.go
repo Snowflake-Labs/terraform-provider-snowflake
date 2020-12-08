@@ -71,7 +71,7 @@ func normalizeQuery(str string) string {
 // semantically significant.
 //
 // If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
-// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldnt'
+// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldn't
 // find such a library.
 func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
