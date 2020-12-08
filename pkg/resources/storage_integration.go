@@ -28,6 +28,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      "EXTERNAL_STAGE",
 		ValidateFunc: validation.StringInSlice([]string{"EXTERNAL_STAGE"}, true),
+		ForceNew: true,
 	},
 	"enabled": {
 		Type:     schema.TypeBool,
