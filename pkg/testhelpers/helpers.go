@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,11 +22,4 @@ func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 
-}
-
-func Providers() map[string]*schema.Provider {
-	p := provider.Provider()
-	return map[string]*schema.Provider{
-		"snowflake": p,
-	}
 }
