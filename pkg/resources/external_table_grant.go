@@ -86,21 +86,21 @@ func ExternalTableGrant() *schema.Resource {
 }
 
 // CreateExternalTableGrant implements schema.CreateFunc
-func CreateExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		externalTableName string
 		schemaName        string
 	)
-	if _, ok := data.GetOk("external_table_name"); ok {
-		externalTableName = data.Get("external_table_name").(string)
+	if name, ok := d.GetOk("external_table_name"); ok {
+		externalTableName = name.(string)
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureExternalTables := data.Get("on_future").(bool)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureExternalTables := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureExternalTables {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -120,7 +120,7 @@ func CreateExternalTableGrant(data *schema.ResourceData, meta interface{}) error
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -136,14 +136,14 @@ func CreateExternalTableGrant(data *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadExternalTableGrant(data, meta)
+	return ReadExternalTableGrant(d, meta)
 }
 
 // ReadExternalTableGrant implements schema.ReadFunc
-func ReadExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -152,11 +152,11 @@ func ReadExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
 	externalTableName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -164,19 +164,19 @@ func ReadExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
 	if externalTableName == "" {
 		futureExternalTablesEnabled = true
 	}
-	err = data.Set("external_table_name", externalTableName)
+	err = d.Set("external_table_name", externalTableName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureExternalTablesEnabled)
+	err = d.Set("on_future", futureExternalTablesEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -188,12 +188,12 @@ func ReadExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
 
-	return readGenericGrant(data, meta, externalTableGrantSchema, builder, futureExternalTablesEnabled, validExternalTablePrivileges)
+	return readGenericGrant(d, meta, externalTableGrantSchema, builder, futureExternalTablesEnabled, validExternalTablePrivileges)
 }
 
 // DeleteExternalTableGrant implements schema.DeleteFunc
-func DeleteExternalTableGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -209,5 +209,5 @@ func DeleteExternalTableGrant(data *schema.ResourceData, meta interface{}) error
 	} else {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

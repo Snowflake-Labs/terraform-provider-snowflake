@@ -114,7 +114,7 @@ func ProcedureGrant() *schema.Resource {
 }
 
 // CreateProcedureGrant implements schema.CreateFunc
-func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		procedureName      string
 		schemaName         string
@@ -123,26 +123,26 @@ func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		procedureSignature string
 		argumentTypes      []string
 	)
-	if _, ok := data.GetOk("procedure_name"); ok {
-		procedureName = data.Get("procedure_name").(string)
-		if _, ok = data.GetOk("arguments"); ok {
-			arguments = data.Get("arguments").([]interface{})
+	if name, ok := d.GetOk("procedure_name"); ok {
+		procedureName = name.(string)
+		if args, ok := d.GetOk("arguments"); ok {
+			arguments = args.([]interface{})
 		} else {
 			return errors.New("arguments must be set when specifying procedure_name.")
 		}
-		if _, ok = data.GetOk("return_type"); ok {
-			returnType = strings.ToUpper(data.Get("return_type").(string))
+		if ret, ok := d.GetOk("return_type"); ok {
+			returnType = strings.ToUpper(ret.(string))
 		} else {
 			return errors.New("return_type must be set when specifying procedure_name.")
 		}
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureProcedures := data.Get("on_future").(bool)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureProcedures := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureProcedures {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -168,7 +168,7 @@ func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -184,20 +184,20 @@ func CreateProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadProcedureGrant(data, meta)
+	return ReadProcedureGrant(d, meta)
 }
 
 // ReadProcedureGrant implements schema.ReadFunc
-func ReadProcedureGrant(data *schema.ResourceData, meta interface{}) error {
+func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		procedureName string
 		returnType    string
 		arguments     []interface{}
 		argumentTypes []string
 	)
-	grantID, err := grantIDFromString(data.Id())
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -206,11 +206,11 @@ func ReadProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 	procedureSignature := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -227,27 +227,27 @@ func ReadProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		arguments = procedureSignatureMap["arguments"].([]interface{})
 		argumentTypes = procedureSignatureMap["argumentTypes"].([]string)
 	}
-	err = data.Set("procedure_name", procedureName)
+	err = d.Set("procedure_name", procedureName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("arguments", arguments)
+	err = d.Set("arguments", arguments)
 	if err != nil {
 		return err
 	}
-	err = data.Set("return_type", returnType)
+	err = d.Set("return_type", returnType)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureProceduresEnabled)
+	err = d.Set("on_future", futureProceduresEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -259,12 +259,12 @@ func ReadProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
 	}
 
-	return readGenericGrant(data, meta, procedureGrantSchema, builder, futureProceduresEnabled, validProcedurePrivileges)
+	return readGenericGrant(d, meta, procedureGrantSchema, builder, futureProceduresEnabled, validProcedurePrivileges)
 }
 
 // DeleteProcedureGrant implements schema.DeleteFunc
-func DeleteProcedureGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -285,5 +285,5 @@ func DeleteProcedureGrant(data *schema.ResourceData, meta interface{}) error {
 		argumentTypes := procedureSignatureMap["argumentTypes"].([]string)
 		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

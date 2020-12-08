@@ -92,21 +92,21 @@ func MaterializedViewGrant() *schema.Resource {
 }
 
 // CreateViewGrant implements schema.CreateFunc
-func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		materializedViewName string
 		schemaName           string
 	)
-	if _, ok := data.GetOk("materialized_view_name"); ok {
-		materializedViewName = data.Get("materialized_view_name").(string)
+	if name, ok := d.GetOk("materialized_view_name"); ok {
+		materializedViewName = name.(string)
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureMaterializedViews := data.Get("on_future").(bool)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureMaterializedViews := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureMaterializedViews {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -126,7 +126,7 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -142,14 +142,14 @@ func CreateMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadMaterializedViewGrant(data, meta)
+	return ReadMaterializedViewGrant(d, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc
-func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -158,11 +158,11 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 	materializedViewName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -170,19 +170,19 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 	if materializedViewName == "" {
 		futureMaterializedViewsEnabled = true
 	}
-	err = data.Set("materialized_view_name", materializedViewName)
+	err = d.Set("materialized_view_name", materializedViewName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureMaterializedViewsEnabled)
+	err = d.Set("on_future", futureMaterializedViewsEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -194,12 +194,12 @@ func ReadMaterializedViewGrant(data *schema.ResourceData, meta interface{}) erro
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 
-	return readGenericGrant(data, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
+	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc
-func DeleteMaterializedViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -215,5 +215,5 @@ func DeleteMaterializedViewGrant(data *schema.ResourceData, meta interface{}) er
 	} else {
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

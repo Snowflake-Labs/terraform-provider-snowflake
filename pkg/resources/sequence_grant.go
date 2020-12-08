@@ -79,21 +79,21 @@ func SequenceGrant() *schema.Resource {
 }
 
 // CreateSequenceGrant implements schema.CreateFunc
-func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		sequenceName string
 		schemaName   string
 	)
-	if _, ok := data.GetOk("sequence_name"); ok {
-		sequenceName = data.Get("sequence_name").(string)
+	if name, ok := d.GetOk("sequence_name"); ok {
+		sequenceName = name.(string)
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureSequences := data.Get("on_future").(bool)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureSequences := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureSequences {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -113,7 +113,7 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -129,14 +129,14 @@ func CreateSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadSequenceGrant(data, meta)
+	return ReadSequenceGrant(d, meta)
 }
 
 // ReadSequenceGrant implements schema.ReadFunc
-func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -145,11 +145,11 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	sequenceName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -157,19 +157,19 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	if sequenceName == "" {
 		futureSequencesEnabled = true
 	}
-	err = data.Set("sequence_name", sequenceName)
+	err = d.Set("sequence_name", sequenceName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureSequencesEnabled)
+	err = d.Set("on_future", futureSequencesEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -181,12 +181,12 @@ func ReadSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
-	return readGenericGrant(data, meta, sequenceGrantSchema, builder, futureSequencesEnabled, validSequencePrivileges)
+	return readGenericGrant(d, meta, sequenceGrantSchema, builder, futureSequencesEnabled, validSequencePrivileges)
 }
 
 // DeleteSequenceGrant implements schema.DeleteFunc
-func DeleteSequenceGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -202,5 +202,5 @@ func DeleteSequenceGrant(data *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

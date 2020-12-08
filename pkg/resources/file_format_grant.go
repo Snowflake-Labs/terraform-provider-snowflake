@@ -79,21 +79,21 @@ func FileFormatGrant() *schema.Resource {
 }
 
 // CreateFileFormatGrant implements schema.CreateFunc
-func CreateFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		fileFormatName string
 		schemaName     string
 	)
-	if _, ok := data.GetOk("file_format_name"); ok {
-		fileFormatName = data.Get("file_format_name").(string)
+	if _, ok := d.GetOk("file_format_name"); ok {
+		fileFormatName = d.Get("file_format_name").(string)
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if _, ok := d.GetOk("schema_name"); ok {
+		schemaName = d.Get("schema_name").(string)
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureFileFormats := data.Get("on_future").(bool)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureFileFormats := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureFileFormats {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -113,7 +113,7 @@ func CreateFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -129,14 +129,14 @@ func CreateFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadFileFormatGrant(data, meta)
+	return ReadFileFormatGrant(d, meta)
 }
 
 // ReadFileFormatGrant implements schema.ReadFunc
-func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -145,11 +145,11 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	fileFormatName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -157,19 +157,19 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	if fileFormatName == "" {
 		futureFileFormatsEnabled = true
 	}
-	err = data.Set("file_format_name", fileFormatName)
+	err = d.Set("file_format_name", fileFormatName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureFileFormatsEnabled)
+	err = d.Set("on_future", futureFileFormatsEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -181,12 +181,12 @@ func ReadFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
 
-	return readGenericGrant(data, meta, fileFormatGrantSchema, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
+	return readGenericGrant(d, meta, fileFormatGrantSchema, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
 }
 
 // DeleteFileFormatGrant implements schema.DeleteFunc
-func DeleteFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -202,5 +202,5 @@ func DeleteFileFormatGrant(data *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }
