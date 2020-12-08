@@ -8,9 +8,9 @@ export TF_ACC_TERRAFORM_VERSION=0.12.29
 
 go_test ?= -
 ifeq (, $(shell which gotest))
-	go_test='go test'
+	go_test=go test
 else
-	go_test='gotest'
+	go_test=gotest
 endif
 
 all: test docs install
