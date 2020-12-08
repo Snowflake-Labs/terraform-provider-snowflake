@@ -84,11 +84,11 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		fileFormatName string
 		schemaName     string
 	)
-	if _, ok := d.GetOk("file_format_name"); ok {
-		fileFormatName = d.Get("file_format_name").(string)
+	if name, ok := d.GetOk("file_format_name"); ok {
+		fileFormatName = name.(string)
 	}
-	if _, ok := d.GetOk("schema_name"); ok {
-		schemaName = d.Get("schema_name").(string)
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
 	}
 	dbName := d.Get("database_name").(string)
 	priv := d.Get("privilege").(string)

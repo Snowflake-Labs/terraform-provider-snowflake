@@ -36,7 +36,7 @@ func TestAccStreamGrantBasic(t *testing.T) {
 	})
 }
 
-func TestAccStreamGrantFuture(t *testing.T) {
+func TestAccStreamFutureGrant(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
