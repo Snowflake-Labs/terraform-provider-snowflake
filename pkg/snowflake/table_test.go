@@ -9,7 +9,18 @@ import (
 func TestTableCreate(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	s.WithColumns([]map[string]string{{"name": "column1", "type": "OBJECT"}, {"name": "column2", "type": "VARCHAR"}})
+	cols := []Column{
+		{
+			name:  "column1",
+			_type: "OBJECT",
+		},
+		{
+			name:  "column2",
+			_type: "VARCHAR",
+		},
+	}
+
+	s.WithColumns(Columns(cols))
 	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
 
 	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR)`, s.Create())

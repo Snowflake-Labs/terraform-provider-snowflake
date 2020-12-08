@@ -5,15 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
 	networkPolicyComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccNetworkPolicy(t *testing.T) {
+func TestAcc_NetworkPolicy(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
 		t.Skip("Skipping TestAccNetworkPolicy")
 	}

@@ -1,66 +1,65 @@
 package resources
 
-type privilege string
+type Privilege string
 
-func (p privilege) string() string {
+func (p Privilege) String() string {
 	return string(p)
 }
 
 const (
-	privilegeAll                    privilege = "ALL"
-	privilegeSelect                 privilege = "SELECT"
-	privilegeInsert                 privilege = "INSERT"
-	privilegeUpdate                 privilege = "UPDATE"
-	privilegeDelete                 privilege = "DELETE"
-	privilegeTruncate               privilege = "TRUNCATE"
-	privilegeReferences             privilege = "REFERENCES"
-	privilegeCreateSchema           privilege = "CREATE SCHEMA"
-	privilegeImportedPrivileges     privilege = "IMPORTED PRIVILEGES"
-	privilegeModify                 privilege = "MODIFY"
-	privilegeOperate                privilege = "OPERATE"
-	privilegeMonitor                privilege = "MONITOR"
-	privilegeOwnership              privilege = "OWNERSHIP"
-	privilegeRead                   privilege = "READ"
-	privilegeReferenceUsage         privilege = "REFERENCE_USAGE"
-	privilegeUsage                  privilege = "USAGE"
-	privilegeWrite                  privilege = "WRITE"
-	privilegeCreateTable            privilege = "CREATE TABLE"
-	privilegeCreateView             privilege = "CREATE VIEW"
-	privilegeCreateFileFormat       privilege = "CREATE FILE FORMAT"
-	privilegeCreateStage            privilege = "CREATE STAGE"
-	privilegeCreatePipe             privilege = "CREATE PIPE"
-	privilegeCreateStream           privilege = "CREATE STREAM"
-	privilegeCreateTask             privilege = "CREATE TASK"
-	privilegeCreateSequence         privilege = "CREATE SEQUENCE"
-	privilegeCreateFunction         privilege = "CREATE FUNCTION"
-	privilegeCreateProcedure        privilege = "CREATE PROCEDURE"
-	privilegeCreateExternalTable    privilege = "CREATE EXTERNAL TABLE"
-	privilegeCreateMaterializedView privilege = "CREATE MATERIALIZED VIEW"
-	privilegeCreateTemporaryTable   privilege = "CREATE TEMPORARY TABLE"
-	privilegeCreateMaskingPolicy    privilege = "CREATE MASKING POLICY"
+	privilegeSelect                 Privilege = "SELECT"
+	privilegeInsert                 Privilege = "INSERT"
+	privilegeUpdate                 Privilege = "UPDATE"
+	privilegeDelete                 Privilege = "DELETE"
+	privilegeTruncate               Privilege = "TRUNCATE"
+	privilegeReferences             Privilege = "REFERENCES"
+	privilegeCreateSchema           Privilege = "CREATE SCHEMA"
+	privilegeImportedPrivileges     Privilege = "IMPORTED PRIVILEGES"
+	privilegeModify                 Privilege = "MODIFY"
+	privilegeOperate                Privilege = "OPERATE"
+	privilegeMonitor                Privilege = "MONITOR"
+	privilegeOwnership              Privilege = "OWNERSHIP"
+	privilegeRead                   Privilege = "READ"
+	privilegeReferenceUsage         Privilege = "REFERENCE_USAGE"
+	privilegeUsage                  Privilege = "USAGE"
+	privilegeWrite                  Privilege = "WRITE"
+	privilegeCreateTable            Privilege = "CREATE TABLE"
+	privilegeCreateView             Privilege = "CREATE VIEW"
+	privilegeCreateFileFormat       Privilege = "CREATE FILE FORMAT"
+	privilegeCreateStage            Privilege = "CREATE STAGE"
+	privilegeCreatePipe             Privilege = "CREATE PIPE"
+	privilegeCreateStream           Privilege = "CREATE STREAM"
+	privilegeCreateTask             Privilege = "CREATE TASK"
+	privilegeCreateSequence         Privilege = "CREATE SEQUENCE"
+	privilegeCreateFunction         Privilege = "CREATE FUNCTION"
+	privilegeCreateProcedure        Privilege = "CREATE PROCEDURE"
+	privilegeCreateExternalTable    Privilege = "CREATE EXTERNAL TABLE"
+	privilegeCreateMaterializedView Privilege = "CREATE MATERIALIZED VIEW"
+	privilegeCreateTemporaryTable   Privilege = "CREATE TEMPORARY TABLE"
+	privilegeCreateMaskingPolicy    Privilege = "CREATE MASKING POLICY"
 
-	privilegeCreateRole        privilege = "CREATE ROLE"
-	privilegeCreateUser        privilege = "CREATE USER"
-	privilegeCreateWarehouse   privilege = "CREATE WAREHOUSE"
-	privilegeCreateDatabase    privilege = "CREATE DATABASE"
-	privilegeCreateIntegration privilege = "CREATE INTEGRATION"
-	privilegeManageGrants      privilege = "MANAGE GRANTS"
-	privilegeMonitorUsage      privilege = "MONITOR USAGE"
-	privilegeMonitorExecution  privilege = "MONITOR EXECUTION"
-	privilegeExecuteTask       privilege = "EXECUTE TASK"
+	privilegeCreateRole        Privilege = "CREATE ROLE"
+	privilegeCreateUser        Privilege = "CREATE USER"
+	privilegeCreateWarehouse   Privilege = "CREATE WAREHOUSE"
+	privilegeCreateDatabase    Privilege = "CREATE DATABASE"
+	privilegeCreateIntegration Privilege = "CREATE INTEGRATION"
+	privilegeManageGrants      Privilege = "MANAGE GRANTS"
+	privilegeMonitorUsage      Privilege = "MONITOR USAGE"
+	privilegeMonitorExecution  Privilege = "MONITOR EXECUTION"
+	privilegeExecuteTask       Privilege = "EXECUTE TASK"
 )
 
-type privilegeSet map[privilege]struct{}
+type PrivilegeSet map[Privilege]struct{}
 
-func newPrivilegeSet(privileges ...privilege) privilegeSet {
-	ps := privilegeSet{}
+func NewPrivilegeSet(privileges ...Privilege) PrivilegeSet {
+	ps := PrivilegeSet{}
 	for _, priv := range privileges {
 		ps[priv] = struct{}{}
 	}
 	return ps
 }
 
-func (ps privilegeSet) toList() []string {
+func (ps PrivilegeSet) toList() []string {
 	privs := []string{}
 	for p := range ps {
 		privs = append(privs, string(p))
@@ -68,23 +67,11 @@ func (ps privilegeSet) toList() []string {
 	return privs
 }
 
-func (ps privilegeSet) addString(s string) {
-	ps[privilege(s)] = struct{}{}
+func (ps PrivilegeSet) addString(s string) {
+	ps[Privilege(s)] = struct{}{}
 }
 
-func (ps privilegeSet) hasString(s string) bool {
-	_, ok := ps[privilege(s)]
+func (ps PrivilegeSet) hasString(s string) bool {
+	_, ok := ps[Privilege(s)]
 	return ok
-}
-
-func (ps privilegeSet) ALLPrivsPresent(validPrivs privilegeSet) bool {
-	for p := range validPrivs {
-		if p == privilegeAll || p == privilegeOwnership || p == privilegeCreateStream {
-			continue
-		}
-		if _, ok := ps[p]; !ok {
-			return false
-		}
-	}
-	return true
 }

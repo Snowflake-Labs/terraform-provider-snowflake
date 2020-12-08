@@ -10,7 +10,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -111,8 +111,8 @@ func TestDiffSuppressStatement(t *testing.T) {
 		want bool
 	}{
 		{"select", args{"", "select * from foo;", "select * from foo;", nil}, true},
-		{"view 1", args{"", testhelpers.MustFixture("view_1a.sql"), testhelpers.MustFixture("view_1b.sql"), nil}, true},
-		{"view 2", args{"", testhelpers.MustFixture("view_2a.sql"), testhelpers.MustFixture("view_2b.sql"), nil}, true},
+		{"view 1", args{"", testhelpers.MustFixture(t, "view_1a.sql"), testhelpers.MustFixture(t, "view_1b.sql"), nil}, true},
+		{"view 2", args{"", testhelpers.MustFixture(t, "view_2a.sql"), testhelpers.MustFixture(t, "view_2b.sql"), nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

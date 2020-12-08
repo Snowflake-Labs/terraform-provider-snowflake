@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccWarehouseGrant(t *testing.T) {
+func TestAcc_WarehouseGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_GRANT_TESTS"); ok {
 		t.Skip("Skipping TestAccWarehouseGrant")
 	}

@@ -5,15 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
 	managedAccountComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccManagedAccount(t *testing.T) {
+func TestAcc_ManagedAccount(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
 		t.Skip("Skipping TestAccManagedAccount")
 	}
