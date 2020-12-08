@@ -20,7 +20,7 @@ func TestAcc_NetworkPolicy(t *testing.T) {
 
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
