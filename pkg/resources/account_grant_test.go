@@ -6,22 +6,22 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
+//lintignore:AT003
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
 	err := resources.AccountGrant().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-func TestAccountGrantCreate(t *testing.T) {
+//lintignore:AT003
+func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -41,6 +41,7 @@ func TestAccountGrantCreate(t *testing.T) {
 	})
 }
 
+//lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 

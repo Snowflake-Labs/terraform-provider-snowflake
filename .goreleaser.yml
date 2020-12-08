@@ -13,6 +13,8 @@ builds:
     - '386'
     - arm
     - arm64
+  flags:
+    - -trimpath
   ldflags:
     - "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha={{.Commit}} -X github.com/chanzuckerberg/go-misc/ver.Version={{.Version}} -X github.com/chanzuckerberg/go-misc/ver.Dirty={{.Env.DIRTY}}"
   ignore:

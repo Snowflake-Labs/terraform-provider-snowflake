@@ -4,7 +4,7 @@
 
 ----
 
-[![Build Status](https://travis-ci.com/chanzuckerberg/terraform-provider-snowflake.svg?branch=main)](https://travis-ci.com/chanzuckerberg/terraform-provider-snowflake) [![codecov](https://codecov.io/gh/chanzuckerberg/terraform-provider-snowflake/branch/main/graph/badge.svg)](https://codecov.io/gh/chanzuckerberg/terraform-provider-snowflake)
+![.github/workflows/ci.yml](https://github.com/chanzuckerberg/terraform-provider-snowflake/workflows/.github/workflows/ci.yml/badge.svg)
 
 This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 

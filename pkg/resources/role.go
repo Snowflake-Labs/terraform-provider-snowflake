@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var roleProperties = []string{"comment"}
@@ -31,18 +31,18 @@ func Role() *schema.Resource {
 
 		Schema: roleSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateRole(data *schema.ResourceData, meta interface{}) error {
-	return CreateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(data, meta)
+func CreateRole(d *schema.ResourceData, meta interface{}) error {
+	return CreateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(d, meta)
 }
 
-func ReadRole(data *schema.ResourceData, meta interface{}) error {
+func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
 	role, err := snowflake.ScanRole(row)
@@ -55,11 +55,11 @@ func ReadRole(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", role.Name.String)
+	err = d.Set("name", role.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", role.Comment.String)
+	err = d.Set("comment", role.Comment.String)
 	if err != nil {
 		return err
 	}
@@ -67,10 +67,10 @@ func ReadRole(data *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func UpdateRole(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(data, meta)
+func UpdateRole(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(d, meta)
 }
 
-func DeleteRole(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("role", snowflake.Role)(data, meta)
+func DeleteRole(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("role", snowflake.Role)(d, meta)
 }

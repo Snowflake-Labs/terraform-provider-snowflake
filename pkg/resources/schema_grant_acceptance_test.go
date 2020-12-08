@@ -3,15 +3,14 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccSchemaGrant(t *testing.T) {
+func TestAcc_SchemaGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccSchemaGrant")
 	}
@@ -50,7 +49,7 @@ func TestAccSchemaGrant(t *testing.T) {
 	})
 }
 
-func TestAccSchemaFutureGrants(t *testing.T) {
+func TestAcc_SchemaFutureGrants(t *testing.T) {
 
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -80,14 +79,14 @@ func TestAccSchemaFutureGrants(t *testing.T) {
 
 func futureTableAndViewGrantConfig(n, role_table, role_view string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" { 
-  name = "%v" 
+resource "snowflake_database" "test" {
+  name = "%v"
 }
 
-resource "snowflake_schema" "test" {   
-  name      = "%v"   
-  database  = snowflake_database.test.name   
-  comment   = "Terraform acceptance test" 
+resource "snowflake_schema" "test" {
+  name      = "%v"
+  database  = snowflake_database.test.name
+  comment   = "Terraform acceptance test"
 }
 
 resource "snowflake_role" "table_reader" {
