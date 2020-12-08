@@ -19,6 +19,6 @@ require (
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/zclconf/go-cty v1.5.1 // indirect
 	golang.org/x/crypto v0.0.0-20200707235045-ab33eee955e0
-	golang.org/x/tools v0.0.0-20201202200335-bef1c476418a // indirect
+	golang.org/x/tools v0.0.0-20201208183658-cc330816fc52
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
