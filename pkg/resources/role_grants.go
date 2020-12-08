@@ -42,16 +42,16 @@ func RoleGrants() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roleName := d.Get("role_name").(string)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	users := expandStringList(d.Get("users").(*schema.Set).List())
 
 	if len(roles) == 0 && len(users) == 0 {
 		return fmt.Errorf("no users or roles specified for role grants")
@@ -70,8 +70,8 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	data.SetId(roleName)
-	return ReadRoleGrants(data, meta)
+	d.SetId(roleName)
+	return ReadRoleGrants(d, meta)
 }
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
@@ -94,9 +94,9 @@ type roleGrant struct {
 	Grantedby   sql.NullString `db:"granted_by"`
 }
 
-func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Id()
+	roleName := d.Id()
 
 	roles := make([]string, 0)
 	users := make([]string, 0)
@@ -117,15 +117,15 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err = data.Set("role_name", roleName)
+	err = d.Set("role_name", roleName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("roles", roles)
+	err = d.Set("roles", roles)
 	if err != nil {
 		return err
 	}
-	err = data.Set("users", users)
+	err = d.Set("users", users)
 	if err != nil {
 		return err
 	}
@@ -166,12 +166,12 @@ func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 	return grants, nil
 }
 
-func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
+	roleName := d.Get("role_name").(string)
 
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	users := expandStringList(d.Get("users").(*schema.Set).List())
 
 	for _, role := range roles {
 		err := revokeRoleFromRole(db, roleName, role)
@@ -187,7 +187,7 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	data.SetId("")
+	d.SetId("")
 	return nil
 }
 
@@ -203,12 +203,12 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	return err
 }
 
-func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
+	roleName := d.Get("role_name").(string)
 
 	x := func(resource string, grant func(db *sql.DB, role string, target string) error, revoke func(db *sql.DB, role string, target string) error) error {
-		o, n := data.GetChange(resource)
+		o, n := d.GetChange(resource)
 
 		if o == nil {
 			o = new(schema.Set)
@@ -247,5 +247,5 @@ func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return ReadRoleGrants(data, meta)
+	return ReadRoleGrants(d, meta)
 }

@@ -28,4 +28,11 @@ description: |-
 - **stage_name** (String, Optional) The name of the stage on which to grant privileges.
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is stage name | privilege | true/false for with_grant_option
+terraform import snowflake_stage_grant.example 'stageName|USAGE|true'
+```

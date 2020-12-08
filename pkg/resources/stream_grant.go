@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validStreamPrivileges = newPrivilegeSet(
+var validStreamPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeSelect,
 )

@@ -10,7 +10,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validProcedurePrivileges = newPrivilegeSet(
+var validProcedurePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 )

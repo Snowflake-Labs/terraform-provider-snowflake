@@ -66,63 +66,6 @@ type grantID struct {
 	GrantOption  bool
 }
 
-// Because none of the grants currently have a privilege of "ALL", rather they explicitly say
-// each privilege for each database_schema pair, we want to collapse them into one grant that has
-// the privilege of "ALL". filterAllGrants allows us to filter the grants and reassign their privilege
-// to "ALL".
-func filterALLGrants(grantList []*grant, validPrivs privilegeSet) []*grant {
-	// We only filter if ALL is in validPrivs.
-	_, ok := validPrivs[privilegeAll]
-	if !ok {
-		return grantList
-	}
-
-	groupedByRole := map[grant]privilegeSet{}
-	for _, g := range grantList {
-		id := grant{
-			GrantName:   g.GrantName,
-			GranteeType: g.GranteeType,
-			GranteeName: g.GranteeName,
-			GrantOption: g.GrantOption,
-		}
-		if _, ok := groupedByRole[id]; !ok {
-			groupedByRole[id] = privilegeSet{}
-		}
-		groupedByRole[id].addString(g.Privilege)
-	}
-	for databaseSchemaRole, privs := range groupedByRole {
-		if !privs.ALLPrivsPresent(validPrivs) {
-			delete(groupedByRole, databaseSchemaRole)
-		}
-	}
-	filteredGrants := []*grant{}
-
-	// Roles with the "ALL" privilege
-	for databaseSchemaRole := range groupedByRole {
-		filteredGrants = append(filteredGrants, &grant{
-			GrantName:   databaseSchemaRole.GrantName,
-			Privilege:   privilegeAll.string(),
-			GranteeType: databaseSchemaRole.GranteeType,
-			GranteeName: databaseSchemaRole.GranteeName,
-		})
-	}
-
-	for _, g := range grantList {
-		id := grant{
-			GrantName:   g.GrantName,
-			GranteeType: g.GranteeType,
-			GranteeName: g.GranteeName,
-			GrantOption: g.GrantOption,
-		}
-		// Already added it with the "ALL" privilege, so skip
-		if _, ok := groupedByRole[id]; ok {
-			continue
-		}
-		filteredGrants = append(filteredGrants, g)
-	}
-	return filteredGrants
-}
-
 // String() takes in a grantID object and returns a pipe-delimited string:
 // resourceName|schemaName|ObjectName|Privilege|GrantOption
 func (gi *grantID) String() (string, error) {
@@ -171,13 +114,13 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	return grantResult, nil
 }
 
-func createGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
-	roles, shares := expandRolesAndShares(data)
+	roles, shares := expandRolesAndShares(d)
 
 	if len(roles)+len(shares) == 0 {
 		return fmt.Errorf("no roles or shares specified for this grant")
@@ -201,12 +144,12 @@ func createGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 }
 
 func readGenericGrant(
-	data *schema.ResourceData,
+	d *schema.ResourceData,
 	meta interface{},
 	schema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
-	validPrivileges privilegeSet) error {
+	validPrivileges PrivilegeSet) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
@@ -218,15 +161,12 @@ func readGenericGrant(
 	if err != nil {
 		return err
 	}
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
-
-	// We re-aggregate grants that would be equivalent to the "ALL" grant
-	grants = filterALLGrants(grants, validPrivileges)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	// Map of roles to privileges
-	rolePrivileges := map[string]privilegeSet{}
-	sharePrivileges := map[string]privilegeSet{}
+	rolePrivileges := map[string]PrivilegeSet{}
+	sharePrivileges := map[string]PrivilegeSet{}
 
 	// List of all grants for each schema_database
 	for _, grant := range grants {
@@ -237,7 +177,7 @@ func readGenericGrant(
 			privileges, ok := rolePrivileges[roleName]
 			if !ok {
 				// If not there, create an empty set
-				privileges = privilegeSet{}
+				privileges = PrivilegeSet{}
 			}
 
 			if strings.ReplaceAll(builder.GrantType(), " ", "_") == grant.GrantType {
@@ -251,7 +191,7 @@ func readGenericGrant(
 			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
 			if !ok {
 				// If not there, create an empty set
-				privileges = privilegeSet{}
+				privileges = PrivilegeSet{}
 			}
 			// Add privilege to the set
 			privileges.addString(grant.Privilege)
@@ -266,7 +206,7 @@ func readGenericGrant(
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
-		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
+		if privileges.hasString(priv) {
 			roles = append(roles, roleName)
 		}
 	}
@@ -274,28 +214,28 @@ func readGenericGrant(
 	// Now see which shares have our privilege
 	for shareName, privileges := range sharePrivileges {
 		// Where priv is not all so it should match exactly
-		if privileges.hasString(priv) || privileges.ALLPrivsPresent(validPrivileges) {
+		if privileges.hasString(priv) {
 			shares = append(shares, shareName)
 		}
 	}
 
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
 	if err != nil {
 		return err
 	}
-	err = data.Set("roles", roles)
+	err = d.Set("roles", roles)
 	if err != nil {
 		return err
 	}
 
 	_, sharesOk := schema["shares"]
 	if sharesOk && !futureObjects {
-		err = data.Set("shares", shares)
+		err = d.Set("shares", shares)
 		if err != nil {
 			return err
 		}
 	}
-	err = data.Set("with_grant_option", grantOption)
+	err = d.Set("with_grant_option", grantOption)
 	if err != nil {
 		return err
 	}
@@ -371,18 +311,18 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 	return grants, nil
 }
 
-func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	db := meta.(*sql.DB)
 
-	priv := data.Get("privilege").(string)
+	priv := d.Get("privilege").(string)
 
 	var roles, shares []string
-	if _, ok := data.GetOk("roles"); ok {
-		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	if _, ok := d.GetOk("roles"); ok {
+		roles = expandStringList(d.Get("roles").(*schema.Set).List())
 	}
 
-	if _, ok := data.GetOk("shares"); ok {
-		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	if _, ok := d.GetOk("shares"); ok {
+		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 
 	for _, role := range roles {
@@ -399,18 +339,18 @@ func deleteGenericGrant(data *schema.ResourceData, meta interface{}, builder sno
 		}
 	}
 
-	data.SetId("")
+	d.SetId("")
 	return nil
 }
 
-func expandRolesAndShares(data *schema.ResourceData) ([]string, []string) {
+func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 	var roles, shares []string
-	if _, ok := data.GetOk("roles"); ok {
-		roles = expandStringList(data.Get("roles").(*schema.Set).List())
+	if _, ok := d.GetOk("roles"); ok {
+		roles = expandStringList(d.Get("roles").(*schema.Set).List())
 	}
 
-	if _, ok := data.GetOk("shares"); ok {
-		shares = expandStringList(data.Get("shares").(*schema.Set).List())
+	if _, ok := d.GetOk("shares"); ok {
+		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
 }

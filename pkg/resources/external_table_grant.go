@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var validExternalTablePrivileges = newPrivilegeSet(
+var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeSelect,
 )

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccSchemaGrant(t *testing.T) {
+func TestAcc_SchemaGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
 		t.Skip("Skipping TestAccSchemaGrant")
 	}
@@ -49,7 +49,7 @@ func TestAccSchemaGrant(t *testing.T) {
 	})
 }
 
-func TestAccSchemaFutureGrants(t *testing.T) {
+func TestAcc_SchemaFutureGrants(t *testing.T) {
 
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

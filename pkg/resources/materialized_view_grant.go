@@ -9,11 +9,11 @@ import (
 )
 
 /*
-newPriviligeSet creates a set of privileges that are allowed
+NewPriviligeSet creates a set of privileges that are allowed
 They are used for validation in the schema object below.
 */
 
-var validMaterializedViewPrivileges = newPrivilegeSet(
+var validMaterializedViewPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeSelect,
 )

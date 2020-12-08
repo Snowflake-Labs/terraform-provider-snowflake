@@ -30,7 +30,7 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 	}
 }
 
-func TestAccUser(t *testing.T) {
+func TestAcc_User(t *testing.T) {
 	r := require.New(t)
 	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := strings.ToUpper(randomdata.Email())
