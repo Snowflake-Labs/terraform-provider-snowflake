@@ -17,7 +17,7 @@ func TestAccAccountGrant_defaults(t *testing.T) {
 			{
 				Config: accountGrantConfig(roleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", privilegeMonitorUsage.String()),
+					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MONITOR USAGE"),
 				),
 			},
 		},
