@@ -118,12 +118,7 @@ var userSchema = map[string]*schema.Schema{
 		Description: "Last name of the user.",
 	},
 
-	//    DISPLAY_NAME = <string>
-	//    FIRST_NAME = <string>
 	//    MIDDLE_NAME = <string>
-	//    LAST_NAME = <string>
-	//    EMAIL = <string>
-	//    MUST_CHANGE_PASSWORD = TRUE | FALSE
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
 	//    DAYS_TO_EXPIRY = <integer>
