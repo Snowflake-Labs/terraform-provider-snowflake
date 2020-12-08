@@ -23,7 +23,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the resource monitor.",
 		Default:      "MONITOR",
-		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

@@ -22,7 +22,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the integration.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

@@ -47,7 +47,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

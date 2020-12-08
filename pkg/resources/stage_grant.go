@@ -39,7 +39,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the stage.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validStagePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validStagePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

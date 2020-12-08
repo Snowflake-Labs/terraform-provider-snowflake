@@ -41,7 +41,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
 		Default:      privilegeSelect.String(),
-		ValidateFunc: validation.StringInSlice(validTablePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

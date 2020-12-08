@@ -36,7 +36,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
 		Default:      privilegeSelect.String(),
-		ValidateFunc: validation.StringInSlice(validViewPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validViewPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

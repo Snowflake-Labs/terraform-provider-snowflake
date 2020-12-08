@@ -24,7 +24,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the schema.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validAccountPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

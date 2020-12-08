@@ -28,7 +28,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validDatabasePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validDatabasePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
