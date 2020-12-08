@@ -21,10 +21,11 @@ var validMaterializedViewPrivileges = NewPrivilegeSet(
 // The schema holds the resource variables that can be provided in the Terraform
 var materializedViewGrantSchema = map[string]*schema.Schema{
 	"materialized_view_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the materialized view on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the materialized view on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -54,11 +55,12 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"shares": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeString},
+		Optional:      true,
+		Description:   "Grants privilege to these shares (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"on_future": {
 		Type:          schema.TypeBool,

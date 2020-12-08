@@ -17,10 +17,11 @@ var validFunctionPrivileges = NewPrivilegeSet(
 
 var functionGrantSchema = map[string]*schema.Schema{
 	"function_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the function on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"arguments": {
 		Type: schema.TypeList,
@@ -38,15 +39,17 @@ var functionGrantSchema = map[string]*schema.Schema{
 				},
 			},
 		},
-		Optional:    true,
-		Description: "List of the arguments for the function (must be present if function_name is present)",
-		ForceNew:    true,
+		Optional:      true,
+		Description:   "List of the arguments for the function (must be present if function_name is present)",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"return_type": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The return type of the function (must be present if function_name is present)",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The return type of the function (must be present if function_name is present)",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -76,11 +79,12 @@ var functionGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"shares": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeString},
+		Optional:      true,
+		Description:   "Grants privilege to these shares (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"on_future": {
 		Type:          schema.TypeBool,

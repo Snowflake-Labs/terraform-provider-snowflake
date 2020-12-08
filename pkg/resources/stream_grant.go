@@ -15,10 +15,11 @@ var validStreamPrivileges = NewPrivilegeSet(
 
 var streamGrantSchema = map[string]*schema.Schema{
 	"stream_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the stream on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,

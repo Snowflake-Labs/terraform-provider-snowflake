@@ -15,10 +15,11 @@ var validFileFormatPrivileges = NewPrivilegeSet(
 
 var fileFormatGrantSchema = map[string]*schema.Schema{
 	"file_format_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the file format on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the file format on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
