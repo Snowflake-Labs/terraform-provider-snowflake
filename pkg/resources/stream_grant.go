@@ -17,7 +17,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	"stream_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"schema_name": {

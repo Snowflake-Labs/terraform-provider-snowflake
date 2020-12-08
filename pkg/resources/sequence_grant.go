@@ -17,7 +17,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	"sequence_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the sequence on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the sequence on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"schema_name": {

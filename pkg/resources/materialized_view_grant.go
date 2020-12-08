@@ -23,7 +23,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"materialized_view_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the materialized view on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the materialized view on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -57,7 +57,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"on_future": {

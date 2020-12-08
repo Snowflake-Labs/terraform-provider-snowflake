@@ -19,7 +19,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 	"function_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"arguments": {
@@ -79,7 +79,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"on_future": {

@@ -19,7 +19,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the stage on which to grant privileges.",
+		Description: "The name of the stage on which to grant privilege (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -53,7 +53,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"on_future": {
