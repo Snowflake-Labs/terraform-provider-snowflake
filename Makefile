@@ -6,6 +6,13 @@ export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.12.29
 
+go_test ?= -
+ifeq (, $(shell which gotest))
+	go_test=go test
+else
+	go_test=gotest
+endif
+
 all: test docs install
 .PHONY: all
 
@@ -14,6 +21,7 @@ setup: ## setup development dependencies
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 	bash .download-tfproviderlint.sh
+	go get golang.org/x/tools/cmd/goimports
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
@@ -27,6 +35,14 @@ lint-ci: ## run the fast go linters
 lint-all: fmt ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
 .PHONY: lint-all
+
+lint-missing-acceptance-tests:
+	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
+		if [ ! -f pkg/resources/"$$r"_acceptance_test.go ]; then \
+			echo $$r; \
+		fi; \
+	done
+.PHONY: lint-missing-acceptance-tests
 
 check-release-prereqs:
 ifndef KEYBASE_KEY_ID
@@ -61,11 +77,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 $(go_test) -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 deps:
@@ -109,6 +125,5 @@ check-mod:
 .PHONY: check-mod
 
 fmt:
-	go get golang.org/x/tools/cmd/goimports
 	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
 .PHONY: fmt

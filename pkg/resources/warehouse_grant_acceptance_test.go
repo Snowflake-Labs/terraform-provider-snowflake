@@ -26,7 +26,7 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "privilege", "USAGE"),
 				),
 			},
-			// // IMPORT
+			// IMPORT
 			{
 				ResourceName:      "snowflake_warehouse_grant.test",
 				ImportState:       true,
