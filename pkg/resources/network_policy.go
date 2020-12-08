@@ -95,6 +95,11 @@ func ReadNetworkPolicy(data *schema.ResourceData, meta interface{}) error {
 	showSql := builder.ShowAllNetworkPolicies()
 
 	rows, err := snowflake.Query(db, showSql)
+	if err == sql.ErrNoRows {
+		log.Printf("[WARN] task (%s) not found, removing from state file", data.Id())
+		data.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
