@@ -86,7 +86,7 @@ resource "snowflake_table" "test" {
 	}
 	column {
 		name = "column2"
-		type = "VARCHAR"
+		type = "VARCHAR(16777216)"
 	}
 }
 
