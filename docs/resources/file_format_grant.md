@@ -19,7 +19,7 @@ description: |-
 
 ### Optional
 
-- **file_format_name** (String, Optional) The name of the file format on which to grant privileges immediately (only valid if on_future is unset).
+- **file_format_name** (String, Optional) The name of the file format on which to grant privileges immediately (only valid if on_future is false).
 - **id** (String, Optional) The ID of this resource.
 - **on_future** (Boolean, Optional) When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.
 - **privilege** (String, Optional) The privilege to grant on the current or future file format.

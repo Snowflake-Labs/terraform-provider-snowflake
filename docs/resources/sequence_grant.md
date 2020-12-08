@@ -24,7 +24,7 @@ description: |-
 - **privilege** (String, Optional) The privilege to grant on the current or future sequence.
 - **roles** (Set of String, Optional) Grants privilege to these roles.
 - **schema_name** (String, Optional) The name of the schema containing the current or future sequences on which to grant privileges.
-- **sequence_name** (String, Optional) The name of the sequence on which to grant privileges immediately (only valid if on_future is unset).
+- **sequence_name** (String, Optional) The name of the sequence on which to grant privileges immediately (only valid if on_future is false).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 
