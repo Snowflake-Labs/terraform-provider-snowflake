@@ -23,7 +23,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the schema.",
-		Default:      "USAGE",
+		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
