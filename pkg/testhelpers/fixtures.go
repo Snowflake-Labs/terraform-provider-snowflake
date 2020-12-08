@@ -3,12 +3,13 @@ package testhelpers
 import (
 	"io/ioutil"
 	"path/filepath"
+	"testing"
 )
 
-func MustFixture(name string) string {
+func MustFixture(t *testing.T, name string) string {
 	b, err := Fixture(name)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	return b
 }

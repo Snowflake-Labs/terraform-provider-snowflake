@@ -4,9 +4,10 @@ import (
 	"crypto/rsa"
 	"io/ioutil"
 
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
@@ -17,82 +18,88 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"account": &schema.Schema{
+			"account": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "oauth_access_token"},
 			},
-			"oauth_access_token": &schema.Schema{
+			"oauth_access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "private_key_path", "password"},
 			},
-			"browser_auth": &schema.Schema{
+			"browser_auth": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
 				ConflictsWith: []string{"password", "private_key_path", "oauth_access_token"},
 			},
-			"private_key_path": &schema.Schema{
+			"private_key_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
 			},
-			"role": &schema.Schema{
+			"role": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
 			},
-			"region": &schema.Schema{
+			"region": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"snowflake_account_grant":          resources.AccountGrant(),
-			"snowflake_database":               resources.Database(),
-			"snowflake_database_grant":         resources.DatabaseGrant(),
-			"snowflake_integration_grant":      resources.IntegrationGrant(),
-			"snowflake_managed_account":        resources.ManagedAccount(),
-			"snowflake_pipe":                   resources.Pipe(),
-			"snowflake_resource_monitor":       resources.ResourceMonitor(),
-			"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
-			"snowflake_role":                   resources.Role(),
-			"snowflake_role_grants":            resources.RoleGrants(),
-			"snowflake_schema":                 resources.Schema(),
-			"snowflake_schema_grant":           resources.SchemaGrant(),
-			"snowflake_share":                  resources.Share(),
-			"snowflake_stage":                  resources.Stage(),
-			"snowflake_stage_grant":            resources.StageGrant(),
-			"snowflake_storage_integration":    resources.StorageIntegration(),
-			"snowflake_user":                   resources.User(),
-			"snowflake_view":                   resources.View(),
-			"snowflake_view_grant":             resources.ViewGrant(),
-			"snowflake_task":                   resources.Task(),
-			"snowflake_table_grant":            resources.TableGrant(),
-			"snowflake_warehouse":              resources.Warehouse(),
-			"snowflake_warehouse_grant":        resources.WarehouseGrant(),
+			"snowflake_account_grant":             resources.AccountGrant(),
+			"snowflake_database":                  resources.Database(),
+			"snowflake_database_grant":            resources.DatabaseGrant(),
+			"snowflake_integration_grant":         resources.IntegrationGrant(),
+			"snowflake_managed_account":           resources.ManagedAccount(),
+			"snowflake_network_policy":            resources.NetworkPolicy(),
+			"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
+			"snowflake_pipe":                      resources.Pipe(),
+			"snowflake_resource_monitor":          resources.ResourceMonitor(),
+			"snowflake_resource_monitor_grant":    resources.ResourceMonitorGrant(),
+			"snowflake_role":                      resources.Role(),
+			"snowflake_role_grants":               resources.RoleGrants(),
+			"snowflake_schema":                    resources.Schema(),
+			"snowflake_schema_grant":              resources.SchemaGrant(),
+			"snowflake_share":                     resources.Share(),
+			"snowflake_stage":                     resources.Stage(),
+			"snowflake_stage_grant":               resources.StageGrant(),
+			"snowflake_storage_integration":       resources.StorageIntegration(),
+			"snowflake_stream":                    resources.Stream(),
+			"snowflake_user":                      resources.User(),
+			"snowflake_view":                      resources.View(),
+			"snowflake_view_grant":                resources.ViewGrant(),
+			"snowflake_task":                      resources.Task(),
+			"snowflake_table":                     resources.Table(),
+			"snowflake_table_grant":               resources.TableGrant(),
+			"snowflake_warehouse":                 resources.Warehouse(),
+			"snowflake_warehouse_grant":           resources.WarehouseGrant(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{},
-		ConfigureFunc:  ConfigureProvider,
+		DataSourcesMap: map[string]*schema.Resource{
+			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
+		},
+		ConfigureFunc: ConfigureProvider,
 	}
 }
 

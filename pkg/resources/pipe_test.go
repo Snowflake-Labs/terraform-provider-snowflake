@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,5 +45,5 @@ func expectReadPipe(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "database_name", "schema_name", "definition", "owner", "notification_channel", "comment"},
 	).AddRow("2019-12-23 17:20:50.088 +0000", "test_pipe", "test_db", "test_schema", "test definition", "N", "test", "great comment")
-	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW PIPES LIKE 'test_pipe' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }

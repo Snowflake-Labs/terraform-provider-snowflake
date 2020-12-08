@@ -1,37 +1,37 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = newPrivilegeSet(
+var ValidViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
 )
 
 var viewGrantSchema = map[string]*schema.Schema{
-	"view_name": &schema.Schema{
+	"view_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the view on which to grant privileges immediately (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
-	"schema_name": &schema.Schema{
+	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the schema containing the current or future views on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"database_name": &schema.Schema{
+	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the current or future views on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
@@ -39,27 +39,34 @@ var viewGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(ValidViewPrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": &schema.Schema{
+	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
-	"on_future": &schema.Schema{
+	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
+	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
 	},
 }
 
@@ -72,30 +79,31 @@ func ViewGrant() *schema.Resource {
 
 		Schema: viewGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateViewGrant implements schema.CreateFunc
-func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		viewName   string
 		schemaName string
 	)
-	if _, ok := data.GetOk("view_name"); ok {
-		viewName = data.Get("view_name").(string)
+	if _, ok := d.GetOk("view_name"); ok {
+		viewName = d.Get("view_name").(string)
 	} else {
 		viewName = ""
 	}
-	if _, ok := data.GetOk("schema_name"); ok {
-		schemaName = data.Get("schema_name").(string)
+	if _, ok := d.GetOk("schema_name"); ok {
+		schemaName = d.Get("schema_name").(string)
 	} else {
 		schemaName = ""
 	}
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	futureViews := data.Get("on_future").(bool)
+	dbName := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	futureViews := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schemaName == "") && !futureViews {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -115,7 +123,7 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -125,19 +133,20 @@ func CreateViewGrant(data *schema.ResourceData, meta interface{}) error {
 		SchemaName:   schemaName,
 		ObjectName:   viewName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadViewGrant(data, meta)
+	return ReadViewGrant(d, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc
-func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -146,11 +155,11 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	viewName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -158,15 +167,19 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 	if viewName == "" {
 		futureViewsEnabled = true
 	}
-	err = data.Set("view_name", viewName)
+	err = d.Set("view_name", viewName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("on_future", futureViewsEnabled)
+	err = d.Set("on_future", futureViewsEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -178,12 +191,12 @@ func ReadViewGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
 
-	return readGenericGrant(data, meta, builder, futureViewsEnabled, ValidViewPrivileges)
+	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, ValidViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc
-func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -199,5 +212,5 @@ func DeleteViewGrant(data *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

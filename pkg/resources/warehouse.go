@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // warehouseCreateProperties are only available via the CREATE statement
@@ -19,16 +19,16 @@ var warehouseProperties = []string{
 }
 
 var warehouseSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
 	},
-	"warehouse_size": &schema.Schema{
+	"warehouse_size": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
@@ -44,28 +44,28 @@ var warehouseSchema = map[string]*schema.Schema{
 			return normalize(old) == normalize(new)
 		},
 	},
-	"max_cluster_count": &schema.Schema{
+	"max_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
-	"min_cluster_count": &schema.Schema{
+	"min_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
-	"scaling_policy": &schema.Schema{
+	"scaling_policy": {
 		Type:         schema.TypeString,
 		Description:  "Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.",
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "ECONOMY"}, true),
 	},
-	"auto_suspend": &schema.Schema{
+	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
@@ -73,29 +73,29 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntAtLeast(60),
 	},
 	// @TODO add a disable_auto_suspend property that sets the value of auto_suspend to NULL
-	"auto_resume": &schema.Schema{
+	"auto_resume": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
 		Optional:    true,
 		Computed:    true,
 	},
-	"initially_suspended": &schema.Schema{
+	"initially_suspended": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:    true,
 	},
-	"resource_monitor": &schema.Schema{
+	"resource_monitor": {
 		Type:        schema.TypeString,
 		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:    true,
 		Computed:    true,
 	},
-	"wait_for_provisioning": &schema.Schema{
+	"wait_for_provisioning": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
 	},
-	"statement_timeout_in_seconds": &schema.Schema{
+	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Default:     0,
@@ -114,21 +114,21 @@ func Warehouse() *schema.Resource {
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateWarehouse implements schema.CreateFunc
-func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
+func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	props := append(warehouseProperties, warehouseCreateProperties...)
-	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc
-func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
+func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.Warehouse(data.Id()).Show()
+	stmt := snowflake.Warehouse(d.Id()).Show()
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
@@ -136,49 +136,49 @@ func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", w.Name)
+	err = d.Set("name", w.Name)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", w.Comment)
+	err = d.Set("comment", w.Comment)
 	if err != nil {
 		return err
 	}
-	err = data.Set("warehouse_size", w.Size)
+	err = d.Set("warehouse_size", w.Size)
 	if err != nil {
 		return err
 	}
-	err = data.Set("max_cluster_count", w.MaxClusterCount)
+	err = d.Set("max_cluster_count", w.MaxClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("min_cluster_count", w.MinClusterCount)
+	err = d.Set("min_cluster_count", w.MinClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("scaling_policy", w.ScalingPolicy)
+	err = d.Set("scaling_policy", w.ScalingPolicy)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_suspend", w.AutoSuspend)
+	err = d.Set("auto_suspend", w.AutoSuspend)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_resume", w.AutoResume)
+	err = d.Set("auto_resume", w.AutoResume)
 	if err != nil {
 		return err
 	}
-	err = data.Set("resource_monitor", w.ResourceMonitor)
+	err = d.Set("resource_monitor", w.ResourceMonitor)
 
 	return err
 }
 
 // UpdateWarehouse implements schema.UpdateFunc
-func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc
-func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
+func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("warehouse", snowflake.Warehouse)(d, meta)
 }

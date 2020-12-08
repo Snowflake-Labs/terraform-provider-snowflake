@@ -5,8 +5,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,6 +20,38 @@ func database(t *testing.T, id string, params map[string]interface{}) *schema.Re
 func databaseGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func schemaGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func stageGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func tableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.TableGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -50,9 +81,17 @@ func accountGrant(t *testing.T, id string, params map[string]interface{}) *schem
 	return d
 }
 
-func providers() map[string]terraform.ResourceProvider {
+func stream(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Stream().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func providers() map[string]*schema.Provider {
 	p := provider.Provider()
-	return map[string]terraform.ResourceProvider{
+	return map[string]*schema.Provider{
 		"snowflake": p,
 	}
 }
@@ -76,6 +115,14 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func table(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Table().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

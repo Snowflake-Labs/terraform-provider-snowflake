@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -19,37 +19,37 @@ const (
 )
 
 var schemaSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
 		ForceNew:    true,
 	},
-	"database": &schema.Schema{
+	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the schema.",
 		ForceNew:    true,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the schema.",
 	},
-	"is_transient": &schema.Schema{
+	"is_transient": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 		ForceNew:    true,
 	},
-	"is_managed": &schema.Schema{
+	"is_managed": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
-	"data_retention_days": &schema.Schema{
+	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      1,
@@ -109,37 +109,36 @@ func Schema() *schema.Resource {
 		Read:   ReadSchema,
 		Update: UpdateSchema,
 		Delete: DeleteSchema,
-		Exists: SchemaExists,
 
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateSchema implements schema.CreateFunc
-func CreateSchema(data *schema.ResourceData, meta interface{}) error {
+func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-	database := data.Get("database").(string)
+	name := d.Get("name").(string)
+	database := d.Get("database").(string)
 
 	builder := snowflake.Schema(name).WithDB(database)
 
 	// Set optionals
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := data.GetOk("is_transient"); ok && v.(bool) {
+	if v, ok := d.GetOk("is_transient"); ok && v.(bool) {
 		builder.Transient()
 	}
 
-	if v, ok := data.GetOk("is_managed"); ok && v.(bool) {
+	if v, ok := d.GetOk("is_managed"); ok && v.(bool) {
 		builder.Managed()
 	}
 
-	if v, ok := data.GetOk("data_retention_days"); ok {
+	if v, ok := d.GetOk("data_retention_days"); ok {
 		builder.WithDataRetentionDays(v.(int))
 	}
 
@@ -158,15 +157,15 @@ func CreateSchema(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadSchema(data, meta)
+	return ReadSchema(d, meta)
 }
 
 // ReadSchema implements schema.ReadFunc
-func ReadSchema(data *schema.ResourceData, meta interface{}) error {
+func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(data.Id())
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -182,33 +181,33 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", s.Name.String)
+	err = d.Set("name", s.Name.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", s.DatabaseName.String)
+	err = d.Set("database", s.DatabaseName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", s.Comment.String)
+	err = d.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("data_retention_days", s.RetentionTime.Int64)
+	err = d.Set("data_retention_days", s.RetentionTime.Int64)
 	if err != nil {
 		return err
 	}
 
 	// reset the options before reading back from the DB
-	err = data.Set("is_transient", false)
+	err = d.Set("is_transient", false)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("is_managed", false)
+	err = d.Set("is_managed", false)
 	if err != nil {
 		return err
 	}
@@ -217,12 +216,12 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 		for _, opt := range strings.Split(opts, ", ") {
 			switch opt {
 			case "TRANSIENT":
-				err = data.Set("is_transient", true)
+				err = d.Set("is_transient", true)
 				if err != nil {
 					return err
 				}
 			case "MANAGED ACCESS":
-				err = data.Set("is_managed", true)
+				err = d.Set("is_managed", true)
 				if err != nil {
 					return err
 				}
@@ -234,11 +233,8 @@ func ReadSchema(data *schema.ResourceData, meta interface{}) error {
 }
 
 // UpdateSchema implements schema.UpdateFunc
-func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
-	schemaID, err := schemaIDFromString(data.Id())
+func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -249,19 +245,17 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Schema(schema).WithDB(dbName)
 
 	db := meta.(*sql.DB)
-	if data.HasChange("comment") {
-		_, comment := data.GetChange("comment")
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schema comment on %v", data.Id())
+			return errors.Wrapf(err, "error updating schema comment on %v", d.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
-	if data.HasChange("is_managed") {
-		_, managed := data.GetChange("is_managed")
+	if d.HasChange("is_managed") {
+		managed := d.Get("is_managed")
 		var q string
 		if managed.(bool) {
 			q = builder.Manage()
@@ -271,30 +265,27 @@ func UpdateSchema(data *schema.ResourceData, meta interface{}) error {
 
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error changing management state on %v", data.Id())
+			return errors.Wrapf(err, "error changing management state on %v", d.Id())
 		}
-
-		data.SetPartial("is_managed")
 	}
 
-	data.Partial(false)
-	if data.HasChange("data_retention_days") {
-		_, days := data.GetChange("data_retention_days")
+	if d.HasChange("data_retention_days") {
+		days := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetentionDays(days.(int))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating data retention days on %v", data.Id())
+			return errors.Wrapf(err, "error updating data retention days on %v", d.Id())
 		}
 	}
 
-	return ReadSchema(data, meta)
+	return ReadSchema(d, meta)
 }
 
 // DeleteSchema implements schema.DeleteFunc
-func DeleteSchema(data *schema.ResourceData, meta interface{}) error {
+func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(data.Id())
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -306,10 +297,10 @@ func DeleteSchema(data *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting schema %v", data.Id())
+		return errors.Wrapf(err, "error deleting schema %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }

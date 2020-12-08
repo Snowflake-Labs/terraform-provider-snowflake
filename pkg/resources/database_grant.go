@@ -2,12 +2,11 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var ValidDatabasePrivileges = newPrivilegeSet(
-	privilegeAll,
+var ValidDatabasePrivileges = NewPrivilegeSet(
 	privilegeCreateSchema,
 	privilegeImportedPrivileges,
 	privilegeModify,
@@ -18,13 +17,13 @@ var ValidDatabasePrivileges = newPrivilegeSet(
 )
 
 var databaseGrantSchema = map[string]*schema.Schema{
-	"database_name": &schema.Schema{
+	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
@@ -32,18 +31,25 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": &schema.Schema{
+	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares.",
+		ForceNew:    true,
+	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
 		ForceNew:    true,
 	},
 }
@@ -57,18 +63,19 @@ func DatabaseGrant() *schema.Resource {
 
 		Schema: databaseGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateDatabaseGrant implements schema.CreateFunc
-func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName := data.Get("database_name").(string)
+func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
+	dbName := d.Get("database_name").(string)
 	builder := snowflake.DatabaseGrant(dbName)
-	priv := data.Get("privilege").(string)
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -76,27 +83,32 @@ func CreateDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	grant := &grantID{
 		ResourceName: dbName,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadDatabaseGrant(data, meta)
+	return ReadDatabaseGrant(d, meta)
 }
 
 // ReadDatabaseGrant implements schema.ReadFunc
-func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	err = data.Set("database_name", grantID.ResourceName)
+	err = d.Set("database_name", grantID.ResourceName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", grantID.Privilege)
+	err = d.Set("privilege", grantID.Privilege)
+	if err != nil {
+		return err
+	}
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -108,14 +120,13 @@ func ReadDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.DatabaseGrant(grantID.ResourceName)
-
-	return readGenericGrant(data, meta, builder, false, ValidDatabasePrivileges)
+	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, ValidDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc
-func DeleteDatabaseGrant(data *schema.ResourceData, meta interface{}) error {
-	dbName := data.Get("database_name").(string)
+func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
+	dbName := d.Get("database_name").(string)
 	builder := snowflake.DatabaseGrant(dbName)
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

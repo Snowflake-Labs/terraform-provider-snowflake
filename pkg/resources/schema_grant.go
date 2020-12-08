@@ -1,17 +1,14 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// Intentionally exclude the "ALL" alias because it is not a real privilege and
-// might not interact well with this provider.
-var validSchemaPrivileges = newPrivilegeSet(
-	privilegeAll,
+var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
 	privilegeOwnership,
@@ -29,22 +26,23 @@ var validSchemaPrivileges = newPrivilegeSet(
 	privilegeCreateExternalTable,
 	privilegeCreateMaterializedView,
 	privilegeCreateTemporaryTable,
+	privilegeCreateMaskingPolicy,
 )
 
 var schemaGrantSchema = map[string]*schema.Schema{
-	"schema_name": &schema.Schema{
+	"schema_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the schema on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"database_name": &schema.Schema{
+	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the schema on which to grant privileges.",
 		ForceNew:    true,
 	},
-	"privilege": &schema.Schema{
+	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
@@ -52,27 +50,34 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.toList(), true),
 		ForceNew:     true,
 	},
-	"roles": &schema.Schema{
+	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
 		ForceNew:    true,
 	},
-	"shares": &schema.Schema{
+	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is unset).",
 		ForceNew:    true,
 	},
-	"on_future": &schema.Schema{
+	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
 		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
+	},
+	"with_grant_option": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
+		Default:     false,
+		ForceNew:    true,
 	},
 }
 
@@ -85,22 +90,23 @@ func SchemaGrant() *schema.Resource {
 
 		Schema: schemaGrantSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateSchemaGrant implements schema.CreateFunc
-func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	var schema string
-	if _, ok := data.GetOk("schema_name"); ok {
-		schema = data.Get("schema_name").(string)
+	if _, ok := d.GetOk("schema_name"); ok {
+		schema = d.Get("schema_name").(string)
 	} else {
 		schema = ""
 	}
-	db := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	onFuture := data.Get("on_future").(bool)
+	db := d.Get("database_name").(string)
+	priv := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	if (schema == "") && !onFuture {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -113,7 +119,7 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SchemaGrant(db, schema)
 	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -122,30 +128,31 @@ func CreateSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 		ResourceName: db,
 		SchemaName:   schema,
 		Privilege:    priv,
+		GrantOption:  grantOption,
 	}
 	dataIDInput, err := grantID.String()
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadSchemaGrant(data, meta)
+	return ReadSchemaGrant(d, meta)
 }
 
 // ReadSchemaGrant implements schema.ReadFunc
-func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
@@ -153,11 +160,15 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	if schemaName == "" {
 		onFuture = true
 	}
-	err = data.Set("on_future", onFuture)
+	err = d.Set("on_future", onFuture)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", grantID.Privilege)
+	err = d.Set("privilege", grantID.Privilege)
+	if err != nil {
+		return err
+	}
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
@@ -168,12 +179,12 @@ func ReadSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.SchemaGrant(dbName, schemaName)
 	}
-	return readGenericGrant(data, meta, builder, onFuture, validSchemaPrivileges)
+	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc
-func DeleteSchemaGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -191,5 +202,5 @@ func DeleteSchemaGrant(data *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.SchemaGrant(dbName, schemaName)
 	}
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
 }

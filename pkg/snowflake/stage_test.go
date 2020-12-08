@@ -28,11 +28,11 @@ func TestStageCreate(t *testing.T) {
 	s.WithCopyOptions("on_error='skip_file'")
 	r.Equal(s.Create(), `CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file')`)
 
-	s.WithComment("Yeehaw")
-	r.Equal(s.Create(), `CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yeehaw'`)
+	s.WithComment("Yee'haw")
+	r.Equal(`CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yee\'haw'`, s.Create())
 
 	s.WithStorageIntegration("MY_INTEGRATION")
-	r.Equal(s.Create(), `CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') STORAGE_INTEGRATION = MY_INTEGRATION ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yeehaw'`)
+	r.Equal(`CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://load/encrypted_files/' CREDENTIALS = (aws_role='arn:aws:iam::001234567890:role/mysnowflakerole') STORAGE_INTEGRATION = MY_INTEGRATION ENCRYPTION = (type='AWS_SSE_KMS' kms_key_id = 'aws/key') FILE_FORMAT = (format_name=my_csv_format) COPY_OPTIONS = (on_error='skip_file') COMMENT = 'Yee\'haw'`, s.Create())
 }
 
 func TestStageRename(t *testing.T) {
@@ -57,6 +57,12 @@ func TestStageChangeFileFormat(t *testing.T) {
 	r := require.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
 	r.Equal(s.ChangeFileFormat("format_name=my_csv_format"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET FILE_FORMAT = (format_name=my_csv_format)`)
+}
+
+func TestStageChangeFileFormatToEmptyList(t *testing.T) {
+	r := require.New(t)
+	s := Stage("test_stage", "test_db", "test_schema")
+	r.Equal(s.ChangeFileFormat("TYPE = parquet NULL_IF = [] COMPRESSION = none"), `ALTER STAGE "test_db"."test_schema"."test_stage" SET FILE_FORMAT = (TYPE = parquet NULL_IF = () COMPRESSION = none)`)
 }
 
 func TestStageChangeEncryption(t *testing.T) {
@@ -104,5 +110,5 @@ func TestStageDescribe(t *testing.T) {
 func TestStageShow(t *testing.T) {
 	r := require.New(t)
 	s := Stage("test_stage", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW STAGES LIKE 'test_stage' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW STAGES LIKE 'test_stage' IN SCHEMA "test_db"."test_schema"`)
 }

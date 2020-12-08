@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var userProperties = []string{
@@ -19,6 +19,10 @@ var userProperties = []string{
 	"rsa_public_key",
 	"rsa_public_key_2",
 	"must_change_password",
+	"email",
+	"display_name",
+	"first_name",
+	"last_name",
 }
 
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
@@ -26,11 +30,11 @@ var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool 
 }
 
 var userSchema = map[string]*schema.Schema{
-	"name": &schema.Schema{
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)"},
-	"login_name": &schema.Schema{
+	"login_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
@@ -38,59 +42,80 @@ var userSchema = map[string]*schema.Schema{
 		// login_name is case-insensitive
 		DiffSuppressFunc: diffCaseInsensitive,
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		// TODO validation
 	},
-	"password": &schema.Schema{
+	"password": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Sensitive:   true,
 		Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
 		// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
 	},
-	"disabled": &schema.Schema{
+	"disabled": {
 		Type:     schema.TypeBool,
 		Optional: true,
 		Computed: true,
 	},
-	"default_warehouse": &schema.Schema{
+	"default_warehouse": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
 	},
-	"default_namespace": &schema.Schema{
+	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: diffCaseInsensitive,
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
-	"default_role": &schema.Schema{
+	"default_role": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
 		Description: "Specifies the role that is active by default for the user’s session upon login.",
 	},
-	"rsa_public_key": &schema.Schema{
+	"rsa_public_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.",
 	},
-	"rsa_public_key_2": &schema.Schema{
+	"rsa_public_key_2": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
-	"has_rsa_public_key": &schema.Schema{
+	"has_rsa_public_key": {
 		Type:        schema.TypeBool,
 		Computed:    true,
 		Description: "Will be true if user as an RSA key set.",
 	},
-	"must_change_password": &schema.Schema{
+	"must_change_password": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
+	},
+	"email": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Email address for the user.",
+	},
+	"display_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Optional:    true,
+		Description: "Name displayed for the user in the Snowflake web interface.",
+	},
+	"first_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "First name of the user.",
+	},
+	"last_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Last name of the user.",
 	},
 
 	//    DISPLAY_NAME = <string>
@@ -116,19 +141,18 @@ func User() *schema.Resource {
 		Read:   ReadUser,
 		Update: UpdateUser,
 		Delete: DeleteUser,
-		Exists: UserExists,
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
 
-func CreateUser(data *schema.ResourceData, meta interface{}) error {
-	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+func CreateUser(d *schema.ResourceData, meta interface{}) error {
+	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
 }
 
 func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
@@ -148,9 +172,9 @@ func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	return false, nil
 }
 
-func ReadUser(data *schema.ResourceData, meta interface{}) error {
+func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.User(id).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -160,49 +184,69 @@ func ReadUser(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("name", u.Name.String)
+	err = d.Set("name", u.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", u.Comment.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("login_name", u.LoginName.String)
+	err = d.Set("comment", u.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("disabled", u.Disabled)
+	err = d.Set("login_name", u.LoginName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_role", u.DefaultRole.String)
+	err = d.Set("disabled", u.Disabled)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_namespace", u.DefaultNamespace.String)
+	err = d.Set("default_role", u.DefaultRole.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("default_warehouse", u.DefaultWarehouse.String)
+	err = d.Set("default_namespace", u.DefaultNamespace.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("has_rsa_public_key", u.HasRsaPublicKey)
+	err = d.Set("default_warehouse", u.DefaultWarehouse.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("has_rsa_public_key", u.HasRsaPublicKey)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("email", u.Email.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("display_name", u.DisplayName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("first_name", u.FirstName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("last_name", u.LastName.String)
 
 	return err
 }
 
-func UpdateUser(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(data, meta)
+func UpdateUser(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
 }
 
-func DeleteUser(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("user", snowflake.User)(data, meta)
+func DeleteUser(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("user", snowflake.User)(d, meta)
 }
