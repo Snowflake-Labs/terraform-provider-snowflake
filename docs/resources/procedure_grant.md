@@ -9,7 +9,41 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_procedure_grant grant {
+  database_name   = "db"
+  schema_name     = "schema"
+  procedure_name  = "procedure"
+
+  arguments   = [
+    {
+      "name": "a",
+      "type": "array"
+    },
+    {
+      "name": "b",
+      "type": "string"
+    }
+  ]
+  return_type = "string"
+
+  privilege = "select"
+  roles = [
+    "role1",
+    "role2",
+  ]
+
+  shares = [
+    "share1",
+    "share2",
+  ]
+
+  on_future         = false
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -38,4 +72,11 @@ Required:
 - **name** (String, Required) The argument name
 - **type** (String, Required) The argument type
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | procedure signature | privilege | true/false for with_grant_option
+terraform import snowflake_procedure_grant.example 'dbName|schemaName|procedureName(ARG1 ARG1TYPE, ARG2 ARG2TYPE):RETURNTYPE|USAGE|false'
+```

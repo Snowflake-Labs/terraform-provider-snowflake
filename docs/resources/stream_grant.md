@@ -9,7 +9,24 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_stream_grant grant {
+  database_name = "db"
+  schema_name   = "schema"
+  stream_name   = "view"
+
+  privilege = "select"
+  roles = [
+    "role1",
+    "role2",
+  ]
+
+  on_future         = false
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -27,4 +44,11 @@ description: |-
 - **stream_name** (String, Optional) The name of the stream on which to grant privileges immediately (only valid if on_future is false).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | stream name | privilege | true/false for with_grant_option
+terraform import snowflake_stream_grant.example 'dbName|schemaName|streamName|SELECT|false'
+```

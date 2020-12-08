@@ -9,7 +9,29 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_external_table_grant grant {
+  database_name       = "db"
+  schema_name         = "schema"
+  external_table_name = "external_table"
+
+  privilege = "select"
+  roles = [
+    "role1",
+    "role2",
+  ]
+
+  shares = [
+    "share1",
+    "share2",
+  ]
+
+  on_future         = false
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -28,4 +50,11 @@ description: |-
 - **shares** (Set of String, Optional) Grants privilege to these shares (only valid if on_future is false).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | external table name | privilege | true/false for with_grant_option
+terraform import snowflake_external_table_grant.example 'dbName|schemaName|externalTableName|SELECT|false'
+```

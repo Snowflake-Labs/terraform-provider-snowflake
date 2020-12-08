@@ -9,7 +9,24 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_file_format_grant grant {
+  database_name     = "db"
+  schema_name       = "schema"
+  file_format_name  = "file_format"
+
+  privilege = "select"
+  roles = [
+    "role1",
+    "role2",
+  ]
+
+  on_future         = false
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -27,4 +44,11 @@ description: |-
 - **roles** (Set of String, Optional) Grants privilege to these roles.
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | file format name | privilege | true/false for with_grant_option
+terraform import snowflake_file_format_grant.example 'dbName|schemaName|fileFormatName|USAGE|false'
+```
