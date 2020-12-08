@@ -16,6 +16,7 @@ description: |-
 ### Required
 
 - **database_name** (String, Required) The name of the database containing the current or future procedures on which to grant privileges.
+- **schema_name** (String, Required) The name of the schema containing the current or future procedures on which to grant privileges.
 
 ### Optional
 
@@ -26,7 +27,6 @@ description: |-
 - **procedure_name** (String, Optional) The name of the procedure on which to grant privileges immediately (only valid if on_future is false).
 - **return_type** (String, Optional) The return type of the procedure (must be present if procedure_name is present)
 - **roles** (Set of String, Optional) Grants privilege to these roles.
-- **schema_name** (String, Optional) The name of the schema containing the current or future procedures on which to grant privileges.
 - **shares** (Set of String, Optional) Grants privilege to these shares (only valid if on_future is false).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 

@@ -17,10 +17,11 @@ var ValidStagePrivileges = NewPrivilegeSet(
 
 var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the stage on which to grant privilege (only valid if on_future is false).",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the stage on which to grant privilege (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -90,13 +91,11 @@ func StageGrant() *schema.Resource {
 // CreateStageGrant implements schema.CreateFunc
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	var stageName string
-	if _, ok := d.GetOk("stage_name"); ok {
-		stageName = d.Get("stage_name").(string)
-	} else {
-		stageName = ""
+	if name, ok := d.GetOk("stage_name"); ok {
+		stageName = name.(string)
 	}
-	schemaName := d.Get("schema_name").(string)
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	futureStages := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)

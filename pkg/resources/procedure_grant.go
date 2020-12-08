@@ -53,7 +53,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The name of the schema containing the current or future procedures on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -121,7 +121,6 @@ func ProcedureGrant() *schema.Resource {
 func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		procedureName      string
-		schemaName         string
 		arguments          []interface{}
 		returnType         string
 		procedureSignature string
@@ -140,24 +139,11 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("return_type must be set when specifying procedure_name.")
 		}
 	}
-	if name, ok := d.GetOk("schema_name"); ok {
-		schemaName = name.(string)
-	}
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	futureProcedures := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-
-	if (schemaName == "") && !futureProcedures {
-		return errors.New("schema_name must be set unless on_future is true.")
-	}
-
-	if (procedureName == "") && !futureProcedures {
-		return errors.New("procedure_name must be set unless on_future is true.")
-	}
-	if (procedureName != "") && futureProcedures {
-		return errors.New("procedure_name must be empty if on_future is true.")
-	}
 
 	if procedureName != "" {
 		procedureSignature, _, argumentTypes = formatCallableObjectName(procedureName, returnType, arguments)

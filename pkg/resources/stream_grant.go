@@ -3,7 +3,6 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -23,7 +22,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The name of the schema containing the current or future streams on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -81,31 +80,15 @@ func StreamGrant() *schema.Resource {
 
 // CreateStreamGrant implements schema.CreateFunc
 func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		streamName string
-		schemaName string
-	)
+	var streamName string
 	if name, ok := d.GetOk("stream_name"); ok {
 		streamName = name.(string)
 	}
-	if name, ok := d.GetOk("schema_name"); ok {
-		schemaName = name.(string)
-	}
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	futureStreams := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-
-	if (schemaName == "") && !futureStreams {
-		return errors.New("schema_name must be set unless on_future is true.")
-	}
-
-	if (streamName == "") && !futureStreams {
-		return errors.New("stream_name must be set unless on_future is true.")
-	}
-	if (streamName != "") && futureStreams {
-		return errors.New("stream_name must be empty if on_future is true.")
-	}
 
 	var builder snowflake.GrantBuilder
 	if futureStreams {

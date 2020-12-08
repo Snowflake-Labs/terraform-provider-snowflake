@@ -16,6 +16,7 @@ description: |-
 ### Required
 
 - **database_name** (String, Required) The name of the database containing the current or future file formats on which to grant privileges.
+- **schema_name** (String, Required) The name of the schema containing the current or future file formats on which to grant privileges.
 
 ### Optional
 
@@ -24,7 +25,6 @@ description: |-
 - **on_future** (Boolean, Optional) When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.
 - **privilege** (String, Optional) The privilege to grant on the current or future file format.
 - **roles** (Set of String, Optional) Grants privilege to these roles.
-- **schema_name** (String, Optional) The name of the schema containing the current or future file formats on which to grant privileges.
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 

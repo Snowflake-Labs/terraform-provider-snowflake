@@ -53,7 +53,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The name of the schema containing the current or future functions on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -121,7 +121,6 @@ func FunctionGrant() *schema.Resource {
 func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		functionName      string
-		schemaName        string
 		arguments         []interface{}
 		returnType        string
 		functionSignature string
@@ -140,24 +139,11 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("return_type must be set when specifying function_name.")
 		}
 	}
-	if _, ok := d.GetOk("schema_name"); ok {
-		schemaName = d.Get("schema_name").(string)
-	}
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	futureFunctions := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-
-	if (schemaName == "") && !futureFunctions {
-		return errors.New("schema_name must be set unless on_future is true.")
-	}
-
-	if (functionName == "") && !futureFunctions {
-		return errors.New("function_name must be set unless on_future is true.")
-	}
-	if (functionName != "") && futureFunctions {
-		return errors.New("function_name must be empty if on_future is true.")
-	}
 
 	if functionName != "" {
 		functionSignature, _, argumentTypes = formatCallableObjectName(functionName, returnType, arguments)

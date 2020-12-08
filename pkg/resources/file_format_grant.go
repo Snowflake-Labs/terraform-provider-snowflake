@@ -3,7 +3,6 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -23,7 +22,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The name of the schema containing the current or future file formats on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -81,31 +80,15 @@ func FileFormatGrant() *schema.Resource {
 
 // CreateFileFormatGrant implements schema.CreateFunc
 func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		fileFormatName string
-		schemaName     string
-	)
+	var fileFormatName string
 	if name, ok := d.GetOk("file_format_name"); ok {
 		fileFormatName = name.(string)
 	}
-	if name, ok := d.GetOk("schema_name"); ok {
-		schemaName = name.(string)
-	}
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	futureFileFormats := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-
-	if (schemaName == "") && !futureFileFormats {
-		return errors.New("schema_name must be set unless on_future is true.")
-	}
-
-	if (fileFormatName == "") && !futureFileFormats {
-		return errors.New("file_format_name must be set unless on_future is true.")
-	}
-	if (fileFormatName != "") && futureFileFormats {
-		return errors.New("file_format_name must be empty if on_future is true.")
-	}
 
 	var builder snowflake.GrantBuilder
 	if futureFileFormats {
