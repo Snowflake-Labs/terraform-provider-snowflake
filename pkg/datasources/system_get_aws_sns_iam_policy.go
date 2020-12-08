@@ -38,8 +38,8 @@ func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) erro
 	row := snowflake.QueryRow(db, sel)
 	policy, err := snowflake.ScanAWSSNSIAMPolicy(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] system_get_aws_sns_iam_policy (%s) not found, removing from state file", data.Id())
-		data.SetId("")
+		log.Printf("[WARN] system_get_aws_sns_iam_policy (%s) not found, removing from state file", d.Id())
+		d.SetId("")
 		return nil
 	}
 	if err != nil {

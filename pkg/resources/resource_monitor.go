@@ -142,8 +142,8 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	rm, err := snowflake.ScanResourceMonitor(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] resource monitor (%s) not found, removing from state file", data.Id())
-		data.SetId("")
+		log.Printf("[WARN] resource monitor (%s) not found, removing from state file", d.Id())
+		d.SetId("")
 		return nil
 	}
 	if err != nil {

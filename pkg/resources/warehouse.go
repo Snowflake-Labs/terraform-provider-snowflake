@@ -134,8 +134,8 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] warehouse (%s) not found, removing from state file", data.Id())
-		data.SetId("")
+		log.Printf("[WARN] warehouse (%s) not found, removing from state file", d.Id())
+		d.SetId("")
 		return nil
 	}
 	if err != nil {

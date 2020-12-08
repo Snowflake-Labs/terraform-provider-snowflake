@@ -47,8 +47,8 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
 	role, err := snowflake.ScanRole(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] role (%s) not found, removing from state file", data.Id())
-		data.SetId("")
+		log.Printf("[WARN] role (%s) not found, removing from state file", d.Id())
+		d.SetId("")
 		return nil
 	}
 	if err != nil {

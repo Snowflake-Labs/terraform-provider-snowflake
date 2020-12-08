@@ -204,8 +204,8 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] pipe (%s) not found, removing from state file", data.Id())
-		data.SetId("")
+		log.Printf("[WARN] pipe (%s) not found, removing from state file", d.Id())
+		d.SetId("")
 		return nil
 	}
 	if err != nil {
