@@ -112,7 +112,7 @@ clean: ## clean the repo
 .PHONY: clean
 
 docs:
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
 check-docs: docs ## check that docs have been generated
