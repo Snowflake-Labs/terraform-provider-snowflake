@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -204,7 +203,6 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] pipe (%s) not found, removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}

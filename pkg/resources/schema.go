@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -179,7 +178,6 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanSchema(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] schema (%s) not found, removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}

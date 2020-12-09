@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -185,7 +184,6 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] table (%s) not found, removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}

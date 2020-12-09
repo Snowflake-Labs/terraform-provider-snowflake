@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -177,7 +176,6 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 
 	u, err := snowflake.ScanUser(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] user (%s) not found, removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}

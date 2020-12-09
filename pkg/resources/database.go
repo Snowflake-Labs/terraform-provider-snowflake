@@ -3,7 +3,6 @@ package resources
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -124,7 +123,6 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("[WARN] database %v not found, removing from state file", name)
 			d.SetId("")
 			return nil
 		}

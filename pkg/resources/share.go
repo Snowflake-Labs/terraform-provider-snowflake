@@ -3,7 +3,6 @@ package resources
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -134,7 +133,6 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanShare(row)
 	if err == sql.ErrNoRows {
-		log.Printf("[WARN] share (%s) not found, removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}
