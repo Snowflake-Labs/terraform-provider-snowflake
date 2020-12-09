@@ -57,10 +57,12 @@ func TestStreamRead(t *testing.T) {
 		r.Equal("stream_name", d.Get("name").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.Stream("stream_name", "database_name", "schema_name").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err2 := resources.ReadStream(d, db)
+		r.Empty(d.State())
 		r.Nil(err2)
 	})
 }

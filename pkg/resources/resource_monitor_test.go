@@ -101,12 +101,14 @@ func TestResourceMonitorRead(t *testing.T) {
 	}
 
 	d := resourceMonitor(t, "good_name", in)
-	q := snowflake.ResourceMonitor(d.Id()).Show()
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.ResourceMonitor(d.Id()).Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadResourceMonitor(d, db)
+		r.Empty(d.State())
 		r.Nil(err)
 	})
 }

@@ -63,10 +63,12 @@ func TestTableRead(t *testing.T) {
 		r.Equal("good_name", d.Get("name").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.Table("good_name", "database_name", "schema_name").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err2 := resources.ReadTable(d, db)
+		r.Empty(d.State())
 		r.Nil(err2)
 	})
 }

@@ -53,10 +53,12 @@ func TestWarehouseRead(t *testing.T) {
 		r.NoError(err)
 		r.Equal("mock comment", d.Get("comment").(string))
 
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.Warehouse(d.Id()).Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err2 := resources.ReadWarehouse(d, db)
+		r.Empty(d.State())
 		r.Nil(err2)
 	})
 }

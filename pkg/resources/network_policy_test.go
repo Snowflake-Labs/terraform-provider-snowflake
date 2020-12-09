@@ -99,10 +99,12 @@ func TestNetworkPolicyRead(t *testing.T) {
 	d := networkPolicy(t, "good-network-policy", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.NetworkPolicy(d.Id()).ShowAllNetworkPolicies()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err1 := resources.ReadNetworkPolicy(d, db)
+		r.Empty(d.State())
 
 		rows := sqlmock.NewRows([]string{
 			"created_on", "name", "comment", "entries_in_allowed_ip_list", "entries_in_blocked_ip_list",

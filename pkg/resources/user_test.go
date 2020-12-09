@@ -73,10 +73,12 @@ func TestUserRead(t *testing.T) {
 		r.Equal("myloginname", d.Get("login_name").(string))
 		r.Equal(false, d.Get("disabled").(bool))
 
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.User(d.Id()).Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err2 := resources.ReadUser(d, db)
+		r.Empty(d.State())
 		r.Nil(err2)
 	})
 }

@@ -52,11 +52,14 @@ func TestPipeRead(t *testing.T) {
 	}
 
 	d := pipe(t, "test_db|test_schema|test_pipe", in)
-	q := snowflake.Pipe("test_pipe", "test_db", "test_schema").Show()
+
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.Pipe("test_pipe", "test_db", "test_schema").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadPipe(d, db)
+		r.Empty(d.State())
 		r.Nil(err)
 	})
 }

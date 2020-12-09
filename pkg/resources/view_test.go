@@ -135,9 +135,12 @@ func TestViewRead(t *testing.T) {
 	d := view(t, "test_db|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.View("good_name").WithDB("test_db").WithSchema("test_schema").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadView(d, db)
+		r.Empty(d.State())
 		r.Nil(err)
 	})
 }

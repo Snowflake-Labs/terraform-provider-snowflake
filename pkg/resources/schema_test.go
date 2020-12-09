@@ -53,11 +53,14 @@ func TestSchemaRead(t *testing.T) {
 
 	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
 	d.SetId("test_db|good_name")
-	q := snowflake.Schema("good_name").WithDB("test_db").Show()
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.Schema("good_name").WithDB("test_db").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadSchema(d, db)
+		r.Empty(d.State())
 		r.Nil(err)
 	})
 }

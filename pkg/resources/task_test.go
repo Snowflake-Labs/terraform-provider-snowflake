@@ -77,10 +77,12 @@ func TestTaskRead(t *testing.T) {
 	d := task(t, "test_db|test_schema|test_task", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when resource is not found
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.Task("test_task", "test_db", "test_schema").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadTask(d, db)
+		r.Empty(d.State())
 		r.Nil(err)
 	})
 }
