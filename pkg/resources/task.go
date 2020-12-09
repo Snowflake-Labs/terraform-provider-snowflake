@@ -593,7 +593,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			// make sure defer doesn't enable task again
 			// when standalone or root task and status is supsended
 			if root != nil && builder.QualifiedName() == root.QualifiedName() {
-				root = root.SetDisabled()
+				root = root.SetDisabled() //nolint
 			}
 		}
 

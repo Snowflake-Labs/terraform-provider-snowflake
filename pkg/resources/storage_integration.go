@@ -39,6 +39,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		Description: "Explicitly limits external stages that use the integration to reference one or more storage locations.",
+		MinItems:    1,
 	},
 	"storage_blocked_locations": {
 		Type:        schema.TypeList,
