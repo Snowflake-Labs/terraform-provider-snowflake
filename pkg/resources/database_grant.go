@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var ValidDatabasePrivileges = NewPrivilegeSet(
+var validDatabasePrivileges = NewPrivilegeSet(
 	privilegeCreateSchema,
 	privilegeImportedPrivileges,
 	privilegeModify,
@@ -28,7 +28,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidDatabasePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validDatabasePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -55,16 +55,19 @@ var databaseGrantSchema = map[string]*schema.Schema{
 }
 
 // DatabaseGrant returns a pointer to the resource representing a database grant
-func DatabaseGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateDatabaseGrant,
-		Read:   ReadDatabaseGrant,
-		Delete: DeleteDatabaseGrant,
+func DatabaseGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateDatabaseGrant,
+			Read:   ReadDatabaseGrant,
+			Delete: DeleteDatabaseGrant,
 
-		Schema: databaseGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: databaseGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validDatabasePrivileges,
 	}
 }
 
@@ -120,7 +123,7 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.DatabaseGrant(grantID.ResourceName)
-	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, ValidDatabasePrivileges)
+	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc

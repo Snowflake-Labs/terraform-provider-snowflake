@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidViewPrivileges = NewPrivilegeSet(
+var validViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
 )
 
@@ -35,8 +35,8 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
-		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(ValidViewPrivileges.toList(), true),
+		Default:      privilegeSelect.String(),
+		ValidateFunc: validation.StringInSlice(validViewPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -71,16 +71,19 @@ var viewGrantSchema = map[string]*schema.Schema{
 }
 
 // ViewGrant returns a pointer to the resource representing a view grant
-func ViewGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateViewGrant,
-		Read:   ReadViewGrant,
-		Delete: DeleteViewGrant,
+func ViewGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateViewGrant,
+			Read:   ReadViewGrant,
+			Delete: DeleteViewGrant,
 
-		Schema: viewGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: viewGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validViewPrivileges,
 	}
 }
 
@@ -191,7 +194,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
 
-	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, ValidViewPrivileges)
+	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc

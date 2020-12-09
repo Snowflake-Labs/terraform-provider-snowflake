@@ -40,8 +40,8 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
-		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validTablePrivileges.toList(), true),
+		Default:      privilegeSelect.String(),
+		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -76,16 +76,19 @@ var tableGrantSchema = map[string]*schema.Schema{
 }
 
 // TableGrant returns a pointer to the resource representing a Table grant
-func TableGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateTableGrant,
-		Read:   ReadTableGrant,
-		Delete: DeleteTableGrant,
+func TableGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateTableGrant,
+			Read:   ReadTableGrant,
+			Delete: DeleteTableGrant,
 
-		Schema: tableGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: tableGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validTablePrivileges,
 	}
 }
 

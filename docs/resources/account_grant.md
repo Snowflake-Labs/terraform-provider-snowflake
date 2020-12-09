@@ -24,7 +24,7 @@ resource snowflake_account_grant grant {
 ### Optional
 
 - **id** (String, Optional) The ID of this resource.
-- **privilege** (String, Optional) The privilege to grant on the schema.
+- **privilege** (String, Optional) The privilege to grant on the account.
 - **roles** (Set of String, Optional) Grants privilege to these roles.
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
