@@ -67,40 +67,55 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{
-			"snowflake_account_grant":             resources.AccountGrant(),
-			"snowflake_database":                  resources.Database(),
-			"snowflake_database_grant":            resources.DatabaseGrant(),
-			"snowflake_integration_grant":         resources.IntegrationGrant(),
-			"snowflake_managed_account":           resources.ManagedAccount(),
-			"snowflake_network_policy":            resources.NetworkPolicy(),
-			"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
-			"snowflake_pipe":                      resources.Pipe(),
-			"snowflake_resource_monitor":          resources.ResourceMonitor(),
-			"snowflake_resource_monitor_grant":    resources.ResourceMonitorGrant(),
-			"snowflake_role":                      resources.Role(),
-			"snowflake_role_grants":               resources.RoleGrants(),
-			"snowflake_schema":                    resources.Schema(),
-			"snowflake_schema_grant":              resources.SchemaGrant(),
-			"snowflake_share":                     resources.Share(),
-			"snowflake_stage":                     resources.Stage(),
-			"snowflake_stage_grant":               resources.StageGrant(),
-			"snowflake_storage_integration":       resources.StorageIntegration(),
-			"snowflake_stream":                    resources.Stream(),
-			"snowflake_user":                      resources.User(),
-			"snowflake_view":                      resources.View(),
-			"snowflake_view_grant":                resources.ViewGrant(),
-			"snowflake_task":                      resources.Task(),
-			"snowflake_table":                     resources.Table(),
-			"snowflake_table_grant":               resources.TableGrant(),
-			"snowflake_warehouse":                 resources.Warehouse(),
-			"snowflake_warehouse_grant":           resources.WarehouseGrant(),
-		},
+		ResourcesMap: getResources(),
 		DataSourcesMap: map[string]*schema.Resource{
 			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
 		},
 		ConfigureFunc: ConfigureProvider,
 	}
+}
+
+func GetGrantResources() resources.TerraformGrantResources {
+	grants := resources.TerraformGrantResources{
+		"snowflake_account_grant":          resources.AccountGrant(),
+		"snowflake_database_grant":         resources.DatabaseGrant(),
+		"snowflake_integration_grant":      resources.IntegrationGrant(),
+		"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
+		"snowflake_schema_grant":           resources.SchemaGrant(),
+		"snowflake_stage_grant":            resources.StageGrant(),
+		"snowflake_table_grant":            resources.TableGrant(),
+		"snowflake_view_grant":             resources.ViewGrant(),
+		"snowflake_warehouse_grant":        resources.WarehouseGrant(),
+	}
+	return grants
+}
+
+func getResources() map[string]*schema.Resource {
+	others := map[string]*schema.Resource{
+		"snowflake_database":                  resources.Database(),
+		"snowflake_managed_account":           resources.ManagedAccount(),
+		"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
+		"snowflake_network_policy":            resources.NetworkPolicy(),
+		"snowflake_pipe":                      resources.Pipe(),
+		"snowflake_resource_monitor":          resources.ResourceMonitor(),
+		"snowflake_role_grants":               resources.RoleGrants(),
+		"snowflake_role":                      resources.Role(),
+		"snowflake_schema":                    resources.Schema(),
+		"snowflake_share":                     resources.Share(),
+		"snowflake_stage":                     resources.Stage(),
+		"snowflake_storage_integration":       resources.StorageIntegration(),
+		"snowflake_stream":                    resources.Stream(),
+		"snowflake_table":                     resources.Table(),
+		"snowflake_task":                      resources.Task(),
+		"snowflake_user":                      resources.User(),
+		"snowflake_view":                      resources.View(),
+		"snowflake_warehouse":                 resources.Warehouse(),
+	}
+
+	return mergeSchemas(
+		others,
+		GetGrantResources().GetTfSchemas(),
+	)
 }
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {

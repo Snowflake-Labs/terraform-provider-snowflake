@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -183,12 +184,12 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
-	// No rows then no table. Delete from state and end read
 	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] table (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	// Check for other errors
 	if err != nil {
 		return err
 	}

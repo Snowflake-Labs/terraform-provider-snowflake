@@ -86,3 +86,35 @@ func TestIpListToString(t *testing.T) {
 
 	r.Equal("('192.168.0.100/24', '29.254.123.20')", out)
 }
+
+func TestNetworkPolicyRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":            "good-network-policy",
+		"allowed_ip_list": []interface{}{"192.168.1.0/24"},
+		"blocked_ip_list": []interface{}{"155.548.2.98"},
+	}
+
+	d := networkPolicy(t, "good-network-policy", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.NetworkPolicy(d.Id()).ShowAllNetworkPolicies()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err1 := resources.ReadNetworkPolicy(d, db)
+		r.Empty(d.State())
+
+		rows := sqlmock.NewRows([]string{
+			"created_on", "name", "comment", "entries_in_allowed_ip_list", "entries_in_blocked_ip_list",
+		}).AddRow(
+			time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "bad-network-policy", "this is a comment", 2, 1,
+		)
+		mock.ExpectQuery(q).WillReturnRows(rows)
+		err2 := resources.ReadNetworkPolicy(d, db)
+
+		r.Nil(err1)
+		r.Nil(err2)
+	})
+}

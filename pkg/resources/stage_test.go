@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -56,4 +57,25 @@ func expectReadStageShow(mock sqlmock.Sqlmock) {
 		"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud", "notification_channel", "storage_integration"},
 	).AddRow("2019-12-23 17:20:50.088 +0000", "test_stage", "test_db", "test_schema", "s3://load/test/", "N", "Y", "test", "great comment", "us-east-1", "EXTERNAL", "AWS", "NULL", "NULL")
 	mock.ExpectQuery(`^SHOW STAGES LIKE 'test_stage' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
+}
+
+func TestStageRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "test_stage",
+		"database": "test_db",
+		"schema":   "test_schema",
+	}
+	d := stage(t, "test_db|test_schema|test_stage", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.Stage("test_stage", "test_db", "test_schema").Describe()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadStage(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
+	})
 }

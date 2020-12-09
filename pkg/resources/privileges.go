@@ -59,7 +59,7 @@ func NewPrivilegeSet(privileges ...Privilege) PrivilegeSet {
 	return ps
 }
 
-func (ps PrivilegeSet) toList() []string {
+func (ps PrivilegeSet) ToList() []string {
 	privs := []string{}
 	for p := range ps {
 		privs = append(privs, string(p))

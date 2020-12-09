@@ -7,7 +7,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
-var ValidStagePrivileges = NewPrivilegeSet(
+var validStagePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 	// These privileges are only valid for internal stages
@@ -39,7 +39,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the stage.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidStagePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validStagePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -66,16 +66,19 @@ var stageGrantSchema = map[string]*schema.Schema{
 }
 
 // StageGrant returns a pointer to the resource representing a stage grant
-func StageGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateStageGrant,
-		Read:   ReadStageGrant,
-		Delete: DeleteStageGrant,
+func StageGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateStageGrant,
+			Read:   ReadStageGrant,
+			Delete: DeleteStageGrant,
 
-		Schema: stageGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: stageGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validStagePrivileges,
 	}
 }
 
@@ -148,7 +151,7 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.StageGrant(dbName, schemaName, stageName)
-	return readGenericGrant(d, meta, stageGrantSchema, builder, false, ValidStagePrivileges)
+	return readGenericGrant(d, meta, stageGrantSchema, builder, false, validStagePrivileges)
 }
 
 // DeleteStageGrant implements schema.DeleteFunc

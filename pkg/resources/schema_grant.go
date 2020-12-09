@@ -47,7 +47,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -82,16 +82,19 @@ var schemaGrantSchema = map[string]*schema.Schema{
 }
 
 // SchemaGrant returns a pointer to the resource representing a view grant
-func SchemaGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateSchemaGrant,
-		Read:   ReadSchemaGrant,
-		Delete: DeleteSchemaGrant,
+func SchemaGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateSchemaGrant,
+			Read:   ReadSchemaGrant,
+			Delete: DeleteSchemaGrant,
 
-		Schema: schemaGrantSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			Schema: schemaGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validSchemaPrivileges,
 	}
 }
 
