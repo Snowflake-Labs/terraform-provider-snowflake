@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -211,6 +212,8 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	stream, err := snowflake.ScanStream(row)
 	if err == sql.ErrNoRows {
+		// If not found, remove resource from statefile
+		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
