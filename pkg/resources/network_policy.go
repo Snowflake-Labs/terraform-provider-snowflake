@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -93,6 +94,12 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	showSql := builder.ShowAllNetworkPolicies()
 
 	rows, err := snowflake.Query(db, showSql)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -102,11 +109,18 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var s *snowflake.NetworkPolicyStruct
+	var s *snowflake.NetworkPolicyStruct = nil
 	for _, value := range allPolicies {
 		if value.Name.String == policyName {
 			s = value
 		}
+	}
+
+	if s == nil {
+		// The network policy was not found, the Terraform state does not reflect the Snowflake state
+		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	descSql := builder.Describe()
