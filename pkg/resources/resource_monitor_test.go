@@ -10,6 +10,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 )
 
@@ -89,5 +90,25 @@ func TestResourceMonitorExists(t *testing.T) {
 		ok, err := resources.ResourceMonitorExists(d, db)
 		r.NoError(err)
 		r.True(ok)
+	})
+}
+
+func TestResourceMonitorRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name": "good_name",
+	}
+
+	d := resourceMonitor(t, "good_name", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.ResourceMonitor(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadResourceMonitor(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
 	})
 }

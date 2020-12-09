@@ -10,6 +10,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 )
 
@@ -61,4 +62,23 @@ func TestStripAccountFromName(t *testing.T) {
 
 	s = "no_account_for_some_reason"
 	r.Equal("no_account_for_some_reason", resources.StripAccountFromName(s))
+}
+
+func TestShareRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name": "test-share",
+	}
+	d := share(t, "test-share", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.Share(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadShare(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
+	})
 }

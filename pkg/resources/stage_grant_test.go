@@ -16,7 +16,7 @@ import (
 
 func TestStageGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.StageGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.StageGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -33,7 +33,7 @@ func TestStageGrantCreate(t *testing.T) {
 			"shares":            []interface{}{"test-share-1", "test-share-2"},
 			"with_grant_option": true,
 		}
-		d := schema.TestResourceDataRaw(t, resources.StageGrant().Schema, in)
+		d := schema.TestResourceDataRaw(t, resources.StageGrant().Resource.Schema, in)
 		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
