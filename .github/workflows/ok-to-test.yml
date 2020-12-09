@@ -27,6 +27,7 @@ jobs:
         named-args: true
         commands: ok-to-test
         permission: write
+
     - name: Output command and arguments
       run: |
         echo ${{ github.event.client_payload.slash_command.sha }}
