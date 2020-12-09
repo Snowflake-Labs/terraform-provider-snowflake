@@ -212,7 +212,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	stream, err := snowflake.ScanStream(row)
 	if err == sql.ErrNoRows {
-		// If not found, remove resource from statefile
+		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")
 		return nil

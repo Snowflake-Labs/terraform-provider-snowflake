@@ -185,7 +185,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
 	if err == sql.ErrNoRows {
-		// If not found, remove resource from statefile
+		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] table (%s) not found", d.Id())
 		d.SetId("")
 		return nil
