@@ -124,7 +124,8 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("[WARN] database %v not found, removing from state file", name)
+			// If not found, mark resource to be removed from statefile during apply or refresh
+			log.Printf("[DEBUG] database (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}

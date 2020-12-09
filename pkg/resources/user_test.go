@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -71,6 +72,14 @@ func TestUserRead(t *testing.T) {
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("myloginname", d.Get("login_name").(string))
 		r.Equal(false, d.Get("disabled").(bool))
+
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.User(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadUser(d, db)
+		r.Empty(d.State())
+		r.Nil(err2)
 	})
 }
 

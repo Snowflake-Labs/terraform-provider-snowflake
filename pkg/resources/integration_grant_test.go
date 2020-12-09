@@ -17,7 +17,7 @@ import (
 
 func TestIntegrationGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.IntegrationGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.IntegrationGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -30,7 +30,7 @@ func TestIntegrationGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

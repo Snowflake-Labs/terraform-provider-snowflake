@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -118,12 +119,7 @@ var userSchema = map[string]*schema.Schema{
 		Description: "Last name of the user.",
 	},
 
-	//    DISPLAY_NAME = <string>
-	//    FIRST_NAME = <string>
 	//    MIDDLE_NAME = <string>
-	//    LAST_NAME = <string>
-	//    EMAIL = <string>
-	//    MUST_CHANGE_PASSWORD = TRUE | FALSE
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
 	//    DAYS_TO_EXPIRY = <integer>
@@ -180,6 +176,12 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	u, err := snowflake.ScanUser(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] user (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

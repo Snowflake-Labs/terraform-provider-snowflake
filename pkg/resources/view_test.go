@@ -7,6 +7,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -120,4 +121,26 @@ func TestDiffSuppressStatement(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestViewRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "good_name",
+		"database": "test_db",
+		"schema":   "test_schema",
+	}
+
+	d := view(t, "test_db|schema_name|good_name", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.View("good_name").WithDB("test_db").WithSchema("test_schema").Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadView(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
+	})
 }

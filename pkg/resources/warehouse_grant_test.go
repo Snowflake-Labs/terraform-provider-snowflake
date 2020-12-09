@@ -6,18 +6,16 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWarehouseGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.WarehouseGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.WarehouseGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -29,7 +27,7 @@ func TestWarehouseGrantCreate(t *testing.T) {
 		"privilege":      "USAGE",
 		"roles":          []interface{}{"test-role-1", "test-role-2"},
 	}
-	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.WarehouseGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
