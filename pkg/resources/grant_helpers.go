@@ -14,6 +14,22 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// TerraformGrantResource augments terraform's *schema.Resource with extra context
+type TerraformGrantResource struct {
+	Resource   *schema.Resource
+	ValidPrivs PrivilegeSet
+}
+
+type TerraformGrantResources map[string]*TerraformGrantResource
+
+func (t TerraformGrantResources) GetTfSchemas() map[string]*schema.Resource {
+	out := map[string]*schema.Resource{}
+	for name, grant := range t {
+		out[name] = grant.Resource
+	}
+	return out
+}
+
 const (
 	grantIDDelimiter = '|'
 )
