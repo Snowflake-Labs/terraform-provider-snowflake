@@ -22,7 +22,7 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
