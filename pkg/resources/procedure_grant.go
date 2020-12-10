@@ -68,7 +68,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future procedure.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validProcedurePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validProcedurePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -104,16 +104,19 @@ var procedureGrantSchema = map[string]*schema.Schema{
 }
 
 // ProcedureGrant returns a pointer to the resource representing a procedure grant
-func ProcedureGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateProcedureGrant,
-		Read:   ReadProcedureGrant,
-		Delete: DeleteProcedureGrant,
+func ProcedureGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateProcedureGrant,
+			Read:   ReadProcedureGrant,
+			Delete: DeleteProcedureGrant,
 
-		Schema: procedureGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: procedureGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validProcedurePrivileges,
 	}
 }
 

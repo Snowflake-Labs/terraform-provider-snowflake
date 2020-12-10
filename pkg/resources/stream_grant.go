@@ -37,7 +37,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future stream.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validStreamPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validStreamPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -65,16 +65,19 @@ var streamGrantSchema = map[string]*schema.Schema{
 }
 
 // StreamGrant returns a pointer to the resource representing a stream grant
-func StreamGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateStreamGrant,
-		Read:   ReadStreamGrant,
-		Delete: DeleteStreamGrant,
+func StreamGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateStreamGrant,
+			Read:   ReadStreamGrant,
+			Delete: DeleteStreamGrant,
 
-		Schema: streamGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: streamGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validStreamPrivileges,
 	}
 }
 

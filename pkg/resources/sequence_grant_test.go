@@ -15,7 +15,7 @@ import (
 
 func TestSequenceGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.SequenceGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.SequenceGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -30,7 +30,7 @@ func TestSequenceGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -90,7 +90,7 @@ func TestFutureSequenceGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -114,7 +114,7 @@ func TestFutureSequenceGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	}
-	d = schema.TestResourceDataRaw(t, resources.SequenceGrant().Schema, in)
+	d = schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, in)
 	b.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

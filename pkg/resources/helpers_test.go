@@ -59,7 +59,7 @@ func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 
 func materializedViewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -218,7 +218,7 @@ func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.R
 
 func externalTableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -226,7 +226,7 @@ func externalTableGrant(t *testing.T, id string, params map[string]interface{}) 
 
 func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -234,7 +234,7 @@ func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *sc
 
 func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -242,7 +242,7 @@ func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *sche
 
 func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -250,7 +250,7 @@ func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema
 
 func functionGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -258,7 +258,7 @@ func functionGrant(t *testing.T, id string, params map[string]interface{}) *sche
 
 func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

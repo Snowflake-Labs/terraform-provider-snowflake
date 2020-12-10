@@ -37,7 +37,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future file format.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -65,16 +65,19 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 }
 
 // FileFormatGrant returns a pointer to the resource representing a file format grant
-func FileFormatGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateFileFormatGrant,
-		Read:   ReadFileFormatGrant,
-		Delete: DeleteFileFormatGrant,
+func FileFormatGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateFileFormatGrant,
+			Read:   ReadFileFormatGrant,
+			Delete: DeleteFileFormatGrant,
 
-		Schema: fileFormatGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: fileFormatGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validFileFormatPrivileges,
 	}
 }
 

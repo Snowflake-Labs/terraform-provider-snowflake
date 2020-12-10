@@ -43,7 +43,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future materialized view view.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -79,16 +79,19 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 }
 
 // ViewGrant returns a pointer to the resource representing a view grant
-func MaterializedViewGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateMaterializedViewGrant,
-		Read:   ReadMaterializedViewGrant,
-		Delete: DeleteMaterializedViewGrant,
+func MaterializedViewGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateMaterializedViewGrant,
+			Read:   ReadMaterializedViewGrant,
+			Delete: DeleteMaterializedViewGrant,
 
-		Schema: materializedViewGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: materializedViewGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validMaterializedViewPrivileges,
 	}
 }
 

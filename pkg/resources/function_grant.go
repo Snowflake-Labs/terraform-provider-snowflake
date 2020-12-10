@@ -68,7 +68,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future function.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -104,16 +104,19 @@ var functionGrantSchema = map[string]*schema.Schema{
 }
 
 // FunctionGrant returns a pointer to the resource representing a function grant
-func FunctionGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateFunctionGrant,
-		Read:   ReadFunctionGrant,
-		Delete: DeleteFunctionGrant,
+func FunctionGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateFunctionGrant,
+			Read:   ReadFunctionGrant,
+			Delete: DeleteFunctionGrant,
 
-		Schema: functionGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: functionGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validFunctionPrivileges,
 	}
 }
 

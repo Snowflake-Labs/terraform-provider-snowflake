@@ -37,7 +37,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future external table.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -73,16 +73,19 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 }
 
 // ExternalTableGrant returns a pointer to the resource representing a external table grant
-func ExternalTableGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateExternalTableGrant,
-		Read:   ReadExternalTableGrant,
-		Delete: DeleteExternalTableGrant,
+func ExternalTableGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateExternalTableGrant,
+			Read:   ReadExternalTableGrant,
+			Delete: DeleteExternalTableGrant,
 
-		Schema: externalTableGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: externalTableGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validExternalTablePrivileges,
 	}
 }
 

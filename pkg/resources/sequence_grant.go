@@ -37,7 +37,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future sequence.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validSequencePrivileges.toList(), true),
+		ValidateFunc: validation.StringInSlice(validSequencePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -65,16 +65,19 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 }
 
 // SequenceGrant returns a pointer to the resource representing a sequence grant
-func SequenceGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateSequenceGrant,
-		Read:   ReadSequenceGrant,
-		Delete: DeleteSequenceGrant,
+func SequenceGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateSequenceGrant,
+			Read:   ReadSequenceGrant,
+			Delete: DeleteSequenceGrant,
 
-		Schema: sequenceGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: sequenceGrantSchema,
+			Importer: &schema.ResourceImporter{
+				State: schema.ImportStatePassthrough,
+			},
 		},
+		ValidPrivs: validSequencePrivileges,
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 
 func TestFileFormatGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.FileFormatGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.FileFormatGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -30,7 +30,7 @@ func TestFileFormatGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -90,7 +90,7 @@ func TestFutureFileFormatGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -114,7 +114,7 @@ func TestFutureFileFormatGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	}
-	d = schema.TestResourceDataRaw(t, resources.FileFormatGrant().Schema, in)
+	d = schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, in)
 	b.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
