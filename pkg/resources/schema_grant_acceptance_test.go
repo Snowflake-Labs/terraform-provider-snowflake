@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,10 +10,6 @@ import (
 )
 
 func TestAcc_SchemaGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccSchemaGrant")
-	}
-
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
