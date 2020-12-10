@@ -162,7 +162,7 @@ var (
 func TestAcc_Task(t *testing.T) {
 	t.Skip("broken by a change to snowflake")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

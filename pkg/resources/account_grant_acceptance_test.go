@@ -11,7 +11,7 @@ import (
 func TestAccAccountGrant_defaults(t *testing.T) {
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -33,6 +33,7 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_account_grant" "test" {
   roles          = [snowflake_role.test.name]
+  privilege = "MONITOR USAGE"
 }
 `, role)
 }
