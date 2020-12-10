@@ -56,7 +56,6 @@ resource "snowflake_materialized_view_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	on_future = true
-	depends_on = [snowflake_role.test]
 	privilege = "SELECT"
 }
 `

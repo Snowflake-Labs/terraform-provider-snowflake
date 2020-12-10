@@ -57,7 +57,6 @@ resource "snowflake_procedure_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	on_future = true
-	depends_on = [snowflake_role.test]
 	privilege = "USAGE"
 }
 `

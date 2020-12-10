@@ -104,7 +104,6 @@ resource "snowflake_stream_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	stream_name = snowflake_stream.test.name
-	depends_on = [snowflake_role.test]
 	privilege = "SELECT"
 }
 `
