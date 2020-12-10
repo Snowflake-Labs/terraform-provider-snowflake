@@ -29,5 +29,5 @@ jobs:
 
     - name: Output command and arguments
       run: |
-        echo "sha used in slash command:" github.event.client_payload.slash_command.sha
-        echo "head sha:" github.event.client_payload.pull_request.head.sha
+        echo "sha used in slash command:" ${{ github.event.client_payload.slash_command.sha }}
+        echo "head sha:" ${{ github.event.client_payload.pull_request.head.sha }}
