@@ -12,7 +12,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

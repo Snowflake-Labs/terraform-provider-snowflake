@@ -108,7 +108,7 @@ func TestAcc_GrantRole(t *testing.T) {
 		),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			// test settup + removing a role
