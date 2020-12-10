@@ -23,11 +23,24 @@ func TestAccStorageIntegration_validation(t *testing.T) {
 	})
 }
 
+func TestAccStorageIntegration_aws(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: storageIntegrationConfig(name, []string{"s3://foo/"}),
+			},
+		},
+	})
+}
+
 func storageIntegrationConfig(name string, locations []string) string {
 	return fmt.Sprintf(`
 resource snowflake_storage_integration i {
 	name = "%s"
-	storage_allowed_locations = %v
+	storage_allowed_locations = %q
 	storage_provider = "S3"
 
 	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
