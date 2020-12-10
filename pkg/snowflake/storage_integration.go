@@ -26,7 +26,7 @@ func StorageIntegration(name string) *Builder {
 type storageIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
-	IntegrationType sql.NullString `db:"integration_type"`
+	IntegrationType sql.NullString `db:"type"`
 	CreatedOn       sql.NullString `db:"created_on"`
 	Enabled         sql.NullBool   `db:"enabled"`
 }

@@ -18,7 +18,7 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	policyName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
