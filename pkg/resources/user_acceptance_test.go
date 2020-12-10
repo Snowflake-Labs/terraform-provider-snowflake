@@ -39,7 +39,7 @@ func TestAcc_User(t *testing.T) {
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
