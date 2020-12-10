@@ -28,6 +28,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      "EXTERNAL_STAGE",
 		ValidateFunc: validation.StringInSlice([]string{"EXTERNAL_STAGE"}, true),
+		ForceNew:     true,
 	},
 	"enabled": {
 		Type:     schema.TypeBool,
@@ -39,6 +40,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		Description: "Explicitly limits external stages that use the integration to reference one or more storage locations.",
+		MinItems:    1,
 	},
 	"storage_blocked_locations": {
 		Type:        schema.TypeList,
@@ -233,11 +235,6 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		runSetStatement = true
 		stmt.SetString("COMMENT", d.Get("comment").(string))
-	}
-
-	if d.HasChange("type") {
-		runSetStatement = true
-		stmt.SetString("TYPE", d.Get("type").(string))
 	}
 
 	if d.HasChange("enabled") {

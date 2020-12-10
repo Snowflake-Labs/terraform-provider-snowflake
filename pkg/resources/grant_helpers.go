@@ -181,7 +181,7 @@ func readGenericGrant(
 
 	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
 	// is checking what kind of builder we have. If it is future grant, then I double check if the
-	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 6 members and contains
+	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 7 members and contains
 	// Truncate then it must be Table
 	futureGrantOnViews := false
 	futureGrantOnTables := false
@@ -189,7 +189,7 @@ func readGenericGrant(
 		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
 			futureGrantOnViews = true
 		}
-		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 6 {
+		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 7 {
 			futureGrantOnTables = true
 		}
 	}
