@@ -38,7 +38,7 @@ jobs:
   integration-fork:
     runs-on: ubuntu-latest
     # Strict rule to check the latest commit sha with the one provided in the ok-to-test command
-    if: github.event_name == "repository_dispatch" && github.event.client_payload.slash_command.args.named.sha == github.event.client_payload.pull_request.head.sha
+    if: github.event_name == 'repository_dispatch' && github.event.client_payload.slash_command.args.named.sha == github.event.client_payload.pull_request.head.sha
     # Integration tests needing secrets
     strategy:
       matrix:
