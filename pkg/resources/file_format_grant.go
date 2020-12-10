@@ -3,6 +3,7 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -14,11 +15,10 @@ var validFileFormatPrivileges = NewPrivilegeSet(
 
 var fileFormatGrantSchema = map[string]*schema.Schema{
 	"file_format_name": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "The name of the file format on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the file format on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -48,12 +48,11 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:          schema.TypeBool,
-		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.",
-		Default:       false,
-		ForceNew:      true,
-		ConflictsWith: []string{"file_format_name"},
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.",
+		Default:     false,
+		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -92,6 +91,13 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureFileFormats := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	if (fileFormatName == "") && !futureFileFormats {
+		return errors.New("file_format_name must be set unless on_future is true.")
+	}
+	if (fileFormatName != "") && futureFileFormats {
+		return errors.New("file_format_name must be empty if on_future is true.")
+	}
 
 	var builder snowflake.GrantBuilder
 	if futureFileFormats {

@@ -17,11 +17,10 @@ var validProcedurePrivileges = NewPrivilegeSet(
 
 var procedureGrantSchema = map[string]*schema.Schema{
 	"procedure_name": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "The name of the procedure on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the procedure on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"arguments": {
 		Type: schema.TypeList,
@@ -39,17 +38,15 @@ var procedureGrantSchema = map[string]*schema.Schema{
 				},
 			},
 		},
-		Optional:      true,
-		Description:   "List of the arguments for the procedure (must be present if procedure_name is present)",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Optional:    true,
+		Description: "List of the arguments for the procedure (must be present if procedure_name is present)",
+		ForceNew:    true,
 	},
 	"return_type": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "The return type of the procedure (must be present if procedure_name is present)",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The return type of the procedure (must be present if procedure_name is present)",
+		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -79,20 +76,18 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"shares": {
-		Type:          schema.TypeSet,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-		Optional:      true,
-		Description:   "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"on_future": {
-		Type:          schema.TypeBool,
-		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future.",
-		Default:       false,
-		ForceNew:      true,
-		ConflictsWith: []string{"procedure_name", "arguments", "return_type", "shares"},
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future.",
+		Default:     false,
+		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -147,6 +142,13 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureProcedures := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	if (procedureName == "") && !futureProcedures {
+		return errors.New("procedure_name must be set unless on_future is true.")
+	}
+	if (procedureName != "") && futureProcedures {
+		return errors.New("procedure_name must be empty if on_future is true.")
+	}
 
 	if procedureName != "" {
 		procedureSignature, _, argumentTypes = formatCallableObjectName(procedureName, returnType, arguments)

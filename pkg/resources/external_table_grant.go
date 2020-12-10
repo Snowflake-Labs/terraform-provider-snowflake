@@ -3,6 +3,7 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -14,11 +15,10 @@ var validExternalTablePrivileges = NewPrivilegeSet(
 
 var externalTableGrantSchema = map[string]*schema.Schema{
 	"external_table_name": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "The name of the external table on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the external table on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -48,20 +48,18 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"shares": {
-		Type:          schema.TypeSet,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-		Optional:      true,
-		Description:   "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"on_future": {
-		Type:          schema.TypeBool,
-		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.",
-		Default:       false,
-		ForceNew:      true,
-		ConflictsWith: []string{"external_table_name", "shares"},
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.",
+		Default:     false,
+		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -100,6 +98,13 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureExternalTables := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	if (externalTableName == "") && !futureExternalTables {
+		return errors.New("external_table_name must be set unless on_future is true.")
+	}
+	if (externalTableName != "") && futureExternalTables {
+		return errors.New("external_table_name must be empty if on_future is true.")
+	}
 
 	var builder snowflake.GrantBuilder
 	if futureExternalTables {

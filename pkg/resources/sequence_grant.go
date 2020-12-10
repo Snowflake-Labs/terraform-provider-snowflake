@@ -3,6 +3,7 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -14,11 +15,10 @@ var validSequencePrivileges = NewPrivilegeSet(
 
 var sequenceGrantSchema = map[string]*schema.Schema{
 	"sequence_name": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "The name of the sequence on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:      true,
-		ConflictsWith: []string{"on_future"},
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the sequence on which to grant privileges immediately (only valid if on_future is false).",
+		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -48,12 +48,11 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:          schema.TypeBool,
-		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future sequences in the given schema. When this is true and no schema_name is provided apply this grant on all future sequences in the given database. The sequence_name field must be unset in order to use on_future.",
-		Default:       false,
-		ForceNew:      true,
-		ConflictsWith: []string{"sequence_name"},
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future sequences in the given schema. When this is true and no schema_name is provided apply this grant on all future sequences in the given database. The sequence_name field must be unset in order to use on_future.",
+		Default:     false,
+		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -92,6 +91,13 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureSequences := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	if (sequenceName == "") && !futureSequences {
+		return errors.New("sequence_name must be set unless on_future is true.")
+	}
+	if (sequenceName != "") && futureSequences {
+		return errors.New("sequence_name must be empty if on_future is true.")
+	}
 
 	var builder snowflake.GrantBuilder
 	if futureSequences {
