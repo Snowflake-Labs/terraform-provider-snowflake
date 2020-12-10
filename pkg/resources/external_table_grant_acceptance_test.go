@@ -53,10 +53,9 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_external_table_grant" "test" {
     database_name = snowflake_database.test.name	
-	roles         = ["{{.role_name}}"]
+	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	on_future = true
-	depends_on = [snowflake_role.test]
 	privilege = "SELECT"
 }
 `
