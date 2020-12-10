@@ -94,6 +94,8 @@ func View() *schema.Resource {
 
 // CreateView implements schema.CreateFunc
 func CreateView(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] XXX")
+
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)

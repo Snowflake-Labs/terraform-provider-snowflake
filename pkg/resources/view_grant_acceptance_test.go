@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"bytes"
-	"os"
 	"testing"
 	"text/template"
 
@@ -31,9 +30,6 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 }
 
 func TestAcc_ViewGrantShares(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccViewGrantShares")
-	}
 
 	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
@@ -94,14 +90,22 @@ func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share s
 
 	tmpl := template.Must(template.New("shares").Parse(`
 resource "snowflake_database" "test" {
-  name = "%v"
+  name = "{{.database_name}}"
+}
+
+resource "snowflake_schema" "test" {
+	name = "{{ .schema_name }}"
+	database = snowflake_database.test.name
 }
 
 resource "snowflake_view" "test" {
   name      = "{{.view_name}}"
   database  = "{{.database_name}}"
+  schema    = "{{ .schema_name }}"
   statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
   is_secure = true
+
+  depends_on = [snowflake_database.test, snowflake_schema.test]
 }
 
 resource "snowflake_role" "test" {
@@ -110,12 +114,13 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_share" "test" {
   name     = "{{.share_name}}"
-  accounts = ["PC37737"]
 }
 
 resource "snowflake_database_grant" "test" {
   database_name = "{{ .database_name }}"
   shares        = ["{{ .share_name }}"]
+
+  depends_on = [snowflake_database.test, snowflake_share.test]
 }
 
 resource "snowflake_view_grant" "test" {
@@ -123,20 +128,22 @@ resource "snowflake_view_grant" "test" {
   database_name = "{{ .database_name }}"
   roles         = ["{{ .role_name }}"]
 	shares        = ["{{ .share_name }}"]
+	schema_name = "{{ .schema_name }}"
 
   // HACK(el): There is a problem with the provider where
   // in older versions of terraform referencing role.name will
   // trick the provider into thinking there are no roles inputted
   // so I hard-code the references.
-  depends_on = [snowflake_database_grant.test, snowflake_role.test, snowflake_share.test]
+  depends_on = [snowflake_database_grant.test, snowflake_role.test, snowflake_share.test, snowflake_view.test, snowflake_schema.test]
 }`))
 
 	out := bytes.NewBuffer(nil)
 	err := tmpl.Execute(out, map[string]string{
 		"share_name":    share,
 		"database_name": database_name,
+		"schema_name":   database_name,
 		"role_name":     role,
-		"view_name":     database_name,
+		"view_name":     view_name,
 	})
 	r.NoError(err)
 
