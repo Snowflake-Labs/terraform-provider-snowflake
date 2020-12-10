@@ -143,7 +143,6 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_share" "test" {
   name     = "%v"
-  accounts = ["PC37737"]
 }
 
 resource "snowflake_database_grant" "test" {
