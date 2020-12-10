@@ -24,5 +24,11 @@ jobs:
         token: ${{ env.TOKEN }} # GitHub App installation access token
         reaction-token: ${{ secrets.GITHUB_TOKEN }}
         issue-type: pull-request
+        named-args: true
         commands: ok-to-test
         permission: write
+
+    - name: Output command and arguments
+      run: |
+        echo ${{ github.event.client_payload.slash_command.sha }}
+        echo ${{ github.event.client_payload.pull_request.head.sha }}
