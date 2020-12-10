@@ -46,6 +46,12 @@ jobs:
           - test-acceptance
           - lint-ci
     steps:
+      - name: Dump the client payload context
+        env:
+          PAYLOAD_CONTEXT: ${{ toJson(github.event.client_payload) }}
+        run: |
+          echo "$PAYLOAD_CONTEXT"
+          echo ${{ github.event_name }}
       - uses: actions/checkout@v2
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
