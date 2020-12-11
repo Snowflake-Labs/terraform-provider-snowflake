@@ -17,10 +17,11 @@ var validStagePrivileges = NewPrivilegeSet(
 
 var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the stage on which to grant privileges.",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the stage on which to grant privilege (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -53,8 +54,16 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
 		ForceNew:    true,
+	},
+	"on_future": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stage_name", "shares"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -85,17 +94,21 @@ func StageGrant() *TerraformGrantResource {
 // CreateStageGrant implements schema.CreateFunc
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	var stageName string
-	if _, ok := d.GetOk("stage_name"); ok {
-		stageName = d.Get("stage_name").(string)
-	} else {
-		stageName = ""
+	if name, ok := d.GetOk("stage_name"); ok {
+		stageName = name.(string)
 	}
-	schemaName := d.Get("schema_name").(string)
 	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
+	futureStages := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	var builder snowflake.GrantBuilder
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
@@ -137,7 +150,15 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	futureStagesEnabled := false
+	if stageName == "" {
+		futureStagesEnabled = true
+	}
 	err = d.Set("stage_name", stageName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("on_future", futureStagesEnabled)
 	if err != nil {
 		return err
 	}
@@ -150,8 +171,14 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
-	return readGenericGrant(d, meta, stageGrantSchema, builder, false, validStagePrivileges)
+	var builder snowflake.GrantBuilder
+	if futureStagesEnabled {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
+
+	return readGenericGrant(d, meta, stageGrantSchema, builder, futureStagesEnabled, validStagePrivileges)
 }
 
 // DeleteStageGrant implements schema.DeleteFunc
@@ -164,7 +191,14 @@ func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	futureStages := (stageName == "")
+
+	var builder snowflake.GrantBuilder
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	return deleteGenericGrant(d, meta, builder)
 }

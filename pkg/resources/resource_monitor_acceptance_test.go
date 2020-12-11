@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -10,7 +11,7 @@ import (
 
 func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),

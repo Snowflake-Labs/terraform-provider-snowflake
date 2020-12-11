@@ -77,15 +77,22 @@ func Provider() *schema.Provider {
 
 func GetGrantResources() resources.TerraformGrantResources {
 	grants := resources.TerraformGrantResources{
-		"snowflake_account_grant":          resources.AccountGrant(),
-		"snowflake_database_grant":         resources.DatabaseGrant(),
-		"snowflake_integration_grant":      resources.IntegrationGrant(),
-		"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
-		"snowflake_schema_grant":           resources.SchemaGrant(),
-		"snowflake_stage_grant":            resources.StageGrant(),
-		"snowflake_table_grant":            resources.TableGrant(),
-		"snowflake_view_grant":             resources.ViewGrant(),
-		"snowflake_warehouse_grant":        resources.WarehouseGrant(),
+		"snowflake_account_grant":           resources.AccountGrant(),
+		"snowflake_database_grant":          resources.DatabaseGrant(),
+		"snowflake_external_table_grant":    resources.ExternalTableGrant(),
+		"snowflake_file_format_grant":       resources.FileFormatGrant(),
+		"snowflake_function_grant":          resources.FunctionGrant(),
+		"snowflake_integration_grant":       resources.IntegrationGrant(),
+		"snowflake_materialized_view_grant": resources.MaterializedViewGrant(),
+		"snowflake_procedure_grant":         resources.ProcedureGrant(),
+		"snowflake_resource_monitor_grant":  resources.ResourceMonitorGrant(),
+		"snowflake_schema_grant":            resources.SchemaGrant(),
+		"snowflake_sequence_grant":          resources.SequenceGrant(),
+		"snowflake_stage_grant":             resources.StageGrant(),
+		"snowflake_stream_grant":            resources.StreamGrant(),
+		"snowflake_table_grant":             resources.TableGrant(),
+		"snowflake_view_grant":              resources.ViewGrant(),
+		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
 	}
 	return grants
 }

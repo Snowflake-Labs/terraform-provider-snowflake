@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // TerraformGrantResource augments terraform's *schema.Resource with extra context
@@ -179,21 +180,6 @@ func readGenericGrant(
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 
-	// This is the only way how I can test that this function is reading VIEW grants or TABLE grants
-	// is checking what kind of builder we have. If it is future grant, then I double check if the
-	// privilegeSet has only one member - SELECT - then it is a VIEW, if it has 7 members and contains
-	// Truncate then it must be Table
-	futureGrantOnViews := false
-	futureGrantOnTables := false
-	if reflect.TypeOf(builder) == reflect.TypeOf(&snowflake.FutureGrantBuilder{}) {
-		if _, ok := validPrivileges[privilegeSelect]; ok && len(validPrivileges) == 1 {
-			futureGrantOnViews = true
-		}
-		if _, ok := validPrivileges[privilegeTruncate]; ok && len(validPrivileges) == 7 {
-			futureGrantOnTables = true
-		}
-	}
-
 	// Map of roles to privileges
 	rolePrivileges := map[string]PrivilegeSet{}
 	sharePrivileges := map[string]PrivilegeSet{}
@@ -209,14 +195,8 @@ func readGenericGrant(
 				// If not there, create an empty set
 				privileges = PrivilegeSet{}
 			}
-			// Add privilege to the set but consider valid privileges only
-			// for VIEW in ReadViewGrant
-			// and for non-VIEW in ReadTableGrant
-			if futureGrantOnViews || futureGrantOnTables {
-				if (futureGrantOnViews && grant.GrantType == "VIEW") || (futureGrantOnTables && grant.GrantType == "TABLE") {
-					privileges.addString(grant.Privilege)
-				}
-			} else { // Other grants
+
+			if strings.ReplaceAll(builder.GrantType(), " ", "_") == grant.GrantType {
 				privileges.addString(grant.Privilege)
 			}
 			// Reassign set back
@@ -389,4 +369,54 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
+}
+
+func parseCallableObjectName(objectName string) (map[string]interface{}, error) {
+	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
+	matches := r.FindStringSubmatch(objectName)
+	if len(matches) == 0 {
+		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
+	}
+	callableSignatureMap := make(map[string]interface{})
+
+	argumentsSignatures := strings.Split(matches[2], ", ")
+
+	arguments := make([]interface{}, len(argumentsSignatures))
+	argumentTypes := make([]string, len(argumentsSignatures))
+	argumentNames := make([]string, len(argumentsSignatures))
+
+	for i, argumentSignature := range argumentsSignatures {
+		signatureComponents := strings.Split(argumentSignature, " ")
+		argumentNames[i] = signatureComponents[0]
+		argumentTypes[i] = signatureComponents[1]
+		arguments[i] = map[string]interface{}{
+			"name": argumentNames[i],
+			"type": argumentTypes[i],
+		}
+	}
+
+	callableSignatureMap["callableName"] = matches[1]
+	callableSignatureMap["arguments"] = arguments
+	callableSignatureMap["argumentTypes"] = argumentTypes
+	callableSignatureMap["argumentNames"] = argumentNames
+	callableSignatureMap["returnType"] = matches[3]
+
+	return callableSignatureMap, nil
+}
+
+func formatCallableObjectName(callableName string, returnType string, arguments []interface{}) (string, []string, []string) {
+	argumentSignatures := make([]string, len(arguments))
+	argumentNames := make([]string, len(arguments))
+	argumentTypes := make([]string, len(arguments))
+
+	if arguments != nil {
+		for i, arg := range arguments {
+			argMap := arg.(map[string]interface{})
+			argumentNames[i] = strings.ToUpper(argMap["name"].(string))
+			argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
+			argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
+		}
+	}
+
+	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
 }

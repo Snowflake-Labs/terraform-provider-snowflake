@@ -94,3 +94,76 @@ func expectReadStageGrant(mock sqlmock.Sqlmock, test_priv string) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON STAGE "test-db"."test-schema"."test-stage"$`).WillReturnRows(rows)
 }
+
+func TestFutureStageGrantCreate(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"on_future":         true,
+		"schema_name":       "PUBLIC",
+		"database_name":     "test-db",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
+	}
+	d := schema.TestResourceDataRaw(t, resources.StageGrant().Resource.Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE STAGES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-1" WITH GRANT OPTION$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE STAGES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadFutureStageGrant(mock)
+		err := resources.CreateStageGrant(d, db)
+		r.NoError(err)
+	})
+
+	b := require.New(t)
+
+	in = map[string]interface{}{
+		"on_future":         true,
+		"database_name":     "test-db",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
+	}
+	d = schema.TestResourceDataRaw(t, resources.StageGrant().Resource.Schema, in)
+	b.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE STAGES IN DATABASE "test-db" TO ROLE "test-role-1"$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(
+			`^GRANT USAGE ON FUTURE STAGES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadFutureStageDatabaseGrant(mock)
+		err := resources.CreateStageGrant(d, db)
+		b.NoError(err)
+	})
+}
+
+func expectReadFutureStageGrant(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
+	}).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "STAGE", "test-db.PUBLIC.<SCHEMA>", "ROLE", "test-role-1", false,
+	).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "STAGE", "test-db.PUBLIC.<SCHEMA>", "ROLE", "test-role-2", false,
+	)
+	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN SCHEMA "test-db"."PUBLIC"$`).WillReturnRows(rows)
+}
+
+func expectReadFutureStageDatabaseGrant(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on", "privilege", "grant_on", "name", "grant_to", "grantee_name", "grant_option",
+	}).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "STAGE", "test-db.<SCHEMA>", "ROLE", "test-role-1", false,
+	).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "USAGE", "STAGE", "test-db.<SCHEMA>", "ROLE", "test-role-2", false,
+	)
+	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
+}

@@ -30,6 +30,8 @@ provider snowflake {
 
 ## Configuration Schema
 
+**Warning: these values are passed directly to the gosnowflake libarary, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
+
 ## Schema
 
 ### Required
@@ -45,7 +47,6 @@ provider snowflake {
 - **private_key_path** (String, Optional)
 - **region** (String, Optional)
 - **role** (String, Optional)
-
 
 ## Authentication
 
