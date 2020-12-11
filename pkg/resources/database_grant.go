@@ -81,7 +81,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
-		return errors.Wrap(err, "error createing database grant")
+		return errors.Wrap(err, "error creating database grant")
 	}
 
 	grant := &grantID{
@@ -91,7 +91,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
-		return errors.Wrap(err, "error createing database grant")
+		return errors.Wrap(err, "error creating database grant")
 	}
 	d.SetId(dataIDInput)
 
