@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"bytes"
-	"os"
 	"strings"
 	"testing"
 	"text/template"
@@ -32,9 +31,6 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 }
 
 func TestAcc_ViewGrantShares(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccViewGrantShares")
-	}
 
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -90,7 +86,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 	})
 }
 
-func viewGrantConfigShares(t *testing.T, database_name, view_name, role_name, share_name string) string {
+func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share_name string) string {
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
@@ -105,10 +101,12 @@ resource "snowflake_schema" "test" {
 
 resource "snowflake_view" "test" {
   name      = "{{.view_name}}"
-  database  = snowflake_database.test.name
-  schema    = snowflake_schema.test.name
+  database  = "{{.database_name}}"
+  schema    = "{{ .schema_name }}"
   statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
   is_secure = true
+
+  depends_on = [snowflake_database.test, snowflake_schema.test]
 }
 
 resource "snowflake_role" "test" {
@@ -117,20 +115,27 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_share" "test" {
   name     = "{{.share_name}}"
-  //accounts = ["PC37737"]
 }
 
 resource "snowflake_database_grant" "test" {
-  database_name = snowflake_database.test.name
-  shares        = [snowflake_share.test.name]
+  database_name = "{{ .database_name }}"
+  shares        = ["{{ .share_name }}"]
+
+  depends_on = [snowflake_database.test, snowflake_share.test]
 }
 
 resource "snowflake_view_grant" "test" {
-  view_name     = snowflake_view.test.name
-  database_name = snowflake_database.test.name
-  schema_name   = snowflake_schema.test.name
-  roles         = [snowflake_role.test.name]
-  shares        = [snowflake_share.test.name]
+  view_name     = "{{ .view_name }}"
+  database_name = "{{ .database_name }}"
+  roles         = ["{{ .role_name }}"]
+	shares        = ["{{ .share_name }}"]
+	schema_name = "{{ .schema_name }}"
+
+  // HACK(el): There is a problem with the provider where
+  // in older versions of terraform referencing role.name will
+  // trick the provider into thinking there are no roles inputted
+  // so I hard-code the references.
+  depends_on = [snowflake_database_grant.test, snowflake_role.test, snowflake_share.test, snowflake_view.test, snowflake_schema.test]
 }`))
 
 	out := bytes.NewBuffer(nil)
@@ -138,7 +143,7 @@ resource "snowflake_view_grant" "test" {
 		"share_name":    share_name,
 		"database_name": database_name,
 		"schema_name":   database_name,
-		"role_name":     role_name,
+		"role_name":     role,
 		"view_name":     view_name,
 	})
 	r.NoError(err)

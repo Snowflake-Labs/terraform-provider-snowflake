@@ -4,6 +4,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 )
 
 var validDatabasePrivileges = NewPrivilegeSet(
@@ -80,7 +81,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating database grant")
 	}
 
 	grant := &grantID{
@@ -90,7 +91,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating database grant")
 	}
 	d.SetId(dataIDInput)
 

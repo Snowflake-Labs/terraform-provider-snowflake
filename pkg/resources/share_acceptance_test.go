@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -15,10 +14,6 @@ const (
 )
 
 func TestAcc_Share(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccShare")
-	}
-
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +41,6 @@ func shareConfig(name string) string {
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
-//	accounts       = ["PC37737"]
 }
 `, name, shareComment)
 }

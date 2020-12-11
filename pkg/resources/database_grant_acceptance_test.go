@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -32,11 +31,7 @@ func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(
 	}
 }
 
-func TestAcc_DatabaseGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccDatabaseGrant")
-	}
-
+func TestAccDatabaseGrant_basic(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
