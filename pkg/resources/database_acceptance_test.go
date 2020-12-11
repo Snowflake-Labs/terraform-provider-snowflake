@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -14,8 +15,8 @@ func TestAcc_Database(t *testing.T) {
 		t.Skip("Skipping TestAccDatabase")
 	}
 
-	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	prefix2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),

@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"text/template"
 
@@ -11,9 +12,9 @@ import (
 )
 
 func TestAcc_ViewGrantBasic(t *testing.T) {
-	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -31,10 +32,10 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 
 func TestAcc_ViewGrantShares(t *testing.T) {
 
-	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -51,9 +52,9 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 }
 
 func TestAcc_FutureViewGrantChange(t *testing.T) {
-	viewName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	databaseName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -85,7 +86,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 	})
 }
 
-func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share string) string {
+func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share_name string) string {
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
@@ -139,7 +140,7 @@ resource "snowflake_view_grant" "test" {
 
 	out := bytes.NewBuffer(nil)
 	err := tmpl.Execute(out, map[string]string{
-		"share_name":    share,
+		"share_name":    share_name,
 		"database_name": database_name,
 		"schema_name":   database_name,
 		"role_name":     role,

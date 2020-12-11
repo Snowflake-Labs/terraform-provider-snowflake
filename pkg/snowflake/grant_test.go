@@ -79,6 +79,126 @@ func TestViewGrant(t *testing.T) {
 	r.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 }
 
+func TestMaterializedViewGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.MaterializedViewGrant("test_db", "PUBLIC", "testMaterializedView")
+	r.Equal(vg.Name(), "testMaterializedView")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON MATERIALIZED VIEW "test_db"."PUBLIC"."testMaterializedView"`, s)
+
+	s = vg.Role("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON VIEW "test_db"."PUBLIC"."testMaterializedView" FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON VIEW "test_db"."PUBLIC"."testMaterializedView" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestExternalTableGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.ExternalTableGrant("test_db", "PUBLIC", "testExternalTable")
+	r.Equal(vg.Name(), "testExternalTable")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable"`, s)
+
+	s = vg.Role("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("SELECT", false)
+	r.Equal(`GRANT SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("SELECT")
+	r.Equal(`REVOKE SELECT ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestFileFormatGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.FileFormatGrant("test_db", "PUBLIC", "testFileFormat")
+	r.Equal(vg.Name(), "testFileFormat")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat"`, s)
+
+	s = vg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestFunctionGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.FunctionGrant("test_db", "PUBLIC", "testFunction", []string{"ARRAY", "STRING"})
+	r.Equal(vg.Name(), "testFunction")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING)`, s)
+
+	s = vg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
+func TestProcedureGrant(t *testing.T) {
+	r := require.New(t)
+	vg := snowflake.ProcedureGrant("test_db", "PUBLIC", "testProcedure", []string{"ARRAY", "STRING"})
+	r.Equal(vg.Name(), "testProcedure")
+
+	s := vg.Show()
+	r.Equal(`SHOW GRANTS ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING)`, s)
+
+	s = vg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO ROLE "bob"`, s)
+
+	s = vg.Role("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) FROM ROLE "bob"`, s)
+
+	s = vg.Share("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO SHARE "bob"`, s)
+
+	s = vg.Share("bob").Revoke("USAGE")
+	r.Equal(`REVOKE USAGE ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) FROM SHARE "bob"`, s)
+
+	s = vg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO ROLE "bob" COPY CURRENT GRANTS`, s)
+}
+
 func TestWarehouseGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.WarehouseGrant("test_warehouse")

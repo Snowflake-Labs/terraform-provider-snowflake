@@ -57,6 +57,14 @@ func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 	return d
 }
 
+func materializedViewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Resource.Schema, params)
@@ -203,6 +211,54 @@ func view(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func externalTableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func functionGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

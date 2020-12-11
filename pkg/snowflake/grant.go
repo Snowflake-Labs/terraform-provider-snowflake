@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"strings"
 )
 
 type grantType string
@@ -12,12 +13,19 @@ const (
 	resourceMonitorType grantType = "RESOURCE MONITOR"
 	integrationType     grantType = "INTEGRATION"
 
-	databaseType  grantType = "DATABASE"
-	schemaType    grantType = "SCHEMA"
-	stageType     grantType = "STAGE"
-	viewType      grantType = "VIEW"
-	tableType     grantType = "TABLE"
-	warehouseType grantType = "WAREHOUSE"
+	databaseType         grantType = "DATABASE"
+	schemaType           grantType = "SCHEMA"
+	stageType            grantType = "STAGE"
+	viewType             grantType = "VIEW"
+	materializedViewType grantType = "MATERIALIZED VIEW"
+	tableType            grantType = "TABLE"
+	warehouseType        grantType = "WAREHOUSE"
+	externalTableType    grantType = "EXTERNAL TABLE"
+	fileFormatType       grantType = "FILE FORMAT"
+	functionType         grantType = "FUNCTION"
+	procedureType        grantType = "PROCEDURE"
+	sequenceType         grantType = "SEQUENCE"
+	streamType           grantType = "STREAM"
 )
 
 type GrantExecutable interface {
@@ -28,6 +36,7 @@ type GrantExecutable interface {
 
 type GrantBuilder interface {
 	Name() string
+	GrantType() string
 	Role(string) GrantExecutable
 	Share(string) GrantExecutable
 	Show() string
@@ -44,6 +53,62 @@ type CurrentGrantBuilder struct {
 func (gb *CurrentGrantBuilder) Name() string {
 	return gb.name
 }
+
+func (gb *CurrentGrantBuilder) GrantType() string {
+	return string(gb.grantType)
+}
+
+// Show returns the SQL that will show all privileges on the grant
+func (gb *CurrentGrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
+}
+
+///////////////////////////////////////////////
+// START CurrentMaterializedViewGrantBuilder //
+///////////////////////////////////////////////
+type CurrentMaterializedViewGrantBuilder struct {
+	name          string
+	qualifiedName string
+	grantType     grantType
+}
+
+// Name returns the object name for this CurrentGrantBuilder
+func (gb *CurrentMaterializedViewGrantBuilder) Name() string {
+	return gb.name
+}
+
+func (gb *CurrentMaterializedViewGrantBuilder) GrantType() string {
+	return string(gb.grantType)
+}
+
+// Show returns the SQL that will show all privileges on the grant
+func (gb *CurrentMaterializedViewGrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
+}
+
+// Role returns a pointer to a CurrentGrantExecutable for a role
+func (gb *CurrentMaterializedViewGrantBuilder) Role(n string) GrantExecutable {
+	return &CurrentGrantExecutable{
+		grantName:   gb.qualifiedName,
+		grantType:   viewType,
+		granteeName: n,
+		granteeType: roleType,
+	}
+}
+
+// Share returns a pointer to a CurrentGrantExecutable for a share
+func (gb *CurrentMaterializedViewGrantBuilder) Share(n string) GrantExecutable {
+	return &CurrentGrantExecutable{
+		grantName:   gb.qualifiedName,
+		grantType:   viewType,
+		granteeName: n,
+		granteeType: shareType,
+	}
+}
+
+///////////////////////////////////////////////
+/// END CurrentMaterializedViewGrantBuilder ///
+///////////////////////////////////////////////
 
 // AccountGrant returns a pointer to a CurrentGrantBuilder for an account
 func AccountGrant() GrantBuilder {
@@ -88,6 +153,15 @@ func ViewGrant(db, schema, view string) GrantBuilder {
 	}
 }
 
+// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a view
+func MaterializedViewGrant(db, schema, view string) GrantBuilder {
+	return &CurrentMaterializedViewGrantBuilder{
+		name:          view,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view),
+		grantType:     materializedViewType,
+	}
+}
+
 // TableGrant returns a pointer to a CurrentGrantBuilder for a table
 func TableGrant(db, schema, table string) GrantBuilder {
 	return &CurrentGrantBuilder{
@@ -124,9 +198,58 @@ func WarehouseGrant(w string) GrantBuilder {
 	}
 }
 
-// Show returns the SQL that will show all privileges on the grant
-func (gb *CurrentGrantBuilder) Show() string {
-	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
+// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for a view
+func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          externalTable,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, externalTable),
+		grantType:     externalTableType,
+	}
+}
+
+// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a view
+func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          fileFormat,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, fileFormat),
+		grantType:     fileFormatType,
+	}
+}
+
+// FunctionGrant returns a pointer to a CurrentGrantBuilder for a view
+func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          function,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"(%v)`, db, schema, function, strings.Join(argumentTypes, ", ")),
+		grantType:     functionType,
+	}
+}
+
+// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a view
+func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          procedure,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"(%v)`, db, schema, procedure, strings.Join(argumentTypes, ", ")),
+		grantType:     procedureType,
+	}
+}
+
+// SequenceGrant returns a pointer to a CurrentGrantBuilder for a view
+func SequenceGrant(db, schema, sequence string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          sequence,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, sequence),
+		grantType:     sequenceType,
+	}
+}
+
+// StreamGrant returns a pointer to a CurrentGrantBuilder for a view
+func StreamGrant(db, schema, stream string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          stream,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, stream),
+		grantType:     streamType,
+	}
 }
 
 type granteeType string
