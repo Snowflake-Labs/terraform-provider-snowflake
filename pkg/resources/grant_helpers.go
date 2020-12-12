@@ -409,13 +409,11 @@ func formatCallableObjectName(callableName string, returnType string, arguments 
 	argumentNames := make([]string, len(arguments))
 	argumentTypes := make([]string, len(arguments))
 
-	if arguments != nil {
-		for i, arg := range arguments {
-			argMap := arg.(map[string]interface{})
-			argumentNames[i] = strings.ToUpper(argMap["name"].(string))
-			argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
-			argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
-		}
+	for i, arg := range arguments {
+		argMap := arg.(map[string]interface{})
+		argumentNames[i] = strings.ToUpper(argMap["name"].(string))
+		argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
+		argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
 	}
 
 	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
