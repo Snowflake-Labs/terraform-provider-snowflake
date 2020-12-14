@@ -72,9 +72,8 @@ jobs:
         run: make ${{ matrix.target }}
 
       - uses: actions/github-script@v1
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id && ${{ always() }}
         id: update-check-run
-        if: ${{ always() }}
         env:
           number: ${{ github.event.client_payload.pull_request.number }}
           job: ${{ github.job }}
