@@ -7,25 +7,38 @@ on:
 name: Integration tests
 
 jobs:
-  # Branch-based pull request
   integration-trusted:
     runs-on: ubuntu-latest
-    # Runs tests when a PR is opened from the original repo (not a forked repo), which protects the secrets and builds for trusted contributors
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     strategy:
       matrix:
         target:
           - test-acceptance
           - lint-ci
     steps:
+      - id: sha-input
+        run: |
+          id=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -d- -f2)
+          echo "::set-output name=id::$id"
+
+      - id: sha-head
+        run: |
+          id=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -d- -f2)
+          echo "::set-output name=id::$id"
+
       - uses: actions/checkout@v2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+
       - uses: actions/setup-go@v2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           go-version: '1.15.5'
+
       - name: Install dependencies
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: make setup
 
-      - name: make ${{ matrix.target }}
+      - name: make ${{ matrix.target }} integration trusted
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -34,28 +47,22 @@ jobs:
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
 
-  # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork:
-    runs-on: ubuntu-latest
-    # Strict rule to check the latest commit sha with the one provided in the ok-to-test command
-    if: github.event_name == 'repository_dispatch' && github.event.client_payload.slash_command.args.named.sha == github.event.client_payload.pull_request.head.sha
-    # Integration tests needing secrets
-    strategy:
-      matrix:
-        target:
-          - test-acceptance
-          - lint-ci
-    steps:
       - uses: actions/checkout@v2
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+
       - uses: actions/setup-go@v2
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
         with:
           go-version: '1.15.5'
+
       - name: Install dependencies
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
         run: make setup
 
-      - name: make ${{ matrix.target }}
+      - name: make ${{ matrix.target }} integration fork
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -63,7 +70,9 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
+
       - uses: actions/github-script@v1
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
         id: update-check-run
         if: ${{ always() }}
         env:
