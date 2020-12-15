@@ -21,7 +21,7 @@ jobs:
           echo ${{ github.event_name }}
           echo ${{ github.event.client_payload }}
 
-      - id: verify sha-input
+      - id: verify-sha-input
         if: github.event_name == 'repository_dispatch'
         run: |
           SHAINPUT=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -c1-7)
