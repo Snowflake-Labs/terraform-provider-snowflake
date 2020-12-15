@@ -16,14 +16,16 @@ jobs:
           - lint-ci
     steps:
       - id: sha-input
+        if: github.event_name == 'repository_dispatch'
         run: |
-          id=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -d- -f2)
-          echo "::set-output name=id::$id"
+          SHAINPUT=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -c1-6)
+          echo $SHAINPUT
 
       - id: sha-head
+        if: github.event_name == 'repository_dispatch'
         run: |
-          id=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -d- -f2)
-          echo "::set-output name=id::$id"
+          SHAHEAD=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -c1-6)
+          echo $SHAHEAD
 
       - uses: actions/checkout@v2
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
