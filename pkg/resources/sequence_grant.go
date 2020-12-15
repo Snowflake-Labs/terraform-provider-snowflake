@@ -73,7 +73,7 @@ func SequenceGrant() *TerraformGrantResource {
 
 			Schema: sequenceGrantSchema,
 			Importer: &schema.ResourceImporter{
-				State: schema.ImportStatePassthrough,
+				StateContext: schema.ImportStatePassthroughContext,
 			},
 		},
 		ValidPrivs: validSequencePrivileges,
