@@ -73,7 +73,7 @@ func FileFormatGrant() *TerraformGrantResource {
 
 			Schema: fileFormatGrantSchema,
 			Importer: &schema.ResourceImporter{
-				State: schema.ImportStatePassthrough,
+				StateContext: schema.ImportStatePassthroughContext,
 			},
 		},
 		ValidPrivs: validFileFormatPrivileges,
