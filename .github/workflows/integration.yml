@@ -78,8 +78,8 @@ jobs:
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
         run: make ${{ matrix.target }}
 
-      - uses: actions/github-script@v1
-        if: ${{ always() }}
+      - uses: actions/github-script@v3
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.SHAINPUT == steps.sha-head.outputs.SHAHEAD
         id: update-check-run
         env:
           number: ${{ github.event.client_payload.pull_request.number }}
