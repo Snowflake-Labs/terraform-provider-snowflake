@@ -18,13 +18,13 @@ jobs:
       - id: sha-input
         if: github.event_name == 'repository_dispatch'
         run: |
-          SHAINPUT=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -c1-6)
+          SHAINPUT=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -c1-7)
           echo $SHAINPUT
 
       - id: sha-head
         if: github.event_name == 'repository_dispatch'
         run: |
-          SHAHEAD=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -c1-6)
+          SHAHEAD=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -c1-7)
           echo $SHAHEAD
 
       - uses: actions/checkout@v2
@@ -50,21 +50,21 @@ jobs:
         run: make ${{ matrix.target }}
 
       - uses: actions/checkout@v2
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.SHAINPUT == steps.sha-head.outputs.SHAHEAD
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
 
       - uses: actions/setup-go@v2
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.SHAINPUT == steps.sha-head.outputs.SHAHEAD
         with:
           go-version: '1.15.5'
 
       - name: Install dependencies
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.SHAINPUT == steps.sha-head.outputs.SHAHEAD
         run: make setup
 
       - name: make ${{ matrix.target }} integration fork
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id
+        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.SHAINPUT == steps.sha-head.outputs.SHAHEAD
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -74,7 +74,7 @@ jobs:
         run: make ${{ matrix.target }}
 
       - uses: actions/github-script@v1
-        if: github.event_name == 'repository_dispatch' && steps.sha-input.outputs.id == steps.sha-head.outputs.id && ${{ always() }}
+        if: ${{ always() }}
         id: update-check-run
         env:
           number: ${{ github.event.client_payload.pull_request.number }}
