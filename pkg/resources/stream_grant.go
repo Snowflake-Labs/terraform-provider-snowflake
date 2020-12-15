@@ -73,7 +73,7 @@ func StreamGrant() *TerraformGrantResource {
 
 			Schema: streamGrantSchema,
 			Importer: &schema.ResourceImporter{
-				State: schema.ImportStatePassthrough,
+				StateContext: schema.ImportStatePassthroughContext,
 			},
 		},
 		ValidPrivs: validStreamPrivileges,

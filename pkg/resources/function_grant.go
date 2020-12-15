@@ -26,12 +26,12 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Type: schema.TypeList,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": &schema.Schema{
+				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "The argument name",
 				},
-				"type": &schema.Schema{
+				"type": {
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "The argument type",
@@ -108,7 +108,7 @@ func FunctionGrant() *TerraformGrantResource {
 
 			Schema: functionGrantSchema,
 			Importer: &schema.ResourceImporter{
-				State: schema.ImportStatePassthrough,
+				StateContext: schema.ImportStatePassthroughContext,
 			},
 		},
 		ValidPrivs: validFunctionPrivileges,
