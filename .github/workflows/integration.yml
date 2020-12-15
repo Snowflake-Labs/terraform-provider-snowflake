@@ -15,6 +15,11 @@ jobs:
           - test-acceptance
           - lint-ci
     steps:
+      - id: debug-outputs
+        run: |
+          echo ${{ github.event_name }}
+          echo ${{ github.event.client_payload }}
+
       - id: sha-input
         if: github.event_name == 'repository_dispatch'
         run: |
