@@ -14,10 +14,10 @@ func TestExternalTableCreate(t *testing.T) {
 	s.WithFileFormat("file format")
 	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
 
-	r.Equal(s.Create(), `CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true FILE_FORMAT = ( file format )`)
+	r.Equal(s.Create(), `CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false FILE_FORMAT = ( file format )`)
 
 	s.WithComment("Test Comment")
-	r.Equal(s.Create(), `CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true FILE_FORMAT = ( file format ) COMMENT = 'Test Comment'`)
+	r.Equal(s.Create(), `CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false FILE_FORMAT = ( file format ) COMMENT = 'Test Comment'`)
 }
 
 func TestExternalTableDrop(t *testing.T) {
