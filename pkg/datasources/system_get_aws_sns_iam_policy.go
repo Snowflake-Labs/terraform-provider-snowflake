@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,18 +30,23 @@ func SystemGetAWSSNSIAMPolicy() *schema.Resource {
 }
 
 // ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc
-func ReadSystemGetAWSSNSIAMPolicy(data *schema.ResourceData, meta interface{}) error {
+func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	awsSNSTopicArn := data.Get("aws_sns_topic_arn").(string)
+	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)
 
 	sel := snowflake.SystemGetAWSSNSIAMPolicy(awsSNSTopicArn).Select()
 	row := snowflake.QueryRow(db, sel)
 	policy, err := snowflake.ScanAWSSNSIAMPolicy(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] system_get_aws_sns_iam_policy (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	data.SetId(awsSNSTopicArn)
-	data.Set("aws_sns_topic_policy_json", policy.Policy)
-	return nil
+	d.SetId(awsSNSTopicArn)
+	return d.Set("aws_sns_topic_policy_json", policy.Policy)
 }

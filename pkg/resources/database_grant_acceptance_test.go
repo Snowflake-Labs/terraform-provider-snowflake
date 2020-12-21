@@ -2,7 +2,7 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testRolesAndShares(path string, roles, shares []string) func(*terraform.State) error {
+func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(*terraform.State) error {
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 
-		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(c) != int64(len(roles)) {
+		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
 		r, err := extractList(is.Attributes, "roles")
@@ -31,16 +31,12 @@ func testRolesAndShares(path string, roles, shares []string) func(*terraform.Sta
 	}
 }
 
-func TestAccDatabaseGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccDatabaseGrant")
-	}
+func TestAccDatabaseGrant_basic(t *testing.T) {
+	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	dbName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	shareName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +47,7 @@ func TestAccDatabaseGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
-					testRolesAndShares("snowflake_database_grant.test", []string{roleName}, []string{shareName}),
+					testRolesAndShares(t, "snowflake_database_grant.test", []string{roleName}, []string{shareName}),
 				),
 			},
 			// IMPORT

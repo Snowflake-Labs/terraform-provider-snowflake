@@ -9,7 +9,27 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_table table {
+  database = "database"
+  schema   = "schmea"
+  name     = "table"
+  comment  = "A table."
+  owner    = "me"
+
+  column {
+    name = "id"
+    type = "int"
+  }
+
+  column {
+    name = "data"
+    type = "text"
+  }
+}
+```
 
 ## Schema
 
@@ -37,4 +57,11 @@ Required:
 - **name** (String, Required) Column name
 - **type** (String, Required) Column type, e.g. VARIANT
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | table name
+terraform import snowflake_table.example
+```

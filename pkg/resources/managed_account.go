@@ -92,78 +92,84 @@ func ManagedAccount() *schema.Resource {
 		Create: CreateManagedAccount,
 		Read:   ReadManagedAccount,
 		Delete: DeleteManagedAccount,
-		Exists: ManagedAccountExists,
 
 		Schema: managedAccountSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateManagedAccount implements schema.CreateFunc
-func CreateManagedAccount(data *schema.ResourceData, meta interface{}) error {
+func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource(
 		"this does not seem to be used",
 		managedAccountProperties,
 		managedAccountSchema,
 		snowflake.ManagedAccount,
 		initialReadManagedAccount,
-	)(data, meta)
+	)(d, meta)
 }
 
 // initialReadManagedAccount is used for the first read, since the locator takes
 // some time to appear. This is currently implemented as a sleep. @TODO actually
 // wait until the locator is generated.
-func initialReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
+func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
 	time.Sleep(10 * time.Second)
-	return ReadManagedAccount(data, meta)
+	return ReadManagedAccount(d, meta)
 }
 
 // ReadManagedAccount implements schema.ReadFunc
-func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
+func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.ManagedAccount(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 	a, err := snowflake.ScanManagedAccount(row)
+
+	if err == sql.ErrNoRows {
+		// If not found, remove resource from
+		log.Printf("[DEBUG] managed account (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", a.Name.String)
+	err = d.Set("name", a.Name.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("cloud", a.Cloud.String)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("region", a.Region.String)
+	err = d.Set("cloud", a.Cloud.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("locator", a.Locator.String)
+	err = d.Set("region", a.Region.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("created_on", a.CreatedOn.String)
+	err = d.Set("locator", a.Locator.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("url", a.Url.String)
+	err = d.Set("created_on", a.CreatedOn.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("url", a.Url.String)
 	if err != nil {
 		return err
 	}
 
 	if a.IsReader {
-		err = data.Set("type", "READER")
+		err = d.Set("type", "READER")
 		if err != nil {
 			return err
 		}
@@ -171,20 +177,20 @@ func ReadManagedAccount(data *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to determine the account type")
 	}
 
-	err = data.Set("comment", a.Comment.String)
+	err = d.Set("comment", a.Comment.String)
 
 	return err
 }
 
 // DeleteManagedAccount implements schema.DeleteFunc
-func DeleteManagedAccount(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(data, meta)
+func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
 }
 
 // ManagedAccountExists implements schema.ExistsFunc
-func ManagedAccountExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+func ManagedAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.ManagedAccount(id).Show()
 	rows, err := db.Query(stmt)

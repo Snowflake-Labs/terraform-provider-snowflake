@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -10,16 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccSchemaGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccSchemaGrant")
-	}
-
+func TestAcc_SchemaGrant(t *testing.T) {
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -49,13 +44,13 @@ func TestAccSchemaGrant(t *testing.T) {
 	})
 }
 
-func TestAccSchemaFutureGrants(t *testing.T) {
+func TestAcc_SchemaFutureGrants(t *testing.T) {
 
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameView := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			// TABLE AND VIEW FUTURE GRANTS
@@ -143,7 +138,6 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_share" "test" {
   name     = "%v"
-  accounts = ["PC37737"]
 }
 
 resource "snowflake_database_grant" "test" {

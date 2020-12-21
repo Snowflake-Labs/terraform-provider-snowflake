@@ -9,7 +9,21 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_share share {
+  database_name = "db"
+  schema_name   = "schema"
+  stage_name    = "stage"
+
+  privilege = "USAGE"
+  roles     = ["role1", "role2"]
+  shares    = ["share1", "share2"]
+
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -23,4 +37,10 @@ description: |-
 - **comment** (String, Optional) Specifies a comment for the managed account.
 - **id** (String, Optional) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_share.example name
+```

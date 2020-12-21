@@ -15,7 +15,7 @@ import (
 
 func TestViewGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.ViewGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.ViewGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -31,7 +31,7 @@ func TestViewGrantCreate(t *testing.T) {
 		"shares":            []interface{}{"test-share-1", "test-share-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -103,7 +103,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -135,7 +135,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	}
-	d = schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d = schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	b.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

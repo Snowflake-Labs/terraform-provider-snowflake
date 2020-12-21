@@ -9,7 +9,22 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_resource_monitor monitor {
+  name         = "monitor"
+  credit_quota = 100
+
+  frequency       = "DAILY"
+  start_timestamp = "2020-12-07 00:00"
+  end_timestamp   = "2021-12-07 00:00"
+
+  notify_triggers            = [40]
+  suspend_triggers           = [50]
+  suspend_immediate_triggers = [90]
+}
+```
 
 ## Schema
 
@@ -28,4 +43,10 @@ description: |-
 - **suspend_immediate_triggers** (Set of Number, Optional) A list of percentage thresholds at which to immediately suspend all warehouses.
 - **suspend_triggers** (Set of Number, Optional) A list of percentage thresholds at which to suspend all warehouses.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_resource_monitor.example
+```

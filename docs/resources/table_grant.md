@@ -9,7 +9,22 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_table_grant grant {
+  database_name = "database"
+  schema_name   = "schema"
+  table_name    = "table"
+
+  privilege = "SELECT"
+  roles     = ["role1"]
+  shares    = ["share1"]
+
+  on_future         = false
+  with_grant_option = false
+}
+```
 
 ## Schema
 
@@ -28,4 +43,11 @@ description: |-
 - **table_name** (String, Optional) The name of the table on which to grant privileges immediately (only valid if on_future is unset).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is table name | privilege | true/false for with_grant_option
+terraform import snowflake_table_grant.example 'tableName|MODIFY|true'
+```

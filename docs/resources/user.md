@@ -9,7 +9,29 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_user user {
+  name         = "Snowflake User"
+  login_name   = "snowflake_user"
+  comment      = "A user of snowflake."
+  password     = "secret"
+  disabled     = false
+  display_name = "Snowflake User"
+  email        = "user@snowflake.example"
+  first_name   = "Snowflake"
+  last_name    = "User"
+
+  default_warehouse = "warehosue"
+  default_role      = "role1"
+
+  rsa_public_key   = "..."
+  rsa_public_key_2 = "..."
+
+  must_change_password = false
+}
+```
 
 ## Schema
 
@@ -39,4 +61,10 @@ description: |-
 
 - **has_rsa_public_key** (Boolean, Read-only) Will be true if user as an RSA key set.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_user.example userName
+```

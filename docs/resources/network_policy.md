@@ -9,7 +9,17 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_network_poilcy policy {
+  name    = "policy"
+  comment = "A policy."
+
+  allowed_ip_list = ["192.168.0.100/24"]
+  blocked_ip_list = ["192.168.0.101"]
+}
+```
 
 ## Schema
 
@@ -24,4 +34,10 @@ description: |-
 - **comment** (String, Optional) Specifies a comment for the network policy.
 - **id** (String, Optional) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_network_policy.example policyname
+```

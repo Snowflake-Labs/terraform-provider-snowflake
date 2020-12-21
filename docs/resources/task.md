@@ -9,7 +9,30 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_task task {
+  comment = "my task"
+
+  database  = "db"
+  schema    = "schema"
+  warehouse = "warehouse"
+
+  name          = "task"
+  schedule      = "10"
+  sql_statement = "select * from foo;"
+
+  session_parameters = {
+    "foo" : "bar",
+  }
+
+  user_task_timeout_ms = 10000
+  after                = "preceding_task"
+  when                 = "foo AND bar"
+  enabled              = true
+}
+```
 
 ## Schema
 
@@ -32,4 +55,11 @@ description: |-
 - **user_task_timeout_ms** (Number, Optional) Specifies the time limit on a single run of the task before it times out (in milliseconds).
 - **when** (String, Optional) Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | task name
+terraform import snowflake_task.example 'dbName|schemaName|taskName'
+```

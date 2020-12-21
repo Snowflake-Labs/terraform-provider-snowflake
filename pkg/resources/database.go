@@ -55,26 +55,26 @@ func Database() *schema.Resource {
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateDatabase implements schema.CreateFunc
-func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
-	if _, ok := data.GetOk("from_share"); ok {
-		return createDatabaseFromShare(data, meta)
+func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
+	if _, ok := d.GetOk("from_share"); ok {
+		return createDatabaseFromShare(d, meta)
 	}
 
-	if _, ok := data.GetOk("from_database"); ok {
-		return createDatabaseFromDatabase(data, meta)
+	if _, ok := d.GetOk("from_database"); ok {
+		return createDatabaseFromDatabase(d, meta)
 	}
 
-	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
+	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
-func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error {
-	in := data.Get("from_share").(map[string]interface{})
+func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
+	in := d.Get("from_share").(map[string]interface{})
 	prov := in["provider"]
 	share := in["share"]
 
@@ -83,7 +83,7 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 	}
 
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
 
 	err := snowflake.Exec(db, builder.Create())
@@ -91,16 +91,16 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadDatabase(data, meta)
+	return ReadDatabase(d, meta)
 }
 
-func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) error {
-	sourceDb := data.Get("from_database").(string)
+func createDatabaseFromDatabase(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_database").(string)
 
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromDatabase(name, sourceDb)
 
 	err := snowflake.Exec(db, builder.Create())
@@ -108,14 +108,14 @@ func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) err
 		return errors.Wrapf(err, "error creating a clone database %v from database %v", name, sourceDb)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadDatabase(data, meta)
+	return ReadDatabase(d, meta)
 }
 
-func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
+func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Id()
+	name := d.Id()
 
 	stmt := snowflake.Database(name).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -124,18 +124,19 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("[WARN] database %v not found, removing from state file", name)
-			data.SetId("")
+			// If not found, mark resource to be removed from statefile during apply or refresh
+			log.Printf("[DEBUG] database (%s) not found", d.Id())
+			d.SetId("")
 			return nil
 		}
 		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
 	}
 
-	err = data.Set("name", database.DBName.String)
+	err = d.Set("name", database.DBName.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", database.Comment.String)
+	err = d.Set("comment", database.Comment.String)
 	if err != nil {
 		return err
 	}
@@ -145,14 +146,14 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("data_retention_time_in_days", i)
+	err = d.Set("data_retention_time_in_days", i)
 	return err
 }
 
-func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
+func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
-func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("database", snowflake.Database)(data, meta)
+func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("database", snowflake.Database)(d, meta)
 }

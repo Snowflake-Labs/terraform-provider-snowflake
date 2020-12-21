@@ -93,7 +93,7 @@ func (npb *NetworkPolicyBuilder) SetOnAccount() string {
 
 // UnsetOnAccount returns the SQL query that will unset the network policy globally on your Snowflake account
 func (npb *NetworkPolicyBuilder) UnsetOnAccount() string {
-	return fmt.Sprintf(`ALTER ACCOUNT UNSET NETWORK_POLICY`)
+	return `ALTER ACCOUNT UNSET NETWORK_POLICY`
 }
 
 // SetOnUser returns the SQL query that will set the network policy on a given user
@@ -109,7 +109,7 @@ func (npb *NetworkPolicyBuilder) UnsetOnUser(u string) string {
 // ShowAllNetworkPolicies returns the SQL query that will SHOW *all* network policies in the Snowflake account
 // Snowflake's implementation of SHOW for network policies does *not* support limiting results with LIKE
 func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
-	return fmt.Sprintf(`SHOW NETWORK POLICIES`)
+	return `SHOW NETWORK POLICIES`
 }
 
 // IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')

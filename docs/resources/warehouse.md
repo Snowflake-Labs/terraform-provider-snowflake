@@ -9,7 +9,15 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_warehouse w {
+  name           = "test"
+  comment        = "foo"
+  warehouse_size = "small"
+}
+```
 
 ## Schema
 
@@ -32,4 +40,10 @@ description: |-
 - **wait_for_provisioning** (Boolean, Optional) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
 - **warehouse_size** (String, Optional)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import snowflake_warehouse.example warehouseName
+```

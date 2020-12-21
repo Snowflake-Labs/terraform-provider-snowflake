@@ -30,16 +30,16 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 	}
 }
 
-func TestAccUser(t *testing.T) {
+func TestAcc_User(t *testing.T) {
 	r := require.New(t)
-	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	prefix2 := randomdata.Email()
+	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix2 := strings.ToUpper(randomdata.Email())
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -74,11 +75,10 @@ func Table() *schema.Resource {
 		Read:   ReadTable,
 		Update: UpdateTable,
 		Delete: DeleteTable,
-		Exists: TableExists,
 
 		Schema: tableSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -130,17 +130,17 @@ func tableIDFromString(stringID string) (*tableID, error) {
 }
 
 // CreateTable implements schema.CreateFunc
-func CreateTable(data *schema.ResourceData, meta interface{}) error {
+func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	schema := data.Get("schema").(string)
-	name := data.Get("name").(string)
+	database := d.Get("database").(string)
+	schema := d.Get("schema").(string)
+	name := d.Get("name").(string)
 
 	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
 	// for data types in the HCL2ValueFromConfigValue method.
 	columns := []snowflake.Column{}
 
-	for _, column := range data.Get("column").([]interface{}) {
+	for _, column := range d.Get("column").([]interface{}) {
 		typed := column.(map[string]interface{})
 		columnDef := snowflake.Column{}
 		columnDef.WithName(typed["name"].(string)).WithType(typed["type"].(string))
@@ -149,7 +149,7 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
 
 	// Set optionals
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
@@ -168,15 +168,15 @@ func CreateTable(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadTable(data, meta)
+	return ReadTable(d, meta)
 }
 
 // ReadTable implements schema.ReadFunc
-func ReadTable(data *schema.ResourceData, meta interface{}) error {
+func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(data.Id())
+	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -184,12 +184,12 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
-	// No rows then no table. Delete from state and end read
 	if err == sql.ErrNoRows {
-		data.SetId("")
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] table (%s) not found", d.Id())
+		d.SetId("")
 		return nil
 	}
-	// Check for other errors
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	for key, val := range toSet {
-		err = data.Set(key, val)
+		err = d.Set(key, val) //lintignore:R001
 		if err != nil {
 			return err
 		}
@@ -225,11 +225,8 @@ func ReadTable(data *schema.ResourceData, meta interface{}) error {
 }
 
 // UpdateTable implements schema.UpdateFunc
-func UpdateTable(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
-	tableID, err := tableIDFromString(data.Id())
+func UpdateTable(d *schema.ResourceData, meta interface{}) error {
+	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -241,22 +238,22 @@ func UpdateTable(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Table(tableName, dbName, schema)
 
 	db := meta.(*sql.DB)
-	if data.HasChange("comment") {
-		_, comment := data.GetChange("comment")
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating table comment on %v", data.Id())
+			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
 		}
 	}
 
-	return ReadTable(data, meta)
+	return ReadTable(d, meta)
 }
 
 // DeleteTable implements schema.DeleteFunc
-func DeleteTable(data *schema.ResourceData, meta interface{}) error {
+func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(data.Id())
+	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -269,10 +266,10 @@ func DeleteTable(data *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", data.Id())
+		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }
