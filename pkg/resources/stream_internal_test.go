@@ -30,13 +30,13 @@ func TestStreamIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = streamIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name|schema_name|stream
 	database_name|schema_name|stream`
 	_, err = streamIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }
 
 func TestStreamStruct(t *testing.T) {
@@ -94,11 +94,11 @@ func TestStreamOnTableIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = streamOnTableIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name.schema_name.target_table_name
 	database_name.schema_name.target_table_name`
 	_, err = streamOnTableIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }

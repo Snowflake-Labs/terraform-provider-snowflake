@@ -37,12 +37,12 @@ func TestTaskIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per task"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database|schema|task
 		database|schema|task`
 	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per task"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 }

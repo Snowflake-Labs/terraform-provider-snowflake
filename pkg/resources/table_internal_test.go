@@ -30,13 +30,13 @@ func TestTableIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = tableIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name|schema_name|table
 	database_name|schema_name|table`
 	_, err = tableIDFromString(id)
-	r.Equal(fmt.Errorf("1 line at a time"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }
 
 func TestTableStruct(t *testing.T) {

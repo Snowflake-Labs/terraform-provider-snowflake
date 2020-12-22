@@ -29,13 +29,13 @@ func TestSchemaIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = schemaIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per schema"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name|schema
 	database_name|schema`
 	_, err = schemaIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per schema"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }
 
 func TestSchemaStruct(t *testing.T) {

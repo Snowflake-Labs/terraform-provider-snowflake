@@ -24,6 +24,27 @@ func writeID(in []string) (string, error) {
 	return strGrantID, nil
 }
 
+func readID(id string, minFields, maxFields int) ([]string, error) {
+	reader := csv.NewReader(strings.NewReader(id))
+	reader.Comma = delimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("expecting 1 line")
+	}
+	if len(lines[0]) < minFields || len(lines[0]) > maxFields {
+		if minFields == maxFields {
+			return nil, fmt.Errorf("%d fields allowed", minFields)
+		} else {
+			return nil, fmt.Errorf("between %d and %d fields allowed", minFields, maxFields)
+		}
+	}
+	return lines[0], nil
+}
+
 // grantID contains identifying elements that allow unique access privileges
 type grantID struct {
 	ResourceName string
@@ -43,30 +64,21 @@ func (gi *grantID) String() (string, error) {
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 4, 5)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per grant")
-	}
-	if len(lines[0]) != 4 && len(lines[0]) != 5 {
-		return nil, fmt.Errorf("4 or 5 fields allowed")
+		return nil, err
 	}
 
 	grantOption := false
-	if len(lines[0]) == 5 && lines[0][4] == "true" {
+	if len(row) == 5 && row[4] == "true" {
 		grantOption = true
 	}
 
 	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ObjectName:   lines[0][2],
-		Privilege:    lines[0][3],
+		ResourceName: row[0],
+		SchemaName:   row[1],
+		ObjectName:   row[2],
+		Privilege:    row[3],
 		GrantOption:  grantOption,
 	}
 	return grantResult, nil
@@ -87,24 +99,15 @@ func (si *pipeID) String() (string, error) {
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
 // and returns a pipeID object
 func pipeIDFromString(stringID string) (*pipeID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 3, 3)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per pipe")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+		return nil, err
 	}
 
 	pipeResult := &pipeID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		PipeName:     lines[0][2],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
+		PipeName:     row[2],
 	}
 	return pipeResult, nil
 }
@@ -123,23 +126,14 @@ func (si *schemaID) String() (string, error) {
 // schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
 // and returns a schemaID object
 func schemaIDFromString(stringID string) (*schemaID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 2, 2)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per schema")
-	}
-	if len(lines[0]) != 2 {
-		return nil, fmt.Errorf("2 fields allowed")
+		return nil, err
 	}
 
 	schemaResult := &schemaID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
 	}
 	return schemaResult, nil
 }
@@ -159,24 +153,15 @@ func (si *stageID) String() (string, error) {
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
 // and returns a stageID object
 func stageIDFromString(stringID string) (*stageID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 3, 3)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per stage")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+		return nil, err
 	}
 
 	stageResult := &stageID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StageName:    lines[0][2],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
+		StageName:    row[2],
 	}
 	return stageResult, nil
 }
@@ -202,24 +187,15 @@ func (si *streamID) String() (string, error) {
 // streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
 // and returns a streamID object
 func streamIDFromString(stringID string) (*streamID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 3, 3)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+		return nil, err
 	}
 
 	streamResult := &streamID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StreamName:   lines[0][2],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
+		StreamName:   row[2],
 	}
 	return streamResult, nil
 }
@@ -228,6 +204,7 @@ func streamIDFromString(stringID string) (*streamID, error) {
 // and returns a streamOnTableID object
 func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
+	// TODO switch this to delimter, requires state transition
 	reader.Comma = streamOndelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
@@ -235,7 +212,7 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 	}
 
 	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
+		return nil, fmt.Errorf("expecting 1 line")
 	}
 	if len(lines[0]) != 3 {
 		//return nil, fmt.Errorf("on table format: database_name.schema_name.target_table_name")
@@ -259,30 +236,21 @@ type tableID struct {
 //String() takes in a tableID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|TableName
 func (si *tableID) String() (string, error) {
-	return writeID([]string{si.DatabaseName, si.SchemaName, si.TableName}])
+	return writeID([]string{si.DatabaseName, si.SchemaName, si.TableName})
 }
 
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
 // and returns a tableID object
 func tableIDFromString(stringID string) (*tableID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 3, 3)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+		return nil, err
 	}
 
 	tableResult := &tableID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TableName:    lines[0][2],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
+		TableName:    row[2],
 	}
 	return tableResult, nil
 }
@@ -302,24 +270,15 @@ func (t *taskID) String() (string, error) {
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
 // and returns a taskID object
 func taskIDFromString(stringID string) (*taskID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
+	row, err := readID(stringID, 3, 3)
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per task")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+		return nil, err
 	}
 
 	taskResult := &taskID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TaskName:     lines[0][2],
+		DatabaseName: row[0],
+		SchemaName:   row[1],
+		TaskName:     row[2],
 	}
 	return taskResult, nil
 }

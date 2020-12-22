@@ -44,28 +44,28 @@ func TestGrantIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database|name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 or 5 fields allowed"), err)
+	r.Equal(fmt.Errorf("between 4 and 5 fields allowed"), err)
 
 	// Bad ID -- privilege in wrong area
 	id = "database||name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 or 5 fields allowed"), err)
+	r.Equal(fmt.Errorf("between 4 and 5 fields allowed"), err)
 
 	// too many fields
 	id = "database_name|schema|view_name|privilege|false|2"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 or 5 fields allowed"), err)
+	r.Equal(fmt.Errorf("between 4 and 5 fields allowed"), err)
 
 	// 0 lines
 	id = ""
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per grant"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name|schema|view_name|privilege
 	database_name|schema|view_name|privilege`
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per grant"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }
 
 func TestGrantStruct(t *testing.T) {

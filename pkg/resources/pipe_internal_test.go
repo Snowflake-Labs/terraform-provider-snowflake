@@ -30,13 +30,13 @@ func TestPipeIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per pipe"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 
 	// 2 lines
 	id = `database_name|schema_name|pipe
 	database_name|schema_name|pipe`
 	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("1 line per pipe"), err)
+	r.Equal(fmt.Errorf("expecting 1 line"), err)
 }
 
 func TestPipeStruct(t *testing.T) {
