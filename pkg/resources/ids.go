@@ -37,8 +37,7 @@ type grantID struct {
 // resourceName|schemaName|ObjectName|Privilege|GrantOption
 func (gi *grantID) String() (string, error) {
 	grantOption := fmt.Sprintf("%v", gi.GrantOption)
-	dataIdentifiers := []string{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, grantOption}
-	return writeID(dataIdentifiers)
+	return writeID([]string{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, grantOption})
 }
 
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
@@ -82,8 +81,7 @@ type pipeID struct {
 //String() takes in a pipeID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|PipeName
 func (si *pipeID) String() (string, error) {
-	dataIdentifiers := []string{si.DatabaseName, si.SchemaName, si.PipeName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{si.DatabaseName, si.SchemaName, si.PipeName})
 }
 
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
@@ -119,8 +117,7 @@ type schemaID struct {
 // String() takes in a schemaID object and returns a pipe-delimited string:
 // DatabaseName|schemaName
 func (si *schemaID) String() (string, error) {
-	dataIdentifiers := []string{si.DatabaseName, si.SchemaName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{si.DatabaseName, si.SchemaName})
 }
 
 // schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
@@ -156,8 +153,7 @@ type stageID struct {
 // String() takes in a stageID object and returns a pipe-delimited string:
 // DatabaseName|SchemaName|StageName
 func (si *stageID) String() (string, error) {
-	dataIdentifiers := []string{si.DatabaseName, si.SchemaName, si.StageName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{si.DatabaseName, si.SchemaName, si.StageName})
 }
 
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
@@ -200,8 +196,7 @@ type streamOnTableID struct {
 //String() takes in a streamID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|StreamName
 func (si *streamID) String() (string, error) {
-	dataIdentifiers := []string{si.DatabaseName, si.SchemaName, si.StreamName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{si.DatabaseName, si.SchemaName, si.StreamName})
 }
 
 // streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
@@ -264,8 +259,7 @@ type tableID struct {
 //String() takes in a tableID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|TableName
 func (si *tableID) String() (string, error) {
-	dataIdentifiers := []string{si.DatabaseName, si.SchemaName, si.TableName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{si.DatabaseName, si.SchemaName, si.TableName}])
 }
 
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
@@ -302,8 +296,7 @@ type taskID struct {
 //String() takes in a taskID object and returns a pipe-delimited string:
 //DatabaseName|SchemaName|TaskName
 func (t *taskID) String() (string, error) {
-	dataIdentifiers := []string{t.DatabaseName, t.SchemaName, t.TaskName}
-	return writeID(dataIdentifiers)
+	return writeID([]string{t.DatabaseName, t.SchemaName, t.TaskName})
 }
 
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
