@@ -25,7 +25,7 @@ jobs:
         if: github.event_name == 'repository_dispatch'
         run: |
           SHAINPUT=$(echo ${{github.event.client_payload.slash_command.args.named.sha}} | cut -c1-7)
-          echo -n $SHAINPUT | wc -c
+          echo ${#SHAINPUT}
           if [ ${#SHAINPUT} -le 7 ]; then echo "error::input sha not at least 7 characters long" ; exit 1
           else echo "done"
           fi
