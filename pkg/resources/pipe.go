@@ -1,20 +1,13 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-)
-
-const (
-	pipeIDDelimiter = '|'
 )
 
 var pipeSchema = map[string]*schema.Schema{
@@ -93,52 +86,6 @@ func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) b
 
 	// trim off any trailing line endings
 	return strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n")
-}
-
-type pipeID struct {
-	DatabaseName string
-	SchemaName   string
-	PipeName     string
-}
-
-//String() takes in a pipeID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|PipeName
-func (si *pipeID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = pipeIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.PipeName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strPipeID := strings.TrimSpace(buf.String())
-	return strPipeID, nil
-}
-
-// pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
-// and returns a pipeID object
-func pipeIDFromString(stringID string) (*pipeID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = pipeIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per pipe")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	pipeResult := &pipeID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		PipeName:     lines[0][2],
-	}
-	return pipeResult, nil
 }
 
 // CreatePipe implements schema.CreateFunc

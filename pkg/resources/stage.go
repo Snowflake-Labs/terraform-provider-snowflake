@@ -1,20 +1,12 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-)
-
-const (
-	stageIDDelimiter = '|'
 )
 
 var stageSchema = map[string]*schema.Schema{
@@ -82,52 +74,6 @@ var stageSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
-}
-
-type stageID struct {
-	DatabaseName string
-	SchemaName   string
-	StageName    string
-}
-
-// String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName
-func (si *stageID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = stageIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StageName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strStageID := strings.TrimSpace(buf.String())
-	return strStageID, nil
-}
-
-// stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
-// and returns a stageID object
-func stageIDFromString(stringID string) (*stageID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = stageIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per stage")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	stageResult := &stageID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StageName:    lines[0][2],
-	}
-	return stageResult, nil
 }
 
 // Stage returns a pointer to the resource representing a stage

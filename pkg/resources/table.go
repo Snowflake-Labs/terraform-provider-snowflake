@@ -1,20 +1,12 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-)
-
-const (
-	tableIDDelimiter = '|'
 )
 
 var tableSchema = map[string]*schema.Schema{
@@ -81,52 +73,6 @@ func Table() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-}
-
-type tableID struct {
-	DatabaseName string
-	SchemaName   string
-	TableName    string
-}
-
-//String() takes in a tableID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TableName
-func (si *tableID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = tableIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.TableName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strTableID := strings.TrimSpace(buf.String())
-	return strTableID, nil
-}
-
-// tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
-// and returns a tableID object
-func tableIDFromString(stringID string) (*tableID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = tableIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	tableResult := &tableID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TableName:    lines[0][2],
-	}
-	return tableResult, nil
 }
 
 // CreateTable implements schema.CreateFunc
