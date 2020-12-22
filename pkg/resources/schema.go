@@ -100,8 +100,8 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	schemaID := &schemaID{
-		DatabaseName: database,
-		SchemaName:   name,
+		Database: database,
+		Name:     name,
 	}
 	dataIDInput, err := schemaID.String()
 	if err != nil {
@@ -120,8 +120,8 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
 	row := snowflake.QueryRow(db, q)
@@ -195,8 +195,8 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	builder := snowflake.Schema(schema).WithDB(dbName)
 
@@ -246,8 +246,8 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Drop()
 
@@ -269,8 +269,8 @@ func SchemaExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
 	rows, err := db.Query(q)

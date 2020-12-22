@@ -9,7 +9,7 @@ import (
 
 func TestStringFromTaskID(t *testing.T) {
 	r := require.New(t)
-	task := taskID{DatabaseName: "test_db", SchemaName: "test_schema", TaskName: "test_task"}
+	task := taskID{Database: "test_db", Schema: "test_schema", Name: "test_task"}
 	id, err := task.String()
 	r.NoError(err)
 	r.Equal(id, "test_db|test_schema|test_task")
@@ -21,9 +21,9 @@ func TestTaskIDFromString(t *testing.T) {
 	id := "test_db|test_schema|test_task"
 	task, err := taskIDFromString(id)
 	r.NoError(err)
-	r.Equal("test_db", task.DatabaseName)
-	r.Equal("test_schema", task.SchemaName)
-	r.Equal("test_task", task.TaskName)
+	r.Equal("test_db", task.Database)
+	r.Equal("test_schema", task.Schema)
+	r.Equal("test_task", task.Name)
 
 	id = "test_db"
 	_, err = taskIDFromString(id)

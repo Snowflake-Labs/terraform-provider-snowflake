@@ -13,8 +13,8 @@ func TestSchemaIDFromString(t *testing.T) {
 	id := "database_name|schema"
 	schema, err := schemaIDFromString(id)
 	r.NoError(err)
-	r.Equal("database_name", schema.DatabaseName)
-	r.Equal("schema", schema.SchemaName)
+	r.Equal("database_name", schema.Database)
+	r.Equal("schema", schema.Name)
 
 	// Bad ID -- not enough fields
 	id = "database"
@@ -43,8 +43,8 @@ func TestSchemaStruct(t *testing.T) {
 
 	// Vanilla
 	schema := &schemaID{
-		DatabaseName: "database_name",
-		SchemaName:   "schema",
+		Database: "database_name",
+		Name:     "schema",
 	}
 	sID, err := schema.String()
 	r.NoError(err)
@@ -58,13 +58,13 @@ func TestSchemaStruct(t *testing.T) {
 
 	// Grant with extra delimiters
 	schema = &schemaID{
-		DatabaseName: "database|name",
-		SchemaName:   "schema|name",
+		Database: "database|name",
+		Name:     "schema|name",
 	}
 	sID, err = schema.String()
 	r.NoError(err)
 	newSchema, err := schemaIDFromString(sID)
 	r.NoError(err)
-	r.Equal("database|name", newSchema.DatabaseName)
-	r.Equal("schema|name", newSchema.SchemaName)
+	r.Equal("database|name", newSchema.Database)
+	r.Equal("schema|name", newSchema.Name)
 }

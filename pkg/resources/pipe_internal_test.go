@@ -13,9 +13,9 @@ func TestPipeIDFromString(t *testing.T) {
 	id := "database_name|schema_name|pipe"
 	pipe, err := pipeIDFromString(id)
 	r.NoError(err)
-	r.Equal("database_name", pipe.DatabaseName)
-	r.Equal("schema_name", pipe.SchemaName)
-	r.Equal("pipe", pipe.PipeName)
+	r.Equal("database_name", pipe.Database)
+	r.Equal("schema_name", pipe.Schema)
+	r.Equal("pipe", pipe.Name)
 
 	// Bad ID -- not enough fields
 	id = "database"
@@ -44,9 +44,9 @@ func TestPipeStruct(t *testing.T) {
 
 	// Vanilla
 	pipe := &pipeID{
-		DatabaseName: "database_name",
-		SchemaName:   "schema_name",
-		PipeName:     "pipe",
+		Database: "database_name",
+		Schema:   "schema_name",
+		Name:     "pipe",
 	}
 	sID, err := pipe.String()
 	r.NoError(err)
@@ -60,15 +60,15 @@ func TestPipeStruct(t *testing.T) {
 
 	// Grant with extra delimiters
 	pipe = &pipeID{
-		DatabaseName: "database|name",
-		PipeName:     "pipe|name",
+		Database: "database|name",
+		Name:     "pipe|name",
 	}
 	sID, err = pipe.String()
 	r.NoError(err)
 	newPipe, err := pipeIDFromString(sID)
 	r.NoError(err)
-	r.Equal("database|name", newPipe.DatabaseName)
-	r.Equal("pipe|name", newPipe.PipeName)
+	r.Equal("database|name", newPipe.Database)
+	r.Equal("pipe|name", newPipe.Name)
 }
 
 const pipeCopyStatementTemplate string = "COPY INTO MY_DATABASE.MY_SCHEMA.%[4]s (%[1]s%[2]sID%[1]s%[2]s,VALUE%[1]s) FROM (%[1]s%[2]sSELECT%[1]s%[2]s%[2]sSRC.$1%[1]s%[2]s%[2]s,SRC.$2%[1]s%[2]sFROM @MY_DATABASE.MY_SCHEMA.MY_STAGE AS SRC%[1]s)%[1]sFILE_FORMAT = (%[1]s%[2]sFORMAT_NAME = MY_DATABASE.MY_SCHEMA.JSON%[1]s)%[1]sON_ERROR = CONTINUE%[3]s"

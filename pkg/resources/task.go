@@ -197,9 +197,9 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
+	database := taskID.Database
+	schema := taskID.Schema
+	name := taskID.Name
 
 	builder := snowflake.Task(name, database, schema)
 	q := builder.Show()
@@ -359,9 +359,9 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	taskID := &taskID{
-		DatabaseName: database,
-		SchemaName:   dbSchema,
-		TaskName:     name,
+		Database: database,
+		Schema:   dbSchema,
+		Name:     name,
 	}
 	dataIDInput, err := taskID.String()
 	if err != nil {
@@ -380,9 +380,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	db := meta.(*sql.DB)
-	database := taskID.DatabaseName
-	dbSchema := taskID.SchemaName
-	name := taskID.TaskName
+	database := taskID.Database
+	dbSchema := taskID.Schema
+	name := taskID.Name
 	builder := snowflake.Task(name, database, dbSchema)
 
 	root, err := getActiveRootTaskAndSuspend(d, meta)
@@ -561,9 +561,9 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
+	database := taskID.Database
+	schema := taskID.Schema
+	name := taskID.Name
 
 	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
@@ -594,9 +594,9 @@ func TaskExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
+	database := taskID.Database
+	schema := taskID.Schema
+	name := taskID.Name
 
 	q := snowflake.Task(name, database, schema).Show()
 	rows, err := db.Query(q)

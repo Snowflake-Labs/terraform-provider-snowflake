@@ -96,9 +96,9 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	streamID := &streamID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		StreamName:   name,
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := streamID.String()
 	if err != nil {
@@ -117,9 +117,9 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	name := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	name := streamID.Name
 
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -155,9 +155,9 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	streamName := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	streamName := streamID.Name
 
 	q := snowflake.Stream(streamName, dbName, schema).Drop()
 
@@ -178,9 +178,9 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	streamName := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	streamName := streamID.Name
 
 	builder := snowflake.Stream(streamName, dbName, schema)
 

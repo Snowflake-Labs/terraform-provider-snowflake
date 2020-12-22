@@ -13,9 +13,9 @@ func TestTableIDFromString(t *testing.T) {
 	id := "database_name|schema_name|table"
 	table, err := tableIDFromString(id)
 	r.NoError(err)
-	r.Equal("database_name", table.DatabaseName)
-	r.Equal("schema_name", table.SchemaName)
-	r.Equal("table", table.TableName)
+	r.Equal("database_name", table.Database)
+	r.Equal("schema_name", table.Schema)
+	r.Equal("table", table.Name)
 
 	// Bad ID -- not enough fields
 	id = "database"
@@ -44,9 +44,9 @@ func TestTableStruct(t *testing.T) {
 
 	// Vanilla
 	table := &tableID{
-		DatabaseName: "database_name",
-		SchemaName:   "schema_name",
-		TableName:    "table",
+		Database: "database_name",
+		Schema:   "schema_name",
+		Name:     "table",
 	}
 	sID, err := table.String()
 	r.NoError(err)
@@ -60,13 +60,13 @@ func TestTableStruct(t *testing.T) {
 
 	// Grant with extra delimiters
 	table = &tableID{
-		DatabaseName: "database|name",
-		TableName:    "table|name",
+		Database: "database|name",
+		Name:     "table|name",
 	}
 	sID, err = table.String()
 	r.NoError(err)
 	newTable, err := tableIDFromString(sID)
 	r.NoError(err)
-	r.Equal("database|name", newTable.DatabaseName)
-	r.Equal("table|name", newTable.TableName)
+	r.Equal("database|name", newTable.Database)
+	r.Equal("table|name", newTable.Name)
 }

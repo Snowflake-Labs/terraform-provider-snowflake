@@ -106,9 +106,9 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tableID := &tableID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		TableName:    name,
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := tableID.String()
 	if err != nil {
@@ -126,7 +126,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Table(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
+	builder := snowflake.Table(tableID.Name, tableID.Database, tableID.Schema)
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
@@ -155,8 +155,8 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	toSet := map[string]interface{}{
 		"name":     table.TableName.String,
 		"owner":    table.Owner.String,
-		"database": tableID.DatabaseName,
-		"schema":   tableID.SchemaName,
+		"database": tableID.Database,
+		"schema":   tableID.Schema,
 		"comment":  table.Comment.String,
 		"column":   snowflake.NewColumns(tableDescription).Flatten(),
 	}
@@ -177,9 +177,9 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
+	dbName := tableID.Database
+	schema := tableID.Schema
+	tableName := tableID.Name
 
 	builder := snowflake.Table(tableName, dbName, schema)
 
@@ -204,9 +204,9 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
+	dbName := tableID.Database
+	schema := tableID.Schema
+	tableName := tableID.Name
 
 	q := snowflake.Table(tableName, dbName, schema).Drop()
 
@@ -228,9 +228,9 @@ func TableExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
+	dbName := tableID.Database
+	schema := tableID.Schema
+	tableName := tableID.Name
 
 	q := snowflake.Table(tableName, dbName, schema).Show()
 	rows, err := db.Query(q)

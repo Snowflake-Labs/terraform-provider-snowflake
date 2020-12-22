@@ -13,9 +13,9 @@ func TestStreamIDFromString(t *testing.T) {
 	id := "database_name|schema_name|stream"
 	stream, err := streamIDFromString(id)
 	r.NoError(err)
-	r.Equal("database_name", stream.DatabaseName)
-	r.Equal("schema_name", stream.SchemaName)
-	r.Equal("stream", stream.StreamName)
+	r.Equal("database_name", stream.Database)
+	r.Equal("schema_name", stream.Schema)
+	r.Equal("stream", stream.Name)
 
 	// Bad ID -- not enough fields
 	id = "database"
@@ -44,9 +44,9 @@ func TestStreamStruct(t *testing.T) {
 
 	// Vanilla
 	stream := &streamID{
-		DatabaseName: "database_name",
-		SchemaName:   "schema_name",
-		StreamName:   "stream_name",
+		Database: "database_name",
+		Schema:   "schema_name",
+		Name:     "stream_name",
 	}
 	sID, err := stream.String()
 	r.NoError(err)
@@ -60,15 +60,15 @@ func TestStreamStruct(t *testing.T) {
 
 	// Grant with extra delimiters
 	stream = &streamID{
-		DatabaseName: "database|name",
-		StreamName:   "stream|name",
+		Database: "database|name",
+		Name:     "stream|name",
 	}
 	sID, err = stream.String()
 	r.NoError(err)
 	newStream, err := streamIDFromString(sID)
 	r.NoError(err)
-	r.Equal("database|name", newStream.DatabaseName)
-	r.Equal("stream|name", newStream.StreamName)
+	r.Equal("database|name", newStream.Database)
+	r.Equal("stream|name", newStream.Name)
 }
 
 func TestStreamOnTableIDFromString(t *testing.T) {

@@ -122,9 +122,9 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	pipeID := &pipeID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		PipeName:     name,
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := pipeID.String()
 	if err != nil {
@@ -143,9 +143,9 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	name := pipeID.PipeName
+	dbName := pipeID.Database
+	schema := pipeID.Schema
+	name := pipeID.Name
 
 	sq := snowflake.Pipe(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
@@ -215,9 +215,9 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
+	dbName := pipeID.Database
+	schema := pipeID.Schema
+	pipe := pipeID.Name
 
 	builder := snowflake.Pipe(pipe, dbName, schema)
 
@@ -242,9 +242,9 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
+	dbName := pipeID.Database
+	schema := pipeID.Schema
+	pipe := pipeID.Name
 
 	q := snowflake.Pipe(pipe, dbName, schema).Drop()
 
@@ -266,9 +266,9 @@ func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
+	dbName := pipeID.Database
+	schema := pipeID.Schema
+	pipe := pipeID.Name
 
 	q := snowflake.Pipe(pipe, dbName, schema).Show()
 	rows, err := db.Query(q)

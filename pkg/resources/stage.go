@@ -137,9 +137,9 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stageID := &stageID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		StageName:    name,
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := stageID.String()
 	if err != nil {
@@ -159,9 +159,9 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
@@ -243,9 +243,9 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	builder := snowflake.Stage(stage, dbName, schema)
 
@@ -321,9 +321,9 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Drop()
 
@@ -345,9 +345,9 @@ func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	rows, err := db.Query(q)
