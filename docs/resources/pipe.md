@@ -9,7 +9,24 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_pipe pipe {
+  database = "db"
+  schema   = "schema"
+  name     = "pipe"
+
+  comment = "A pipe."
+
+  copy_statement = "copy into mytable from @mystage"
+  auto_ingest    = false
+
+  aws_sns_topic_arn    = "..."
+  notification_channel = "..."
+  owner                = "role1"
+}
+```
 
 ## Schema
 
@@ -32,4 +49,11 @@ description: |-
 - **notification_channel** (String, Read-only) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
 - **owner** (String, Read-only) Name of the role that owns the pipe.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | pipe name
+terraform import snowflake_pipe.example 'dbName|schemaName|pipeName'
+```

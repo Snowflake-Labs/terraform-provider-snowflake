@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -10,17 +11,17 @@ import (
 )
 
 const (
-	networkPolicyComment = "Created by a Terraform acceptance test"
+	networkPolicyComment = "CREATED BY A TERRAFORM ACCEPTANCE TEST"
 )
 
-func TestAccNetworkPolicy(t *testing.T) {
+func TestAcc_NetworkPolicy(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
 		t.Skip("Skipping TestAccNetworkPolicy")
 	}
 
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

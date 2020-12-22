@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -77,11 +78,10 @@ func Pipe() *schema.Resource {
 		Read:   ReadPipe,
 		Update: UpdatePipe,
 		Delete: DeletePipe,
-		Exists: PipeExists,
 
 		Schema: pipeSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -92,10 +92,7 @@ func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) b
 	new = strings.ReplaceAll(new, "\r\n", "\n")
 
 	// trim off any trailing line endings
-	if strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n") {
-		return true
-	}
-	return false
+	return strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n")
 }
 
 type pipeID struct {
@@ -145,28 +142,28 @@ func pipeIDFromString(stringID string) (*pipeID, error) {
 }
 
 // CreatePipe implements schema.CreateFunc
-func CreatePipe(data *schema.ResourceData, meta interface{}) error {
+func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	schema := data.Get("schema").(string)
-	name := data.Get("name").(string)
+	database := d.Get("database").(string)
+	schema := d.Get("schema").(string)
+	name := d.Get("name").(string)
 
 	builder := snowflake.Pipe(name, database, schema)
 
 	// Set optionals
-	if v, ok := data.GetOk("copy_statement"); ok {
+	if v, ok := d.GetOk("copy_statement"); ok {
 		builder.WithCopyStatement(v.(string))
 	}
 
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := data.GetOk("auto_ingest"); ok && v.(bool) {
+	if v, ok := d.GetOk("auto_ingest"); ok && v.(bool) {
 		builder.WithAutoIngest()
 	}
 
-	if v, ok := data.GetOk("aws_sns_topic_arn"); ok {
+	if v, ok := d.GetOk("aws_sns_topic_arn"); ok {
 		builder.WithAwsSnsTopicArn(v.(string))
 	}
 
@@ -186,15 +183,15 @@ func CreatePipe(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadPipe(data, meta)
+	return ReadPipe(d, meta)
 }
 
 // ReadPipe implements schema.ReadFunc
-func ReadPipe(data *schema.ResourceData, meta interface{}) error {
+func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -206,52 +203,58 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 	sq := snowflake.Pipe(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", pipe.Name)
+	err = d.Set("name", pipe.Name)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("database", pipe.DatabaseName)
+	err = d.Set("database", pipe.DatabaseName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schema", pipe.SchemaName)
+	err = d.Set("schema", pipe.SchemaName)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("copy_statement", pipe.Definition)
+	err = d.Set("copy_statement", pipe.Definition)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("owner", pipe.Owner)
+	err = d.Set("owner", pipe.Owner)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", pipe.Comment)
+	err = d.Set("comment", pipe.Comment)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("notification_channel", pipe.NotificationChannel)
+	err = d.Set("notification_channel", pipe.NotificationChannel)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("auto_ingest", pipe.NotificationChannel != "")
+	err = d.Set("auto_ingest", pipe.NotificationChannel != "")
 	if err != nil {
 		return err
 	}
 
 	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
-		err = data.Set("aws_sns_topic_arn", pipe.NotificationChannel)
+		err = d.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}
 
@@ -259,8 +262,8 @@ func ReadPipe(data *schema.ResourceData, meta interface{}) error {
 }
 
 // UpdatePipe implements schema.UpdateFunc
-func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
-	pipeID, err := pipeIDFromString(data.Id())
+func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -272,22 +275,22 @@ func UpdatePipe(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Pipe(pipe, dbName, schema)
 
 	db := meta.(*sql.DB)
-	if data.HasChange("comment") {
-		_, comment := data.GetChange("comment")
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating pipe comment on %v", data.Id())
+			return errors.Wrapf(err, "error updating pipe comment on %v", d.Id())
 		}
 	}
 
-	return ReadPipe(data, meta)
+	return ReadPipe(d, meta)
 }
 
 // DeletePipe implements schema.DeleteFunc
-func DeletePipe(data *schema.ResourceData, meta interface{}) error {
+func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -300,10 +303,10 @@ func DeletePipe(data *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", data.Id())
+		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -68,7 +69,7 @@ func Stream() *schema.Resource {
 
 		Schema: streamSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -152,13 +153,13 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 }
 
 // CreateStream implements schema.CreateFunc
-func CreateStream(data *schema.ResourceData, meta interface{}) error {
+func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	schema := data.Get("schema").(string)
-	name := data.Get("name").(string)
-	onTable := data.Get("on_table").(string)
-	appendOnly := data.Get("append_only").(bool)
+	database := d.Get("database").(string)
+	schema := d.Get("schema").(string)
+	name := d.Get("name").(string)
+	onTable := d.Get("on_table").(string)
+	appendOnly := d.Get("append_only").(bool)
 
 	builder := snowflake.Stream(name, database, schema)
 
@@ -171,7 +172,7 @@ func CreateStream(data *schema.ResourceData, meta interface{}) error {
 	builder.WithAppendOnly(appendOnly)
 
 	// Set optionals
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
@@ -190,15 +191,15 @@ func CreateStream(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadStream(data, meta)
+	return ReadStream(d, meta)
 }
 
 // ReadStream implements schema.ReadFunc
-func ReadStream(data *schema.ResourceData, meta interface{}) error {
+func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(data.Id())
+	streamID, err := streamIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -210,16 +211,22 @@ func ReadStream(data *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	stream, err := snowflake.ScanStream(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] stream (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", stream.StreamName.String)
+	err = d.Set("name", stream.StreamName.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("owner", stream.Owner.String)
+	err = d.Set("owner", stream.Owner.String)
 	if err != nil {
 		return err
 	}
@@ -228,9 +235,9 @@ func ReadStream(data *schema.ResourceData, meta interface{}) error {
 }
 
 // DeleteStream implements schema.DeleteFunc
-func DeleteStream(data *schema.ResourceData, meta interface{}) error {
+func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(data.Id())
+	streamID, err := streamIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -243,20 +250,17 @@ func DeleteStream(data *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting stream %v", data.Id())
+		return errors.Wrapf(err, "error deleting stream %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }
 
 // UpdateStream implements schema.UpdateFunc
-func UpdateStream(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
-	streamID, err := streamIDFromString(data.Id())
+func UpdateStream(d *schema.ResourceData, meta interface{}) error {
+	streamID, err := streamIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -268,14 +272,14 @@ func UpdateStream(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Stream(streamName, dbName, schema)
 
 	db := meta.(*sql.DB)
-	if data.HasChange("comment") {
-		_, comment := data.GetChange("comment")
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stream comment on %v", data.Id())
+			return errors.Wrapf(err, "error updating stream comment on %v", d.Id())
 		}
 	}
 
-	return ReadStream(data, meta)
+	return ReadStream(d, meta)
 }

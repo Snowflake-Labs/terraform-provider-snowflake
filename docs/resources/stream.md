@@ -9,7 +9,22 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_stream stream {
+  comment = "A stream."
+
+  database = "db"
+  schema   = "schema"
+  name     = "stream"
+
+  on_table    = "table"
+  append_only = false
+
+  owner = "role1"
+}
+```
 
 ## Schema
 
@@ -30,4 +45,11 @@ description: |-
 
 - **owner** (String, Read-only) Name of the role that owns the stream.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | on table name
+terraform import snowflake_stream.example 'dbName|schemaName|tableName'
+```

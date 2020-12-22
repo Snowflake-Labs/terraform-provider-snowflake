@@ -13,13 +13,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//lintignore:AT003
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.AccountGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.AccountGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-func TestAccountGrantCreate(t *testing.T) {
+//lintignore:AT003
+func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -27,7 +29,7 @@ func TestAccountGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -39,6 +41,7 @@ func TestAccountGrantCreate(t *testing.T) {
 	})
 }
 
+//lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 

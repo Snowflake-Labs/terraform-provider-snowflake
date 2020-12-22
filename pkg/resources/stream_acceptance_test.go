@@ -2,16 +2,17 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccStream(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+func TestAcc_Stream(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -20,7 +21,7 @@ func TestAccStream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "stream_on_table")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "append_only", true),
 				),
@@ -45,7 +46,7 @@ resource "snowflake_schema" "test_schema" {
 resource "snowflake_table" "test_stream_on_table" {
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
-	name     = "stream_on_table"
+	name     = "STREAM_ON_TABLE"
 	comment  = "Terraform acceptance test"
 	column {
 		name = "column1"

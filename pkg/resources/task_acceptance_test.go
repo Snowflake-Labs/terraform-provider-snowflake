@@ -159,10 +159,10 @@ var (
 	}
 )
 
-func Test_AccTask(t *testing.T) {
+func TestAcc_Task(t *testing.T) {
 	t.Skip("broken by a change to snowflake")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -301,7 +301,7 @@ resource "snowflake_task" "solo_task" {
 	}
 
 	var result bytes.Buffer
-	config.Execute(&result, settings)
+	config.Execute(&result, settings) //nolint
 
 	return result.String()
 }

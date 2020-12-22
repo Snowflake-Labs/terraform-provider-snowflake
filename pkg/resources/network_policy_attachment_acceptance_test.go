@@ -3,22 +3,23 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNetworkPolicyAttachment(t *testing.T) {
+func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
 		t.Skip("Skipping TestAccNetworkPolicyAttachment")
 	}
 
-	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	policyName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	policyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

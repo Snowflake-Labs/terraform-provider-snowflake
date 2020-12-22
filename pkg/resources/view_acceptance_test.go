@@ -2,16 +2,17 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccView(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+func TestAcc_View(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -25,8 +26,12 @@ func TestAccView(t *testing.T) {
 			},
 		},
 	})
+}
 
-	resource.Test(t, resource.TestCase{
+func TestAcc_View2(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

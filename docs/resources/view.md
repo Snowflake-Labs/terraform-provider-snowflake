@@ -9,7 +9,23 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_view view {
+  database = "db"
+  schema   = "schema"
+  name     = "view"
+
+  comment = "comment"
+
+  statement  = <<-SQL
+    select * from foo;
+SQL
+  or_replace = false
+  is_secure  = false
+}
+```
 
 ## Schema
 
@@ -27,4 +43,11 @@ description: |-
 - **or_replace** (Boolean, Optional) Overwrites the View if it exists.
 - **schema** (String, Optional) The schema in which to create the view. Don't use the | character.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | view name
+terraform import snowflake_view.example 'dbName|schemaName|viewName'
+```

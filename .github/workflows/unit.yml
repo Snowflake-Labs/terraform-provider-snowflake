@@ -1,8 +1,6 @@
 # Run unit tests that don't require secrets on any branch/fork pull request
 on:
   pull_request:
-    types: [review_requested, edited, synchronized]
-
 name: Unit tests
 
 jobs:
@@ -13,13 +11,12 @@ jobs:
         target:
           - check-docs
           - check-mod
-          - lint-ci
           - test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.2'
+          go-version: '1.15.5'
       - name: Install dependencies
         run: make setup
       - name: make ${{ matrix.target }}
