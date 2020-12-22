@@ -68,7 +68,7 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies a comment for the external table.",
+		Description: "Specifies a location for the external table.",
 	},
 	"file_format": {
 		Type:        schema.TypeString,
@@ -81,7 +81,7 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Specifies the file format for the external table.",
+		Description: "Specifies the aws sns topic for the external table.",
 	},
 	"partition_by": {
 		Type:        schema.TypeList,
@@ -93,7 +93,7 @@ var externalTableSchema = map[string]*schema.Schema{
 	"refresh_on_create": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant",
+		Description: "Specifies weather to refresh when an external table is created.",
 		Default:     true,
 		ForceNew:    true,
 	},
@@ -130,7 +130,6 @@ func ExternalTable() *schema.Resource {
 		Create: CreateExternalTable,
 		Read:   ReadExternalTable,
 		Delete: DeleteExternalTable,
-		Exists: ExternalTableExists,
 
 		Schema: externalTableSchema,
 		Importer: &schema.ResourceImporter{
