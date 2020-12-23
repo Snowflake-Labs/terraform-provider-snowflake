@@ -115,7 +115,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 // ReadSchema implements schema.ReadFunc
 func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	schemaID, err := idFromString(d.Id())
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
