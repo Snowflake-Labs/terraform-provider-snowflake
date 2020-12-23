@@ -84,18 +84,6 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	return grantResult, nil
 }
 
-type pipeID struct {
-	Database string
-	Schema   string
-	Name     string
-}
-
-//String() takes in a pipeID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|PipeName
-func (si *pipeID) String() (string, error) {
-	return writeID([]string{si.Database, si.Schema, si.Name})
-}
-
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
 // and returns a pipeID object
 func pipeIDFromString(stringID string) (*pipeID, error) {
@@ -138,18 +126,6 @@ func schemaIDFromString(stringID string) (*schemaID, error) {
 	return schemaResult, nil
 }
 
-type stageID struct {
-	Database string
-	Schema   string
-	Name     string
-}
-
-// String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName
-func (si *stageID) String() (string, error) {
-	return writeID([]string{si.Database, si.Schema, si.Name})
-}
-
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
 // and returns a stageID object
 func stageIDFromString(stringID string) (*stageID, error) {
@@ -166,22 +142,10 @@ func stageIDFromString(stringID string) (*stageID, error) {
 	return stageResult, nil
 }
 
-type streamID struct {
-	Database string
-	Schema   string
-	Name     string
-}
-
 type streamOnTableID struct {
 	DatabaseName string
 	SchemaName   string
 	OnTableName  string
-}
-
-//String() takes in a streamID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|StreamName
-func (si *streamID) String() (string, error) {
-	return writeID([]string{si.Database, si.Schema, si.Name})
 }
 
 // streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
@@ -227,18 +191,6 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 	return streamOnTableResult, nil
 }
 
-type tableID struct {
-	Database string
-	Schema   string
-	Name     string
-}
-
-//String() takes in a tableID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TableName
-func (si *tableID) String() (string, error) {
-	return writeID([]string{si.Database, si.Schema, si.Name})
-}
-
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
 // and returns a tableID object
 func tableIDFromString(stringID string) (*tableID, error) {
@@ -255,18 +207,6 @@ func tableIDFromString(stringID string) (*tableID, error) {
 	return tableResult, nil
 }
 
-type taskID struct {
-	Database string
-	Schema   string
-	Name     string
-}
-
-//String() takes in a taskID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TaskName
-func (t *taskID) String() (string, error) {
-	return writeID([]string{t.Database, t.Schema, t.Name})
-}
-
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
 // and returns a taskID object
 func taskIDFromString(stringID string) (*taskID, error) {
@@ -281,4 +221,22 @@ func taskIDFromString(stringID string) (*taskID, error) {
 		Name:     row[2],
 	}
 	return taskResult, nil
+}
+
+type schemaScopedID struct {
+	Database string
+	Schema   string
+	Name     string
+}
+
+type taskID = schemaScopedID
+type streamID = schemaScopedID
+type stageID = schemaScopedID
+type tableID = schemaScopedID
+type pipeID = schemaScopedID
+
+//String() takes in a schemaScopedID object and returns a pipe-delimited string:
+//DatabaseName|SchemaName|TaskName
+func (t *schemaScopedID) String() (string, error) {
+	return writeID([]string{t.Database, t.Schema, t.Name})
 }
