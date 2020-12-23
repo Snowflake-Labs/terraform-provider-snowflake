@@ -121,7 +121,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating pipe %v", name)
 	}
 
-	pipeID := &pipeID{
+	pipeID := &schemaScopedID{
 		Database: database,
 		Schema:   schema,
 		Name:     name,
@@ -138,7 +138,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 // ReadPipe implements schema.ReadFunc
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(d.Id())
+	pipeID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePipe implements schema.UpdateFunc
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
-	pipeID, err := pipeIDFromString(d.Id())
+	pipeID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 // DeletePipe implements schema.DeleteFunc
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(d.Id())
+	pipeID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 // PipeExists implements schema.ExistsFunc
 func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
+	pipeID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}

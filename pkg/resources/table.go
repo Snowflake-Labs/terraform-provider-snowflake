@@ -105,7 +105,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating table %v", name)
 	}
 
-	tableID := &tableID{
+	tableID := &schemaScopedID{
 		Database: database,
 		Schema:   schema,
 		Name:     name,
@@ -122,7 +122,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 // ReadTable implements schema.ReadFunc
 func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(d.Id())
+	tableID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTable implements schema.UpdateFunc
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
-	tableID, err := tableIDFromString(d.Id())
+	tableID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 // DeleteTable implements schema.DeleteFunc
 func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(d.Id())
+	tableID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 // TableExists implements schema.ExistsFunc
 func TableExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(data.Id())
+	tableID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}

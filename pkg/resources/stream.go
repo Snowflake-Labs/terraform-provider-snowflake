@@ -95,7 +95,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating stream %v", name)
 	}
 
-	streamID := &streamID{
+	streamID := &schemaScopedID{
 		Database: database,
 		Schema:   schema,
 		Name:     name,
@@ -112,7 +112,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 // ReadStream implements schema.ReadFunc
 func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 // DeleteStream implements schema.DeleteFunc
 func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStream implements schema.UpdateFunc
 func UpdateStream(d *schema.ResourceData, meta interface{}) error {
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}

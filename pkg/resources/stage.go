@@ -136,7 +136,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating stage %v", name)
 	}
 
-	stageID := &stageID{
+	stageID := &schemaScopedID{
 		Database: database,
 		Schema:   schema,
 		Name:     name,
@@ -154,7 +154,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 // credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE
 func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStage implements schema.UpdateFunc
 func UpdateStage(d *schema.ResourceData, meta interface{}) error {
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 // DeleteStage implements schema.DeleteFunc
 func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -340,7 +340,7 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 // StageExists implements schema.ExistsFunc
 func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(data.Id())
+	stageID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}

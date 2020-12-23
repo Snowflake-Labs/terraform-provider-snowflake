@@ -192,7 +192,7 @@ func Task() *schema.Resource {
 // ReadTask implements schema.ReadFunc
 func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(d.Id())
+	taskID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -358,12 +358,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	taskID := &taskID{
+	id := &schemaScopedID{
 		Database: database,
 		Schema:   dbSchema,
 		Name:     name,
 	}
-	dataIDInput, err := taskID.String()
+	dataIDInput, err := id.String()
 	if err != nil {
 		return err
 	}
@@ -374,7 +374,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTask implements schema.UpdateFunc
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
-	taskID, err := taskIDFromString(d.Id())
+	taskID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -556,7 +556,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 // DeleteTask implements schema.DeleteFunc
 func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(d.Id())
+	taskID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -589,7 +589,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 // TaskExists implements schema.ExistsFunc
 func TaskExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
+	taskID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}

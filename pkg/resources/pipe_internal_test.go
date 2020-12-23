@@ -7,64 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPipeIDFromString(t *testing.T) {
-	r := require.New(t)
-	// Vanilla
-	id := "database_name|schema_name|pipe"
-	pipe, err := pipeIDFromString(id)
-	r.NoError(err)
-	r.Equal("database_name", pipe.Database)
-	r.Equal("schema_name", pipe.Schema)
-	r.Equal("pipe", pipe.Name)
-
-	// Bad ID -- not enough fields
-	id = "database"
-	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
-
-	// Bad ID
-	id = "||"
-	_, err = pipeIDFromString(id)
-	r.NoError(err)
-
-	// 0 lines
-	id = ""
-	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("EOF"), err)
-}
-
-func TestPipeStruct(t *testing.T) {
-	r := require.New(t)
-
-	// Vanilla
-	pipe := &pipeID{
-		Database: "database_name",
-		Schema:   "schema_name",
-		Name:     "pipe",
-	}
-	sID, err := pipe.String()
-	r.NoError(err)
-	r.Equal("database_name|schema_name|pipe", sID)
-
-	// Empty grant
-	pipe = &pipeID{}
-	sID, err = pipe.String()
-	r.NoError(err)
-	r.Equal("||", sID)
-
-	// Grant with extra delimiters
-	pipe = &pipeID{
-		Database: "database|name",
-		Name:     "pipe|name",
-	}
-	sID, err = pipe.String()
-	r.NoError(err)
-	newPipe, err := pipeIDFromString(sID)
-	r.NoError(err)
-	r.Equal("database|name", newPipe.Database)
-	r.Equal("pipe|name", newPipe.Name)
-}
-
 const pipeCopyStatementTemplate string = "COPY INTO MY_DATABASE.MY_SCHEMA.%[4]s (%[1]s%[2]sID%[1]s%[2]s,VALUE%[1]s) FROM (%[1]s%[2]sSELECT%[1]s%[2]s%[2]sSRC.$1%[1]s%[2]s%[2]s,SRC.$2%[1]s%[2]sFROM @MY_DATABASE.MY_SCHEMA.MY_STAGE AS SRC%[1]s)%[1]sFILE_FORMAT = (%[1]s%[2]sFORMAT_NAME = MY_DATABASE.MY_SCHEMA.JSON%[1]s)%[1]sON_ERROR = CONTINUE%[3]s"
 
 func generatecopyStatement(lineEnding string, indent string, includeSemiColon bool, tableName string) string {
