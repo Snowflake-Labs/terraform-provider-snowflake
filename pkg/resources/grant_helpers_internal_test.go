@@ -9,20 +9,9 @@ import (
 
 func TestGrantIDFromString(t *testing.T) {
 	r := require.New(t)
-	// Vanilla without GrantOption
-	id := "database_name|schema|view_name|privilege|"
-	grant, err := grantIDFromString(id)
-	r.NoError(err)
-
-	r.Equal("database_name", grant.ResourceName)
-	r.Equal("schema", grant.SchemaName)
-	r.Equal("view_name", grant.ObjectName)
-	r.Equal("privilege", grant.Privilege)
-	r.Equal(false, grant.GrantOption)
-
 	// Vanilla with GrantOption
-	id = "database_name|schema|view_name|privilege|true"
-	grant, err = grantIDFromString(id)
+	id := "database_name|schema|view_name|privilege|true"
+	grant, err := grantIDFromString(id)
 	r.NoError(err)
 
 	r.Equal("database_name", grant.ResourceName)
