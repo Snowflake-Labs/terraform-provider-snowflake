@@ -26,28 +26,7 @@ func writeID(in []string) (string, error) {
 	return strGrantID, nil
 }
 
-func readID(id string, minFields, maxFields int) ([]string, error) {
-	reader := csv.NewReader(strings.NewReader(id))
-	reader.Comma = delimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("expecting 1 line")
-	}
-	if len(lines[0]) < minFields || len(lines[0]) > maxFields {
-		if minFields == maxFields {
-			return nil, fmt.Errorf("%d fields allowed", minFields)
-		} else {
-			return nil, fmt.Errorf("between %d and %d fields allowed", minFields, maxFields)
-		}
-	}
-	return lines[0], nil
-}
-
-func readIDStruct(id string, data interface{}) error {
+func readID(id string, data interface{}) error {
 	reader := csv.NewReader(strings.NewReader(id))
 	reader.Comma = delimiter
 
@@ -70,7 +49,7 @@ type grantID struct {
 	SchemaName   string
 	ObjectName   string
 	Privilege    string
-	GrantOption  bool
+	GrantOption  bool `csv:",omitempty"`
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
@@ -83,24 +62,9 @@ func (gi *grantID) String() (string, error) {
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
-	row, err := readID(stringID, 4, 5)
-	if err != nil {
-		return nil, err
-	}
-
-	grantOption := false
-	if len(row) == 5 && row[4] == "true" {
-		grantOption = true
-	}
-
-	grantResult := &grantID{
-		ResourceName: row[0],
-		SchemaName:   row[1],
-		ObjectName:   row[2],
-		Privilege:    row[3],
-		GrantOption:  grantOption,
-	}
-	return grantResult, nil
+	result := &grantID{}
+	err := readID(stringID, result)
+	return result, err
 }
 
 type schemaID struct {
@@ -118,7 +82,7 @@ func (si *schemaID) String() (string, error) {
 // and returns a schemaID object
 func schemaIDFromString(stringID string) (*schemaID, error) {
 	result := &schemaID{}
-	err := readIDStruct(stringID, result)
+	err := readID(stringID, result)
 	return result, err
 }
 
@@ -171,6 +135,6 @@ func (t *schemaScopedID) String() (string, error) {
 // and returns a taskID object
 func idFromString(stringID string) (*schemaScopedID, error) {
 	result := &schemaScopedID{}
-	err := readIDStruct(stringID, result)
+	err := readID(stringID, result)
 	return result, err
 }
