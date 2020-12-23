@@ -27,22 +27,15 @@ func TestTaskIDFromString(t *testing.T) {
 
 	id = "test_db"
 	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("3 fields allowed"), err)
+	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
 
 	// Bad ID
 	id = "|"
 	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("3 fields allowed"), err)
+	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
 
 	// 0 lines
 	id = ""
 	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
-
-	// 2 lines
-	id = `database|schema|task
-		database|schema|task`
-	_, err = taskIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
-
+	r.Equal(fmt.Errorf("EOF"), err)
 }

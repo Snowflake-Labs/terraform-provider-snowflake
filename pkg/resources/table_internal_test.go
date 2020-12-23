@@ -20,7 +20,7 @@ func TestTableIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database"
 	_, err = tableIDFromString(id)
-	r.Equal(fmt.Errorf("3 fields allowed"), err)
+	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
 
 	// Bad ID
 	id = "||"
@@ -30,13 +30,7 @@ func TestTableIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = tableIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
-
-	// 2 lines
-	id = `database_name|schema_name|table
-	database_name|schema_name|table`
-	_, err = tableIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
+	r.Equal(fmt.Errorf("EOF"), err)
 }
 
 func TestTableStruct(t *testing.T) {

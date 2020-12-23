@@ -20,7 +20,7 @@ func TestPipeIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database"
 	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("3 fields allowed"), err)
+	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
 
 	// Bad ID
 	id = "||"
@@ -30,13 +30,7 @@ func TestPipeIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
-
-	// 2 lines
-	id = `database_name|schema_name|pipe
-	database_name|schema_name|pipe`
-	_, err = pipeIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
+	r.Equal(fmt.Errorf("EOF"), err)
 }
 
 func TestPipeStruct(t *testing.T) {

@@ -19,7 +19,7 @@ func TestSchemaIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database"
 	_, err = schemaIDFromString(id)
-	r.Equal(fmt.Errorf("2 fields allowed"), err)
+	r.Equal(fmt.Errorf("wrong number of fields in record"), err)
 
 	// Bad ID
 	id = "|"
@@ -29,13 +29,7 @@ func TestSchemaIDFromString(t *testing.T) {
 	// 0 lines
 	id = ""
 	_, err = schemaIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
-
-	// 2 lines
-	id = `database_name|schema
-	database_name|schema`
-	_, err = schemaIDFromString(id)
-	r.Equal(fmt.Errorf("expecting 1 line"), err)
+	r.Equal(fmt.Errorf("EOF"), err)
 }
 
 func TestSchemaStruct(t *testing.T) {

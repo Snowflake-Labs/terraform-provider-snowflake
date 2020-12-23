@@ -5,6 +5,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"strings"
+
+	"github.com/jszwec/csvutil"
 )
 
 const (
@@ -43,6 +45,23 @@ func readID(id string, minFields, maxFields int) ([]string, error) {
 		}
 	}
 	return lines[0], nil
+}
+
+func readIDStruct(id string, data interface{}) error {
+	reader := csv.NewReader(strings.NewReader(id))
+	reader.Comma = delimiter
+
+	header, err := csvutil.Header(data, "csv")
+	if err != nil {
+		return err
+	}
+	fmt.Printf("[DEBUG] header %#v\n", header)
+	decoder, err := csvutil.NewDecoder(reader, header...)
+	if err != nil {
+		return err
+	}
+
+	return decoder.Decode(&data)
 }
 
 // grantID contains identifying elements that allow unique access privileges
@@ -87,17 +106,9 @@ func grantIDFromString(stringID string) (*grantID, error) {
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
 // and returns a pipeID object
 func pipeIDFromString(stringID string) (*pipeID, error) {
-	row, err := readID(stringID, 3, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	pipeResult := &pipeID{
-		Database: row[0],
-		Schema:   row[1],
-		Name:     row[2],
-	}
-	return pipeResult, nil
+	result := &pipeID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 type schemaID struct {
@@ -114,32 +125,17 @@ func (si *schemaID) String() (string, error) {
 // schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
 // and returns a schemaID object
 func schemaIDFromString(stringID string) (*schemaID, error) {
-	row, err := readID(stringID, 2, 2)
-	if err != nil {
-		return nil, err
-	}
-
-	schemaResult := &schemaID{
-		Database: row[0],
-		Name:     row[1],
-	}
-	return schemaResult, nil
+	result := &schemaID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
 // and returns a stageID object
 func stageIDFromString(stringID string) (*stageID, error) {
-	row, err := readID(stringID, 3, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	stageResult := &stageID{
-		Database: row[0],
-		Schema:   row[1],
-		Name:     row[2],
-	}
-	return stageResult, nil
+	result := &stageID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 type streamOnTableID struct {
@@ -151,17 +147,9 @@ type streamOnTableID struct {
 // streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
 // and returns a streamID object
 func streamIDFromString(stringID string) (*streamID, error) {
-	row, err := readID(stringID, 3, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	streamResult := &streamID{
-		Database: row[0],
-		Schema:   row[1],
-		Name:     row[2],
-	}
-	return streamResult, nil
+	result := &streamID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 // streamOnTableIDFromString() takes in a dot-delimited string: DatabaseName.SchemaName.TableName
@@ -194,33 +182,17 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
 // and returns a tableID object
 func tableIDFromString(stringID string) (*tableID, error) {
-	row, err := readID(stringID, 3, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	tableResult := &tableID{
-		Database: row[0],
-		Schema:   row[1],
-		Name:     row[2],
-	}
-	return tableResult, nil
+	result := &tableID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
 // and returns a taskID object
 func taskIDFromString(stringID string) (*taskID, error) {
-	row, err := readID(stringID, 3, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	taskResult := &taskID{
-		Database: row[0],
-		Schema:   row[1],
-		Name:     row[2],
-	}
-	return taskResult, nil
+	result := &taskID{}
+	err := readIDStruct(stringID, result)
+	return result, err
 }
 
 type schemaScopedID struct {
