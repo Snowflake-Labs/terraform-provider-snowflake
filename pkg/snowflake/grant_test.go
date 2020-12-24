@@ -262,6 +262,9 @@ func TestAccountGrant(t *testing.T) {
 
 	s = wg.Role("bob").Revoke("MONITOR USAGE")
 	r.Equal(`REVOKE MONITOR USAGE ON ACCOUNT  FROM ROLE "bob"`, s)
+
+	s = wg.Role("bob").Grant("APPLY MASKING POLICY", false)
+	r.Equal(`GRANT APPLY MASKING POLICY ON ACCOUNT  TO ROLE "bob"`, s)
 }
 
 func TestIntegrationGrant(t *testing.T) {
