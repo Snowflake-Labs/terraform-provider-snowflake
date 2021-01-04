@@ -100,6 +100,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
 		"snowflake_database":                  resources.Database(),
+		"snowflake_file_format":               resources.FileFormat(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
 		"snowflake_network_policy":            resources.NetworkPolicy(),
