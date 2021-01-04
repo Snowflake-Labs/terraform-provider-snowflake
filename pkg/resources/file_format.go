@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -653,9 +653,6 @@ func ReadFileFormat(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateFileFormat implements schema.UpdateFunc
 func UpdateFileFormat(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
 	fileFormatID, err := fileFormatIDFromString(data.Id())
 	if err != nil {
 		return err
@@ -670,366 +667,301 @@ func UpdateFileFormat(data *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	if data.HasChange("compression") {
-		_, change := data.GetChange("compression")
+		change := data.Get("compression")
 		q := builder.ChangeCompression(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format compression on %v", data.Id())
 		}
-
-		data.SetPartial("compression")
 	}
 
 	if data.HasChange("record_delimiter") {
-		_, change := data.GetChange("record_delimiter")
+		change := data.Get("record_delimiter")
 		q := builder.ChangeRecordDelimiter(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format record delimiter on %v", data.Id())
 		}
-
-		data.SetPartial("record_delimiter")
 	}
 
 	if data.HasChange("field_delimiter") {
-		_, change := data.GetChange("field_delimiter")
+		change := data.Get("field_delimiter")
 		q := builder.ChangeFieldDelimiter(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format field delimiter on %v", data.Id())
 		}
-
-		data.SetPartial("field_delimiter")
 	}
 
 	if data.HasChange("file_extension") {
-		_, change := data.GetChange("file_extension")
+		change := data.Get("file_extension")
 		q := builder.ChangeFileExtension(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format file extension on %v", data.Id())
 		}
 
-		data.SetPartial("file_extension")
 	}
 
 	if data.HasChange("skip_header") {
-		_, change := data.GetChange("skip_header")
+		change := data.Get("skip_header")
 		q := builder.ChangeSkipHeader(change.(int))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format skip header on %v", data.Id())
 		}
-
-		data.SetPartial("skip_header")
 	}
 
 	if data.HasChange("skip_blank_lines") {
-		_, change := data.GetChange("skip_blank_lines")
+		change := data.Get("skip_blank_lines")
 		q := builder.ChangeSkipBlankLines(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format skip blank lines on %v", data.Id())
 		}
-
-		data.SetPartial("skip_blank_lines")
 	}
 
 	if data.HasChange("date_format") {
-		_, change := data.GetChange("date_format")
+		change := data.Get("date_format")
 		q := builder.ChangeDateFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format date format on %v", data.Id())
 		}
-
-		data.SetPartial("date_format")
 	}
 
 	if data.HasChange("time_format") {
-		_, change := data.GetChange("time_format")
+		change := data.Get("time_format")
 		q := builder.ChangeTimeFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format time format on %v", data.Id())
 		}
-
-		data.SetPartial("time_format")
 	}
 
 	if data.HasChange("timestamp_format") {
-		_, change := data.GetChange("timestamp_format")
+		change := data.Get("timestamp_format")
 		q := builder.ChangeTimestampFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format timstamp format on %v", data.Id())
 		}
-
-		data.SetPartial("timestamp_format")
 	}
 
 	if data.HasChange("binary_format") {
-		_, change := data.GetChange("binary_format")
+		change := data.Get("binary_format")
 		q := builder.ChangeBinaryFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format binary format on %v", data.Id())
 		}
-
-		data.SetPartial("binary_format")
 	}
 
 	if data.HasChange("escape") {
-		_, change := data.GetChange("escape")
+		change := data.Get("escape")
 		q := builder.ChangeEscape(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format escape on %v", data.Id())
 		}
-
-		data.SetPartial("escape")
 	}
 
 	if data.HasChange("escape_unenclosed_field") {
-		_, change := data.GetChange("escape_unenclosed_field")
+		change := data.Get("escape_unenclosed_field")
 		q := builder.ChangeEscapeUnenclosedField(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format escape_unenclosed_field on %v", data.Id())
 		}
-
-		data.SetPartial("escape_unenclosed_field")
 	}
 
 	if data.HasChange("field_optionally_enclosed_by") {
-		_, change := data.GetChange("field_optionally_enclosed_by")
+		change := data.Get("field_optionally_enclosed_by")
 		q := builder.ChangeFieldOptionallyEnclosedBy(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format field_optionally_enclosed_by on %v", data.Id())
 		}
-
-		data.SetPartial("field_optionally_enclosed_by")
 	}
 
 	if data.HasChange("encoding") {
-		_, change := data.GetChange("encoding")
+		change := data.Get("encoding")
 		q := builder.ChangeEncoding(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format encoding on %v", data.Id())
 		}
-
-		data.SetPartial("encoding")
 	}
 
 	if data.HasChange("comment") {
-		_, change := data.GetChange("comment")
+		change := data.Get("comment")
 		q := builder.ChangeComment(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format comment on %v", data.Id())
 		}
-
-		data.SetPartial("comment")
 	}
 
 	if data.HasChange("trim_space") {
-		_, change := data.GetChange("trim_space")
+		change := data.Get("trim_space")
 		q := builder.ChangeTrimSpace(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format trim_space on %v", data.Id())
 		}
-
-		data.SetPartial("trim_space")
 	}
 
 	if data.HasChange("error_on_column_count_mismatch") {
-		_, change := data.GetChange("error_on_column_count_mismatch")
+		change := data.Get("error_on_column_count_mismatch")
 		q := builder.ChangeErrorOnColumnCountMismatch(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format error_on_column_count_mismatch on %v", data.Id())
 		}
-
-		data.SetPartial("error_on_column_count_mismatch")
 	}
 
 	if data.HasChange("replace_invalid_characters") {
-		_, change := data.GetChange("replace_invalid_characters")
+		change := data.Get("replace_invalid_characters")
 		q := builder.ChangeReplaceInvalidCharacters(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format replace_invalid_characters on %v", data.Id())
 		}
-
-		data.SetPartial("replace_invalid_characters")
 	}
 
 	if data.HasChange("validate_utf8") {
-		_, change := data.GetChange("validate_utf8")
+		change := data.Get("validate_utf8")
 		q := builder.ChangeValidateUTF8(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format validate_utf8 on %v", data.Id())
 		}
-
-		data.SetPartial("validate_utf8")
 	}
 
 	if data.HasChange("empty_field_as_null") {
-		_, change := data.GetChange("empty_field_as_null")
+		change := data.Get("empty_field_as_null")
 		q := builder.ChangeEmptyFieldAsNull(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format empty_field_as_null on %v", data.Id())
 		}
-
-		data.SetPartial("empty_field_as_null")
 	}
 
 	if data.HasChange("skip_byte_order_mark") {
-		_, change := data.GetChange("skip_byte_order_mark")
+		change := data.Get("skip_byte_order_mark")
 		q := builder.ChangeSkipByteOrderMark(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format skip_byte_order_mark on %v", data.Id())
 		}
-
-		data.SetPartial("skip_byte_order_mark")
 	}
 
 	if data.HasChange("enable_octal") {
-		_, change := data.GetChange("enable_octal")
+		change := data.Get("enable_octal")
 		q := builder.ChangeEnableOctal(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format enable_octal on %v", data.Id())
 		}
-
-		data.SetPartial("enable_octal")
 	}
 
 	if data.HasChange("allow_duplicate") {
-		_, change := data.GetChange("allow_duplicate")
+		change := data.Get("allow_duplicate")
 		q := builder.ChangeAllowDuplicate(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format allow_duplicate on %v", data.Id())
 		}
-
-		data.SetPartial("allow_duplicate")
 	}
 
 	if data.HasChange("strip_outer_array") {
-		_, change := data.GetChange("strip_outer_array")
+		change := data.Get("strip_outer_array")
 		q := builder.ChangeStripOuterArray(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format strip_outer_array on %v", data.Id())
 		}
-
-		data.SetPartial("strip_outer_array")
 	}
 
 	if data.HasChange("strip_null_values") {
-		_, change := data.GetChange("strip_null_values")
+		change := data.Get("strip_null_values")
 		q := builder.ChangeStripNullValues(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format strip_null_values on %v", data.Id())
 		}
-
-		data.SetPartial("strip_null_values")
 	}
 
 	if data.HasChange("ignore_utf8_errors") {
-		_, change := data.GetChange("ignore_utf8_errors")
+		change := data.Get("ignore_utf8_errors")
 		q := builder.ChangeIgnoreUTF8Errors(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format ignore_utf8_errors on %v", data.Id())
 		}
-
-		data.SetPartial("ignore_utf8_errors")
 	}
 
 	if data.HasChange("snappy_compression") {
-		_, change := data.GetChange("snappy_compression")
+		change := data.Get("snappy_compression")
 		q := builder.ChangeSnappyCompression(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format snappy_compression on %v", data.Id())
 		}
-
-		data.SetPartial("snappy_compression")
 	}
 
 	if data.HasChange("binary_as_text") {
-		_, change := data.GetChange("binary_as_text")
+		change := data.Get("binary_as_text")
 		q := builder.ChangeBinaryAsText(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format binary_as_text on %v", data.Id())
 		}
-
-		data.SetPartial("binary_as_text")
 	}
 
 	if data.HasChange("preserve_space") {
-		_, change := data.GetChange("preserve_space")
+		change := data.Get("preserve_space")
 		q := builder.ChangePreserveSpace(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format preserve_space on %v", data.Id())
 		}
-
-		data.SetPartial("preserve_space")
 	}
 
 	if data.HasChange("strip_outer_element") {
-		_, change := data.GetChange("strip_outer_element")
+		change := data.Get("strip_outer_element")
 		q := builder.ChangeStripOuterElement(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format strip_outer_element on %v", data.Id())
 		}
-
-		data.SetPartial("strip_outer_element")
 	}
 
 	if data.HasChange("disable_snowflake_data") {
-		_, change := data.GetChange("disable_snowflake_data")
+		change := data.Get("disable_snowflake_data")
 		q := builder.ChangeDisableSnowflakeData(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format disable_snowflake_data on %v", data.Id())
 		}
-
-		data.SetPartial("disable_snowflake_data")
 	}
 
 	if data.HasChange("disable_auto_convert") {
-		_, change := data.GetChange("disable_auto_convert")
+		change := data.Get("disable_auto_convert")
 		q := builder.ChangeDisableAutoConvert(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format disable_auto_convert on %v", data.Id())
 		}
-
-		data.SetPartial("disable_auto_convert")
 	}
 
 	if data.HasChange("null_if") {
-		_, change := data.GetChange("null_if")
+		change := data.Get("null_if")
 		q := builder.ChangeNullIf(expandStringList(change.([]interface{})))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format null_if on %v", data.Id())
 		}
-
-		data.SetPartial("null_if")
 	}
 
 	return ReadFileFormat(data, meta)
