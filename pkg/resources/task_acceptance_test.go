@@ -38,7 +38,7 @@ var (
 	warehousename = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	initialState = &AccTaskTestSettings{
+	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -68,7 +68,7 @@ var (
 	}
 
 	// Enables the Child and changes the SQL
-	stepOne = &AccTaskTestSettings{
+	stepOne = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -99,7 +99,7 @@ var (
 	}
 
 	// Changes Root Schedule and SQL
-	stepTwo = &AccTaskTestSettings{
+	stepTwo = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -128,7 +128,7 @@ var (
 		},
 	}
 
-	stepThree = &AccTaskTestSettings{
+	stepThree = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -250,7 +250,7 @@ func TestAcc_Task(t *testing.T) {
 	})
 }
 
-func taskConfig(settings *AccTaskTestSettings) string {
+func taskConfig(settings *AccTaskTestSettings) string { //nolint
 	config, err := template.New("task_acceptance_test_config").Parse(`
 resource "snowflake_warehouse" "test_wh" {
 	name = "{{ .WarehouseName }}"
