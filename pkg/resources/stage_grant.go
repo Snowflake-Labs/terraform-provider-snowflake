@@ -1,10 +1,9 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var validStagePrivileges = NewPrivilegeSet(
@@ -40,7 +39,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the stage.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validStagePrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validStagePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
