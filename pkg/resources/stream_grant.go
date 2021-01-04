@@ -1,11 +1,10 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pkg/errors"
 )
 
 var validStreamPrivileges = NewPrivilegeSet(
@@ -37,7 +36,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future stream.",
 		Default:      "SELECT",
-		ValidateFunc: validation.StringInSlice(validStreamPrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validStreamPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

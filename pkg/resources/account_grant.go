@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validAccountPrivileges = NewPrivilegeSet(
@@ -24,7 +24,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the account.",
 		Default:      privilegeMonitorUsage,
-		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validAccountPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

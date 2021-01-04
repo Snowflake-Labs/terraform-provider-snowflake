@@ -1,11 +1,10 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pkg/errors"
 )
 
 var validTablePrivileges = NewPrivilegeSet(
@@ -42,7 +41,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
 		Default:      privilegeSelect.String(),
-		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validTablePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
