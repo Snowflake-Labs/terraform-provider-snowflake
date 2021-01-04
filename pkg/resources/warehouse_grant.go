@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validWarehousePrivileges = NewPrivilegeSet(
@@ -25,7 +25,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      privilegeUsage.String(),
-		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validWarehousePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
