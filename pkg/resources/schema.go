@@ -190,7 +190,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateSchema implements schema.UpdateFunc
 func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
-	schemaID, err := idFromString(d.Id())
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 // DeleteSchema implements schema.DeleteFunc
 func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	schemaID, err := idFromString(d.Id())
+	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
