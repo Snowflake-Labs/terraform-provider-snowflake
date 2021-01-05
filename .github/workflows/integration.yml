@@ -33,7 +33,7 @@ jobs:
           SHAHEAD=$(echo ${{github.event.client_payload.pull_request.head.sha}} | cut -c1-7)
           echo ${#SHAINPUT}
           echo ${#SHAHEAD}
-          if [ "${SHAHEAD}" != "${SHAINPUT}" ]; then echo "sha input from slash command does not equal the head sha" ;
+          if [ "${SHAHEAD}" != "${SHAINPUT}" ]; then echo "sha input from slash command does not equal the head sha" ; exit 1
           else echo "shas are equal"
           fi
 
