@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validIntegrationPrivileges = NewPrivilegeSet(
@@ -22,7 +22,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the integration.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validIntegrationPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
