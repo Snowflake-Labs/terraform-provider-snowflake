@@ -39,13 +39,6 @@ jobs:
 
       - name: pull_request actions/checkout
         uses: actions/checkout@v2
-        if: github.event_name == 'pull_request'
-
-      - name: repository_dispatch actions/checkout
-        uses: actions/checkout@v2
-        if: github.event_name == 'repository_dispatch'
-        with:
-          ref: ${{ github.event.client_payload.slash_command.args.named.sha }}
 
       - name: setup-go
         uses: actions/setup-go@v2
