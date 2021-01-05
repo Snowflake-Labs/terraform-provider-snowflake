@@ -55,7 +55,7 @@ resource "snowflake_masking_policy" "test" {
 	schema = snowflake_schema.test.name
 	value_data_type = "string"
 	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-	return_data_tyep = "string"
+	return_data_type = "string"
 	comment = "Terraform acceptance test"
 }
 `, n, n, n)
