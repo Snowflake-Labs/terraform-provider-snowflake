@@ -64,6 +64,7 @@ resource snowflake_function_grant grant {
 - **shares** (Set of String, Optional) Grants privilege to these shares (only valid if on_future is false).
 - **with_grant_option** (Boolean, Optional) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
+<a id="nestedblock--arguments"></a>
 ### Nested Schema for `arguments`
 
 Required:
