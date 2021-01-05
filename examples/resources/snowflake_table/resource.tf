@@ -1,6 +1,6 @@
 resource snowflake_table table {
   database = "database"
-  schema   = "schmea"
+  schema   = "schema"
   name     = "table"
   comment  = "A table."
   owner    = "me"
