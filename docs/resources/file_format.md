@@ -9,7 +9,16 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource "snowflake_file_format" "example_file_format" {
+  name        = "EXAMPLE_FILE_FORMAT"
+  database    = "EXAMPLE_DB"
+  schema      = "EXAMPLE_SCHEMA"
+  format_type = "CSV"
+}
+```
 
 ## Schema
 
@@ -57,4 +66,11 @@ description: |-
 - **trim_space** (Boolean, Optional) Boolean that specifies whether to remove white space from fields.
 - **validate_utf8** (Boolean, Optional) Boolean that specifies whether to validate UTF-8 character encoding in string column data.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | file format name
+terraform import snowflake_file_format.example 'dbName|schemaName|fileFormatName'
+```
