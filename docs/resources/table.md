@@ -49,7 +49,6 @@ resource snowflake_table table {
 
 - **owner** (String, Read-only) Name of the role that owns the table.
 
-<a id="nestedblock--column"></a>
 ### Nested Schema for `column`
 
 Required:
