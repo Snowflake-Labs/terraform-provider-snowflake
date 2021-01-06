@@ -1,20 +1,12 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-)
-
-const (
-	stageIDDelimiter = '|'
 )
 
 var stageSchema = map[string]*schema.Schema{
@@ -84,52 +76,6 @@ var stageSchema = map[string]*schema.Schema{
 	},
 }
 
-type stageID struct {
-	DatabaseName string
-	SchemaName   string
-	StageName    string
-}
-
-// String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName
-func (si *stageID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = stageIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StageName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strStageID := strings.TrimSpace(buf.String())
-	return strStageID, nil
-}
-
-// stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
-// and returns a stageID object
-func stageIDFromString(stringID string) (*stageID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = stageIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per stage")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	stageResult := &stageID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StageName:    lines[0][2],
-	}
-	return stageResult, nil
-}
-
 // Stage returns a pointer to the resource representing a stage
 func Stage() *schema.Resource {
 	return &schema.Resource{
@@ -190,10 +136,10 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating stage %v", name)
 	}
 
-	stageID := &stageID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		StageName:    name,
+	stageID := &schemaScopedID{
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := stageID.String()
 	if err != nil {
@@ -208,14 +154,14 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 // credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE
 func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
@@ -292,14 +238,14 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStage implements schema.UpdateFunc
 func UpdateStage(d *schema.ResourceData, meta interface{}) error {
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	builder := snowflake.Stage(stage, dbName, schema)
 
@@ -370,14 +316,14 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 // DeleteStage implements schema.DeleteFunc
 func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	stageID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Drop()
 
@@ -394,14 +340,14 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 // StageExists implements schema.ExistsFunc
 func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(data.Id())
+	stageID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
+	dbName := stageID.Database
+	schema := stageID.Schema
+	stage := stageID.Name
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	rows, err := db.Query(q)

@@ -32,6 +32,8 @@ resource "snowflake_role" "other_role" {
 }
 
 resource "snowflake_role_grants" "grants" {
+  name = "foo"
+
   role_name = "${snowflake_role.role.name}"
 
   roles = [

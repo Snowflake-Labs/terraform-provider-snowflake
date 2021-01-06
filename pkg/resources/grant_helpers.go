@@ -1,9 +1,7 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"regexp"
 	"strings"
@@ -30,10 +28,6 @@ func (t TerraformGrantResources) GetTfSchemas() map[string]*schema.Resource {
 	}
 	return out
 }
-
-const (
-	grantIDDelimiter = '|'
-)
 
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
@@ -71,63 +65,6 @@ type grant struct {
 	GranteeType string
 	GranteeName string
 	GrantOption bool
-}
-
-// grantID contains identifying elements that allow unique access privileges
-type grantID struct {
-	ResourceName string
-	SchemaName   string
-	ObjectName   string
-	Privilege    string
-	GrantOption  bool
-}
-
-// String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|GrantOption
-func (gi *grantID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = grantIDDelimiter
-	grantOption := fmt.Sprintf("%v", gi.GrantOption)
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, grantOption}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strGrantID := strings.TrimSpace(buf.String())
-	return strGrantID, nil
-}
-
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
-// and returns a grantID object
-func grantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = grantIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per grant")
-	}
-	if len(lines[0]) != 4 && len(lines[0]) != 5 {
-		return nil, fmt.Errorf("4 or 5 fields allowed")
-	}
-
-	grantOption := false
-	if len(lines[0]) == 5 && lines[0][4] == "true" {
-		grantOption = true
-	}
-
-	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ObjectName:   lines[0][2],
-		Privilege:    lines[0][3],
-		GrantOption:  grantOption,
-	}
-	return grantResult, nil
 }
 
 func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
