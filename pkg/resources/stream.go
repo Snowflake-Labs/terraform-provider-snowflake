@@ -1,21 +1,12 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-)
-
-const (
-	streamIDDelimiter        = '|'
-	streamOnTableIDDelimiter = '.'
 )
 
 var streamSchema = map[string]*schema.Schema{
@@ -74,84 +65,6 @@ func Stream() *schema.Resource {
 	}
 }
 
-type streamID struct {
-	DatabaseName string
-	SchemaName   string
-	StreamName   string
-}
-
-type streamOnTableID struct {
-	DatabaseName string
-	SchemaName   string
-	OnTableName  string
-}
-
-//String() takes in a streamID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|StreamName
-func (si *streamID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = streamIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StreamName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strStreamID := strings.TrimSpace(buf.String())
-	return strStreamID, nil
-}
-
-// streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
-// and returns a streamID object
-func streamIDFromString(stringID string) (*streamID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = streamIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	streamResult := &streamID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StreamName:   lines[0][2],
-	}
-	return streamResult, nil
-}
-
-// streamOnTableIDFromString() takes in a dot-delimited string: DatabaseName.SchemaName.TableName
-// and returns a streamOnTableID object
-func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = streamOnTableIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		//return nil, fmt.Errorf("on table format: database_name.schema_name.target_table_name")
-		return nil, fmt.Errorf("invalid format for on_table: %v , expected: <database_name.schema_name.target_table_name>", strings.Join(lines[0], "."))
-	}
-
-	streamOnTableResult := &streamOnTableID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		OnTableName:  lines[0][2],
-	}
-	return streamOnTableResult, nil
-}
-
 // CreateStream implements schema.CreateFunc
 func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -182,10 +95,10 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating stream %v", name)
 	}
 
-	streamID := &streamID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		StreamName:   name,
+	streamID := &schemaScopedID{
+		Database: database,
+		Schema:   schema,
+		Name:     name,
 	}
 	dataIDInput, err := streamID.String()
 	if err != nil {
@@ -199,14 +112,14 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 // ReadStream implements schema.ReadFunc
 func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	name := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	name := streamID.Name
 
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -237,14 +150,14 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 // DeleteStream implements schema.DeleteFunc
 func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	streamName := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	streamName := streamID.Name
 
 	q := snowflake.Stream(streamName, dbName, schema).Drop()
 
@@ -260,14 +173,14 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStream implements schema.UpdateFunc
 func UpdateStream(d *schema.ResourceData, meta interface{}) error {
-	streamID, err := streamIDFromString(d.Id())
+	streamID, err := idFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := streamID.DatabaseName
-	schema := streamID.SchemaName
-	streamName := streamID.StreamName
+	dbName := streamID.Database
+	schema := streamID.Schema
+	streamName := streamID.Name
 
 	builder := snowflake.Stream(streamName, dbName, schema)
 
