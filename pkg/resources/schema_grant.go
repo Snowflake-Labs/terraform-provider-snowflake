@@ -146,7 +146,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done
-	if !(d.HasChange("roles") || d.HasChange("shares")) {
+	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
 
