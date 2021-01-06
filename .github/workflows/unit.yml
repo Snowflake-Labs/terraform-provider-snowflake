@@ -10,7 +10,6 @@ jobs:
       matrix:
         target:
           - check-docs
-          - check-mod
           - test
     steps:
       - uses: actions/checkout@v2
