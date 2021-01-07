@@ -107,7 +107,6 @@ func expectReadAccountGrant(mock sqlmock.Sqlmock) {
 	mock.ExpectQuery(`^SHOW GRANTS ON ACCOUNT$`).WillReturnRows(rows)
 }
 
-
 func TestApplyMaskingPolicy(t *testing.T) {
 	r := require.New(t)
 
