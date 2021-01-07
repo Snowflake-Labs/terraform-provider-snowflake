@@ -67,7 +67,7 @@ jobs:
         with:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
           body: |
-            Integration tests test-acceptance and linc-ci ran for [${{ github.event.client_payload.slash_command.args.named.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
+            Integration tests ran for [${{ github.event.client_payload.slash_command.args.named.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
           reactions: '+1'
 
       - name: set fork job status
