@@ -33,7 +33,14 @@ jobs:
           fi
 
       - name: pull_request actions/checkout
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v2
+
+      - name: pull_request actions/checkout
+        if: github.event_name == 'repository_dispatch'
+        uses: actions/checkout@v2
+        with:
+          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
 
       - name: setup-go
         uses: actions/setup-go@v2
