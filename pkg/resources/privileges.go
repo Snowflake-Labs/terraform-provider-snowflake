@@ -38,7 +38,7 @@ const (
 	privilegeCreateTemporaryTable   Privilege = "CREATE TEMPORARY TABLE"
 	privilegeCreateMaskingPolicy    Privilege = "CREATE MASKING POLICY"
 	privilegeAddSearchOptimization  Privilege = "ADD SEARCH OPTIMIZATION"
-	privilegeApplyMaskingPolicy   	Privilege = "APPLY MASKING POLICY"
+	privilegeApplyMaskingPolicy     Privilege = "APPLY MASKING POLICY"
 
 	privilegeCreateRole        Privilege = "CREATE ROLE"
 	privilegeCreateUser        Privilege = "CREATE USER"
