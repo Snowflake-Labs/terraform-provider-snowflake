@@ -62,7 +62,7 @@ jobs:
         run: make test-acceptance
 
       - name: comment on pull request
-        if: ${{ always() }} && github.event_name == 'repository_dispatch'
+        if: github.event_name == 'repository_dispatch'
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
