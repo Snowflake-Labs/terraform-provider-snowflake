@@ -62,13 +62,12 @@ jobs:
         run: make test-acceptance
 
       - name: comment on pull request
-        if: ${{ always() }} && github.event_name == 'repository_dispatch'
+        if: github.event_name == 'repository_dispatch'
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
           body: |
-            test-acceptance and linc-ci ran and [here is the test run][1]
-            [1]:https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }}
+            Integration tests ran for [${{ github.event.client_payload.slash_command.args.named.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
           reactions: '+1'
 
       - name: set fork job status
