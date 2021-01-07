@@ -10,11 +10,6 @@ jobs:
   integration-trusted:
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    strategy:
-      matrix:
-        target:
-          - test-acceptance
-          - lint-ci
     steps:
       - id: debug-outputs
         run: |
@@ -48,14 +43,23 @@ jobs:
       - name: Install dependencies
         run: make setup
 
-      - name: make ${{ matrix.target }} integration
+      - name: make lint-ci integration
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-        run: make ${{ matrix.target }}
+        run: make lint-ci
+
+      - name: make test-acceptance integration
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+        run: make test-acceptance
 
       - name: set fork job status
         uses: actions/github-script@v3
@@ -66,6 +70,7 @@ jobs:
           job: ${{ github.job }}
           # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
           conclusion: ${{ job.status }}
+          sha: ${{ github.event.client_payload.slash_command.args.named.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -73,7 +78,7 @@ jobs:
               ...context.repo,
               pull_number: process.env.number
             });
-            const ref = pull.head.sha;
+            const ref = process.env.sha;
 
             const { data: checks } = await github.checks.listForRef({
               ...context.repo,
