@@ -10,6 +10,78 @@ import (
 	"github.com/pkg/errors"
 )
 
+// valid format type options for each File Format Type
+// https://docs.snowflake.com/en/sql-reference/sql/create-file-format.html#syntax
+var formatTypeOptions = map[string][]string{
+	"CSV": {
+		"compression",
+		"record_delimiter",
+		"field_delimiter",
+		"file_extension",
+		"skip_header",
+		"skip_blank_lines",
+		"date_format",
+		"time_format",
+		"timestamp_format",
+		"binary_format",
+		"escape",
+		"escape_unenclosed_field",
+		"trim_space",
+		"field_optionally_enclosed_by",
+		"null_if",
+		"error_on_column_count_mismatch",
+		"replace_invalid_characters",
+		"validate_utf8",
+		"empty_field_as_null",
+		"skip_byte_order_mark",
+		"encoding",
+	},
+	"JSON": {
+		"compression",
+		"file_extension",
+		"date_format",
+		"time_format",
+		"timestamp_format",
+		"binary_format",
+		"trim_space",
+		"null_if",
+		"enable_octal",
+		"allow_duplicate",
+		"strip_outer_array",
+		"strip_null_values",
+		"ignore_utf8_errors",
+		"replace_invalid_characters",
+		"skip_byte_order_mark",
+	},
+	"AVRO": {
+		"compression",
+		"trim_space",
+		"null_if",
+	},
+	"ORC": {
+		"trim_space",
+		"null_if",
+	},
+	"PARQUET": {
+		"compression",
+		"snappy_compression",
+		"binary_as_text",
+		"trim_space",
+		"null_if",
+	},
+	"XML": {
+		"compression",
+		"ignore_utf8_errors",
+		"preserve_space",
+		"strip_outer_element",
+		"disable_snowflake_data",
+		"disable_auto_convert",
+		"skip_byte_order_mark",
+		"trim_space",
+		"null_if",
+	},
+}
+
 var fileFormatSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -235,135 +307,200 @@ func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.FileFormat(name, database, schema)
 
-	builder.WithFormatType(data.Get("format_type").(string))
+	formatType := data.Get("format_type").(string)
+	builder.WithFormatType(formatType)
 
 	// Set optionals
-	if v, ok := data.GetOk("compression"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "compression"); ok && err == nil {
 		builder.WithCompression(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("record_delimiter"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "record_delimiter"); ok && err == nil {
 		builder.WithRecordDelimiter(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("field_delimiter"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "field_delimiter"); ok && err == nil {
 		builder.WithFieldDelimiter(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("file_extension"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "file_extension"); ok && err == nil {
 		builder.WithFileExtension(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("skip_header"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "skip_header"); ok && err == nil {
 		builder.WithSkipHeader(v.(int))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("skip_blank_lines"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "skip_blank_lines"); ok && err == nil {
 		builder.WithSkipBlankLines(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("date_format"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "date_format"); ok && err == nil {
 		builder.WithDateFormat(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("time_format"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "time_format"); ok && err == nil {
 		builder.WithTimeFormat(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("timestamp_format"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "timestamp_format"); ok && err == nil {
 		builder.WithTimestampFormat(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("binary_format"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "binary_format"); ok && err == nil {
 		builder.WithBinaryFormat(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("escape"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "escape"); ok && err == nil {
 		builder.WithEscape(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("escape_unenclosed_field"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "escape_unenclosed_field"); ok && err == nil {
 		builder.WithEscapeUnenclosedField(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("trim_space"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "trim_space"); ok && err == nil {
 		builder.WithTrimSpace(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("field_optionally_enclosed_by"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "field_optionally_enclosed_by"); ok && err == nil {
 		builder.WithFieldOptionallyEnclosedBy(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("null_if"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "null_if"); ok && err == nil {
 		builder.WithNullIf(expandStringList(v.([]interface{})))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("error_on_column_count_mismatch"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "error_on_column_count_mismatch"); ok && err == nil {
 		builder.WithErrorOnColumnCountMismatch(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("replace_invalid_characters"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "replace_invalid_characters"); ok && err == nil {
 		builder.WithReplaceInvalidCharacters(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("validate_utf8"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "validate_utf8"); ok && err == nil {
 		builder.WithValidateUTF8(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("empty_field_as_null"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "empty_field_as_null"); ok && err == nil {
 		builder.WithEmptyFieldAsNull(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("skip_byte_order_mark"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "skip_byte_order_mark"); ok && err == nil {
 		builder.WithSkipByteOrderMark(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("encoding"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "encoding"); ok && err == nil {
 		builder.WithEncoding(v.(string))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("enable_octal"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "enable_octal"); ok && err == nil {
 		builder.WithEnableOctal(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("allow_duplicate"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "allow_duplicate"); ok && err == nil {
 		builder.WithAllowDuplicate(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("strip_outer_array"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "strip_outer_array"); ok && err == nil {
 		builder.WithStripOuterArray(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("strip_null_values"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "strip_null_values"); ok && err == nil {
 		builder.WithStripNullValues(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("ignore_utf8_errors"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "ignore_utf8_errors"); ok && err == nil {
 		builder.WithIgnoreUTF8Errors(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("snappy_compression"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "snappy_compression"); ok && err == nil {
 		builder.WithSnappyCompression(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("binary_as_text"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "binary_as_text"); ok && err == nil {
 		builder.WithBinaryAsText(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("preserve_space"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "preserve_space"); ok && err == nil {
 		builder.WithPreserveSpace(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("strip_outer_element"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "strip_outer_element"); ok && err == nil {
 		builder.WithStripOuterElement(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("disable_snowflake_data"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "disable_snowflake_data"); ok && err == nil {
 		builder.WithDisableSnowflakeData(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
-	if v, ok := data.GetOk("disable_auto_convert"); ok {
+	if v, ok, err := getFormatTypeOption(data, formatType, "disable_auto_convert"); ok && err == nil {
 		builder.WithDisableAutoConvert(v.(bool))
+	} else if err != nil {
+		return err
 	}
 
 	if v, ok := data.GetOk("comment"); ok {
@@ -968,4 +1105,24 @@ func FileFormatExists(data *schema.ResourceData, meta interface{}) (bool, error)
 	}
 
 	return false, nil
+}
+
+func getFormatTypeOption(d *schema.ResourceData, formatType, formatTypeOption string) (interface{}, bool, error) {
+	validFormatTypeOptions := formatTypeOptions[formatType]
+	if v, ok := d.GetOk(formatTypeOption); ok {
+		if err := validateFormatTypeOptions(formatType, formatTypeOption, validFormatTypeOptions); err != nil {
+			return nil, true, err
+		}
+		return v, true, nil
+	}
+	return nil, false, nil
+}
+
+func validateFormatTypeOptions(formatType, formatTypeOption string, validFormatTypeOptions []string) error {
+	for _, f := range validFormatTypeOptions {
+		if f == formatTypeOption {
+			return nil
+		}
+	}
+	return fmt.Errorf("%v is an invalid format type option for format type %v", formatTypeOption, formatType)
 }

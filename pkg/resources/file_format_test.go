@@ -40,10 +40,28 @@ func TestFileFormatCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFileFormat(mock)
 		err := resources.CreateFileFormat(d, db)
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Errorf("there were unfulfilled expectations: %s", err)
-		}
 		r.NoError(err)
+	})
+}
+
+func TestFileFormatCreateInvalidOptions(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":          "test_file_format",
+		"database":      "test_db",
+		"schema":        "test_schema",
+		"format_type":   "JSON",
+		"null_if":       []interface{}{"NULL"},
+		"validate_utf8": true,
+		"comment":       "great comment",
+	}
+	d := schema.TestResourceDataRaw(t, resources.FileFormat().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateFileFormat(d, db)
+		r.EqualError(err, "validate_utf8 is an invalid format type option for format type JSON")
 	})
 }
 
