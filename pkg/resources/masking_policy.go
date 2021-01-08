@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -124,37 +123,13 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.MaskingPolicy(policyName, dbName, schema)
 
-	// There is no way to SHOW a single Masking Policy, so we have to read *all* masking policies and filter in memory
-	showSQL := builder.ShowAllMaskingPolicies()
+	showSQL := builder.Show()
 
-	rows, err := snowflake.Query(db, showSQL)
-	if err == sql.ErrNoRows {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] masking policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
+	row := snowflake.QueryRow(db, showSQL)
+
+	s, err := snowflake.ScanMaskingPolicies(row)
 	if err != nil {
 		return err
-	}
-
-	allPolicies, err := snowflake.ScanMaskingPolicies(rows)
-	if err != nil {
-		return err
-	}
-
-	var s *snowflake.MaskingPolicyStruct = nil
-	for _, value := range allPolicies {
-		if value.Name.String == policyName && value.DatabaseName.String == dbName && value.SchemaName.String == schema {
-			s = value
-		}
-	}
-
-	if s == nil {
-		// The masking policy was not found, the Terraform state does not reflect the Snowflake state
-		log.Printf("[DEBUG] masking policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	err = d.Set("name", s.Name.String)
@@ -178,38 +153,38 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	descSQL := builder.Describe()
-	rows, err = snowflake.Query(db, descSQL)
+	rows, err := snowflake.Query(db, descSQL)
 	if err != nil {
 		return err
 	}
 
 	var (
-		name  string
-		value string
+		name       string
+		signature  string
+		returnType string
+		body       string
 	)
 	for rows.Next() {
-		err := rows.Scan(&name, &value)
+		err := rows.Scan(&name, &signature, &returnType, &body)
 		if err != nil {
 			return err
 		}
 
-		if name == "BODY" {
-			err = d.Set("masking_expression", value)
-			if err != nil {
-				return err
-			}
-		} else if name == "RETURN_TYPE" {
-			err = d.Set("return_data_type", value)
-			if err != nil {
-				return err
-			}
-		} else if name == "SIGNATURE" {
-			// format in database is `(VAL <data_type>)`
-			valueDataType := strings.TrimSuffix(strings.Split(value, " ")[1], ")")
-			err = d.Set("value_data_type", valueDataType)
-			if err != nil {
-				return err
-			}
+		err = d.Set("masking_expression", body)
+		if err != nil {
+			return err
+		}
+
+		err = d.Set("return_data_type", returnType)
+		if err != nil {
+			return err
+		}
+
+		// format in database is `(VAL <data_type>)`
+		valueDataType := strings.TrimSuffix(strings.Split(signature, " ")[1], ")")
+		err = d.Set("value_data_type", valueDataType)
+		if err != nil {
+			return err
 		}
 	}
 

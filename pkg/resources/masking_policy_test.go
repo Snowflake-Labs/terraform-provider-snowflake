@@ -8,7 +8,6 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
@@ -51,16 +50,12 @@ func expectReadMaskingPolicy(mock sqlmock.Sqlmock) {
 	}).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "policy_name", "database_name", "schema_name", "MASKING_POLICY", "test", "this is a comment",
 	)
-	mock.ExpectQuery(`^SHOW MASKING POLICIES$`).WillReturnRows(showRows)
+	mock.ExpectQuery(`^SHOW MASKING POLICIES LIKE 'policy_name' IN SCHEMA "database_name"."schema_name"$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
-		"name", "value",
+		"name", "signature", "return_type", "body",
 	}).AddRow(
-		"SIGNATURE", "(VAL VARCHAR)",
-	).AddRow(
-		"RETURN_TYPE", "VARCHAR(16777216)",
-	).AddRow(
-		"BODY", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end",
+		"policy_name", "(VAL VARCHAR)", "VARCHAR(16777216)", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end",
 	)
 	mock.ExpectQuery(`^DESCRIBE MASKING POLICY "database_name"."schema_name"."policy_name"$`).WillReturnRows(descRows)
 }
@@ -85,30 +80,5 @@ func TestMaskingPolicyDelete(t *testing.T) {
 		mock.ExpectExec(`^DROP MASKING POLICY "database_name"."schema_name"."policy_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteMaskingPolicy(d, db)
 		r.NoError(err)
-	})
-}
-
-func TestMaskingPolicyRead(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name":               "policy_name",
-		"database":           "database_name",
-		"schema":             "schema_name",
-		"comment":            "great comment",
-		"value_data_type":    "string",
-		"masking_expression": "case when current_role() in ('ANALYST') then val else sha2(val, 512) end",
-		"return_data_type":   "string",
-	}
-	d := maskingPolicy(t, "database_name|schema_name|policy_name", in)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when resource is not found, checking if state will be empty
-		r.NotEmpty(d.State())
-		q := snowflake.MaskingPolicy("policy_name", "database_name", "schema_name").ShowAllMaskingPolicies()
-		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
-		err := resources.ReadMaskingPolicy(d, db)
-		r.Empty(d.State())
-		r.Nil(err)
 	})
 }

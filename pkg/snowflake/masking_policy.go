@@ -126,10 +126,9 @@ func (mpb *MaskingPolicyBuilder) Drop() string {
 	return fmt.Sprintf(`DROP MASKING POLICY %v`, mpb.QualifiedName())
 }
 
-// ShowAllMaskingPolicies returns the SQL query that will SHOW *all* masking policies in the Snowflake account
-// Snowflake's implementation of SHOW for masking policies does *not* support limiting results with LIKE
-func (mpb *MaskingPolicyBuilder) ShowAllMaskingPolicies() string {
-	return `SHOW MASKING POLICIES`
+// Show returns the SQL query that will show a masking policy.
+func (mpb *MaskingPolicyBuilder) Show() string {
+	return fmt.Sprintf(`SHOW MASKING POLICIES LIKE '%v' IN SCHEMA "%v"."%v"`, mpb.name, mpb.db, mpb.schema)
 }
 
 type MaskingPolicyStruct struct {
@@ -142,17 +141,8 @@ type MaskingPolicyStruct struct {
 	Comment      sql.NullString `db:"comment"`
 }
 
-// ScanMaskingPolicies takes database rows and converts them to a list of MaskingPolicyStruct pointers
-func ScanMaskingPolicies(rows *sqlx.Rows) ([]*MaskingPolicyStruct, error) {
-	var m []*MaskingPolicyStruct
-
-	for rows.Next() {
-		r := &MaskingPolicyStruct{}
-		err := rows.StructScan(r)
-		if err != nil {
-			return nil, err
-		}
-		m = append(m, r)
-	}
-	return m, nil
+func ScanMaskingPolicies(row *sqlx.Row) (*MaskingPolicyStruct, error) {
+	m := &MaskingPolicyStruct{}
+	err := row.StructScan(m)
+	return m, err
 }
