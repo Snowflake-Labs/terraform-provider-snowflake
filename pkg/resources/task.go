@@ -1,14 +1,21 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+)
+
+const (
+	taskIDDelimiter = '|'
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -80,6 +87,27 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
 		ForceNew:    false,
 	},
+}
+
+type taskID struct {
+	DatabaseName string
+	SchemaName   string
+	TaskName     string
+}
+
+//String() takes in a taskID object and returns a pipe-delimited string:
+//DatabaseName|SchemaName|TaskName
+func (t *taskID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = taskIDDelimiter
+	dataIdentifiers := [][]string{{t.DatabaseName, t.SchemaName, t.TaskName}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strTaskID := strings.TrimSpace(buf.String())
+	return strTaskID, nil
 }
 
 // difference find keys in a but not in b
@@ -174,6 +202,31 @@ func resumeTask(root *snowflake.TaskBuilder, meta interface{}) {
 	}
 }
 
+// taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
+// and returns a taskID object
+func taskIDFromString(stringID string) (*taskID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = pipeIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per task")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	taskResult := &taskID{
+		DatabaseName: lines[0][0],
+		SchemaName:   lines[0][1],
+		TaskName:     lines[0][2],
+	}
+	return taskResult, nil
+}
+
 // Task returns a pointer to the resource representing a task
 func Task() *schema.Resource {
 	return &schema.Resource{
@@ -192,14 +245,14 @@ func Task() *schema.Resource {
 // ReadTask implements schema.ReadFunc
 func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := idFromString(d.Id())
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	database := taskID.Database
-	schema := taskID.Schema
-	name := taskID.Name
+	database := taskID.DatabaseName
+	schema := taskID.SchemaName
+	name := taskID.TaskName
 
 	builder := snowflake.Task(name, database, schema)
 	q := builder.Show()
@@ -358,12 +411,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	id := &schemaScopedID{
-		Database: database,
-		Schema:   dbSchema,
-		Name:     name,
+	taskID := &taskID{
+		DatabaseName: database,
+		SchemaName:   dbSchema,
+		TaskName:     name,
 	}
-	dataIDInput, err := id.String()
+	dataIDInput, err := taskID.String()
 	if err != nil {
 		return err
 	}
@@ -374,15 +427,15 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTask implements schema.UpdateFunc
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
-	taskID, err := idFromString(d.Id())
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
 	db := meta.(*sql.DB)
-	database := taskID.Database
-	dbSchema := taskID.Schema
-	name := taskID.Name
+	database := taskID.DatabaseName
+	dbSchema := taskID.SchemaName
+	name := taskID.TaskName
 	builder := snowflake.Task(name, database, dbSchema)
 
 	root, err := getActiveRootTaskAndSuspend(d, meta)
@@ -556,14 +609,14 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 // DeleteTask implements schema.DeleteFunc
 func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := idFromString(d.Id())
+	taskID, err := taskIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	database := taskID.Database
-	schema := taskID.Schema
-	name := taskID.Name
+	database := taskID.DatabaseName
+	schema := taskID.SchemaName
+	name := taskID.TaskName
 
 	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
@@ -589,14 +642,14 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 // TaskExists implements schema.ExistsFunc
 func TaskExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	taskID, err := idFromString(data.Id())
+	taskID, err := taskIDFromString(data.Id())
 	if err != nil {
 		return false, err
 	}
 
-	database := taskID.Database
-	schema := taskID.Schema
-	name := taskID.Name
+	database := taskID.DatabaseName
+	schema := taskID.SchemaName
+	name := taskID.TaskName
 
 	q := snowflake.Task(name, database, schema).Show()
 	rows, err := db.Query(q)
