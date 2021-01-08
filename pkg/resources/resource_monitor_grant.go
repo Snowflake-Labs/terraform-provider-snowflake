@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validResourceMonitorPrivileges = NewPrivilegeSet(
@@ -23,7 +23,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the resource monitor.",
 		Default:      "MONITOR",
-		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.ToList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validResourceMonitorPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

@@ -1,10 +1,7 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
 	"strings"
 
@@ -13,10 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-)
-
-const (
-	schemaIDDelimiter = '|'
 )
 
 var schemaSchema = map[string]*schema.Schema{
@@ -57,50 +50,6 @@ var schemaSchema = map[string]*schema.Schema{
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(0, 90),
 	},
-}
-
-type schemaID struct {
-	DatabaseName string
-	SchemaName   string
-}
-
-// String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|schemaName
-func (si *schemaID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = schemaIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strSchemaID := strings.TrimSpace(buf.String())
-	return strSchemaID, nil
-}
-
-// schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
-// and returns a schemaID object
-func schemaIDFromString(stringID string) (*schemaID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = schemaIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per schema")
-	}
-	if len(lines[0]) != 2 {
-		return nil, fmt.Errorf("2 fields allowed")
-	}
-
-	schemaResult := &schemaID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-	}
-	return schemaResult, nil
 }
 
 // Schema returns a pointer to the resource representing a schema
@@ -151,8 +100,8 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	schemaID := &schemaID{
-		DatabaseName: database,
-		SchemaName:   name,
+		Database: database,
+		Name:     name,
 	}
 	dataIDInput, err := schemaID.String()
 	if err != nil {
@@ -171,8 +120,8 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
 	row := snowflake.QueryRow(db, q)
@@ -246,8 +195,8 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	builder := snowflake.Schema(schema).WithDB(dbName)
 
@@ -297,8 +246,8 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Drop()
 
@@ -315,13 +264,13 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 // SchemaExists implements schema.ExistsFunc
 func SchemaExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(data.Id())
+	schemaID, err := idFromString(data.Id())
 	if err != nil {
 		return false, err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := schemaID.Database
+	schema := schemaID.Name
 
 	q := snowflake.Schema(schema).WithDB(dbName).Show()
 	rows, err := db.Query(q)

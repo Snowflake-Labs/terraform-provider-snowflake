@@ -9,7 +9,7 @@ resource snowflake_user user {
   first_name   = "Snowflake"
   last_name    = "User"
 
-  default_warehouse = "warehosue"
+  default_warehouse = "warehouse"
   default_role      = "role1"
 
   rsa_public_key   = "..."

@@ -2,6 +2,10 @@ package validation
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -54,4 +58,23 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	}
 
 	return
+}
+
+// ValidatePrivilege validates the privilege is in the authorized set.
+// Will also check for the ALL privilege and hopefully provide a helpful error message.
+func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		v, ok := i.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return warnings, errors
+		}
+
+		if v == "ALL" || (ignoreCase && strings.ToUpper(v) == "ALL") {
+			errors = append(errors, fmt.Errorf("the ALL privilege is deprecated, see https://github.com/chanzuckerberg/terraform-provider-snowflake/discussions/318"))
+			return warnings, errors
+		}
+
+		return validation.StringInSlice(valid, ignoreCase)(i, k)
+	}
 }
