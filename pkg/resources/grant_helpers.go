@@ -67,18 +67,16 @@ type grant struct {
 	GrantOption bool
 }
 
-func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+// createGenericGrantRolesAndShares will create generic grants for a set of roles and shares
+func createGenericGrantRolesAndShares(
+	meta interface{},
+	builder snowflake.GrantBuilder,
+	priv string,
+	grantOption bool,
+	roles []string,
+	shares []string,
+) error {
 	db := meta.(*sql.DB)
-
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
-
-	roles, shares := expandRolesAndShares(d)
-
-	if len(roles)+len(shares) == 0 {
-		return fmt.Errorf("no roles or shares specified for this grant")
-	}
-
 	for _, role := range roles {
 		err := snowflake.Exec(db, builder.Role(role).Grant(priv, grantOption))
 		if err != nil {
@@ -92,8 +90,22 @@ func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowfl
 			return err
 		}
 	}
-
 	return nil
+}
+
+func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
+	roles, shares := expandRolesAndShares(d)
+
+	return createGenericGrantRolesAndShares(
+		meta,
+		builder,
+		priv,
+		grantOption,
+		roles,
+		shares,
+	)
 }
 
 func readGenericGrant(
@@ -264,19 +276,16 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 	return grants, nil
 }
 
-func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+// Deletes specific roles and shares from a grant
+// Does not modify TF remote state
+func deleteGenericGrantRolesAndShares(
+	meta interface{},
+	builder snowflake.GrantBuilder,
+	priv string,
+	roles []string,
+	shares []string,
+) error {
 	db := meta.(*sql.DB)
-
-	priv := d.Get("privilege").(string)
-
-	var roles, shares []string
-	if _, ok := d.GetOk("roles"); ok {
-		roles = expandStringList(d.Get("roles").(*schema.Set).List())
-	}
-
-	if _, ok := d.GetOk("shares"); ok {
-		shares = expandStringList(d.Get("shares").(*schema.Set).List())
-	}
 
 	for _, role := range roles {
 		err := snowflake.Exec(db, builder.Role(role).Revoke(priv))
@@ -291,7 +300,16 @@ func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowfl
 			return err
 		}
 	}
+	return nil
+}
 
+func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
+	priv := d.Get("privilege").(string)
+	roles, shares := expandRolesAndShares(d)
+	err := deleteGenericGrantRolesAndShares(meta, builder, priv, roles, shares)
+	if err != nil {
+		return err
+	}
 	d.SetId("")
 	return nil
 }
