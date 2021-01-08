@@ -85,14 +85,6 @@ jobs:
           body: |
             Integration tests ran for [${{ github.event.client_payload.slash_command.args.named.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
 
-      - name: create comment
-        if: (${{ failure() }} || ${{ cancelled() }} || ${{ success() }}) && ${{ steps.fc.outputs.comment-id == 0 }} && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.client_payload.pull_request.number }}
-          body: |
-            Integration tests ran for [${{ github.event.pull_request.head.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
-
       - name: update comment
         if: (${{ failure() }} || ${{ cancelled() }} || ${{ success() }}) && ${{ steps.fc.outputs.comment-id != 0 }} && github.event_name == 'repository_dispatch'
         uses: peter-evans/create-or-update-comment@v1
@@ -100,14 +92,6 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           body: |
             Integration tests ran for [${{ github.event.client_payload.slash_command.args.named.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
-
-      - name: update comment
-        if: (${{ failure() }} || ${{ cancelled() }} || ${{ success() }}) && ${{ steps.fc.outputs.comment-id != 0 }} && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          body: |
-            Integration tests ran for [${{ github.event.pull_request.head.sha }}](https://github.com/chanzuckerberg/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
 
       - name: set fork job status
         uses: actions/github-script@v3
