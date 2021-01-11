@@ -1,12 +1,19 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
+	"fmt"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+)
+
+const (
+	maskingPolicyIDDelimiter = '|'
 )
 
 var maskingPolicySchema = map[string]*schema.Schema{
@@ -53,6 +60,52 @@ var maskingPolicySchema = map[string]*schema.Schema{
 	},
 }
 
+type maskingPolicyID struct {
+	DatabaseName      string
+	SchemaName        string
+	MaskingPolicyName string
+}
+
+// String() takes in a maskingPolicyID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|MaskingPolicyName
+func (mpi *maskingPolicyID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = maskingPolicyIDDelimiter
+	dataIdentifiers := [][]string{{mpi.DatabaseName, mpi.SchemaName, mpi.MaskingPolicyName}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strMaskingPolicyID := strings.TrimSpace(buf.String())
+	return strMaskingPolicyID, nil
+}
+
+/// maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
+// and returns a maskingPolicyID object
+func maskingPolicyIDFromString(stringID string) (*maskingPolicyID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = maskingPolicyIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per masking policy")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	maskingPolicyResult := &maskingPolicyID{
+		DatabaseName:      lines[0][0],
+		SchemaName:        lines[0][1],
+		MaskingPolicyName: lines[0][2],
+	}
+	return maskingPolicyResult, nil
+}
+
 // MaskingPolicy returns a pointer to the resource representing a masking policy
 func MaskingPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -95,10 +148,10 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating masking policy %v", name)
 	}
 
-	maskingPolicyID := &schemaScopedID{
-		Database: database,
-		Schema:   schema,
-		Name:     name,
+	maskingPolicyID := &maskingPolicyID{
+		DatabaseName:      database,
+		SchemaName:        schema,
+		MaskingPolicyName: name,
 	}
 	dataIDInput, err := maskingPolicyID.String()
 	if err != nil {
@@ -112,14 +165,14 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // ReadMaskingPolicy implements schema.ReadFunc
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	maskingPolicyID, err := idFromString(d.Id())
+	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := maskingPolicyID.Database
-	schema := maskingPolicyID.Schema
-	policyName := maskingPolicyID.Name
+	dbName := maskingPolicyID.DatabaseName
+	schema := maskingPolicyID.SchemaName
+	policyName := maskingPolicyID.MaskingPolicyName
 
 	builder := snowflake.MaskingPolicy(policyName, dbName, schema)
 
@@ -195,14 +248,14 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	maskingPolicyID, err := idFromString(d.Id())
+	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := maskingPolicyID.Database
-	schema := maskingPolicyID.Schema
-	policyName := maskingPolicyID.Name
+	dbName := maskingPolicyID.DatabaseName
+	schema := maskingPolicyID.SchemaName
+	policyName := maskingPolicyID.MaskingPolicyName
 
 	builder := snowflake.MaskingPolicy(policyName, dbName, schema)
 
@@ -238,14 +291,14 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // DeleteMaskingPolicy implements schema.DeleteFunc
 func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	maskingPolicyID, err := idFromString(d.Id())
+	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := maskingPolicyID.Database
-	schema := maskingPolicyID.Schema
-	policyName := maskingPolicyID.Name
+	dbName := maskingPolicyID.DatabaseName
+	schema := maskingPolicyID.SchemaName
+	policyName := maskingPolicyID.MaskingPolicyName
 
 	q := snowflake.MaskingPolicy(policyName, dbName, schema).Drop()
 
