@@ -55,7 +55,6 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
@@ -88,6 +87,7 @@ func SchemaGrant() *TerraformGrantResource {
 			Create: CreateSchemaGrant,
 			Read:   ReadSchemaGrant,
 			Delete: DeleteSchemaGrant,
+			Update: UpdateSchemaGrant,
 
 			Schema: schemaGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -139,6 +139,69 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(dataIDInput)
 
+	return ReadSchemaGrant(d, meta)
+}
+
+// UpdateSchemaGrant implements schema.UpdateFunc
+func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	// difference calculates roles/shares to add/revoke
+	difference := func(key string) (toAdd []string, toRevoke []string) {
+		old, new := d.GetChange("roles")
+		oldSet := old.(*schema.Set)
+		newSet := new.(*schema.Set)
+		toAdd = expandStringList(newSet.Difference(oldSet).List())
+		toRevoke = expandStringList(oldSet.Difference(newSet).List())
+		return
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = difference("roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = difference("shares")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	onFuture := d.Get("on_future").(bool)
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if onFuture {
+		builder = snowflake.FutureSchemaGrant(dbName)
+	} else {
+		builder = snowflake.SchemaGrant(dbName, schemaName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
 	return ReadSchemaGrant(d, meta)
 }
 

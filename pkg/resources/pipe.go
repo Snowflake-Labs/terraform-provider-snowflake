@@ -1,13 +1,20 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+)
+
+const (
+	pipeIDDelimiter = '|'
 )
 
 var pipeSchema = map[string]*schema.Schema{
@@ -88,6 +95,52 @@ func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) b
 	return strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n")
 }
 
+type pipeID struct {
+	DatabaseName string
+	SchemaName   string
+	PipeName     string
+}
+
+//String() takes in a pipeID object and returns a pipe-delimited string:
+//DatabaseName|SchemaName|PipeName
+func (si *pipeID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = pipeIDDelimiter
+	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.PipeName}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strPipeID := strings.TrimSpace(buf.String())
+	return strPipeID, nil
+}
+
+// pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
+// and returns a pipeID object
+func pipeIDFromString(stringID string) (*pipeID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = pipeIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per pipe")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	pipeResult := &pipeID{
+		DatabaseName: lines[0][0],
+		SchemaName:   lines[0][1],
+		PipeName:     lines[0][2],
+	}
+	return pipeResult, nil
+}
+
 // CreatePipe implements schema.CreateFunc
 func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -121,10 +174,10 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating pipe %v", name)
 	}
 
-	pipeID := &schemaScopedID{
-		Database: database,
-		Schema:   schema,
-		Name:     name,
+	pipeID := &pipeID{
+		DatabaseName: database,
+		SchemaName:   schema,
+		PipeName:     name,
 	}
 	dataIDInput, err := pipeID.String()
 	if err != nil {
@@ -138,14 +191,14 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 // ReadPipe implements schema.ReadFunc
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := idFromString(d.Id())
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := pipeID.Database
-	schema := pipeID.Schema
-	name := pipeID.Name
+	dbName := pipeID.DatabaseName
+	schema := pipeID.SchemaName
+	name := pipeID.PipeName
 
 	sq := snowflake.Pipe(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
@@ -210,14 +263,14 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePipe implements schema.UpdateFunc
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
-	pipeID, err := idFromString(d.Id())
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := pipeID.Database
-	schema := pipeID.Schema
-	pipe := pipeID.Name
+	dbName := pipeID.DatabaseName
+	schema := pipeID.SchemaName
+	pipe := pipeID.PipeName
 
 	builder := snowflake.Pipe(pipe, dbName, schema)
 
@@ -237,14 +290,14 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 // DeletePipe implements schema.DeleteFunc
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := idFromString(d.Id())
+	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := pipeID.Database
-	schema := pipeID.Schema
-	pipe := pipeID.Name
+	dbName := pipeID.DatabaseName
+	schema := pipeID.SchemaName
+	pipe := pipeID.PipeName
 
 	q := snowflake.Pipe(pipe, dbName, schema).Drop()
 
@@ -261,14 +314,14 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 // PipeExists implements schema.ExistsFunc
 func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	pipeID, err := idFromString(data.Id())
+	pipeID, err := pipeIDFromString(data.Id())
 	if err != nil {
 		return false, err
 	}
 
-	dbName := pipeID.Database
-	schema := pipeID.Schema
-	pipe := pipeID.Name
+	dbName := pipeID.DatabaseName
+	schema := pipeID.SchemaName
+	pipe := pipeID.PipeName
 
 	q := snowflake.Pipe(pipe, dbName, schema).Show()
 	rows, err := db.Query(q)
