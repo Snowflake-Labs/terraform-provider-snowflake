@@ -97,6 +97,14 @@ func managedAccount(t *testing.T, id string, params map[string]interface{}) *sch
 	return d
 }
 
+func maskingPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaskingPolicy().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func networkPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.NetworkPolicy().Schema, params)
