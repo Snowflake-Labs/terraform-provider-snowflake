@@ -88,7 +88,7 @@ jobs:
 
       - name: set fork job status
         uses: actions/github-script@v3
-        if: github.event_name == 'repository_dispatch'
+        if: ${{ always() }}
         id: update-check-run
         env:
           number: ${{ github.event.client_payload.pull_request.number }}
@@ -96,9 +96,15 @@ jobs:
           # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
           conclusion: ${{ job.status }}
           sha: ${{ github.event.client_payload.slash_command.args.named.sha }}
+          event_name: ${{ github.event_name }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            if (process.env.event_name !== 'repository_dispatch') {
+              console.log("Not repository_dispatch... nothing to do!");
+              return process.env.event_name;
+            }
+
             const ref = process.env.sha;
 
             const { data: checks } = await github.checks.listForRef({
