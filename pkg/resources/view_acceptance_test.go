@@ -57,6 +57,7 @@ resource "snowflake_view" "test" {
 	name      = "%v"
 	comment   = "Terraform test resource"
 	database  = snowflake_database.test.name
+	schema    = "PUBLIC"
 	is_secure = true
 	or_replace = false
 	statement = "%s"
