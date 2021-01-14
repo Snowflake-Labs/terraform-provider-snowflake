@@ -139,7 +139,6 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
-	fmt.Println(err)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
