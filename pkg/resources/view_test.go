@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -26,6 +27,7 @@ func TestViewCreate(t *testing.T) {
 	in := map[string]interface{}{
 		"name":      "good_name",
 		"database":  "test_db",
+		"schema":    "test_schema",
 		"comment":   "great comment",
 		"statement": "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
 		"is_secure": true,
@@ -35,7 +37,7 @@ func TestViewCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURE VIEW "test_db"."PUBLIC"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -49,6 +51,7 @@ func TestViewCreateOrReplace(t *testing.T) {
 	in := map[string]interface{}{
 		"name":       "good_name",
 		"database":   "test_db",
+		"schema":     "test_schema",
 		"comment":    "great comment",
 		"statement":  "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'",
 		"is_secure":  true,
@@ -59,7 +62,7 @@ func TestViewCreateOrReplace(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE OR REPLACE SECURE VIEW "test_db"."PUBLIC"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+			`^CREATE OR REPLACE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -73,6 +76,7 @@ func TestViewCreateAmpersand(t *testing.T) {
 	in := map[string]interface{}{
 		"name":      "good_name",
 		"database":  "test_db",
+		"schema":    "test_schema",
 		"comment":   "great comment",
 		"statement": "SELECT * FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'",
 		"is_secure": true,
@@ -82,7 +86,7 @@ func TestViewCreateAmpersand(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURE VIEW "test_db"."PUBLIC"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
+			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -94,8 +98,8 @@ func TestViewCreateAmpersand(t *testing.T) {
 func expectReadView(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure", "is_materialized"},
-	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "test_db", "GREAT_SCHEMA", "admin", "great comment", "SELECT * FROM test_db.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true, false)
-	mock.ExpectQuery(`^SHOW VIEWS LIKE 'good_name' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "test_db", "test_schema", "admin", "great comment", "SELECT * FROM test_db.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true, false)
+	mock.ExpectQuery(`^SHOW VIEWS LIKE 'good_name' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 
 func TestDiffSuppressStatement(t *testing.T) {
@@ -132,12 +136,13 @@ func TestViewRead(t *testing.T) {
 		"schema":   "test_schema",
 	}
 
-	d := view(t, "test_db|schema_name|good_name", in)
+	d := view(t, "test_db|test_schema|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
 		q := snowflake.View("good_name").WithDB("test_db").WithSchema("test_schema").Show()
+		fmt.Println(q)
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadView(d, db)
 		r.Empty(d.State())
