@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -20,13 +21,12 @@ type ViewBuilder struct {
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
-func (vb *ViewBuilder) QualifiedName() string {
-	// should not happen since this is enforced by view resource schema
+func (vb *ViewBuilder) QualifiedName() (string, error) {
 	if vb.db == "" || vb.schema == "" {
-		panic("Views must specify a database and a schema") //nolint
+		return "", errors.New("Views must specify a database and a schema")
 	}
 
-	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name)
+	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name), nil
 }
 
 // WithComment adds a comment to the ViewBuilder
@@ -83,7 +83,7 @@ func View(name string) *ViewBuilder {
 }
 
 // Create returns the SQL query that will create a new view.
-func (vb *ViewBuilder) Create() string {
+func (vb *ViewBuilder) Create() (string, error) {
 	var q strings.Builder
 
 	q.WriteString("CREATE")
@@ -96,7 +96,12 @@ func (vb *ViewBuilder) Create() string {
 		q.WriteString(" SECURE")
 	}
 
-	q.WriteString(fmt.Sprintf(` VIEW %v`, vb.QualifiedName()))
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+
+	q.WriteString(fmt.Sprintf(` VIEW %v`, qn))
 
 	if vb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(vb.comment)))
@@ -104,38 +109,63 @@ func (vb *ViewBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(" AS %v", vb.statement))
 
-	return q.String()
+	return q.String(), nil
 }
 
 // Rename returns the SQL query that will rename the view.
-func (vb *ViewBuilder) Rename(newName string) string {
-	oldName := vb.QualifiedName()
+func (vb *ViewBuilder) Rename(newName string) (string, error) {
+	oldName, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
 	vb.name = newName
-	return fmt.Sprintf(`ALTER VIEW %v RENAME TO %v`, oldName, vb.QualifiedName())
+
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER VIEW %v RENAME TO %v`, oldName, qn), nil
 }
 
 // Secure returns the SQL query that will change the view to a secure view.
-func (vb *ViewBuilder) Secure() string {
-	return fmt.Sprintf(`ALTER VIEW %v SET SECURE`, vb.QualifiedName())
+func (vb *ViewBuilder) Secure() (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER VIEW %v SET SECURE`, qn), nil
 }
 
 // Unsecure returns the SQL query that will change the view to a normal (unsecured) view.
-func (vb *ViewBuilder) Unsecure() string {
-	return fmt.Sprintf(`ALTER VIEW %v UNSET SECURE`, vb.QualifiedName())
+func (vb *ViewBuilder) Unsecure() (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER VIEW %v UNSET SECURE`, qn), nil
 }
 
 // ChangeComment returns the SQL query that will update the comment on the view.
 // Note that comment is the only parameter, if more are released this should be
 // abstracted as per the generic builder.
-func (vb *ViewBuilder) ChangeComment(c string) string {
-	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, vb.QualifiedName(), EscapeString(c))
+func (vb *ViewBuilder) ChangeComment(c string) (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, qn, EscapeString(c)), nil
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the view.
 // Note that comment is the only parameter, if more are released this should be
 // abstracted as per the generic builder.
-func (vb *ViewBuilder) RemoveComment() string {
-	return fmt.Sprintf(`ALTER VIEW %v UNSET COMMENT`, vb.QualifiedName())
+func (vb *ViewBuilder) RemoveComment() (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER VIEW %v UNSET COMMENT`, qn), nil
 }
 
 // Show returns the SQL query that will show the row representing this view.
@@ -144,8 +174,12 @@ func (vb *ViewBuilder) Show() string {
 }
 
 // Drop returns the SQL query that will drop the row representing this view.
-func (vb *ViewBuilder) Drop() string {
-	return fmt.Sprintf(`DROP VIEW %v`, vb.QualifiedName())
+func (vb *ViewBuilder) Drop() (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`DROP VIEW %v`, qn), nil
 }
 
 type view struct {
