@@ -28,7 +28,7 @@ var viewSchema = map[string]*schema.Schema{
 	},
 	"schema": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Default:     "PUBLIC",
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
@@ -116,7 +116,6 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-	log.Print("[DEBUG] xxx ", q)
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)

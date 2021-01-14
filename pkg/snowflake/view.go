@@ -21,23 +21,12 @@ type ViewBuilder struct {
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
 func (vb *ViewBuilder) QualifiedName() string {
-	var n strings.Builder
-
-	if vb.db != "" && vb.schema != "" {
-		n.WriteString(fmt.Sprintf(`"%v"."%v".`, vb.db, vb.schema))
+	// should not happen since this is enforced by view resource schema
+	if vb.db == "" || vb.schema == "" {
+		panic("Views must specify a database and a schema")
 	}
 
-	if vb.db != "" && vb.schema == "" {
-		n.WriteString(fmt.Sprintf(`"%v"..`, vb.db))
-	}
-
-	if vb.db == "" && vb.schema != "" {
-		n.WriteString(fmt.Sprintf(`"%v".`, vb.schema))
-	}
-
-	n.WriteString(fmt.Sprintf(`"%v"`, vb.name))
-
-	return n.String()
+	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name)
 }
 
 // WithComment adds a comment to the ViewBuilder
@@ -151,10 +140,7 @@ func (vb *ViewBuilder) RemoveComment() string {
 
 // Show returns the SQL query that will show the row representing this view.
 func (vb *ViewBuilder) Show() string {
-	if vb.db == "" {
-		return fmt.Sprintf(`SHOW VIEWS LIKE '%v'`, vb.name)
-	}
-	return fmt.Sprintf(`SHOW VIEWS LIKE '%v' IN DATABASE "%v"`, vb.name, vb.db)
+	return fmt.Sprintf(`SHOW VIEWS LIKE '%v' IN SCHEMA "%v"."%v"`, vb.name, vb.db, vb.schema)
 }
 
 // Drop returns the SQL query that will drop the row representing this view.

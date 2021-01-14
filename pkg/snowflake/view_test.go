@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,10 +9,14 @@ import (
 
 func TestView(t *testing.T) {
 	r := require.New(t)
-	v := View("test")
+	db := "some_database"
+	schema := "some_schema"
+	view := "test"
+
+	v := View(view).WithDB(db).WithSchema(schema)
 	r.NotNil(v)
 	r.False(v.secure)
-	r.Equal(v.QualifiedName(), `"test"`)
+	r.Equal(v.QualifiedName(), fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view))
 
 	v.WithSecure()
 	r.True(v.secure)
@@ -23,69 +28,60 @@ func TestView(t *testing.T) {
 	v.WithStatement("SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1")
 
 	q := v.Create()
-	r.Equal(`CREATE SECURE VIEW "test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "some_database"."some_schema"."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q = v.Secure()
-	r.Equal(`ALTER VIEW "test" SET SECURE`, q)
+	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" SET SECURE`, q)
 
 	q = v.Unsecure()
-	r.Equal(`ALTER VIEW "test" UNSET SECURE`, q)
+	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" UNSET SECURE`, q)
 
 	q = v.ChangeComment("bad' comment")
-	r.Equal(`ALTER VIEW "test" SET COMMENT = 'bad\' comment'`, q)
+	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" SET COMMENT = 'bad\' comment'`, q)
 
 	q = v.RemoveComment()
-	r.Equal(`ALTER VIEW "test" UNSET COMMENT`, q)
+	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" UNSET COMMENT`, q)
 
 	q = v.Drop()
-	r.Equal(`DROP VIEW "test"`, q)
+	r.Equal(`DROP VIEW "some_database"."some_schema"."test"`, q)
 
 	q = v.Show()
-	r.Equal(`SHOW VIEWS LIKE 'test'`, q)
+	r.Equal(`SHOW VIEWS LIKE 'test' IN SCHEMA "some_database"."some_schema"`, q)
 
 	v.WithDB("mydb")
-	r.Equal(v.QualifiedName(), `"mydb".."test"`)
+	r.Equal(v.QualifiedName(), `"mydb"."some_schema"."test"`)
 
 	q = v.Create()
-	r.Equal(`CREATE SECURE VIEW "mydb".."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "mydb"."some_schema"."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q = v.Secure()
-	r.Equal(`ALTER VIEW "mydb".."test" SET SECURE`, q)
+	r.Equal(`ALTER VIEW "mydb"."some_schema"."test" SET SECURE`, q)
 
 	q = v.Show()
-	r.Equal(`SHOW VIEWS LIKE 'test' IN DATABASE "mydb"`, q)
+	r.Equal(`SHOW VIEWS LIKE 'test' IN SCHEMA "mydb"."some_schema"`, q)
 
 	q = v.Drop()
-	r.Equal(`DROP VIEW "mydb".."test"`, q) // FIXME invalid query
+	r.Equal(`DROP VIEW "mydb"."some_schema"."test"`, q)
 }
 
 func TestQualifiedName(t *testing.T) {
 	r := require.New(t)
-	v := View("view")
-	r.Equal(v.QualifiedName(), `"view"`)
-
-	v = View("view").WithDB("db")
-	r.Equal(v.QualifiedName(), `"db".."view"`)
-
-	v = View("view").WithSchema("schema")
-	r.Equal(v.QualifiedName(), `"schema"."view"`)
-
-	v = View("view").WithDB("db").WithSchema("schema")
+	v := View("view").WithDB("db").WithSchema("schema")
 	r.Equal(v.QualifiedName(), `"db"."schema"."view"`)
 }
 
 func TestRename(t *testing.T) {
 	r := require.New(t)
-	v := View("test")
+	v := View("test").WithDB("db").WithSchema("schema")
 
 	q := v.Rename("test2")
-	r.Equal(`ALTER VIEW "test" RENAME TO "test2"`, q)
+	r.Equal(`ALTER VIEW "db"."schema"."test" RENAME TO "db"."schema"."test2"`, q)
 
 	v.WithDB("testDB")
 	q = v.Rename("test3")
-	r.Equal(`ALTER VIEW "testDB".."test2" RENAME TO "testDB".."test3"`, q)
+	r.Equal(`ALTER VIEW "testDB"."schema"."test2" RENAME TO "testDB"."schema"."test3"`, q)
 
-	v = View("test4").WithSchema("testSchema")
+	v = View("test4").WithDB("db").WithSchema("testSchema")
 	q = v.Rename("test5")
-	r.Equal(`ALTER VIEW "testSchema"."test4" RENAME TO "testSchema"."test5"`, q)
+	r.Equal(`ALTER VIEW "db"."testSchema"."test4" RENAME TO "db"."testSchema"."test5"`, q)
 }
