@@ -29,7 +29,6 @@ var viewSchema = map[string]*schema.Schema{
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Default:     "PUBLIC",
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},
@@ -137,6 +136,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
+	fmt.Println(err)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())

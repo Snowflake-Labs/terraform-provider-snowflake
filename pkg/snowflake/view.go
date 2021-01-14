@@ -23,7 +23,7 @@ type ViewBuilder struct {
 func (vb *ViewBuilder) QualifiedName() string {
 	// should not happen since this is enforced by view resource schema
 	if vb.db == "" || vb.schema == "" {
-		panic("Views must specify a database and a schema")
+		panic("Views must specify a database and a schema") //nolint
 	}
 
 	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name)
