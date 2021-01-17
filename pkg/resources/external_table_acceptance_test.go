@@ -17,13 +17,10 @@ func TestAccExternalTable(t *testing.T) {
 			{
 				Config: externalTableConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "auto_refresh", "false"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "file_format", "format"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "location", "location"),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "comment", "Terraform acceptance test"),
 				),
 			},
 		},
@@ -51,8 +48,8 @@ resource "snowflake_stage" "test" {
 }
 
 resource "snowflake_external_table" "test_table" {
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
+	database = snowflake_database.test.name
+	schema   = snowflake_schema.test.name
 	name     = "%v"
 	comment  = "Terraform acceptance test"
 	column {
