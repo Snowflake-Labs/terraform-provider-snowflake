@@ -114,6 +114,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_storage_integration":       resources.StorageIntegration(),
 		"snowflake_stream":                    resources.Stream(),
 		"snowflake_table":                     resources.Table(),
+		"snowflake_external_table":            resources.ExternalTable(),
 		"snowflake_task":                      resources.Task(),
 		"snowflake_user":                      resources.User(),
 		"snowflake_view":                      resources.View(),

@@ -192,6 +192,14 @@ func table(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 	return d
 }
 
+func externalTable(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalTable().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func task(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Task().Schema, params)
