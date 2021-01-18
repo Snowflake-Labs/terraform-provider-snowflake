@@ -9,7 +9,26 @@ description: |-
 
 
 
+## Example Usage
 
+```terraform
+resource snowflake_external_table external_table {
+  database = "db"
+  schema   = "schema"
+  name     = "external_table"
+  comment  = "External table"
+
+  column {
+    name = "id"
+    type = "int"
+  }
+
+  column {
+    name = "data"
+    type = "text"
+  }
+}
+```
 
 ## Schema
 
@@ -45,4 +64,11 @@ Required:
 - **name** (String, Required) Column name
 - **type** (String, Required) Column type, e.g. VARIANT
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | external table name
+terraform import snowflake_external_table.example 'dbName|schemaName|externalTableName'
+```
