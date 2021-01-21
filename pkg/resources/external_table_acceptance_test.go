@@ -43,6 +43,7 @@ resource "snowflake_schema" "test" {
 
 resource "snowflake_stage" "test" {
 	name = "%v"
+	url = "s3://com.example.bucket/prefix"
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
 	comment = "Terraform acceptance test"
