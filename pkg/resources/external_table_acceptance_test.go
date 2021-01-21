@@ -56,12 +56,12 @@ resource "snowflake_external_table" "test_table" {
 	comment  = "Terraform acceptance test"
 	column {
 		name = "column1"
-		type = "VARIANT"
+		type = "TIMESTAMP_NTZ(9)"
     as = "($1:\"CreatedDate\"::timestamp)"
 	}
 	column {
 		name = "column2"
-		type = "VARCHAR"
+		type = "TIMESTAMP_NTZ(9)"
     as = "($1:\"CreatedDate\"::timestamp)"
 	}
   file_format = "TYPE = CSV"
