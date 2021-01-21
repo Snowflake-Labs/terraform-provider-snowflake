@@ -64,7 +64,7 @@ resource "snowflake_external_table" "test_table" {
 		type = "TIMESTAMP_NTZ(9)"
     as = "($1:\"CreatedDate\"::timestamp)"
 	}
-  file_format = "(TYPE = CSV)"
+  file_format = "TYPE = CSV"
   location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"
 }
 `
