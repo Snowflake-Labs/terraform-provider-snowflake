@@ -16,7 +16,7 @@ func TestAccExternalTable(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: externalTableConfig(accName, []string{}),
+				Config: externalTableConfig(accName, []string{"s3://foo/"}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "database", accName),
