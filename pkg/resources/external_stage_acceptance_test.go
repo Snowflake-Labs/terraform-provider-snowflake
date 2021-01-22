@@ -28,7 +28,6 @@ func TestAcc_ExternalStage(t *testing.T) {
 	})
 }
 
-// The defining feature of an external stage is the url that you provide when creating the stage
 func externalStageConfig(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
