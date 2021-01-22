@@ -16,7 +16,7 @@ func TestAccExternalTable(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: externalTableConfig(accName),
+				Config: externalTableConfig(accName, []string{}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "database", accName),
@@ -28,7 +28,7 @@ func TestAccExternalTable(t *testing.T) {
 	})
 }
 
-func externalTableConfig(name string) string {
+func externalTableConfig(name string, locations []string) string {
 	s := `
 resource "snowflake_database" "test" {
 	name = "%v"
@@ -47,6 +47,14 @@ resource "snowflake_stage" "test" {
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
 	comment = "Terraform acceptance test"
+	storage_integration = snowflake_storage_integration.i.name
+}
+
+resource "snowflake_storage_integration" "i" {
+	name = "%v"
+	storage_allowed_locations = %q
+	storage_provider = "S3"
+	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 }
 
 resource "snowflake_external_table" "test_table" {
@@ -68,5 +76,5 @@ resource "snowflake_external_table" "test_table" {
   location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"
 }
 `
-	return fmt.Sprintf(s, name, name, name, name)
+	return fmt.Sprintf(s, name, name, name, name, locations, name)
 }
