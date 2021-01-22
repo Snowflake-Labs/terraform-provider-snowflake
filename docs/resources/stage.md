@@ -47,7 +47,7 @@ resource "snowflake_stage_grant" "grant_example_stage" {
 - **file_format** (String, Optional) Specifies the file format for the stage.
 - **id** (String, Optional) The ID of this resource.
 - **snowflake_iam_user** (String, Optional)
-- **storage_integration** (String, Optional) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity. Required only if the storage location is private/protected; not required for public buckets/containers.
+- **storage_integration** (String, Optional) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
 - **url** (String, Optional) Specifies the URL for the stage.
 
 ## Import
