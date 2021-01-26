@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -187,6 +188,14 @@ func readGenericGrant(
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
 	if err != nil {
+		// HACK HACK: If the object doesn't exist or not authorized then we can assume someone deleted it
+		// We set the tf id == blank and return.
+		// I don't know of a better way to work around this issue
+		if strings.Contains(err.Error(), "does not exist or not authorized") {
+			log.Printf("[WARN] resource (%s) not found, removing from state file", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	priv := d.Get("privilege").(string)
