@@ -5,6 +5,7 @@ LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.12.29
+export SKIP_EXTERNAL_TABLE_TESTS=true
 
 go_test ?= -
 ifeq (, $(shell which gotest))
