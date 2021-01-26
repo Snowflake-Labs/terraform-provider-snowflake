@@ -37,6 +37,8 @@ const (
 	privilegeCreateMaterializedView Privilege = "CREATE MATERIALIZED VIEW"
 	privilegeCreateTemporaryTable   Privilege = "CREATE TEMPORARY TABLE"
 	privilegeCreateMaskingPolicy    Privilege = "CREATE MASKING POLICY"
+	privilegeCreateShare            Privilege = "CREATE SHARE"
+	privilegeImportShare            Privilege = "IMPORT SHARE"
 	privilegeAddSearchOptimization  Privilege = "ADD SEARCH OPTIMIZATION"
 	privilegeApplyMaskingPolicy     Privilege = "APPLY MASKING POLICY"
 
