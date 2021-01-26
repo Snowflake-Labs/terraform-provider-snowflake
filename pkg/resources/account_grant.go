@@ -17,6 +17,8 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegeMonitorExecution,
 	privilegeExecuteTask,
 	privilegeApplyMaskingPolicy,
+	privilegeCreateShare,
+	privilegeImportShare,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
