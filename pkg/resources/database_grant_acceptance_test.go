@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/pkg/errors"
 )
 
 func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(*terraform.State) error {
@@ -59,6 +60,36 @@ func TestAccDatabaseGrant_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccDatabaseGrant_roleNotExists(t *testing.T) {
+	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				// Note the DB we're trying to grant to doesn't exist
+				// This tests we don't error out, but do delete remote state
+				Config: fmt.Sprintf(`
+resource "snowflake_database_grant" "test" {
+	database_name = "%v"
+  roles         = ["%v"]
+}`, dbName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					func(state *terraform.State) error {
+						id := state.RootModule().Resources["snowflake_database_grant.test"].Primary.ID
+						if id != "" {
+							return errors.Errorf("Expected empty ID but got %s", id)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+
 }
 
 func databaseGrantConfig(db, role, share string) string {
