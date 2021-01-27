@@ -62,7 +62,7 @@ func TestAccDatabaseGrant_basic(t *testing.T) {
 }
 
 // TODO(el): fix this test
-// func TestAccDatabaseGrant_roleNotExists(t *testing.T) {
+// func TestAccDatabaseGrant_dbNotExists(t *testing.T) {
 // 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 // 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
