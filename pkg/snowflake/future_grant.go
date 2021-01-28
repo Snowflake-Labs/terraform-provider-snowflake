@@ -219,9 +219,11 @@ func (fge *FutureGrantExecutable) Grant(p string, w bool) string {
 }
 
 // Revoke returns the SQL that will revoke future privileges on the grant from the grantee
-func (fge *FutureGrantExecutable) Revoke(p string) string {
-	return fmt.Sprintf(`REVOKE %v ON FUTURE %vS IN %v %v FROM ROLE "%v"`,
-		p, fge.futureGrantType, fge.futureGrantTarget, fge.grantName, fge.granteeName)
+func (fge *FutureGrantExecutable) Revoke(p string) []string {
+	return []string{
+		fmt.Sprintf(`REVOKE %v ON FUTURE %vS IN %v %v FROM ROLE "%v"`,
+			p, fge.futureGrantType, fge.futureGrantTarget, fge.grantName, fge.granteeName),
+	}
 }
 
 // Show returns the SQL that will show all future grants on the schema

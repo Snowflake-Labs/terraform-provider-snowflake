@@ -364,14 +364,14 @@ func deleteGenericGrantRolesAndShares(
 	db := meta.(*sql.DB)
 
 	for _, role := range roles {
-		err := snowflake.Exec(db, builder.Role(role).Revoke(priv))
+		err := snowflake.ExecMulti(db, builder.Role(role).Revoke(priv))
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := snowflake.Exec(db, builder.Share(share).Revoke(priv))
+		err := snowflake.ExecMulti(db, builder.Share(share).Revoke(priv))
 		if err != nil {
 			return err
 		}

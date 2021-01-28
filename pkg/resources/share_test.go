@@ -36,7 +36,11 @@ func TestShareCreate(t *testing.T) {
 		mock.ExpectExec(`^CREATE DATABASE "TEMP_test-share_\d*"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT USAGE ON DATABASE "TEMP_test-share_\d*" TO SHARE "test-share"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^ALTER SHARE "test-share" SET ACCOUNTS=bob123,sue456$`).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectBegin()
 		mock.ExpectExec(`^REVOKE USAGE ON DATABASE "TEMP_test-share_\d*" FROM SHARE "test-share"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
 		mock.ExpectExec(`^DROP DATABASE "TEMP_test-share_\d*"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadShare(mock)
 		err := resources.CreateShare(d, db)
