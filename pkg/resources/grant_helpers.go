@@ -194,7 +194,7 @@ func readGenericGrant(
 		// We set the tf id == blank and return.
 		// I don't know of a better way to work around this issue
 		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok &&
-			snowflakeErr.Number == 002003 &&
+			snowflakeErr.Number == 2003 &&
 			strings.Contains(err.Error(), "does not exist or not authorized") {
 			log.Printf("[WARN] resource (%s) not found, removing from state file", d.Id())
 			d.SetId("")
