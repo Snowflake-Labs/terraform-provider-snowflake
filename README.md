@@ -12,6 +12,8 @@ This is a terraform provider plugin for managing [Snowflake](https://www.snowfla
 
 If you need help, try the [discussions area](https://github.com/chanzuckerberg/terraform-provider-snowflake/discussions) of this repo.
 
+For an end-to-end guide on how to use this provider, checkout [guides.snowflake.com](https://guides.snowflake.com/guide/terraforming_snowflake/)
+
 ## Install
 
 The easiest way is to run this command:
