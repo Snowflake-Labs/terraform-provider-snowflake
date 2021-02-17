@@ -10,7 +10,7 @@ require (
 	github.com/chanzuckerberg/go-misc v0.0.0-20201208181439-ea3e3e39e194
 	github.com/hashicorp/go-getter v1.5.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.8.1 // indirect
-	github.com/hashicorp/terraform-plugin-docs v0.2.0
+	github.com/hashicorp/terraform-plugin-docs v0.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.3.0
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/luna-duclos/instrumentedsql v1.1.3
