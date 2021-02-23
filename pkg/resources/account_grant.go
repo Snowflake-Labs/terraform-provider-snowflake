@@ -28,14 +28,12 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Description:  "The privilege to grant on the account.",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.ValidatePrivilege(validAccountPrivileges.ToList(), true),
-		ForceNew:     true,
 	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -53,6 +51,7 @@ func AccountGrant() *TerraformGrantResource {
 			Create: CreateAccountGrant,
 			Read:   ReadAccountGrant,
 			Delete: DeleteAccountGrant,
+			Update: UpdateAccountGrant,
 
 			Schema: accountGrantSchema,
 		},
@@ -111,4 +110,37 @@ func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateAccountGrant implements schema.UpdateFunc
+func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update is roles.
+	// if nothing changed, nothing to update and we're done.
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	builder := snowflake.AccountGrant()
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil)
+	if err != nil {
+		return err
+	}
+
+	// then add
+	err = createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil)
+	if err != nil {
+		return err
+	}
+
+	// done, refresh state
+	return ReadAccountGrant(d, meta)
 }
