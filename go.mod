@@ -10,7 +10,7 @@ require (
 	github.com/chanzuckerberg/go-misc v0.0.0-20201208181439-ea3e3e39e194
 	github.com/hashicorp/go-getter v1.5.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.8.1 // indirect
-	github.com/hashicorp/terraform-plugin-docs v0.2.0
+	github.com/hashicorp/terraform-plugin-docs v0.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.3
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/luna-duclos/instrumentedsql v1.1.3
@@ -19,7 +19,6 @@ require (
 	github.com/posener/complete v1.2.1 // indirect
 	github.com/snowflakedb/gosnowflake v1.4.0
 	github.com/stretchr/testify v1.7.0
-	github.com/zclconf/go-cty v1.7.1 // indirect
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
 	golang.org/x/tools v0.1.0
 	google.golang.org/api v0.34.0 // indirect
