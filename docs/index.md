@@ -42,13 +42,13 @@ provider snowflake {
 
 ### Optional
 
-- **browser_auth** (Boolean, Optional)
-- **oauth_access_token** (String, Optional)
-- **password** (String, Optional)
-- **private_key** (String, Optional)
-- **private_key_path** (String, Optional)
-- **region** (String, Optional)
-- **role** (String, Optional)
+- **browser_auth** (Boolean)
+- **oauth_access_token** (String, Sensitive)
+- **password** (String, Sensitive)
+- **private_key** (String, Sensitive)
+- **private_key_path** (String, Sensitive)
+- **region** (String)
+- **role** (String)
 
 ## Authentication
 
