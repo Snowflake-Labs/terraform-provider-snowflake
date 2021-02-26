@@ -449,3 +449,13 @@ func formatCallableObjectName(callableName string, returnType string, arguments 
 
 	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
 }
+
+// changeDiff calculates roles/shares to add/revoke
+func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []string) {
+	o, n := d.GetChange(key)
+	oldSet := o.(*schema.Set)
+	newSet := n.(*schema.Set)
+	toAdd = expandStringList(newSet.Difference(oldSet).List())
+	toRemove = expandStringList(oldSet.Difference(newSet).List())
+	return
+}
