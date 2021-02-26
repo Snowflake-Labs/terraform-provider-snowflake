@@ -248,12 +248,12 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("auto_ingest", pipe.NotificationChannel != "")
+	err = d.Set("auto_ingest", pipe.NotificationChannel != nil)
 	if err != nil {
 		return err
 	}
 
-	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
+	if pipe.NotificationChannel != nil && strings.Contains(*pipe.NotificationChannel, "arn:aws:sns:") {
 		err = d.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}
