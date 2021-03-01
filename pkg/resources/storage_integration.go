@@ -74,6 +74,16 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "",
 	},
+	"azure_consent_url": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The consent URL that is used to create an Azure Snowflake service principle inside your tenant.",
+	},
+	"azure_multi_tenant_app_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "This is the name of the Snowflake client application created for your account.",
+	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -211,6 +221,14 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "STORAGE_AWS_EXTERNAL_ID":
 			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
+				return err
+			}
+		case "AZURE_CONSENT_URL":
+			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+				return err
+			}
+		case "AZURE_MULTI_TENANT_APP_NAME":
+			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
 				return err
 			}
 		default:
