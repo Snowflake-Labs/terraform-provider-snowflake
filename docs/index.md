@@ -45,6 +45,7 @@ provider snowflake {
 - **browser_auth** (Boolean)
 - **oauth_access_token** (String, Sensitive)
 - **password** (String, Sensitive)
+- **private_key** (String, Sensitive)
 - **private_key_path** (String, Sensitive)
 - **region** (String)
 - **role** (String)
