@@ -33,28 +33,35 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "oauth_access_token"},
 			},
 			"oauth_access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "password"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password"},
 			},
 			"browser_auth": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "private_key_path", "oauth_access_token"},
+				ConflictsWith: []string{"password", "private_key_path", "private_key", "oauth_access_token"},
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key"},
+			},
+			"private_key": &schema.Schema{
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path"},
 			},
 			"role": {
 				Type:        schema.TypeString,
@@ -133,11 +140,22 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
 	privateKeyPath := s.Get("private_key_path").(string)
+	privateKey := s.Get("private_key").(string)
 	oauthAccessToken := s.Get("oauth_access_token").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
 
-	dsn, err := DSN(account, user, password, browserAuth, privateKeyPath, oauthAccessToken, region, role)
+	dsn, err := DSN(
+		account,
+		user,
+		password,
+		browserAuth,
+		privateKeyPath,
+		privateKey,
+		oauthAccessToken,
+		region,
+		role,
+	)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
@@ -157,6 +175,7 @@ func DSN(
 	password string,
 	browserAuth bool,
 	privateKeyPath,
+	privateKey,
 	oauthAccessToken,
 	region,
 	role string) (string, error) {
@@ -175,14 +194,23 @@ func DSN(
 	}
 
 	if privateKeyPath != "" {
-
-		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
+		privateKeyBytes, err := ReadPrivateKeyFile(privateKeyPath)
+		if err != nil {
+			return "", errors.Wrap(err, "Private Key file could not be read")
+		}
+		rsaPrivateKey, err := ParsePrivateKey(privateKeyBytes)
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
 		config.PrivateKey = rsaPrivateKey
 		config.Authenticator = gosnowflake.AuthTypeJwt
-
+	} else if privateKey != "" {
+		rsaPrivateKey, err := ParsePrivateKey([]byte(privateKey))
+		if err != nil {
+			return "", errors.Wrap(err, "Private Key could not be parsed")
+		}
+		config.PrivateKey = rsaPrivateKey
+		config.Authenticator = gosnowflake.AuthTypeJwt
 	} else if browserAuth {
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
 	} else if oauthAccessToken != "" {
@@ -197,7 +225,7 @@ func DSN(
 	return gosnowflake.DSN(&config)
 }
 
-func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
+func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Invalid Path to private key")
@@ -207,10 +235,15 @@ func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read private key")
 	}
+
 	if len(privateKeyBytes) == 0 {
 		return nil, errors.New("Private key is empty")
 	}
 
+	return privateKeyBytes, nil
+}
+
+func ParsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not parse private key")
