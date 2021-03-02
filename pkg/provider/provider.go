@@ -109,6 +109,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_database":                  resources.Database(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_masking_policy":            resources.MaskingPolicy(),
+		"snowflake_materialized_view":         resources.MaterializedView(),
 		"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
 		"snowflake_network_policy":            resources.NetworkPolicy(),
 		"snowflake_pipe":                      resources.Pipe(),

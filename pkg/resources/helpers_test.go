@@ -224,6 +224,14 @@ func view(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 	return d
 }
 
+func materializedView(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaterializedView().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)
