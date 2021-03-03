@@ -61,14 +61,12 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is unset).",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
 		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
-		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
 	},
 	"with_grant_option": {
@@ -150,25 +148,15 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// difference calculates roles/shares to add/revoke
-	difference := func(key string) (toAdd []string, toRevoke []string) {
-		old, new := d.GetChange("roles")
-		oldSet := old.(*schema.Set)
-		newSet := new.(*schema.Set)
-		toAdd = expandStringList(newSet.Difference(oldSet).List())
-		toRevoke = expandStringList(oldSet.Difference(newSet).List())
-		return
-	}
-
 	rolesToAdd := []string{}
 	rolesToRevoke := []string{}
 	sharesToAdd := []string{}
 	sharesToRevoke := []string{}
 	if d.HasChange("roles") {
-		rolesToAdd, rolesToRevoke = difference("roles")
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 	if d.HasChange("shares") {
-		sharesToAdd, sharesToRevoke = difference("shares")
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
 	grantID, err := grantIDFromString(d.Id())
@@ -189,15 +177,25 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		rolesToRevoke,
+		sharesToRevoke,
+	); err != nil {
 		return err
 	}
+
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		grantID.GrantOption,
+		rolesToAdd,
+		sharesToAdd,
+	); err != nil {
 		return err
 	}
 
