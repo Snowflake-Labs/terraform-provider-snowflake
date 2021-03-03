@@ -25,6 +25,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      privilegeUsage.String(),
+		ForceNew:     true,
 		ValidateFunc: validation.ValidatePrivilege(validWarehousePrivileges.ToList(), true),
 	},
 	"roles": {
