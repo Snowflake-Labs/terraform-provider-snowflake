@@ -67,6 +67,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:      true,
 		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
+		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
 	},
 	"with_grant_option": {
