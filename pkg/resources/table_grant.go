@@ -41,6 +41,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future table.",
 		Default:      privilegeSelect.String(),
+		ForceNew:     true,
 		ValidateFunc: validation.ValidatePrivilege(validTablePrivileges.ToList(), true),
 	},
 	"roles": {
@@ -60,6 +61,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Optional:      true,
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
+		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
 	},
 	"with_grant_option": {
