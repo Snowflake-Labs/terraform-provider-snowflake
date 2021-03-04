@@ -69,11 +69,6 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "",
 	},
-	"storage_gcp_service_account": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  "",
-	},
 	"azure_tenant_id": {
 		Type:     schema.TypeString,
 		Optional: true,
