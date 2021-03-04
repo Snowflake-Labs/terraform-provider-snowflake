@@ -223,6 +223,10 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
+		case "STORAGE_GCP_SERVICE_ACCOUNT":
+			if err = d.Set("storage_gcp_service_account", v.(string)); err != nil {
+				return err
+			}
 		case "AZURE_CONSENT_URL":
 			if err = d.Set("azure_consent_url", v.(string)); err != nil {
 				return err
@@ -296,6 +300,10 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("azure_tenant_id") {
 			runSetStatement = true
 			stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
+		}
+		if d.HasChange("storage_gcp_service_account") {
+			runSetStatement = true
+			stmt.SetString("STORAGE_GCP_SERVICE_ACCOUNT", d.Get("storage_gcp_service_account").(string))
 		}
 	}
 
