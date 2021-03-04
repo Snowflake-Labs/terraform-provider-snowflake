@@ -96,8 +96,8 @@ func expectReadStorageIntegrationForGCS(mock sqlmock.Sqlmock) {
 		"property", "property_type", "property_value", "property_default",
 	}).AddRow("ENABLED", "Boolean", true, false).
 		AddRow("STORAGE_PROVIDER", "String", "GCS", nil).
-		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
-		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
+		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "gcs://bucket-a/path-a/,gcs://bucket-b/", nil).
+		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "gcs://bucket-c/path-c/,gcs://bucket-d/", nil).
 		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
