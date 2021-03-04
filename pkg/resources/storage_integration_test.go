@@ -85,3 +85,20 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
 }
+
+func expectReadStorageIntegrationForGCS(mock sqlmock.Sqlmock) {
+	showRows := sqlmock.NewRows([]string{
+		"name", "type", "category", "enabled", "created_on"},
+	).AddRow("test_storage_integration", "EXTERNAL_STAGE", "STORAGE", true, "now")
+	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration'$`).WillReturnRows(showRows)
+
+	descRows := sqlmock.NewRows([]string{
+		"property", "property_type", "property_value", "property_default",
+	}).AddRow("ENABLED", "Boolean", true, false).
+		AddRow("STORAGE_PROVIDER", "String", "GCS", nil).
+		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "gcs://bucket-a/path-a/,gcs://bucket-b/", nil).
+		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "gcs://bucket-c/path-c/,gcs://bucket-d/", nil).
+		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
+
+	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
+}
