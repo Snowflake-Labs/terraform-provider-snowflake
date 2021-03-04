@@ -29,22 +29,20 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the database.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validDatabasePrivileges.ToList(), true),
 		ForceNew:     true,
+		ValidateFunc: validation.ValidatePrivilege(validDatabasePrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -62,6 +60,7 @@ func DatabaseGrant() *TerraformGrantResource {
 			Create: CreateDatabaseGrant,
 			Read:   ReadDatabaseGrant,
 			Delete: DeleteDatabaseGrant,
+			Update: UpdateDatabaseGrant,
 
 			Schema: databaseGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -133,4 +132,58 @@ func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.DatabaseGrant(dbName)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateDatabaseGrant implements schema.UpdateFunc
+func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	// create the builder
+	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+
+	// first revoke
+	if err := deleteGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		rolesToRevoke,
+		sharesToRevoke,
+	); err != nil {
+		return err
+	}
+
+	// then add
+	if err := createGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		grantID.GrantOption,
+		rolesToAdd,
+		sharesToAdd,
+	); err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadDatabaseGrant(d, meta)
 }
