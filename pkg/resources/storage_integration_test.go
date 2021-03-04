@@ -81,7 +81,23 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
 		AddRow("STORAGE_AWS_IAM_USER_ARN", "String", "arn:aws:iam::000000000000:/user/test", nil).
 		AddRow("STORAGE_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).
-		AddRow("STORAGE_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
+		AddRow("STORAGE_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
+
+	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
+}
+
+func expectReadStorageIntegrationForGCS(mock sqlmock.Sqlmock) {
+	showRows := sqlmock.NewRows([]string{
+		"name", "type", "category", "enabled", "created_on"},
+	).AddRow("test_storage_integration", "EXTERNAL_STAGE", "STORAGE", true, "now")
+	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration'$`).WillReturnRows(showRows)
+
+	descRows := sqlmock.NewRows([]string{
+		"property", "property_type", "property_value", "property_default",
+	}).AddRow("ENABLED", "Boolean", true, false).
+		AddRow("STORAGE_PROVIDER", "String", "GCS", nil).
+		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
+		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
 		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
