@@ -81,7 +81,8 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
 		AddRow("STORAGE_AWS_IAM_USER_ARN", "String", "arn:aws:iam::000000000000:/user/test", nil).
 		AddRow("STORAGE_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).
-		AddRow("STORAGE_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
+		AddRow("STORAGE_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
+		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
 }
