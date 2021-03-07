@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -337,8 +338,16 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 			if param.Value == param.DefaultValue {
 				continue
 			}
-
-			paramMap[param.Key] = param.Value
+			_, ignoreCaseOverride := os.LookupEnv("SNOWFLAKE_TASK_IGNORE_CASE")
+			_, ignoreTimezoneOverride := os.LookupEnv("SNOWFLAKE_TASK_IGNORE_TIMEZONE")
+			log.Printf("[TRACE] environment variables present: ignoreCase=%v ignoreTimezone=%v\n", ignoreCaseOverride, ignoreTimezoneOverride)
+			if ignoreCaseOverride && param.Key == "QUOTED_IDENTIFIERS_IGNORE_CASE" {
+				log.Printf("[TRACE] Not setting the ignore case value %v - because it is ignored\n", param.Key)
+			} else if ignoreTimezoneOverride && param.Key == "TIMEZONE" {
+				log.Printf("[TRACE] Not setting the timezone value %v - because it is ignored\n", param.Key)
+			} else {
+				paramMap[param.Key] = param.Value
+			}
 		}
 
 		err := d.Set("session_parameters", paramMap)
