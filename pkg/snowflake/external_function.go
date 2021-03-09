@@ -58,7 +58,7 @@ func (fb *ExternalFunctionBuilder) QualifiedNameWithArgTypes() string {
 		argTypes = append(argTypes, fmt.Sprintf(`%v`, EscapeString(arg["type"])))
 	}
 	q.WriteString(strings.Join(argTypes, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
+	q.WriteString(`)`)
 
 	return q.String()
 }
@@ -159,13 +159,13 @@ func (fb *ExternalFunctionBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE EXTERNAL FUNCTION %v`, fb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` (`))
+	q.WriteString(` (`)
 	args := []string{}
 	for _, arg := range fb.args {
 		args = append(args, fmt.Sprintf(`%v %v`, EscapeString(arg["name"]), EscapeString(arg["type"])))
 	}
 	q.WriteString(strings.Join(args, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
+	q.WriteString(`)`)
 
 	q.WriteString(` RETURNS ` + EscapeString(fb.returnType))
 
@@ -193,13 +193,13 @@ func (fb *ExternalFunctionBuilder) Create() string {
 			headers = append(headers, fmt.Sprintf(`'%v' = '%v'`, EscapeString(header["name"]), EscapeString(header["value"])))
 		}
 		q.WriteString(strings.Join(headers, ", "))
-		q.WriteString(fmt.Sprintf(`)`))
+		q.WriteString(`)`)
 	}
 
 	if len(fb.contextHeaders) > 0 {
 		q.WriteString(` CONTEXT_HEADERS = (`)
 		q.WriteString(EscapeString(strings.Join(fb.contextHeaders, ", ")))
-		q.WriteString(fmt.Sprintf(`)`))
+		q.WriteString(`)`)
 	}
 
 	if fb.maxBatchRows > 0 {
