@@ -176,6 +176,14 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
+func apiIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.APIIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
