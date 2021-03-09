@@ -16,7 +16,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the name of the api integration. This name follows the rules for Object Identifiers. The name should be unique among api integrations in your account.",
+		Description: "Specifies the name of the API integration. This name follows the rules for Object Identifiers. The name should be unique among api integrations in your account.",
 	},
 	"api_provider": {
 		Type:         schema.TypeString,
@@ -81,17 +81,17 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     true,
-		Description: "Specifies whether this api integration is enabled or disabled. If the api integration is disabled, any external function that relies on it will not work.",
+		Description: "Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "A description of the api integration.",
+		Description: "A description of the API integration.",
 	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "Date and time when the api integration was created.",
+		Description: "Date and time when the API integration was created.",
 	},
 }
 

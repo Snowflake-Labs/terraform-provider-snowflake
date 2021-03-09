@@ -1,29 +1,353 @@
 package resources
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"bytes"
+	"database/sql"
+	"encoding/csv"
+	"fmt"
+	"strings"
+
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
+)
+
+const (
+	externalFunctionIDDelimiter = '|'
+)
 
 var externalFunctionSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the identifier for the function. The identifier can contain the schema name and database name, as well as the function name. The function's signature (name and argument data types) must be unique within the schema.",
+		Description: "Specifies the identifier for the external function. The identifier can contain the schema name and database name, as well as the function name. The function's signature (name and argument data types) must be unique within the schema.",
 	},
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The schema in which to create the table.",
+		Description: "The schema in which to create the external function.",
 	},
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The database in which to create the table.",
+		Description: "The database in which to create the external function.",
+	},
+	"args": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the arguments/inputs for the external function. These should correspond to the arguments that the remote service expects.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Argument name",
+				},
+				"type": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Argument type, e.g. VARCHAR",
+				},
+			},
+		},
+	},
+	"null_input_behavior": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT", "STRICT"}, false),
+		Description:  "Specifies the behavior of the external function when called with null inputs.",
+	},
+	"return_type": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Specifies the data type returned by the external function.",
+	},
+	"return_null_allowed": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Indicates whether the function can return NULL values or must return only NON-NULL values.",
+	},
+	"return_behavior": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
+		Description:  "Specifies the behavior of the function when returning results",
+	},
+	"api_integration": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The name of the API integration object that should be used to authenticate the call to the proxy service.",
+	},
+	"headers": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Allows users to specify key-value metadata that is sent with every request as HTTP headers.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Header name",
+				},
+				"value": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Header value",
+				},
+			},
+		},
+	},
+	"context_headers": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Binds Snowflake context function results to HTTP headers.",
+	},
+	"max_batch_rows": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "This specifies the maximum number of rows in each batch sent to the proxy service.",
+	},
+	"compression": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringInSlice([]string{"NONE", "AUTO", "GZIP", "DEFLATE"}, false),
+		Description:  "If specified, the JSON payload is compressed when sent from Snowflake to the proxy service, and when sent back from the proxy service to Snowflake.",
+	},
+	"url_of_proxy_and_resource": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "This is the invocation URL of the proxy service and resource through which Snowflake calls the remote service.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "A description of the external function.",
 	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Date and time when the external function was created.",
+	},
+}
+
+// ExternalFunction returns a pointer to the resource representing an external function
+func ExternalFunction() *schema.Resource {
+	return &schema.Resource{
+		Create: CreateExternalFunction,
+		Read:   ReadExternalFunction,
+		Delete: DeleteExternalFunction,
+
+		Schema: externalFunctionSchema,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+	}
+}
+
+type externalFunctionID struct {
+	DatabaseName         string
+	SchemaName           string
+	ExternalFunctionName string
+}
+
+func (si *externalFunctionID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = externalFunctionIDDelimiter
+	err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName}})
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(buf.String()), nil
+}
+
+func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = externalFunctionIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line at a time")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	return &externalFunctionID{
+		DatabaseName:         lines[0][0],
+		SchemaName:           lines[0][1],
+		ExternalFunctionName: lines[0][2],
+	}, nil
+}
+
+// CreateExternalFunction implements schema.CreateFunc
+func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	database := d.Get("database").(string)
+	dbSchema := d.Get("schema").(string)
+	name := d.Get("name").(string)
+
+	builder := snowflake.ExternalFunction(name, database, dbSchema)
+	builder.WithReturnType(d.Get("return_type").(string))
+	builder.WithReturnBehavior(d.Get("return_behavior").(string))
+	builder.WithAPIIntegration(d.Get("api_integration").(string))
+	builder.WithURLOfProxyAndResource(d.Get("url_of_proxy_and_resource").(string))
+
+	// Set optionals
+	if _, ok := d.GetOk("args"); ok {
+		args := []map[string]string{}
+		for _, arg := range d.Get("args").([]interface{}) {
+			argDef := map[string]string{}
+			for key, val := range arg.(map[string]interface{}) {
+				argDef[key] = val.(string)
+			}
+			args = append(args, argDef)
+		}
+
+		builder.WithArgs(args)
+	}
+
+	if v, ok := d.GetOk("return_null_allowed"); ok {
+		builder.WithReturnNullAllowed(v.(bool))
+	}
+
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		builder.WithNullInputBehavior(v.(string))
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+
+	if _, ok := d.GetOk("headers"); ok {
+		headers := []map[string]string{}
+		for _, header := range d.Get("headers").([]interface{}) {
+			headerDef := map[string]string{}
+			for key, val := range header.(map[string]interface{}) {
+				headerDef[key] = val.(string)
+			}
+			headers = append(headers, headerDef)
+		}
+
+		builder.WithHeaders(headers)
+	}
+
+	if v, ok := d.GetOk("context_headers"); ok {
+		contextHeaders := expandStringList(v.(*schema.Set).List())
+		builder.WithContextHeaders(contextHeaders)
+	}
+
+	if v, ok := d.GetOk("max_batch_rows"); ok {
+		builder.WithMaxBatchRows(v.(int))
+	}
+
+	if v, ok := d.GetOk("compression"); ok {
+		builder.WithNullInputBehavior(v.(string))
+	}
+
+	stmt := builder.Create()
+	err := snowflake.Exec(db, stmt)
+	if err != nil {
+		return errors.Wrapf(err, "error creating external function %v", name)
+	}
+
+	externalFunctionID := &externalFunctionID{
+		DatabaseName:         database,
+		SchemaName:           dbSchema,
+		ExternalFunctionName: name,
+	}
+	dataIDInput, err := externalFunctionID.String()
+	if err != nil {
+		return err
+	}
+	d.SetId(dataIDInput)
+
+	return ReadExternalFunction(d, meta)
+}
+
+// ReadExternalFunction implements schema.ReadFunc
+func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	externalFunctionID, err := externalFunctionIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := externalFunctionID.DatabaseName
+	dbSchema := externalFunctionID.SchemaName
+	name := externalFunctionID.ExternalFunctionName
+
+	stmt := snowflake.ExternalFunction(name, dbName, dbSchema).Show()
+	row := snowflake.QueryRow(db, stmt)
+	externalFunction, err := snowflake.ScanExternalFunction(row)
+	if err != nil {
+		return err
+	}
+
+	// Note: 'language' must be EXTERNAL and 'is_external_function' set to Y
+	if externalFunction.Language.String != "EXTERNAL" || externalFunction.IsExternalFunction.String != "Y" {
+		return fmt.Errorf("Expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
+	}
+
+	if err := d.Set("name", externalFunction.ExternalFunctionName.String); err != nil {
+		return err
+	}
+
+	if err := d.Set("schema", externalFunction.SchemaName.String); err != nil {
+		return err
+	}
+
+	if err := d.Set("database", externalFunction.DatabaseName.String); err != nil {
+		return err
+	}
+
+	if err := d.Set("created_on", externalFunction.CreatedOn.String); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteExternalFunction implements schema.DeleteFunc
+func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	externalFunctionID, err := externalFunctionIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := externalFunctionID.DatabaseName
+	dbSchema := externalFunctionID.SchemaName
+	name := externalFunctionID.ExternalFunctionName
+
+	q := snowflake.ExternalFunction(name, dbName, dbSchema).Drop()
+
+	err = snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error deleting external function %v", d.Id())
+	}
+
+	d.SetId("")
+	return nil
 }
