@@ -47,7 +47,7 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 
 	resource "snowflake_api_integration" "test_api_int" {
 		name = "%s"
-		api_provider = aws_api_gateway
+		api_provider = "aws_api_gateway"
 		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
 		enabled = true
@@ -68,5 +68,16 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		api_integration = snowflake_api_integration.test_api_int.name
 		url_of_proxy_and_resource = "%s"
 	}
-	`, name, name, name, prefixes, name, url)
+
+	resource "snowflake_external_function" "test_func_2" {
+		name = "%s"
+		database = snowflake_database.test_database.name
+		schema   = snowflake_schema.test_schema.name
+		comment = "Terraform acceptance test"
+		return_type = "varchar"
+		return_behavior = "IMMUTABLE"
+		api_integration = snowflake_api_integration.test_api_int.name
+		url_of_proxy_and_resource = "%s"
+	}
+	`, name, name, name, prefixes, name, url, name, url+"_2")
 }

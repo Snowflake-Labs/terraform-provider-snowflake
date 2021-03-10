@@ -14,6 +14,7 @@ type ExternalFunctionBuilder struct {
 	db                    string
 	schema                string
 	args                  []map[string]string
+	argtypes              string // only used for 'DESC FUNCTION' & 'DROP FUNCTION' commands as of today (list of args types is required)
 	nullInputBehavior     string
 	returnType            string
 	returnNullAllowed     bool
@@ -51,21 +52,20 @@ func (fb *ExternalFunctionBuilder) QualifiedName() string {
 // QualifiedNameWithArgTypes appends all args' types to the qualified name. This is required to invoke 'DESC FUNCTION' and 'DROP FUNCTION' commands.
 func (fb *ExternalFunctionBuilder) QualifiedNameWithArgTypes() string {
 	q := strings.Builder{}
-
-	q.WriteString(fmt.Sprintf(`%v (`, fb.QualifiedName()))
-	argTypes := []string{}
-	for _, arg := range fb.args {
-		argTypes = append(argTypes, fmt.Sprintf(`%v`, EscapeString(arg["type"])))
-	}
-	q.WriteString(strings.Join(argTypes, ", "))
-	q.WriteString(`)`)
-
+	q.WriteString(fmt.Sprintf(`%v (%s)`, fb.QualifiedName(), fb.argtypes))
 	return q.String()
 }
 
 // WithArgs sets the args on the ExternalFunctionBuilder
 func (fb *ExternalFunctionBuilder) WithArgs(args []map[string]string) *ExternalFunctionBuilder {
 	fb.args = args
+	return fb
+}
+
+// WithArgTypes sets the args on the ExternalFunctionBuilder
+func (fb *ExternalFunctionBuilder) WithArgTypes(argtypes string) *ExternalFunctionBuilder {
+	argtypeslist := strings.ReplaceAll(argtypes, "-", ", ")
+	fb.argtypes = argtypeslist
 	return fb
 }
 

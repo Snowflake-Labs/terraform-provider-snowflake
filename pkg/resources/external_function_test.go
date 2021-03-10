@@ -30,7 +30,7 @@ func TestExternalFunctionCreate(t *testing.T) {
 		"api_integration":           "test_api_integration_01",
 		"url_of_proxy_and_resource": "https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function",
 	}
-	d := externalFunction(t, "database_name|schema_name|my_test_function", in)
+	d := externalFunction(t, "database_name|schema_name|my_test_function|varchar", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE EXTERNAL FUNCTION "database_name"."schema_name"."my_test_function" \(data varchar\) RETURNS varchar NULL IMMUTABLE API_INTEGRATION = 'test_api_integration_01' AS 'https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function'`).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -50,7 +50,7 @@ func expectExternalFunctionRead(mock sqlmock.Sqlmock) {
 func TestExternalFunctionRead(t *testing.T) {
 	r := require.New(t)
 
-	d := externalFunction(t, "database_name|schema_name|my_test_function", map[string]interface{}{"name": "my_test_function", "comment": "mock comment"})
+	d := externalFunction(t, "database_name|schema_name|my_test_function|", map[string]interface{}{"name": "my_test_function", "comment": "mock comment"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectExternalFunctionRead(mock)
@@ -65,10 +65,10 @@ func TestExternalFunctionRead(t *testing.T) {
 func TestExternalFunctionDelete(t *testing.T) {
 	r := require.New(t)
 
-	d := externalFunction(t, "database_name|schema_name|drop_it", map[string]interface{}{"name": "drop_it"})
+	d := externalFunction(t, "database_name|schema_name|drop_it|", map[string]interface{}{"name": "drop_it"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`DROP FUNCTION "database_name"."schema_name"."drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`DROP FUNCTION "database_name"."schema_name"."drop_it" ()`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteExternalFunction(d, db)
 		r.NoError(err)
 	})

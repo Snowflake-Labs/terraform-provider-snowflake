@@ -162,16 +162,17 @@ func ExternalFunction() *schema.Resource {
 }
 
 type externalFunctionID struct {
-	DatabaseName         string
-	SchemaName           string
-	ExternalFunctionName string
+	DatabaseName             string
+	SchemaName               string
+	ExternalFunctionName     string
+	ExternalFunctionArgTypes string
 }
 
 func (si *externalFunctionID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = externalFunctionIDDelimiter
-	err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName}})
+	err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName, si.ExternalFunctionArgTypes}})
 	if err != nil {
 		return "", err
 	}
@@ -190,14 +191,15 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line at a time")
 	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
+	if len(lines[0]) != 4 {
+		return nil, fmt.Errorf("4 fields allowed")
 	}
 
 	return &externalFunctionID{
-		DatabaseName:         lines[0][0],
-		SchemaName:           lines[0][1],
-		ExternalFunctionName: lines[0][2],
+		DatabaseName:             lines[0][0],
+		SchemaName:               lines[0][1],
+		ExternalFunctionName:     lines[0][2],
+		ExternalFunctionArgTypes: lines[0][3],
 	}, nil
 }
 
@@ -207,6 +209,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
+	var argtypes string
 
 	builder := snowflake.ExternalFunction(name, database, dbSchema)
 	builder.WithReturnType(d.Get("return_type").(string))
@@ -216,16 +219,26 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 
 	// Set optionals
 	if _, ok := d.GetOk("args"); ok {
+		var types []string
 		args := []map[string]string{}
 		for _, arg := range d.Get("args").([]interface{}) {
 			argDef := map[string]string{}
 			for key, val := range arg.(map[string]interface{}) {
 				argDef[key] = val.(string)
+
+				if key == "type" {
+					// Also store arg types in distinct array as list of types is required for some Snowflake commands (DESC, DROP)
+					types = append(types, argDef[key])
+				}
 			}
 			args = append(args, argDef)
 		}
 
+		// Use '-' as a separator between arg types as the result will end in the Terraform resource id
+		argtypes = strings.Join(types, "-")
+
 		builder.WithArgs(args)
+		builder.WithArgTypes(argtypes)
 	}
 
 	if v, ok := d.GetOk("return_null_allowed"); ok {
@@ -273,9 +286,10 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	externalFunctionID := &externalFunctionID{
-		DatabaseName:         database,
-		SchemaName:           dbSchema,
-		ExternalFunctionName: name,
+		DatabaseName:             database,
+		SchemaName:               dbSchema,
+		ExternalFunctionName:     name,
+		ExternalFunctionArgTypes: argtypes,
 	}
 	dataIDInput, err := externalFunctionID.String()
 	if err != nil {
@@ -340,8 +354,9 @@ func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	dbName := externalFunctionID.DatabaseName
 	dbSchema := externalFunctionID.SchemaName
 	name := externalFunctionID.ExternalFunctionName
+	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
-	q := snowflake.ExternalFunction(name, dbName, dbSchema).Drop()
+	q := snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
 
 	err = snowflake.Exec(db, q)
 	if err != nil {

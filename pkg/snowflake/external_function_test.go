@@ -10,6 +10,7 @@ func TestExternalFunctionCreate(t *testing.T) {
 	r := require.New(t)
 	s := ExternalFunction("test_function", "test_db", "test_schema")
 	s.WithArgs([]map[string]string{{"name": "data", "type": "varchar"}})
+	s.WithArgTypes("varchar")
 	s.WithReturnType("varchar")
 	s.WithNullInputBehavior("RETURNS NULL ON NULL INPUT")
 	s.WithReturnBehavior("IMMUTABLE")
@@ -30,8 +31,7 @@ func TestExternalFunctionDrop(t *testing.T) {
 	r.Equal(s.Drop(), `DROP FUNCTION "test_db"."test_schema"."test_function" ()`)
 
 	// With arg
-	s = ExternalFunction("test_function", "test_db", "test_schema")
-	s.WithArgs([]map[string]string{{"name": "data", "type": "varchar"}})
+	s = ExternalFunction("test_function", "test_db", "test_schema").WithArgTypes("varchar")
 	r.Equal(s.Drop(), `DROP FUNCTION "test_db"."test_schema"."test_function" (varchar)`)
 }
 
