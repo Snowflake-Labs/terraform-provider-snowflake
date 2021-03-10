@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccApiIntegration(t *testing.T) {
+func TestAcc_ApiIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_API_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAccApiIntegration")
 	}
