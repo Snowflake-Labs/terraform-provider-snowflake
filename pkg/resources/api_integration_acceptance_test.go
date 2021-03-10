@@ -52,7 +52,7 @@ func apiIntegrationConfig_aws(name string, prefixes []string) string {
 	resource "snowflake_api_integration" "test_aws_int" {
 		name = "%s"
 		api_provider = aws_api_gateway
-		api_aws_role_arn = 'arn:aws:iam::000000000001:/role/test'
+		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
 		enabled = true
 		comment = "Terraform acceptance test"
@@ -65,8 +65,8 @@ func apiIntegrationConfig_azure(name string, prefixes []string) string {
 	resource "snowflake_api_integration" "test_azure_int" {
 		name = "%s"
 		api_provider = azure_api_management
-		azure_tenant_id = '123456'
-		azure_ad_application_id = '7890'
+		azure_tenant_id = "123456"
+		azure_ad_application_id = "7890"
 		api_allowed_prefixes = %q
 		enabled = true
 		comment = "Terraform acceptance test"
