@@ -24,6 +24,7 @@ func TestExternalFunctionCreate(t *testing.T) {
 		"name":                      "my_test_function",
 		"database":                  "database_name",
 		"schema":                    "schema_name",
+		"args":                      []interface{}{map[string]interface{}{"name": "data", "type": "varchar"}},
 		"return_type":               "varchar",
 		"return_behavior":           "IMMUTABLE",
 		"api_integration":           "test_api_integration_01",
@@ -32,7 +33,7 @@ func TestExternalFunctionCreate(t *testing.T) {
 	d := externalFunction(t, "database_name|schema_name|my_test_function", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE EXTERNAL FUNCTION "database_name"."schema_name"."my_test_function" \(\) RETURNS varchar NULL IMMUTABLE API_INTEGRATION = 'test_api_integration_01' AS 'https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE EXTERNAL FUNCTION "database_name"."schema_name"."my_test_function" \(data varchar\) RETURNS varchar NULL IMMUTABLE API_INTEGRATION = 'test_api_integration_01' AS 'https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function'`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectExternalFunctionRead(mock)
 		err := resources.CreateExternalFunction(d, db)
@@ -42,7 +43,7 @@ func TestExternalFunctionCreate(t *testing.T) {
 }
 
 func expectExternalFunctionRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure", "is_external_function", "language"}).AddRow("now", "my_test_function", "schema_name", "N", "N", "N", "0", "0", "NULL", "mock comment", "database_name", "N", "N", "N", "Y", "EXTERNAL")
+	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure", "is_external_function", "language"}).AddRow("now", "my_test_function", "schema_name", "N", "N", "N", "1", "1", "MY_TEST_FUNCTION(VARCHAR) RETURN VARCHAR", "mock comment", "database_name", "N", "N", "N", "Y", "EXTERNAL")
 	mock.ExpectQuery(`SHOW EXTERNAL FUNCTIONS LIKE 'my_test_function' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
 }
 
