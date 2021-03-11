@@ -227,7 +227,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
+			log.Printf("[WARN] unexpected api integration property %v returned from Snowflake", k)
 		}
 	}
 

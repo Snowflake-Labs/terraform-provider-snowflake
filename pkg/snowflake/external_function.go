@@ -235,6 +235,7 @@ type externalFunction struct {
 	ExternalFunctionName sql.NullString `db:"name"`
 	DatabaseName         sql.NullString `db:"catalog_name"`
 	SchemaName           sql.NullString `db:"schema_name"`
+	Comment              sql.NullString `db:"description"`
 	IsExternalFunction   sql.NullString `db:"is_external_function"`
 	Language             sql.NullString `db:"language"`
 }

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -311,7 +313,9 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	dbName := externalFunctionID.DatabaseName
 	dbSchema := externalFunctionID.SchemaName
 	name := externalFunctionID.ExternalFunctionName
+	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
+	// Some properties can come from the SHOW EXTERNAL FUNCTION call
 	stmt := snowflake.ExternalFunction(name, dbName, dbSchema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	externalFunction, err := snowflake.ScanExternalFunction(row)
@@ -336,8 +340,84 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if err := d.Set("comment", externalFunction.Comment.String); err != nil {
+		return err
+	}
+
 	if err := d.Set("created_on", externalFunction.CreatedOn.String); err != nil {
 		return err
+	}
+
+	// Some properties come from the DESCRIBE FUNCTION call
+	stmt = snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Describe()
+	externalFunctionDescriptionRows, err := snowflake.Query(db, stmt)
+	if err != nil {
+		return err
+	}
+
+	externalFunctionDescription, err := snowflake.ScanExternalFunctionDescription(externalFunctionDescriptionRows)
+	if err != nil {
+		return err
+	}
+
+	for _, desc := range externalFunctionDescription {
+		switch desc.Property.String {
+		case "signature":
+			// Format in Snowflake DB is: (argName argType, argName argType, ...)
+			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
+			argPairs := strings.Split(args, ", ")
+			flattenedArgs := []interface{}{}
+
+			for _, argPair := range argPairs {
+				arg := strings.Split(argPair, " ")
+
+				flatArg := map[string]interface{}{}
+				flatArg["name"] = arg[0]
+				flatArg["type"] = arg[1]
+				flattenedArgs = append(flattenedArgs, flatArg)
+			}
+
+			if err = d.Set("args", flattenedArgs); err != nil {
+				return err
+			}
+		case "returns":
+			// Format in Snowflake DB is returnType(<some number>)
+			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
+			match := re.FindStringSubmatch(desc.Value.String)
+			if err = d.Set("return_type", match[1]); err != nil {
+				return err
+			}
+		case "null handling":
+			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+				return err
+			}
+		case "volatility":
+			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+				return err
+			}
+		case "headers":
+			//TODO - Format in Snowflake DB is: {"head1":"val1","head2":"val2"}
+		case "context_headers":
+			//TODO - Format in Snowflake DB is: ["context_function_1","context_function_2"]
+		case "max_batch_rows":
+			if desc.Value.String != "not set" {
+				if err = d.Set("max_batch_rows", desc.Value.String); err != nil {
+					return err
+				}
+			}
+		case "compression":
+			if err = d.Set("compression", desc.Value.String); err != nil {
+				return err
+			}
+		case "body":
+			if err = d.Set("url_of_proxy_and_resource", desc.Value.String); err != nil {
+				return err
+			}
+		case "language":
+			// To ignore
+		default:
+			log.Printf("[WARN] unexpected external function property %v returned from Snowflake", desc.Property.String)
+		}
 	}
 
 	return nil
