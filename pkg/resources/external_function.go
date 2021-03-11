@@ -24,7 +24,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
-		// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+		// Suppress the diff shown if the values are equal when both compared in lower case.
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			if strings.ToLower(old) == strings.ToLower(new) {
 				return true
@@ -55,7 +55,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 				"name": {
 					Type:     schema.TypeString,
 					Required: true,
-					// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+					// Suppress the diff shown if the values are equal when both compared in lower case.
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						if strings.ToLower(old) == strings.ToLower(new) {
 							return true
@@ -67,7 +67,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
-					// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+					// Suppress the diff shown if the values are equal when both compared in lower case.
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						if strings.ToLower(old) == strings.ToLower(new) {
 							return true
@@ -91,7 +91,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
-		// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+		// Suppress the diff shown if the values are equal when both compared in lower case.
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			if strings.ToLower(old) == strings.ToLower(new) {
 				return true
