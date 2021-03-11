@@ -16,7 +16,7 @@ To set up a new person for releasing, there are a few steps–
 2. releaser: a pgp key - `keybase pgp gen`
 3. releaser: export public key.
    1. `keybase pgp export` to find id if key you want to export (keep this for later)
-   2. `keybase pgp export -q KEY_ID`
+   2. `keybase pgp export -q KEY_ID` where `KEY_ID` is a 16 character ID in the INFO output after running `keybase pgp gen`
 4. github admin for chanzuckerberg: take public key exported above and add it [in the registry](https://registry.terraform.io/settings/gpg-keys)
 5. releaser: set `KEYBASE_KEY_ID` environment variable
 6. releaser: run `make release-prerelease` to test that releases are working correctly
