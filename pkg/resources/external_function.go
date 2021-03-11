@@ -21,9 +21,16 @@ const (
 
 var externalFunctionSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.ToLower(old) == strings.ToLower(new) {
+				return true
+			}
+			return false
+		},
 		Description: "Specifies the identifier for the external function. The identifier can contain the schema name and database name, as well as the function name. The function's signature (name and argument data types) must be unique within the schema.",
 	},
 	"schema": {
@@ -46,13 +53,27 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
+					Type:     schema.TypeString,
+					Required: true,
+					// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if strings.ToLower(old) == strings.ToLower(new) {
+							return true
+						}
+						return false
+					},
 					Description: "Argument name",
 				},
 				"type": {
-					Type:        schema.TypeString,
-					Required:    true,
+					Type:     schema.TypeString,
+					Required: true,
+					// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if strings.ToLower(old) == strings.ToLower(new) {
+							return true
+						}
+						return false
+					},
 					Description: "Argument type, e.g. VARCHAR",
 				},
 			},
@@ -61,14 +82,22 @@ var externalFunctionSchema = map[string]*schema.Schema{
 	"null_input_behavior": {
 		Type:         schema.TypeString,
 		Optional:     true,
+		Default:      "CALLED ON NULL INPUT",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT", "STRICT"}, false),
 		Description:  "Specifies the behavior of the external function when called with null inputs.",
 	},
 	"return_type": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// Suppress the diff shown if the base_image name are equal when both compared in lower case.
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.ToLower(old) == strings.ToLower(new) {
+				return true
+			}
+			return false
+		},
 		Description: "Specifies the data type returned by the external function.",
 	},
 	"return_null_allowed": {
@@ -126,6 +155,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 	"compression": {
 		Type:         schema.TypeString,
 		Optional:     true,
+		Default:      "AUTO",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"NONE", "AUTO", "GZIP", "DEFLATE"}, false),
 		Description:  "If specified, the JSON payload is compressed when sent from Snowflake to the proxy service, and when sent back from the proxy service to Snowflake.",
@@ -139,6 +169,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Default:     "user-defined function",
 		ForceNew:    true,
 		Description: "A description of the external function.",
 	},
@@ -278,7 +309,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("compression"); ok {
-		builder.WithNullInputBehavior(v.(string))
+		builder.WithCompression(v.(string))
 	}
 
 	stmt := builder.Create()
