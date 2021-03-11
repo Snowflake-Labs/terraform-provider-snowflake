@@ -365,20 +365,23 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
 			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
-			argPairs := strings.Split(args, ", ")
-			flattenedArgs := []interface{}{}
 
-			for _, argPair := range argPairs {
-				arg := strings.Split(argPair, " ")
+			if args != "" { // Do nothing for functions without arguments
+				argPairs := strings.Split(args, ", ")
+				args := []interface{}{}
 
-				flatArg := map[string]interface{}{}
-				flatArg["name"] = arg[0]
-				flatArg["type"] = arg[1]
-				flattenedArgs = append(flattenedArgs, flatArg)
-			}
+				for _, argPair := range argPairs {
+					argItem := strings.Split(argPair, " ")
 
-			if err = d.Set("args", flattenedArgs); err != nil {
-				return err
+					arg := map[string]interface{}{}
+					arg["name"] = argItem[0]
+					arg["type"] = argItem[1]
+					args = append(args, arg)
+				}
+
+				if err = d.Set("args", args); err != nil {
+					return err
+				}
 			}
 		case "returns":
 			// Format in Snowflake DB is returnType(<some number>)
