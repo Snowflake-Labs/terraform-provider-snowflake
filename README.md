@@ -128,5 +128,6 @@ To set up a new person for releasing, there are a few steps–
       2. `keybase pgp export -q KEY_ID`
 4. github admin for chanzuckerberg: take public key exported above and add it [in the registry](https://registry.terraform.io/settings/gpg-keys)
 5. releaser: set `KEYBASE_KEY_ID` environment variable
-6. releaser: run `make release-prerelease` to test that releases are working correctly
-7. releaser: run `make release` to release for real
+6. set `GITHUB_TOKEN` environment variable with a personal access token
+7. releaser: run `make release-prerelease` to test that releases are working correctly
+8. releaser: run `make release` to release for real
