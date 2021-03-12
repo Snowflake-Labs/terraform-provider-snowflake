@@ -108,7 +108,7 @@ If you are using the Standard Snowflake plan, it's recommended you also set up t
 
 ## Running a release
 
-**Note: releases can only be done by those with keybase pgp keys whitelisted in the terraform registry.**
+**Note: releases can only be done by those with keybase pgp keys allowed in the terraform registry.**
 
 Releases are done by [goreleaser](https://goreleaser.com/) and run by our make files. There two goreleaser configs, `.goreleaser.yml` for regular releases and `.goreleaser.prerelease.yml` for doing prereleases (for testing).
 
@@ -130,4 +130,3 @@ To set up a new person for releasing, there are a few steps–
 5. releaser: set `KEYBASE_KEY_ID` environment variable
 6. releaser: run `make release-prerelease` to test that releases are working correctly
 7. releaser: run `make release` to release for real
-
