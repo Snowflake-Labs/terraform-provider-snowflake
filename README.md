@@ -43,9 +43,9 @@ terraform {
 }
 ```
 
-TODO fogg config
-
 ## Usage
+
+An [introductory tutorial](https://guides.snowflake.com/guide/terraforming_snowflake/#0) is available from Snowflake.
 
 In-depth docs are available [on the Terraform registry](https://registry.terraform.io/providers/chanzuckerberg/snowflake/latest).
 
