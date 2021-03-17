@@ -13,6 +13,7 @@ type PipeBuilder struct {
 	db             string
 	schema         string
 	autoIngest     bool
+	integration    string
 	awsSnsTopicArn string
 	comment        string
 	copyStatement  string
@@ -48,6 +49,12 @@ func (pb *PipeBuilder) WithAutoIngest() *PipeBuilder {
 // WithAwsSnsTopicArn adds the aws_sns_topic to the PipeBuilder
 func (pb *PipeBuilder) WithAwsSnsTopicArn(s string) *PipeBuilder {
 	pb.awsSnsTopicArn = s
+	return pb
+}
+
+// WithIntegration adds the integration to the PipeBuilder
+func (pb *PipeBuilder) WithIntegration(s string) *PipeBuilder {
+	pb.integration = s
 	return pb
 }
 
@@ -95,6 +102,10 @@ func (pb *PipeBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(pb.awsSnsTopicArn)))
 	}
 
+	if pb.integration != "" {
+		q.WriteString(fmt.Sprintf(` INTEGRATION = '%v'`, EscapeString(pb.integration)))
+	}
+
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(pb.comment)))
 	}
@@ -133,6 +144,7 @@ type pipe struct {
 	Definition          string  `db:"definition"`
 	Owner               string  `db:"owner"`
 	NotificationChannel *string `db:"notification_channel"`
+	Integration         *string `db:"integration"`
 	Comment             string  `db:"comment"`
 }
 

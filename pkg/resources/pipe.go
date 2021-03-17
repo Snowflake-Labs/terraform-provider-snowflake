@@ -55,6 +55,12 @@ var pipeSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies a auto_ingest param for the pipe.",
 	},
+	"integration": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies an integration param for the pipe.",
+	},
 	"aws_sns_topic_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -159,6 +165,10 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("integration"); ok {
+		builder.WithIntegration(v.(string))
+	}
+
 	if v, ok := d.GetOk("auto_ingest"); ok && v.(bool) {
 		builder.WithAutoIngest()
 	}
@@ -239,6 +249,11 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("comment", pipe.Comment)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("integration", pipe.Integration)
 	if err != nil {
 		return err
 	}
