@@ -84,6 +84,11 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "This is the name of the Snowflake client application created for your account.",
 	},
+	"storage_gcp_service_account": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "This is the name of the Snowflake Google Service Account created for your account.",
+	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
