@@ -25,15 +25,14 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      privilegeUsage.String(),
-		ValidateFunc: validation.ValidatePrivilege(validWarehousePrivileges.ToList(), true),
 		ForceNew:     true,
+		ValidateFunc: validation.ValidatePrivilege(validWarehousePrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -51,6 +50,7 @@ func WarehouseGrant() *TerraformGrantResource {
 			Create: CreateWarehouseGrant,
 			Read:   ReadWarehouseGrant,
 			Delete: DeleteWarehouseGrant,
+			Update: UpdateWarehouseGrant,
 
 			Schema: warehouseGrantSchema,
 			// FIXME - tests for this don't currently work
@@ -126,4 +126,49 @@ func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.WarehouseGrant(w)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateWarehouseGrant implements schema.UpdateFunc
+func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update is roles. if nothing changed,
+	// nothing to update and we're done.
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	// create the builder
+	builder := snowflake.WarehouseGrant(grantID.ResourceName)
+
+	// first revoke
+	if err := deleteGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		rolesToRevoke,
+		nil,
+	); err != nil {
+		return err
+	}
+
+	// then add
+	if err := createGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		grantID.GrantOption,
+		rolesToAdd,
+		nil,
+	); err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadWarehouseGrant(d, meta)
 }
