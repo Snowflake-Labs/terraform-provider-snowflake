@@ -26,7 +26,6 @@ func TestAcc_ApiIntegration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", apiIntName),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_api_gateway"),
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_iam_user_arn"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_external_id"),
@@ -37,7 +36,6 @@ func TestAcc_ApiIntegration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", apiIntName2),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_provider", "azure_api_management"),
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "azure_multi_tenant_app_name"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "azure_consent_url"),
@@ -55,7 +53,6 @@ func apiIntegrationConfig_aws(name string, prefixes []string) string {
 		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
 		enabled = true
-		comment = "Terraform acceptance test"
 	}
 	`, name, prefixes)
 }
@@ -69,7 +66,6 @@ func apiIntegrationConfig_azure(name string, prefixes []string) string {
 		azure_ad_application_id = "7890"
 		api_allowed_prefixes = %q
 		enabled = true
-		comment = "Terraform acceptance test"
 	}
 	`, name, prefixes)
 }

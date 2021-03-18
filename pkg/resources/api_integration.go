@@ -83,11 +83,6 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Default:     true,
 		Description: "Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.",
 	},
-	"comment": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "A description of the API integration.",
-	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -123,10 +118,6 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
 
 	// Set optional fields
-	if v, ok := d.GetOk("comment"); ok {
-		stmt.SetString(`COMMENT`, v.(string))
-	}
-
 	if _, ok := d.GetOk("api_blocked_prefixes"); ok {
 		stmt.SetStringList("API_BLOCKED_PREFIXES", expandStringList(d.Get("api_blocked_prefixes").([]interface{})))
 	}
@@ -243,11 +234,6 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	// This is required in case the only change is to UNSET API_ALLOWED_PREFIXES.
 	var runSetStatement bool
-
-	if d.HasChange("comment") {
-		runSetStatement = true
-		stmt.SetString("COMMENT", d.Get("comment").(string))
-	}
 
 	if d.HasChange("enabled") {
 		runSetStatement = true
