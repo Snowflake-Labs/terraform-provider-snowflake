@@ -51,7 +51,6 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
 		enabled = true
-		comment = "Terraform acceptance test"
 	}
 
 	resource "snowflake_external_function" "test_func" {
