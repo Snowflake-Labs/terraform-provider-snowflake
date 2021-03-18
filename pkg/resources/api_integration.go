@@ -152,7 +152,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ApiIntegration(d.Id()).Show()
+	stmt := snowflake.ApiIntegration(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -183,7 +183,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.ApiIntegration(d.Id()).Describe()
+	stmt = snowflake.ApiIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("Could not describe api integration: %w", err)
@@ -264,7 +264,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("api_blocked_prefixes") {
 		v := d.Get("api_blocked_prefixes").([]interface{})
 		if len(v) == 0 {
-			err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, d.Id()))
+			err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id))
 			if err != nil {
 				return fmt.Errorf("error unsetting api_blocked_prefixes: %w", err)
 			}
