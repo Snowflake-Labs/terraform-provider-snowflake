@@ -232,7 +232,6 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	stmt := snowflake.ApiIntegration(id).Alter()
 
-	// This is required in case the only change is to UNSET API_ALLOWED_PREFIXES.
 	var runSetStatement bool
 
 	if d.HasChange("enabled") {
@@ -245,8 +244,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
 	}
 
-	// We need to UNSET this if we remove all api blocked prefixes. I don't think
-	// @TODO move the SQL back to the snowflake package
+	// We need to UNSET this if we remove all api blocked prefixes.
 	if d.HasChange("api_blocked_prefixes") {
 		v := d.Get("api_blocked_prefixes").([]interface{})
 		if len(v) == 0 {
