@@ -217,7 +217,7 @@ func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateViewGrant implements schema.DeleteFunc
+// UpdateViewGrant implements schema.UpdateFunc
 func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done
