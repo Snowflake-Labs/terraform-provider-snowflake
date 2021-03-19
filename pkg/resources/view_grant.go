@@ -36,22 +36,20 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future view.",
 		Default:      privilegeSelect.String(),
-		ValidateFunc: validation.ValidatePrivilege(validViewPrivileges.ToList(), true),
 		ForceNew:     true,
+		ValidateFunc: validation.ValidatePrivilege(validViewPrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is unset).",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
@@ -77,6 +75,7 @@ func ViewGrant() *TerraformGrantResource {
 			Create: CreateViewGrant,
 			Read:   ReadViewGrant,
 			Delete: DeleteViewGrant,
+			Update: UpdateViewGrant,
 
 			Schema: viewGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -216,4 +215,57 @@ func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateViewGrant implements schema.UpdateFunc
+func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
+	}
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	viewName := grantID.ObjectName
+	futureViews := (viewName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futureViews {
+		builder = snowflake.FutureViewGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.ViewGrant(dbName, schemaName, viewName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadViewGrant(d, meta)
 }
