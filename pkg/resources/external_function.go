@@ -26,10 +26,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		ForceNew: true,
 		// Suppress the diff shown if the values are equal when both compared in lower case.
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if strings.ToLower(old) == strings.ToLower(new) {
-				return true
-			}
-			return false
+			return strings.EqualFold(old, new)
 		},
 		Description: "Specifies the identifier for the external function. The identifier can contain the schema name and database name, as well as the function name. The function's signature (name and argument data types) must be unique within the schema.",
 	},
@@ -57,10 +54,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						if strings.ToLower(old) == strings.ToLower(new) {
-							return true
-						}
-						return false
+						return strings.EqualFold(old, new)
 					},
 					Description: "Argument name",
 				},
@@ -69,10 +63,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						if strings.ToLower(old) == strings.ToLower(new) {
-							return true
-						}
-						return false
+						return strings.EqualFold(old, new)
 					},
 					Description: "Argument type, e.g. VARCHAR",
 				},
@@ -93,10 +84,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		ForceNew: true,
 		// Suppress the diff shown if the values are equal when both compared in lower case.
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if strings.ToLower(old) == strings.ToLower(new) {
-				return true
-			}
-			return false
+			return strings.EqualFold(old, new)
 		},
 		Description: "Specifies the data type returned by the external function.",
 	},

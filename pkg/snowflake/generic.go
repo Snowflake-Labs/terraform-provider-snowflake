@@ -106,7 +106,7 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`ALTER %s "%s" SET`, ab.entityType, ab.name)) // TODO handle error
 
-	sb.WriteString(fmt.Sprintf(`%s`, ab.rawStatement))
+	sb.WriteString(ab.rawStatement)
 
 	for k, v := range ab.stringProperties {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
@@ -184,7 +184,7 @@ func (b *CreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %s "%s"`, b.entityType, b.name)) // TODO handle error
 
-	sb.WriteString(fmt.Sprintf(`%s`, b.rawStatement))
+	sb.WriteString(b.rawStatement)
 
 	sortedStringProperties := make([]string, 0)
 	for k := range b.stringProperties {
