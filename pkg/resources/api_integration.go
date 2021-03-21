@@ -295,7 +295,7 @@ func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {
 	apiProvider := data.Get("api_provider").(string)
-	stmt.SetString("API_PROVIDER", apiProvider)
+	stmt.SetRaw("API_PROVIDER=" + apiProvider)
 
 	switch apiProvider {
 	case "aws_api_gateway", "aws_private_api_gateway":

@@ -32,7 +32,7 @@ func TestAPIIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE API INTEGRATION "test_api_integration" API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_PROVIDER='aws_api_gateway' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-west-2.amazonaws.com/prod/'\) ENABLED=true$`,
+			`^CREATE API INTEGRATION "test_api_integration" API_PROVIDER=aws_api_gateway API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-west-2.amazonaws.com/prod/'\) ENABLED=true$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadAPIIntegration(mock)
 
