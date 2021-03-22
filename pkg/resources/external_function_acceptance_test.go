@@ -76,6 +76,7 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		return_type = "varchar"
 		return_behavior = "IMMUTABLE"
 		api_integration = snowflake_api_integration.test_api_int.name
+		max_batch_rows = 500
 		url_of_proxy_and_resource = "%s"
 	}
 	`, name, name, name, prefixes, name, url, name, url+"_2")

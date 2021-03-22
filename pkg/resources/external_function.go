@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -419,7 +420,12 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 			//TODO - Format in Snowflake DB is: ["context_function_1","context_function_2"]
 		case "max_batch_rows":
 			if desc.Value.String != "not set" {
-				if err = d.Set("max_batch_rows", desc.Value.String); err != nil {
+				i, err := strconv.ParseInt(desc.Value.String, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				if err = d.Set("max_batch_rows", i); err != nil {
 					return err
 				}
 			}
