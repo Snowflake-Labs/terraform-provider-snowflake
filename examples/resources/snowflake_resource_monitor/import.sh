@@ -1,0 +1,1 @@
+terraform import snowflake_resource_monitor.example

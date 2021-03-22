@@ -6,8 +6,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 type (
@@ -38,7 +38,7 @@ var (
 	warehousename = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	initialState = &AccTaskTestSettings{
+	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -68,7 +68,7 @@ var (
 	}
 
 	// Enables the Child and changes the SQL
-	stepOne = &AccTaskTestSettings{
+	stepOne = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -94,11 +94,12 @@ var (
 			When:          "TRUE",
 			Enabled:       true,
 			SessionParams: false,
+			Schedule:      "5 MINUTE",
 		},
 	}
 
 	// Changes Root Schedule and SQL
-	stepTwo = &AccTaskTestSettings{
+	stepTwo = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -118,15 +119,16 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:    soloname,
-			Schema:  "PUBLIC",
-			SQL:     "SELECT *",
-			When:    "FALSE",
-			Enabled: true,
+			Name:     soloname,
+			Schema:   "PUBLIC",
+			SQL:      "SELECT *",
+			When:     "FALSE",
+			Enabled:  true,
+			Schedule: "15 MINUTE",
 		},
 	}
 
-	stepThree = &AccTaskTestSettings{
+	stepThree = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
@@ -152,14 +154,15 @@ var (
 			When:          "TRUE",
 			Enabled:       true,
 			SessionParams: true,
+			Schedule:      "5 MINUTE",
 		},
 	}
 )
 
-func Test_AccTask(t *testing.T) {
-	t.Skip("broken by a change to snowflake. see example https://travis-ci.com/github/chanzuckerberg/terraform-provider-snowflake/jobs/367972245#L676")
+func TestAcc_Task(t *testing.T) {
+	t.Skip("broken by a change to snowflake")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +250,7 @@ func Test_AccTask(t *testing.T) {
 	})
 }
 
-func taskConfig(settings *AccTaskTestSettings) string {
+func taskConfig(settings *AccTaskTestSettings) string { //nolint
 	config, err := template.New("task_acceptance_test_config").Parse(`
 resource "snowflake_warehouse" "test_wh" {
 	name = "{{ .WarehouseName }}"
@@ -282,6 +285,9 @@ resource "snowflake_task" "solo_task" {
 	sql_statement = "{{ .SoloTask.SQL }}"
 	enabled  	  = {{ .SoloTask.Enabled }}
 	when     	  = "{{ .SoloTask.When }}"
+	{{ if .SoloTask.Schedule }}
+	schedule    = "{{ .SoloTask.Schedule }}"
+	{{- end }}
 	{{ if .SoloTask.SessionParams}}
 	session_parameters = {
 		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
@@ -295,7 +301,7 @@ resource "snowflake_task" "solo_task" {
 	}
 
 	var result bytes.Buffer
-	config.Execute(&result, settings)
+	config.Execute(&result, settings) //nolint
 
 	return result.String()
 }

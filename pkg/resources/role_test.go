@@ -8,7 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,6 +55,13 @@ func TestRoleRead(t *testing.T) {
 		r.NoError(err)
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("role name", d.Get("name").(string))
+
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		mock.ExpectQuery(`SHOW ROLES LIKE 'good_name'`).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadRole(d, db)
+		r.Empty(d.State())
+		r.Nil(err2)
 	})
 }
 

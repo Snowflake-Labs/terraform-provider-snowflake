@@ -8,7 +8,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
@@ -17,7 +17,7 @@ import (
 
 func TestIntegrationGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.IntegrationGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.IntegrationGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -25,16 +25,17 @@ func TestIntegrationGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"integration_name": "test-integration",
-		"privilege":        "USAGE",
-		"roles":            []interface{}{"test-role-1", "test-role-2"},
+		"integration_name":  "test-integration",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT USAGE ON INTEGRATION "test-integration" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadIntegrationGrant(mock)
 		err := resources.CreateIntegrationGrant(d, db)
 		r.NoError(err)
@@ -44,10 +45,11 @@ func TestIntegrationGrantCreate(t *testing.T) {
 func TestIntegrationGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES", map[string]interface{}{
-		"integration_name": "test-integration",
-		"privilege":        "IMPORTED PRIVILIGES",
-		"roles":            []interface{}{"test-role-1", "test-role-2"},
+	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES|false", map[string]interface{}{
+		"integration_name":  "test-integration",
+		"privilege":         "IMPORTED PRIVILIGES",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
 	})
 
 	r.NotNil(d)

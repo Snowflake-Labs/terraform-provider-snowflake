@@ -3,10 +3,11 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -44,45 +45,44 @@ func Share() *schema.Resource {
 		Read:   ReadShare,
 		Update: UpdateShare,
 		Delete: DeleteShare,
-		Exists: ShareExists,
 
 		Schema: shareSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateShare implements schema.CreateFunc
-func CreateShare(data *schema.ResourceData, meta interface{}) error {
+func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 
 	builder := snowflake.Share(name).Create()
-	builder.SetString("COMMENT", data.Get("comment").(string))
+	builder.SetString("COMMENT", d.Get("comment").(string))
 
 	err := snowflake.Exec(db, builder.Statement())
 	if err != nil {
 		return errors.Wrapf(err, "error creating share")
 	}
-	data.SetId(name)
+	d.SetId(name)
 
 	// Adding accounts must be done via an ALTER query
 
 	// @TODO flesh out the share type in the snowflake package since it doesn't
 	// follow the normal generic rules
-	err = setAccounts(data, meta)
+	err = setAccounts(d, meta)
 	if err != nil {
 		return err
 	}
 
-	return ReadShare(data, meta)
+	return ReadShare(d, meta)
 }
 
-func setAccounts(data *schema.ResourceData, meta interface{}) error {
+func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-	accs := expandStringList(data.Get("accounts").([]interface{}))
+	name := d.Get("name").(string)
+	accs := expandStringList(d.Get("accounts").([]interface{}))
 
 	if len(accs) > 0 {
 		// There is a race condition where error accounts cannot be added to a
@@ -99,7 +99,7 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 
 		// 2. Create temporary DB grant to the share
 		tempDBGrant := snowflake.DatabaseGrant(tempName)
-		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("USAGE"))
+		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("USAGE", false))
 		if err != nil {
 			return errors.Wrapf(err, "error creating temporary DB grant %v", tempName)
 		}
@@ -110,7 +110,7 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error adding accounts to share %v", name)
 		}
 		// 4. Revoke temporary DB grant to the share
-		err = snowflake.Exec(db, tempDBGrant.Share(name).Revoke("USAGE"))
+		err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
 		if err != nil {
 			return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
 		}
@@ -125,55 +125,61 @@ func setAccounts(data *schema.ResourceData, meta interface{}) error {
 }
 
 // ReadShare implements schema.ReadFunc
-func ReadShare(data *schema.ResourceData, meta interface{}) error {
+func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.Share(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	s, err := snowflake.ScanShare(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] share (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", StripAccountFromName(s.Name.String))
+	err = d.Set("name", StripAccountFromName(s.Name.String))
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", s.Comment.String)
+	err = d.Set("comment", s.Comment.String)
 	if err != nil {
 		return err
 	}
 
 	accs := strings.FieldsFunc(s.To.String, func(c rune) bool { return c == ',' })
-	err = data.Set("accounts", accs)
+	err = d.Set("accounts", accs)
 
 	return err
 }
 
 // UpdateShare implements schema.UpdateFunc
-func UpdateShare(data *schema.ResourceData, meta interface{}) error {
+func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	// Change the accounts first - this is a special case and won't work using the generic method
-	if data.HasChange("accounts") {
-		err := setAccounts(data, meta)
+	if d.HasChange("accounts") {
+		err := setAccounts(d, meta)
 		if err != nil {
 			return err
 		}
 	}
 
-	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(data, meta)
+	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(d, meta)
 }
 
 // DeleteShare implements schema.DeleteFunc
-func DeleteShare(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.Share)(data, meta)
+func DeleteShare(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
 }
 
 // ShareExists implements schema.ExistsFunc
-func ShareExists(data *schema.ResourceData, meta interface{}) (bool, error) {
+func ShareExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.Share(id).Show()
 	rows, err := db.Query(stmt)

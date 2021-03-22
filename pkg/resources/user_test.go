@@ -7,8 +7,9 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,6 +27,10 @@ func TestUserCreate(t *testing.T) {
 		"comment":              "great comment",
 		"password":             "awesomepassword",
 		"login_name":           "gname",
+		"display_name":         "Display Name",
+		"first_name":           "Marcin",
+		"last_name":            "Zukowski",
+		"email":                "fake@email.com",
 		"disabled":             true,
 		"default_warehouse":    "mywarehouse",
 		"default_namespace":    "mynamespace",
@@ -38,7 +43,7 @@ func TestUserCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' DISPLAY_NAME='Display Name' EMAIL='fake@email.com' FIRST_NAME='Marcin' LAST_NAME='Zukowski' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock)
 		err := resources.CreateUser(d, db)
 		r.NoError(err)
@@ -67,6 +72,14 @@ func TestUserRead(t *testing.T) {
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("myloginname", d.Get("login_name").(string))
 		r.Equal(false, d.Get("disabled").(bool))
+
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.User(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadUser(d, db)
+		r.Empty(d.State())
+		r.Nil(err2)
 	})
 }
 
