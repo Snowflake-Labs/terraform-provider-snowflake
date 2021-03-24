@@ -44,6 +44,7 @@ func QueryRow(db *sql.DB, stmt string) *sqlx.Row {
 // [DB.Unsafe](https://godoc.org/github.com/jmoiron/sqlx#DB.Unsafe) so that we can scan to structs
 // without worrying about newly introduced columns
 func Query(db *sql.DB, stmt string) (*sqlx.Rows, error) {
+	log.Print("[DEBUG] query stmt ", stmt)
 	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
 	return sdb.Queryx(stmt)
 }
