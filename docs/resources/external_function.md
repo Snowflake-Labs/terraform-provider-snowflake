@@ -17,8 +17,12 @@ resource "snowflake_external_function" "test_ext_func" {
   name = "my_function"
   database = "my_test_db"
   schema   = "my_test_schema"
-  args {
-    name = "data"
+  arg {
+    name = "arg1"
+    type = "varchar"
+  }
+  arg {
+    name = "arg2"
     type = "varchar"
   }
   return_type = "varchar"
@@ -43,11 +47,11 @@ resource "snowflake_external_function" "test_ext_func" {
 
 ### Optional
 
-- **args** (Block List) Specifies the arguments/inputs for the external function. These should correspond to the arguments that the remote service expects. (see [below for nested schema](#nestedblock--args))
+- **arg** (Block List) Specifies the arguments/inputs for the external function. These should correspond to the arguments that the remote service expects. (see [below for nested schema](#nestedblock--arg))
 - **comment** (String) A description of the external function.
 - **compression** (String) If specified, the JSON payload is compressed when sent from Snowflake to the proxy service, and when sent back from the proxy service to Snowflake.
 - **context_headers** (List of String) Binds Snowflake context function results to HTTP headers.
-- **headers** (Block List) Allows users to specify key-value metadata that is sent with every request as HTTP headers. (see [below for nested schema](#nestedblock--headers))
+- **header** (Block List) Allows users to specify key-value metadata that is sent with every request as HTTP headers. (see [below for nested schema](#nestedblock--header))
 - **id** (String) The ID of this resource.
 - **max_batch_rows** (Number) This specifies the maximum number of rows in each batch sent to the proxy service.
 - **null_input_behavior** (String) Specifies the behavior of the external function when called with null inputs.
@@ -57,8 +61,8 @@ resource "snowflake_external_function" "test_ext_func" {
 
 - **created_on** (String) Date and time when the external function was created.
 
-<a id="nestedblock--args"></a>
-### Nested Schema for `args`
+<a id="nestedblock--arg"></a>
+### Nested Schema for `arg`
 
 Required:
 
@@ -66,8 +70,8 @@ Required:
 - **type** (String) Argument type, e.g. VARCHAR
 
 
-<a id="nestedblock--headers"></a>
-### Nested Schema for `headers`
+<a id="nestedblock--header"></a>
+### Nested Schema for `header`
 
 Required:
 

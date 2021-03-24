@@ -57,8 +57,12 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		name = "%s"
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
-		args {
-			name = "data"
+		arg {
+			name = "arg1"
+			type = "varchar"
+		}
+		arg {
+			name = "arg2"
 			type = "varchar"
 		}
 		comment = "Terraform acceptance test"
@@ -76,6 +80,10 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		return_type = "varchar"
 		return_behavior = "IMMUTABLE"
 		api_integration = snowflake_api_integration.test_api_int.name
+		header {
+			name = "x-custom-header"
+			value = "snowflake"
+		}
 		max_batch_rows = 500
 		url_of_proxy_and_resource = "%s"
 	}

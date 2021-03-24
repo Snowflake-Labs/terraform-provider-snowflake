@@ -39,7 +39,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the external function.",
 	},
-	"args": {
+	"arg": {
 		Type:        schema.TypeList,
 		Optional:    true,
 		ForceNew:    true,
@@ -104,7 +104,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The name of the API integration object that should be used to authenticate the call to the proxy service.",
 	},
-	"headers": {
+	"header": {
 		Type:        schema.TypeList,
 		Optional:    true,
 		ForceNew:    true,
@@ -125,10 +125,14 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		},
 	},
 	"context_headers": {
-		Type:        schema.TypeList,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		ForceNew:    true,
+		Type:     schema.TypeList,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Optional: true,
+		ForceNew: true,
+		// Suppress the diff shown if the values are equal when both compared in lower case.
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
+		},
 		Description: "Binds Snowflake context function results to HTTP headers.",
 	},
 	"max_batch_rows": {
@@ -236,10 +240,10 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	builder.WithURLOfProxyAndResource(d.Get("url_of_proxy_and_resource").(string))
 
 	// Set optionals
-	if _, ok := d.GetOk("args"); ok {
+	if _, ok := d.GetOk("arg"); ok {
 		var types []string
 		args := []map[string]string{}
-		for _, arg := range d.Get("args").([]interface{}) {
+		for _, arg := range d.Get("arg").([]interface{}) {
 			argDef := map[string]string{}
 			for key, val := range arg.(map[string]interface{}) {
 				argDef[key] = val.(string)
@@ -271,9 +275,9 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	if _, ok := d.GetOk("headers"); ok {
+	if _, ok := d.GetOk("header"); ok {
 		headers := []map[string]string{}
-		for _, header := range d.Get("headers").([]interface{}) {
+		for _, header := range d.Get("header").([]interface{}) {
 			headerDef := map[string]string{}
 			for key, val := range header.(map[string]interface{}) {
 				headerDef[key] = val.(string)
@@ -285,7 +289,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("context_headers"); ok {
-		contextHeaders := expandStringList(v.(*schema.Set).List())
+		contextHeaders := expandStringList(v.([]interface{}))
 		builder.WithContextHeaders(contextHeaders)
 	}
 
@@ -395,7 +399,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("args", args); err != nil {
+				if err = d.Set("arg", args); err != nil {
 					return err
 				}
 			}
@@ -415,9 +419,33 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "headers":
-			//TODO - Format in Snowflake DB is: {"head1":"val1","head2":"val2"}
+			if desc.Value.Valid && desc.Value.String != "null" {
+				// Format in Snowflake DB is: {"head1":"val1","head2":"val2"}
+				headerPairs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "{", ""), "}", ""), "\"", ""), ",")
+				headers := []interface{}{}
+
+				for _, headerPair := range headerPairs {
+					headerItem := strings.Split(headerPair, ":")
+
+					header := map[string]interface{}{}
+					header["name"] = headerItem[0]
+					header["value"] = headerItem[1]
+					headers = append(headers, header)
+				}
+
+				if err = d.Set("header", headers); err != nil {
+					return err
+				}
+			}
 		case "context_headers":
-			//TODO - Format in Snowflake DB is: ["context_function_1","context_function_2"]
+			if desc.Value.Valid && desc.Value.String != "null" {
+				// Format in Snowflake DB is: ["CONTEXT_FUNCTION_1","CONTEXT_FUNCTION_2"]
+				contextHeaders := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "\"", ""), ",")
+
+				if err = d.Set("context_headers", contextHeaders); err != nil {
+					return err
+				}
+			}
 		case "max_batch_rows":
 			if desc.Value.String != "not set" {
 				i, err := strconv.ParseInt(desc.Value.String, 10, 64)

@@ -2,8 +2,12 @@ resource "snowflake_external_function" "test_ext_func" {
   name = "my_function"
   database = "my_test_db"
   schema   = "my_test_schema"
-  args {
-    name = "data"
+  arg {
+    name = "arg1"
+    type = "varchar"
+  }
+  arg {
+    name = "arg2"
     type = "varchar"
   }
   return_type = "varchar"
