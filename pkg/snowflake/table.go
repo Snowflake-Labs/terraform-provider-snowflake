@@ -174,6 +174,7 @@ func (tb *TableBuilder) DropColumn(name string) string {
 	return fmt.Sprintf(`ALTER TABLE %s DROP COLUMN "%s"`, tb.QualifiedName(), name)
 }
 
+// ChangeColumnType returns the SQL query that will change the type of the named column to the given type.
 func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 	col := Column{
 		name:  name,
