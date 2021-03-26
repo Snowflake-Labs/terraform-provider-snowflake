@@ -59,8 +59,6 @@ Required:
 - **name** (String) Column name
 - **type** (String) Column type, e.g. VARIANT
 
-Once created, columns _type_ can be changed without loss of data. Attempting to change the _name_ of a column will result in the column being dropped and a new column created. Any data in the original column will be lost.
-
 ## Import
 
 Import is supported using the following syntax:
