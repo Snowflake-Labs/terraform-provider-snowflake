@@ -160,6 +160,29 @@ func (tb *TableBuilder) ChangeComment(c string) string {
 	return fmt.Sprintf(`ALTER TABLE %v SET COMMENT = '%v'`, tb.QualifiedName(), EscapeString(c))
 }
 
+// AddColumn returns the SQL query that will add a new column to the table.
+func (tb *TableBuilder) AddColumn(name string, dataType string) string {
+	col := Column{
+		name:  name,
+		_type: dataType,
+	}
+	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
+}
+
+// DropColumn returns the SQL query that will add a new column to the table.
+func (tb *TableBuilder) DropColumn(name string) string {
+	return fmt.Sprintf(`ALTER TABLE %s DROP COLUMN "%s"`, tb.QualifiedName(), name)
+}
+
+// ChangeColumnType returns the SQL query that will change the type of the named column to the given type.
+func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
+	col := Column{
+		name:  name,
+		_type: dataType,
+	}
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
+}
+
 // RemoveComment returns the SQL query that will remove the comment on the table.
 func (tb *TableBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TABLE %v UNSET COMMENT`, tb.QualifiedName())

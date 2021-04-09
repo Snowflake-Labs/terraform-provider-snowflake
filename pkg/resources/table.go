@@ -40,7 +40,6 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
-		ForceNew:    true,
 		Description: "Definitions of a column to create in the table. Minimum one required.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -129,6 +128,76 @@ func tableIDFromString(stringID string) (*tableID, error) {
 	return tableResult, nil
 }
 
+type column struct {
+	name     string
+	dataType string
+}
+
+func (c column) toSnowflakeColumn() snowflake.Column {
+	sC := snowflake.Column{}
+	return *sC.WithName(c.name).WithType(c.dataType)
+}
+
+type columns []column
+
+func (c columns) toSnowflakeColumns() []snowflake.Column {
+	sC := make([]snowflake.Column, len(c))
+	for i, col := range c {
+		sC[i] = col.toSnowflakeColumn()
+	}
+	return sC
+}
+
+func (old columns) getNewIn(new columns) (added columns) {
+	added = columns{}
+	for _, cO := range old {
+		found := false
+		for _, cN := range new {
+			if cO.name == cN.name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, cO)
+		}
+	}
+	return
+}
+
+func (old columns) getChangedTypes(new columns) (changed columns) {
+	changed = columns{}
+	for _, cO := range old {
+		for _, cN := range new {
+			if cO.name == cN.name && cO.dataType != cN.dataType {
+				changed = append(changed, cN)
+			}
+		}
+	}
+	return
+}
+
+func (old columns) diffs(new columns) (removed columns, added columns, changed columns) {
+	return old.getNewIn(new), new.getNewIn(old), old.getChangedTypes(new)
+}
+
+func getColumn(from interface{}) (to column) {
+	c := from.(map[string]interface{})
+	return column{
+		name:     c["name"].(string),
+		dataType: c["type"].(string),
+	}
+}
+
+func getColumns(from interface{}) (to columns) {
+	cols := from.([]interface{})
+	to = make(columns, len(cols))
+	for i, c := range cols {
+		to[i] = getColumn(c)
+	}
+	return to
+}
+
 // CreateTable implements schema.CreateFunc
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -136,17 +205,8 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
-	// for data types in the HCL2ValueFromConfigValue method.
-	columns := []snowflake.Column{}
-
-	for _, column := range d.Get("column").([]interface{}) {
-		typed := column.(map[string]interface{})
-		columnDef := snowflake.Column{}
-		columnDef.WithName(typed["name"].(string)).WithType(typed["type"].(string))
-		columns = append(columns, columnDef)
-	}
-	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns)
+	columns := getColumns(d.Get("column").([]interface{}))
+	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns.toSnowflakeColumns())
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -244,6 +304,31 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
+		}
+	}
+	if d.HasChange("column") {
+		old, new := d.GetChange("column")
+		removed, added, changed := getColumns(old).diffs(getColumns(new))
+		for _, cA := range removed {
+			q := builder.DropColumn(cA.name)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error dropping column on %v", d.Id())
+			}
+		}
+		for _, cA := range added {
+			q := builder.AddColumn(cA.name, cA.dataType)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding column on %v", d.Id())
+			}
+		}
+		for _, cA := range changed {
+			q := builder.ChangeColumnType(cA.name, cA.dataType)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing column type on %v", d.Id())
+			}
 		}
 	}
 

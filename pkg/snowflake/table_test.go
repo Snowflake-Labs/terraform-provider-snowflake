@@ -41,6 +41,24 @@ func TestTableRemoveComment(t *testing.T) {
 	r.Equal(s.RemoveComment(), `ALTER TABLE "test_db"."test_schema"."test_table" UNSET COMMENT`)
 }
 
+func TestTableAddColumn(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.AddColumn("new_column", "VARIANT"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
+}
+
+func TestTableDropColumn(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.DropColumn("old_column"), `ALTER TABLE "test_db"."test_schema"."test_table" DROP COLUMN "old_column"`)
+}
+
+func TestTableChangeColumnType(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangeColumnType("old_column", "BIGINT"), `ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" BIGINT`)
+}
+
 func TestTableDrop(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
