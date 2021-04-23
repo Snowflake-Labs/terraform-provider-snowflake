@@ -63,7 +63,7 @@ resource "snowflake_masking_policy" "test" {
 
 resource "snowflake_masking_policy_grant" "test" {
 	masking_policy_name = snowflake_masking_policy.test.name
-    database_name = snowflake_database.test.name
+	database_name = snowflake_database.test.name
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	privilege = "APPLY"
