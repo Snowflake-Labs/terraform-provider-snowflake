@@ -23,11 +23,11 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 			{
 				Config: maskingPolicyGrantConfig(t, databaseName, schemaName, maskingPolicyName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_making_policy_grant.test", "database_name", databaseName),
-					resource.TestCheckResourceAttr("snowflake_making_policy_grant.test", "schema_name", schemaName),
-					resource.TestCheckResourceAttr("snowflake_making_policy_grant.test", "making_policy_name", maskingPolicyName),
-					resource.TestCheckResourceAttr("snowflake_making_policy_grant.test", "with_grant_option", "false"),
-					resource.TestCheckResourceAttr("snowflake_making_policy_grant.test", "privilege", "APPLY"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", databaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", schemaName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "masking_policy_name", maskingPolicyName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "APPLY"),
 				),
 			},
 		},
