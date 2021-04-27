@@ -42,6 +42,10 @@ func maskingPolicyGrantConfig(name string) string {
 		comment = "Terraform acceptance test"
 	}
 
+	resource "snowflake_role" "test" {
+		name = "%v"
+	}
+
 	resource "snowflake_masking_policy" "test" {
 		name = "%v"
 		database = snowflake_database.test.name
@@ -59,5 +63,5 @@ func maskingPolicyGrantConfig(name string) string {
 		schema_name   = snowflake_schema.test.name
 		privilege = "APPLY"
 	}
-	`, name, name, name)
+	`, name, name, name, name)
 }
