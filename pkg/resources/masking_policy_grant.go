@@ -12,22 +12,16 @@ var validMaskingPoilcyPrivileges = NewPrivilegeSet(
 )
 
 var maskingPolicyGrantSchema = map[string]*schema.Schema{
-	"masking_policy_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the masking policy on which to grant privileges immediately.",
-		ForceNew:    true,
-	},
-	"schema_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the schema containing the masking policy on which to grant privileges.",
-		ForceNew:    true,
-	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the masking policy on which to grant privileges.",
+		ForceNew:    true,
+	},
+	"masking_policy_name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The name of the masking policy on which to grant privileges immediately.",
 		ForceNew:    true,
 	},
 	"privilege": {
@@ -43,6 +37,12 @@ var maskingPolicyGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
+		ForceNew:    true,
+	},
+	"schema_name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The name of the schema containing the masking policy on which to grant privileges.",
 		ForceNew:    true,
 	},
 	"with_grant_option": {
