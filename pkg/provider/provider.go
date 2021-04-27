@@ -3,6 +3,7 @@ package provider
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
@@ -204,7 +205,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
 		if err != nil {
-			errors.Wrap(err, "could not retreive access token from refresh token")
+			return nil, errors.Wrap(err, "could not retreive access token from refresh token")
 		}
 		oauthAccessToken = accessToken
 	}
@@ -333,14 +334,14 @@ func GetOauthData(refreshToken, redirectUrl string) url.Values {
 	return data
 }
 
-func GetOauthRequest(dataContent *strings.Reader, endPoint, clientId, clientSecret string) *http.Request {
+func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", endPoint, dataContent)
 	if err != nil {
-		errors.Wrap(err, "Request to the endpoint could not be completed")
+		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
 	}
 	request.SetBasicAuth(clientId, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
-	return request
+	return request, nil
 
 }
 
@@ -351,13 +352,16 @@ func GetOauthAccessToken(
 	data url.Values) (string, error) {
 
 	client := &http.Client{}
-	request := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	if err != nil {
+		return "", errors.Wrap(err, "Oauth request returned an error:")
+	}
 
 	var result Result
 
 	response, err := client.Do(request)
 	if err != nil {
-		errors.Wrap(err, "Response status returned an error:")
+		return "", errors.Wrap(err, "Response status returned an error:")
 	}
 	if response.StatusCode != 200 {
 		errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
@@ -365,8 +369,11 @@ func GetOauthAccessToken(
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		errors.Wrap(err, "Response body was not able to be parsed")
+		return "", errors.Wrap(err, "Response body was not able to be parsed")
 	}
-	json.Unmarshal([]byte(body), &result)
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		errors.Wrap(err, "Error parsing JSON from Snowflake")
+	}
 	return result.AccessToken, nil
 }
