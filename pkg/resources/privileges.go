@@ -41,6 +41,7 @@ const (
 	privilegeImportShare            Privilege = "IMPORT SHARE"
 	privilegeAddSearchOptimization  Privilege = "ADD SEARCH OPTIMIZATION"
 	privilegeApplyMaskingPolicy     Privilege = "APPLY MASKING POLICY"
+	privilegeApply                  Privilege = "APPLY"
 
 	privilegeCreateRole        Privilege = "CREATE ROLE"
 	privilegeCreateUser        Privilege = "CREATE USER"
