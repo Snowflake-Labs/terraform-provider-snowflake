@@ -373,7 +373,7 @@ func GetOauthAccessToken(
 	}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		errors.Wrap(err, "Error parsing JSON from Snowflake")
+		return "", errors.Wrap(err, "Error parsing JSON from Snowflake")
 	}
 	return result.AccessToken, nil
 }
