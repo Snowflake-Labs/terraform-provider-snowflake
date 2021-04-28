@@ -364,7 +364,7 @@ func GetOauthAccessToken(
 		return "", errors.Wrap(err, "Response status returned an error:")
 	}
 	if response.StatusCode != 200 {
-		errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
+		return "", errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
