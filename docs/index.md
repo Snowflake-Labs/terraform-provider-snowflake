@@ -75,6 +75,7 @@ The Snowflake provider support multiple ways to authenticate:
 
 * Password
 * OAuth Access Token
+* OAuth Refresh Token
 * Browser Auth
 * Private Key
 
@@ -109,7 +110,7 @@ export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
 
 Note that once this access token expires, you'll need to request a new one through an external application.
 
-If you have an OAuth Refresh token, export these credentials as environment variables:
+If you have an OAuth refresh token, export these credentials as environment variables:
 
 ```shell
 export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
