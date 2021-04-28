@@ -65,5 +65,5 @@ Import is supported using the following syntax:
 
 ```shell
 # format is database name | schema name | table name
-terraform import snowflake_table.example
+terraform import snowflake_table.example 'databaseName|schemaName|tableName'
 ```
