@@ -26,6 +26,7 @@ const (
 	procedureType        grantType = "PROCEDURE"
 	sequenceType         grantType = "SEQUENCE"
 	streamType           grantType = "STREAM"
+	maskingPolicyType    grantType = "MASKING POLICY"
 )
 
 type GrantExecutable interface {
@@ -153,7 +154,7 @@ func ViewGrant(db, schema, view string) GrantBuilder {
 	}
 }
 
-// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a view
+// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a materialized view
 func MaterializedViewGrant(db, schema, view string) GrantBuilder {
 	return &CurrentMaterializedViewGrantBuilder{
 		name:          view,
@@ -171,7 +172,7 @@ func TableGrant(db, schema, table string) GrantBuilder {
 	}
 }
 
-// ResourceMonitorGrant returns a pointer to a CurrentGrantBuilder for a warehouse
+// ResourceMonitorGrant returns a pointer to a CurrentGrantBuilder for a resource monitor
 func ResourceMonitorGrant(w string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          w,
@@ -180,7 +181,7 @@ func ResourceMonitorGrant(w string) GrantBuilder {
 	}
 }
 
-// IntegrationGrant returns a pointer to a CurrentGrantBuilder for a warehouse
+// IntegrationGrant returns a pointer to a CurrentGrantBuilder for an integration
 func IntegrationGrant(w string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          w,
@@ -198,7 +199,7 @@ func WarehouseGrant(w string) GrantBuilder {
 	}
 }
 
-// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for a view
+// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for an external table
 func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          externalTable,
@@ -207,7 +208,7 @@ func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
 	}
 }
 
-// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a view
+// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a file format
 func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          fileFormat,
@@ -225,7 +226,7 @@ func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBui
 	}
 }
 
-// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a view
+// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a procedure
 func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          procedure,
@@ -234,7 +235,7 @@ func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantB
 	}
 }
 
-// SequenceGrant returns a pointer to a CurrentGrantBuilder for a view
+// SequenceGrant returns a pointer to a CurrentGrantBuilder for a sequence
 func SequenceGrant(db, schema, sequence string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          sequence,
@@ -243,12 +244,21 @@ func SequenceGrant(db, schema, sequence string) GrantBuilder {
 	}
 }
 
-// StreamGrant returns a pointer to a CurrentGrantBuilder for a view
+// StreamGrant returns a pointer to a CurrentGrantBuilder for a stream
 func StreamGrant(db, schema, stream string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          stream,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, stream),
 		grantType:     streamType,
+	}
+}
+
+// MaskingPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy
+func MaskingPolicyGrant(db, schema, maskingPolicy string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          maskingPolicy,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, maskingPolicy),
+		grantType:     maskingPolicyType,
 	}
 }
 
