@@ -90,6 +90,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_file_format_grant":       resources.FileFormatGrant(),
 		"snowflake_function_grant":          resources.FunctionGrant(),
 		"snowflake_integration_grant":       resources.IntegrationGrant(),
+		"snowflake_masking_policy_grant":    resources.MaskingPolicyGrant(),
 		"snowflake_materialized_view_grant": resources.MaterializedViewGrant(),
 		"snowflake_procedure_grant":         resources.ProcedureGrant(),
 		"snowflake_resource_monitor_grant":  resources.ResourceMonitorGrant(),
@@ -106,7 +107,9 @@ func GetGrantResources() resources.TerraformGrantResources {
 
 func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
+		"snowflake_api_integration":           resources.APIIntegration(),
 		"snowflake_database":                  resources.Database(),
+		"snowflake_external_function":         resources.ExternalFunction(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_masking_policy":            resources.MaskingPolicy(),
 		"snowflake_materialized_view":         resources.MaterializedView(),

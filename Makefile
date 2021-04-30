@@ -51,7 +51,7 @@ ifndef KEYBASE_KEY_ID
 endif
 .PHONY: check-release-prereqs
 
-release: check-release-prereqs ## run a release
+release: setup check-release-prereqs ## run a release
 	./bin/bff bump
 	git push
 	goreleaser release --debug --rm-dist

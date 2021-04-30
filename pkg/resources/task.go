@@ -334,7 +334,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		paramMap := map[string]interface{}{}
 		for _, param := range params {
 			log.Printf("[TRACE] %+v\n", param)
-			if param.Value == param.DefaultValue {
+			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" {
 				continue
 			}
 

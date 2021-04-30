@@ -11,6 +11,7 @@ import (
 type EntityType string
 
 const (
+	ApiIntegrationType     EntityType = "API INTEGRATION"
 	DatabaseType           EntityType = "DATABASE"
 	ManagedAccountType     EntityType = "MANAGED ACCOUNT"
 	ResourceMonitorType    EntityType = "RESOURCE MONITOR"
@@ -49,6 +50,7 @@ type SettingBuilder interface {
 	SetBool(string, bool)
 	SetInt(string, int)
 	SetFloat(string, float64)
+	SetRaw(string)
 }
 
 type AlterPropertiesBuilder struct {
@@ -59,6 +61,7 @@ type AlterPropertiesBuilder struct {
 	boolProperties       map[string]bool
 	intProperties        map[string]int
 	floatProperties      map[string]float64
+	rawStatement         string
 }
 
 func (b *Builder) Alter() *AlterPropertiesBuilder {
@@ -93,9 +96,17 @@ func (ab *AlterPropertiesBuilder) SetFloat(key string, value float64) {
 	ab.floatProperties[key] = value
 }
 
+func (ab *AlterPropertiesBuilder) SetRaw(rawStatement string) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`%s %s`, ab.rawStatement, rawStatement))
+	ab.rawStatement = sb.String()
+}
+
 func (ab *AlterPropertiesBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`ALTER %s "%s" SET`, ab.entityType, ab.name)) // TODO handle error
+
+	sb.WriteString(ab.rawStatement)
 
 	for k, v := range ab.stringProperties {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
@@ -128,6 +139,7 @@ type CreateBuilder struct {
 	boolProperties       map[string]bool
 	intProperties        map[string]int
 	floatProperties      map[string]float64
+	rawStatement         string
 }
 
 func (b *Builder) Create() *CreateBuilder {
@@ -162,9 +174,17 @@ func (b *CreateBuilder) SetFloat(key string, value float64) {
 	b.floatProperties[key] = value
 }
 
+func (b *CreateBuilder) SetRaw(rawStatement string) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`%s %s`, b.rawStatement, rawStatement))
+	b.rawStatement = sb.String()
+}
+
 func (b *CreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %s "%s"`, b.entityType, b.name)) // TODO handle error
+
+	sb.WriteString(b.rawStatement)
 
 	sortedStringProperties := make([]string, 0)
 	for k := range b.stringProperties {
