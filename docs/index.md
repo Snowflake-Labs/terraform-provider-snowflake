@@ -19,9 +19,14 @@ provider snowflake {
   region   = "..."
 
   // optional, at exactly one must be set
-  password           = "..."
-  oauth_access_token = "..."
-  private_key_path   = "..."
+  password              = "..."
+  oauth_access_token    = "..."
+  private_key_path      = "..."
+  oauth_refresh_token   = "..."
+  oauth_client_id       = "..."
+  oauth_client_secret   = "..."
+  oauth_endpoint        = "..."
+  oauth_redirect_url    = "..."
 
   // optional
   role = "..."
@@ -42,6 +47,7 @@ provider snowflake {
 
 ### Optional
 
+<<<<<<< HEAD
 - **browser_auth** (Boolean)
 - **oauth_access_token** (String, Sensitive)
 - **password** (String, Sensitive)
@@ -49,6 +55,19 @@ provider snowflake {
 - **private_key_path** (String, Sensitive)
 - **region** (String)
 - **role** (String)
+=======
+- **browser_auth** (Boolean, Optional)
+- **oauth_access_token** (String, Optional)
+- **password** (String, Optional)
+- **private_key_path** (String, Optional)
+- **oauth_refresh_token** (String, Optional)
+- **oauth_client_id** (String, Optional)
+- **oauth_client_secret** (String, Optional)
+- **oauth_endpoint** (String, Optional)
+- **oauth_redirect_url** (String, Optional)
+- **region** (String, Optional)
+- **role** (String, Optional)
+>>>>>>> 08049f0 (Updated documentation, to show how to utlize refresh token)
 
 ## Authentication
 
@@ -90,6 +109,18 @@ export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
 
 Note that once this access token expires, you'll need to request a new one through an external application.
 
+If you have an OAuth Refresh token, export these credentials as environment variables:
+
+```shell
+export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
+export SNOWFLAKE_OAUTH_CLIENT_ID='...'
+export SNOWFLAKE_OAUTH_CLIENT_SECRET='...'
+export SNOWFLAKE_OAUTH_ENDPOINT='...'
+export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
+```
+
+Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
+
 ### Username and Password Environment Variables
 
 If you choose to use Username and Password Authentication, export these credentials:
@@ -113,8 +144,21 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `password` - (optional) Password for username+password auth. Cannot be used with `browser_auth` or
   `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.
 * `oauth_access_token` - (optional) Token for use with OAuth. Generating the token is left to other
-  tools. Cannot be used with `browser_auth`, `private_key_path` or `password`. Can be source from
-  `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
+  tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. 
+  Can be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
+* `oauth_refresh_token` - (optional) Token for use with OAuth. Setup and generation of the token is 
+  left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, 
+  `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, 
+  `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment 
+  variable.
+* `oauth_client_id` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
+* `oauth_client_secret` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
+* `oauth_endpoint` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
+* `oauth_redirect_url` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable. 
 * `private_key_path` - (optional) Path to a private key for using keypair authentication.. Cannot be
   used with `browser_auth`, `oauth_access_token` or `password`. Can be source from
   `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
