@@ -2,6 +2,8 @@ package provider
 
 import (
 	"crypto/rsa"
+	"encoding/json"
+	"io"
 	"io/ioutil"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
@@ -12,6 +14,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 	"golang.org/x/crypto/ssh"
+
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 )
 
 // Provider is a provider
@@ -33,21 +41,61 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"oauth_access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_refresh_token"},
+			},
+			"oauth_refresh_token": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_REFRESH_TOKEN", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_endpoint", "oauth_redirect_url"},
+			},
+			"oauth_client_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_CLIENT_ID", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				RequiredWith:  []string{"oauth_refresh_token", "oauth_client_secret", "oauth_endpoint", "oauth_redirect_url"},
+			},
+			"oauth_client_secret": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_CLIENT_SECRET", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				RequiredWith:  []string{"oauth_client_id", "oauth_refresh_token", "oauth_endpoint", "oauth_redirect_url"},
+			},
+			"oauth_endpoint": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ENDPOINT", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_refresh_token", "oauth_redirect_url"},
+			},
+			"oauth_redirect_url": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_REDIRECT_URL", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_endpoint", "oauth_refresh_token"},
 			},
 			"browser_auth": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "private_key_path", "private_key", "oauth_access_token"},
+				ConflictsWith: []string{"password", "private_key_path", "private_key", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,
@@ -61,7 +109,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path"},
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path", "oauth_refresh_token"},
 			},
 			"role": {
 				Type:        schema.TypeString,
@@ -148,6 +196,19 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	oauthAccessToken := s.Get("oauth_access_token").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
+	oauthRefreshToken := s.Get("oauth_refresh_token").(string)
+	oauthClientID := s.Get("oauth_client_id").(string)
+	oauthClientSecret := s.Get("oauth_client_secret").(string)
+	oauthEndpoint := s.Get("oauth_endpoint").(string)
+	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
+
+	if oauthRefreshToken != "" {
+		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
+		if err != nil {
+			return nil, errors.Wrap(err, "could not retreive access token from refresh token")
+		}
+		oauthAccessToken = accessToken
+	}
 
 	dsn, err := DSN(
 		account,
@@ -160,7 +221,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		region,
 		role,
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
 	}
@@ -258,4 +318,62 @@ func ParsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
 		return nil, errors.New("privateKey not of type RSA")
 	}
 	return rsaPrivateKey, nil
+}
+
+type Result struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
+func GetOauthData(refreshToken, redirectUrl string) url.Values {
+	data := url.Values{}
+	data.Set("grant_type", "refresh_token")
+	data.Set("refresh_token", refreshToken)
+	data.Set("redirect_uri", redirectUrl)
+	return data
+}
+
+func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret string) (*http.Request, error) {
+	request, err := http.NewRequest("POST", endPoint, dataContent)
+	if err != nil {
+		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
+	}
+	request.SetBasicAuth(clientId, clientSecret)
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
+	return request, nil
+
+}
+
+func GetOauthAccessToken(
+	endPoint,
+	client_id,
+	client_secret string,
+	data url.Values) (string, error) {
+
+	client := &http.Client{}
+	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	if err != nil {
+		return "", errors.Wrap(err, "Oauth request returned an error:")
+	}
+
+	var result Result
+
+	response, err := client.Do(request)
+	if err != nil {
+		return "", errors.Wrap(err, "Response status returned an error:")
+	}
+	if response.StatusCode != 200 {
+		return "", errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "Response body was not able to be parsed")
+	}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", errors.Wrap(err, "Error parsing JSON from Snowflake")
+	}
+	return result.AccessToken, nil
 }
