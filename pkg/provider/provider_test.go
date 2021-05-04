@@ -1,6 +1,14 @@
 package provider_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
@@ -84,6 +92,152 @@ func TestOAuthDSN(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("DSN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetOauthDATA(t *testing.T) {
+	type param struct {
+		refresh_token,
+		redirect_url string
+	}
+	refresh_token := "ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW+0cE7KJx2yoUV0ysWu3HKwhJ1v/iEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX/JUM3/wzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY="
+	redirect_url := "https://localhost.com"
+	cases := []struct {
+		name    string
+		param   param
+		want    string
+		wantErr bool
+	}{
+		{"simpleData", param{refresh_token, redirect_url},
+			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D",
+			false},
+		{"errorData", param{"no_refresh_token", redirect_url},
+			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=no_refresh_token",
+			false},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			got := provider.GetOauthData(tt.param.refresh_token, tt.param.redirect_url)
+			want, err := url.ParseQuery(tt.want)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetData() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("GetData() = %v, want %v", got, tt.want)
+			}
+
+		})
+	}
+}
+
+func TestGetOauthResponse(t *testing.T) {
+	type param struct {
+		dataStuff,
+		endpoint,
+		clientid,
+		clientscret string
+	}
+	dataStuff := "grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D"
+	endpoint := "https://example.snowflakecomputing.com/oauth/token-request"
+	clientid := "nWsfd+gowithgoiwm1vJvGLckmLIMPS="
+	clientsecret := "ThjKLFMD45wKIgVTecwVXguZrt+yHG1Ydth8eeQB34XU="
+	cases := []struct {
+		name    string
+		param   param
+		want    string
+		wantErr bool
+	}{
+		{"simpleContent", param{dataStuff, endpoint, clientid, clientsecret},
+			"application/x-www-form-urlencoded;charset=UTF-8",
+			false},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientscret)
+			if err != nil {
+				t.Errorf("GetOauthRequest() %v", err)
+			}
+			if !reflect.DeepEqual(got.Header.Get("Content-Type"), tt.want) {
+				t.Errorf("GetResponse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// RoundTripFunc .
+type RoundTripFunc func(req *http.Request) *http.Response
+
+// RoundTrip .
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+func NewTestClient(fn RoundTripFunc) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFunc(fn),
+	}
+}
+
+func TestGetOauthAccessToken(t *testing.T) {
+	type param struct {
+		dataStuff,
+		endpoint,
+		clientid,
+		clientsecret string
+	}
+	dataStuff := "grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D"
+	endpoint := "https://example.snowflakecomputing.com/oauth/token-request"
+	clientid := "nWsfd+gowithgoiwm1vJvGLckmLIMPS="
+	clientsecret := "ThjKLFMD45wKIgVTecwVXguZrt+yHG1Ydth8eeQB34XU="
+	cases := []struct {
+		name       string
+		param      param
+		want       string
+		statuscode string
+		wantTok    string
+		wantErr    bool
+	}{
+		{"simpleAccessToken", param{dataStuff, endpoint, clientid, clientsecret},
+			`{"access_token": "ABCDEFGHIabchefghiJKLMNOPQRjklmnopqrSTUVWXYZstuvwxyz","token_type": "Bearer","expires_in": 600}`,
+			"200", "ABCDEFGHIabchefghiJKLMNOPQRjklmnopqrSTUVWXYZstuvwxyz", false},
+		{"errorAccessToken", param{dataStuff, endpoint, clientid, clientsecret},
+			"",
+			"404", "", false},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			client := NewTestClient(func(req *http.Request) *http.Response {
+				// Test request parameters
+				statusCODE, err := strconv.Atoi(tt.statuscode)
+				if err != nil {
+					t.Errorf("Invalid statuscode type %v", err)
+				}
+				return &http.Response{
+					StatusCode: statusCODE,
+					Body:       ioutil.NopCloser(bytes.NewBufferString(tt.want)),
+					Header:     make(http.Header),
+				}
+			})
+			req_got, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientsecret)
+			if err != nil {
+				t.Errorf("GetOauthRequest() %v", err)
+			}
+			body, err := client.Do(req_got)
+			if err != nil {
+				t.Errorf("Body was not returned %v", err)
+			}
+			got, err := ioutil.ReadAll(body.Body)
+			if err != nil {
+				t.Errorf("Response body was not able to be parsed %v", err)
+			}
+			var result provider.Result
+			json.Unmarshal([]byte(got), &result)
+			if result.AccessToken != tt.wantTok {
+				t.Errorf("TestGetAccessToken() = %v, want %v", result.AccessToken, tt.want)
 			}
 		})
 	}
