@@ -47,27 +47,18 @@ provider snowflake {
 
 ### Optional
 
-<<<<<<< HEAD
 - **browser_auth** (Boolean)
 - **oauth_access_token** (String, Sensitive)
+- **oauth_client_id** (String, Sensitive)
+- **oauth_client_secret** (String, Sensitive)
+- **oauth_endpoint** (String, Sensitive)
+- **oauth_redirect_url** (String, Sensitive)
+- **oauth_refresh_token** (String, Sensitive)
 - **password** (String, Sensitive)
 - **private_key** (String, Sensitive)
 - **private_key_path** (String, Sensitive)
 - **region** (String)
 - **role** (String)
-=======
-- **browser_auth** (Boolean, Optional)
-- **oauth_access_token** (String, Optional)
-- **password** (String, Optional)
-- **private_key_path** (String, Optional)
-- **oauth_refresh_token** (String, Optional)
-- **oauth_client_id** (String, Optional)
-- **oauth_client_secret** (String, Optional)
-- **oauth_endpoint** (String, Optional)
-- **oauth_redirect_url** (String, Optional)
-- **region** (String, Optional)
-- **role** (String, Optional)
->>>>>>> 08049f0 (Updated documentation, to show how to utlize refresh token)
 
 ## Authentication
 
@@ -110,7 +101,9 @@ export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
 
 Note that once this access token expires, you'll need to request a new one through an external application.
 
-If you have an OAuth refresh token, export these credentials as environment variables:
+### OAuth Refresh Token
+
+If you have an OAuth Refresh token, export these credentials as environment variables:
 
 ```shell
 export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
@@ -119,8 +112,6 @@ export SNOWFLAKE_OAUTH_CLIENT_SECRET='...'
 export SNOWFLAKE_OAUTH_ENDPOINT='...'
 export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
 ```
-
-Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
 
 ### Username and Password Environment Variables
 
@@ -165,3 +156,4 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 * `role` - (optional) Snowflake role to use for operations. If left unset, default role for user
   will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
+  
