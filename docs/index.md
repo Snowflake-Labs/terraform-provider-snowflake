@@ -113,6 +113,8 @@ export SNOWFLAKE_OAUTH_ENDPOINT='...'
 export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
 ```
 
+Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
+
 ### Username and Password Environment Variables
 
 If you choose to use Username and Password Authentication, export these credentials:
@@ -156,4 +158,4 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 * `role` - (optional) Snowflake role to use for operations. If left unset, default role for user
   will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
-  
+
