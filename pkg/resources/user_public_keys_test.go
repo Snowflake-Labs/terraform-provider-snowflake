@@ -2,12 +2,12 @@ package resources_test
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -21,13 +21,14 @@ func TestUserPublicKeys(t *testing.T) {
 
 func rowsFromMap(in map[string]string) *sqlmock.Rows {
 	cols := []string{}
-	vals := []string{}
+	vals := []driver.Value{}
 	for col, val := range in {
 		cols = append(cols, col)
 		vals = append(vals, val)
 	}
-
-	return sqlMock.NewRows(append(cols, vals...))
+	rows := sqlmock.NewRows(cols)
+	rows.AddRow(vals...)
+	return rows
 }
 
 func TestUserPublicKeysCreate(t *testing.T) {
@@ -41,67 +42,42 @@ func TestUserPublicKeysCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.UserPublicKeys().Schema, in)
 	r.NotNil(d)
 
-	rets := map[string]string{
+	rows := map[string]string{
 		"name": "good_name",
+	}
+
+	describeUserRows := map[string]string{
+		"property": "RSA_PUBLIC_KEY_FP",
+		"value":    "fp1",
 	}
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key = 'asdf'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key_2 = 'asdf2'`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(sqlmock.NewRows(rowsFromMap()))
+		mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(rowsFromMap(rows))
+		mock.ExpectQuery(`DESCRIBE USER "good_name"`).WillReturnRows(rowsFromMap(describeUserRows))
 		err := resources.CreateUserPublicKeys(d, db)
 		r.NoError(err)
-	})
 
-	// WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-	// mock.ExpectExec(`^CREATE USER "good_name" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' DISPLAY_NAME='Display Name' EMAIL='fake@email.com' FIRST_NAME='Marcin' LAST_NAME='Zukowski' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`).WillReturnResult(sqlmock.NewResult(1, 1))
-	// expectReadUser(mock)
-	// err := resources.CreateUser(d, db)
-	// r.NoError(err)
-	// })
-}
-
-func expectReadPublicKeysUser(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{
-		"name", "created_on", "login_name", "display_name", "first_name", "last_name", "email", "mins_to_unlock",
-		"days_to_expiry", "comment", "disabled", "must_change_password", "snowflake_lock", "default_warehouse",
-		"default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner",
-		"last_success_login", "expires_at_time", "locked_until_time", "has_password", "has_rsa_public_key"},
-	).AddRow("good_name", "created_on", "myloginname", "display_name", "first_name", "last_name", "email", "mins_to_unlock", "days_to_expiry", "mock comment", false, true, "snowflake_lock", "default_warehouse", "default_namespace", "default_role", "ext_authn_duo", "ext_authn_uid", "mins_to_bypass_mfa", "owner", "last_success_login", "expires_at_time", "locked_until_time", "has_password", false)
-	mock.ExpectQuery(`^SHOW USERS LIKE 'good_name'$`).WillReturnRows(rows)
-}
-
-func TestUsePublicKeysrRead(t *testing.T) {
-	r := require.New(t)
-
-	d := user(t, "good_name", map[string]interface{}{"name": "good_name"})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectReadUser(mock)
-		err := resources.ReadUser(d, db)
-		r.NoError(err)
-		r.Equal("mock comment", d.Get("comment").(string))
-		r.Equal("myloginname", d.Get("login_name").(string))
-		r.Equal(false, d.Get("disabled").(bool))
-
-		// Test when resource is not found, checking if state will be empty
-		r.NotEmpty(d.State())
-		q := snowflake.User(d.Id()).Show()
-		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
-		err2 := resources.ReadUser(d, db)
-		r.Empty(d.State())
-		r.Nil(err2)
+		r.Equal(in["name"], d.Id())
+		r.Equal(describeUserRows["value"], d.Get("rsa_public_key_fp").(string))
 	})
 }
 
 func TestUsePublicKeysrDelete(t *testing.T) {
 	r := require.New(t)
-
-	d := user(t, "drop_it", map[string]interface{}{"name": "drop_it"})
+	in := map[string]interface{}{
+		"name":             "good_name",
+		"rsa_public_key":   "asdf",
+		"rsa_public_key_2": "asdf2",
+	}
+	d := schema.TestResourceDataRaw(t, resources.UserPublicKeys().Schema, in)
+	d.SetId(in["name"].(string))
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`^DROP USER "drop_it"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteUser(d, db)
+		mock.ExpectExec(`ALTER USER "good_name" UNSET rsa_public_key`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`ALTER USER "good_name" UNSET rsa_public_key_2`).WillReturnResult(sqlmock.NewResult(1, 1))
+		err := resources.DeleteUserPublicKeys(d, db)
 		r.NoError(err)
 	})
 }
