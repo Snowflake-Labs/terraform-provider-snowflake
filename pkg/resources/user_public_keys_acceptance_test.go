@@ -32,8 +32,8 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 
-					resource.TestCheckResourceAttr("snowflake_user_public_keys.foo", "rsa_public_key", sshkey1),
-					resource.TestCheckResourceAttr("snowflake_user_public_keys.foo", "rsa_public_key_2", sshkey2),
+					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key", sshkey1),
+					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key_2", sshkey2),
 				),
 			},
 			// IMPORT
