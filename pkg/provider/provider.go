@@ -154,6 +154,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 }
 
 func getResources() map[string]*schema.Resource {
+	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
 		"snowflake_api_integration":           resources.APIIntegration(),
 		"snowflake_database":                  resources.Database(),
@@ -165,8 +166,8 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_network_policy":            resources.NetworkPolicy(),
 		"snowflake_pipe":                      resources.Pipe(),
 		"snowflake_resource_monitor":          resources.ResourceMonitor(),
-		"snowflake_role_grants":               resources.RoleGrants(),
 		"snowflake_role":                      resources.Role(),
+		"snowflake_role_grants":               resources.RoleGrants(),
 		"snowflake_schema":                    resources.Schema(),
 		"snowflake_share":                     resources.Share(),
 		"snowflake_stage":                     resources.Stage(),
@@ -176,6 +177,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_external_table":            resources.ExternalTable(),
 		"snowflake_task":                      resources.Task(),
 		"snowflake_user":                      resources.User(),
+		"snowflake_user_public_keys":          resources.UserPublicKeys(),
 		"snowflake_view":                      resources.View(),
 		"snowflake_warehouse":                 resources.Warehouse(),
 	}
