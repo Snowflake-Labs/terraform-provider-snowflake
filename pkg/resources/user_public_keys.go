@@ -21,6 +21,7 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 		Description: "Name of the user.",
 		ForceNew:    true,
 	},
+
 	"rsa_public_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -29,6 +30,18 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 	"rsa_public_key_2": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
+	},
+
+	// computed
+	"rsa_public_key_fp": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.",
+	},
+	"rsa_public_key_2_fp": {
+		Type:        schema.TypeString,
+		Computed:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
 }
@@ -47,29 +60,41 @@ func UserPublicKeys() *schema.Resource {
 	}
 }
 
+func checkUserExists(db *sql.DB, name string) (bool, error) {
+	// First check if user exists
+	stmt := snowflake.User(name).Show()
+	row := snowflake.QueryRow(db, stmt)
+	_, err := snowflake.ScanUser(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] user (%s) not found", name)
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	// First check if user exists
-	stmt := snowflake.User(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-	_, err := snowflake.ScanUser(row)
-	if err == sql.ErrNoRows {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] user (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
+	exists, err := checkUserExists(db, id)
 	if err != nil {
 		return err
+	}
+	// If not found, mark resource to be removed from statefile during apply or refresh
+	if !exists {
+		d.SetId("")
+		return nil
 	}
 
 	// at this point, we know we have a user. Read keys
 	var rsaKeyFP string
 	var rsaKey2FP string
 
-	stmt = fmt.Sprintf(`DESCRIBE USER "%s"`, d.Get("name").(string))
+	stmt := fmt.Sprintf(`DESCRIBE USER "%s"`, d.Get("name").(string))
 	props, err := snowflake.Query(db, stmt)
 	if err != nil {
 		return err
