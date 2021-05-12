@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/go-misc/sets"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -13,6 +14,13 @@ import (
 var userPublicKeyProperties = []string{
 	"rsa_public_key",
 	"rsa_public_key_2",
+}
+
+// sanitize input to supress diffs, etc
+func publicKeyStateFunc(v interface{}) string {
+	value := v.(string)
+	value = strings.TrimSuffix(value, "\n")
+	return value
 }
 
 var userPublicKeysSchema = map[string]*schema.Schema{
@@ -27,11 +35,13 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.",
+		StateFunc:   publicKeyStateFunc,
 	},
 	"rsa_public_key_2": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
+		StateFunc:   publicKeyStateFunc,
 	},
 }
 

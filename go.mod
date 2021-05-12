@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/chanzuckerberg/go-misc v0.0.0-20201208181439-ea3e3e39e194
