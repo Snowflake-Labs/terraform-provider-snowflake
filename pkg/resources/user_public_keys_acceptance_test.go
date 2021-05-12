@@ -110,11 +110,11 @@ resource "snowflake_user" "w" {
 resource "snowflake_user_public_keys" "foobar" {
 	name = snowflake_user.w.name
 	rsa_public_key = <<KEY
-{{- .PublicKey1 -}}
+{{ .PublicKey1 }}
 	KEY
 
 	rsa_public_key_2 = <<KEY
-{{- .PublicKey2 -}}
+{{ .PublicKey2 }}
 	KEY
 }
 `
