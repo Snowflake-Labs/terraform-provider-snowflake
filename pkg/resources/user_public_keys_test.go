@@ -46,21 +46,14 @@ func TestUserPublicKeysCreate(t *testing.T) {
 		"name": "good_name",
 	}
 
-	describeUserRows := map[string]string{
-		"property": "RSA_PUBLIC_KEY_FP",
-		"value":    "fp1",
-	}
-
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key = 'asdf'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key_2 = 'asdf2'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(rowsFromMap(rows))
-		mock.ExpectQuery(`DESCRIBE USER "good_name"`).WillReturnRows(rowsFromMap(describeUserRows))
 		err := resources.CreateUserPublicKeys(d, db)
 		r.NoError(err)
 
 		r.Equal(in["name"], d.Id())
-		r.Equal(describeUserRows["value"], d.Get("rsa_public_key_fp").(string))
 	})
 }
 

@@ -3,12 +3,12 @@
 page_title: "snowflake_user_public_keys Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_user_public_keys (Resource)
 
-
+This resource helps manage a user's public keys. Use this resource only when the user resources are created/managed through a mechanism external to Terraform (such as SCIM).
 
 
 
@@ -24,10 +24,3 @@ description: |-
 - **id** (String) The ID of this resource.
 - **rsa_public_key** (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
 - **rsa_public_key_2** (String) Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.
-
-### Read-Only
-
-- **rsa_public_key_2_fp** (String) Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.
-- **rsa_public_key_fp** (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
-
-

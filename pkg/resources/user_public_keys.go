@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chanzuckerberg/go-misc/sets"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -30,18 +31,6 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 	"rsa_public_key_2": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
-	},
-
-	// computed
-	"rsa_public_key_fp": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.",
-	},
-	"rsa_public_key_2_fp": {
-		Type:        schema.TypeString,
-		Computed:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
 }
@@ -89,41 +78,7 @@ func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
-	// at this point, we know we have a user. Read keys
-	var rsaKeyFP string
-	var rsaKey2FP string
-
-	stmt := fmt.Sprintf(`DESCRIBE USER "%s"`, d.Get("name").(string))
-	props, err := snowflake.Query(db, stmt)
-	if err != nil {
-		return err
-	}
-	defer props.Close()
-
-	for props.Next() {
-		prop := &snowflake.DescribeUserProp{}
-		err := props.StructScan(prop)
-		if err != nil {
-			return err
-		}
-
-		switch prop.Property {
-		case "RSA_PUBLIC_KEY_FP":
-			if prop.Value.Valid {
-				rsaKeyFP = prop.Value.String
-			}
-		case "RSA_PUBLIC_KEY_2_FP":
-			if prop.Value.Valid {
-				rsaKey2FP = prop.Value.String
-			}
-		default:
-			log.Printf("[DEBUG] skipping user property %s", prop.Property)
-		}
-	}
-
-	d.Set("rsa_public_key_fp", rsaKeyFP)
-	d.Set("rsa_public_key_2_fp", rsaKey2FP)
+	// we can't really read the public keys back from Snowflake so assume they haven't changed
 	return nil
 }
 
@@ -151,21 +106,23 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 
 	propsToSet := map[string]string{}
-	propsToUnset := []string{}
+	propsToUnset := sets.NewStringSet()
 
 	for _, prop := range userPublicKeyProperties {
-		fingerprintProp := fmt.Sprintf("%s_fp", prop)
-		if !d.HasChange(fingerprintProp) {
+		// if key hasn't changed, continue
+		if !d.HasChange(prop) {
 			continue
 		}
+		// if it has changed then we should do something about it
 		publicKey, publicKeyOK := d.GetOk(prop)
-		if publicKeyOK {
+		if publicKeyOK { // if set, then we should update the value
 			propsToSet[prop] = publicKey.(string)
-		} else {
-			propsToUnset = append(propsToUnset, prop)
+		} else { // if now unset, we should unset the key from the user
+			propsToUnset.Add(publicKey.(string))
 		}
 	}
 
+	// set the keys we decided should be set
 	for prop, value := range propsToSet {
 		err := updateUserPublicKeys(db, name, prop, value)
 		if err != nil {
@@ -173,12 +130,14 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	for _, prop := range propsToUnset {
+	// unset the keys we decided should be unset
+	for _, prop := range propsToUnset.List() {
 		err := unsetUserPublicKeys(db, name, prop)
 		if err != nil {
 			return err
 		}
 	}
+	// re-sync
 	return ReadUserPublicKeys(d, meta)
 }
 
