@@ -31,20 +31,6 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and Public keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
-
-	// computed
-	"rsa_public_key_fp": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "The Fingerprint corresponding to rsa_public_key",
-	},
-	"rsa_public_key_2_fp": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "The Fingerprint corresponding to rsa_public_key_2",
-	},
 }
 
 func UserPublicKeys() *schema.Resource {
