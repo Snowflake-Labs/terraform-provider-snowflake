@@ -150,9 +150,10 @@ func TestAcc_GrantRole(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_role_grants.w",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_role_grants.w",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"roles", "users"},
 			},
 		},
 	})
@@ -181,42 +182,44 @@ resource "snowflake_user" "u2" {
 
 func rgConfig(role1, role2, role3, user1, user2 string) string {
 	s := `
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
-	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
+		users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
+	}
+	`
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 
 func rgConfig2(role1, role2, role3, user1, user2 string) string {
 	s := `
 
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}"]
-	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}"]
+		users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
+	}
+	`
+
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 
 func rgConfig3(role1, role2, role3, user1, user2 string) string {
 	s := `
 
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
-	users = ["${snowflake_user.u.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
+		users = ["${snowflake_user.u.name}"]
+	}
+	`
+
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 
