@@ -20,5 +20,5 @@ require (
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
-	golang.org/x/tools v0.1.0
+	golang.org/x/tools v0.1.1
 )
