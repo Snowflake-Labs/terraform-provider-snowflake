@@ -122,11 +122,9 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
 		},
-		ResourcesMap: getResources(),
-		DataSourcesMap: map[string]*schema.Resource{
-			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
-		},
-		ConfigureFunc: ConfigureProvider,
+		ResourcesMap:   getResources(),
+		DataSourcesMap: getDataSources(),
+		ConfigureFunc:  ConfigureProvider,
 	}
 }
 
@@ -186,6 +184,15 @@ func getResources() map[string]*schema.Resource {
 		others,
 		GetGrantResources().GetTfSchemas(),
 	)
+}
+
+func getDataSources() map[string]*schema.Resource {
+	dataSources := map[string]*schema.Resource{
+		"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
+		"snowflake_system_get_privatelink_config": datasources.SystemGetPrivateLinkConfig(),
+	}
+
+	return dataSources
 }
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
