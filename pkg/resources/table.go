@@ -36,6 +36,12 @@ var tableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the table.",
 	},
+	"cluster_by": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
+	},
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -55,12 +61,6 @@ var tableSchema = map[string]*schema.Schema{
 				},
 			},
 		},
-	},
-	"cluster_by": {
-		Type:        schema.TypeList,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
 	},
 	"comment": {
 		Type:        schema.TypeString,
