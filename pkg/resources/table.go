@@ -56,6 +56,11 @@ var tableSchema = map[string]*schema.Schema{
 			},
 		},
 	},
+	"cluster_by": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Clustering key(s) and/or expressions",
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -213,6 +218,10 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("cluster_by"); ok {
+		builder.WithClustering(expandStringList(v.([]interface{})))
+	}
+
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
@@ -267,12 +276,13 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":     table.TableName.String,
-		"owner":    table.Owner.String,
-		"database": tableID.DatabaseName,
-		"schema":   tableID.SchemaName,
-		"comment":  table.Comment.String,
-		"column":   snowflake.NewColumns(tableDescription).Flatten(),
+		"name":       table.TableName.String,
+		"owner":      table.Owner.String,
+		"database":   tableID.DatabaseName,
+		"schema":     tableID.SchemaName,
+		"comment":    table.Comment.String,
+		"column":     snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
 	}
 
 	for key, val := range toSet {
@@ -304,6 +314,16 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
+		}
+	}
+
+	if d.HasChange("cluster_by") {
+		cb := expandStringList(d.Get("cluster_by").([]interface{}))
+		builder.WithClustering(cb)
+		q := builder.ChangeClusterBy(builder.GetClusterKeyString())
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table clustering on %v", d.Id())
 		}
 	}
 	if d.HasChange("column") {
