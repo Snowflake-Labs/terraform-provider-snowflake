@@ -60,7 +60,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Clustering key(s) and/or expressions",
+		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
 	},
 	"comment": {
 		Type:        schema.TypeString,
