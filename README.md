@@ -110,6 +110,8 @@ If you are using the Standard Snowflake plan, it's recommended you also set up t
 
 **Note: releases can only be done by those with keybase pgp keys allowed in the terraform registry.**
 
+Releases will be performed once a week on **Monday around 11am PST**. If your change is more urgent and you need to use it sooner, use the commit hash.
+
 Releases are done by [goreleaser](https://goreleaser.com/) and run by our make files. There two goreleaser configs, `.goreleaser.yml` for regular releases and `.goreleaser.prerelease.yml` for doing prereleases (for testing).
 
 Releases are [published to the terraform registry](https://registry.terraform.io/providers/chanzuckerberg/snowflake/latest), which requires that releases by signed.
