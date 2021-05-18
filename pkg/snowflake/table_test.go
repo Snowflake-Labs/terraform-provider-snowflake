@@ -66,7 +66,7 @@ func TestTableChangeColumnType(t *testing.T) {
 func TestTableChangeClusterBy(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.ChangeClusterBy("column2"), `ALTER TABLE "test_db"."test_schema"."test_table" CLUSTER BY LINEAR(column2)`)
+	r.Equal(s.ChangeClusterBy("column2, column3"), `ALTER TABLE "test_db"."test_schema"."test_table" CLUSTER BY LINEAR(column2, column3)`)
 }
 
 func TestTableDropClusterBy(t *testing.T) {
