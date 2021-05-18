@@ -320,8 +320,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("cluster_by") {
 		cb := expandStringList(d.Get("cluster_by").([]interface{}))
-		builder.WithClustering(cb)
-		q := builder.ChangeClusterBy(builder.GetClusterKeyString())
+
+		var q string
+		if len(cb) != 0 {
+			builder.WithClustering(cb)
+			q = builder.ChangeClusterBy(builder.GetClusterKeyString())
+		} else {
+			q = builder.DropClustering()
+		}
+
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating table clustering on %v", d.Id())
