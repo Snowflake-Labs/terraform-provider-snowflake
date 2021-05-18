@@ -1,9 +1,10 @@
 resource snowflake_table table {
-  database = "database"
-  schema   = "schmea"
-  name     = "table"
-  comment  = "A table."
-  owner    = "me"
+  database   = "database"
+  schema     = "schmea"
+  name       = "table"
+  comment    = "A table."
+  owner      = "me"
+  cluster_by = ["to_date(DATE)"]
 
   column {
     name = "id"
@@ -13,5 +14,10 @@ resource snowflake_table table {
   column {
     name = "data"
     type = "text"
+  }
+
+  column {
+    name = "DATE"
+    type = "TIMESTAMP_NTZ(9)"
   }
 }
