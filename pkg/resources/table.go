@@ -58,6 +58,7 @@ var tableSchema = map[string]*schema.Schema{
 	},
 	"cluster_by": {
 		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Clustering key(s) and/or expressions",
 	},
