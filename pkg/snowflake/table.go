@@ -71,11 +71,12 @@ func (c Columns) getColumnDefinitions() string {
 
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema
 type TableBuilder struct {
-	name    string
-	db      string
-	schema  string
-	columns Columns
-	comment string
+	name      string
+	db        string
+	schema    string
+	columns   Columns
+	comment   string
+	clusterBy []string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -109,6 +110,37 @@ func (tb *TableBuilder) WithComment(c string) *TableBuilder {
 func (tb *TableBuilder) WithColumns(c Columns) *TableBuilder {
 	tb.columns = c
 	return tb
+}
+
+// WithClustering adds cluster keys/expressions to TableBuilder
+func (tb *TableBuilder) WithClustering(c []string) *TableBuilder {
+	tb.clusterBy = c
+	return tb
+}
+
+//Function to get clustering definition
+func (tb *TableBuilder) GetClusterKeyString() string {
+
+	return fmt.Sprint(strings.Join(tb.clusterBy[:], ", "))
+}
+
+//function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
+func ClusterStatementToList(clusterStatement string) []string {
+	if clusterStatement == "" {
+		return nil
+	}
+
+	cleanStatement := strings.TrimSuffix(strings.Replace(clusterStatement, "LINEAR(", "", 1), ")")
+	// remove cluster statement and trailing parenthesis
+
+	var clean []string
+
+	for _, s := range strings.Split(cleanStatement, ",") {
+		clean = append(clean, strings.TrimSpace(s))
+	}
+
+	return clean
+
 }
 
 // Table returns a pointer to a Builder that abstracts the DDL operations for a table.
@@ -152,7 +184,18 @@ func (tb *TableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
+	if tb.clusterBy != nil {
+		//add optional clustering statement
+		q.WriteString(fmt.Sprintf(` CLUSTER BY LINEAR(%v)`, tb.GetClusterKeyString()))
+
+	}
+
 	return q.String()
+}
+
+// ChangeClusterBy returns the SQL query to change cluastering on table
+func (tb *TableBuilder) ChangeClusterBy(cb string) string {
+	return fmt.Sprintf(`ALTER TABLE %v CLUSTER BY LINEAR(%v)`, tb.QualifiedName(), cb)
 }
 
 // ChangeComment returns the SQL query that will update the comment on the table.
@@ -186,6 +229,11 @@ func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 // RemoveComment returns the SQL query that will remove the comment on the table.
 func (tb *TableBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TABLE %v UNSET COMMENT`, tb.QualifiedName())
+}
+
+// RemoveClustering returns the SQL query that will remove data clustering from the table
+func (tb *TableBuilder) DropClustering() string {
+	return fmt.Sprintf(`ALTER TABLE %v DROP CLUSTERING KEY`, tb.QualifiedName())
 }
 
 // Drop returns the SQL query that will drop a table.
