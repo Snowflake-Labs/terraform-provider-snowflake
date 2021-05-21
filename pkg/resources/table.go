@@ -36,6 +36,12 @@ var tableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the table.",
 	},
+	"cluster_by": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
+	},
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -213,6 +219,10 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("cluster_by"); ok {
+		builder.WithClustering(expandStringList(v.([]interface{})))
+	}
+
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
@@ -267,12 +277,13 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":     table.TableName.String,
-		"owner":    table.Owner.String,
-		"database": tableID.DatabaseName,
-		"schema":   tableID.SchemaName,
-		"comment":  table.Comment.String,
-		"column":   snowflake.NewColumns(tableDescription).Flatten(),
+		"name":       table.TableName.String,
+		"owner":      table.Owner.String,
+		"database":   tableID.DatabaseName,
+		"schema":     tableID.SchemaName,
+		"comment":    table.Comment.String,
+		"column":     snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
 	}
 
 	for key, val := range toSet {
@@ -304,6 +315,23 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
+		}
+	}
+
+	if d.HasChange("cluster_by") {
+		cb := expandStringList(d.Get("cluster_by").([]interface{}))
+
+		var q string
+		if len(cb) != 0 {
+			builder.WithClustering(cb)
+			q = builder.ChangeClusterBy(builder.GetClusterKeyString())
+		} else {
+			q = builder.DropClustering()
+		}
+
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table clustering on %v", d.Id())
 		}
 	}
 	if d.HasChange("column") {
