@@ -14,12 +14,14 @@ description: |-
 
 ```terraform
 resource snowflake_table table {
-  database = "database"
-  schema   = "schmea"
-  name     = "table"
-  comment  = "A table."
-  owner    = "me"
-
+  database   = "database"
+  schema     = "schmea"
+  name       = "table"
+  comment    = "A table."
+  cluster_by = ["to_date(DATE)"]
+  
+  owner      = "me"
+  
   column {
     name = "id"
     type = "int"
@@ -28,6 +30,11 @@ resource snowflake_table table {
   column {
     name = "data"
     type = "text"
+  }
+
+  column {
+    name = "DATE"
+    type = "TIMESTAMP_NTZ(9)"
   }
 }
 ```
@@ -44,6 +51,7 @@ resource snowflake_table table {
 
 ### Optional
 
+- **cluster_by** (List of String) A list of one of more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
 - **id** (String) The ID of this resource.
 
