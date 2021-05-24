@@ -3,14 +3,16 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type Column struct {
-	name  string
-	_type string // type is reserved
+	name     string
+	_type    string // type is reserved
+	nullable bool
 }
 
 func (c *Column) WithName(name string) *Column {
@@ -22,11 +24,23 @@ func (c *Column) WithType(t string) *Column {
 	return c
 }
 
+func (c *Column) WithNullable(nullable bool) *Column {
+	c.nullable = nullable
+	return c
+}
+
 func (c *Column) getColumnDefinition() string {
 	if c == nil {
 		return ""
 	}
-	return fmt.Sprintf(`"%v" %v`, EscapeString(c.name), EscapeString(c._type))
+	var nullConstraint string
+	if c.nullable {
+		nullConstraint = "NULL"
+	} else {
+		nullConstraint = "NOT NULL"
+	}
+
+	return fmt.Sprintf(`"%v" %v %v`, EscapeString(c.name), EscapeString(c._type), nullConstraint)
 }
 
 type Columns []Column
@@ -39,8 +53,9 @@ func NewColumns(tds []tableDescription) Columns {
 			continue
 		}
 		cs = append(cs, Column{
-			name:  td.Name.String,
-			_type: td.Type.String,
+			name:     td.Name.String,
+			_type:    td.Type.String,
+			nullable: td.IsNullable(),
 		})
 	}
 	return Columns(cs)
@@ -52,6 +67,7 @@ func (c Columns) Flatten() []interface{} {
 		flat := map[string]interface{}{}
 		flat["name"] = col.name
 		flat["type"] = col._type
+		flat["nullable"] = col.nullable
 
 		flattened = append(flattened, flat)
 	}
@@ -204,10 +220,11 @@ func (tb *TableBuilder) ChangeComment(c string) string {
 }
 
 // AddColumn returns the SQL query that will add a new column to the table.
-func (tb *TableBuilder) AddColumn(name string, dataType string) string {
+func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool) string {
 	col := Column{
-		name:  name,
-		_type: dataType,
+		name:     name,
+		_type:    dataType,
+		nullable: nullable,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
 }
@@ -218,10 +235,11 @@ func (tb *TableBuilder) DropColumn(name string) string {
 }
 
 // ChangeColumnType returns the SQL query that will change the type of the named column to the given type.
-func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
+func (tb *TableBuilder) ChangeColumnType(name string, dataType string, nullable bool) string {
 	col := Column{
-		name:  name,
-		_type: dataType,
+		name:     name,
+		_type:    dataType,
+		nullable: nullable,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
 }
@@ -273,9 +291,18 @@ func ScanTable(row *sqlx.Row) (*table, error) {
 }
 
 type tableDescription struct {
-	Name sql.NullString `db:"name"`
-	Type sql.NullString `db:"type"`
-	Kind sql.NullString `db:"kind"`
+	Name     sql.NullString `db:"name"`
+	Type     sql.NullString `db:"type"`
+	Kind     sql.NullString `db:"kind"`
+	Nullable sql.NullString `db:"null?"`
+}
+
+func (td *tableDescription) IsNullable() bool {
+	if td.Nullable.String == "Y" {
+		return true
+	} else {
+		return false
+	}
 }
 
 func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
@@ -286,6 +313,7 @@ func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("This is null %v")
 		tds = append(tds, td)
 	}
 	return tds, rows.Err()

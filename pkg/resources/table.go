@@ -59,6 +59,12 @@ var tableSchema = map[string]*schema.Schema{
 					Required:    true,
 					Description: "Column type, e.g. VARIANT",
 				},
+				"nullable": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     true,
+					Description: "Whether this column can contain null values.",
+				},
 			},
 		},
 	},
@@ -137,11 +143,12 @@ func tableIDFromString(stringID string) (*tableID, error) {
 type column struct {
 	name     string
 	dataType string
+	nullable bool
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
 	sC := snowflake.Column{}
-	return *sC.WithName(c.name).WithType(c.dataType)
+	return *sC.WithName(c.name).WithType(c.dataType).WithNullable(c.nullable)
 }
 
 type columns []column
@@ -192,6 +199,7 @@ func getColumn(from interface{}) (to column) {
 	return column{
 		name:     c["name"].(string),
 		dataType: c["type"].(string),
+		nullable: c["nullable"].(bool),
 	}
 }
 
@@ -345,14 +353,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range added {
-			q := builder.AddColumn(cA.name, cA.dataType)
+			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding column on %v", d.Id())
 			}
 		}
 		for _, cA := range changed {
-			q := builder.ChangeColumnType(cA.name, cA.dataType)
+			q := builder.ChangeColumnType(cA.name, cA.dataType, cA.nullable)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error changing column type on %v", d.Id())
