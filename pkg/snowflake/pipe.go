@@ -16,7 +16,7 @@ type PipeBuilder struct {
 	awsSnsTopicArn string
 	comment        string
 	copyStatement  string
-	integration   string
+	integration    string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -145,7 +145,7 @@ type pipe struct {
 	Owner               string  `db:"owner"`
 	NotificationChannel *string `db:"notification_channel"`
 	Comment             string  `db:"comment"`
-	Integration         string `db:"integration"`
+	Integration         string  `db:"integration"`
 }
 
 func ScanPipe(row *sqlx.Row) (*pipe, error) {
