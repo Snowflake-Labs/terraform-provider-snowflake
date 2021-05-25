@@ -243,7 +243,6 @@ func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 		name:  name,
 		_type: dataType,
 	}
-	//TODO we don't want the constraint added here
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(false))
 }
 
