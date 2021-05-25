@@ -3,7 +3,6 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -29,7 +28,7 @@ func (c *Column) WithNullable(nullable bool) *Column {
 	return c
 }
 
-func (c *Column) getColumnDefinition() string {
+func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
 	if c == nil {
 		return ""
 	}
@@ -40,7 +39,11 @@ func (c *Column) getColumnDefinition() string {
 		nullConstraint = "NOT NULL"
 	}
 
-	return fmt.Sprintf(`"%v" %v %v`, EscapeString(c.name), EscapeString(c._type), nullConstraint)
+	if withInlineConstraints {
+		return fmt.Sprintf(`"%v" %v %v`, EscapeString(c.name), EscapeString(c._type), nullConstraint)
+	} else {
+		return fmt.Sprintf(`"%v" %v`, EscapeString(c.name), EscapeString(c._type))
+	}
 }
 
 type Columns []Column
@@ -74,11 +77,11 @@ func (c Columns) Flatten() []interface{} {
 	return flattened
 }
 
-func (c Columns) getColumnDefinitions() string {
+func (c Columns) getColumnDefinitions(withInlineConstraints bool) string {
 	// TODO(el): verify Snowflake reflects column order back in desc table calls
 	columnDefinitions := []string{}
 	for _, column := range c {
-		columnDefinitions = append(columnDefinitions, column.getColumnDefinition())
+		columnDefinitions = append(columnDefinitions, column.getColumnDefinition(withInlineConstraints))
 	}
 
 	// NOTE: intentionally blank leading space
@@ -194,7 +197,7 @@ func TableWithColumnDefinitions(name, db, schema string, columns Columns) *Table
 func (tb *TableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE TABLE %v`, tb.QualifiedName()))
-	q.WriteString(tb.columns.getColumnDefinitions())
+	q.WriteString(tb.columns.getColumnDefinitions(true))
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
@@ -226,7 +229,7 @@ func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool) s
 		_type:    dataType,
 		nullable: nullable,
 	}
-	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
+	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true))
 }
 
 // DropColumn returns the SQL query that will add a new column to the table.
@@ -235,19 +238,33 @@ func (tb *TableBuilder) DropColumn(name string) string {
 }
 
 // ChangeColumnType returns the SQL query that will change the type of the named column to the given type.
-func (tb *TableBuilder) ChangeColumnType(name string, dataType string, nullable bool) string {
+func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 	col := Column{
-		name:     name,
-		_type:    dataType,
-		nullable: nullable,
+		name:  name,
+		_type: dataType,
 	}
-	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition())
+	//TODO we don't want the constraint added here
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(false))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the table.
 func (tb *TableBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TABLE %v UNSET COMMENT`, tb.QualifiedName())
 }
+
+// Return sql to set null constraint on column
+func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string {
+	if nullable {
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s DROP NOT NULL`, tb.QualifiedName(), name)
+	} else {
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s SET NOT NULL`, tb.QualifiedName(), name)
+	}
+}
+
+// Return sql to drop null constraint on column
+// func (tb *TableBuilder) DropNullConstraint(name string) string {
+
+// }
 
 // RemoveClustering returns the SQL query that will remove data clustering from the table
 func (tb *TableBuilder) DropClustering() string {
@@ -313,7 +330,6 @@ func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("This is null %v")
 		tds = append(tds, td)
 	}
 	return tds, rows.Err()
