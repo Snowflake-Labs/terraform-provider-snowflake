@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -129,7 +130,11 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if err := data.Set("type", s.IntegrationType.String); err != nil {
+	// Snowflake returns "QUEUE - AZURE_STORAGE_QUEUE" instead of simple "QUEUE" as a type
+	// so it needs to be parsed in order to not show a diff in Terraform
+	typeParts := strings.Split(s.Type.String, "-")
+	parsedType := strings.TrimSpace(typeParts[0])
+	if err = data.Set("type", parsedType); err != nil {
 		return err
 	}
 
