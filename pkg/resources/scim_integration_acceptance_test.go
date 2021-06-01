@@ -61,7 +61,7 @@ func scimIntegrationConfig_azure(name string) string {
 
 func scimIntegrationConfig_okta_np(name string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_network_policy" "test" {
+	resource "snowflake_network_policy" "okta" {
 		name            = "OKTA_NETWORK_POLICY"
 		allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 	}
@@ -75,7 +75,7 @@ func scimIntegrationConfig_okta_np(name string) string {
 		name = "%s"
 		scim_client = "OKTA"
 		provisioner_role = snowflake_role.okta.name
-		network_policy = snowflake_network_policy.test.name
+		network_policy = snowflake_network_policy.okta.name
 	}
 	`, name)
 }
