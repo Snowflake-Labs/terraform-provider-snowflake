@@ -31,7 +31,7 @@ func TestScimIntegration(t *testing.T) {
 	d.SetString(`run_as_role`, "AAD_PROVISIONER")
 	d.SetString(`network_policy`, "aad_policy")
 	q = d.Statement()
-	r.Equal(`ALTER SECURITY INTEGRATION "aad_provisioning" SET type=scim NETWORK_POLICY='aad_policy' SCIM_CLIENT='azure' RUN_AS_ROLE='AAD_PROVISIONER'`, q)
+	r.Equal(`ALTER SECURITY INTEGRATION "aad_provisioning" SET type=scim SCIM_CLIENT='azure' RUN_AS_ROLE='AAD_PROVISIONER' NETWORK_POLICY='aad_policy'`, q)
 
 	e := builder.Drop()
 	r.Equal(`DROP SECURITY INTEGRATION "aad_provisioning"`, e)
