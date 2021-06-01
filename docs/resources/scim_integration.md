@@ -33,7 +33,6 @@ resource "snowflake_scim_integration" "aad" {
 
 ### Optional
 
-- **enabled** (Boolean) Specifies whether this SCIM integration is enabled or disabled. If the SCIM integration is disabled, any external function that relies on it will not work.
 - **id** (String) The ID of this resource.
 - **network_policy** (String) Specifies an existing network policy active for your account. The network policy restricts the list of user IP addresses when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access token. If this parameter is not set, the network policy for the account (if any) is used instead.
 

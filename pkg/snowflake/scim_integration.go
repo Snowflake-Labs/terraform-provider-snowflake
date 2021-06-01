@@ -28,7 +28,6 @@ type scimIntegration struct {
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
 	CreatedOn       sql.NullString `db:"created_on"`
-	Enabled         sql.NullBool   `db:"enabled"`
 }
 
 func ScanScimIntegration(row *sqlx.Row) (*scimIntegration, error) {

@@ -32,7 +32,7 @@ func TestSCIMIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURITY INTEGRATION "test_scim_integration" TYPE=SCIM NETWORK_POLICY='AAD_NETWORK_POLICY' RUN_AS_ROLE='AAD_PROVISIONER' SCIM_CLIENT='AZURE' ENABLED=true$`,
+			`^CREATE SECURITY INTEGRATION "test_scim_integration" TYPE=SCIM NETWORK_POLICY='AAD_NETWORK_POLICY' RUN_AS_ROLE='AAD_PROVISIONER' SCIM_CLIENT='AZURE'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadSCIMIntegration(mock)
 
@@ -68,14 +68,13 @@ func TestSCIMIntegrationDelete(t *testing.T) {
 
 func expectReadSCIMIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
-	).AddRow("test_scim_integration", "SCIM - AZURE", "SECURITY", true, "now")
+		"name", "type", "category", "created_on"},
+	).AddRow("test_scim_integration", "SCIM - AZURE", "SECURITY", "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_scim_integration'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
-	}).AddRow("ENABLED", "Boolean", true, false).
-		AddRow("NETWORK_POLICY", "String", "AAD_NETWORK_POLICY", nil).
+	}).AddRow("NETWORK_POLICY", "String", "AAD_NETWORK_POLICY", nil).
 		AddRow("RUN_AS_ROLE", "String", "AAD_PROVISIONER", nil)
 
 	mock.ExpectQuery(`DESCRIBE SECURITY INTEGRATION "test_scim_integration"$`).WillReturnRows(descRows)

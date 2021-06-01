@@ -51,12 +51,6 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies an existing network policy active for your account. The network policy restricts the list of user IP addresses when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access token. If this parameter is not set, the network policy for the account (if any) is used instead.",
 	},
-	"enabled": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     true,
-		Description: "Specifies whether this SCIM integration is enabled or disabled. If the SCIM integration is disabled, any external function that relies on it will not work.",
-	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -88,7 +82,6 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	// Set required fields
 	stmt.SetRaw(`TYPE=SCIM`)
-	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 	stmt.SetString(`SCIM_CLIENT`, d.Get("scim_client").(string))
 	stmt.SetString(`RUN_AS_ROLE`, d.Get("provisioner_role").(string))
 
@@ -139,10 +132,6 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
-		return err
-	}
-
 	// Some properties come from the DESCRIBE INTEGRATION call
 	// We need to grab them in a loop
 	var k, pType string
@@ -158,8 +147,6 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		switch k {
-		case "ENABLED":
-			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "NETWORK_POLICY":
 			if err = d.Set("network_policy", v.(string)); err != nil {
 				return err
@@ -184,11 +171,6 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.ScimIntegration(id).Alter()
 
 	var runSetStatement bool
-
-	if d.HasChange("enabled") {
-		runSetStatement = true
-		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-	}
 
 	if d.HasChange("scim_client") {
 		runSetStatement = true

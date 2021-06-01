@@ -28,7 +28,6 @@ func TestAcc_ScimIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "scim_client", "AZURE"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "provisioner_role", "AAD_PROVISIONER"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "created_on"),
-					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "enabled"),
 				),
 			},
 			{
@@ -39,7 +38,6 @@ func TestAcc_ScimIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "provisioner_role", "AAD_PROVISIONER"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "network_policy", "AAD_NETWORK_POLICY"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "created_on"),
-					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "enabled"),
 				),
 			},
 		},
@@ -52,7 +50,6 @@ func scimIntegrationConfig_azure(name string) string {
 		name = "%s"
 		scim_client = "AZURE"
 		provisioner_role = "AAD_PROVISIONER"
-		enabled = true
 	}
 	`, name)
 }
@@ -64,7 +61,6 @@ func scimIntegrationConfig_azure_np(name string) string {
 		scim_client = "AZURE"
 		provisioner_role = "AAD_PROVISIONER"
 		network_policy = "AAD_NETWORK_POLICY"
-		enabled = true
 	}
 	`, name)
 }
