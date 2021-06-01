@@ -42,8 +42,11 @@ func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{})
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		log.Printf("[DEBUG] system_generate_scim_access_token (%s) failed to generate (%q)", d.Id(), err.Error())
+		d.SetId("")
+		return nil
 	}
 
 	d.SetId(integrationName)
