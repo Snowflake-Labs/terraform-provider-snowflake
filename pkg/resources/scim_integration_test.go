@@ -22,10 +22,10 @@ func TestSCIMIntegrationCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":           "test_scim_integration",
-		"scim_client":    "AZURE",
-		"run_as_role":    "AAD_PROVISIONER",
-		"network_policy": "AAD_NETWORK_POLICY",
+		"name":             "test_scim_integration",
+		"scim_client":      "AZURE",
+		"provisioner_role": "AAD_PROVISIONER",
+		"network_policy":   "AAD_NETWORK_POLICY",
 	}
 	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, in)
 	r.NotNil(d)

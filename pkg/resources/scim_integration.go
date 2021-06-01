@@ -32,7 +32,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 			return normalize(old) == normalize(new)
 		},
 	},
-	"run_as_role": {
+	"provisioner_role": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.",
@@ -90,7 +90,7 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt.SetRaw(`TYPE=SCIM`)
 	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 	stmt.SetString(`SCIM_CLIENT`, d.Get("scim_client").(string))
-	stmt.SetString(`RUN_AS_ROLE`, d.Get("run_as_role").(string))
+	stmt.SetString(`RUN_AS_ROLE`, d.Get("provisioner_role").(string))
 
 	// Set optional fields
 	if _, ok := d.GetOk("network_policy"); ok {
@@ -165,7 +165,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "RUN_AS_ROLE":
-			if err = d.Set("run_as_role", v.(string)); err != nil {
+			if err = d.Set("provisioner_role", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -195,9 +195,9 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetString(`SCIM_CLIENT`, d.Get("scim_client").(string))
 	}
 
-	if d.HasChange("run_as_role") {
+	if d.HasChange("provisioner_role") {
 		runSetStatement = true
-		stmt.SetString(`RUN_AS_ROLE`, d.Get("run_as_role").(string))
+		stmt.SetString(`RUN_AS_ROLE`, d.Get("provisioner_role").(string))
 	}
 
 	// We need to UNSET this if we remove all api blocked prefixes.

@@ -26,7 +26,7 @@ func TestAcc_ScimIntegration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "name", scimIntName),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "scim_client", "AZURE"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "run_as_role", "AAD_PROVISIONER"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "provisioner_role", "AAD_PROVISIONER"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "enabled"),
 				),
@@ -36,7 +36,7 @@ func TestAcc_ScimIntegration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "name", scimIntName2),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "scim_client", "AZURE"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "run_as_role", "AAD_PROVISIONER"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "provisioner_role", "AAD_PROVISIONER"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test_azure_int", "network_policy", "AAD_NETWORK_POLICY"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test_azure_int", "enabled"),
@@ -51,7 +51,7 @@ func scimIntegrationConfig_azure(name string) string {
 	resource "snowflake_scim_integration" "test_azure_int" {
 		name = "%s"
 		scim_client = "AZURE"
-		run_as_role = "AAD_PROVISIONER"
+		provisioner_role = "AAD_PROVISIONER"
 		enabled = true
 	}
 	`, name)
@@ -62,7 +62,7 @@ func scimIntegrationConfig_azure_np(name string) string {
 	resource "snowflake_scim_integration" "test_azure_int_np" {
 		name = "%s"
 		scim_client = "AZURE"
-		run_as_role = "AAD_PROVISIONER"
+		provisioner_role = "AAD_PROVISIONER"
 		network_policy = "AAD_NETWORK_POLICY"
 		enabled = true
 	}
