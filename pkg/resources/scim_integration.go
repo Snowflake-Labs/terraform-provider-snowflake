@@ -120,7 +120,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("expected %v to be an Security integration, got %v", id, c)
 	}
 
-	if err := d.Set("scim_client", strings.TrimPrefix(s.IntegrationType.String, "SCIM -")); err != nil {
+	if err := d.Set("scim_client", strings.TrimPrefix(s.IntegrationType.String, "SCIM - ")); err != nil {
 		return err
 	}
 

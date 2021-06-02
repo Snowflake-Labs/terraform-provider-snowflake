@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAcc_ScimIntegration(t *testing.T) {
+func TestAccScimIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAccScimIntegration")
 	}
@@ -51,24 +51,59 @@ func scimIntegrationConfig_azure(name string) string {
 		comment = "test comment"
 	}
 
+	resource "snowflake_account_grant" "azurecu" {
+		roles     = [snowflake_role.azure.name]
+		privilege = "CREATE USER"
+	}
+
+	resource "snowflake_account_grant" "azurecr" {
+		roles     = [snowflake_role.azure.name]
+		privilege = "CREATE ROLE"
+	}
+
+	resource "snowflake_role_grants" "azure" {
+		role_name = snowflake_role.azure.name
+		roles = ["ACCOUNTADMIN"]
+	}
+
 	resource "snowflake_scim_integration" "test_azure_int" {
 		name = "%s"
 		scim_client = "AZURE"
 		provisioner_role = snowflake_role.azure.name
+		depends_on = [
+			snowflake_account_grant.azurecu,
+			snowflake_account_grant.azurecr,
+			snowflake_role_grants.azure
+		]
 	}
 	`, name)
 }
 
 func scimIntegrationConfig_okta_np(name string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_network_policy" "okta" {
-		name            = "OKTA_NETWORK_POLICY"
-		allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
-	}
-
 	resource "snowflake_role" "okta" {
 		name = "OKTA_PROVISIONER"
 		comment = "test comment"
+	}
+
+	resource "snowflake_account_grant" "oktacu" {
+		roles     = [snowflake_role.okta.name]
+		privilege = "CREATE USER"
+	}
+
+	resource "snowflake_account_grant" "oktacr" {
+		roles     = [snowflake_role.okta.name]
+		privilege = "CREATE ROLE"
+	}
+
+	resource "snowflake_role_grants" "okta" {
+		role_name = snowflake_role.okta.name
+		roles = ["ACCOUNTADMIN"]
+	}
+
+	resource "snowflake_network_policy" "okta" {
+		name            = "OKTA_NETWORK_POLICY"
+		allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 	}
 
 	resource "snowflake_scim_integration" "test_okta_int_np" {
@@ -76,6 +111,11 @@ func scimIntegrationConfig_okta_np(name string) string {
 		scim_client = "OKTA"
 		provisioner_role = snowflake_role.okta.name
 		network_policy = snowflake_network_policy.okta.name
+		depends_on = [
+			snowflake_account_grant.oktacu,
+			snowflake_account_grant.oktacr,
+			snowflake_role_grants.okta
+		]
 	}
 	`, name)
 }
