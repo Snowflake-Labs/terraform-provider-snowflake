@@ -109,24 +109,53 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 
 	sb.WriteString(ab.rawStatement)
 
-	for k, v := range ab.stringProperties {
-		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
+	sortedStringProperties := make([]string, 0)
+	for k := range ab.stringProperties {
+		sortedStringProperties = append(sortedStringProperties, k)
+	}
+	sort.Strings(sortedStringProperties)
+
+	for _, k := range sortedStringProperties {
+		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(ab.stringProperties[k])))
 	}
 
-	for k, v := range ab.stringListProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
+	sortedStringListProperties := make([]string, 0)
+	for k := range ab.stringListProperties {
+		sortedStringListProperties = append(sortedStringListProperties, k)
 	}
 
-	for k, v := range ab.boolProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), v))
+	for _, k := range sortedStringListProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(ab.stringListProperties[k])))
 	}
 
-	for k, v := range ab.intProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), v))
+	sortedBoolProperties := make([]string, 0)
+	for k := range ab.boolProperties {
+		sortedBoolProperties = append(sortedBoolProperties, k)
+	}
+	sort.Strings(sortedBoolProperties)
+
+	for _, k := range sortedBoolProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), ab.boolProperties[k]))
 	}
 
-	for k, v := range ab.floatProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), v))
+	sortedIntProperties := make([]string, 0)
+	for k := range ab.intProperties {
+		sortedIntProperties = append(sortedIntProperties, k)
+	}
+	sort.Strings(sortedIntProperties)
+
+	for _, k := range sortedIntProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), ab.intProperties[k]))
+	}
+
+	sortedFloatProperties := make([]string, 0)
+	for k := range ab.floatProperties {
+		sortedFloatProperties = append(sortedFloatProperties, k)
+	}
+	sort.Strings(sortedFloatProperties)
+
+	for _, k := range sortedFloatProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), ab.floatProperties[k]))
 	}
 
 	return sb.String()
