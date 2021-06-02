@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccScimIntegration(t *testing.T) {
+func TestAcc_ScimIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAccScimIntegration")
 	}
