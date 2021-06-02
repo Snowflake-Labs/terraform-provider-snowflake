@@ -45,6 +45,7 @@ resource snowflake_pipe pipe {
 - **aws_sns_topic_arn** (String) Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.
 - **comment** (String) Specifies a comment for the pipe.
 - **id** (String) The ID of this resource.
+- **integration** (String) Specifies an integration for the pipe.
 
 ### Read-Only
 

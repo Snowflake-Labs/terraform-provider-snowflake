@@ -24,11 +24,11 @@ func NotificationIntegration(name string) *Builder {
 }
 
 type notificationIntegration struct {
-	Name            sql.NullString `db:"name"`
-	Category        sql.NullString `db:"category"`
-	Type            sql.NullString `db:"type"`
-	CreatedOn       sql.NullString `db:"created_on"`
-	Enabled         sql.NullBool   `db:"enabled"`
+	Name      sql.NullString `db:"name"`
+	Category  sql.NullString `db:"category"`
+	Type      sql.NullString `db:"type"`
+	CreatedOn sql.NullString `db:"created_on"`
+	Enabled   sql.NullBool   `db:"enabled"`
 }
 
 func ScanNotificationIntegration(row *sqlx.Row) (*notificationIntegration, error) {
