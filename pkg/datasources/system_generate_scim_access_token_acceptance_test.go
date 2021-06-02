@@ -28,10 +28,28 @@ func generateAccessTokenConfig() string {
 		comment = "test comment"
 	}
 
+	resource "snowflake_account_grant" "azurecu" {
+		roles     = [snowflake_role.azure.name]
+		privilege = "CREATE USER"
+	}
+	resource "snowflake_account_grant" "azurecr" {
+		roles     = [snowflake_role.azure.name]
+		privilege = "CREATE ROLE"
+	}
+	resource "snowflake_role_grants" "azure" {
+		role_name = snowflake_role.azure.name
+		roles = ["ACCOUNTADMIN"]
+	}
+
 	resource "snowflake_scim_integration" "azure" {
 		name = "AAD_PROVISIONING"
 		scim_client = "AZURE"
 		provisioner_role = snowflake_role.azure.name
+		depends_on = [
+			snowflake_account_grant.azurecu,
+			snowflake_account_grant.azurecr,
+			snowflake_role_grants.azure
+		]
 	}
 
 	data snowflake_system_generate_scim_access_token p {
