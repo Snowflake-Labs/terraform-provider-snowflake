@@ -15,7 +15,7 @@ description: |-
 ```terraform
 resource snowflake_table table {
   database   = "database"
-  schema     = "schmea"
+  schema     = "schema"
   name       = "table"
   comment    = "A table."
   cluster_by = ["to_date(DATE)"]
@@ -54,6 +54,7 @@ resource snowflake_table table {
 - **cluster_by** (List of String) A list of one of more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
 - **id** (String) The ID of this resource.
+- **primary_key** (Block List, Max: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--primary_key))
 
 ### Read-Only
 
@@ -66,6 +67,22 @@ Required:
 
 - **name** (String) Column name
 - **type** (String) Column type, e.g. VARIANT
+
+Optional:
+
+- **nullable** (Boolean) Whether this column can contain null values.
+
+
+<a id="nestedblock--primary_key"></a>
+### Nested Schema for `primary_key`
+
+Required:
+
+- **keys** (List of String) Whether this column should be used as a primary key.
+
+Optional:
+
+- **name** (String) Column name
 
 ## Import
 
