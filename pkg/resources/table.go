@@ -78,6 +78,29 @@ var tableSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the table.",
 	},
+	"primary_key": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		MaxItems:    1,
+		Description: "Definitions of a column to create in the table. Minimum one required.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Name of constraint",
+				},
+				"keys": {
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Required:    true,
+					Description: "Whether this column should be used as a primary key. ",
+				},
+			},
+		},
+	},
 }
 
 func Table() *schema.Resource {
@@ -178,20 +201,34 @@ func (old columns) getNewIn(new columns) (added columns) {
 	return
 }
 
-func (old columns) getChangedTypes(new columns) (changed columns) {
-	changed = columns{}
+type changedColumns []changedColumn
+
+type changedColumn struct {
+	newColumn             column //our new column
+	changedDataType       bool
+	changedNullConstraint bool
+}
+
+func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
+	changed = changedColumns{}
 	for _, cO := range old {
 		for _, cN := range new {
+			changeColumn := changedColumn{cN, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
-				changed = append(changed, cN)
+				changeColumn.changedDataType = true
 			}
+			if cO.name == cN.name && cO.nullable != cN.nullable {
+				changeColumn.changedNullConstraint = true
+			}
+
+			changed = append(changed, changeColumn)
 		}
 	}
 	return
 }
 
-func (old columns) diffs(new columns) (removed columns, added columns, changed columns) {
-	return old.getNewIn(new), new.getNewIn(old), old.getChangedTypes(new)
+func (old columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
+	return old.getNewIn(new), new.getNewIn(old), old.getChangedColumnProperties(new)
 }
 
 func getColumn(from interface{}) (to column) {
@@ -212,6 +249,20 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
+func toSnowflakePrimaryKey(from interface{}) snowflake.PrimaryKey {
+	pk := from.([]interface{})
+	if len(pk) > 0 {
+
+		pkDetails := pk[0].(map[string]interface{})
+
+		snowPk := snowflake.PrimaryKey{}
+		name := pkDetails["name"].(string)
+		keys := expandStringList(pkDetails["keys"].([]interface{}))
+		return *snowPk.WithName(name).WithKeys(keys)
+	}
+	return snowflake.PrimaryKey{}
+}
+
 // CreateTable implements schema.CreateFunc
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -220,6 +271,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	columns := getColumns(d.Get("column").([]interface{}))
+
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns.toSnowflakeColumns())
 
 	// Set optionals
@@ -229,6 +281,10 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("cluster_by"); ok {
 		builder.WithClustering(expandStringList(v.([]interface{})))
+	}
+
+	if v, ok := d.GetOk("primary_key"); ok {
+		builder.WithPrimaryKey(toSnowflakePrimaryKey(v.([]interface{})))
 	}
 
 	stmt := builder.Create()
@@ -283,15 +339,26 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
+	if err != nil {
+		return err
+	}
+
+	pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
+	if err != nil {
+		return err
+	}
+
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":       table.TableName.String,
-		"owner":      table.Owner.String,
-		"database":   tableID.DatabaseName,
-		"schema":     tableID.SchemaName,
-		"comment":    table.Comment.String,
-		"column":     snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"name":        table.TableName.String,
+		"owner":       table.Owner.String,
+		"database":    tableID.DatabaseName,
+		"schema":      tableID.SchemaName,
+		"comment":     table.Comment.String,
+		"column":      snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by":  snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"primary_key": snowflake.FlattenTablePrimaryKey(pkDescription),
 	}
 
 	for key, val := range toSet {
@@ -360,8 +427,41 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range changed {
-			q := builder.ChangeColumnType(cA.name, cA.dataType, cA.nullable)
-			err := snowflake.Exec(db, q)
+			var queries []string
+			if cA.changedDataType {
+				queries = append(queries, builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType))
+			}
+			if cA.changedNullConstraint {
+				queries = append(queries, builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable))
+			}
+
+			if len(queries) > 0 {
+				err := snowflake.ExecMulti(db, queries)
+				if err != nil {
+					return errors.Wrapf(err, "error changing column type on %v", d.Id())
+				}
+			}
+
+		}
+	}
+	if d.HasChange("primary_key") {
+		oldpk, newpk := d.GetChange("primary_key")
+
+		snowPk := toSnowflakePrimaryKey(newpk)
+		builder.WithPrimaryKey(snowPk)
+
+		var queries []string
+		if len(oldpk.([]interface{})) > 0 || (len(newpk.([]interface{})) == 0) {
+			//drop our pk if there was an old primary key, or pk has been removed
+			queries = append(queries, builder.DropPrimaryKey())
+		}
+
+		if len(newpk.([]interface{})) > 0 {
+			// add our new pk
+			queries = append(queries, builder.ChangePrimaryKey())
+		}
+		if len(queries) > 0 {
+			err := snowflake.ExecMulti(db, queries)
 			if err != nil {
 				return errors.Wrapf(err, "error changing column type on %v", d.Id())
 			}
