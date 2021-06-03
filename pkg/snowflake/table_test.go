@@ -33,7 +33,7 @@ func TestTableCreate(t *testing.T) {
 	s.WithClustering([]string{"column1"})
 	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
 
-	s.WithPrimaryKey(PrimaryKey{name:"MY_KEY",keys: []string{"column1"}})
+	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1"}})
 	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR ,CONSTRAINT MY_KEY PRIMARY KEY(column1)) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
 }
 
@@ -106,13 +106,13 @@ func TestTableDropPrimaryKeys(t *testing.T) {
 func TestTableChangePrimaryKeysWithConstraintName(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	s.WithPrimaryKey(PrimaryKey{name:"MY_KEY",keys: []string{"column1","column2"}})
+	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1", "column2"}})
 	r.Equal(s.ChangePrimaryKey(), `ALTER TABLE "test_db"."test_schema"."test_table" ADD CONSTRAINT MY_KEY PRIMARY KEY(column1, column2)`)
 }
 
 func TestTableChangePrimaryKeysWithoutConstraintName(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	s.WithPrimaryKey(PrimaryKey{name:"",keys: []string{"column1","column2"}})
+	s.WithPrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}})
 	r.Equal(s.ChangePrimaryKey(), `ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY(column1, column2)`)
 }
