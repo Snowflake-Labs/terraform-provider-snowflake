@@ -16,27 +16,19 @@ func TestAcc_ScimIntegration(t *testing.T) {
 	}
 
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	scimIntName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	scimProvisionerRole := "AAD_PROVISIONER"
+	scimNetworkPolicy := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: scimIntegrationConfig_azure(scimIntName),
+				Config: scimIntegrationConfig_azure(scimIntName, scimProvisionerRole, scimNetworkPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", scimIntName),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "AZURE"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "provisioner_role", "AAD_PROVISIONER"),
-					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "created_on"),
-				),
-			},
-			{
-				Config: scimIntegrationConfig_okta_np(scimIntName2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", scimIntName2),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "provisioner_role", "OKTA_PROVISIONER"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", "OKTA_NETWORK_POLICY"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "provisioner_role", scimProvisionerRole),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", scimNetworkPolicy),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "created_on"),
 				),
 			},
@@ -49,10 +41,10 @@ func TestAcc_ScimIntegration(t *testing.T) {
 	})
 }
 
-func scimIntegrationConfig_azure(name string) string {
+func scimIntegrationConfig_azure(name string, role string, policy string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_role" "azure" {
-		name = "AAD_PROVISIONER"
+		name = "%s"
 		comment = "test comment"
 	}
 
@@ -71,56 +63,21 @@ func scimIntegrationConfig_azure(name string) string {
 		roles = ["ACCOUNTADMIN"]
 	}
 
+	resource "snowflake_network_policy" "azure" {
+		name            = "%s"
+		allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
+	}
+
 	resource "snowflake_scim_integration" "test" {
 		name = "%s"
 		scim_client = "AZURE"
 		provisioner_role = snowflake_role.azure.name
+		network_policy = snowflake_network_policy.azure.name
 		depends_on = [
 			snowflake_account_grant.azurecua,
 			snowflake_account_grant.azurecra,
 			snowflake_role_grants.azure
 		]
 	}
-	`, name)
-}
-
-func scimIntegrationConfig_okta_np(name string) string {
-	return fmt.Sprintf(`
-	resource "snowflake_role" "okta" {
-		name = "OKTA_PROVISIONER"
-		comment = "test comment"
-	}
-
-	resource "snowflake_account_grant" "oktacu" {
-		roles     = [snowflake_role.okta.name]
-		privilege = "CREATE USER"
-	}
-
-	resource "snowflake_account_grant" "oktacr" {
-		roles     = [snowflake_role.okta.name]
-		privilege = "CREATE ROLE"
-	}
-
-	resource "snowflake_role_grants" "okta" {
-		role_name = snowflake_role.okta.name
-		roles = ["ACCOUNTADMIN"]
-	}
-
-	resource "snowflake_network_policy" "okta" {
-		name            = "OKTA_NETWORK_POLICY"
-		allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
-	}
-
-	resource "snowflake_scim_integration" "test" {
-		name = "%s"
-		scim_client = "OKTA"
-		provisioner_role = snowflake_role.okta.name
-		network_policy = snowflake_network_policy.okta.name
-		depends_on = [
-			snowflake_account_grant.oktacu,
-			snowflake_account_grant.oktacr,
-			snowflake_role_grants.okta
-		]
-	}
-	`, name)
+	`, role, policy, name)
 }
