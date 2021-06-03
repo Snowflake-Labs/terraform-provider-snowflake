@@ -438,7 +438,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			if len(queries) > 0 {
 				err := snowflake.ExecMulti(db, queries)
 				if err != nil {
-					return errors.Wrapf(err, "error changing column type on %v", d.Id())
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
 				}
 			}
 
