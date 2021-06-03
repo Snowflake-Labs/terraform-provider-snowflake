@@ -11,12 +11,14 @@ func TestTableCreate(t *testing.T) {
 	s := Table("test_table", "test_db", "test_schema")
 	cols := []Column{
 		{
-			name:  "column1",
-			_type: "OBJECT",
+			name:     "column1",
+			_type:    "OBJECT",
+			nullable: true,
 		},
 		{
-			name:  "column2",
-			_type: "VARCHAR",
+			name:     "column2",
+			_type:    "VARCHAR",
+			nullable: true,
 		},
 	}
 
@@ -48,7 +50,7 @@ func TestTableRemoveComment(t *testing.T) {
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "VARIANT"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
+	r.Equal(s.AddColumn("new_column", "VARIANT", true), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
 }
 
 func TestTableDropColumn(t *testing.T) {
@@ -85,4 +87,10 @@ func TestTableShow(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.Show(), `SHOW TABLES LIKE 'test_table' IN SCHEMA "test_db"."test_schema"`)
+}
+
+func TestTableShowPrimaryKeys(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ShowPrimaryKeys(), `SHOW PRIMARY KEYS IN TABLE "test_db"."test_schema"."test_table"`)
 }
