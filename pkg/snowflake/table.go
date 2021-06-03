@@ -3,10 +3,26 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
+
+type PrimaryKey struct {
+	name string
+	keys []string
+}
+
+func (pk *PrimaryKey) WithName(name string) *PrimaryKey {
+	pk.name = name
+	return pk
+}
+
+func (pk *PrimaryKey) WithKeys(keys []string) *PrimaryKey {
+	pk.keys = keys
+	return pk
+}
 
 type Column struct {
 	name     string
@@ -29,21 +45,49 @@ func (c *Column) WithNullable(nullable bool) *Column {
 }
 
 func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
+
 	if c == nil {
 		return ""
 	}
-	var nullConstraint string
-	if c.nullable {
-		nullConstraint = "NULL"
-	} else {
-		nullConstraint = "NOT NULL"
+	var colDef strings.Builder
+	colDef.WriteString(fmt.Sprintf(`"%v" %v`, EscapeString(c.name), EscapeString(c._type)))
+	if withInlineConstraints {
+		if !c.nullable {
+			colDef.WriteString(` NOT NULL`)
+		}
 	}
 
-	if withInlineConstraints {
-		return fmt.Sprintf(`"%v" %v %v`, EscapeString(c.name), EscapeString(c._type), nullConstraint)
-	} else {
-		return fmt.Sprintf(`"%v" %v`, EscapeString(c.name), EscapeString(c._type))
+	return colDef.String()
+
+}
+
+func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
+	sort.SliceStable(pkds, func(i, j int) bool { return pkds[i].KeySequence.String < pkds[j].KeySequence.String })
+	//sort our keys on the key sequence
+	flattened := []interface{}{}
+	flat := map[string]interface{}{}
+	var keys []string
+	var name string
+	var nameSet bool
+
+	for _, pk := range pkds {
+		//set as empty string, sys_constraint means it was an unnnamed constraint
+		if strings.Contains(pk.ConstraintName.String, "SYS_CONSTRAINT") && !nameSet {
+			name = ""
+			nameSet = true
+		}
+		if !nameSet {
+			name = pk.ConstraintName.String
+			nameSet = true
+		}
+
+		keys = append(keys, pk.ColumnName.String)
 	}
+	flat["name"] = name
+	flat["keys"] = keys
+	flattened = append(flattened, flat)
+	return flattened
+
 }
 
 type Columns []Column
@@ -90,12 +134,13 @@ func (c Columns) getColumnDefinitions(withInlineConstraints bool) string {
 
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema
 type TableBuilder struct {
-	name      string
-	db        string
-	schema    string
-	columns   Columns
-	comment   string
-	clusterBy []string
+	name       string
+	db         string
+	schema     string
+	columns    Columns
+	comment    string
+	clusterBy  []string
+	primaryKey PrimaryKey
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -137,10 +182,44 @@ func (tb *TableBuilder) WithClustering(c []string) *TableBuilder {
 	return tb
 }
 
+func (tb *TableBuilder) WithPrimaryKey(pk PrimaryKey) *TableBuilder {
+	tb.primaryKey = pk
+	return tb
+}
+
 //Function to get clustering definition
 func (tb *TableBuilder) GetClusterKeyString() string {
 
-	return fmt.Sprint(strings.Join(tb.clusterBy[:], ", "))
+	return JoinStringList(tb.clusterBy[:], ", ")
+}
+
+func JoinStringList(instrings []string, delimiter string) string {
+
+	return fmt.Sprint(strings.Join(instrings[:], delimiter))
+
+}
+
+func (tb *TableBuilder) getCreateStatementBody() string {
+	var q strings.Builder
+
+	colDef := tb.columns.getColumnDefinitions(true)
+
+	if len(tb.primaryKey.keys) > 0 {
+		colDef = strings.TrimSuffix(colDef, ")") //strip trailing
+		q.WriteString(colDef)
+		if tb.primaryKey.name != "" {
+			q.WriteString(fmt.Sprintf(` ,CONSTRAINT %v PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(tb.primaryKey.keys, ",")))
+
+		} else {
+			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(tb.primaryKey.keys, ",")))
+		}
+
+		q.WriteString(")") // add closing
+	} else {
+		q.WriteString(colDef)
+	}
+
+	return q.String()
 }
 
 //function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
@@ -197,7 +276,7 @@ func TableWithColumnDefinitions(name, db, schema string, columns Columns) *Table
 func (tb *TableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE TABLE %v`, tb.QualifiedName()))
-	q.WriteString(tb.columns.getColumnDefinitions(true))
+	q.WriteString(tb.getCreateStatementBody())
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
@@ -251,7 +330,7 @@ func (tb *TableBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TABLE %v UNSET COMMENT`, tb.QualifiedName())
 }
 
-// Return sql to set null constraint on column
+// Return sql to set/unset null constraint on column
 func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string {
 	if nullable {
 		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s DROP NOT NULL`, tb.QualifiedName(), name)
@@ -260,10 +339,17 @@ func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string 
 	}
 }
 
-// Return sql to drop null constraint on column
-// func (tb *TableBuilder) DropNullConstraint(name string) string {
+func (tb *TableBuilder) ChangePrimaryKey() string {
+	pks := JoinStringList(tb.primaryKey.keys, ", ")
+	if tb.primaryKey.name != "" {
+		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %v PRIMARY KEY(%v)`, tb.QualifiedName(), tb.primaryKey.name, pks)
+	}
+	return fmt.Sprintf(`ALTER TABLE %s ADD PRIMARY KEY(%v)`, tb.QualifiedName(), pks)
+}
 
-// }
+func (tb *TableBuilder) DropPrimaryKey() string {
+	return fmt.Sprintf(`ALTER TABLE %s DROP PRIMARY KEY`, tb.QualifiedName())
+}
 
 // RemoveClustering returns the SQL query that will remove data clustering from the table
 func (tb *TableBuilder) DropClustering() string {
@@ -282,6 +368,10 @@ func (tb *TableBuilder) Show() string {
 
 func (tb *TableBuilder) ShowColumns() string {
 	return fmt.Sprintf(`DESC TABLE %s`, tb.QualifiedName())
+}
+
+func (tb *TableBuilder) ShowPrimaryKeys() string {
+	return fmt.Sprintf(`SHOW PRIMARY KEYS IN TABLE %s`, tb.QualifiedName())
 }
 
 type table struct {
@@ -321,6 +411,12 @@ func (td *tableDescription) IsNullable() bool {
 	}
 }
 
+type primaryKeyDescription struct {
+	ColumnName     sql.NullString `db:"column_name"`
+	KeySequence    sql.NullString `db:"key_sequence"`
+	ConstraintName sql.NullString `db:"constraint_name"`
+}
+
 func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
 	tds := []tableDescription{}
 	for rows.Next() {
@@ -332,4 +428,17 @@ func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
 		tds = append(tds, td)
 	}
 	return tds, rows.Err()
+}
+
+func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]primaryKeyDescription, error) {
+	pkds := []primaryKeyDescription{}
+	for rows.Next() {
+		pk := primaryKeyDescription{}
+		err := rows.StructScan(&pk)
+		if err != nil {
+			return nil, err
+		}
+		pkds = append(pkds, pk)
+	}
+	return pkds, rows.Err()
 }
