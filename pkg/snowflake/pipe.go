@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -137,15 +138,15 @@ func (pb *PipeBuilder) Show() string {
 }
 
 type pipe struct {
-	Createdon           string  `db:"created_on"`
-	Name                string  `db:"name"`
-	DatabaseName        string  `db:"database_name"`
-	SchemaName          string  `db:"schema_name"`
-	Definition          string  `db:"definition"`
-	Owner               string  `db:"owner"`
-	NotificationChannel *string `db:"notification_channel"`
-	Comment             string  `db:"comment"`
-	Integration         string  `db:"integration"`
+	Createdon           string         `db:"created_on"`
+	Name                string         `db:"name"`
+	DatabaseName        string         `db:"database_name"`
+	SchemaName          string         `db:"schema_name"`
+	Definition          string         `db:"definition"`
+	Owner               string         `db:"owner"`
+	NotificationChannel *string        `db:"notification_channel"`
+	Comment             string         `db:"comment"`
+	Integration         sql.NullString `db:"integration"`
 }
 
 func ScanPipe(row *sqlx.Row) (*pipe, error) {
