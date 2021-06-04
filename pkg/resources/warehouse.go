@@ -71,7 +71,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(60),
+		ValidateFunc: validation.IntAtLeast(1),
 	},
 	// @TODO add a disable_auto_suspend property that sets the value of auto_suspend to NULL
 	"auto_resume": {
