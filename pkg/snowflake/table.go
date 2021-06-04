@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -62,9 +63,16 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
 }
 
 func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
+	flattened := []interface{}{}
+	log.Printf(`[BEN] this is lenght %v`, len(pkds))
+	if len(pkds) == 0 {
+		log.Printf(`[BEN] tin here %v`, len(pkds))
+		return flattened
+	}
+	
 	sort.SliceStable(pkds, func(i, j int) bool { return pkds[i].KeySequence.String < pkds[j].KeySequence.String })
 	//sort our keys on the key sequence
-	flattened := []interface{}{}
+	
 	flat := map[string]interface{}{}
 	var keys []string
 	var name string
