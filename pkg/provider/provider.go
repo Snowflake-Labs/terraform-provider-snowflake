@@ -190,8 +190,9 @@ func getResources() map[string]*schema.Resource {
 
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
-		"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
-		"snowflake_system_get_privatelink_config": datasources.SystemGetPrivateLinkConfig(),
+		"snowflake_system_generate_scim_access_token": datasources.SystemGenerateSCIMAccessToken(),
+		"snowflake_system_get_aws_sns_iam_policy":     datasources.SystemGetAWSSNSIAMPolicy(),
+		"snowflake_system_get_privatelink_config":     datasources.SystemGetPrivateLinkConfig(),
 	}
 
 	return dataSources
