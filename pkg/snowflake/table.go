@@ -3,9 +3,9 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -69,10 +69,10 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 		log.Printf(`[BEN] tin here %v`, len(pkds))
 		return flattened
 	}
-	
+
 	sort.SliceStable(pkds, func(i, j int) bool { return pkds[i].KeySequence.String < pkds[j].KeySequence.String })
 	//sort our keys on the key sequence
-	
+
 	flat := map[string]interface{}{}
 	var keys []string
 	var name string
