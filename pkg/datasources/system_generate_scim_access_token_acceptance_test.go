@@ -33,22 +33,22 @@ func generateAccessTokenConfig(name string) string {
 	}
 
 	resource "snowflake_account_grant" "azurecud" {
-		roles     = [snowflake_role.azure.name]
+		roles     = [snowflake_role.azured.name]
 		privilege = "CREATE USER"
 	}
 	resource "snowflake_account_grant" "azurecrd" {
-		roles     = [snowflake_role.azure.name]
+		roles     = [snowflake_role.azured.name]
 		privilege = "CREATE ROLE"
 	}
 	resource "snowflake_role_grants" "azured" {
-		role_name = snowflake_role.azure.name
+		role_name = snowflake_role.azured.name
 		roles = ["ACCOUNTADMIN"]
 	}
 
 	resource "snowflake_scim_integration" "azured" {
 		name = "%s"
 		scim_client = "AZURE"
-		provisioner_role = snowflake_role.azure.name
+		provisioner_role = snowflake_role.azured.name
 		depends_on = [
 			snowflake_account_grant.azurecud,
 			snowflake_account_grant.azurecrd,
