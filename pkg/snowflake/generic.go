@@ -3,7 +3,6 @@ package snowflake
 import (
 	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 	"text/template"
 )
@@ -109,52 +108,23 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 
 	sb.WriteString(ab.rawStatement)
 
-	sortedStringProperties := make([]string, 0)
-	for k := range ab.stringProperties {
-		sortedStringProperties = append(sortedStringProperties, k)
-	}
-	sort.Strings(sortedStringProperties)
-
-	for _, k := range sortedStringProperties {
+	for _, k := range sortStrings(ab.stringProperties) {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(ab.stringProperties[k])))
 	}
 
-	sortedStringListProperties := make([]string, 0)
-	for k := range ab.stringListProperties {
-		sortedStringListProperties = append(sortedStringListProperties, k)
-	}
-
-	for _, k := range sortedStringListProperties {
+	for _, k := range sortStringList(ab.stringListProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(ab.stringListProperties[k])))
 	}
 
-	sortedBoolProperties := make([]string, 0)
-	for k := range ab.boolProperties {
-		sortedBoolProperties = append(sortedBoolProperties, k)
-	}
-	sort.Strings(sortedBoolProperties)
-
-	for _, k := range sortedBoolProperties {
+	for _, k := range sortStringsBool(ab.boolProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), ab.boolProperties[k]))
 	}
 
-	sortedIntProperties := make([]string, 0)
-	for k := range ab.intProperties {
-		sortedIntProperties = append(sortedIntProperties, k)
-	}
-	sort.Strings(sortedIntProperties)
-
-	for _, k := range sortedIntProperties {
+	for _, k := range sortStringsInt(ab.intProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), ab.intProperties[k]))
 	}
 
-	sortedFloatProperties := make([]string, 0)
-	for k := range ab.floatProperties {
-		sortedFloatProperties = append(sortedFloatProperties, k)
-	}
-	sort.Strings(sortedFloatProperties)
-
-	for _, k := range sortedFloatProperties {
+	for _, k := range sortStringsFloat(ab.floatProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), ab.floatProperties[k]))
 	}
 
@@ -216,52 +186,23 @@ func (b *CreateBuilder) Statement() string {
 
 	sb.WriteString(b.rawStatement)
 
-	sortedStringProperties := make([]string, 0)
-	for k := range b.stringProperties {
-		sortedStringProperties = append(sortedStringProperties, k)
-	}
-	sort.Strings(sortedStringProperties)
-
-	for _, k := range sortedStringProperties {
+	for _, k := range sortStrings(b.stringProperties) {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(b.stringProperties[k])))
 	}
 
-	sortedStringListProperties := make([]string, 0)
-	for k := range b.stringListProperties {
-		sortedStringListProperties = append(sortedStringListProperties, k)
-	}
-
-	for _, k := range sortedStringListProperties {
+	for _, k := range sortStringList(b.stringListProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(b.stringListProperties[k])))
 	}
 
-	sortedBoolProperties := make([]string, 0)
-	for k := range b.boolProperties {
-		sortedBoolProperties = append(sortedBoolProperties, k)
-	}
-	sort.Strings(sortedBoolProperties)
-
-	for _, k := range sortedBoolProperties {
+	for _, k := range sortStringsBool(b.boolProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), b.boolProperties[k]))
 	}
 
-	sortedIntProperties := make([]string, 0)
-	for k := range b.intProperties {
-		sortedIntProperties = append(sortedIntProperties, k)
-	}
-	sort.Strings(sortedIntProperties)
-
-	for _, k := range sortedIntProperties {
+	for _, k := range sortStringsInt(b.intProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), b.intProperties[k]))
 	}
 
-	sortedFloatProperties := make([]string, 0)
-	for k := range b.floatProperties {
-		sortedFloatProperties = append(sortedFloatProperties, k)
-	}
-	sort.Strings(sortedFloatProperties)
-
-	for _, k := range sortedFloatProperties {
+	for _, k := range sortStringsFloat(b.floatProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), b.floatProperties[k]))
 	}
 
