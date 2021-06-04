@@ -3,7 +3,6 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
@@ -64,9 +63,7 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
 
 func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	flattened := []interface{}{}
-	log.Printf(`[BEN] this is lenght %v`, len(pkds))
 	if len(pkds) == 0 {
-		log.Printf(`[BEN] tin here %v`, len(pkds))
 		return flattened
 	}
 
