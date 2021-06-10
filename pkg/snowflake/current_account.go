@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -49,9 +50,8 @@ func ScanCurrentAccount(row *sqlx.Row) (*account, error) {
 	return acc, err
 }
 
-func ReadCurrentAccount(sdb *sqlx.DB) (*account, error) {
-	stmt := SelectCurrentAccount()
-	row := sdb.QueryRowx(stmt)
+func ReadCurrentAccount(db *sql.DB) (*account, error) {
+	row := QueryRow(db, SelectCurrentAccount())
 	return ScanCurrentAccount(row)
 }
 

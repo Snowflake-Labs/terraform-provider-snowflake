@@ -59,7 +59,7 @@ func TestCurrentAccountRead(t *testing.T) {
 			rows := sqlmock.NewRows([]string{"account", "region"}).AddRow(testCase.account, testCase.region)
 			mock.ExpectQuery(`SELECT CURRENT_ACCOUNT\(\) AS "account", CURRENT_REGION\(\) AS "region";`).WillReturnRows(rows)
 
-			acc, err := snowflake.ReadCurrentAccount(sqlxDB)
+			acc, err := snowflake.ReadCurrentAccount(sqlxDB.DB)
 			r.NoError(err)
 			r.Equal(testCase.account, acc.Account)
 			r.Equal(testCase.region, acc.Region)
