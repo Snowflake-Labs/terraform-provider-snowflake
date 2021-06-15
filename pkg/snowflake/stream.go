@@ -10,12 +10,13 @@ import (
 
 // StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
 type StreamBuilder struct {
-	name       string
-	db         string
-	schema     string
-	onTable    string
-	appendOnly bool
-	comment    string
+	name            string
+	db              string
+	schema          string
+	onTable         string
+	appendOnly      bool
+	showInitialRows bool
+	comment         string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -59,6 +60,16 @@ func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
 	return sb
 }
 
+func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
+	sb.showInitialRows = false
+
+	if b {
+		sb.showInitialRows = b
+	}
+
+	return sb
+}
+
 // Stream returns a pointer to a Builder that abstracts the DDL operations for a stream.
 //
 // Supported DDL operations are:
@@ -88,6 +99,8 @@ func (sb *StreamBuilder) Create() string {
 	}
 
 	q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
+
+	q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
 
 	return q.String()
 }
