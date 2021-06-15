@@ -18,8 +18,8 @@ func TestFutureSchemaGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("USAGE")
-	r.Equal(`REVOKE USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE SCHEMAS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestFutureTableGrant(t *testing.T) {
@@ -33,8 +33,8 @@ func TestFutureTableGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("USAGE")
-	r.Equal(`REVOKE USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureTableGrant("test_db", "")
@@ -46,8 +46,8 @@ func TestFutureTableGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE TABLES IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("USAGE")
-	b.Equal(`REVOKE USAGE ON FUTURE TABLES IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal([]string{`REVOKE USAGE ON FUTURE TABLES IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestFutureMaterializedViewGrant(t *testing.T) {
@@ -61,8 +61,8 @@ func TestFutureMaterializedViewGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("SELECT", false)
 	r.Equal(`GRANT SELECT ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("SELECT")
-	r.Equal(`REVOKE SELECT ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("SELECT")
+	r.Equal([]string{`REVOKE SELECT ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureMaterializedViewGrant("test_db", "")
@@ -74,8 +74,8 @@ func TestFutureMaterializedViewGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("SELECT", false)
 	b.Equal(`GRANT SELECT ON FUTURE MATERIALIZED VIEWS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("SELECT")
-	b.Equal(`REVOKE SELECT ON FUTURE MATERIALIZED VIEWS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("SELECT")
+	b.Equal([]string{`REVOKE SELECT ON FUTURE MATERIALIZED VIEWS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestFutureViewGrant(t *testing.T) {
@@ -89,8 +89,8 @@ func TestFutureViewGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("USAGE")
-	r.Equal(`REVOKE USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE VIEWS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureViewGrant("test_db", "")
@@ -102,8 +102,8 @@ func TestFutureViewGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE VIEWS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("USAGE")
-	b.Equal(`REVOKE USAGE ON FUTURE VIEWS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal([]string{`REVOKE USAGE ON FUTURE VIEWS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestFutureStageGrant(t *testing.T) {
@@ -117,8 +117,8 @@ func TestFutureStageGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE STAGES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("USAGE")
-	r.Equal(`REVOKE USAGE ON FUTURE STAGES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE STAGES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureStageGrant("test_db", "")
@@ -130,8 +130,8 @@ func TestFutureStageGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE STAGES IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("USAGE")
-	b.Equal(`REVOKE USAGE ON FUTURE STAGES IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal([]string{`REVOKE USAGE ON FUTURE STAGES IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestShowFutureGrantsInSchema(t *testing.T) {
@@ -160,8 +160,8 @@ func TestFutureExternalTableGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("SELECT", false)
 	r.Equal(`GRANT SELECT ON FUTURE EXTERNAL TABLES IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("SELECT")
-	r.Equal(`REVOKE SELECT ON FUTURE EXTERNAL TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("SELECT")
+	r.Equal([]string{`REVOKE SELECT ON FUTURE EXTERNAL TABLES IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureExternalTableGrant("test_db", "")
@@ -173,8 +173,8 @@ func TestFutureExternalTableGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("SELECT", false)
 	b.Equal(`GRANT SELECT ON FUTURE EXTERNAL TABLES IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("SELECT")
-	b.Equal(`REVOKE SELECT ON FUTURE EXTERNAL TABLES IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("SELECT")
+	b.Equal([]string{`REVOKE SELECT ON FUTURE EXTERNAL TABLES IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
 
 func TestFutureFileFormatGrant(t *testing.T) {
@@ -188,8 +188,8 @@ func TestFutureFileFormatGrant(t *testing.T) {
 	s = fvg.Role("bob").Grant("USAGE", false)
 	r.Equal(`GRANT USAGE ON FUTURE FILE FORMATS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
 
-	s = fvg.Role("bob").Revoke("USAGE")
-	r.Equal(`REVOKE USAGE ON FUTURE FILE FORMATS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`, s)
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE FILE FORMATS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
 
 	b := require.New(t)
 	fvgd := snowflake.FutureFileFormatGrant("test_db", "")
@@ -201,6 +201,6 @@ func TestFutureFileFormatGrant(t *testing.T) {
 	s = fvgd.Role("bob").Grant("USAGE", false)
 	b.Equal(`GRANT USAGE ON FUTURE FILE FORMATS IN DATABASE "test_db" TO ROLE "bob"`, s)
 
-	s = fvgd.Role("bob").Revoke("USAGE")
-	b.Equal(`REVOKE USAGE ON FUTURE FILE FORMATS IN DATABASE "test_db" FROM ROLE "bob"`, s)
+	revoke = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal([]string{`REVOKE USAGE ON FUTURE FILE FORMATS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }

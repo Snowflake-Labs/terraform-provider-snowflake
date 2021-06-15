@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 // TerraformGrantResource augments terraform's *schema.Resource with extra context
@@ -187,6 +189,17 @@ func readGenericGrant(
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
 	if err != nil {
+		// HACK HACK: If the object doesn't exist or not authorized then we can assume someone deleted it
+		// We also check the error number matches
+		// We set the tf id == blank and return.
+		// I don't know of a better way to work around this issue
+		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok &&
+			snowflakeErr.Number == 2003 &&
+			strings.Contains(err.Error(), "does not exist or not authorized") {
+			log.Printf("[WARN] resource (%s) not found, removing from state file", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	priv := d.Get("privilege").(string)
@@ -351,14 +364,14 @@ func deleteGenericGrantRolesAndShares(
 	db := meta.(*sql.DB)
 
 	for _, role := range roles {
-		err := snowflake.Exec(db, builder.Role(role).Revoke(priv))
+		err := snowflake.ExecMulti(db, builder.Role(role).Revoke(priv))
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := snowflake.Exec(db, builder.Share(share).Revoke(priv))
+		err := snowflake.ExecMulti(db, builder.Share(share).Revoke(priv))
 		if err != nil {
 			return err
 		}
@@ -435,4 +448,14 @@ func formatCallableObjectName(callableName string, returnType string, arguments 
 	}
 
 	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
+}
+
+// changeDiff calculates roles/shares to add/revoke
+func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []string) {
+	o, n := d.GetChange(key)
+	oldSet := o.(*schema.Set)
+	newSet := n.(*schema.Set)
+	toAdd = expandStringList(newSet.Difference(oldSet).List())
+	toRemove = expandStringList(oldSet.Difference(newSet).List())
+	return
 }

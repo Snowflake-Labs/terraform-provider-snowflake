@@ -33,3 +33,8 @@ func ScanUser(row *sqlx.Row) (*user, error) {
 	err := row.StructScan(r)
 	return r, err
 }
+
+type DescribeUserProp struct {
+	Property string         `db:"property"`
+	Value    sql.NullString `db:"value"`
+}

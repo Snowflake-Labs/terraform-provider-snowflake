@@ -61,6 +61,38 @@ func TestAccDatabaseGrant_basic(t *testing.T) {
 	})
 }
 
+// TODO(el): fix this test
+// func TestAccDatabaseGrant_dbNotExists(t *testing.T) {
+// 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+// 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		Providers: providers(),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				// Note the DB we're trying to grant to doesn't exist
+// 				// This tests we don't error out, but do delete remote state
+// 				Config: fmt.Sprintf(`
+// resource "snowflake_database_grant" "test" {
+// 	database_name = "%v"
+//   roles         = ["%v"]
+// }`, dbName, roleName),
+// 				ResourceName: "snowflake_database_grant.test",
+// 				ImportStateId: ,
+// 				Check: resource.ComposeTestCheckFunc(
+// 					func(state *terraform.State) error {
+// 						id := state.RootModule().Resources["snowflake_database_grant.test"].Primary.ID
+// 						if id != "" {
+// 							return errors.Errorf("Expected empty ID but got %s", id)
+// 						}
+// 						return nil
+// 					},
+// 				),
+// 			},
+// 		},
+// 	})
+// }
+
 func databaseGrantConfig(db, role, share string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {

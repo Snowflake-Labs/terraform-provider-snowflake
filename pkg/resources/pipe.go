@@ -60,7 +60,12 @@ var pipeSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
 	},
-	"notification_channel": {
+	"integration": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies an integration for the pipe.",
+	},
+	"notification_channel": &schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.",
@@ -167,6 +172,10 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 		builder.WithAwsSnsTopicArn(v.(string))
 	}
 
+	if v, ok := d.GetOk("integration"); ok {
+		builder.WithIntegration(v.(string))
+	}
+
 	q := builder.Create()
 
 	err := snowflake.Exec(db, q)
@@ -248,12 +257,12 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("auto_ingest", pipe.NotificationChannel != "")
+	err = d.Set("auto_ingest", pipe.NotificationChannel != nil)
 	if err != nil {
 		return err
 	}
 
-	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
+	if pipe.NotificationChannel != nil && strings.Contains(*pipe.NotificationChannel, "arn:aws:sns:") {
 		err = d.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}

@@ -52,6 +52,40 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	return string(e.input[e.pos:]), nil
 }
 
+func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error) {
+	fmt.Printf("[DEBUG] extracting materialized view query: %s\n", string(e.input))
+	e.consumeSpace()
+	e.consumeToken("use warehouse")
+	e.consumeSpace()
+	e.consumeNonSpace() // warehouse name
+	e.consumeSpace()
+	e.consumeToken("create")
+	e.consumeSpace()
+	e.consumeToken("or replace")
+	e.consumeSpace()
+	e.consumeToken("secure")
+	e.consumeSpace()
+	e.consumeToken("materialized view")
+	e.consumeSpace()
+	e.consumeToken("if not exists")
+	e.consumeSpace()
+	e.consumeIdentifier()
+	// TODO copy grants
+	// TODO column list
+	e.consumeComment()
+	e.consumeSpace()
+	e.consumeComment()
+	e.consumeSpace()
+	e.consumeToken("cluster by")
+	e.consumeSpace()
+	e.consumeClusterBy()
+	e.consumeSpace()
+	e.consumeToken("as")
+	e.consumeSpace()
+
+	return string(e.input[e.pos:]), nil
+}
+
 // consumeToken will move e.pos forward iff the token is the next part of the input. Comparison is
 // case-insensitive. Will return true if consumed.
 func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
@@ -136,4 +170,18 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 	if !e.consumeToken("'") {
 		return
 	}
+}
+
+func (e *ViewSelectStatementExtractor) consumeClusterBy() {
+	if e.input[e.pos] != '(' {
+		return
+	}
+	found := 1
+	for {
+		if e.pos+found > len(e.input)-1 || e.input[e.pos+found-1] == ')' {
+			break
+		}
+		found += 1
+	}
+	e.pos += found
 }

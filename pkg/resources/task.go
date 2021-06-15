@@ -82,10 +82,11 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.",
 	},
 	"sql_statement": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
-		ForceNew:    false,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
+		ForceNew:         false,
+		DiffSuppressFunc: DiffSuppressStatement,
 	},
 }
 
@@ -334,7 +335,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		paramMap := map[string]interface{}{}
 		for _, param := range params {
 			log.Printf("[TRACE] %+v\n", param)
-			if param.Value == param.DefaultValue {
+			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" {
 				continue
 			}
 

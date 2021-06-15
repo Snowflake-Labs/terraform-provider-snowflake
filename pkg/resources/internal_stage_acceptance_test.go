@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAcc_Stage(t *testing.T) {
+func TestAcc_InternalStage(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: stageConfig(accName),
+				Config: internalStageConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "database", accName),
@@ -28,7 +28,7 @@ func TestAcc_Stage(t *testing.T) {
 	})
 }
 
-func stageConfig(n string) string {
+func internalStageConfig(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%v"

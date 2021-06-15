@@ -110,7 +110,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error adding accounts to share %v", name)
 		}
 		// 4. Revoke temporary DB grant to the share
-		err = snowflake.Exec(db, tempDBGrant.Share(name).Revoke("USAGE"))
+		err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
 		if err != nil {
 			return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
 		}

@@ -19,7 +19,7 @@ func TestStage(t *testing.T) {
 	r.NoError(err)
 }
 
-func TestStageCreate(t *testing.T) {
+func TestInternalStageCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -34,6 +34,31 @@ func TestStageCreate(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
 			`^CREATE STAGE "test_db"."test_schema"."test_stage" COMMENT = 'great comment'$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadStage(mock)
+		expectReadStageShow(mock)
+		err := resources.CreateStage(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestExternalStageCreate(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "test_stage",
+		"database": "test_db",
+		"url":      "s3://com.example.bucket/prefix",
+		"schema":   "test_schema",
+		"comment":  "great comment",
+	}
+	d := schema.TestResourceDataRaw(t, resources.Stage().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE STAGE "test_db"."test_schema"."test_stage" URL = 's3://com.example.bucket/prefix' COMMENT = 'great comment'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadStage(mock)

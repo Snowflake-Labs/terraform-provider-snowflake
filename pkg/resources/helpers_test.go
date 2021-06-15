@@ -176,9 +176,40 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
+func apiIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.APIIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func scimIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+func notificationIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -187,6 +218,14 @@ func storageIntegration(t *testing.T, id string, params map[string]interface{}) 
 func table(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Table().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func externalTable(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalTable().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -211,6 +250,14 @@ func user(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 func view(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func materializedView(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaterializedView().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -267,6 +314,14 @@ func functionGrant(t *testing.T, id string, params map[string]interface{}) *sche
 func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func maskingPolicyGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaskingPolicyGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

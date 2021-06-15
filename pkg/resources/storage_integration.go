@@ -74,6 +74,21 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "",
 	},
+	"azure_consent_url": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The consent URL that is used to create an Azure Snowflake service principle inside your tenant.",
+	},
+	"azure_multi_tenant_app_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "This is the name of the Snowflake client application created for your account.",
+	},
+	"storage_gcp_service_account": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "This is the name of the Snowflake Google Service Account created for your account.",
+	},
 	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -213,6 +228,18 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
+		case "STORAGE_GCP_SERVICE_ACCOUNT":
+			if err = d.Set("storage_gcp_service_account", v.(string)); err != nil {
+				return err
+			}
+		case "AZURE_CONSENT_URL":
+			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+				return err
+			}
+		case "AZURE_MULTI_TENANT_APP_NAME":
+			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
 		}
@@ -278,6 +305,10 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("azure_tenant_id") {
 			runSetStatement = true
 			stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
+		}
+		if d.HasChange("storage_gcp_service_account") {
+			runSetStatement = true
+			stmt.SetString("STORAGE_GCP_SERVICE_ACCOUNT", d.Get("storage_gcp_service_account").(string))
 		}
 	}
 
