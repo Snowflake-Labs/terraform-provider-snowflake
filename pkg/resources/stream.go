@@ -45,17 +45,20 @@ var streamSchema = map[string]*schema.Schema{
 	"on_table": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "Name of the table the stream will monitor.",
 	},
 	"append_only": {
 		Type:        schema.TypeBool,
 		Optional:    true,
+		ForceNew:    true,
 		Default:     false,
 		Description: "Type of the stream that will be created.",
 	},
 	"show_initial_rows": {
 		Type:        schema.TypeBool,
 		Optional:    true,
+		ForceNew:    true,
 		Default:     false,
 		Description: "Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.",
 	},
@@ -230,6 +233,21 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("name", stream.StreamName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("on_table", stream.OnTable.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("append_only", stream.AppendOnly.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("show_initial_rows", stream.ShowInitialRows.String)
 	if err != nil {
 		return err
 	}

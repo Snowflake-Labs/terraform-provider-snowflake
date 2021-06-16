@@ -126,16 +126,19 @@ func (sb *StreamBuilder) Show() string {
 }
 
 type descStreamRow struct {
-	CreatedOn    sql.NullString `db:"created_on"`
-	StreamName   sql.NullString `db:"name"`
-	DatabaseName sql.NullString `db:"database_name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Owner        sql.NullString `db:"owner"`
-	Comment      sql.NullString `db:"comment"`
-	TableName    sql.NullString `db:"table_name"`
-	Type         sql.NullString `db:"type"`
-	Stale        sql.NullString `db:"stale"`
-	Mode         sql.NullString `db:"mode"`
+	CreatedOn       sql.NullString `db:"created_on"`
+	StreamName      sql.NullString `db:"name"`
+	DatabaseName    sql.NullString `db:"database_name"`
+	SchemaName      sql.NullString `db:"schema_name"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
+	OnTable         sql.NullString `db:"on_table"`
+	AppendOnly      sql.NullString `db:"append_only"`
+	ShowInitialRows sql.NullString `db:"show_initial_rows"`
+	TableName       sql.NullString `db:"table_name"`
+	Type            sql.NullString `db:"type"`
+	Stale           sql.NullString `db:"stale"`
+	Mode            sql.NullString `db:"mode"`
 }
 
 func ScanStream(row *sqlx.Row) (*descStreamRow, error) {
