@@ -18,6 +18,7 @@ import (
 func checkBool(path, attr string, value bool) func(*terraform.State) error {
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
+		print(is)
 		d := is.Attributes[attr]
 		b, err := strconv.ParseBool(d)
 		if err != nil {
