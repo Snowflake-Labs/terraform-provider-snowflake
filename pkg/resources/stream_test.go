@@ -49,14 +49,14 @@ func expectStreamRead(mock sqlmock.Sqlmock) {
 func TestStreamRead(t *testing.T) {
 	r := require.New(t)
 
-	d := stream(t, "database_name|schema_name|stream_name", map[string]interface{}{"name": "stream_name", "comment": "mock comment"})
+	d := stream(t, "database_name|schema_name|stream_name", map[string]interface{}{"name": "stream_name", "comment": "grand comment"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectStreamRead(mock)
 		err := resources.ReadStream(d, db)
 		r.NoError(err)
 		r.Equal("stream_name", d.Get("name").(string))
-		r.Equal("mock comment", d.Get("comment").(string))
+		r.Equal("grand comment", d.Get("comment").(string))
 
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
