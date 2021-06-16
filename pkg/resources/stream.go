@@ -237,17 +237,17 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("on_table", stream.OnTable.String)
+	err = d.Set("on_table", stream.OnTable)
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("append_only", stream.AppendOnly.String)
+	err = d.Set("append_only", stream.AppendOnly)
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("show_initial_rows", stream.ShowInitialRows.String)
+	err = d.Set("show_initial_rows", stream.ShowInitialRows)
 	if err != nil {
 		return err
 	}

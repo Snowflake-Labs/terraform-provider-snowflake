@@ -132,9 +132,9 @@ type descStreamRow struct {
 	SchemaName      sql.NullString `db:"schema_name"`
 	Owner           sql.NullString `db:"owner"`
 	Comment         sql.NullString `db:"comment"`
-	OnTable         sql.NullString `db:"on_table"`
-	AppendOnly      sql.NullString `db:"append_only"`
-	ShowInitialRows sql.NullString `db:"show_initial_rows"`
+	OnTable         bool           `db:"on_table"`
+	AppendOnly      bool           `db:"append_only"`
+	ShowInitialRows bool           `db:"show_initial_rows"`
 	TableName       sql.NullString `db:"table_name"`
 	Type            sql.NullString `db:"type"`
 	Stale           sql.NullString `db:"stale"`
