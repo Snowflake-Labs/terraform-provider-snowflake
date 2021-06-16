@@ -23,8 +23,8 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", true),
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "true"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", true),
 				),
 			},
 		},
@@ -65,7 +65,7 @@ resource "snowflake_stream" "test_stream" {
 	name     = "%s"
 	comment  = "Terraform acceptance test"
 	on_table = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_table.test_stream_on_table.name}"
-	append_only = true
+	append_only = false
 	show_initial_rows = true
 }
 `
