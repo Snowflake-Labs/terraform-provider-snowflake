@@ -252,6 +252,11 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("comment", stream.Comment.String)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("owner", stream.Owner.String)
 	if err != nil {
 		return err
