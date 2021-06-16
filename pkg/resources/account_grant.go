@@ -54,6 +54,9 @@ func AccountGrant() *TerraformGrantResource {
 			Update: UpdateAccountGrant,
 
 			Schema: accountGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
 		ValidPrivs: validAccountPrivileges,
 	}
