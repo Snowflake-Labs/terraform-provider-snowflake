@@ -61,12 +61,7 @@ func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
 }
 
 func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
-	sb.showInitialRows = false
-
-	if b {
-		sb.showInitialRows = b
-	}
-
+	sb.showInitialRows = b
 	return sb
 }
 
