@@ -113,7 +113,7 @@ func (tb *ExternalTableBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), EscapeString(columnDefinition["as"])))
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
 	q.WriteString(fmt.Sprintf(`)`))
