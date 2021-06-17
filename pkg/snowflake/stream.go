@@ -51,12 +51,7 @@ func (sb *StreamBuilder) WithOnTable(d string, s string, t string) *StreamBuilde
 }
 
 func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
-	sb.appendOnly = false
-
-	if b {
-		sb.appendOnly = b
-	}
-
+	sb.appendOnly = b
 	return sb
 }
 
