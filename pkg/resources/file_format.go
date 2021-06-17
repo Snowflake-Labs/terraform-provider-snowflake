@@ -1,13 +1,21 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
+	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+)
+
+const (
+	fileFormatIDDelimiter = '|'
 )
 
 // valid format type options for each File Format Type
@@ -38,19 +46,19 @@ var formatTypeOptions = map[string][]string{
 	},
 	"JSON": {
 		"compression",
-		"file_extension",
 		"date_format",
 		"time_format",
 		"timestamp_format",
 		"binary_format",
 		"trim_space",
 		"null_if",
+		"file_extension",
 		"enable_octal",
 		"allow_duplicate",
 		"strip_outer_array",
 		"strip_null_values",
-		"ignore_utf8_errors",
 		"replace_invalid_characters",
+		"ignore_utf8_errors",
 		"skip_byte_order_mark",
 	},
 	"AVRO": {
@@ -77,8 +85,6 @@ var formatTypeOptions = map[string][]string{
 		"disable_snowflake_data",
 		"disable_auto_convert",
 		"skip_byte_order_mark",
-		"trim_space",
-		"null_if",
 	},
 }
 
@@ -282,6 +288,18 @@ type fileFormatID struct {
 	FileFormatName string
 }
 
+func (ffi *fileFormatID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = fileFormatIDDelimiter
+	err := csvWriter.WriteAll([][]string{{ffi.DatabaseName, ffi.SchemaName, ffi.FileFormatName}})
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(buf.String()), nil
+}
+
 // FileFormat returns a pointer to the resource representing a file format
 func FileFormat() *schema.Resource {
 	return &schema.Resource{
@@ -301,11 +319,12 @@ func FileFormat() *schema.Resource {
 // CreateFileFormat implements schema.CreateFunc
 func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-	database := data.Get("database").(string)
-	schema := data.Get("schema").(string)
 
-	builder := snowflake.FileFormat(name, database, schema)
+	dbName := data.Get("database").(string)
+	schemaName := data.Get("schema").(string)
+	fileFormatName := data.Get("name").(string)
+
+	builder := snowflake.FileFormat(fileFormatName, dbName, schemaName)
 
 	formatType := data.Get("format_type").(string)
 	builder.WithFormatType(formatType)
@@ -511,13 +530,13 @@ func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating file format %v", name)
+		return errors.Wrapf(err, "error creating file format %v", fileFormatName)
 	}
 
-	fileFormatID := &schemaScopedID{
-		Database: database,
-		Schema:   schema,
-		Name:     name,
+	fileFormatID := &fileFormatID{
+		DatabaseName:   dbName,
+		SchemaName:     schemaName,
+		FileFormatName: fileFormatName,
 	}
 	dataIDInput, err := fileFormatID.String()
 	if err != nil {
@@ -531,16 +550,16 @@ func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 // ReadFileFormat implements schema.ReadFunc
 func ReadFileFormat(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	fileFormatID, err := idFromString(data.Id())
+	fileFormatID, err := fileFormatIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := fileFormatID.Database
-	schema := fileFormatID.Schema
-	fileFormat := fileFormatID.Name
+	dbName := fileFormatID.DatabaseName
+	schemaName := fileFormatID.SchemaName
+	fileFormatName := fileFormatID.FileFormatName
 
-	ff := snowflake.FileFormat(fileFormat, dbName, schema).Show()
+	ff := snowflake.FileFormat(fileFormatName, dbName, schemaName).Show()
 	row := snowflake.QueryRow(db, ff)
 
 	f, err := snowflake.ScanFileFormatShow(row)
@@ -743,16 +762,16 @@ func ReadFileFormat(data *schema.ResourceData, meta interface{}) error {
 
 // UpdateFileFormat implements schema.UpdateFunc
 func UpdateFileFormat(data *schema.ResourceData, meta interface{}) error {
-	fileFormatID, err := idFromString(data.Id())
+	fileFormatID, err := fileFormatIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := fileFormatID.Database
-	schema := fileFormatID.Schema
-	fileFormat := fileFormatID.Name
+	dbName := fileFormatID.DatabaseName
+	schemaName := fileFormatID.SchemaName
+	fileFormatName := fileFormatID.FileFormatName
 
-	builder := snowflake.FileFormat(fileFormat, dbName, schema)
+	builder := snowflake.FileFormat(fileFormatName, dbName, schemaName)
 	fmt.Println(builder)
 
 	db := meta.(*sql.DB)
@@ -1060,16 +1079,16 @@ func UpdateFileFormat(data *schema.ResourceData, meta interface{}) error {
 // DeleteFileFormat implements schema.DeleteFunc
 func DeleteFileFormat(data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	fileFormatID, err := idFromString(data.Id())
+	fileFormatID, err := fileFormatIDFromString(data.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := fileFormatID.Database
-	schema := fileFormatID.Schema
-	fileFormat := fileFormatID.Name
+	dbName := fileFormatID.DatabaseName
+	schemaName := fileFormatID.SchemaName
+	fileFormatName := fileFormatID.FileFormatName
 
-	q := snowflake.FileFormat(fileFormat, dbName, schema).Drop()
+	q := snowflake.FileFormat(fileFormatName, dbName, schemaName).Drop()
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
@@ -1084,16 +1103,16 @@ func DeleteFileFormat(data *schema.ResourceData, meta interface{}) error {
 // FileFormatExists implements schema.ExistsFunc
 func FileFormatExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
-	fileFormatID, err := idFromString(data.Id())
+	fileFormatID, err := fileFormatIDFromString(data.Id())
 	if err != nil {
 		return false, err
 	}
 
-	dbName := fileFormatID.Database
-	schema := fileFormatID.Schema
-	fileFormat := fileFormatID.Name
+	dbName := fileFormatID.DatabaseName
+	schemaName := fileFormatID.SchemaName
+	fileFormatName := fileFormatID.FileFormatName
 
-	q := snowflake.FileFormat(fileFormat, dbName, schema).Describe()
+	q := snowflake.FileFormat(fileFormatName, dbName, schemaName).Describe()
 	rows, err := db.Query(q)
 	if err != nil {
 		return false, err
@@ -1105,6 +1124,28 @@ func FileFormatExists(data *schema.ResourceData, meta interface{}) (bool, error)
 	}
 
 	return false, nil
+}
+
+func fileFormatIDFromString(stringID string) (*fileFormatID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = fileFormatIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line at a time")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("4 fields allowed")
+	}
+
+	return &fileFormatID{
+		DatabaseName:   lines[0][0],
+		SchemaName:     lines[0][1],
+		FileFormatName: lines[0][2],
+	}, nil
 }
 
 func getFormatTypeOption(d *schema.ResourceData, formatType, formatTypeOption string) (interface{}, bool, error) {
