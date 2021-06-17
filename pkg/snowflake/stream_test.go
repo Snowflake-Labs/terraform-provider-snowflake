@@ -11,13 +11,16 @@ func TestStreamCreate(t *testing.T) {
 	s := Stream("test_stream", "test_db", "test_schema")
 
 	s.WithOnTable("test_db", "test_schema", "test_target_table")
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" APPEND_ONLY = false`)
+	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" APPEND_ONLY = false SHOW_INITIAL_ROWS = false`)
 
 	s.WithComment("Test Comment")
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false`)
+	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false SHOW_INITIAL_ROWS = false`)
+
+	s.WithShowInitialRows(true)
+	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false SHOW_INITIAL_ROWS = true`)
 
 	s.WithAppendOnly(true)
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true`)
+	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true SHOW_INITIAL_ROWS = true`)
 }
 
 func TestStreamChangeComment(t *testing.T) {

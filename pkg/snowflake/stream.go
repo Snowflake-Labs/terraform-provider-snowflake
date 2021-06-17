@@ -10,12 +10,13 @@ import (
 
 // StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
 type StreamBuilder struct {
-	name       string
-	db         string
-	schema     string
-	onTable    string
-	appendOnly bool
-	comment    string
+	name            string
+	db              string
+	schema          string
+	onTable         string
+	appendOnly      bool
+	showInitialRows bool
+	comment         string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -50,12 +51,12 @@ func (sb *StreamBuilder) WithOnTable(d string, s string, t string) *StreamBuilde
 }
 
 func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
-	sb.appendOnly = false
+	sb.appendOnly = b
+	return sb
+}
 
-	if b {
-		sb.appendOnly = b
-	}
-
+func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
+	sb.showInitialRows = b
 	return sb
 }
 
@@ -89,6 +90,8 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
 
+	q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
+
 	return q.String()
 }
 
@@ -113,16 +116,18 @@ func (sb *StreamBuilder) Show() string {
 }
 
 type descStreamRow struct {
-	CreatedOn    sql.NullString `db:"created_on"`
-	StreamName   sql.NullString `db:"name"`
-	DatabaseName sql.NullString `db:"database_name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Owner        sql.NullString `db:"owner"`
-	Comment      sql.NullString `db:"comment"`
-	TableName    sql.NullString `db:"table_name"`
-	Type         sql.NullString `db:"type"`
-	Stale        sql.NullString `db:"stale"`
-	Mode         sql.NullString `db:"mode"`
+	CreatedOn       sql.NullString `db:"created_on"`
+	StreamName      sql.NullString `db:"name"`
+	DatabaseName    sql.NullString `db:"database_name"`
+	SchemaName      sql.NullString `db:"schema_name"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
+	AppendOnly      bool           `db:"append_only"`
+	ShowInitialRows bool           `db:"show_initial_rows"`
+	TableName       sql.NullString `db:"table_name"`
+	Type            sql.NullString `db:"type"`
+	Stale           sql.NullString `db:"stale"`
+	Mode            sql.NullString `db:"mode"`
 }
 
 func ScanStream(row *sqlx.Row) (*descStreamRow, error) {
