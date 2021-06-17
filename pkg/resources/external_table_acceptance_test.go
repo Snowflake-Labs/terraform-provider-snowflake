@@ -68,13 +68,13 @@ resource "snowflake_external_table" "test_table" {
 	comment  = "Terraform acceptance test"
 	column {
 		name = "column1"
-		type = "TIMESTAMP_NTZ(9)"
-    as = "($1:\"CreatedDate\"::timestamp)"
+		type = "STRING"
+    as = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
 	}
 	column {
 		name = "column2"
 		type = "TIMESTAMP_NTZ(9)"
-    as = "($1:\"CreatedDate\"::timestamp)"
+    as = "($1:'CreatedDate'::timestamp)"
 	}
   file_format = "TYPE = CSV"
   location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"

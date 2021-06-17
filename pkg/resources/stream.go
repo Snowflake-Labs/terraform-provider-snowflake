@@ -45,13 +45,22 @@ var streamSchema = map[string]*schema.Schema{
 	"on_table": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "Name of the table the stream will monitor.",
 	},
 	"append_only": {
 		Type:        schema.TypeBool,
 		Optional:    true,
+		ForceNew:    true,
 		Default:     false,
 		Description: "Type of the stream that will be created.",
+	},
+	"show_initial_rows": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    true,
+		Default:     false,
+		Description: "Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.",
 	},
 	"owner": {
 		Type:        schema.TypeString,
@@ -160,6 +169,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	onTable := d.Get("on_table").(string)
 	appendOnly := d.Get("append_only").(bool)
+	showInitialRows := d.Get("show_initial_rows").(bool)
 
 	builder := snowflake.Stream(name, database, schema)
 
@@ -170,6 +180,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	builder.WithOnTable(resultOnTable.DatabaseName, resultOnTable.SchemaName, resultOnTable.OnTableName)
 	builder.WithAppendOnly(appendOnly)
+	builder.WithShowInitialRows(showInitialRows)
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -222,6 +233,26 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("name", stream.StreamName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("on_table", stream.TableName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("append_only", stream.AppendOnly)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("show_initial_rows", stream.ShowInitialRows)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("comment", stream.Comment.String)
 	if err != nil {
 		return err
 	}
