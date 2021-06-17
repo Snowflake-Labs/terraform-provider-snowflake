@@ -42,6 +42,7 @@ resource snowflake_stream stream {
 - **comment** (String) Specifies a comment for the stream.
 - **id** (String) The ID of this resource.
 - **on_table** (String) Name of the table the stream will monitor.
+- **show_initial_rows** (Boolean) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.
 
 ### Read-Only
 

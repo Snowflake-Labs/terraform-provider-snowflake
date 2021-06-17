@@ -96,11 +96,10 @@ resource "snowflake_stream" "test" {
 	name     = "{{ .stream_name }}"
 	comment  = "Terraform acceptance test"
 	on_table = "${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_table.test.name}"
-	append_only = true
 }
 
 resource "snowflake_stream_grant" "test" {
-    database_name = snowflake_database.test.name	
+  database_name = snowflake_database.test.name
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	stream_name = snowflake_stream.test.name
@@ -140,7 +139,7 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_stream_grant" "test" {
-    database_name = snowflake_database.test.name	
+  database_name = snowflake_database.test.name
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	on_future = true
