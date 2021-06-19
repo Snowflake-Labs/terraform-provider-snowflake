@@ -35,6 +35,7 @@ const (
 	privilegeCreateProcedure        Privilege = "CREATE PROCEDURE"
 	privilegeCreateExternalTable    Privilege = "CREATE EXTERNAL TABLE"
 	privilegeCreateMaterializedView Privilege = "CREATE MATERIALIZED VIEW"
+	privilegeCreateRowAccessPolicy  Privilege = "CREATE ROW ACCESS POLICY"
 	privilegeCreateTemporaryTable   Privilege = "CREATE TEMPORARY TABLE"
 	privilegeCreateMaskingPolicy    Privilege = "CREATE MASKING POLICY"
 	privilegeCreateShare            Privilege = "CREATE SHARE"

@@ -24,6 +24,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeCreateProcedure,
 	privilegeCreateExternalTable,
 	privilegeCreateMaterializedView,
+	privilegeCreateRowAccessPolicy,
 	privilegeCreateTemporaryTable,
 	privilegeCreateMaskingPolicy,
 	privilegeAddSearchOptimization,
