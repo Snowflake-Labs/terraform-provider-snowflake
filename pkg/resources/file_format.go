@@ -72,7 +72,6 @@ var formatTypeOptions = map[string][]string{
 	},
 	"PARQUET": {
 		"compression",
-		"snappy_compression",
 		"binary_as_text",
 		"trim_space",
 		"null_if",
@@ -244,11 +243,6 @@ var fileFormatSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Boolean that specifies whether UTF-8 encoding errors produce error conditions.",
-	},
-	"snappy_compression": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Boolean that specifies whether unloaded file(s) are compressed using the SNAPPY algorithm.",
 	},
 	"binary_as_text": {
 		Type:        schema.TypeBool,
@@ -486,12 +480,6 @@ func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if v, ok, err := getFormatTypeOption(data, formatType, "snappy_compression"); ok && err == nil {
-		builder.WithSnappyCompression(v.(bool))
-	} else if err != nil {
-		return err
-	}
-
 	if v, ok, err := getFormatTypeOption(data, formatType, "binary_as_text"); ok && err == nil {
 		builder.WithBinaryAsText(v.(bool))
 	} else if err != nil {
@@ -592,7 +580,7 @@ func ReadFileFormat(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("compression", opts.Type)
+	err = data.Set("compression", opts.Compression)
 	if err != nil {
 		return err
 	}
@@ -718,11 +706,6 @@ func ReadFileFormat(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = data.Set("ignore_utf8_errors", opts.IgnoreUTF8Errors)
-	if err != nil {
-		return err
-	}
-
-	err = data.Set("snappy_compression", opts.SnappyCompression)
 	if err != nil {
 		return err
 	}
@@ -1007,15 +990,6 @@ func UpdateFileFormat(data *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format ignore_utf8_errors on %v", data.Id())
-		}
-	}
-
-	if data.HasChange("snappy_compression") {
-		change := data.Get("snappy_compression")
-		q := builder.ChangeSnappyCompression(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format snappy_compression on %v", data.Id())
 		}
 	}
 

@@ -59,7 +59,6 @@ resource "snowflake_file_format" "example_file_format" {
 - **skip_blank_lines** (Boolean) Boolean that specifies to skip any blank lines encountered in the data files.
 - **skip_byte_order_mark** (Boolean) Boolean that specifies whether to skip the BOM (byte order mark), if present in a data file.
 - **skip_header** (Number) Number of lines at the start of the file to skip.
-- **snappy_compression** (Boolean) Boolean that specifies whether unloaded file(s) are compressed using the SNAPPY algorithm.
 - **strip_null_values** (Boolean) Boolean that instructs the JSON parser to remove object fields or array elements containing null values.
 - **strip_outer_array** (Boolean) Boolean that instructs the JSON parser to remove outer brackets.
 - **strip_outer_element** (Boolean) Boolean that specifies whether the XML parser strips out the outer XML element, exposing 2nd level elements as separate documents.

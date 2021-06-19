@@ -41,7 +41,6 @@ type FileFormatBuilder struct {
 	stripOuterArray            bool
 	stripNullValues            bool
 	ignoreUTF8Errors           bool
-	snappyCompression          bool
 	binaryAsText               bool
 	preserveSpace              bool
 	stripOuterElement          bool
@@ -199,25 +198,19 @@ func (ffb *FileFormatBuilder) WithAllowDuplicate(n bool) *FileFormatBuilder {
 
 // WithStripOuterArray adds strip outer array to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithStripOuterArray(n bool) *FileFormatBuilder {
-	ffb.allowDuplicate = n
+	ffb.stripOuterArray = n
 	return ffb
 }
 
 // WithStripNullValues adds strip null values to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithStripNullValues(n bool) *FileFormatBuilder {
-	ffb.allowDuplicate = n
+	ffb.stripNullValues = n
 	return ffb
 }
 
 // WithIgnoreUTF8Errors adds ignore UTF8 errors to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithIgnoreUTF8Errors(n bool) *FileFormatBuilder {
 	ffb.ignoreUTF8Errors = n
-	return ffb
-}
-
-// WithSnappyCompression adds snappy compression to the FileFormatBuilder
-func (ffb *FileFormatBuilder) WithSnappyCompression(n bool) *FileFormatBuilder {
-	ffb.snappyCompression = n
 	return ffb
 }
 
@@ -326,7 +319,7 @@ func (ffb *FileFormatBuilder) Create() string {
 	}
 
 	if ffb.escape != "" {
-		q.WriteString(fmt.Sprintf(` ESCAPE = '%v'`, ffb.escape))
+		q.WriteString(fmt.Sprintf(` ESCAPE = '%v'`, EscapeString(ffb.escape)))
 	}
 
 	if ffb.escapeUnenclosedField != "" {
@@ -334,13 +327,13 @@ func (ffb *FileFormatBuilder) Create() string {
 	}
 
 	if ffb.fieldOptionallyEnclosedBy != "" {
-		q.WriteString(fmt.Sprintf(` FIELD_OPTIONALLY_ENCLOSED_BY = '%v'`, ffb.fieldOptionallyEnclosedBy))
+		q.WriteString(fmt.Sprintf(` FIELD_OPTIONALLY_ENCLOSED_BY = '%v'`, EscapeString(ffb.fieldOptionallyEnclosedBy)))
 	}
 
 	if len(ffb.nullIf) > 0 {
 		nullIfStr := "'" + strings.Join(ffb.nullIf, "', '") + "'"
 		q.WriteString(fmt.Sprintf(` NULL_IF = (%v)`, nullIfStr))
-	} else {
+	} else if strings.ToUpper(ffb.formatType) != "XML" {
 		q.WriteString(` NULL_IF = ()`)
 	}
 
@@ -369,7 +362,6 @@ func (ffb *FileFormatBuilder) Create() string {
 	} else if ffb.formatType == "AVRO" || ffb.formatType == "ORC" {
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 	} else if ffb.formatType == "PARQUET" {
-		q.WriteString(fmt.Sprintf(` SNAPPY_COMPRESSION = %v`, ffb.snappyCompression))
 		q.WriteString(fmt.Sprintf(` BINARY_AS_TEXT = %v`, ffb.binaryAsText))
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 	} else if ffb.formatType == "XML" {
@@ -379,7 +371,6 @@ func (ffb *FileFormatBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` DISABLE_SNOWFLAKE_DATA = %v`, ffb.disableSnowflakeData))
 		q.WriteString(fmt.Sprintf(` DISABLE_AUTO_CONVERT = %v`, ffb.disableAutoConvert))
 		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
-		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 	}
 
 	if ffb.comment != "" {
@@ -533,11 +524,6 @@ func (ffb *FileFormatBuilder) ChangeSkipByteOrderMark(c bool) string {
 	return fmt.Sprintf(`ALTER FILE FORMAT %v SET SKIP_BYTE_ORDER_MARK = %v`, ffb.QualifiedName(), c)
 }
 
-// ChangeSnappyCompression returns the SQL query that will update SNAPPY_COMPRESSION on the file format.
-func (ffb *FileFormatBuilder) ChangeSnappyCompression(c bool) string {
-	return fmt.Sprintf(`ALTER FILE FORMAT %v SET SNAPPY_COMPRESSION = %v`, ffb.QualifiedName(), c)
-}
-
 // ChangeBinaryAsText returns the SQL query that will update BINARY_AS_TEXT on the file format.
 func (ffb *FileFormatBuilder) ChangeBinaryAsText(c bool) string {
 	return fmt.Sprintf(`ALTER FILE FORMAT %v SET BINARY_AS_TEXT = %v`, ffb.QualifiedName(), c)
@@ -618,7 +604,6 @@ type fileFormatOptions struct {
 	StripNullValues            bool     `json:"STRIP_NULL_VALUES,omitempty"`
 	IgnoreUTF8Errors           bool     `json:"IGNORE_UTF8_ERRORS,omitempty"`
 	BinaryAsText               bool     `json:"BINARY_AS_TEXT,omitempty"`
-	SnappyCompression          bool     `json:"SNAPPY_COMPRESSION,omitempty"`
 	PreserveSpace              bool     `json:"PRESERVE_SPACE,omitempty"`
 	StripOuterElement          bool     `json:"STRIP_OUTER_ELEMENT,omitempty"`
 	DisableSnowflakeData       bool     `json:"DISABLE_SNOWFLAKE_DATA,omitempty"`
