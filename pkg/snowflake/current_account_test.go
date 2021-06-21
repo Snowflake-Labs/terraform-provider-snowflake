@@ -1,11 +1,12 @@
 package snowflake_test
 
 import (
+	"testing"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCurrentAccountSelect(t *testing.T) {
