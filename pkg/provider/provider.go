@@ -157,6 +157,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_integration":           resources.APIIntegration(),
 		"snowflake_database":                  resources.Database(),
 		"snowflake_external_function":         resources.ExternalFunction(),
+		"snowflake_file_format":               resources.FileFormat(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_masking_policy":            resources.MaskingPolicy(),
 		"snowflake_materialized_view":         resources.MaterializedView(),
