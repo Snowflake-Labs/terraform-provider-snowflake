@@ -45,7 +45,6 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the SQL expression that transforms the data.",
-		ForceNew:    true,
 	},
 	"return_data_type": {
 		Type:        schema.TypeString,
