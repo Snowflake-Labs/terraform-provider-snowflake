@@ -129,6 +129,14 @@ func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *sc
 	return d
 }
 
+func sequence(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Sequence().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func share(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, params)
@@ -184,6 +192,14 @@ func apiIntegration(t *testing.T, id string, params map[string]interface{}) *sch
 	return d
 }
 
+func scimIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
@@ -195,6 +211,13 @@ func externalFunction(t *testing.T, id string, params map[string]interface{}) *s
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+func notificationIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

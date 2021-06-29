@@ -157,6 +157,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_integration":           resources.APIIntegration(),
 		"snowflake_database":                  resources.Database(),
 		"snowflake_external_function":         resources.ExternalFunction(),
+		"snowflake_file_format":               resources.FileFormat(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_masking_policy":            resources.MaskingPolicy(),
 		"snowflake_materialized_view":         resources.MaterializedView(),
@@ -167,9 +168,12 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_role":                      resources.Role(),
 		"snowflake_role_grants":               resources.RoleGrants(),
 		"snowflake_schema":                    resources.Schema(),
+		"snowflake_scim_integration":          resources.SCIMIntegration(),
+		"snowflake_sequence":                  resources.Sequence(),
 		"snowflake_share":                     resources.Share(),
 		"snowflake_stage":                     resources.Stage(),
 		"snowflake_storage_integration":       resources.StorageIntegration(),
+		"snowflake_notification_integration":  resources.NotificationIntegration(),
 		"snowflake_stream":                    resources.Stream(),
 		"snowflake_table":                     resources.Table(),
 		"snowflake_external_table":            resources.ExternalTable(),
@@ -188,8 +192,11 @@ func getResources() map[string]*schema.Resource {
 
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
-		"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
-		"snowflake_system_get_privatelink_config": datasources.SystemGetPrivateLinkConfig(),
+		"snowflake_current_account":                    datasources.CurrentAccount(),
+		"snowflake_system_generate_scim_access_token":  datasources.SystemGenerateSCIMAccessToken(),
+		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
+		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
+		"snowflake_system_get_snowflake_platform_info": datasources.SystemGetSnowflakePlatformInfo(),
 	}
 
 	return dataSources

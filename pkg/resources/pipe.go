@@ -60,7 +60,12 @@ var pipeSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
 	},
-	"notification_channel": {
+	"integration": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies an integration for the pipe.",
+	},
+	"notification_channel": &schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.",
@@ -165,6 +170,10 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("aws_sns_topic_arn"); ok {
 		builder.WithAwsSnsTopicArn(v.(string))
+	}
+
+	if v, ok := d.GetOk("integration"); ok {
+		builder.WithIntegration(v.(string))
 	}
 
 	q := builder.Create()
