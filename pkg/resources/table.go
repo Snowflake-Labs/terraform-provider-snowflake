@@ -120,6 +120,10 @@ var tableSchema = map[string]*schema.Schema{
 	},
 }
 
+func isQuoted(s string) bool {
+	return strings.Contains(s, "\"")
+}
+
 func Table() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTable,
@@ -287,10 +291,6 @@ func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 	snowPk := snowflake.PrimaryKey{}
 	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
 
-}
-
-func isQuoted(s string) bool {
-	return strings.Contains(s, "\"")
 }
 
 // CreateTable implements schema.CreateFunc
