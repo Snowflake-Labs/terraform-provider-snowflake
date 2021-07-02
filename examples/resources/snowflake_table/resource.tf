@@ -4,9 +4,8 @@ resource snowflake_table table {
   name        = "table"
   comment     = "A table."
   cluster_by  = ["to_date(DATE)"]
-  primary_key = ["\"data\""]
-  owner       = "me"
-  
+  owner       = "me" 
+
   column {
     name     = "id"
     type     = "int"
@@ -22,5 +21,11 @@ resource snowflake_table table {
   column {
     name = "DATE"
     type = "TIMESTAMP_NTZ(9)"
+  }
+
+  primary_key {
+    name = "my_key"
+    keys = ["data"]
+
   }
 }
