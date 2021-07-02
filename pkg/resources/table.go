@@ -89,23 +89,6 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Name of constraint",
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-
-						var suppressName bool = false
-
-						if !isQuoted(new) {
-							if strings.ToUpper(new) == old {
-								suppressName = true
-							}
-						}
-
-						if isQuoted(new) {
-							if strings.ReplaceAll(new, "\"", "") == old {
-								suppressName = true
-							}
-						}
-						return suppressName
-					},
 				},
 				"keys": {
 					Type: schema.TypeList,
@@ -118,10 +101,6 @@ var tableSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-}
-
-func isQuoted(s string) bool {
-	return strings.Contains(s, "\"")
 }
 
 func Table() *schema.Resource {

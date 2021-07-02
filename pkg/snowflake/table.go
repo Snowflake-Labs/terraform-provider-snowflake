@@ -102,24 +102,11 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 			nameSet = true
 		}
 
-		var colName string = pk.ColumnName.String
-		if hasLower(colName) {
-
-			colName = fmt.Sprintf(`"%s"`, colName)
-
-		}
-		keys = append(keys, colName)
+		keys = append(keys, pk.ColumnName.String)
 
 	}
 
-	if hasLower(name) {
-		// if the keyname has any lowercase values it has to have been quoted originally
-		flat["name"] = fmt.Sprintf(`"%s"`, name)
-
-	} else {
-		flat["name"] = name
-	}
-
+	flat["name"] = name
 	flat["keys"] = keys
 	flattened = append(flattened, flat)
 	return flattened
@@ -235,6 +222,17 @@ func JoinStringList(instrings []string, delimiter string) string {
 
 }
 
+func quoteStringList(instrings []string) []string {
+	var clean []string
+	for _, word := range instrings {
+		quoted := fmt.Sprintf(`"%s"`, word)
+		clean = append(clean, quoted)
+
+	}
+	return clean
+
+}
+
 func (tb *TableBuilder) getCreateStatementBody() string {
 	var q strings.Builder
 
@@ -244,10 +242,10 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 		colDef = strings.TrimSuffix(colDef, ")") //strip trailing
 		q.WriteString(colDef)
 		if tb.primaryKey.name != "" {
-			q.WriteString(fmt.Sprintf(` ,CONSTRAINT %v PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(tb.primaryKey.keys, ",")))
+			q.WriteString(fmt.Sprintf(` ,CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
 
 		} else {
-			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(tb.primaryKey.keys, ",")))
+			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
 		}
 
 		q.WriteString(")") // add closing
@@ -376,9 +374,9 @@ func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string 
 }
 
 func (tb *TableBuilder) ChangePrimaryKey() string {
-	pks := JoinStringList(tb.primaryKey.keys, ", ")
+	pks := JoinStringList(quoteStringList(tb.primaryKey.keys), ", ")
 	if tb.primaryKey.name != "" {
-		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %v PRIMARY KEY(%v)`, tb.QualifiedName(), tb.primaryKey.name, pks)
+		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.QualifiedName(), tb.primaryKey.name, pks)
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD PRIMARY KEY(%v)`, tb.QualifiedName(), pks)
 }
