@@ -89,6 +89,23 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Name of constraint",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+
+						var suppressName bool = false
+
+						if !isQuoted(new) {
+							if strings.ToUpper(new) == old {
+								suppressName = true
+							}
+						}
+
+						if isQuoted(new) {
+							if strings.ReplaceAll(new, "\"", "") == old {
+								suppressName = true
+							}
+						}
+						return suppressName
+					},
 				},
 				"keys": {
 					Type: schema.TypeList,
@@ -249,18 +266,31 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
-func toSnowflakePrimaryKey(from interface{}) snowflake.PrimaryKey {
+type primarykey struct {
+	name string
+	keys []string
+}
+
+func getPrimaryKey(from interface{}) (to primarykey) {
 	pk := from.([]interface{})
+	to = primarykey{}
 	if len(pk) > 0 {
-
 		pkDetails := pk[0].(map[string]interface{})
-
-		snowPk := snowflake.PrimaryKey{}
-		name := pkDetails["name"].(string)
-		keys := expandStringList(pkDetails["keys"].([]interface{}))
-		return *snowPk.WithName(name).WithKeys(keys)
+		to.name = pkDetails["name"].(string)
+		to.keys = expandStringList(pkDetails["keys"].([]interface{}))
+		return to
 	}
-	return snowflake.PrimaryKey{}
+	return to
+}
+
+func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
+	snowPk := snowflake.PrimaryKey{}
+	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
+
+}
+
+func isQuoted(s string) bool {
+	return strings.Contains(s, "\"")
 }
 
 // CreateTable implements schema.CreateFunc
@@ -284,7 +314,8 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("primary_key"); ok {
-		builder.WithPrimaryKey(toSnowflakePrimaryKey(v.([]interface{})))
+		pk := getPrimaryKey(v.([]interface{}))
+		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
 	}
 
 	stmt := builder.Create()
@@ -427,43 +458,51 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range changed {
-			var queries []string
-			if cA.changedDataType {
-				queries = append(queries, builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType))
-			}
-			if cA.changedNullConstraint {
-				queries = append(queries, builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable))
-			}
 
-			if len(queries) > 0 {
-				err := snowflake.ExecMulti(db, queries)
+			if cA.changedDataType {
+
+				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
+				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+				}
+			}
+			if cA.changedNullConstraint {
+
+				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
 				}
 			}
 
 		}
 	}
 	if d.HasChange("primary_key") {
-		oldpk, newpk := d.GetChange("primary_key")
+		opk, npk := d.GetChange("primary_key")
 
-		snowPk := toSnowflakePrimaryKey(newpk)
-		builder.WithPrimaryKey(snowPk)
+		newpk := getPrimaryKey(npk)
+		oldpk := getPrimaryKey(opk)
 
-		var queries []string
-		if len(oldpk.([]interface{})) > 0 || (len(newpk.([]interface{})) == 0) {
+		builder.WithPrimaryKey(newpk.toSnowflakePrimaryKey())
+
+		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
 			//drop our pk if there was an old primary key, or pk has been removed
-			queries = append(queries, builder.DropPrimaryKey())
+			q := builder.DropPrimaryKey()
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing primary key first on %v", d.Id())
+			}
 		}
 
-		if len(newpk.([]interface{})) > 0 {
+		if len(newpk.keys) > 0 {
 			// add our new pk
-			queries = append(queries, builder.ChangePrimaryKey())
-		}
-		if len(queries) > 0 {
-			err := snowflake.ExecMulti(db, queries)
+			q := builder.ChangePrimaryKey()
+			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error changing column type on %v", d.Id())
+				return errors.Wrapf(err, "error changing property on %v", d.Id())
 			}
 		}
 	}

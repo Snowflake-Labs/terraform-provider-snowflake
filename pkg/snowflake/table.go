@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -61,6 +62,21 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
 
 }
 
+func hasLower(s string) bool {
+	for _, letter := range s {
+		if unicode.IsLower(letter) {
+			return true
+		}
+	}
+	return false
+}
+
+/*Note:
+https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html
+Unquoted object identifiers are stored and resolved as uppercase characters (e.g. id is stored and resolved as ID)
+If an object is created using a double-quoted identifier, when referenced in a query or any other SQL statement,
+the identifier must be specified exactly as created, including the double quotes
+*/
 func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	flattened := []interface{}{}
 	if len(pkds) == 0 {
@@ -86,9 +102,24 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 			nameSet = true
 		}
 
-		keys = append(keys, pk.ColumnName.String)
+		var colName string = pk.ColumnName.String
+		if hasLower(colName) {
+
+			colName = fmt.Sprintf(`"%s"`, colName)
+
+		}
+		keys = append(keys, colName)
+
 	}
-	flat["name"] = name
+
+	if hasLower(name) {
+		// if the keyname has any lowercase values it has to have been quoted originally
+		flat["name"] = fmt.Sprintf(`"%s"`, name)
+
+	} else {
+		flat["name"] = name
+	}
+
 	flat["keys"] = keys
 	flattened = append(flattened, flat)
 	return flattened
@@ -338,9 +369,9 @@ func (tb *TableBuilder) RemoveComment() string {
 // Return sql to set/unset null constraint on column
 func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string {
 	if nullable {
-		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s DROP NOT NULL`, tb.QualifiedName(), name)
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" DROP NOT NULL`, tb.QualifiedName(), name)
 	} else {
-		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN %s SET NOT NULL`, tb.QualifiedName(), name)
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" SET NOT NULL`, tb.QualifiedName(), name)
 	}
 }
 
