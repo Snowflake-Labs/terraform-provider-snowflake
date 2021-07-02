@@ -77,7 +77,7 @@ Required:
 
 Optional:
 
-- **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, if this column is used in a Primary Key constraint this value will need to be appropriatly set.
+- **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
 
 <a id="nestedblock--primary_key"></a>
