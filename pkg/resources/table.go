@@ -82,7 +82,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		MaxItems:    1,
-		Description: "Definitions of a column to create in the table. Minimum one required.",
+		Description: "Definitions primary key constraint to create on table",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {

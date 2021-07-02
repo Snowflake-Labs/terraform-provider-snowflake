@@ -61,7 +61,7 @@ resource snowflake_table table {
 - **cluster_by** (List of String) A list of one of more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
 - **id** (String) The ID of this resource.
-- **primary_key** (Block List, Max: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--primary_key))
+- **primary_key** (Block List, Max: 1) Definitions primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
 
 ### Read-Only
 
