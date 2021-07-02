@@ -82,7 +82,7 @@ Required:
 
 Optional:
 
-- **name** (String) Column name
+- **name** (String) Name of constraint
 
 ## Import
 
