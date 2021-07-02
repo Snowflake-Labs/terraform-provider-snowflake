@@ -113,7 +113,7 @@ var tableSchema = map[string]*schema.Schema{
 						Type: schema.TypeString,
 					},
 					Required:    true,
-					Description: "Whether this column should be used as a primary key. ",
+					Description: "Columns to use in primary key",
 				},
 			},
 		},
