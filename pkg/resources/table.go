@@ -63,7 +63,7 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     true,
-					Description: "Whether this column can contain null values.",
+					Description: "Whether this column can contain null values. **Note**: Depending on your Snowflake version, if this column is used in a Primary Key constraint this value will need to be appropriatly set.",
 				},
 			},
 		},
