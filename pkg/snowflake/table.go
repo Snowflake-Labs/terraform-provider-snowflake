@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"unicode"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -62,21 +61,6 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool) string {
 
 }
 
-func hasLower(s string) bool {
-	for _, letter := range s {
-		if unicode.IsLower(letter) {
-			return true
-		}
-	}
-	return false
-}
-
-/*Note:
-https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html
-Unquoted object identifiers are stored and resolved as uppercase characters (e.g. id is stored and resolved as ID)
-If an object is created using a double-quoted identifier, when referenced in a query or any other SQL statement,
-the identifier must be specified exactly as created, including the double quotes
-*/
 func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	flattened := []interface{}{}
 	if len(pkds) == 0 {
