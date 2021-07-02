@@ -40,7 +40,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
+		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
 	"column": {
 		Type:        schema.TypeList,
@@ -82,7 +82,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		MaxItems:    1,
-		Description: "Definitions primary key constraint to create on table",
+		Description: "Definitions of primary key constraint to create on table",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
