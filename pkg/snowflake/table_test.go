@@ -106,13 +106,11 @@ func TestTableDropPrimaryKeys(t *testing.T) {
 func TestTableChangePrimaryKeysWithConstraintName(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1", "column2"}})
-	r.Equal(s.ChangePrimaryKey(), `ALTER TABLE "test_db"."test_schema"."test_table" ADD CONSTRAINT "MY_KEY" PRIMARY KEY("column1", "column2")`)
+	r.Equal(s.ChangePrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1", "column2"}}), `ALTER TABLE "test_db"."test_schema"."test_table" ADD CONSTRAINT "MY_KEY" PRIMARY KEY("column1", "column2")`)
 }
 
 func TestTableChangePrimaryKeysWithoutConstraintName(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	s.WithPrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}})
-	r.Equal(s.ChangePrimaryKey(), `ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY("column1", "column2")`)
+	r.Equal(s.ChangePrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}}), `ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY("column1", "column2")`)
 }
