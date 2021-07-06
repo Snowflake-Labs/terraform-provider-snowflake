@@ -465,8 +465,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		newpk := getPrimaryKey(npk)
 		oldpk := getPrimaryKey(opk)
 
-		builder.WithPrimaryKey(newpk.toSnowflakePrimaryKey())
-
 		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
 			//drop our pk if there was an old primary key, or pk has been removed
 			q := builder.DropPrimaryKey()
@@ -478,7 +476,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 		if len(newpk.keys) > 0 {
 			// add our new pk
-			q := builder.ChangePrimaryKey()
+			q := builder.ChangePrimaryKey(newpk.toSnowflakePrimaryKey())
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error changing property on %v", d.Id())

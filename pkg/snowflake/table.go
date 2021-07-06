@@ -357,8 +357,9 @@ func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string 
 	}
 }
 
-func (tb *TableBuilder) ChangePrimaryKey() string {
-	pks := JoinStringList(quoteStringList(tb.primaryKey.keys), ", ")
+func (tb *TableBuilder) ChangePrimaryKey(newPk PrimaryKey) string {
+	tb.WithPrimaryKey(newPk)
+	pks := JoinStringList(quoteStringList(newPk.keys), ", ")
 	if tb.primaryKey.name != "" {
 		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.QualifiedName(), tb.primaryKey.name, pks)
 	}
