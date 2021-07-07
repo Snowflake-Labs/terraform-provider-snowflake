@@ -85,6 +85,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"resource_monitor": {
 		Type:        schema.TypeString,
@@ -96,6 +97,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
@@ -187,6 +189,18 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("auto_resume", w.AutoResume)
+	if err != nil {
+		return err
+	}
+	err = d.Set("statement_timeout_in_seconds", w.StatementTimeoutInSeconds)
+	if err != nil {
+		return err
+	}
+	err = d.Set("statement_queued_timeout_in_seconds", w.StatementQueuedTimeoutInSeconds)
+	if err != nil {
+		return err
+	}
+	err = d.Set("max_concurrency_level", w.MaxConcurrencyLevel)
 	if err != nil {
 		return err
 	}
