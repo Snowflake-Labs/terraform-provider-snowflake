@@ -75,6 +75,11 @@ var pipeSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the pipe.",
 	},
+	"error_integration": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the name of the notification integration used for error notifications.",
+	},
 }
 
 func Pipe() *schema.Resource {
