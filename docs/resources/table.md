@@ -20,8 +20,6 @@ resource snowflake_table table {
   comment    = "A table."
   cluster_by = ["to_date(DATE)"]
   
-  owner      = "me"
-  
   column {
     name = "id"
     type = "int"
