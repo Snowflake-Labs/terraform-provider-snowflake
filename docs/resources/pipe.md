@@ -46,6 +46,7 @@ resource snowflake_pipe pipe {
 - **comment** (String) Specifies a comment for the pipe.
 - **id** (String) The ID of this resource.
 - **integration** (String) Specifies an integration for the pipe.
+- **error_integration** (String) Specifies the name of the notification integration used for error notifications.
 
 ### Read-Only
 
