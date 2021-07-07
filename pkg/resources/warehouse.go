@@ -11,12 +11,13 @@ import (
 )
 
 // warehouseCreateProperties are only available via the CREATE statement
-var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning", "statement_timeout_in_seconds"}
+var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
 
 var warehouseProperties = []string{
 	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
 	"scaling_policy", "auto_suspend", "auto_resume",
-	"resource_monitor",
+	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
+	"statement_timeout_in_seconds",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
@@ -102,6 +103,20 @@ var warehouseSchema = map[string]*schema.Schema{
 		Default:     0,
 		ForceNew:    false,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+	},
+	"statement_queued_timeout_in_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     8,
+		ForceNew:    false,
+		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+	},
+	"max_concurrency_level": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     0,
+		ForceNew:    false,
+		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 }
 
