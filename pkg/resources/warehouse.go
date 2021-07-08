@@ -11,12 +11,13 @@ import (
 )
 
 // warehouseCreateProperties are only available via the CREATE statement
-var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning", "statement_timeout_in_seconds"}
+var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
 
 var warehouseProperties = []string{
 	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
 	"scaling_policy", "auto_suspend", "auto_resume",
-	"resource_monitor",
+	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
+	"statement_timeout_in_seconds",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
@@ -84,6 +85,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"resource_monitor": {
 		Type:        schema.TypeString,
@@ -95,13 +97,25 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Default:     0,
-		ForceNew:    false,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+	},
+	"statement_queued_timeout_in_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     0,
+		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+	},
+	"max_concurrency_level": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     0,
+		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 }
 
@@ -172,6 +186,18 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("auto_resume", w.AutoResume)
+	if err != nil {
+		return err
+	}
+	err = d.Set("statement_timeout_in_seconds", w.StatementTimeoutInSeconds)
+	if err != nil {
+		return err
+	}
+	err = d.Set("statement_queued_timeout_in_seconds", w.StatementQueuedTimeoutInSeconds)
+	if err != nil {
+		return err
+	}
+	err = d.Set("max_concurrency_level", w.MaxConcurrencyLevel)
 	if err != nil {
 		return err
 	}
