@@ -35,9 +35,11 @@ resource snowflake_warehouse w {
 - **id** (String) The ID of this resource.
 - **initially_suspended** (Boolean) Specifies whether the warehouse is created initially in the ‘Suspended’ state.
 - **max_cluster_count** (Number) Specifies the maximum number of server clusters for the warehouse.
+- **max_concurrency_level** (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
 - **min_cluster_count** (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
 - **resource_monitor** (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
 - **scaling_policy** (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.
+- **statement_queued_timeout_in_seconds** (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - **statement_timeout_in_seconds** (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
 - **wait_for_provisioning** (Boolean) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
 - **warehouse_size** (String)
