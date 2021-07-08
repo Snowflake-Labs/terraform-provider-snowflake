@@ -181,6 +181,10 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 		builder.WithIntegration(v.(string))
 	}
 
+	if v, ok := d.GetOk("error_integration"); ok {
+		builder.WithErrorIntegration((v.(string)))
+	}
+
 	q := builder.Create()
 
 	err := snowflake.Exec(db, q)
@@ -272,6 +276,11 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("error_integration", pipe.ErrorIntegration)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -295,6 +304,15 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating pipe comment on %v", d.Id())
+		}
+	}
+
+	if d.HasChange("error_integration") {
+		errorIntegration := d.Get("error_integration")
+		q := builder.ChangeErrorIntegration(errorIntegration.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating pipe error_integration on %v", d.Id())
 		}
 	}
 
