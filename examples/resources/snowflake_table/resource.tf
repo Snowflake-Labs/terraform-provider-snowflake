@@ -1,11 +1,10 @@
 resource snowflake_table table {
-  database    = "database"
-  schema      = "schema"
-  name        = "table"
-  comment     = "A table."
-  cluster_by  = ["to_date(DATE)"]
-  owner       = "me" 
-
+  database   = "database"
+  schema     = "schmea"
+  name       = "table"
+  comment    = "A table."
+  cluster_by = ["to_date(DATE)"]
+  
   column {
     name     = "id"
     type     = "int"
