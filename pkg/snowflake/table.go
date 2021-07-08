@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -67,7 +68,11 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 		return flattened
 	}
 
-	sort.SliceStable(pkds, func(i, j int) bool { return pkds[i].KeySequence.String < pkds[j].KeySequence.String })
+	sort.SliceStable(pkds, func(i, j int) bool {
+		num1, _ := strconv.Atoi(pkds[i].KeySequence.String)
+		num2, _ := strconv.Atoi(pkds[j].KeySequence.String)
+		return num1 < num2
+	})
 	//sort our keys on the key sequence
 
 	flat := map[string]interface{}{}
