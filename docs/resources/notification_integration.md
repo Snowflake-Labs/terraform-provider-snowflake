@@ -17,6 +17,7 @@ description: |-
 
 ### Required
 
+- **aws_sqs_role_arn** (String) The AWS IAM role that Snowflake should assume to use SQS
 - **azure_storage_queue_primary_uri** (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
 - **azure_tenant_id** (String) The ID of the Azure Active Directory tenant used for identity management
 - **name** (String)
@@ -26,11 +27,11 @@ description: |-
 - **comment** (String)
 - **enabled** (Boolean)
 - **id** (String) The ID of this resource.
-- **notification_provider** (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE)
+- **notification_provider** (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)
 - **type** (String) A type of integration
 
 ### Read-Only
 
+- **aws_sqs_external_id** (String) The external ID that Snowflake will use when assuming the AWS role.
+- **aws_sqs_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
 - **created_on** (String) Date and time when the notification integration was created.
-
-

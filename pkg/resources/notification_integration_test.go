@@ -121,7 +121,8 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
 			AddRow("DIRECTION", "String", "OUTBOUND", nil).
 			AddRow("AWS_SQS_ARN", "String", "some-sqs-arn", nil).
-			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil)
+			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil).
+			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
 	}
 
 	mock.ExpectQuery(`DESCRIBE NOTIFICATION INTEGRATION "test_notification_integration"$`).WillReturnRows(descRows)

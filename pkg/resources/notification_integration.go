@@ -53,6 +53,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The ID of the Azure Active Directory tenant used for identity management",
 	},
+	"aws_sqs_external_id": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The external ID that Snowflake will use when assuming the AWS role",
+	},
 	"aws_sqs_arn": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -217,6 +222,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			}
 		case "AWS_SQS_ROLE_ARN":
 			if err = data.Set("aws_sqs_role_arn", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SQS_EXTERNAL_ID":
+			if err = data.Set("aws_sqs_external_id", v.(string)); err != nil {
 				return err
 			}
 		default:
