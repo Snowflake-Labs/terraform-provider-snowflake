@@ -11,12 +11,14 @@ func TestTableCreate(t *testing.T) {
 	s := Table("test_table", "test_db", "test_schema")
 	cols := []Column{
 		{
-			name:  "column1",
-			_type: "OBJECT",
+			name:     "column1",
+			_type:    "OBJECT",
+			nullable: true,
 		},
 		{
-			name:  "column2",
-			_type: "VARCHAR",
+			name:     "column2",
+			_type:    "VARCHAR",
+			nullable: true,
 		},
 	}
 
@@ -31,6 +33,8 @@ func TestTableCreate(t *testing.T) {
 	s.WithClustering([]string{"column1"})
 	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
 
+	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1"}})
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
 }
 
 func TestTableChangeComment(t *testing.T) {
@@ -48,7 +52,7 @@ func TestTableRemoveComment(t *testing.T) {
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "VARIANT"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
+	r.Equal(s.AddColumn("new_column", "VARIANT", true), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
 }
 
 func TestTableDropColumn(t *testing.T) {
@@ -85,4 +89,28 @@ func TestTableShow(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.Show(), `SHOW TABLES LIKE 'test_table' IN SCHEMA "test_db"."test_schema"`)
+}
+
+func TestTableShowPrimaryKeys(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ShowPrimaryKeys(), `SHOW PRIMARY KEYS IN TABLE "test_db"."test_schema"."test_table"`)
+}
+
+func TestTableDropPrimaryKeys(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.DropPrimaryKey(), `ALTER TABLE "test_db"."test_schema"."test_table" DROP PRIMARY KEY`)
+}
+
+func TestTableChangePrimaryKeysWithConstraintName(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangePrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1", "column2"}}), `ALTER TABLE "test_db"."test_schema"."test_table" ADD CONSTRAINT "MY_KEY" PRIMARY KEY("column1", "column2")`)
+}
+
+func TestTableChangePrimaryKeysWithoutConstraintName(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangePrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}}), `ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY("column1", "column2")`)
 }
