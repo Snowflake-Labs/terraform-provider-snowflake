@@ -69,5 +69,5 @@ func expectReadFileFormat(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "database_name", "schema_name", "type", "owner", "comment", "format_options"},
 	).AddRow("2019-12-23 17:20:50.088 +0000", "test_file_format", "test_db", "test_schema", "CSV", "test", "great comment", `{"TYPE":"CSV","RECORD_DELIMITER":"\n","FIELD_DELIMITER":",","FILE_EXTENSION":null,"SKIP_HEADER":0,"DATE_FORMAT":"AUTO","TIME_FORMAT":"AUTO","TIMESTAMP_FORMAT":"AUTO","BINARY_FORMAT":"HEX","ESCAPE":"NONE","ESCAPE_UNENCLOSED_FIELD":"\\","TRIM_SPACE":false,"FIELD_OPTIONALLY_ENCLOSED_BY":"NONE","NULL_IF":["\\N"],"COMPRESSION":"AUTO","ERROR_ON_COLUMN_COUNT_MISMATCH":false,"VALIDATE_UTF8":false,"SKIP_BLANK_LINES":false,"REPLACE_INVALID_CHARACTERS":false,"EMPTY_FIELD_AS_NULL":false,"SKIP_BYTE_ORDER_MARK":false,"ENCODING":"UTF8"}`)
-	mock.ExpectQuery(`^SHOW FILE FORMATS LIKE 'test_file_format' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW FILE FORMATS LIKE 'test_file_format' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
