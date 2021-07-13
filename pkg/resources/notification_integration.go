@@ -30,22 +30,43 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{"QUEUE"}, true),
 		Description:  "A type of integration",
 	},
+	"direction": &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
+		Description:  "Direction of the cloud messaging with respect to Snowflake (required only for error notifications)",
+	},
+	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"notification_provider": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		Default:      "AZURE_STORAGE_QUEUE",
-		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE"}, true),
-		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE)",
+		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS"}, true),
+		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)",
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The queue ID for the Azure Queue Storage queue created for Event Grid notifications",
 	},
 	"azure_tenant_id": &schema.Schema{
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The ID of the Azure Active Directory tenant used for identity management",
+	},
+	"aws_sqs_external_id": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The external ID that Snowflake will use when assuming the AWS role",
+	},
+	"aws_sqs_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "AWS SQS queue ARN for notification integration to connect to",
+	},
+	"aws_sqs_role_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "AWS IAM role ARN for notification integration to assume",
 	},
 	"comment": &schema.Schema{
 		Type:     schema.TypeString,
@@ -90,6 +111,12 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	if v, ok := data.GetOk("comment"); ok {
 		stmt.SetString(`COMMENT`, v.(string))
 	}
+	if v, ok := data.GetOk("direction"); ok {
+		stmt.SetString(`DIRECTION`, v.(string))
+	}
+	if v, ok := data.GetOk("azure_tenant_id"); ok {
+		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
+	}
 	if v, ok := data.GetOk("notification_provider"); ok {
 		stmt.SetString(`NOTIFICATION_PROVIDER`, v.(string))
 	}
@@ -98,6 +125,12 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	}
 	if v, ok := data.GetOk("azure_tenant_id"); ok {
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
+	}
+	if v, ok := data.GetOk("aws_sqs_arn"); ok {
+		stmt.SetString(`AWS_SQS_ARN`, v.(string))
+	}
+	if v, ok := data.GetOk("aws_sqs_role_arn"); ok {
+		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
 	}
 
 	err := snowflake.Exec(db, stmt.Statement())
@@ -167,6 +200,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 		switch k {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
+		case "DIRECTION":
+			if err = data.Set("direction", v.(string)); err != nil {
+				return err
+			}
 		case "NOTIFICATION_PROVIDER":
 			if err = data.Set("notification_provider", v.(string)); err != nil {
 				return err
@@ -177,6 +214,18 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			}
 		case "AZURE_TENANT_ID":
 			if err = data.Set("azure_tenant_id", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SQS_ARN":
+			if err = data.Set("aws_sqs_arn", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SQS_ROLE_ARN":
+			if err = data.Set("aws_sqs_role_arn", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SQS_EXTERNAL_ID":
+			if err = data.Set("aws_sqs_external_id", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -213,6 +262,11 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 		stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
 	}
 
+	if data.HasChange("direction") {
+		runSetStatement = true
+		stmt.SetString("DIRECTION", data.Get("direction").(string))
+	}
+
 	if data.HasChange("notification_provider") {
 		runSetStatement = true
 		stmt.SetString("NOTIFICATION_PROVIDER", data.Get("notification_provider").(string))
@@ -226,6 +280,16 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	if data.HasChange("azure_tenant_id") {
 		runSetStatement = true
 		stmt.SetString("AZURE_TENANT_ID", data.Get("azure_tenant_id").(string))
+	}
+
+	if data.HasChange("aws_sqs_arn") {
+		runSetStatement = true
+		stmt.SetString("AWS_SQS_ARN", data.Get("aws_sqs_arn").(string))
+	}
+
+	if data.HasChange("aws_sqs_role_arn") {
+		runSetStatement = true
+		stmt.SetString("AWS_SQS_ROLE_ARN", data.Get("aws_sqs_role_arn").(string))
 	}
 
 	if runSetStatement {
