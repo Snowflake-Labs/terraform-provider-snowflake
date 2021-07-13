@@ -276,7 +276,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("error_integration", pipe.ErrorIntegration)
+	err = d.Set("error_integration", pipe.ErrorIntegration.String)
 	if err != nil {
 		return err
 	}
