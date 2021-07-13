@@ -265,5 +265,5 @@ func TestFileFormatDescribe(t *testing.T) {
 func TestFileFormatShow(t *testing.T) {
 	r := require.New(t)
 	f := FileFormat("test_file_format", "test_db", "test_schema")
-	r.Equal(`SHOW FILE FORMATS LIKE 'test_file_format' IN DATABASE "test_db"`, f.Show())
+	r.Equal(`SHOW FILE FORMATS LIKE 'test_file_format' IN SCHEMA "test_db"."test_schema"`, f.Show())
 }

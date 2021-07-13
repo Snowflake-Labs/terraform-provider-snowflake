@@ -561,7 +561,7 @@ func (ffb *FileFormatBuilder) Describe() string {
 
 // Show returns the SQL query that will show a file format.
 func (ffb *FileFormatBuilder) Show() string {
-	return fmt.Sprintf(`SHOW FILE FORMATS LIKE '%v' IN DATABASE "%v"`, ffb.name, ffb.db)
+	return fmt.Sprintf(`SHOW FILE FORMATS LIKE '%v' IN SCHEMA "%v"."%v"`, ffb.name, ffb.db, ffb.schema)
 }
 
 type fileFormatShow struct {
