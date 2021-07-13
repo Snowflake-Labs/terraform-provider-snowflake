@@ -22,9 +22,10 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: notificationIntegrationConfig(accName, storageUri, tenant),
+				Config: azureNotificationIntegrationConfig(accName, storageUri, tenant),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AZURE_STORAGE_QUEUE"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", storageUri),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_tenant_id", tenant),
 				),
@@ -33,13 +34,14 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 	})
 }
 
-func notificationIntegrationConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
+func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
   name                            = "%s"
+  notification_provider			  = "%s"
   azure_storage_queue_primary_uri = "%s"
   azure_tenant_id                 = "%s"
 }
 `
-	return fmt.Sprintf(s, name, azureStorageQueuePrimaryUri, azureTenantId)
+	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
 }
