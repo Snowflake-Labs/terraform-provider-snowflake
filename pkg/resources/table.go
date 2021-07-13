@@ -40,7 +40,7 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "A list of one of more table columns/expressions to be used as clustering key(s) for the table",
+		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
 	"column": {
 		Type:        schema.TypeList,
@@ -59,6 +59,12 @@ var tableSchema = map[string]*schema.Schema{
 					Required:    true,
 					Description: "Column type, e.g. VARIANT",
 				},
+				"nullable": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     true,
+					Description: "Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.",
+				},
 			},
 		},
 	},
@@ -71,6 +77,29 @@ var tableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Name of the role that owns the table.",
+	},
+	"primary_key": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		MaxItems:    1,
+		Description: "Definitions of primary key constraint to create on table",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Name of constraint",
+				},
+				"keys": {
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Required:    true,
+					Description: "Columns to use in primary key",
+				},
+			},
+		},
 	},
 }
 
@@ -137,11 +166,12 @@ func tableIDFromString(stringID string) (*tableID, error) {
 type column struct {
 	name     string
 	dataType string
+	nullable bool
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
 	sC := snowflake.Column{}
-	return *sC.WithName(c.name).WithType(c.dataType)
+	return *sC.WithName(c.name).WithType(c.dataType).WithNullable(c.nullable)
 }
 
 type columns []column
@@ -171,20 +201,34 @@ func (old columns) getNewIn(new columns) (added columns) {
 	return
 }
 
-func (old columns) getChangedTypes(new columns) (changed columns) {
-	changed = columns{}
+type changedColumns []changedColumn
+
+type changedColumn struct {
+	newColumn             column //our new column
+	changedDataType       bool
+	changedNullConstraint bool
+}
+
+func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
+	changed = changedColumns{}
 	for _, cO := range old {
 		for _, cN := range new {
+			changeColumn := changedColumn{cN, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
-				changed = append(changed, cN)
+				changeColumn.changedDataType = true
 			}
+			if cO.name == cN.name && cO.nullable != cN.nullable {
+				changeColumn.changedNullConstraint = true
+			}
+
+			changed = append(changed, changeColumn)
 		}
 	}
 	return
 }
 
-func (old columns) diffs(new columns) (removed columns, added columns, changed columns) {
-	return old.getNewIn(new), new.getNewIn(old), old.getChangedTypes(new)
+func (old columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
+	return old.getNewIn(new), new.getNewIn(old), old.getChangedColumnProperties(new)
 }
 
 func getColumn(from interface{}) (to column) {
@@ -192,6 +236,7 @@ func getColumn(from interface{}) (to column) {
 	return column{
 		name:     c["name"].(string),
 		dataType: c["type"].(string),
+		nullable: c["nullable"].(bool),
 	}
 }
 
@@ -204,6 +249,29 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
+type primarykey struct {
+	name string
+	keys []string
+}
+
+func getPrimaryKey(from interface{}) (to primarykey) {
+	pk := from.([]interface{})
+	to = primarykey{}
+	if len(pk) > 0 {
+		pkDetails := pk[0].(map[string]interface{})
+		to.name = pkDetails["name"].(string)
+		to.keys = expandStringList(pkDetails["keys"].([]interface{}))
+		return to
+	}
+	return to
+}
+
+func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
+	snowPk := snowflake.PrimaryKey{}
+	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
+
+}
+
 // CreateTable implements schema.CreateFunc
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -212,6 +280,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	columns := getColumns(d.Get("column").([]interface{}))
+
 	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns.toSnowflakeColumns())
 
 	// Set optionals
@@ -221,6 +290,11 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("cluster_by"); ok {
 		builder.WithClustering(expandStringList(v.([]interface{})))
+	}
+
+	if v, ok := d.GetOk("primary_key"); ok {
+		pk := getPrimaryKey(v.([]interface{}))
+		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
 	}
 
 	stmt := builder.Create()
@@ -275,15 +349,26 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
+	if err != nil {
+		return err
+	}
+
+	pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
+	if err != nil {
+		return err
+	}
+
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":       table.TableName.String,
-		"owner":      table.Owner.String,
-		"database":   tableID.DatabaseName,
-		"schema":     tableID.SchemaName,
-		"comment":    table.Comment.String,
-		"column":     snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"name":        table.TableName.String,
+		"owner":       table.Owner.String,
+		"database":    tableID.DatabaseName,
+		"schema":      tableID.SchemaName,
+		"comment":     table.Comment.String,
+		"column":      snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by":  snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"primary_key": snowflake.FlattenTablePrimaryKey(pkDescription),
 	}
 
 	for key, val := range toSet {
@@ -345,17 +430,56 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range added {
-			q := builder.AddColumn(cA.name, cA.dataType)
+			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding column on %v", d.Id())
 			}
 		}
 		for _, cA := range changed {
-			q := builder.ChangeColumnType(cA.name, cA.dataType)
+
+			if cA.changedDataType {
+
+				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+				}
+			}
+			if cA.changedNullConstraint {
+
+				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+				}
+			}
+
+		}
+	}
+	if d.HasChange("primary_key") {
+		opk, npk := d.GetChange("primary_key")
+
+		newpk := getPrimaryKey(npk)
+		oldpk := getPrimaryKey(opk)
+
+		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
+			//drop our pk if there was an old primary key, or pk has been removed
+			q := builder.DropPrimaryKey()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error changing column type on %v", d.Id())
+				return errors.Wrapf(err, "error changing primary key first on %v", d.Id())
+			}
+		}
+
+		if len(newpk.keys) > 0 {
+			// add our new pk
+			q := builder.ChangePrimaryKey(newpk.toSnowflakePrimaryKey())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing property on %v", d.Id())
 			}
 		}
 	}

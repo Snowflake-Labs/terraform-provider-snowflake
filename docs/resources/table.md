@@ -21,18 +21,26 @@ resource snowflake_table table {
   cluster_by = ["to_date(DATE)"]
   
   column {
-    name = "id"
-    type = "int"
+    name     = "id"
+    type     = "int"
+    nullable = true
   }
 
   column {
-    name = "data"
-    type = "text"
+    name     = "data"
+    type     = "text"
+    nullable = false
   }
 
   column {
     name = "DATE"
     type = "TIMESTAMP_NTZ(9)"
+  }
+
+  primary_key {
+    name = "my_key"
+    keys = ["data"]
+
   }
 }
 ```
@@ -49,9 +57,10 @@ resource snowflake_table table {
 
 ### Optional
 
-- **cluster_by** (List of String) A list of one of more table columns/expressions to be used as clustering key(s) for the table
+- **cluster_by** (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
 - **id** (String) The ID of this resource.
+- **primary_key** (Block List, Max: 1) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
 
 ### Read-Only
 
@@ -64,6 +73,22 @@ Required:
 
 - **name** (String) Column name
 - **type** (String) Column type, e.g. VARIANT
+
+Optional:
+
+- **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
+
+
+<a id="nestedblock--primary_key"></a>
+### Nested Schema for `primary_key`
+
+Required:
+
+- **keys** (List of String) Columns to use in primary key
+
+Optional:
+
+- **name** (String) Name of constraint
 
 ## Import
 
