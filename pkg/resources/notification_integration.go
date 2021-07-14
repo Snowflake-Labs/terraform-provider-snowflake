@@ -237,7 +237,7 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 				return err
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
-			if err = d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+			if err = data.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
 				return err
 			}
 		default:
