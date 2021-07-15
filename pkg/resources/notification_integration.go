@@ -40,7 +40,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"notification_provider": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "GCS_PUBSUB"}, true),
+		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)",
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
@@ -138,7 +138,7 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
 	}
 	if v, ok := data.GetOk("gcp_pubsub_subscription_name"); ok {
-		stmt.SetString(`GCS_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
+		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
 	}
 
 	err := snowflake.Exec(db, stmt.Statement())

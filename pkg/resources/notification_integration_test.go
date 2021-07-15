@@ -55,7 +55,7 @@ func TestNotificationIntegrationCreate(t *testing.T) {
 				"notification_provider":        "GCP_PUBSUB",
 				"gcp_pubsub_subscription_name": "some-gcp-sub-name",
 			},
-			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" GCP_PUBSUB_SUBSCRIPTION_NAME='some-gcp-sub-name' COMMENT='great comment' NOTIFICATION_PROVIDER='GCP_PUBSUB' TYPE='QUEUE' ENABLED=true$`,
+			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" COMMENT='great comment' GCP_PUBSUB_SUBSCRIPTION_NAME='some-gcp-sub-name' NOTIFICATION_PROVIDER='GCP_PUBSUB' TYPE='QUEUE' ENABLED=true$`,
 		},
 	}
 	for _, testCase := range testCases {
@@ -82,6 +82,9 @@ func TestNotificationIntegrationRead(t *testing.T) {
 		},
 		{
 			notificationProvider: "AWS_SQS",
+		},
+		{
+			notificationProvider: "GCP_PUBSUB",
 		},
 	}
 	for _, testCase := range testCases {
@@ -133,10 +136,10 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("AWS_SQS_ARN", "String", "some-sqs-arn", nil).
 			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil).
 			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
-	case "GCS_PUBSUB":
+	case "GCP_PUBSUB":
 		descRows = descRows.
-			AddRow("GCP_PUBSUB_SUBSCRIPTION_NAME", "String", "some-gcp-sub-name", nil).
-			AddRow("GCP_PUBSUB_SERVICE_ACCOUNT", "String", ".*", nil)
+		    AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
+			AddRow("GCP_PUBSUB_SUBSCRIPTION_NAME", "String", "some-gcp-sub-name", nil)
 	}
 	mock.ExpectQuery(`DESCRIBE NOTIFICATION INTEGRATION "test_notification_integration"$`).WillReturnRows(descRows)
 }
