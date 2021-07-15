@@ -138,7 +138,7 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
 	case "GCP_PUBSUB":
 		descRows = descRows.
-		    AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
+			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
 			AddRow("GCP_PUBSUB_SUBSCRIPTION_NAME", "String", "some-gcp-sub-name", nil)
 	}
 	mock.ExpectQuery(`DESCRIBE NOTIFICATION INTEGRATION "test_notification_integration"$`).WillReturnRows(descRows)
