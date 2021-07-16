@@ -33,7 +33,7 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 		},
 	})
 
-	pubsubName := "some-gcp-sub-name"
+	pubsubName := "projects/project-1234/subscriptions/sub2"
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
