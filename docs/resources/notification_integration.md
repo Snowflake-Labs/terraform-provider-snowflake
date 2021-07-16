@@ -29,6 +29,7 @@ description: |-
 - **comment** (String)
 - **direction** (String) Direction of the cloud messaging with respect to Snowflake (required only for error notifications)
 - **enabled** (Boolean)
+- **gcp_pubsub_subscription_name** (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
 - **id** (String) The ID of this resource.
 - **notification_provider** (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)
 - **type** (String) A type of integration
