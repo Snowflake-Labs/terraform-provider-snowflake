@@ -40,7 +40,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"notification_provider": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS"}, true),
+		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)",
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
@@ -77,6 +77,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Date and time when the notification integration was created.",
+	},
+	"gcp_pubsub_subscription_name": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
 	},
 }
 
@@ -131,6 +136,9 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	}
 	if v, ok := data.GetOk("aws_sqs_role_arn"); ok {
 		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
+	}
+	if v, ok := data.GetOk("gcp_pubsub_subscription_name"); ok {
+		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
 	}
 
 	err := snowflake.Exec(db, stmt.Statement())
@@ -228,6 +236,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			if err = data.Set("aws_sqs_external_id", v.(string)); err != nil {
 				return err
 			}
+		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
+			if err = data.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
 		}
@@ -290,6 +302,11 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	if data.HasChange("aws_sqs_role_arn") {
 		runSetStatement = true
 		stmt.SetString("AWS_SQS_ROLE_ARN", data.Get("aws_sqs_role_arn").(string))
+	}
+
+	if data.HasChange("gcp_pubsub_subscription_name") {
+		runSetStatement = true
+		stmt.SetString("GCP_PUBSUB_SUBSCRIPTION_NAME", data.Get("gcp_pubsub_subscription_name").(string))
 	}
 
 	if runSetStatement {

@@ -47,6 +47,16 @@ func TestNotificationIntegrationCreate(t *testing.T) {
 			},
 			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" AWS_SQS_ARN='some-sqs-arn' AWS_SQS_ROLE_ARN='some-iam-role-arn' COMMENT='great comment' DIRECTION='OUTBOUND' NOTIFICATION_PROVIDER='AWS_SQS' TYPE='QUEUE' ENABLED=true$`,
 		},
+		{
+			notificationProvider: "GCP_PUBSUB",
+			raw: map[string]interface{}{
+				"name":                         "test_notification_integration",
+				"comment":                      "great comment",
+				"notification_provider":        "GCP_PUBSUB",
+				"gcp_pubsub_subscription_name": "some-gcp-sub-name",
+			},
+			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" COMMENT='great comment' GCP_PUBSUB_SUBSCRIPTION_NAME='some-gcp-sub-name' NOTIFICATION_PROVIDER='GCP_PUBSUB' TYPE='QUEUE' ENABLED=true$`,
+		},
 	}
 	for _, testCase := range testCases {
 		r := require.New(t)
@@ -72,6 +82,9 @@ func TestNotificationIntegrationRead(t *testing.T) {
 		},
 		{
 			notificationProvider: "AWS_SQS",
+		},
+		{
+			notificationProvider: "GCP_PUBSUB",
 		},
 	}
 	for _, testCase := range testCases {
@@ -123,7 +136,10 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("AWS_SQS_ARN", "String", "some-sqs-arn", nil).
 			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil).
 			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
+	case "GCP_PUBSUB":
+		descRows = descRows.
+			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
+			AddRow("GCP_PUBSUB_SUBSCRIPTION_NAME", "String", "some-gcp-sub-name", nil)
 	}
-
 	mock.ExpectQuery(`DESCRIBE NOTIFICATION INTEGRATION "test_notification_integration"$`).WillReturnRows(descRows)
 }

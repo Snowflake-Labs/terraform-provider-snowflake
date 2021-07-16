@@ -32,6 +32,21 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 			},
 		},
 	})
+
+	pubsubName := "projects/project-1234/subscriptions/sub2"
+	resource.Test(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: gcpNotificationIntegrationConfig(accName, pubsubName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", pubsubName),
+				),
+			},
+		},
+	})
 }
 
 func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
@@ -44,4 +59,15 @@ resource "snowflake_notification_integration" "test" {
 }
 `
 	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
+}
+
+func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string) string {
+	s := `
+resource "snowflake_notification_integration" "test" {
+  name                            = "%s"
+  notification_provider           = "%s"
+  gcp_pubsub_subscription_name    = "%s"
+}
+`
+	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
 }
