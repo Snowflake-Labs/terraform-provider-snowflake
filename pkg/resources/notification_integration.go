@@ -55,8 +55,13 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	},
 	"aws_sqs_external_id": &schema.Schema{
 		Type:        schema.TypeString,
-		Optional:    true,
+		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role",
+	},
+	"aws_sqs_iam_user_arn": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
 	"aws_sqs_arn": &schema.Schema{
 		Type:        schema.TypeString,
@@ -234,6 +239,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			}
 		case "AWS_SQS_EXTERNAL_ID":
 			if err = data.Set("aws_sqs_external_id", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SQS_IAM_USER_ARN":
+			if err = data.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
