@@ -135,7 +135,8 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("DIRECTION", "String", "OUTBOUND", nil).
 			AddRow("AWS_SQS_ARN", "String", "some-sqs-arn", nil).
 			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil).
-			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
+			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
+			AddRow("AWS_SQS_IAM_USER_ARN", "String", "some-iam-user-arn", nil)
 	case "GCP_PUBSUB":
 		descRows = descRows.
 			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
