@@ -55,18 +55,18 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	},
 	"aws_sqs_external_id": &schema.Schema{
 		Type:        schema.TypeString,
-		Optional:    true,
+		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role",
-	},
-	"aws_sqs_arn": &schema.Schema{
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "AWS SQS queue ARN for notification integration to connect to",
 	},
 	"aws_sqs_iam_user_arn": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
+	},
+	"aws_sqs_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "AWS SQS queue ARN for notification integration to connect to",
 	},
 	"aws_sqs_role_arn": &schema.Schema{
 		Type:        schema.TypeString,
