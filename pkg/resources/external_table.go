@@ -212,8 +212,8 @@ func CreateExternalTable(data *schema.ResourceData, meta interface{}) error {
 
 	// Set optionals
 	if v, ok := data.GetOk("partition_by"); ok {
-		partiionBys := expandStringList(v.(*schema.Set).List())
-		builder.WithPartitionBys(partiionBys)
+		partitionBys := expandStringList(v.([]interface{}))
+		builder.WithPartitionBys(partitionBys)
 	}
 
 	if v, ok := data.GetOk("pattern"); ok {
