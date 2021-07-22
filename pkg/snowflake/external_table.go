@@ -113,14 +113,15 @@ func (tb *ExternalTableBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), EscapeString(columnDefinition["as"])))
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
 	q.WriteString(fmt.Sprintf(`)`))
 
-	if len(tb.partitionBys) > 1 {
-		q.WriteString(` PARTIION BY `)
+	if len(tb.partitionBys) > 0 {
+		q.WriteString(` PARTITION BY ( `)
 		q.WriteString(EscapeString(strings.Join(tb.partitionBys, ", ")))
+		q.WriteString(` )`)
 	}
 
 	q.WriteString(` WITH LOCATION = ` + EscapeString(tb.location))

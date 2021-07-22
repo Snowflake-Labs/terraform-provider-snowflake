@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -9,13 +10,15 @@ import (
 
 // PipeBuilder abstracts the creation of SQL queries for a Snowflake schema
 type PipeBuilder struct {
-	name           string
-	db             string
-	schema         string
-	autoIngest     bool
-	awsSnsTopicArn string
-	comment        string
-	copyStatement  string
+	name             string
+	db               string
+	schema           string
+	autoIngest       bool
+	awsSnsTopicArn   string
+	comment          string
+	copyStatement    string
+	integration      string
+	errorIntegration string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -63,6 +66,18 @@ func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	return pb
 }
 
+/// WithIntegration adds Integration specification to the PipeBuilder
+func (pb *PipeBuilder) WithIntegration(s string) *PipeBuilder {
+	pb.integration = s
+	return pb
+}
+
+/// WithErrorIntegration adds ErrorIntegration specification to the PipeBuilder
+func (pb *PipeBuilder) WithErrorIntegration(s string) *PipeBuilder {
+	pb.errorIntegration = s
+	return pb
+}
+
 // Pipe returns a pointer to a Builder that abstracts the DDL operations for a pipe.
 //
 // Supported DDL operations are:
@@ -91,6 +106,14 @@ func (pb *PipeBuilder) Create() string {
 		q.WriteString(` AUTO_INGEST = TRUE`)
 	}
 
+	if pb.integration != "" {
+		q.WriteString(fmt.Sprintf(` INTEGRATION = '%v'`, EscapeString(pb.integration)))
+	}
+
+	if pb.errorIntegration != "" {
+		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(pb.errorIntegration)))
+	}
+
 	if pb.awsSnsTopicArn != "" {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(pb.awsSnsTopicArn)))
 	}
@@ -115,6 +138,11 @@ func (pb *PipeBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER PIPE %v UNSET COMMENT`, pb.QualifiedName())
 }
 
+// ChangeErrorIntegration return SQL query that will update the error_integration on the pipe.
+func (pb *PipeBuilder) ChangeErrorIntegration(c string) string {
+	return fmt.Sprintf(`ALTER PIPE %v SET ERROR_INTEGRATION = %v`, pb.QualifiedName(), EscapeString(c))
+}
+
 // Drop returns the SQL query that will drop a pipe.
 func (pb *PipeBuilder) Drop() string {
 	return fmt.Sprintf(`DROP PIPE %v`, pb.QualifiedName())
@@ -126,14 +154,16 @@ func (pb *PipeBuilder) Show() string {
 }
 
 type pipe struct {
-	Createdon           string  `db:"created_on"`
-	Name                string  `db:"name"`
-	DatabaseName        string  `db:"database_name"`
-	SchemaName          string  `db:"schema_name"`
-	Definition          string  `db:"definition"`
-	Owner               string  `db:"owner"`
-	NotificationChannel *string `db:"notification_channel"`
-	Comment             string  `db:"comment"`
+	Createdon           string         `db:"created_on"`
+	Name                string         `db:"name"`
+	DatabaseName        string         `db:"database_name"`
+	SchemaName          string         `db:"schema_name"`
+	Definition          string         `db:"definition"`
+	Owner               string         `db:"owner"`
+	NotificationChannel *string        `db:"notification_channel"`
+	Comment             string         `db:"comment"`
+	Integration         sql.NullString `db:"integration"`
+	ErrorIntegration    sql.NullString `db:"error_integration"`
 }
 
 func ScanPipe(row *sqlx.Row) (*pipe, error) {

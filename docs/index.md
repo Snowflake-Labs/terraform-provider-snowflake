@@ -19,9 +19,15 @@ provider snowflake {
   region   = "..."
 
   // optional, at exactly one must be set
-  password           = "..."
-  oauth_access_token = "..."
-  private_key_path   = "..."
+  password              = "..."
+  oauth_access_token    = "..."
+  private_key_path      = "..."
+  private_key           = "..."
+  oauth_refresh_token   = "..."
+  oauth_client_id       = "..."
+  oauth_client_secret   = "..."
+  oauth_endpoint        = "..."
+  oauth_redirect_url    = "..."
 
   // optional
   role = "..."
@@ -44,6 +50,11 @@ provider snowflake {
 
 - **browser_auth** (Boolean)
 - **oauth_access_token** (String, Sensitive)
+- **oauth_client_id** (String, Sensitive)
+- **oauth_client_secret** (String, Sensitive)
+- **oauth_endpoint** (String, Sensitive)
+- **oauth_redirect_url** (String, Sensitive)
+- **oauth_refresh_token** (String, Sensitive)
 - **password** (String, Sensitive)
 - **private_key** (String, Sensitive)
 - **private_key_path** (String, Sensitive)
@@ -56,6 +67,7 @@ The Snowflake provider support multiple ways to authenticate:
 
 * Password
 * OAuth Access Token
+* OAuth Refresh Token
 * Browser Auth
 * Private Key
 
@@ -90,6 +102,20 @@ export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
 
 Note that once this access token expires, you'll need to request a new one through an external application.
 
+### OAuth Refresh Token
+
+If you have an OAuth Refresh token, export these credentials as environment variables:
+
+```shell
+export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
+export SNOWFLAKE_OAUTH_CLIENT_ID='...'
+export SNOWFLAKE_OAUTH_CLIENT_SECRET='...'
+export SNOWFLAKE_OAUTH_ENDPOINT='...'
+export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
+```
+
+Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
+
 ### Username and Password Environment Variables
 
 If you choose to use Username and Password Authentication, export these credentials:
@@ -113,10 +139,24 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `password` - (optional) Password for username+password auth. Cannot be used with `browser_auth` or
   `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.
 * `oauth_access_token` - (optional) Token for use with OAuth. Generating the token is left to other
-  tools. Cannot be used with `browser_auth`, `private_key_path` or `password`. Can be source from
-  `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
+  tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. 
+  Can be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
+* `oauth_refresh_token` - (optional) Token for use with OAuth. Setup and generation of the token is 
+  left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, 
+  `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, 
+  `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment 
+  variable.
+* `oauth_client_id` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
+* `oauth_client_secret` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
+* `oauth_endpoint` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
+* `oauth_redirect_url` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+  `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable. 
 * `private_key_path` - (optional) Path to a private key for using keypair authentication.. Cannot be
   used with `browser_auth`, `oauth_access_token` or `password`. Can be source from
   `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 * `role` - (optional) Snowflake role to use for operations. If left unset, default role for user
   will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
+
