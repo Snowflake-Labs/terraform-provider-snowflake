@@ -3,11 +3,13 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 type PrimaryKey struct {
@@ -465,4 +467,21 @@ func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]primaryKeyDescription, error)
 		pkds = append(pkds, pk)
 	}
 	return pkds, rows.Err()
+}
+
+func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, error) {
+	stmt := fmt.Sprintf(`SHOW TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []table{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no tables found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
