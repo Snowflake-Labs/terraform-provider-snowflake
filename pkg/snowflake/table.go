@@ -466,7 +466,7 @@ type table struct {
 	Rows                sql.NullString `db:"row"`
 	Bytes               sql.NullString `db:"bytes"`
 	Owner               sql.NullString `db:"owner"`
-	RetentionTime       sql.NullString `db:"retention_time"`
+	RetentionTime       sql.NullInt32  `db:"retention_time"`
 	AutomaticClustering sql.NullString `db:"automatic_clustering"`
 	ChangeTracking      sql.NullString `db:"change_tracking"`
 }

@@ -323,6 +323,14 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
 	}
 
+	if v, ok := d.GetOk("data_retention_days"); ok {
+		builder.WithDataRetentionTimeInDays(v.(int))
+	}
+
+	if v, ok := d.GetOk("change_tracking"); ok {
+		builder.WithChangeTracking(v.(bool))
+	}
+
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
@@ -387,14 +395,16 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":        table.TableName.String,
-		"owner":       table.Owner.String,
-		"database":    tableID.DatabaseName,
-		"schema":      tableID.SchemaName,
-		"comment":     table.Comment.String,
-		"column":      snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by":  snowflake.ClusterStatementToList(table.ClusterBy.String),
-		"primary_key": snowflake.FlattenTablePrimaryKey(pkDescription),
+		"name":                table.TableName.String,
+		"owner":               table.Owner.String,
+		"database":            tableID.DatabaseName,
+		"schema":              tableID.SchemaName,
+		"comment":             table.Comment.String,
+		"column":              snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by":          snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		"data_retention_days": table.RetentionTime.Int32,
+		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}
 
 	for key, val := range toSet {
