@@ -208,6 +208,14 @@ func externalFunction(t *testing.T, id string, params map[string]interface{}) *s
 	return d
 }
 
+func procedure(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Procedure().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
