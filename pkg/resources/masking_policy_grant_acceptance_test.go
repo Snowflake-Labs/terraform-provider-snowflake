@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,6 +11,9 @@ import (
 )
 
 func TestAcc_MaskingPolicyGrant(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_MASKING_POLICY_TESTS"); ok {
+		t.Skip("Skipping TestAccMaskingPolicy")
+	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{

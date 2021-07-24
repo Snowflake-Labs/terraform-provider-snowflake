@@ -216,6 +216,14 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 		switch desc.Property.String {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
+			// re := regexp.MustCompile(`.+(\(.*\))`)
+			// found := re.FindStringSubmatch(desc.Value.String)
+			// params := ""
+			// if len(found) == 2 {
+			// 	params = found[1]
+			// } else {
+			// 	return fmt.Errorf("Invalid signature format %v", desc.Value.String)
+			// }
 			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
 
 			if args != "" { // Do nothing for functions without arguments

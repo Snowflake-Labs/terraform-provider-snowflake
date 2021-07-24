@@ -168,7 +168,7 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(pb.comment)))
 	}
 	q.WriteString(fmt.Sprintf(" EXECUTE AS %v", pb.executeAs))
-	q.WriteString(fmt.Sprintf(" AS XX\n%v\nXX", pb.statement))
+	q.WriteString(fmt.Sprintf(" AS $$%v$$", pb.statement))
 	return q.String(), nil
 }
 

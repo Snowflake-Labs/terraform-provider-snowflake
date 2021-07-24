@@ -36,7 +36,7 @@ func TestProcedureCreate(t *testing.T) {
 	createStmnt, _ := s.Create()
 	expected := `CREATE OR REPLACE PROCEDURE "test_db"."test_schema"."test_proc"` +
 		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR LANGUAGE javascript EXECUTE AS CALLER AS $$` +
-		"\n" + `var message = "Hi"` + "\nreturn message\n$$"
+		`var message = "Hi"` + "\nreturn message$$"
 	r.Equal(expected, createStmnt)
 }
 
@@ -50,7 +50,7 @@ func TestProcedureCreateWithOptionalParams(t *testing.T) {
 	expected := `CREATE OR REPLACE PROCEDURE "test_db"."test_schema"."test_proc"` +
 		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR LANGUAGE javascript RETURNS NULL ON NULL INPUT` +
 		` IMMUTABLE COMMENT = 'this is cool proc!' EXECUTE AS CALLER AS $$` +
-		"\n" + `var message = "Hi"` + "\nreturn message\n$$"
+		`var message = "Hi"` + "\nreturn message$$"
 	r.Equal(expected, createStmnt)
 }
 
