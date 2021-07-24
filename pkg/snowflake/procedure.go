@@ -45,24 +45,6 @@ func (pb *ProcedureBuilder) ArgumentsSignature() (string, error) {
 	return fmt.Sprintf(`%v(%v) RETURN %v`, pb.name, strings.Join(pb.argumentTypes, ", "), pb.returnType), nil
 }
 
-// WithSchema adds the name of the schema to the ProcedureBuilder
-// func (pb *ProcedureBuilder) WithSchema(s string) *ProcedureBuilder {
-//	pb.schema = s
-//	return pb
-// }
-
-// WithDB adds the name of the database to the ProcedureBuilder
-// func (pb *ProcedureBuilder) WithDB(db string) *ProcedureBuilder {
-// 	pb.db = db
-// 	return pb
-// }
-
-// WithArgumentTypes sets the argument types list to the ProcedureBuilder
-// func (pb *ProcedureBuilder) WithArgumentTypes(argumentTypes []string) *ProcedureBuilder {
-// 	pb.argumentTypes = argumentTypes
-//	return pb
-// }
-
 // WithArgs sets the args and argumentTypes on the ProcedureBuilder
 func (pb *ProcedureBuilder) WithArgs(args []map[string]string) *ProcedureBuilder {
 	pb.args = []map[string]string{}
@@ -105,7 +87,7 @@ func (pb *ProcedureBuilder) WithComment(c string) *ProcedureBuilder {
 	return pb
 }
 
-// WithStatement adds the SQL statement to be used for the view
+// WithStatement adds the SQL statement to be used for the procedure
 func (pb *ProcedureBuilder) WithStatement(s string) *ProcedureBuilder {
 	pb.statement = s
 	return pb
@@ -135,7 +117,7 @@ func Procedure(db, schema, name string, argTypes []string) *ProcedureBuilder {
 	}
 }
 
-// Create returns the SQL query that will create a new view.
+// Create returns the SQL query that will create a new procedure.
 func (pb *ProcedureBuilder) Create() (string, error) {
 	var q strings.Builder
 
@@ -231,7 +213,7 @@ func (pb *ProcedureBuilder) Describe() (string, error) {
 	return fmt.Sprintf(`DESCRIBE PROCEDURE %v`, qn), nil
 }
 
-// Drop returns the SQL query that will drop the row representing this view.
+// Drop returns the SQL query that will drop the procedure.
 func (pb *ProcedureBuilder) Drop() (string, error) {
 	qn, err := pb.QualifiedName()
 	if err != nil {
@@ -243,7 +225,6 @@ func (pb *ProcedureBuilder) Drop() (string, error) {
 type procedure struct {
 	Comment sql.NullString `db:"description"`
 	// Snowflake returns is_secure in the show procedure output, but it is irrelevant
-	// IsSecure     bool           `db:"is_secure"`
 	Name         sql.NullString `db:"name"`
 	SchemaName   sql.NullString `db:"schema_name"`
 	Text         sql.NullString `db:"text"`
@@ -284,10 +265,4 @@ func ScanProcedures(rows *sqlx.Rows) ([]*procedure, error) {
 		pcs = append(pcs, r)
 	}
 	return pcs, rows.Err()
-}
-
-func ScanProcedure(row *sqlx.Row) (*procedure, error) {
-	r := &procedure{}
-	err := row.StructScan(r)
-	return r, err
 }
