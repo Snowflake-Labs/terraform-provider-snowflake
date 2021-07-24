@@ -70,12 +70,13 @@ var procedureSchema = map[string]*schema.Schema{
 		Description: "Sets execute context - see caller's rights and owner's rights",
 	},
 	"null_input_behavior": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      "CALLED ON NULL INPUT",
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT", "STRICT"}, false),
-		Description:  "Specifies the behavior of the external function when called with null inputs.",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "CALLED ON NULL INPUT",
+		ForceNew: true,
+		// We do not use STRICT, because Snowflake then in the Read phase returns RETURNS NULL ON NULL INPUT
+		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT"}, false),
+		Description:  "Specifies the behavior of the procedure when called with null inputs.",
 	},
 	"return_behavior": {
 		Type:         schema.TypeString,
@@ -216,14 +217,6 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 		switch desc.Property.String {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			// re := regexp.MustCompile(`.+(\(.*\))`)
-			// found := re.FindStringSubmatch(desc.Value.String)
-			// params := ""
-			// if len(found) == 2 {
-			// 	params = found[1]
-			// } else {
-			// 	return fmt.Errorf("Invalid signature format %v", desc.Value.String)
-			// }
 			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
 
 			if args != "" { // Do nothing for functions without arguments
@@ -349,7 +342,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for view %v", d.Id())
+				return errors.Wrapf(err, "error unsetting comment for procedure %v", d.Id())
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
@@ -375,7 +368,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ReadView(d, meta)
+	return ReadProcedure(d, meta)
 }
 
 // DeleteProcedure implements schema.DeleteFunc
