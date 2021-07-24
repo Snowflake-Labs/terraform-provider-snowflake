@@ -13,13 +13,19 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_table" "table" {
+resource "snowflake_schema" "schema" {
   database            = "database"
-  schema              = "schmea"
+  name                = "schema"
+  data_retention_days = 1
+}
+
+resource "snowflake_table" "table" {
+  database            = snowflake_schema.schema.database
+  schema              = snowflake_schema.schema.name
   name                = "table"
   comment             = "A table."
   cluster_by          = ["to_date(DATE)"]
-  data_retention_days = 1
+  data_retention_days = snowflake_schema.schema.data_retention_days
   change_tracking     = false
 
   column {
@@ -64,10 +70,10 @@ resource "snowflake_table" "table" {
 
 ### Optional
 
-- **change_tracking** (Boolean) Specifies whether to enable change tracking on the table.
+- **change_tracking** (Boolean) Specifies whether to enable change tracking on the table. Default false.
 - **cluster_by** (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
-- **data_retention_days** (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table.
+- **data_retention_days** (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
 - **id** (String) The ID of this resource.
 - **primary_key** (Block List, Max: 1) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
 

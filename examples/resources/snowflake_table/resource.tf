@@ -1,10 +1,16 @@
-resource "snowflake_table" "table" {
+resource "snowflake_schema" "schema" {
   database            = "database"
-  schema              = "schmea"
+  name                = "schema"
+  data_retention_days = 1
+}
+
+resource "snowflake_table" "table" {
+  database            = snowflake_schema.schema.database
+  schema              = snowflake_schema.schema.name
   name                = "table"
   comment             = "A table."
   cluster_by          = ["to_date(DATE)"]
-  data_retention_days = 1
+  data_retention_days = snowflake_schema.schema.data_retention_days
   change_tracking     = false
 
   column {
