@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	pe "github.com/pkg/errors"
 )
 
 // MaterializedViewBuilder abstracts the creation of SQL queries for a Snowflake Materialized View
@@ -190,4 +192,21 @@ func ScanMaterializedView(row *sqlx.Row) (*materializedView, error) {
 	r := &materializedView{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) ([]materializedView, error) {
+	stmt := fmt.Sprintf(`SHOW MATERIALIZED VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []materializedView{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no materialized views found")
+		return nil, nil
+	}
+	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
 }
