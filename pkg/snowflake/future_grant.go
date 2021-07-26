@@ -19,6 +19,8 @@ const (
 	futureProcedureType        futureGrantType = "PROCEDURE"
 	futureSequenceType         futureGrantType = "SEQUENCE"
 	futureStreamType           futureGrantType = "STREAM"
+	futurePipeType             futureGrantType = "PIPE"
+	futureTaskType             futureGrantType = "TASK"
 )
 
 const (
@@ -100,7 +102,7 @@ func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureStageGrant returns a pointer to a FutureGrantBuilder for a table
+// FutureStageGrant returns a pointer to a FutureGrantBuilder for a stage
 func FutureStageGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -111,7 +113,7 @@ func FutureStageGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a external table
 func FutureExternalTableGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -122,7 +124,7 @@ func FutureExternalTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureFileFormatGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureFileFormatGrant returns a pointer to a FutureGrantBuilder for a file format
 func FutureFileFormatGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -133,7 +135,7 @@ func FutureFileFormatGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a function
 func FutureFunctionGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -144,7 +146,7 @@ func FutureFunctionGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureProcedureGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureProcedureGrant returns a pointer to a FutureGrantBuilder for a procedure
 func FutureProcedureGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -155,7 +157,7 @@ func FutureProcedureGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a sequence
 func FutureSequenceGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -166,13 +168,35 @@ func FutureSequenceGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureStreamGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureStreamGrant returns a pointer to a FutureGrantBuilder for a stream
 func FutureStreamGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
 		futureGrantType:   futureStreamType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FuturePipeGrant returns a pointer to a FutureGrantBuilder for a pipe
+func FuturePipeGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futurePipeType,
+		futureGrantTarget: futureTarget,
+	}
+}
+
+// FutureTaskGrant returns a pointer to a FutureGrantBuilder for a task
+func FutureTaskGrant(db, schema string) GrantBuilder {
+	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	return &FutureGrantBuilder{
+		name:              name,
+		qualifiedName:     qualifiedName,
+		futureGrantType:   futureTaskType,
 		futureGrantTarget: futureTarget,
 	}
 }
