@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -188,4 +190,21 @@ func ScanSchema(row *sqlx.Row) (*schema, error) {
 	r := &schema{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
+	stmt := fmt.Sprintf(`SHOW SCHEMAS IN DATABASE "%v"`, databaseName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []schema{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no schemas found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

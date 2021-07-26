@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	pe "github.com/pkg/errors"
 )
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View
@@ -195,4 +197,21 @@ func ScanView(row *sqlx.Row) (*view, error) {
 	r := &view{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListViews(databaseName string, schemaName string, db *sql.DB) ([]view, error) {
+	stmt := fmt.Sprintf(`SHOW VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []view{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no views found")
+		return nil, nil
+	}
+	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
 }
