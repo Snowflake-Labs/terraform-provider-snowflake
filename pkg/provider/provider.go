@@ -197,6 +197,10 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
 		"snowflake_system_get_snowflake_platform_info": datasources.SystemGetSnowflakePlatformInfo(),
+		"snowflake_schemas":                            datasources.Schemas(),
+		"snowflake_tables":                             datasources.Tables(),
+		"snowflake_views":                              datasources.Views(),
+		"snowflake_materialized_views":                 datasources.MaterializedViews(),
 	}
 
 	return dataSources
