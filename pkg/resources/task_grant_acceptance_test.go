@@ -32,43 +32,43 @@ func TestAcc_TaskGrant(t *testing.T) {
 func taskGrantConfig(name string) string {
 	s := `
 resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
+  name = "%v"
+  comment = "Terraform acceptance test"
 }
 
 resource "snowflake_schema" "test" {
-	name = snowflake_database.test.name
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
+  name = snowflake_database.test.name
+  database = snowflake_database.test.name
+  comment = "Terraform acceptance test"
 }
 
 resource "snowflake_role" "test" {
-	name = "%v"
+  name = "%v"
 }
 
 resource "snowflake_warehouse" "test" {
-	name = snowflake_database.test.name
+  name = snowflake_database.test.name
 }
 
 resource "snowflake_task" "test" {
-	name     	       = snowflake_schema.test.name
-	database  	       = snowflake_database.test.name
-	schema   	  	   = snowflake_schema.test.name
-	warehouse 	  	   = snowflake_warehouse.test.name
-	sql_statement      = "SHOW FUNCTIONS"
-	enabled  	  	   = true
-	schedule 	  	   = "15 MINUTES"
-	lifecycle {
-		ignore_changes = [session_parameters]
-	}
+  name     	    = snowflake_schema.test.name
+  database  	= snowflake_database.test.name
+  schema   	  	= snowflake_schema.test.name
+  warehouse 	= snowflake_warehouse.test.name
+  sql_statement = "SHOW FUNCTIONS"
+  enabled  	  	= true
+  schedule 	  	= "15 MINUTES"
+  lifecycle {
+    ignore_changes = [session_parameters]
+  }
 }
 
 resource "snowflake_task_grant" "test" {
-	task_name 	  = snowflake_task.test.name
-	database_name = snowflake_database.test.name
-	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
-	privilege 	  = "OPERATE"
+  task_name 	= snowflake_task.test.name
+  database_name = snowflake_database.test.name
+  roles         = [snowflake_role.test.name]
+  schema_name   = snowflake_schema.test.name
+  privilege 	= "OPERATE"
 }
 `
 	return fmt.Sprintf(s, name, name)

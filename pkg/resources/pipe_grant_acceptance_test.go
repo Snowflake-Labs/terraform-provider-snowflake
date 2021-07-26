@@ -32,51 +32,47 @@ func TestAcc_PipeGrant(t *testing.T) {
 func pipeGrantConfig(name string) string {
 	s := `
 resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
+  name = "%v"
+  comment = "Terraform acceptance test"
 }
 
 resource "snowflake_schema" "test" {
-	name = snowflake_database.test.name
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
+  name = snowflake_database.test.name
+  database = snowflake_database.test.name
+  comment = "Terraform acceptance test"
 }
 
 resource "snowflake_table" "test" {
-	database = snowflake_database.test.name
-  	schema   = snowflake_schema.test.name
-	name     = snowflake_schema.test.name
-
-	  column {
-			name = "id"
-			type = "NUMBER(5,0)"
-	  }
-	
-	  column {
-		name = "data"
-		type = "VARCHAR(16)"
-	  }
+  database = snowflake_database.test.name
+  schema   = snowflake_schema.test.name
+  name     = snowflake_schema.test.name
+  column {
+	name = "id"
+	type = "NUMBER(5,0)"
+  }
+  column {
+    name = "data"
+	type = "VARCHAR(16)"
+  }
 }
 
 resource "snowflake_role" "test" {
-	name = "%v"
+  name = "%v"
 }
 
 resource "snowflake_stage" "test" {
-	name = snowflake_schema.test.name
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
-	comment = "Terraform acceptance test"
+  name = snowflake_schema.test.name
+  database = snowflake_database.test.name
+  schema = snowflake_schema.test.name
+  comment = "Terraform acceptance test"
 }
 
-
-
 resource "snowflake_pipe_grant" "test" {
-	pipe_name = snowflake_pipe.test.name
-	database_name = snowflake_database.test.name
-	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
-	privilege 	  = "OPERATE"
+  pipe_name = snowflake_pipe.test.name
+  database_name = snowflake_database.test.name
+  roles         = [snowflake_role.test.name]
+  schema_name   = snowflake_schema.test.name
+  privilege 	  = "OPERATE"
 }
 
 resource "snowflake_pipe" "test" {
