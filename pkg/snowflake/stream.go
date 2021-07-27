@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
@@ -134,4 +136,21 @@ func ScanStream(row *sqlx.Row) (*descStreamRow, error) {
 	t := &descStreamRow{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+func ListStreams(databaseName string, schemaName string, db *sql.DB) ([]descStreamRow, error) {
+	stmt := fmt.Sprintf(`SHOW STREAMS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []descStreamRow{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no stages found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

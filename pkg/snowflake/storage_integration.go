@@ -2,8 +2,10 @@ package snowflake
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // StorageIntegration returns a pointer to a Builder that abstracts the DDL operations for a storage integration.
@@ -29,10 +31,28 @@ type storageIntegration struct {
 	IntegrationType sql.NullString `db:"type"`
 	CreatedOn       sql.NullString `db:"created_on"`
 	Enabled         sql.NullBool   `db:"enabled"`
+	Comment         sql.NullString `db:"comment"`
 }
 
 func ScanStorageIntegration(row *sqlx.Row) (*storageIntegration, error) {
 	r := &storageIntegration{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListStorageIntegrations(db *sql.DB) ([]storageIntegration, error) {
+	stmt := "SHOW STORAGE INTEGRATIONS"
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []storageIntegration{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no resouce monitors found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

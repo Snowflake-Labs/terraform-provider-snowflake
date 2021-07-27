@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // externalTableBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -172,4 +174,21 @@ func ScanExternalTable(row *sqlx.Row) (*externalTable, error) {
 	t := &externalTable{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]externalTable, error) {
+	stmt := fmt.Sprintf(`SHOW EXTERNAL TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []externalTable{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no external tables found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
