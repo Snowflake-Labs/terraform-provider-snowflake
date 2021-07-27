@@ -27,6 +27,8 @@ const (
 	sequenceType         grantType = "SEQUENCE"
 	streamType           grantType = "STREAM"
 	maskingPolicyType    grantType = "MASKING POLICY"
+	pipeType             grantType = "PIPE"
+	taskType             grantType = "TASK"
 )
 
 type GrantExecutable interface {
@@ -259,6 +261,24 @@ func MaskingPolicyGrant(db, schema, maskingPolicy string) GrantBuilder {
 		name:          maskingPolicy,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, maskingPolicy),
 		grantType:     maskingPolicyType,
+	}
+}
+
+// PipeGrant returns a pointer to a CurrentGrantBuilder for a pipe
+func PipeGrant(db, schema, pipe string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          pipe,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, pipe),
+		grantType:     pipeType,
+	}
+}
+
+// TaskGrant returns a pointer to a CurrentGrantBuilder for a task
+func TaskGrant(db, schema, task string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          task,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, task),
+		grantType:     taskType,
 	}
 }
 

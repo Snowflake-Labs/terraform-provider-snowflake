@@ -138,6 +138,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_integration_grant":       resources.IntegrationGrant(),
 		"snowflake_masking_policy_grant":    resources.MaskingPolicyGrant(),
 		"snowflake_materialized_view_grant": resources.MaterializedViewGrant(),
+		"snowflake_pipe_grant":              resources.PipeGrant(),
 		"snowflake_procedure_grant":         resources.ProcedureGrant(),
 		"snowflake_resource_monitor_grant":  resources.ResourceMonitorGrant(),
 		"snowflake_schema_grant":            resources.SchemaGrant(),
@@ -145,6 +146,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_stage_grant":             resources.StageGrant(),
 		"snowflake_stream_grant":            resources.StreamGrant(),
 		"snowflake_table_grant":             resources.TableGrant(),
+		"snowflake_task_grant":              resources.TaskGrant(),
 		"snowflake_view_grant":              resources.ViewGrant(),
 		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
 	}
@@ -197,6 +199,10 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
 		"snowflake_system_get_snowflake_platform_info": datasources.SystemGetSnowflakePlatformInfo(),
+		"snowflake_schemas":                            datasources.Schemas(),
+		"snowflake_tables":                             datasources.Tables(),
+		"snowflake_views":                              datasources.Views(),
+		"snowflake_materialized_views":                 datasources.MaterializedViews(),
 	}
 
 	return dataSources
