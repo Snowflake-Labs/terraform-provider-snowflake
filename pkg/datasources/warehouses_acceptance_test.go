@@ -15,7 +15,8 @@ func TestAccWarehouses(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: warehouses(warehouseName),
+				PreventPostDestroyRefresh: true,
+				Config:                    warehouses(warehouseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_warehouses.s", "warehouses.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_warehouses.s", "warehouses.0.name"),

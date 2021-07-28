@@ -15,7 +15,8 @@ func TestAccStorageIntegrations(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: storageIntegrations(storageIntegrationName),
+				PreventPostDestroyRefresh: true,
+				Config:                    storageIntegrations(storageIntegrationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.0.name"),

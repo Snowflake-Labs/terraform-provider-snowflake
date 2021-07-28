@@ -15,7 +15,8 @@ func TestAccResourceMonitors(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitors(resourceMonitorName),
+				PreventPostDestroyRefresh: true,
+				Config:                    resourceMonitors(resourceMonitorName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.0.name"),
