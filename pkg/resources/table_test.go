@@ -22,17 +22,32 @@ func TestTableCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":        "good_name",
-		"database":    "database_name",
-		"schema":      "schema_name",
-		"comment":     "great comment",
-		"column":      []interface{}{map[string]interface{}{"name": "column1", "type": "OBJECT"}, map[string]interface{}{"name": "column2", "type": "VARCHAR", "nullable": false}},
+		"name":     "good_name",
+		"database": "database_name",
+		"schema":   "schema_name",
+		"comment":  "great comment",
+		"column": []interface{}{
+			map[string]interface{}{
+				"name": "column1",
+				"type": "OBJECT",
+			},
+			map[string]interface{}{
+				"name":     "column2",
+				"type":     "VARCHAR",
+				"nullable": false,
+			},
+			map[string]interface{}{
+				"name":    "column3",
+				"type":    "INT",
+				"comment": "some comment",
+			},
+		},
 		"primary_key": []interface{}{map[string]interface{}{"name": "MY_KEY", "keys": []interface{}{"column1"}}},
 	}
 	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT, "column2" VARCHAR NOT NULL ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" INT COMMENT 'some comment' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
