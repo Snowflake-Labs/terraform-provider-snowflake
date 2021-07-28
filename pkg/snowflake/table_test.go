@@ -19,22 +19,29 @@ func TestTableCreate(t *testing.T) {
 			name:     "column2",
 			_type:    "VARCHAR",
 			nullable: true,
+			comment:  "only populated when data is available",
 		},
 	}
 
 	s.WithColumns(Columns(cols))
 	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
 
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR)`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available') DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithComment("Test Comment")
-	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR) COMMENT = 'Test Comment'`)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available') COMMENT = 'Test Comment' DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`)
 
 	s.WithClustering([]string{"column1"})
-	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available') COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`)
 
 	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1"}})
-	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT, "column2" VARCHAR ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1)`)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`)
+
+	s.WithDataRetentionTimeInDays(10)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = false`)
+
+	s.WithChangeTracking(true)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true`)
 }
 
 func TestTableChangeComment(t *testing.T) {
@@ -52,7 +59,13 @@ func TestTableRemoveComment(t *testing.T) {
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "VARIANT", true), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT`)
+	r.Equal(s.AddColumn("new_column", "VARIANT", true, ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`)
+}
+
+func TestTableAddColumnWithComment(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.AddColumn("new_column", "VARIANT", true, "some comment"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`)
 }
 
 func TestTableDropColumn(t *testing.T) {
@@ -67,10 +80,28 @@ func TestTableChangeColumnType(t *testing.T) {
 	r.Equal(s.ChangeColumnType("old_column", "BIGINT"), `ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" BIGINT`)
 }
 
+func TestTableChangeColumnComment(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangeColumnComment("old_column", "some comment"), `ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" COMMENT 'some comment'`)
+}
+
 func TestTableChangeClusterBy(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.ChangeClusterBy("column2, column3"), `ALTER TABLE "test_db"."test_schema"."test_table" CLUSTER BY LINEAR(column2, column3)`)
+}
+
+func TestTableChangeDataRetention(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangeDataRetention(5), `ALTER TABLE "test_db"."test_schema"."test_table" SET DATA_RETENTION_TIME_IN_DAYS = 5`)
+}
+
+func TestTableChangeChangeTracking(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangeChangeTracking(true), `ALTER TABLE "test_db"."test_schema"."test_table" SET CHANGE_TRACKING = true`)
 }
 
 func TestTableDropClusterBy(t *testing.T) {

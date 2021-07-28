@@ -76,10 +76,12 @@ resource "snowflake_role" "test" {
   name = "{{.role_name}}"
 }
 resource "snowflake_table" "test" {
-	database = snowflake_database.test.name
-	schema   = snowflake_schema.test.name
-	name     = "{{ .table_name }}"
-	comment  = "Terraform acceptance test"
+	database        = snowflake_database.test.name
+	schema          = snowflake_schema.test.name
+	name            = "{{ .table_name }}"
+	change_tracking = true
+	comment         = "Terraform acceptance test"
+
 	column {
 		name = "column1"
 		type = "VARIANT"

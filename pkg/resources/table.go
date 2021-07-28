@@ -10,6 +10,7 @@ import (
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -65,6 +66,12 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     true,
 					Description: "Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.",
 				},
+				"comment": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Column comment",
+				},
 			},
 		},
 	},
@@ -100,6 +107,19 @@ var tableSchema = map[string]*schema.Schema{
 				},
 			},
 		},
+	},
+	"data_retention_days": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      1,
+		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
+		ValidateFunc: validation.IntBetween(0, 90),
+	},
+	"change_tracking": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
 }
 
@@ -167,11 +187,12 @@ type column struct {
 	name     string
 	dataType string
 	nullable bool
+	comment  string
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
 	sC := snowflake.Column{}
-	return *sC.WithName(c.name).WithType(c.dataType).WithNullable(c.nullable)
+	return *sC.WithName(c.name).WithType(c.dataType).WithNullable(c.nullable).WithComment(c.comment)
 }
 
 type columns []column
@@ -207,18 +228,22 @@ type changedColumn struct {
 	newColumn             column //our new column
 	changedDataType       bool
 	changedNullConstraint bool
+	changedComment        bool
 }
 
 func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range old {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false}
+			changeColumn := changedColumn{cN, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
 			if cO.name == cN.name && cO.nullable != cN.nullable {
 				changeColumn.changedNullConstraint = true
+			}
+			if cO.name == cN.name && cO.comment != cN.comment {
+				changeColumn.changedComment = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -237,6 +262,7 @@ func getColumn(from interface{}) (to column) {
 		name:     c["name"].(string),
 		dataType: c["type"].(string),
 		nullable: c["nullable"].(bool),
+		comment:  c["comment"].(string),
 	}
 }
 
@@ -295,6 +321,14 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("primary_key"); ok {
 		pk := getPrimaryKey(v.([]interface{}))
 		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
+	}
+
+	if v, ok := d.GetOk("data_retention_days"); ok {
+		builder.WithDataRetentionTimeInDays(v.(int))
+	}
+
+	if v, ok := d.GetOk("change_tracking"); ok {
+		builder.WithChangeTracking(v.(bool))
 	}
 
 	stmt := builder.Create()
@@ -361,14 +395,16 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":        table.TableName.String,
-		"owner":       table.Owner.String,
-		"database":    tableID.DatabaseName,
-		"schema":      tableID.SchemaName,
-		"comment":     table.Comment.String,
-		"column":      snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by":  snowflake.ClusterStatementToList(table.ClusterBy.String),
-		"primary_key": snowflake.FlattenTablePrimaryKey(pkDescription),
+		"name":                table.TableName.String,
+		"owner":               table.Owner.String,
+		"database":            tableID.DatabaseName,
+		"schema":              tableID.SchemaName,
+		"comment":             table.Comment.String,
+		"column":              snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by":          snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		"data_retention_days": table.RetentionTime.Int32,
+		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}
 
 	for key, val := range toSet {
@@ -430,7 +466,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range added {
-			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable)
+			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA.comment)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding column on %v", d.Id())
@@ -450,6 +486,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			if cA.changedNullConstraint {
 
 				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+				}
+			}
+			if cA.changedComment {
+				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.comment)
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
@@ -481,6 +525,24 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return errors.Wrapf(err, "error changing property on %v", d.Id())
 			}
+		}
+	}
+	if d.HasChange("data_retention_days") {
+		_, ndr := d.GetChange("data_retention_days")
+
+		q := builder.ChangeDataRetention(ndr.(int))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error changing property on %v", d.Id())
+		}
+	}
+	if d.HasChange("change_tracking") {
+		_, nct := d.GetChange("change_tracking")
+
+		q := builder.ChangeChangeTracking(nct.(bool))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
 	}
 

@@ -45,10 +45,12 @@ resource "snowflake_schema" "test_schema" {
 }
 
 resource "snowflake_table" "test_stream_on_table" {
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
-	name     = "STREAM_ON_TABLE"
-	comment  = "Terraform acceptance test"
+	database        = snowflake_database.test_database.name
+	schema          = snowflake_schema.test_schema.name
+	name            = "STREAM_ON_TABLE"
+	comment         = "Terraform acceptance test"
+	change_tracking = true
+
 	column {
 		name = "column1"
 		type = "VARIANT"
