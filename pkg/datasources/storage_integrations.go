@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -55,6 +56,8 @@ func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
+
 	currentStorageIntegrations, err := snowflake.ListStorageIntegrations(db)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
@@ -80,6 +83,5 @@ func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
 		storageIntegrations = append(storageIntegrations, storageIntegrationMap)
 	}
 
-	d.SetId(account.Account)
 	return d.Set("storage_integrations", storageIntegrations)
 }

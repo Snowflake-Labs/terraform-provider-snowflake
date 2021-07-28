@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -55,6 +56,8 @@ func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
+
 	currentResourceMonitors, err := snowflake.ListResourceMonitors(db)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
@@ -80,6 +83,5 @@ func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
 		resourceMonitors = append(resourceMonitors, resourceMonitorMap)
 	}
 
-	d.SetId(account.Account)
 	return d.Set("resource_monitors", resourceMonitors)
 }

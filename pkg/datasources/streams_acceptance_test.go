@@ -44,10 +44,11 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 	}
 
 	resource snowflake_table "test_stream_on_table" {
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
-		name     = "%v"
-		comment  = "Terraform acceptance test"
+		database 	    = snowflake_database.test_database.name
+		schema   	    = snowflake_schema.test_schema.name
+		change_tracking = true
+		name     	    = "%v"
+		comment  	    = "Terraform acceptance test"
 		column {
 			name = "column1"
 			type = "VARIANT"

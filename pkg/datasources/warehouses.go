@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -65,6 +66,8 @@ func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
+
 	currentWarehouses, err := snowflake.ListWarehouses(db)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
@@ -92,6 +95,5 @@ func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
 		warehouses = append(warehouses, warehouseMap)
 	}
 
-	d.SetId(account.Account)
 	return d.Set("warehouses", warehouses)
 }
