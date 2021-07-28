@@ -141,6 +141,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_pipe_grant":              resources.PipeGrant(),
 		"snowflake_procedure_grant":         resources.ProcedureGrant(),
 		"snowflake_resource_monitor_grant":  resources.ResourceMonitorGrant(),
+		"snowflake_row_access_policy_grant": resources.RowAccessPolicyGrant(),
 		"snowflake_schema_grant":            resources.SchemaGrant(),
 		"snowflake_sequence_grant":          resources.SequenceGrant(),
 		"snowflake_stage_grant":             resources.StageGrant(),
@@ -169,6 +170,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_resource_monitor":          resources.ResourceMonitor(),
 		"snowflake_role":                      resources.Role(),
 		"snowflake_role_grants":               resources.RoleGrants(),
+		"snowflake_row_access_policy":         resources.RowAccessPolicy(),
 		"snowflake_schema":                    resources.Schema(),
 		"snowflake_scim_integration":          resources.SCIMIntegration(),
 		"snowflake_sequence":                  resources.Sequence(),
@@ -203,6 +205,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_tables":                             datasources.Tables(),
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
 	}
 
 	return dataSources
