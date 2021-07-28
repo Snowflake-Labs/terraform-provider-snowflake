@@ -13,13 +13,21 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_table table {
-  database   = "database"
-  schema     = "schmea"
-  name       = "table"
-  comment    = "A table."
-  cluster_by = ["to_date(DATE)"]
-  
+resource "snowflake_schema" "schema" {
+  database            = "database"
+  name                = "schema"
+  data_retention_days = 1
+}
+
+resource "snowflake_table" "table" {
+  database            = snowflake_schema.schema.database
+  schema              = snowflake_schema.schema.name
+  name                = "table"
+  comment             = "A table."
+  cluster_by          = ["to_date(DATE)"]
+  data_retention_days = snowflake_schema.schema.data_retention_days
+  change_tracking     = false
+
   column {
     name     = "id"
     type     = "int"
@@ -37,10 +45,15 @@ resource snowflake_table table {
     type = "TIMESTAMP_NTZ(9)"
   }
 
+  column {
+    name    = "extra"
+    type    = "VARIANT"
+    comment = "extra data"
+  }
+
   primary_key {
     name = "my_key"
     keys = ["data"]
-
   }
 }
 ```
@@ -57,8 +70,10 @@ resource snowflake_table table {
 
 ### Optional
 
+- **change_tracking** (Boolean) Specifies whether to enable change tracking on the table. Default false.
 - **cluster_by** (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
 - **comment** (String) Specifies a comment for the table.
+- **data_retention_days** (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
 - **id** (String) The ID of this resource.
 - **primary_key** (Block List, Max: 1) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
 
@@ -76,6 +91,7 @@ Required:
 
 Optional:
 
+- **comment** (String) Column comment
 - **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
 
