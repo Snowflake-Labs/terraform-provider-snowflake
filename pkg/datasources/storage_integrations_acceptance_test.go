@@ -20,8 +20,6 @@ func TestAccStorageIntegrations(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.0.name"),
 				),
-				//Workaround for https://github.com/hashicorp/terraform/issues/17034
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
