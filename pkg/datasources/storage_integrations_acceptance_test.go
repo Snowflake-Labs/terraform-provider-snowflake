@@ -15,12 +15,13 @@ func TestAccStorageIntegrations(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				PreventPostDestroyRefresh: true,
-				Config:                    storageIntegrations(storageIntegrationName),
+				Config: storageIntegrations(storageIntegrationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.s", "storage_integrations.0.name"),
 				),
+				//Workaround for https://github.com/hashicorp/terraform/issues/17034
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

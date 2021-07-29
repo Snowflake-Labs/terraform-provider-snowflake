@@ -15,12 +15,13 @@ func TestAccResourceMonitors(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				PreventPostDestroyRefresh: true,
-				Config:                    resourceMonitors(resourceMonitorName),
+				Config: resourceMonitors(resourceMonitorName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.0.name"),
 				),
+				//Workaround for https://github.com/hashicorp/terraform/issues/17034
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

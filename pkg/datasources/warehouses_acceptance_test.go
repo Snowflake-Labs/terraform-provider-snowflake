@@ -15,12 +15,13 @@ func TestAccWarehouses(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				PreventPostDestroyRefresh: true,
-				Config:                    warehouses(warehouseName),
+				Config: warehouses(warehouseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_warehouses.s", "warehouses.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_warehouses.s", "warehouses.0.name"),
 				),
+				//Workaround for https://github.com/hashicorp/terraform/issues/17034
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
