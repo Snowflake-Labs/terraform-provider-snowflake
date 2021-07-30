@@ -58,6 +58,7 @@ func generateAccessTokenConfig(name string) string {
 
 	data snowflake_system_generate_scim_access_token p {
 		integration_name = snowflake_scim_integration.azured.name
+		depends_on = [snowflake_scim_integration.azured]
 	}
 	`, name)
 }

@@ -41,6 +41,7 @@ func schemas(databaseName string, schemaName string) string {
 
 	data snowflake_schemas "s" {
 		database = snowflake_schema.s.database
+		depends_on = [snowflake_schema.s]
 	}
 	`, databaseName, schemaName)
 }
