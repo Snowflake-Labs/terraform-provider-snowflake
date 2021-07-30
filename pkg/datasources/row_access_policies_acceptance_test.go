@@ -57,6 +57,7 @@ func rowAccessPolicies(databaseName string, schemaName string, rowAccessPolicyNa
 	data snowflake_row_access_policies "v" {
 		database = snowflake_row_access_policy.test.database
 		schema = snowflake_row_access_policy.test.schema
+		depends_on = [snowflake_row_access_policy.test]
 	}
 	`, databaseName, schemaName, rowAccessPolicyName)
 }
