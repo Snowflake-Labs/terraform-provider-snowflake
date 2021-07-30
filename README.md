@@ -28,6 +28,8 @@ You can also just download a binary from our [releases](https://github.com/chanz
 
 ### For Terraform v0.13+ users
 
+> We are now (7/29/2021) using Terraform 0.13 for testing purposes due to an issue for data sources for versions <0.13. Related PR for this change [here](https://github.com/chanzuckerberg/terraform-provider-snowflake/pull/622#issuecomment-888879621).
+
 You can use [Explicit Provider Source Locations](https://www.terraform.io/upgrade-guides/0-13.html#explicit-provider-source-locations).
 
 The following maybe work well.

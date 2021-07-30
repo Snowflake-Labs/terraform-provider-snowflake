@@ -17,7 +17,7 @@ func TestAccStorageIntegration_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      storageIntegrationConfig(name, []string{}),
-				ExpectError: regexp.MustCompile("1 item minimum, config has 0 declared"),
+				ExpectError: regexp.MustCompile("1 item minimum, but config has only 0 declared"),
 			},
 		},
 	})
