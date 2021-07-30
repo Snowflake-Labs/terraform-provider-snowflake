@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // FileFormatBuilder abstracts the creation of SQL queries for a Snowflake file format
@@ -620,4 +622,21 @@ func ParseFormatOptions(fileOptions string) (*fileFormatOptions, error) {
 	ff := &fileFormatOptions{}
 	err := json.Unmarshal([]byte(fileOptions), ff)
 	return ff, err
+}
+
+func ListFileFormats(databaseName string, schemaName string, db *sql.DB) ([]fileFormatShow, error) {
+	stmt := fmt.Sprintf(`SHOW FILE FORMATS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []fileFormatShow{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no file formats found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

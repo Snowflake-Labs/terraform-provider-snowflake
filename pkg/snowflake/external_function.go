@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // ExternalFunctionBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -264,4 +266,21 @@ func ScanExternalFunctionDescription(rows *sqlx.Rows) ([]externalFunctionDescrip
 		efds = append(efds, efd)
 	}
 	return efds, rows.Err()
+}
+
+func ListExternalFunctions(databaseName string, schemaName string, db *sql.DB) ([]externalFunction, error) {
+	stmt := fmt.Sprintf(`SHOW EXTERNAL FUNCTIONS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []externalFunction{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no external functions found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

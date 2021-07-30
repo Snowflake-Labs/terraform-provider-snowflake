@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // MaskingPolicyBuilder abstracts the creation of SQL queries for a Snowflake Masking Policy
@@ -145,4 +147,21 @@ func ScanMaskingPolicies(row *sqlx.Row) (*MaskingPolicyStruct, error) {
 	m := &MaskingPolicyStruct{}
 	err := row.StructScan(m)
 	return m, err
+}
+
+func ListMaskingPolicies(databaseName string, schemaName string, db *sql.DB) ([]MaskingPolicyStruct, error) {
+	stmt := fmt.Sprintf(`SHOW MASKING POLICIES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []MaskingPolicyStruct{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no masking policies found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 func fixFileFormat(inputFileFormat string) string {
@@ -268,4 +270,21 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	r.FileFormat = strings.Join(ff, " ")
 	r.CopyOptions = strings.Join(co, " ")
 	return r, nil
+}
+
+func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, error) {
+	stmt := fmt.Sprintf(`SHOW STAGES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []stage{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no stages found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

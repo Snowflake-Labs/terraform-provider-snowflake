@@ -1,9 +1,12 @@
 package snowflake
 
 import (
+	"database/sql"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 func Warehouse(name string) *Builder {
@@ -54,4 +57,21 @@ func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
 	w := &warehouse{}
 	err := row.StructScan(w)
 	return w, err
+}
+
+func ListWarehouses(db *sql.DB) ([]warehouse, error) {
+	stmt := "SHOW WAREHOUSES"
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []warehouse{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no warehouses found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // PipeBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -170,4 +172,21 @@ func ScanPipe(row *sqlx.Row) (*pipe, error) {
 	p := &pipe{}
 	e := row.StructScan(p)
 	return p, e
+}
+
+func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]pipe, error) {
+	stmt := fmt.Sprintf(`SHOW PIPES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []pipe{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no pipes found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
