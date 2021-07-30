@@ -51,6 +51,7 @@ func stages(databaseName string, schemaName string, stageName string) string {
 	data snowflake_stages "t" {
 		database = snowflake_stage.t.database
 		schema = snowflake_stage.t.schema
+		depends_on = [snowflake_stage.t]
 	}
 	`, databaseName, schemaName, stageName)
 }

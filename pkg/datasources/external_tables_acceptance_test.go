@@ -73,6 +73,7 @@ func externalTables(databaseName string, schemaName string, stageName string, ex
 	data snowflake_external_tables "t" {
 		database = snowflake_external_table.test_table.database
 		schema = snowflake_external_table.test_table.schema
+		depends_on = [snowflake_external_table.test_table]
 	}
 	`, databaseName, schemaName, stageName, externalTableName)
 }

@@ -73,6 +73,7 @@ func externalFunctions(databaseName string, schemaName string, apiName string, e
 	data snowflake_external_functions "t" {
 		database = snowflake_external_function.test_func.database
 		schema = snowflake_external_function.test_func.schema
+		depends_on = [snowflake_external_function.test_func]
 	}
 	`, databaseName, schemaName, apiName, externalFunctionName)
 }

@@ -55,6 +55,7 @@ func masking_policies(databaseName string, schemaName string, maskingPolicyName 
 	data snowflake_masking_policies "t" {
 		database = snowflake_masking_policy.test.database
 		schema   = snowflake_masking_policy.test.schema
+		depends_on = [snowflake_masking_policy.test]
 	}
 	`, databaseName, schemaName, maskingPolicyName)
 }

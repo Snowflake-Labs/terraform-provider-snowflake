@@ -70,6 +70,7 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 	data snowflake_streams "t" {
 		database = snowflake_stream.test_stream.database
 		schema = snowflake_stream.test_stream.schema
+		depends_on = [snowflake_stream.test_stream]
 	}
 	`, databaseName, schemaName, tableName, streamName)
 }

@@ -62,6 +62,7 @@ func tasks(databaseName string, schemaName string, taskName string) string {
 	data snowflake_tasks "t" {
 		database = snowflake_task.test.database
 		schema = snowflake_task.test.schema
+		depends_on = [snowflake_task.test]
 	}
 	`, databaseName, schemaName, taskName)
 }

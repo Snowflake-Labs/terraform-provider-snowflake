@@ -74,6 +74,7 @@ func fileFormats(databaseName string, schemaName string, fileFormatName string) 
 	data snowflake_file_formats "t" {
 		database = snowflake_file_format.t.database
 		schema = snowflake_file_format.t.schema
+		depends_on = [snowflake_file_format.t]
 	}
 	`, databaseName, schemaName, fileFormatName)
 }

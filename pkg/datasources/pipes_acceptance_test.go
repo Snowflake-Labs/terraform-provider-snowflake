@@ -67,6 +67,7 @@ resource "snowflake_stage" "test" {
 data snowflake_pipes "t" {
 	database = snowflake_pipe.test.database
 	schema = snowflake_pipe.test.schema
+	depends_on = [snowflake_pipe.test]
 }
 
 resource "snowflake_pipe" "test" {
