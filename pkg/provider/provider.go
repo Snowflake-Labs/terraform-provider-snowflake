@@ -203,6 +203,18 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_tables":                             datasources.Tables(),
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_stages":                             datasources.Stages(),
+		"snowflake_file_formats":                       datasources.FileFormats(),
+		"snowflake_sequences":                          datasources.Sequences(),
+		"snowflake_streams":                            datasources.Streams(),
+		"snowflake_tasks":                              datasources.Tasks(),
+		"snowflake_pipes":                              datasources.Pipes(),
+		"snowflake_masking_policies":                   datasources.MaskingPolicies(),
+		"snowflake_external_functions":                 datasources.ExternalFunctions(),
+		"snowflake_external_tables":                    datasources.ExternalTables(),
+		"snowflake_warehouses":                         datasources.Warehouses(),
+		"snowflake_resource_monitors":                  datasources.ResourceMonitors(),
+		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
 	}
 
 	return dataSources
