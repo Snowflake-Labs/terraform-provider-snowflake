@@ -29,6 +29,7 @@ const (
 	maskingPolicyType    grantType = "MASKING POLICY"
 	pipeType             grantType = "PIPE"
 	taskType             grantType = "TASK"
+	rowAccessPolicyType  grantType = "ROW ACCESS POLICY"
 )
 
 type GrantExecutable interface {
@@ -279,6 +280,15 @@ func TaskGrant(db, schema, task string) GrantBuilder {
 		name:          task,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, task),
 		grantType:     taskType,
+	}
+}
+
+// RowAccessPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy
+func RowAccessPolicyGrant(db, schema, rowAccessPolicy string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          rowAccessPolicy,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, rowAccessPolicy),
+		grantType:     rowAccessPolicyType,
 	}
 }
 
