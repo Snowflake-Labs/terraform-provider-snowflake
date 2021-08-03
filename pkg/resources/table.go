@@ -583,11 +583,17 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range added {
-			if cA._default._type() != "constant" {
-				return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
+			var q string
+			if cA._default == nil {
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.comment)
+			} else {
+				if cA._default._type() != "constant" {
+					return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
+				}
+
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), cA.comment)
 			}
 
-			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), cA.comment)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding column on %v", d.Id())
