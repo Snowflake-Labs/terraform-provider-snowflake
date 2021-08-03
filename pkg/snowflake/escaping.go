@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -32,4 +33,20 @@ func UnescapeSnowflakeString(in string) string {
 	out = strings.TrimSuffix(out, `'`)
 	out = strings.Replace(out, `''`, `'`, -1)
 	return out
+}
+
+// AddressEscape wraps a name inside double quotes only if required by Snowflake
+func AddressEscape(in ...string) string {
+	quoteCheck := regexp.MustCompile(`[^A-Z0-9_]`)
+	address := make([]string, len(in))
+
+	for i, n := range in {
+		if quoteCheck.MatchString(n) {
+			address[i] = fmt.Sprintf(`"%s"`, strings.Replace(n, `"`, `\"`, -1))
+		} else {
+			address[i] = n
+		}
+	}
+
+	return strings.Join(address, ".")
 }

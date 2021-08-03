@@ -917,7 +917,7 @@ resource "snowflake_table" "test_table" {
 		name = "column3"
 		type = "NUMBER(38,0)"
 		default {
-			sequence = "${snowflake_sequence.test_seq.database}.${snowflake_sequence.test_seq.schema}.${snowflake_sequence.test_seq.name}"
+			sequence = snowflake_sequence.test_seq.fully_qualified_name
 		}
 	}
 }
@@ -962,7 +962,7 @@ resource "snowflake_table" "test_table" {
 		name = "column3"
 		type = "NUMBER(38,0)"
 		default {
-			sequence = "${snowflake_sequence.test_seq.database}.${snowflake_sequence.test_seq.schema}.${snowflake_sequence.test_seq.name}"
+			sequence = snowflake_sequence.test_seq.fully_qualified_name
 		}
 	}
 }

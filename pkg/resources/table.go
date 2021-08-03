@@ -69,7 +69,7 @@ var tableSchema = map[string]*schema.Schema{
 				"default": {
 					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Defines the column default value",
+					Description: "Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied",
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: &schema.Resource{
