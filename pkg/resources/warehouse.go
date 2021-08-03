@@ -22,8 +22,9 @@ var warehouseProperties = []string{
 
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Identifier for the virtual warehouse; must be unique for your account.",
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -37,7 +38,8 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{
 			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE",
 			"X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE", "XXXLARGE", "X3LARGE",
-			"3X-LARGE", "X4LARGE", "4X-LARGE",
+			"3X-LARGE", "X4LARGE", "4X-LARGE", "X5LARGE", "5X-LARGE", "X6LARGE",
+			"6X-LARGE",
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -45,6 +47,7 @@ var warehouseSchema = map[string]*schema.Schema{
 			}
 			return normalize(old) == normalize(new)
 		},
+		Description: "Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).",
 	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
