@@ -63,6 +63,13 @@ var procedureSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 	},
+	"statement": {
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the javascript code used to create the procedure.",
+		ForceNew:         true,
+		DiffSuppressFunc: DiffSuppressStatement,
+	},
 	"execute_as": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -82,7 +89,6 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      "VOLATILE",
-		Required:     false,
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
 		Description:  "Specifies the behavior of the function when returning results",
@@ -92,13 +98,6 @@ var procedureSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     "user-defined function",
 		Description: "Specifies a comment for the procedure.",
-	},
-	"statement": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      "Specifies the javascript code used to create the procedure.",
-		ForceNew:         true,
-		DiffSuppressFunc: DiffSuppressStatement,
 	},
 }
 
