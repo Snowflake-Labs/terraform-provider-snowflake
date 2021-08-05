@@ -10,6 +10,7 @@ import (
 var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeSelect,
+	privilegeReferences,
 )
 
 var externalTableGrantSchema = map[string]*schema.Schema{
