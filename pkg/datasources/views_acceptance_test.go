@@ -52,6 +52,7 @@ func views(databaseName string, schemaName string, viewName string) string {
 	data snowflake_views "v" {
 		database = snowflake_view.v.database
 		schema = snowflake_view.v.schema
+		depends_on = [snowflake_view.v]
 	}
 	`, databaseName, schemaName, viewName)
 }

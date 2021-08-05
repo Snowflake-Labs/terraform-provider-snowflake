@@ -25,7 +25,7 @@ resource snowflake_warehouse w {
 
 ### Required
 
-- **name** (String)
+- **name** (String) Identifier for the virtual warehouse; must be unique for your account.
 
 ### Optional
 
@@ -42,7 +42,7 @@ resource snowflake_warehouse w {
 - **statement_queued_timeout_in_seconds** (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - **statement_timeout_in_seconds** (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
 - **wait_for_provisioning** (Boolean) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
-- **warehouse_size** (String)
+- **warehouse_size** (String) Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).
 
 ## Import
 

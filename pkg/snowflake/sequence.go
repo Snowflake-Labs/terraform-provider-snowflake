@@ -91,9 +91,9 @@ func ScanSequence(row *sqlx.Row) (*sequence, error) {
 	return d, e
 }
 
-func ListSequences(sdb *sqlx.DB) ([]sequence, error) {
-	stmt := "SHOW SEQUENCES"
-	rows, err := sdb.Queryx(stmt)
+func ListSequences(databaseName string, schemaName string, db *sql.DB) ([]sequence, error) {
+	stmt := fmt.Sprintf(`SHOW SEQUENCES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func ListSequences(sdb *sqlx.DB) ([]sequence, error) {
 	dbs := []sequence{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no sequence found")
+		log.Printf("[DEBUG] no sequences found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

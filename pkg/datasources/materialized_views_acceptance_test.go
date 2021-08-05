@@ -72,6 +72,7 @@ func materializedViews(warehouseName string, databaseName string, schemaName str
 	data snowflake_materialized_views "v" {
 		database = snowflake_materialized_view.v.database
 		schema = snowflake_materialized_view.v.schema
+		depends_on = [snowflake_materialized_view.v]
 	}
 	`, warehouseName, databaseName, schemaName, tableName, viewName)
 }

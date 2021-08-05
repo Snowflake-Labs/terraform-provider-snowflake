@@ -1,12 +1,15 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // TaskBuilder abstracts the creation of sql queries for a snowflake task
@@ -345,4 +348,21 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 
 	}
 	return t, nil
+}
+
+func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, error) {
+	stmt := fmt.Sprintf(`SHOW TASKS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []task{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no tasks found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
