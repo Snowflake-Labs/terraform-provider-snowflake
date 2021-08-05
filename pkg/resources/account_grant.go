@@ -19,6 +19,13 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegeApplyMaskingPolicy,
 	privilegeCreateShare,
 	privilegeImportShare,
+	privilegeApplyRowAccessPolicy,
+	privilegeApplyTag,
+	privilegeAttachPolicy,
+	privilegeCreateDataExchangeListing,
+	privilegeCreateNetworkPolicy,
+	privilegeOverrideShareRestrictions,
+	privilegeCreateAccount,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
