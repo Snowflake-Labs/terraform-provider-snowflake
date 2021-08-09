@@ -3,6 +3,7 @@ package provider
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"encoding/pem"
 	"io"
 	"io/ioutil"
 
@@ -13,6 +14,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 
 	"fmt"
@@ -41,21 +43,21 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "oauth_access_token", "oauth_refresh_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"oauth_access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ACCESS_TOKEN", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_refresh_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_refresh_token"},
 			},
 			"oauth_refresh_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_REFRESH_TOKEN", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_access_token"},
 				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_endpoint", "oauth_redirect_url"},
 			},
 			"oauth_client_id": {
@@ -63,7 +65,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_CLIENT_ID", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_access_token"},
 				RequiredWith:  []string{"oauth_refresh_token", "oauth_client_secret", "oauth_endpoint", "oauth_redirect_url"},
 			},
 			"oauth_client_secret": {
@@ -71,7 +73,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_CLIENT_SECRET", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_access_token"},
 				RequiredWith:  []string{"oauth_client_id", "oauth_refresh_token", "oauth_endpoint", "oauth_redirect_url"},
 			},
 			"oauth_endpoint": {
@@ -79,7 +81,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_ENDPOINT", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_access_token"},
 				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_refresh_token", "oauth_redirect_url"},
 			},
 			"oauth_redirect_url": {
@@ -87,7 +89,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_OAUTH_REDIRECT_URL", nil),
 				Sensitive:     true,
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "password", "oauth_access_token"},
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "password", "oauth_access_token"},
 				RequiredWith:  []string{"oauth_client_id", "oauth_client_secret", "oauth_endpoint", "oauth_refresh_token"},
 			},
 			"browser_auth": {
@@ -95,7 +97,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
-				ConflictsWith: []string{"password", "private_key_path", "private_key", "oauth_access_token", "oauth_refresh_token"},
+				ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,
@@ -104,12 +106,20 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key"},
 			},
-			"private_key": &schema.Schema{
+			"private_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path", "oauth_refresh_token"},
+			},
+			"private_key_passphrase": {
+				Type:          schema.TypeString,
+				Description:   "Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc",
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"role": {
 				Type:        schema.TypeString,
@@ -230,6 +240,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	browserAuth := s.Get("browser_auth").(bool)
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
+	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
 	oauthAccessToken := s.Get("oauth_access_token").(string)
 	region := s.Get("region").(string)
 	role := s.Get("role").(string)
@@ -254,6 +265,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		browserAuth,
 		privateKeyPath,
 		privateKey,
+		privateKeyPassphrase,
 		oauthAccessToken,
 		region,
 		role,
@@ -277,6 +289,7 @@ func DSN(
 	browserAuth bool,
 	privateKeyPath,
 	privateKey,
+	privateKeyPassphrase,
 	oauthAccessToken,
 	region,
 	role string) (string, error) {
@@ -299,14 +312,14 @@ func DSN(
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key file could not be read")
 		}
-		rsaPrivateKey, err := ParsePrivateKey(privateKeyBytes)
+		rsaPrivateKey, err := ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
 		config.PrivateKey = rsaPrivateKey
 		config.Authenticator = gosnowflake.AuthTypeJwt
 	} else if privateKey != "" {
-		rsaPrivateKey, err := ParsePrivateKey([]byte(privateKey))
+		rsaPrivateKey, err := ParsePrivateKey([]byte(privateKey), []byte(privateKeyPassphrase))
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
@@ -344,7 +357,26 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 	return privateKeyBytes, nil
 }
 
-func ParsePrivateKey(privateKeyBytes []byte) (*rsa.PrivateKey, error) {
+func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
+	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
+	if privateKeyBlock == nil {
+		return nil, fmt.Errorf("Could not parse private key, key is not in PEM format")
+	}
+
+	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
+		if len(passhrase) == 0 {
+			return nil, fmt.Errorf("Private key requires a passphrase, but private_key_passphrase was not supplied")
+		}
+		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
+		if err != nil {
+			return nil, errors.Wrap(
+				err,
+				"Could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported",
+			)
+		}
+		return privateKey, nil
+	}
+
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not parse private key")
