@@ -22,6 +22,7 @@ func TestAcc_Sequence(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`%v.%v.%v`, accName, accName, accName)),
 				),
 			},
 			// Set comment and rename
@@ -31,6 +32,7 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accRename),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", "look at me I am a comment"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`%v.%v.%v`, accName, accName, accRename)),
 				),
 			},
 			// Unset comment and set increment
@@ -41,6 +43,7 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "increment", "32"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`%v.%v.%v`, accName, accName, accName)),
 				),
 			},
 		},
