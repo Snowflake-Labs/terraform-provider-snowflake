@@ -46,6 +46,7 @@ resource "snowflake_sequence" "test_sequence" {
 
 ### Read-Only
 
+- **fully_qualified_name** (String) The fully qualified name of the sequence.
 - **next_value** (Number) The next value the sequence will provide.
 
 
