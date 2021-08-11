@@ -19,6 +19,12 @@ resource "snowflake_schema" "schema" {
   data_retention_days = 1
 }
 
+resource "snowflake_sequence" "sequence" {
+  database = snowflake_schema.schema.database
+  schema   = snowflake_schema.schema.name
+  name     = "sequence"
+}
+
 resource "snowflake_table" "table" {
   database            = snowflake_schema.schema.database
   schema              = snowflake_schema.schema.name
@@ -32,6 +38,10 @@ resource "snowflake_table" "table" {
     name     = "id"
     type     = "int"
     nullable = true
+
+    default {
+      sequence = snowflake_sequence.sequence.fully_qualified_name
+    }
   }
 
   column {
@@ -92,7 +102,18 @@ Required:
 Optional:
 
 - **comment** (String) Column comment
+- **default** (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
 - **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
+
+<a id="nestedblock--column--default"></a>
+### Nested Schema for `column.default`
+
+Optional:
+
+- **constant** (String) The default constant value for the column
+- **expression** (String) The default expression value for the column
+- **sequence** (String) The default sequence to use for the column
+
 
 
 <a id="nestedblock--primary_key"></a>
