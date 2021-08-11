@@ -811,3 +811,161 @@ resource "snowflake_table" "test_table" {
 `
 	return fmt.Sprintf(s, name, name, name)
 }
+
+func TestAcc_TableDefaults(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: tableColumnWithDefaults(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.default.0.constant", "hello"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.expression"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.sequence"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "TIMESTAMP_NTZ(9)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.constant"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.default.0.expression", "CURRENT_TIMESTAMP()"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.sequence"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf("%v.%v.%v", accName, accName, accName)),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+			{
+				Config: tableColumnWithoutDefaults(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.default"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "TIMESTAMP_NTZ(9)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf("%v.%v.%v", accName, accName, accName)),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+		},
+	})
+}
+
+func tableColumnWithDefaults(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_sequence" "test_seq" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+}
+
+resource "snowflake_table" "test_table" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+	comment             = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+		default {
+			constant = "hello"
+		}
+	}
+	column {
+		name = "column2"
+		type = "TIMESTAMP_NTZ(9)"
+		default {
+			expression = "CURRENT_TIMESTAMP()"
+		}
+	}
+	column {
+		name = "column3"
+		type = "NUMBER(38,0)"
+		default {
+			sequence = snowflake_sequence.test_seq.fully_qualified_name
+		}
+	}
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
+}
+
+func tableColumnWithoutDefaults(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_sequence" "test_seq" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+}
+
+resource "snowflake_table" "test_table" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+	comment             = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+	}
+	column {
+		name = "column2"
+		type = "TIMESTAMP_NTZ(9)"
+	}
+	column {
+		name = "column3"
+		type = "NUMBER(38,0)"
+		default {
+			sequence = snowflake_sequence.test_seq.fully_qualified_name
+		}
+	}
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
+}

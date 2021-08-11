@@ -30,12 +30,75 @@ func (pk *PrimaryKey) WithKeys(keys []string) *PrimaryKey {
 	return pk
 }
 
+type ColumnDefaultType int
+
+const (
+	columnDefaultTypeConstant = iota
+	columnDefaultTypeSequence
+	columnDefaultTypeExpression
+)
+
+type ColumnDefault struct {
+	_type      ColumnDefaultType
+	expression string
+}
+
+func NewColumnDefaultWithConstant(constant string) *ColumnDefault {
+	return &ColumnDefault{
+		_type:      columnDefaultTypeConstant,
+		expression: constant,
+	}
+}
+
+func NewColumnDefaultWithExpression(expression string) *ColumnDefault {
+	return &ColumnDefault{
+		_type:      columnDefaultTypeExpression,
+		expression: expression,
+	}
+}
+
+func NewColumnDefaultWithSequence(sequence string) *ColumnDefault {
+	return &ColumnDefault{
+		_type:      columnDefaultTypeSequence,
+		expression: sequence,
+	}
+}
+
+func (d *ColumnDefault) String(columnType string) string {
+	columnType = strings.ToUpper(columnType)
+
+	switch {
+	case d._type == columnDefaultTypeExpression:
+		return d.expression
+
+	case d._type == columnDefaultTypeSequence:
+		return fmt.Sprintf(`%v.NEXTVAL`, d.expression)
+
+	case d._type == columnDefaultTypeConstant && (strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT"):
+		return EscapeSnowflakeString(d.expression)
+
+	default:
+		return d.expression
+	}
+}
+
+func (d *ColumnDefault) UnescapeConstantSnowflakeString(columnType string) string {
+	columnType = strings.ToUpper(columnType)
+
+	if d._type == columnDefaultTypeConstant && (strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT") {
+		return UnescapeSnowflakeString(d.expression)
+	}
+
+	return d.expression
+}
+
 // Column structure that represents a table column
 type Column struct {
 	name     string
 	_type    string // type is reserved
 	nullable bool
-	comment  string // pointer as value is nullable
+	_default *ColumnDefault // default is reserved
+	comment  string         // pointer as value is nullable
 }
 
 // WithName set the column name
@@ -53,6 +116,11 @@ func (c *Column) WithType(t string) *Column {
 // WithNullable set if the column is nullable
 func (c *Column) WithNullable(nullable bool) *Column {
 	c.nullable = nullable
+	return c
+}
+
+func (c *Column) WithDefault(cd *ColumnDefault) *Column {
+	c._default = cd
 	return c
 }
 
@@ -74,6 +142,10 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 		if !c.nullable {
 			colDef.WriteString(` NOT NULL`)
 		}
+	}
+
+	if c._default != nil {
+		colDef.WriteString(fmt.Sprintf(` DEFAULT %v`, c._default.String(c._type)))
 	}
 
 	if withComment {
@@ -133,10 +205,12 @@ func NewColumns(tds []tableDescription) Columns {
 		if td.Kind.String != "COLUMN" {
 			continue
 		}
+
 		cs = append(cs, Column{
 			name:     td.Name.String,
 			_type:    td.Type.String,
 			nullable: td.IsNullable(),
+			_default: td.ColumnDefault(),
 			comment:  td.Comment.String,
 		})
 	}
@@ -151,6 +225,20 @@ func (c Columns) Flatten() []interface{} {
 		flat["type"] = col._type
 		flat["nullable"] = col.nullable
 		flat["comment"] = col.comment
+
+		if col._default != nil {
+			def := map[string]interface{}{}
+			switch col._default._type {
+			case columnDefaultTypeConstant:
+				def["constant"] = col._default.UnescapeConstantSnowflakeString(col._type)
+			case columnDefaultTypeExpression:
+				def["expression"] = col._default.expression
+			case columnDefaultTypeSequence:
+				def["sequence"] = col._default.expression
+			}
+
+			flat["default"] = []interface{}{def}
+		}
 
 		flattened = append(flattened, flat)
 	}
@@ -378,11 +466,12 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 }
 
 // AddColumn returns the SQL query that will add a new column to the table.
-func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, comment string) string {
+func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, comment string) string {
 	col := Column{
 		name:     name,
 		_type:    dataType,
 		nullable: nullable,
+		_default: _default,
 		comment:  comment,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
@@ -405,6 +494,10 @@ func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 
 func (tb *TableBuilder) ChangeColumnComment(name string, comment string) string {
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" COMMENT '%v'`, tb.QualifiedName(), EscapeString(name), EscapeString(comment))
+}
+
+func (tb *TableBuilder) DropColumnDefault(name string) string {
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" DROP DEFAULT`, tb.QualifiedName(), EscapeString(name))
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the table.
@@ -484,6 +577,7 @@ type tableDescription struct {
 	Type     sql.NullString `db:"type"`
 	Kind     sql.NullString `db:"kind"`
 	Nullable sql.NullString `db:"null?"`
+	Default  sql.NullString `db:"default"`
 	Comment  sql.NullString `db:"comment"`
 }
 
@@ -493,6 +587,26 @@ func (td *tableDescription) IsNullable() bool {
 	} else {
 		return false
 	}
+}
+
+func (td *tableDescription) ColumnDefault() *ColumnDefault {
+	if !td.Default.Valid {
+		return nil
+	}
+
+	if strings.HasSuffix(td.Default.String, ".NEXTVAL") {
+		return NewColumnDefaultWithSequence(strings.TrimSuffix(td.Default.String, ".NEXTVAL"))
+	}
+
+	if strings.Contains(td.Default.String, "(") && strings.Contains(td.Default.String, ")") {
+		return NewColumnDefaultWithExpression(td.Default.String)
+	}
+
+	if strings.Contains(td.Type.String, "CHAR") || td.Type.String == "STRING" || td.Type.String == "TEXT" {
+		return NewColumnDefaultWithConstant(UnescapeSnowflakeString(td.Default.String))
+	}
+
+	return NewColumnDefaultWithConstant(td.Default.String)
 }
 
 type primaryKeyDescription struct {
