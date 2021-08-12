@@ -9,6 +9,7 @@ import (
 
 var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
+	privilegeReferences,
 	privilegeSelect,
 )
 

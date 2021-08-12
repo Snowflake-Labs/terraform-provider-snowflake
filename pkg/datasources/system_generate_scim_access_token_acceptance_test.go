@@ -2,6 +2,7 @@ package datasources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
+		t.Skip("Skipping TestAccScimIntegration")
+	}
+
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
