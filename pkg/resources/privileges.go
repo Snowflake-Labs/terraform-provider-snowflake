@@ -13,7 +13,7 @@ const (
 	privilegeDelete                    Privilege = "DELETE"
 	privilegeTruncate                  Privilege = "TRUNCATE"
 	privilegeReferences                Privilege = "REFERENCES"
-  privilegeRebuild                   Privilege = "REBUILD"
+	privilegeRebuild                   Privilege = "REBUILD"
 	privilegeCreateSchema              Privilege = "CREATE SCHEMA"
 	privilegeImportedPrivileges        Privilege = "IMPORTED PRIVILEGES"
 	privilegeModify                    Privilege = "MODIFY"
