@@ -66,6 +66,35 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     true,
 					Description: "Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.",
 				},
+				"default": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied",
+					MinItems:    1,
+					MaxItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"constant": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The default constant value for the column",
+								// ConflictsWith: []string{".expression", ".sequence"}, - can't use, nor ExactlyOneOf due to column type being TypeList
+							},
+							"expression": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The default expression value for the column",
+								// ConflictsWith: []string{".constant", ".sequence"}, - can't use, nor ExactlyOneOf due to column type being TypeList
+							},
+							"sequence": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The default sequence to use for the column",
+								// ConflictsWith: []string{".constant", ".expression"}, - can't use, nor ExactlyOneOf due to column type being TypeList
+							},
+						},
+					},
+				},
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -183,16 +212,63 @@ func tableIDFromString(stringID string) (*tableID, error) {
 	return tableResult, nil
 }
 
+type columnDefault struct {
+	constant   *string
+	expression *string
+	sequence   *string
+}
+
+func (cd *columnDefault) toSnowflakeColumnDefault() *snowflake.ColumnDefault {
+	if cd.constant != nil {
+		return snowflake.NewColumnDefaultWithConstant(*cd.constant)
+	}
+
+	if cd.expression != nil {
+		return snowflake.NewColumnDefaultWithExpression(*cd.expression)
+	}
+
+	if cd.sequence != nil {
+		return snowflake.NewColumnDefaultWithSequence(*cd.sequence)
+	}
+
+	return nil
+}
+
+func (cd *columnDefault) _type() string {
+	if cd.constant != nil {
+		return "constant"
+	}
+
+	if cd.expression != nil {
+		return "expression"
+	}
+
+	if cd.sequence != nil {
+		return "sequence"
+	}
+
+	return "unknown"
+}
+
 type column struct {
 	name     string
 	dataType string
 	nullable bool
+	_default *columnDefault
 	comment  string
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
-	sC := snowflake.Column{}
-	return *sC.WithName(c.name).WithType(c.dataType).WithNullable(c.nullable).WithComment(c.comment)
+	sC := &snowflake.Column{}
+
+	if c._default != nil {
+		sC = sC.WithDefault(c._default.toSnowflakeColumnDefault())
+	}
+
+	return *sC.WithName(c.name).
+		WithType(c.dataType).
+		WithNullable(c.nullable).
+		WithComment(c.comment)
 }
 
 type columns []column
@@ -228,6 +304,7 @@ type changedColumn struct {
 	newColumn             column //our new column
 	changedDataType       bool
 	changedNullConstraint bool
+	dropedDefault         bool
 	changedComment        bool
 }
 
@@ -235,13 +312,17 @@ func (old columns) getChangedColumnProperties(new columns) (changed changedColum
 	changed = changedColumns{}
 	for _, cO := range old {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
 			if cO.name == cN.name && cO.nullable != cN.nullable {
 				changeColumn.changedNullConstraint = true
 			}
+			if cO.name == cN.name && cO._default != nil && cN._default == nil {
+				changeColumn.dropedDefault = true
+			}
+
 			if cO.name == cN.name && cO.comment != cN.comment {
 				changeColumn.changedComment = true
 			}
@@ -256,12 +337,48 @@ func (old columns) diffs(new columns) (removed columns, added columns, changed c
 	return old.getNewIn(new), new.getNewIn(old), old.getChangedColumnProperties(new)
 }
 
+func getColumnDefault(def map[string]interface{}) *columnDefault {
+	if c, ok := def["constant"]; ok {
+		if constant, ok := c.(string); ok && len(constant) > 0 {
+			return &columnDefault{
+				constant: &constant,
+			}
+		}
+	}
+
+	if e, ok := def["expression"]; ok {
+		if expr, ok := e.(string); ok && len(expr) > 0 {
+			return &columnDefault{
+				expression: &expr,
+			}
+		}
+	}
+
+	if s, ok := def["sequence"]; ok {
+		if seq := s.(string); ok && len(seq) > 0 {
+			return &columnDefault{
+				sequence: &seq,
+			}
+		}
+	}
+
+	return nil
+}
+
 func getColumn(from interface{}) (to column) {
 	c := from.(map[string]interface{})
+	var cd *columnDefault
+
+	_default := c["default"].([]interface{})
+	if len(_default) == 1 {
+		cd = getColumnDefault(_default[0].(map[string]interface{}))
+	}
+
 	return column{
 		name:     c["name"].(string),
 		dataType: c["type"].(string),
 		nullable: c["nullable"].(bool),
+		_default: cd,
 		comment:  c["comment"].(string),
 	}
 }
@@ -466,7 +583,17 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range added {
-			q := builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA.comment)
+			var q string
+			if cA._default == nil {
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.comment)
+			} else {
+				if cA._default._type() != "constant" {
+					return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
+				}
+
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), cA.comment)
+			}
+
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding column on %v", d.Id())
@@ -486,6 +613,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			if cA.changedNullConstraint {
 
 				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+				}
+			}
+			if cA.dropedDefault {
+				q := builder.DropColumnDefault(cA.newColumn.name)
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())

@@ -44,6 +44,11 @@ var sequenceSchema = map[string]*schema.Schema{
 		Description: "The next value the sequence will provide.",
 		Computed:    true,
 	},
+	"fully_qualified_name": {
+		Type:        schema.TypeString,
+		Description: "The fully qualified name of the sequence.",
+		Computed:    true,
+	},
 }
 
 var sequenceProperties = []string{"comment", "data_retention_time_in_days"}
@@ -95,7 +100,8 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.Sequence(name, database, schema).Show()
+	seq := snowflake.Sequence(name, database, schema)
+	stmt := seq.Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	sequence, err := snowflake.ScanSequence(row)
@@ -141,6 +147,11 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("next_value", i)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("fully_qualified_name", seq.Address())
 	if err != nil {
 		return err
 	}
