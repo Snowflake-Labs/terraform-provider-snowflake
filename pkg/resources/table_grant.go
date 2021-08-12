@@ -14,6 +14,7 @@ var validTablePrivileges = NewPrivilegeSet(
 	privilegeDelete,
 	privilegeTruncate,
 	privilegeReferences,
+	privilegeRebuild,
 	privilegeOwnership,
 )
 
