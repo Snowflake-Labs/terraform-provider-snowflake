@@ -99,6 +99,7 @@ func TestSequenceRead(t *testing.T) {
 		r.Equal(25, d.Get("increment").(int))
 		r.Equal(5, d.Get("next_value").(int))
 		r.Equal("database|schema|good_name", d.Id())
+		r.Equal(`"database"."schema"."good_name"`, d.Get("fully_qualified_name").(string))
 	})
 }
 

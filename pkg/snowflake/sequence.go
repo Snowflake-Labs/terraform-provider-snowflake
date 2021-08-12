@@ -85,6 +85,10 @@ func (sb *SequenceBuilder) QualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"."%v"`, sb.db, sb.schema, sb.name)
 }
 
+func (sb *SequenceBuilder) Address() string {
+	return AddressEscape(sb.db, sb.schema, sb.name)
+}
+
 func ScanSequence(row *sqlx.Row) (*sequence, error) {
 	d := &sequence{}
 	e := row.StructScan(d)
