@@ -13,10 +13,21 @@ description: |-
 ## Example Usage
 
 ```terraform
+resource "snowflake_schema" "db" {
+  name                = "MYDB"
+  data_retention_days = 1
+}
+
+resource "snowflake_schema" "schema" {
+  database            = snowflake_database.db.name
+  name                = "MYSCHEMA"
+  data_retention_days = 1
+}
+
 resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
-  database = "DEMO_DB"
-  schema   = "PUBLIC"
+  database = snowflake_database.db.name
+  schema   = snowflake_schema.schema.name
   arguments {
     name = "arg1"
     type = "varchar"
@@ -65,4 +76,11 @@ Required:
 - **name** (String) The argument name
 - **type** (String) The argument type
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | stored procedure name | <list of arg types, separated with '-'>
+terraform import snowflake_procedure.example 'dbName|schemaName|procedureName|varchar-varchar-varchar'
+```
