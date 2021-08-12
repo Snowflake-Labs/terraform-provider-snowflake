@@ -167,6 +167,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_network_policy_attachment": resources.NetworkPolicyAttachment(),
 		"snowflake_network_policy":            resources.NetworkPolicy(),
 		"snowflake_pipe":                      resources.Pipe(),
+		"snowflake_procedure":                 resources.Procedure(),
 		"snowflake_resource_monitor":          resources.ResourceMonitor(),
 		"snowflake_role":                      resources.Role(),
 		"snowflake_role_grants":               resources.RoleGrants(),
