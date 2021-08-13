@@ -9,7 +9,6 @@ import (
 
 var validViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
-	privilegeReferences,
 	privilegeOwnership,
 )
 
