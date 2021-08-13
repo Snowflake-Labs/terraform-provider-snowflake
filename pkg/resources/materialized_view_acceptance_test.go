@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,6 +11,9 @@ import (
 )
 
 func TestAcc_MaterializedView(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_MATERIALIZED_VIEW_TESTS"); ok {
+		t.Skip("Skipping TestAcc_MaterializedView")
+	}
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -35,6 +39,9 @@ func TestAcc_MaterializedView(t *testing.T) {
 }
 
 func TestAcc_MaterializedView2(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_MATERIALIZED_VIEW_TESTS"); ok {
+		t.Skip("Skipping TestAcc_MaterializedView2")
+	}
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
