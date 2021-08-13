@@ -6,6 +6,7 @@ export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.13.0
 export SKIP_EXTERNAL_TABLE_TESTS=true
+export SKIP_SCIM_INTEGRATION_TESTS=true
 
 go_test ?= -
 ifeq (, $(shell which gotest))
