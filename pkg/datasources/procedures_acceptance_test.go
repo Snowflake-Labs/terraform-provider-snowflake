@@ -64,23 +64,10 @@ resource "snowflake_procedure" "test_proc" {
 	statement = "var X=3\nreturn X"
 }
 
-resource "snowflake_role" "test" {
-	name = snowflake_procedure.test_proc_simple.name
-  }
-  
-resource "snowflake_procedure_grant" "test" {
-	  database_name = snowflake_database.test_database.name
-	  roles         = [snowflake_role.test.name]
-	  schema_name   = snowflake_schema.test_schema.name
-	  procedure_name = snowflake_procedure.test_proc_simple.name
-	  return_type =  snowflake_procedure.test_proc_simple.return_type
-	  privilege = "USAGE"
-  }
-
 data snowflake_procedures "t" {
 	database = snowflake_database.test_database.name
 	schema = snowflake_schema.test_schema.name
-	depends_on = [snowflake_procedure.test_proc_simple, snowflake_procedure.test_proc, snowflake_procedure_grant.test]
+	depends_on = [snowflake_procedure.test_proc_simple, snowflake_procedure.test_proc]
 }
 `
 	return fmt.Sprintf(s, databaseName, schemaName, procedureName, procedureWithArgumentsName)
