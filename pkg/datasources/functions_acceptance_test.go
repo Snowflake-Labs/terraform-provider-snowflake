@@ -33,13 +33,13 @@ func TestAccFunctions(t *testing.T) {
 func functions(databaseName string, schemaName string, functionName string, functionWithArgumentsName string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-  name 	  = "%v"
-  comment = "Terraform acceptance test"
+	name 	  = "%v"
+	comment = "Terraform acceptance test"
 }
 resource "snowflake_schema" "test_schema" {
-  name 	   = "%v"
-  database = snowflake_database.test_database.name
-  comment  = "Terraform acceptance test"
+	name 	   = "%v"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
 }
 resource "snowflake_function" "test_funct_simple" {
 	name = "%s"
