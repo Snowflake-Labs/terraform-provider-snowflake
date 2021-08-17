@@ -56,7 +56,7 @@ resource snowflake_function_grant grant {
 
 ### Optional
 
-- **arguments** (Block List) List of the arguments for the function (must be present if function_name is present) (see [below for nested schema](#nestedblock--arguments))
+- **arguments** (Block List) List of the arguments for the function (must be present if function has arguments and function_name is present) (see [below for nested schema](#nestedblock--arguments))
 - **function_name** (String) The name of the function on which to grant privileges immediately (only valid if on_future is false).
 - **id** (String) The ID of this resource.
 - **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name, arguments, return_type, and shares fields must be unset in order to use on_future.
