@@ -56,7 +56,7 @@ resource snowflake_procedure_grant grant {
 
 ### Optional
 
-- **arguments** (Block List) List of the arguments for the procedure (must be present if procedure_name is present) (see [below for nested schema](#nestedblock--arguments))
+- **arguments** (Block List) List of the arguments for the procedure (must be present if procedure has arguments and procedure_name is present) (see [below for nested schema](#nestedblock--arguments))
 - **id** (String) The ID of this resource.
 - **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future.
 - **privilege** (String) The privilege to grant on the current or future procedure.

@@ -412,17 +412,19 @@ func parseCallableObjectName(objectName string) (map[string]interface{}, error) 
 
 	argumentsSignatures := strings.Split(matches[2], ", ")
 
-	arguments := make([]interface{}, len(argumentsSignatures))
-	argumentTypes := make([]string, len(argumentsSignatures))
-	argumentNames := make([]string, len(argumentsSignatures))
+	arguments := []interface{}{}
+	argumentTypes := []string{}
+	argumentNames := []string{}
 
 	for i, argumentSignature := range argumentsSignatures {
-		signatureComponents := strings.Split(argumentSignature, " ")
-		argumentNames[i] = signatureComponents[0]
-		argumentTypes[i] = signatureComponents[1]
-		arguments[i] = map[string]interface{}{
-			"name": argumentNames[i],
-			"type": argumentTypes[i],
+		if argumentSignature != "" {
+			signatureComponents := strings.Split(argumentSignature, " ")
+			argumentNames = append(argumentNames, signatureComponents[0])
+			argumentTypes = append(argumentTypes, signatureComponents[1])
+			arguments = append(arguments, map[string]interface{}{
+				"name": argumentNames[i],
+				"type": argumentTypes[i],
+			})
 		}
 	}
 
