@@ -161,6 +161,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_database":                  resources.Database(),
 		"snowflake_external_function":         resources.ExternalFunction(),
 		"snowflake_file_format":               resources.FileFormat(),
+		"snowflake_function":                  resources.Function(),
 		"snowflake_managed_account":           resources.ManagedAccount(),
 		"snowflake_masking_policy":            resources.MaskingPolicy(),
 		"snowflake_materialized_view":         resources.MaterializedView(),
@@ -219,6 +220,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_resource_monitors":                  datasources.ResourceMonitors(),
 		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
 		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
+		"snowflake_functions":                          datasources.Functions(),
 		"snowflake_procedures":                         datasources.Procedures(),
 	}
 
