@@ -2,11 +2,8 @@ package datasources
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -108,21 +105,4 @@ func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
 	return d.Set("functions", functions)
-}
-
-func parseArguments(arguments string) (map[string]interface{}, error) {
-	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\) RETURN (?P<return_type>.*)`)
-	matches := r.FindStringSubmatch(arguments)
-	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf(`Could not parse arguments: %v`, arguments))
-	}
-	callableSignatureMap := make(map[string]interface{})
-
-	argumentTypes := strings.Split(matches[2], ", ")
-
-	callableSignatureMap["callableName"] = matches[1]
-	callableSignatureMap["argumentTypes"] = argumentTypes
-	callableSignatureMap["returnType"] = matches[3]
-
-	return callableSignatureMap, nil
 }
