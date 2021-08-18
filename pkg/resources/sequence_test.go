@@ -67,7 +67,7 @@ func TestSequenceRead(t *testing.T) {
 		"database": "database",
 	}
 
-	d := sequence(t, "good_name", in)
+	d := sequence(t, "database|schema|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		rows := sqlmock.NewRows([]string{
@@ -111,7 +111,7 @@ func TestSequenceDelete(t *testing.T) {
 		"database": "database",
 	}
 
-	d := sequence(t, "drop_it", in)
+	d := sequence(t, "database|schema|drop_it", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SEQUENCE "database"."schema"."drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
