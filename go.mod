@@ -37,6 +37,7 @@ require (
 	github.com/posener/complete v1.2.1 // indirect
 	github.com/snowflakedb/gosnowflake v1.6.0
 	github.com/stretchr/testify v1.7.0
+	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	github.com/zclconf/go-cty v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/tools v0.1.5
