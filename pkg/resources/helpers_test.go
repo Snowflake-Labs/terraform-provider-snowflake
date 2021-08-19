@@ -374,3 +374,11 @@ func rowAccessPolicyGrant(t *testing.T, id string, params map[string]interface{}
 	d.SetId(id)
 	return d
 }
+
+func function(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Function().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}

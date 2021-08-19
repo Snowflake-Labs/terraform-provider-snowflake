@@ -38,7 +38,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 			},
 		},
 		Optional:    true,
-		Description: "List of the arguments for the procedure (must be present if procedure_name is present)",
+		Description: "List of the arguments for the procedure (must be present if procedure has arguments and procedure_name is present)",
 		ForceNew:    true,
 	},
 	"return_type": {
@@ -125,11 +125,6 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	)
 	if name, ok := d.GetOk("procedure_name"); ok {
 		procedureName = name.(string)
-		if args, ok := d.GetOk("arguments"); ok {
-			arguments = args.([]interface{})
-		} else {
-			return errors.New("arguments must be set when specifying procedure_name.")
-		}
 		if ret, ok := d.GetOk("return_type"); ok {
 			returnType = strings.ToUpper(ret.(string))
 		} else {
@@ -141,6 +136,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureProcedures := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	arguments = d.Get("arguments").([]interface{})
 
 	if (procedureName == "") && !futureProcedures {
 		return errors.New("procedure_name must be set unless on_future is true.")
