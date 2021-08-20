@@ -49,4 +49,11 @@ resource "snowflake_sequence" "test_sequence" {
 - **fully_qualified_name** (String) The fully qualified name of the sequence.
 - **next_value** (Number) The next value the sequence will provide.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | sequence name
+terraform import snowflake_sequence.example 'dbName|schemaName|sequenceName'
+```
