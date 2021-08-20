@@ -28,12 +28,13 @@ func TestStreamCreate(t *testing.T) {
 		"comment":           "great comment",
 		"on_table":          "target_db.target_schema.target_table",
 		"append_only":       true,
+		"insert_only":       true,
 		"show_initial_rows": true,
 	}
 	d := stream(t, "database_name|schema_name|stream_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE STREAM "database_name"."schema_name"."stream_name" ON TABLE "target_db"."target_schema"."target_table" COMMENT = 'great comment' APPEND_ONLY = true SHOW_INITIAL_ROWS = true`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE STREAM "database_name"."schema_name"."stream_name" ON TABLE "target_db"."target_schema"."target_table" COMMENT = 'great comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectStreamRead(mock)
 		err := resources.CreateStream(d, db)
 		r.NoError(err)
@@ -42,7 +43,7 @@ func TestStreamCreate(t *testing.T) {
 }
 
 func expectStreamRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"name", "database_name", "schema_name", "owner", "comment", "table_name", "type", "stale", "mode"}).AddRow("stream_name", "database_name", "schema_name", "owner_name", "grand comment", "target_table", "DELTA", false, "APPEND_ONLY")
+	rows := sqlmock.NewRows([]string{"name", "database_name", "schema_name", "owner", "comment", "table_name", "type", "stale", "mode"}).AddRow("stream_name", "database_name", "schema_name", "owner_name", "grand comment", "target_table", "DELTA", false, "APPEND_ONLY", "INSERT_ONLY")
 	mock.ExpectQuery(`SHOW STREAMS LIKE 'stream_name' IN DATABASE "database_name"`).WillReturnRows(rows)
 }
 
@@ -90,6 +91,7 @@ func TestStreamUpdate(t *testing.T) {
 		"comment":     "new stream comment",
 		"on_table":    "target_table",
 		"append_only": true,
+		"insert_only": true,
 	}
 
 	d := stream(t, "database_name|schema_name|stream_name", in)

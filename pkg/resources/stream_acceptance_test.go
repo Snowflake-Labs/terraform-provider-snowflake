@@ -24,6 +24,7 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},

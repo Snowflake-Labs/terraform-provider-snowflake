@@ -22,6 +22,7 @@ resource snowflake_stream stream {
 
   on_table    = "table"
   append_only = false
+  insert_only = false
 
   owner = "role1"
 }
@@ -39,6 +40,7 @@ resource snowflake_stream stream {
 ### Optional
 
 - **append_only** (Boolean) Type of the stream that will be created.
+- **insert_only** (Boolean) Type of the stream that will be created. Ins
 - **comment** (String) Specifies a comment for the stream.
 - **id** (String) The ID of this resource.
 - **on_table** (String) Name of the table the stream will monitor.
