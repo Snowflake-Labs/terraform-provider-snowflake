@@ -40,7 +40,7 @@ resource snowflake_stream stream {
 ### Optional
 
 - **append_only** (Boolean) Type of the stream that will be created.
-- **insert_only** (Boolean) Type of the stream that will be created. Ins
+- **insert_only** (Boolean) Type of the stream that will be created.
 - **comment** (String) Specifies a comment for the stream.
 - **id** (String) The ID of this resource.
 - **on_table** (String) Name of the table the stream will monitor.
