@@ -27,7 +27,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The name of the schema containing the current or future materialized views on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -103,6 +103,10 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	priv := d.Get("privilege").(string)
 	futureMaterializedViews := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	if (schemaName == "") && !futureMaterializedViews {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
 
 	if (materializedViewName == "") && !futureMaterializedViews {
 		return errors.New("materialized_view_name must be set unless on_future is true.")
