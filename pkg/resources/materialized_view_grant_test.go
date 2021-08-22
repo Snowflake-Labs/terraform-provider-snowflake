@@ -141,6 +141,24 @@ func TestFutureMaterializedViewGrantCreate(t *testing.T) {
 		err := resources.CreateMaterializedViewGrant(d, db)
 		b.NoError(err)
 	})
+
+	// Validate specifying on_future=false and schema_name="" generates an error
+	m := require.New(t)
+
+	in = map[string]interface{}{
+		"on_future":         false,
+		"database_name":     "test-db",
+		"privilege":         "SELECT",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": false,
+	}
+	d = schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Resource.Schema, in)
+	m.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateMaterializedViewGrant(d, db)
+		m.Error(err)
+	})
 }
 
 func expectReadFutureMaterializedViewGrant(mock sqlmock.Sqlmock) {
