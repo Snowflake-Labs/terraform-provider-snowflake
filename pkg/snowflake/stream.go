@@ -17,6 +17,7 @@ type StreamBuilder struct {
 	schema          string
 	onTable         string
 	appendOnly      bool
+	insertOnly      bool
 	showInitialRows bool
 	comment         string
 }
@@ -57,6 +58,11 @@ func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
 	return sb
 }
 
+func (sb *StreamBuilder) WithInsertOnly(b bool) *StreamBuilder {
+	sb.insertOnly = b
+	return sb
+}
+
 func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
 	sb.showInitialRows = b
 	return sb
@@ -92,6 +98,8 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
 
+	q.WriteString(fmt.Sprintf(` INSERT_ONLY = %v`, sb.insertOnly))
+
 	q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
 
 	return q.String()
@@ -125,6 +133,7 @@ type descStreamRow struct {
 	Owner           sql.NullString `db:"owner"`
 	Comment         sql.NullString `db:"comment"`
 	AppendOnly      bool           `db:"append_only"`
+	InsertOnly      bool           `db:"insert_only"`
 	ShowInitialRows bool           `db:"show_initial_rows"`
 	TableName       sql.NullString `db:"table_name"`
 	Type            sql.NullString `db:"type"`

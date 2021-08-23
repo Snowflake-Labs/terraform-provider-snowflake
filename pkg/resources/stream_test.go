@@ -28,12 +28,13 @@ func TestStreamCreate(t *testing.T) {
 		"comment":           "great comment",
 		"on_table":          "target_db.target_schema.target_table",
 		"append_only":       true,
+		"insert_only":       false,
 		"show_initial_rows": true,
 	}
 	d := stream(t, "database_name|schema_name|stream_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE STREAM "database_name"."schema_name"."stream_name" ON TABLE "target_db"."target_schema"."target_table" COMMENT = 'great comment' APPEND_ONLY = true SHOW_INITIAL_ROWS = true`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE STREAM "database_name"."schema_name"."stream_name" ON TABLE "target_db"."target_schema"."target_table" COMMENT = 'great comment' APPEND_ONLY = true INSERT_ONLY = false SHOW_INITIAL_ROWS = true`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectStreamRead(mock)
 		err := resources.CreateStream(d, db)
 		r.NoError(err)
@@ -118,6 +119,7 @@ func TestStreamUpdate(t *testing.T) {
 		"comment":     "new stream comment",
 		"on_table":    "target_table",
 		"append_only": true,
+		"insert_only": false,
 	}
 
 	d := stream(t, "database_name|schema_name|stream_name", in)

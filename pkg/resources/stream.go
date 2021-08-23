@@ -55,6 +55,13 @@ var streamSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Type of the stream that will be created.",
 	},
+	"insert_only": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    true,
+		Default:     false,
+		Description: "Create an insert only stream type.",
+	},
 	"show_initial_rows": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -169,6 +176,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	onTable := d.Get("on_table").(string)
 	appendOnly := d.Get("append_only").(bool)
+	insertOnly := d.Get("insert_only").(bool)
 	showInitialRows := d.Get("show_initial_rows").(bool)
 
 	builder := snowflake.Stream(name, database, schema)
@@ -180,6 +188,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	builder.WithOnTable(resultOnTable.DatabaseName, resultOnTable.SchemaName, resultOnTable.OnTableName)
 	builder.WithAppendOnly(appendOnly)
+	builder.WithInsertOnly(insertOnly)
 	builder.WithShowInitialRows(showInitialRows)
 
 	// Set optionals
@@ -243,6 +252,11 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("append_only", stream.Mode.String == "APPEND_ONLY")
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("insert_only", stream.InsertOnly)
 	if err != nil {
 		return err
 	}
