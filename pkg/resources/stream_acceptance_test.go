@@ -16,7 +16,7 @@ func TestAcc_Stream(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: streamConfig(accName),
+				Config: streamConfig(accName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
@@ -27,11 +27,28 @@ func TestAcc_Stream(t *testing.T) {
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},
+			{
+				Config: streamConfig(accName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", true),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
 		},
 	})
 }
 
-func streamConfig(name string) string {
+func streamConfig(name string, append_only bool) string {
+	append_only_config := ""
+	if append_only {
+		append_only_config = "append_only = true"
+	}
+
 	s := `
 resource "snowflake_database" "test_database" {
 	name    = "%s"
@@ -62,12 +79,13 @@ resource "snowflake_table" "test_stream_on_table" {
 }
 
 resource "snowflake_stream" "test_stream" {
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
-	name     = "%s"
-	comment  = "Terraform acceptance test"
-	on_table = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_table.test_stream_on_table.name}"
+	database    = snowflake_database.test_database.name
+	schema      = snowflake_schema.test_schema.name
+	name        = "%s"
+	comment     = "Terraform acceptance test"
+	on_table    = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_table.test_stream_on_table.name}"
+	%s
 }
 `
-	return fmt.Sprintf(s, name, name, name)
+	return fmt.Sprintf(s, name, name, name, append_only_config)
 }
