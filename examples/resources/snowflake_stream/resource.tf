@@ -5,9 +5,10 @@ resource snowflake_stream stream {
   schema   = "schema"
   name     = "stream"
 
-  on_table    = "table"
-  append_only = false
-  insert_only = false
+  on_external_table = true
+  on_table          = "table"
+  append_only       = false
+  insert_only       = false
 
   owner = "role1"
 }

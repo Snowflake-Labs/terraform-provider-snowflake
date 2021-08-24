@@ -44,6 +44,7 @@ resource snowflake_stream stream {
 - **id** (String) The ID of this resource.
 - **insert_only** (Boolean) Create an insert only stream type.
 - **on_table** (String) Name of the table the stream will monitor.
+- **on_external_table** (Boolean) Specifies whether the table being monitored is an external table.
 - **show_initial_rows** (Boolean) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.
 
 ### Read-Only

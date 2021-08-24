@@ -48,6 +48,12 @@ var streamSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Name of the table the stream will monitor.",
 	},
+	"on_external_table": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies whether the table being monitored is an external table.",
+	},
 	"append_only": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -175,6 +181,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	onTable := d.Get("on_table").(string)
+	onExternalTable := d.Get("on_external_table").(bool)
 	appendOnly := d.Get("append_only").(bool)
 	insertOnly := d.Get("insert_only").(bool)
 	showInitialRows := d.Get("show_initial_rows").(bool)
@@ -186,6 +193,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	builder.WithExternalTable(onExternalTable)
 	builder.WithOnTable(resultOnTable.DatabaseName, resultOnTable.SchemaName, resultOnTable.OnTableName)
 	builder.WithAppendOnly(appendOnly)
 	builder.WithInsertOnly(insertOnly)
