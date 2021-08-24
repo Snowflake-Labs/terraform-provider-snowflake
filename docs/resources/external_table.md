@@ -51,6 +51,7 @@ resource snowflake_external_table external_table {
 - **copy_grants** (Boolean) Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant
 - **id** (String) The ID of this resource.
 - **partition_by** (List of String) Specifies any partition columns to evaluate for the external table.
+- **pattern** (String) Specifies the file names and/or paths on the external stage to match.
 - **refresh_on_create** (Boolean) Specifies weather to refresh when an external table is created.
 
 ### Read-Only
