@@ -28,7 +28,7 @@ func TestExternalTableCreate(t *testing.T) {
 		"column":      []interface{}{map[string]interface{}{"name": "column1", "type": "OBJECT", "as": "a"}, map[string]interface{}{"name": "column2", "type": "VARCHAR", "as": "b"}},
 		"location":    "location",
 		"file_format": "format",
-		"pattern": "pattern",
+		"pattern":     "pattern",
 	}
 	d := externalTable(t, "database_name|schema_name|good_name", in)
 
