@@ -76,7 +76,12 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the file format for the external table.",
 	},
-
+	"pattern": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the file names and/or paths on the external stage to match.",
+	},
 	"aws_sns_topic": {
 		Type:        schema.TypeString,
 		Optional:    true,
