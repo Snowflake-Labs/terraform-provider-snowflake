@@ -156,7 +156,7 @@ resource "snowflake_external_table" "test_external_stream_table" {
 }
 
 resource "snowflake_stream" "test_external_table_stream" {
-	database          = snowflake_database.test_database.name
+	database          = snowflake_database.test.name
 	schema            = snowflake_schema.test_schema.name
 	name              = "%s"
 	comment           = "Terraform acceptance test"
