@@ -165,5 +165,5 @@ resource "snowflake_stream" "test_external_table_stream" {
 }
 `
 
-	return fmt.Sprintf(s, name, name, name, name, locations, name, name)
+	return fmt.Sprintf(s, name, name, name, name, locations, name)
 }
