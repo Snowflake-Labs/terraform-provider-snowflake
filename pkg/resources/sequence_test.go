@@ -97,7 +97,6 @@ func TestSequenceRead(t *testing.T) {
 		r.Equal("database", d.Get("database").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal(25, d.Get("increment").(int))
-		r.Equal(5, d.Get("next_value").(int))
 		r.Equal("database|schema|good_name", d.Id())
 		r.Equal(`"database"."schema"."good_name"`, d.Get("fully_qualified_name").(string))
 	})
