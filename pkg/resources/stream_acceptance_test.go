@@ -158,12 +158,12 @@ resource "snowflake_external_table" "test_external_stream_table" {
 }
 
 resource "snowflake_stream" "test_external_table_stream" {
-	database          = snowflake_database.test_database.name
-	schema            = snowflake_schema.test_schema.name
+	database          = snowflake_database.test.name
+	schema            = snowflake_schema.test.name
 	name              = "%s"
 	comment           = "Terraform acceptance test"
 	on_external_table = true
-	on_table          = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_external_table.test_external_stream_table.name}"
+	on_table          = "${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_external_table.test_external_stream_table.name}"
 }
 `
 
