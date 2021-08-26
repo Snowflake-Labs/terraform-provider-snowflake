@@ -11,6 +11,8 @@ import (
 
 func TestAcc_Stream(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	// Ref: https://github.com/chanzuckerberg/terraform-provider-snowflake/pull/661#discussion_r696067813
+	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -41,12 +43,12 @@ func TestAcc_Stream(t *testing.T) {
 				),
 			},
 			{
-				Config: externalTableStreamConfig(accName),
+				Config: externalTableStreamConfig(accNameExternalTable),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_EXTERNAL_TABLE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "on_external_table", true),
 					checkBool("snowflake_stream.test_stream", "append_only", false),
