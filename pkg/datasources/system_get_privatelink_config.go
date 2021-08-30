@@ -21,7 +21,7 @@ var systemGetPrivateLinkConfigSchema = map[string]*schema.Schema{
 		Description: "The URL used to connect to Snowflake through AWS PrivateLink or Azure Private Link.",
 	},
 
-	"oscp_url": {
+	"ocsp_url": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The OCSP URL corresponding to your Snowflake account that uses AWS PrivateLink or Azure Private Link.",
@@ -72,7 +72,7 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 	d.SetId(config.AccountName)
 	d.Set("account_name", config.AccountName)
 	d.Set("account_url", config.AccountURL)
-	d.Set("oscp_url", config.OSCPURL)
+	d.Set("ocsp_url", config.OCSPURL)
 
 	if config.AwsVpceID != "" {
 		d.Set("aws_vpce_id", config.AwsVpceID)

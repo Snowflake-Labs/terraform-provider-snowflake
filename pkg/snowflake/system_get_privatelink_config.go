@@ -19,8 +19,8 @@ type privateLinkConfigInternal struct {
 	AwsVpceID                 string `json:"privatelink-vpce-id,omitempty"`
 	AzurePrivateLinkServiceID string `json:"privatelink-pls-id,omitempty"`
 	AccountURL                string `json:"privatelink-account-url"`
-	OSCPURL                   string `json:"privatelink-ocsp-url,omitempty"`
-	TypodOSCPURL              string `json:"privatelink_ocsp-url,omitempty"` // because snowflake returns this for AWS, but don't have an Azure account to verify against
+	OCSPURL                   string `json:"privatelink-ocsp-url,omitempty"`
+	TypodOCSPURL              string `json:"privatelink_ocsp-url,omitempty"` // because snowflake returns this for AWS, but don't have an Azure account to verify against
 }
 
 type PrivateLinkConfig struct {
@@ -28,7 +28,7 @@ type PrivateLinkConfig struct {
 	AwsVpceID                 string
 	AzurePrivateLinkServiceID string
 	AccountURL                string
-	OSCPURL                   string
+	OCSPURL                   string
 }
 
 func ScanPrivateLinkConfig(row *sqlx.Row) (*RawPrivateLinkConfig, error) {
@@ -53,11 +53,11 @@ func (i *privateLinkConfigInternal) getPrivateLinkConfig() (*PrivateLinkConfig, 
 		i.AwsVpceID,
 		i.AzurePrivateLinkServiceID,
 		i.AccountURL,
-		i.OSCPURL,
+		i.OCSPURL,
 	}
 
-	if i.TypodOSCPURL != "" {
-		config.OSCPURL = i.TypodOSCPURL
+	if i.TypodOCSPURL != "" {
+		config.OCSPURL = i.TypodOCSPURL
 	}
 
 	return config, nil

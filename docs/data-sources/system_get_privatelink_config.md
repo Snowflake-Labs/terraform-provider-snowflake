@@ -58,9 +58,9 @@ resource "aws_route53_record" "snowflake_private_link_url" {
   records = [aws_vpc_endpoint.snowflake_private_link.dns_entry[0]["dns_name"]]
 }
 
-resource "aws_route53_record" "snowflake_private_link_oscp_url" {
+resource "aws_route53_record" "snowflake_private_link_ocsp_url" {
   zone_id = aws_route53_zone.snowflake_private_link_url.zone_id
-  name    = data.snowflake_system_get_privatelink_config.snowflake_private_link.oscp_url
+  name    = data.snowflake_system_get_privatelink_config.snowflake_private_link.ocsp_url
   type    = "CNAME"
   ttl     = "300"
   records = [aws_vpc_endpoint.snowflake_private_link.dns_entry[0]["dns_name"]]
@@ -80,6 +80,6 @@ resource "aws_route53_record" "snowflake_private_link_oscp_url" {
 - **account_url** (String) The URL used to connect to Snowflake through AWS PrivateLink or Azure Private Link.
 - **aws_vpce_id** (String) The AWS VPCE ID for your account.
 - **azure_pls_id** (String) The Azure Private Link Service ID for your account.
-- **oscp_url** (String) The OCSP URL corresponding to your Snowflake account that uses AWS PrivateLink or Azure Private Link.
+- **ocsp_url** (String) The OCSP URL corresponding to your Snowflake account that uses AWS PrivateLink or Azure Private Link.
 
 
