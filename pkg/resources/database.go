@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,14 +33,41 @@ var databaseSchema = map[string]*schema.Schema{
 		Description:   "Specify a provider and a share in this map to create a database from a share.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_database"},
+		ConflictsWith: []string{"from_database", "from_replica"},
 	},
 	"from_database": {
 		Type:          schema.TypeString,
 		Description:   "Specify a database to create a clone from.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_share"},
+		ConflictsWith: []string{"from_share", "from_replica"},
+	},
+	"from_replica": {
+		Type:          schema.TypeString,
+		Description:   "Specify a fully-qualified path to database to create a replica from.",
+		Optional:      true,
+		ForceNew:      true,
+		ConflictsWith: []string{"from_share", "from_database"},
+	},
+	"replication_accounts": {
+		Type:             schema.TypeSet,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		Optional:         true,
+		Description:      "A list of accounts to be added to the replication.",
+		DiffSuppressFunc: diffCaseInsensitive,
+	},
+	"replication_failover_accounts": {
+		Type:             schema.TypeSet,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		Optional:         true,
+		Description:      "A list of accounts to be added to the failover replication.",
+		DiffSuppressFunc: diffCaseInsensitive,
+	},
+	"replication_is_primary": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, sets the database as primary for failover.",
+		Default:     false,
 	},
 	"tag": tagReferenceSchema,
 }
@@ -69,6 +97,10 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("from_database"); ok {
 		return createDatabaseFromDatabase(d, meta)
+	}
+
+	if _, ok := d.GetOk("from_replica"); ok {
+		return createDatabaseFromReplica(d, meta)
 	}
 
 	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
@@ -114,6 +146,23 @@ func createDatabaseFromDatabase(d *schema.ResourceData, meta interface{}) error 
 	return ReadDatabase(d, meta)
 }
 
+func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_replica").(string)
+
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	builder := snowflake.DatabaseFromReplica(name, sourceDb)
+
+	err := snowflake.Exec(db, builder.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+	}
+
+	d.SetId(name)
+
+	return ReadDatabase(d, meta)
+}
+
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
@@ -148,12 +197,103 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("data_retention_time_in_days", i)
-	return err
+	if err != nil {
+		return err
+	}
+
+	stmt = snowflake.Replication(name).Show()
+	row = snowflake.QueryRow(db, stmt)
+	replication, err := snowflake.ScanReplication(row)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// If not found, no replication is enabled
+			d.Set("replication_accounts", make([]string, 0))
+			d.Set("replication_enable_failover", false)
+			d.Set("replication_is_primary", false)
+			return nil
+		}
+		return err
+	}
+
+	err = d.Set("replication_accounts", strings.Split(replication.ReplAccounts.String, ", "))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("replication_failover_accounts", strings.Split(replication.FailoverAccounts.String, ", "))
+	if err != nil {
+		return err
+	}
+
+	return d.Set("replication_is_primary", replication.IsPrimary.Bool)
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] updating database %v", d.Id())
+	db := meta.(*sql.DB)
+	database := d.Get("name").(string)
+
+	// Change the replication details first - this is a special case and won't work using the generic method
+	x := func(resource, replType string, toggleGrant func(db *sql.DB, database, account, replType, toggleType string) error) error {
+		o, n := d.GetChange(resource)
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		for _, account := range remove {
+			err := toggleReplicationToAcc(db, database, account, replType, "DISABLE")
+			if err != nil {
+				return err
+			}
+		}
+		for _, account := range add {
+			err := toggleReplicationToAcc(db, database, account, replType, "ENABLE")
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	err := x("replication_accounts", "REPLICATION", toggleReplicationToAcc)
+	if err != nil {
+		return err
+	}
+
+	err = x("replication_failover_accounts", "FAILOVER", toggleReplicationToAcc)
+	if err != nil {
+		return err
+	}
+
+	_, n := d.GetChange("replication_is_primary")
+
+	if n == true {
+		err = setPrimaryReplicationSource(db, database)
+		if err != nil {
+			return err
+		}
+	}
+
 	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+}
+
+func toggleReplicationToAcc(db *sql.DB, database, account, replType, toggleType string) error {
+	err := snowflake.Exec(db, fmt.Sprintf(`ALTER DATABASE "%v" %v %v TO ACCOUNTS "%v"`, database, toggleType, replType, account))
+	return err
+}
+
+func setPrimaryReplicationSource(db *sql.DB, database string) error {
+	err := snowflake.Exec(db, fmt.Sprintf(`ALTER DATABASE "%v" PRIMARY`, database))
+	return err
 }
 
 func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
