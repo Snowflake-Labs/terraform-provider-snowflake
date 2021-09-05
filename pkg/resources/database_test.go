@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"database/sql"
+	"reflect"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -37,14 +38,18 @@ func TestDatabaseCreate(t *testing.T) {
 }
 
 func expectRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
-	mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(rows)
+	dbRows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
+	mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(dbRows)
+	replicationRows := sqlmock.NewRows([]string{"snowflake_region", "created_on", "account_name", "name", "comment", "is_primary", "primary", "replication_allowed_to_accounts", "failover_allowed_to_accounts", "organization_name", "account_locator"}).AddRow("snowflake_region", "created_on", "account_name", "name", "comment", "true", "primary", "acc1, acc2", "acc3, acc4", "organization_name", "account_locator")
+	mock.ExpectQuery("SHOW REPLICATION DATABASES LIKE 'good_name'").WillReturnRows(replicationRows)
 }
 
 func TestDatabaseRead(t *testing.T) {
 	r := require.New(t)
 
-	d := database(t, "good_name", map[string]interface{}{"name": "good_name"})
+	d := database(t, "good_name", map[string]interface{}{
+		"name": "good_name",
+	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectRead(mock)
@@ -53,7 +58,11 @@ func TestDatabaseRead(t *testing.T) {
 		r.Equal("good_name", d.Get("name").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal(1, d.Get("data_retention_time_in_days").(int))
+		r.Equal(true, d.Get("replication_is_primary").(bool))
 	})
+	if !reflect.DeepEqual([]interface{}{"acc3", "acc4"}, d.Get("replication_failover_accounts").(*schema.Set).List()) {
+		t.Errorf("GetData() = ")
+	}
 }
 
 func TestDatabaseDelete(t *testing.T) {
@@ -101,6 +110,24 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestDatabaseCreateFromReplica(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":         "good_name",
+		"from_replica": "abc123",
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" AS REPLICA OF "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)

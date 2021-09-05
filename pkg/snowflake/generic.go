@@ -16,6 +16,7 @@ const (
 	ResourceMonitorType         EntityType = "RESOURCE MONITOR"
 	RoleType                    EntityType = "ROLE"
 	ShareType                   EntityType = "SHARE"
+	ReplicationType             EntityType = "REPLICATION"
 	StorageIntegrationType      EntityType = "STORAGE INTEGRATION"
 	NotificationIntegrationType EntityType = "NOTIFICATION INTEGRATION"
 	SecurityIntegrationType     EntityType = "SECURITY INTEGRATION"
