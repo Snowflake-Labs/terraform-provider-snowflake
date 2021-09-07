@@ -3,7 +3,7 @@
 page_title: "snowflake_share Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_share (Resource)
@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_share" "test" {
+resource snowflake_share test {
 	name           = "share_name"
 	comment        = "cool comment"
 }
