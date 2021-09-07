@@ -58,7 +58,7 @@ func tables(databaseName string, schemaName string, tableName string, stageName 
 		name = "%v"
 		url = "s3://snowflake-workshop-lab/weather-nyc"
 		database = snowflake_database.d.name
-		schema = snowflake_schema.t.name
+		schema = snowflake_schema.s.name
 	}
 
 	resource "snowflake_external_table" "et" {
