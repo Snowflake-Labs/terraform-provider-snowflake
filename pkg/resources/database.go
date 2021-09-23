@@ -235,19 +235,19 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	// Change the replication details first - this is a special case and won't work using the generic method
 	x := func(resource, replType string, toggleGrant func(db *sql.DB, database, account, replType, toggleType string) error) error {
-		o, n := d.GetChange(resource)
+		old_ver, new_ver := d.GetChange(resource)
 
-		if o == nil {
-			o = new(schema.Set)
+		if old_ver == nil {
+			old_ver = new(schema.Set)
 		}
-		if n == nil {
-			n = new(schema.Set)
+		if new_ver == nil {
+			new_ver = new(schema.Set)
 		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		old_ver = old_ver.(*schema.Set)
+		new_ver = new_ver.(*schema.Set)
 
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringList(old_ver.Difference(new_ver).List())
+		add := expandStringList(new_ver.Difference(old_ver).List())
 
 		for _, account := range remove {
 			err := toggleReplicationToAcc(db, database, account, replType, "DISABLE")
