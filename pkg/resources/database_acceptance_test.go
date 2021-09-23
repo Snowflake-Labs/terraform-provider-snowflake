@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testCheckReplication(t *testing.T, path string, replicas, failovers []string) func(*terraform.State) error {
+func TestCheckReplication(t *testing.T, path string, replicas, failovers []string) func(*terraform.State) error {
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 
