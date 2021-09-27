@@ -160,6 +160,10 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Some properties can come from the SHOW INTEGRATION call
 
 	s, err := snowflake.ScanStorageIntegration(row)
+	if err == sql.ErrNoRows {
+		// Integration not found, maybe it was already deleted and we are running a refresh
+		return err
+	}
 	if err != nil {
 		return fmt.Errorf("Could not show storage integration: %w", err)
 	}
