@@ -42,13 +42,13 @@ func TestProcedureCreate(t *testing.T) {
 	d := prepDummyProcedureResource(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE javascript CALLED ON NULL INPUT IMMUTABLE COMMENT = 'user-defined function' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE javascript CALLED ON NULL INPUT IMMUTABLE COMMENT = 'user-defined procedure' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectProcedureRead(mock)
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
 		r.Equal("my_proc", d.Get("name").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
-		r.Equal("user-defined function", d.Get("comment").(string))
+		r.Equal("user-defined procedure", d.Get("comment").(string))
 	})
 }
 
@@ -80,7 +80,7 @@ func TestProcedureRead(t *testing.T) {
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
 		r.Equal("my_proc", d.Get("name").(string))
-		r.Equal("user-defined function", d.Get("comment").(string))
+		r.Equal("user-defined procedure", d.Get("comment").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal(procedureBody, d.Get("statement").(string))
 
