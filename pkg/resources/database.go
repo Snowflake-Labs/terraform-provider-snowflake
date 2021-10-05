@@ -243,11 +243,11 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		if new_ver == nil {
 			new_ver = new(schema.Set)
 		}
-		old_ver = old_ver.(*schema.Set)
-		new_ver = new_ver.(*schema.Set)
+		old_ver_set := old_ver.(*schema.Set)
+		new_ver_set := new_ver.(*schema.Set)
 
-		remove := expandStringList(old_ver.Difference(new_ver).List())
-		add := expandStringList(new_ver.Difference(old_ver).List())
+		remove := expandStringList(old_ver_set.Difference(new_ver_set).List())
+		add := expandStringList(new_ver_set.Difference(old_ver_set).List())
 
 		for _, account := range remove {
 			err := toggleReplicationToAcc(db, database, account, replType, "DISABLE")
