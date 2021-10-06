@@ -44,7 +44,7 @@ var databaseSchema = map[string]*schema.Schema{
 	},
 	"from_replica": {
 		Type:          schema.TypeString,
-		Description:   "Specify a fully-qualified path to database to create a replica from.",
+		Description:   "Specify a fully-qualified path to a database to create a replica from.",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share", "from_database"},
