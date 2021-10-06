@@ -16,7 +16,7 @@ description: |-
 resource snowflake_task_grant grant {
   database_name = "db"
   schema_name   = "schema"
-  sequence_name = "sequence"
+  task_name = "task"
 
   privilege = "operate"
   roles = [
