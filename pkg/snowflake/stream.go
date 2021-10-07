@@ -122,7 +122,7 @@ func (sb *StreamBuilder) Drop() string {
 
 // Show returns the SQL query that will show a stream.
 func (sb *StreamBuilder) Show() string {
-	return fmt.Sprintf(`SHOW STREAMS LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+	return fmt.Sprintf(`SHOW STREAMS LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
 type descStreamRow struct {
