@@ -208,7 +208,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		if err == sql.ErrNoRows {
 			// If not found, no replication is enabled
 			d.Set("replication_accounts", make([]string, 0))
-			d.Set("replication_enable_failover", false)
+			d.Set("replication_failover_accounts", false)
 			d.Set("replication_is_primary", false)
 			return nil
 		}
