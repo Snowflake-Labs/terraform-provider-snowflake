@@ -150,6 +150,39 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
+	"tag": {
+		Type:        schema.TypeList,
+		Required:    false,
+		Optional:    true,
+		MinItems:    0,
+		Description: "Definitions of a tag to associate with the table.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Tag name, e.g. department.",
+				},
+				"value": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Tag value, e.g. marketing_info.",
+				},
+				"database": {
+					Type:        schema.TypeString,
+					Required:    false,
+					Optional:    true,
+					Description: "Name of the database that the tag was created in.",
+				},
+				"schema": {
+					Type:        schema.TypeString,
+					Required:    false,
+					Optional:    true,
+					Description: "Name of the schema that the tag was created in.",
+				},
+			},
+		},
+	},
 }
 
 func Table() *schema.Resource {
@@ -281,6 +314,58 @@ func (c columns) toSnowflakeColumns() []snowflake.Column {
 	return sC
 }
 
+type tags []tag
+
+func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
+	sT := make([]snowflake.TagValue, len(t))
+	for i, tag := range t {
+		sT[i] = tag.toSnowflakeTagValue()
+	}
+	return sT
+}
+
+func (tag tag) toSnowflakeTagValue() snowflake.TagValue {
+	return snowflake.TagValue{
+		Name:     tag.name,
+		Value:    tag.value,
+		Database: tag.database,
+		Schema:   tag.schema,
+	}
+}
+
+func (old tags) getNewIn(new tags) (added tags) {
+	added = tags{}
+	for _, t0 := range old {
+		found := false
+		for _, cN := range new {
+			if t0.name == cN.name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, t0)
+		}
+	}
+	return
+}
+
+func (old tags) getChangedTagProperties(new tags) (changed tags) {
+	changed = tags{}
+	for _, t0 := range old {
+		for _, tN := range new {
+			if t0.name == tN.name && t0.value != tN.value {
+				changed = append(changed, tN)
+			}
+		}
+	}
+	return
+}
+
+func (old tags) diffs(new tags) (removed tags, added tags, changed tags) {
+	return old.getNewIn(new), new.getNewIn(old), old.getChangedTagProperties(new)
+}
+
 func (old columns) getNewIn(new columns) (added columns) {
 	added = columns{}
 	for _, cO := range old {
@@ -409,6 +494,28 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 	return to
 }
 
+type tag struct {
+	name     string
+	value    string
+	database string
+	schema   string
+}
+
+func getTags(from interface{}) (to tags) {
+	tags := from.([]interface{})
+	to = make([]tag, len(tags))
+	for i, t := range tags {
+		v := t.(map[string]interface{})
+		to[i] = tag{
+			name:     v["name"].(string),
+			value:    v["value"].(string),
+			database: v["database"].(string),
+			schema:   v["schema"].(string),
+		}
+	}
+	return to
+}
+
 func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 	snowPk := snowflake.PrimaryKey{}
 	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
@@ -446,6 +553,11 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("change_tracking"); ok {
 		builder.WithChangeTracking(v.(bool))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v.(interface{}))
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	stmt := builder.Create()
@@ -679,6 +791,35 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
+	}
+	if d.HasChange("tag") {
+		old, new := d.GetChange("tag")
+		removed, added, changed := getTags(old).diffs(getTags(new))
+		for _, tA := range removed {
+			q := builder.UnsetTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+			}
+		}
+		for _, tA := range added {
+			var q string
+			q = builder.AddTag(tA.toSnowflakeTagValue())
+
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding column on %v", d.Id())
+			}
+		}
+		for _, tA := range changed {
+			q := builder.ChangeTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing property on %v", d.Id())
+
+			}
+		}
+
 	}
 
 	return ReadTable(d, meta)

@@ -40,7 +40,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	github.com/zclconf/go-cty v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/tools v0.1.5
+	golang.org/x/tools v0.1.7
 	google.golang.org/api v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210729151513-df9385d47c1b // indirect
