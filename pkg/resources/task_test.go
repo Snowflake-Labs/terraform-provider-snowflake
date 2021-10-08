@@ -55,7 +55,7 @@ func expectReadTask(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition"},
 	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "")
-	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 
 func expectReadTaskParams(mock sqlmock.Sqlmock) {
