@@ -82,12 +82,12 @@ func tagIDFromString(stringID string) (*tagID, error) {
 		return nil, fmt.Errorf("3 fields allowed")
 	}
 
-	schemaResult := &tagID{
+	tagResult := &tagID{
 		DatabaseName: lines[0][0],
 		SchemaName:   lines[0][1],
 		TagName:      lines[0][2],
 	}
-	return schemaResult, nil
+	return tagResult, nil
 }
 
 // Schema returns a pointer to the resource representing a schema
