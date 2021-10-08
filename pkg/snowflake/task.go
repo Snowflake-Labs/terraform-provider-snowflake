@@ -266,7 +266,7 @@ func (tb *TaskBuilder) Describe() string {
 
 // Show returns the sql that will show a task.
 func (tb *TaskBuilder) Show() string {
-	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN DATABASE "%v"`, EscapeString(tb.name), EscapeString(tb.db))
+	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN SCHEMA "%v"."%v"`, EscapeString(tb.name), EscapeString(tb.db), EscapeString(tb.schema))
 }
 
 // ShowParameters returns the query to show the session parameters for the task
