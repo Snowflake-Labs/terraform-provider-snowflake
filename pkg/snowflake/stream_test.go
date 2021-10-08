@@ -47,5 +47,5 @@ func TestStreamDrop(t *testing.T) {
 func TestStreamShow(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW STREAMS LIKE 'test_stream' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW STREAMS LIKE 'test_stream' IN SCHEMA "test_db"."test_schema"`)
 }
