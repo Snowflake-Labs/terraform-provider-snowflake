@@ -42,6 +42,22 @@ func TestTableCreate(t *testing.T) {
 	}
 
 	s.WithColumns(Columns(cols))
+
+	tags := []TagValue{
+		{
+			Name:     "tag",
+			Database: "test_db",
+			Schema:   "test_schema",
+			Value:    "value",
+		},
+		{
+			Name:     "tag2",
+			Database: "test_db",
+			Schema:   "test_schema",
+			Value:    "value2",
+		},
+	}
+
 	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
 
 	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '') DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
@@ -60,6 +76,9 @@ func TestTableCreate(t *testing.T) {
 
 	s.WithChangeTracking(true)
 	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true`)
+
+	s.WithTags(tags)
+	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true WITH TAG ("test_db"."test_schema"."tag" = "value", "test_db"."test_schema"."tag2" = "value2")`)
 }
 
 func TestTableChangeComment(t *testing.T) {
@@ -174,4 +193,22 @@ func TestTableChangePrimaryKeysWithoutConstraintName(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.ChangePrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}}), `ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY("column1", "column2")`)
+}
+
+func TestTableAddTag(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.AddTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db", Value: "value"}), `ALTER TABLE "test_db"."test_schema"."test_table" SET TAG "test_db"."test_schema"."tag" = "value"`)
+}
+
+func TestTableChangeTag(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.ChangeTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db", Value: "value"}), `ALTER TABLE "test_db"."test_schema"."test_table" SET TAG "test_db"."test_schema"."tag" = "value"`)
+}
+
+func TestTableUnsetTag(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.UnsetTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db"}), `ALTER TABLE "test_db"."test_schema"."test_table" UNSET TAG "test_db"."test_schema"."tag"`)
 }

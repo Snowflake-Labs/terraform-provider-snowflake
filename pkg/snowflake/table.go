@@ -334,17 +334,17 @@ func (tb *TableBuilder) WithTags(tags []TagValue) *TableBuilder {
 	return tb
 }
 
-// UnsetTag returns the SQL query that will add a new column to the table.
+// AddTag returns the SQL query that will add a new tag to the table.
 func (tb *TableBuilder) AddTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER TABLE %s SET TAG "%v"."%v"."%v" = "%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
-// UnsetTag returns the SQL query that will add a new column to the table.
+// ChangeTag returns the SQL query that will alter a tag on the table.
 func (tb *TableBuilder) ChangeTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER TABLE %s SET TAG "%v"."%v"."%v" = "%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
-// UnsetTag returns the SQL query that will add a new column to the table.
+// UnsetTag returns the SQL query that will unset a tag on the table.
 func (tb *TableBuilder) UnsetTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER TABLE %s UNSET TAG "%v"."%v"."%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }

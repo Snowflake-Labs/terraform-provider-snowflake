@@ -556,7 +556,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v.(interface{}))
+		tags := getTags(v)
 		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
@@ -803,8 +803,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, tA := range added {
-			var q string
-			q = builder.AddTag(tA.toSnowflakeTagValue())
+			q := builder.AddTag(tA.toSnowflakeTagValue())
 
 			err := snowflake.Exec(db, q)
 			if err != nil {
