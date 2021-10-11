@@ -3,19 +3,13 @@ module github.com/chanzuckerberg/terraform-provider-snowflake
 go 1.15
 
 require (
-	github.com/Azure/azure-storage-blob-go v0.14.0 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/apache/arrow/go/arrow v0.0.0-20210729190125-0559a87e4528 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.3.2 // indirect
 	github.com/chanzuckerberg/go-misc v0.0.0-20201208181439-ea3e3e39e194
 	github.com/fatih/color v1.12.0 // indirect
-	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
-	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
 	github.com/hashicorp/go-plugin v1.4.2 // indirect
@@ -35,11 +29,11 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.1 // indirect
-	github.com/snowflakedb/gosnowflake v1.6.0
+	github.com/snowflakedb/gosnowflake v1.6.2
 	github.com/stretchr/testify v1.7.0
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	github.com/zclconf/go-cty v1.9.0 // indirect
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/tools v0.1.7
 	google.golang.org/api v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
