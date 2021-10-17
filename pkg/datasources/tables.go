@@ -77,7 +77,7 @@ func ReadTables(d *schema.ResourceData, meta interface{}) error {
 	for _, table := range currentTables {
 		tableMap := map[string]interface{}{}
 
-		if table.IsExternal.Bool == true{
+		if table.IsExternal.String == "Y" {
 			continue
 		}
 
