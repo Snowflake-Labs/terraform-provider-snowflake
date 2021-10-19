@@ -45,6 +45,17 @@ resource "snowflake_table" "table" {
   }
 
   column {
+    name     = "identity"
+    type     = "int"
+    nullable = true
+
+    identity {
+      start_num = 1
+      step_num  = 3
+    }
+  }
+
+  column {
     name     = "data"
     type     = "text"
     nullable = false
