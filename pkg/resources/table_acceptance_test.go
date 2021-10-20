@@ -1043,7 +1043,7 @@ resource "snowflake_table" "test_table" {
 	}
 
 	tag {
-		name = snowflake_tag.test_tag2.name
+		name = snowflake_tag.test2_tag.name
 		schema = snowflake_tag.test_tag2.schema
 		database = snowflake_tag.test_tag2.database
 		value = "%s"
