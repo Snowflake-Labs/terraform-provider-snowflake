@@ -1044,8 +1044,8 @@ resource "snowflake_table" "test_table" {
 
 	tag {
 		name = snowflake_tag.test2_tag.name
-		schema = snowflake_tag.test_tag2.schema
-		database = snowflake_tag.test_tag2.database
+		schema = snowflake_tag.test2_tag.schema
+		database = snowflake_tag.test2_tag.database
 		value = "%s"
 	}
 }
