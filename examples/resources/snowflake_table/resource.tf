@@ -31,7 +31,7 @@ resource "snowflake_table" "table" {
 
   column {
     name     = "identity"
-    type     = "int"
+    type     = "NUMBER(38,0)"
     nullable = true
 
     identity {
