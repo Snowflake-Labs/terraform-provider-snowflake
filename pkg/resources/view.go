@@ -262,7 +262,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-
+	handleTagChanges(db, d, builder)
 	if d.HasChange("tag") {
 		old, new := d.GetChange("tag")
 		removed, added, changed := getTags(old).diffs(getTags(new))
@@ -286,10 +286,8 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 			}
 		}
-
 	}
 
 	return ReadView(d, meta)

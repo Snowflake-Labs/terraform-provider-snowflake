@@ -301,34 +301,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tag") {
-		old, new := d.GetChange("tag")
-		removed, added, changed := getTags(old).diffs(getTags(new))
-		for _, tA := range removed {
-			q := builder.UnsetTag(tA.toSnowflakeTagValue())
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
-			}
-		}
-		for _, tA := range added {
-			q := builder.AddTag(tA.toSnowflakeTagValue())
-
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding tag on %v", d.Id())
-			}
-		}
-		for _, tA := range changed {
-			q := builder.ChangeTag(tA.toSnowflakeTagValue())
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error changing tag on %v", d.Id())
-
-			}
-		}
-
-	}
+	handleTagChanges(db, d, builder)
 
 	return ReadMaterializedView(d, meta)
 }
