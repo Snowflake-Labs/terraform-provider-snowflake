@@ -95,11 +95,13 @@ var tableSchema = map[string]*schema.Schema{
 						},
 					},
 				},
-				// Note: Identity and default are mutually exclusive.
+				/*Note: Identity and default are mutually exclusive. From what I can tell we can't enforce this here
+				the snowflake query will error so we can defer enforcement to there.
+				*/
 				"identity": {
 					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Defines the identity start/step values for a column.",
+					Description: "Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive.",
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: &schema.Resource{
