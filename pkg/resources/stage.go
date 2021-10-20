@@ -82,6 +82,44 @@ var stageSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
+	"tag": {
+		Type:        schema.TypeList,
+		Required:    false,
+		Optional:    true,
+		ForceNew:    true,
+		MinItems:    0,
+		Description: "Definitions of a tag to associate with the external table.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					ForceNew:    true,
+					Description: "Tag name, e.g. department.",
+				},
+				"value": {
+					Type:        schema.TypeString,
+					Required:    true,
+					ForceNew:    true,
+					Description: "Tag value, e.g. marketing_info.",
+				},
+				"database": {
+					Type:        schema.TypeString,
+					Required:    false,
+					Optional:    true,
+					ForceNew:    true,
+					Description: "Name of the database that the tag was created in.",
+				},
+				"schema": {
+					Type:        schema.TypeString,
+					Required:    false,
+					Optional:    true,
+					ForceNew:    true,
+					Description: "Name of the schema that the tag was created in.",
+				},
+			},
+		},
+	},
 }
 
 type stageID struct {
@@ -181,6 +219,11 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	q := builder.Create()
@@ -362,6 +405,35 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating stage comment on %v", d.Id())
 		}
+	}
+
+	if d.HasChange("tag") {
+		old, new := d.GetChange("tag")
+		removed, added, changed := getTags(old).diffs(getTags(new))
+		for _, tA := range removed {
+			q := builder.UnsetTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+			}
+		}
+		for _, tA := range added {
+			q := builder.AddTag(tA.toSnowflakeTagValue())
+
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding tag on %v", d.Id())
+			}
+		}
+		for _, tA := range changed {
+			q := builder.ChangeTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing tag on %v", d.Id())
+
+			}
+		}
+
 	}
 
 	return ReadStage(d, meta)
