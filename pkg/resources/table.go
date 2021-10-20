@@ -314,75 +314,6 @@ func (c columns) toSnowflakeColumns() []snowflake.Column {
 	return sC
 }
 
-type tags []tag
-
-func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
-	sT := make([]snowflake.TagValue, len(t))
-	for i, tag := range t {
-		sT[i] = tag.toSnowflakeTagValue()
-	}
-	return sT
-}
-
-func (tag tag) toSnowflakeTagValue() snowflake.TagValue {
-	return snowflake.TagValue{
-		Name:     tag.name,
-		Value:    tag.value,
-		Database: tag.database,
-		Schema:   tag.schema,
-	}
-}
-
-func (old tags) getNewIn(new tags) (added tags) {
-	added = tags{}
-	for _, t0 := range old {
-		found := false
-		for _, cN := range new {
-			if t0.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, t0)
-		}
-	}
-	return
-}
-
-func (old tags) getChangedTagProperties(new tags) (changed tags) {
-	changed = tags{}
-	for _, t0 := range old {
-		for _, tN := range new {
-			if t0.name == tN.name && t0.value != tN.value {
-				changed = append(changed, tN)
-			}
-		}
-	}
-	return
-}
-
-func (old tags) diffs(new tags) (removed tags, added tags, changed tags) {
-	return old.getNewIn(new), new.getNewIn(old), old.getChangedTagProperties(new)
-}
-
-func (old columns) getNewIn(new columns) (added columns) {
-	added = columns{}
-	for _, cO := range old {
-		found := false
-		for _, cN := range new {
-			if cO.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, cO)
-		}
-	}
-	return
-}
-
 type changedColumns []changedColumn
 
 type changedColumn struct {
@@ -490,28 +421,6 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 		to.name = pkDetails["name"].(string)
 		to.keys = expandStringList(pkDetails["keys"].([]interface{}))
 		return to
-	}
-	return to
-}
-
-type tag struct {
-	name     string
-	value    string
-	database string
-	schema   string
-}
-
-func getTags(from interface{}) (to tags) {
-	tags := from.([]interface{})
-	to = make([]tag, len(tags))
-	for i, t := range tags {
-		v := t.(map[string]interface{})
-		to[i] = tag{
-			name:     v["name"].(string),
-			value:    v["value"].(string),
-			database: v["database"].(string),
-			schema:   v["schema"].(string),
-		}
 	}
 	return to
 }
