@@ -1000,25 +1000,25 @@ func TestAcc_TableTags(t *testing.T) {
 func tableWithTags(name string, tagName string, tag2Name string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-	name    = "%s"
+	name    = "%[1]s"
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_schema" "test_schema" {
-	name     = "%s"
+	name     = "%[1]s"
 	database = snowflake_database.test_database.name
 	comment  = "Terraform acceptance test"
 }
 
 resource "snowflake_tag" "test_tag" {
-	name     = "%s"
+	name     = "%[2]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
 	comment  = "Terraform acceptance test"
 }
 
 resource "snowflake_tag" "test2_tag" {
-	name     = "%s"
+	name     = "%[3]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
 	comment  = "Terraform acceptance test"
@@ -1027,7 +1027,7 @@ resource "snowflake_tag" "test2_tag" {
 resource "snowflake_table" "test_table" {
 	database            = snowflake_database.test_database.name
 	schema              = snowflake_schema.test_schema.name
-	name                = "%s"
+	name                = "%[1]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1039,16 +1039,16 @@ resource "snowflake_table" "test_table" {
 		name = snowflake_tag.test_tag.name
 		schema = snowflake_tag.test_tag.schema
 		database = snowflake_tag.test_tag.database
-		value = "%s"
+		value = "%[1]s"
 	}
 
 	tag {
 		name = snowflake_tag.test2_tag.name
 		schema = snowflake_tag.test2_tag.schema
 		database = snowflake_tag.test2_tag.database
-		value = "%s"
+		value = "%[1]s"
 	}
 }
 `
-	return fmt.Sprintf(s, name, name, tagName, tag2Name, name, name)
+	return fmt.Sprintf(s, name, tagName, tag2Name)
 }
