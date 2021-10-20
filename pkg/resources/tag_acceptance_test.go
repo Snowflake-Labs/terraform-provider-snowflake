@@ -54,7 +54,7 @@ resource "snowflake_database" "test2" {
 
 	tag {
 		name = snowflake_tag.test.name
-		schema = snowflake_tag.test_tag.schema
+		schema = snowflake_tag.test.schema
 		database = snowflake_tag.test_tag.database
 		value = "%[1]v"
 	}
