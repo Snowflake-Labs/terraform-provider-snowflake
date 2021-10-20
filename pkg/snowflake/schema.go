@@ -75,17 +75,17 @@ func (sb *SchemaBuilder) WithTags(tags []TagValue) *SchemaBuilder {
 
 // AddTag returns the SQL query that will add a new tag to the schema.
 func (sb *SchemaBuilder) AddTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
 // ChangeTag returns the SQL query that will alter a tag on the schema.
 func (sb *SchemaBuilder) ChangeTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
 // UnsetTag returns the SQL query that will unset a tag on the schema.
 func (sb *SchemaBuilder) UnsetTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER VIEW %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
+	return fmt.Sprintf(`ALTER SCHEMA %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // Schema returns a pointer to a Builder that abstracts the DDL operations for a schema.
