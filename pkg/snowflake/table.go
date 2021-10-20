@@ -624,7 +624,6 @@ func (td *tableDescription) IsNullable() bool {
 }
 
 func (td *tableDescription) ColumnDefault() *ColumnDefault {
-	//TODO call this twice and adjust to include identity
 	if !td.Default.Valid {
 		return nil
 	}
