@@ -31,21 +31,33 @@ func TestAcc_Tag(t *testing.T) {
 func tagConfig(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
-	name = "%v"
+	name = "%[1]v"
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_schema" "test" {
-	name = "%v"
+	name = "%[1]v"
 	database = snowflake_database.test.name
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_tag" "test" {
-	name = "%v"
+	name = "%[1]v"
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+
+resource "snowflake_database" "test2" {
+	name = "%[1]v_2"
+	comment = "Terraform acceptance test2 with tags"
+
+	tag {
+		name = snowflake_tag.test_tag.name
+		schema = snowflake_tag.test_tag.schema
+		database = snowflake_tag.test_tag.database
+		value = "%[1]v"
+	}
+}
+`, n)
 }
