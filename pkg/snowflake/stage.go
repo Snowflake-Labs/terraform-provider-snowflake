@@ -88,7 +88,7 @@ func (sb *StageBuilder) WithTags(tags []TagValue) *StageBuilder {
 
 // AddTag returns the SQL query that will add a new tag to the view.
 func (sb *StageBuilder) AddTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER MATESTAGEW %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER STAGE %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
 // ChangeTag returns the SQL query that will alter a tag on the view.
