@@ -58,39 +58,7 @@ var schemaSchema = map[string]*schema.Schema{
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(0, 90),
 	},
-	"tag": {
-		Type:        schema.TypeList,
-		Required:    false,
-		Optional:    true,
-		MinItems:    0,
-		Description: "Definitions of a tag to associate with the schema.",
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Tag name, e.g. department.",
-				},
-				"value": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Tag value, e.g. marketing_info.",
-				},
-				"database": {
-					Type:        schema.TypeString,
-					Required:    false,
-					Optional:    true,
-					Description: "Name of the database that the tag was created in.",
-				},
-				"schema": {
-					Type:        schema.TypeString,
-					Required:    false,
-					Optional:    true,
-					Description: "Name of the schema that the tag was created in.",
-				},
-			},
-		},
-	},
+	"tag": tagReferenceSchema,
 }
 
 type schemaID struct {

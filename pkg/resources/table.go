@@ -150,39 +150,7 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
-	"tag": {
-		Type:        schema.TypeList,
-		Required:    false,
-		Optional:    true,
-		MinItems:    0,
-		Description: "Definitions of a tag to associate with the table.",
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Tag name, e.g. department.",
-				},
-				"value": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Tag value, e.g. marketing_info.",
-				},
-				"database": {
-					Type:        schema.TypeString,
-					Required:    false,
-					Optional:    true,
-					Description: "Name of the database that the tag was created in.",
-				},
-				"schema": {
-					Type:        schema.TypeString,
-					Required:    false,
-					Optional:    true,
-					Description: "Name of the schema that the tag was created in.",
-				},
-			},
-		},
-	},
+	"tag": tagReferenceSchema,
 }
 
 func Table() *schema.Resource {
