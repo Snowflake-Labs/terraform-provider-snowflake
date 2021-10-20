@@ -53,7 +53,7 @@ resource "snowflake_database" "test2" {
 	comment = "Terraform acceptance test2 with tags"
 
 	tag {
-		name = snowflake_tag.test_tag.name
+		name = snowflake_tag.test.name
 		schema = snowflake_tag.test_tag.schema
 		database = snowflake_tag.test_tag.database
 		value = "%[1]v"
