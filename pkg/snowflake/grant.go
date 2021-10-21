@@ -30,6 +30,7 @@ const (
 	pipeType             grantType = "PIPE"
 	taskType             grantType = "TASK"
 	rowAccessPolicyType  grantType = "ROW ACCESS POLICY"
+	roleGrantType        grantType = "ROLE"
 )
 
 type GrantExecutable interface {
@@ -113,6 +114,16 @@ func (gb *CurrentMaterializedViewGrantBuilder) Share(n string) GrantExecutable {
 ///////////////////////////////////////////////
 /// END CurrentMaterializedViewGrantBuilder ///
 ///////////////////////////////////////////////
+
+// RoleGrant returns a pointer to a CurrentGrantBuilder for a role
+func RoleGrant(role string) GrantBuilder {
+
+	return &CurrentGrantBuilder{
+		name:          role,
+		qualifiedName: fmt.Sprintf(`"%v"`, role),
+		grantType:     roleGrantType,
+	}
+}
 
 // AccountGrant returns a pointer to a CurrentGrantBuilder for an account
 func AccountGrant() GrantBuilder {
