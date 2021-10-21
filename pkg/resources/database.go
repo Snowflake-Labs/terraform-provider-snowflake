@@ -41,6 +41,7 @@ var databaseSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share"},
 	},
+	"tag": tagReferenceSchema,
 }
 
 var databaseProperties = []string{"comment", "data_retention_time_in_days"}

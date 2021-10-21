@@ -34,6 +34,12 @@ func CreateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeList:
+					tags, ok := val.([]snowflake.TagValue)
+					if !ok {
+						continue
+					}
+					qb.SetTags(tags)
 				}
 			}
 		}

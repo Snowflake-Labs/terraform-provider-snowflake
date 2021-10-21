@@ -150,6 +150,7 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
+	"tag": tagReferenceSchema,
 }
 
 func Table() *schema.Resource {
@@ -279,23 +280,6 @@ func (c columns) toSnowflakeColumns() []snowflake.Column {
 		sC[i] = col.toSnowflakeColumn()
 	}
 	return sC
-}
-
-func (old columns) getNewIn(new columns) (added columns) {
-	added = columns{}
-	for _, cO := range old {
-		found := false
-		for _, cN := range new {
-			if cO.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, cO)
-		}
-	}
-	return
 }
 
 type changedColumns []changedColumn
@@ -446,6 +430,11 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("change_tracking"); ok {
 		builder.WithChangeTracking(v.(bool))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	stmt := builder.Create()
@@ -680,6 +669,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
 	}
+	handleTagChanges(db, d, builder)
 
 	return ReadTable(d, meta)
 }

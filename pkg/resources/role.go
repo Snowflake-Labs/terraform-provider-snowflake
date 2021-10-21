@@ -20,6 +20,7 @@ var roleSchema = map[string]*schema.Schema{
 		Optional: true,
 		// TODO validation
 	},
+	"tag": tagReferenceSchema,
 }
 
 func Role() *schema.Resource {
