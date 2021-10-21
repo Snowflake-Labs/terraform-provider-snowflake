@@ -43,6 +43,22 @@ type ColumnDefault struct {
 	expression string
 }
 
+type ColumnIdentity struct {
+	startNum int
+	stepNum  int
+}
+
+func (id *ColumnIdentity) WithStartNum(start int) *ColumnIdentity {
+	id.startNum = start
+	return id
+
+}
+
+func (id *ColumnIdentity) WithStep(step int) *ColumnIdentity {
+	id.stepNum = step
+	return id
+}
+
 func NewColumnDefaultWithConstant(constant string) *ColumnDefault {
 	return &ColumnDefault{
 		_type:      columnDefaultTypeConstant,
@@ -98,7 +114,8 @@ type Column struct {
 	_type    string // type is reserved
 	nullable bool
 	_default *ColumnDefault // default is reserved
-	comment  string         // pointer as value is nullable
+	identity *ColumnIdentity
+	comment  string // pointer as value is nullable
 }
 
 // WithName set the column name
@@ -130,6 +147,11 @@ func (c *Column) WithComment(comment string) *Column {
 	return c
 }
 
+func (c *Column) WithIdentity(id *ColumnIdentity) *Column {
+	c.identity = id
+	return c
+}
+
 func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment bool) string {
 
 	if c == nil {
@@ -146,6 +168,10 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 
 	if c._default != nil {
 		colDef.WriteString(fmt.Sprintf(` DEFAULT %v`, c._default.String(c._type)))
+	}
+
+	if c.identity != nil {
+		colDef.WriteString(fmt.Sprintf(` IDENTITY(%v, %v)`, c.identity.startNum, c.identity.stepNum))
 	}
 
 	if withComment {
@@ -211,6 +237,7 @@ func NewColumns(tds []tableDescription) Columns {
 			_type:    td.Type.String,
 			nullable: td.IsNullable(),
 			_default: td.ColumnDefault(),
+			identity: td.ColumnIdentity(),
 			comment:  td.Comment.String,
 		})
 	}
@@ -240,6 +267,12 @@ func (c Columns) Flatten() []interface{} {
 			flat["default"] = []interface{}{def}
 		}
 
+		if col.identity != nil {
+			id := map[string]interface{}{}
+			id["start_num"] = col.identity.startNum
+			id["step_num"] = col.identity.stepNum
+			flat["identity"] = []interface{}{id}
+		}
 		flattened = append(flattened, flat)
 	}
 	return flattened
@@ -507,12 +540,13 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 }
 
 // AddColumn returns the SQL query that will add a new column to the table.
-func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, comment string) string {
+func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string) string {
 	col := Column{
 		name:     name,
 		_type:    dataType,
 		nullable: nullable,
 		_default: _default,
+		identity: identity,
 		comment:  comment,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
@@ -647,7 +681,32 @@ func (td *tableDescription) ColumnDefault() *ColumnDefault {
 		return NewColumnDefaultWithConstant(UnescapeSnowflakeString(td.Default.String))
 	}
 
+	if td.ColumnIdentity() != nil {
+		/*
+			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity seperate so will return nil
+			here if identity information is present. Default/identity are mutually exclusive
+		*/
+		return nil
+	}
+
 	return NewColumnDefaultWithConstant(td.Default.String)
+}
+
+func (td *tableDescription) ColumnIdentity() *ColumnIdentity {
+	// if autoincrement is used this is reflected back IDENTITY START 1 INCREMENT 1
+	if !td.Default.Valid {
+		return nil
+	}
+	if strings.Contains(td.Default.String, "IDENTITY") {
+
+		split := strings.Split(td.Default.String, " ")
+		start, _ := strconv.Atoi(split[2])
+		step, _ := strconv.Atoi(split[4])
+
+		return &ColumnIdentity{start, step}
+
+	}
+	return nil
 }
 
 type primaryKeyDescription struct {

@@ -1052,3 +1052,159 @@ resource "snowflake_table" "test_table" {
 `
 	return fmt.Sprintf(s, name, tagName, tag2Name)
 }
+
+func TestAcc_TableIdentity(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: tableColumnWithIdentityDefault(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.expression"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.sequence"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "TIMESTAMP_NTZ(9)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.sequence"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.start_num", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.step_num", "1"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+			{
+				Config: tableColumnWithIdentity(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.expression"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.type.default.0.sequence"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "TIMESTAMP_NTZ(9)"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.1.type.default.0.sequence"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.identity.0.start_num"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.0.identity.0.step_num"),
+					// we've dropped the previous identity column and making sure that adding a new column as an identity works
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.start_num", "2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.step_num", "4"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+		},
+	})
+}
+
+func tableColumnWithIdentityDefault(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_sequence" "test_seq" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+}
+
+resource "snowflake_table" "test_table" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+	comment             = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "NUMBER(38,0)"
+	}
+	column {
+		name = "column2"
+		type = "TIMESTAMP_NTZ(9)"
+	}
+	column {
+		name = "column3"
+		type = "NUMBER(38,0)"
+		identity {
+		}
+	}
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
+}
+
+func tableColumnWithIdentity(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_sequence" "test_seq" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+}
+
+resource "snowflake_table" "test_table" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+	comment             = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "NUMBER(38,0)"
+	}
+	column {
+		name = "column2"
+		type = "TIMESTAMP_NTZ(9)"
+	}
+	
+	column {
+		name = "column4"
+		type = "NUMBER(38,0)"
+		identity {
+			start_num = 2
+			step_num = 4
+		}
+	}
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
+}

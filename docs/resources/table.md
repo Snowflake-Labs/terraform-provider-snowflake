@@ -45,6 +45,17 @@ resource "snowflake_table" "table" {
   }
 
   column {
+    name     = "identity"
+    type     = "NUMBER(38,0)"
+    nullable = true
+
+    identity {
+      start_num = 1
+      step_num  = 3
+    }
+  }
+
+  column {
     name     = "data"
     type     = "text"
     nullable = false
@@ -104,6 +115,7 @@ Optional:
 
 - **comment** (String) Column comment
 - **default** (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
+- **identity** (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
 - **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
 <a id="nestedblock--column--default"></a>
@@ -114,6 +126,15 @@ Optional:
 - **constant** (String) The default constant value for the column
 - **expression** (String) The default expression value for the column
 - **sequence** (String) The default sequence to use for the column
+
+
+<a id="nestedblock--column--identity"></a>
+### Nested Schema for `column.identity`
+
+Optional:
+
+- **start_num** (Number) The number to start incrementing at.
+- **step_num** (Number) Step size to increment by.
 
 
 

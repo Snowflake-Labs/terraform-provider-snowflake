@@ -81,6 +81,35 @@ func TestTableCreate(t *testing.T) {
 	r.Equal(s.Create(), `CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true WITH TAG ("test_db"."test_schema"."tag" = "value", "test_db"."test_schema"."tag2" = "value2")`)
 }
 
+func TestTableCreateIdentity(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	cols := []Column{
+		{
+			name:     "column1",
+			_type:    "OBJECT",
+			nullable: true,
+		},
+		{
+			name:     "column2",
+			_type:    "VARCHAR",
+			nullable: true,
+			comment:  "only populated when data is available",
+		},
+		{
+			name:     "column3",
+			_type:    "NUMBER(38,0)",
+			nullable: false,
+			identity: &ColumnIdentity{2, 5},
+		},
+	}
+
+	s.WithColumns(Columns(cols))
+	r.Equal(s.QualifiedName(), `"test_db"."test_schema"."test_table"`)
+
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL IDENTITY(2, 5) COMMENT '') DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
+}
+
 func TestTableChangeComment(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
@@ -96,19 +125,25 @@ func TestTableRemoveComment(t *testing.T) {
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "VARIANT", true, nil, ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`)
+	r.Equal(s.AddColumn("new_column", "VARIANT", true, nil, nil, ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`)
 }
 
 func TestTableAddColumnWithComment(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "VARIANT", true, nil, "some comment"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`)
+	r.Equal(s.AddColumn("new_column", "VARIANT", true, nil, nil, "some comment"), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`)
 }
 
 func TestTableAddColumnWithDefault(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
-	r.Equal(s.AddColumn("new_column", "NUMBER(38,0)", true, NewColumnDefaultWithConstant("1"), ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) DEFAULT 1 COMMENT ''`)
+	r.Equal(s.AddColumn("new_column", "NUMBER(38,0)", true, NewColumnDefaultWithConstant("1"), nil, ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) DEFAULT 1 COMMENT ''`)
+}
+
+func TestTableAddColumnWithIdentity(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table", "test_db", "test_schema")
+	r.Equal(s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, ""), `ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) COMMENT ''`)
 }
 
 func TestTableDropColumn(t *testing.T) {
