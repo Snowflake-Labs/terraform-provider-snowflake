@@ -50,7 +50,21 @@ resource "snowflake_stage_grant" "grant_example_stage" {
 - **id** (String) The ID of this resource.
 - **snowflake_iam_user** (String)
 - **storage_integration** (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
+- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 - **url** (String) Specifies the URL for the stage.
+
+<a id="nestedblock--tag"></a>
+### Nested Schema for `tag`
+
+Required:
+
+- **name** (String) Tag name, e.g. department.
+- **value** (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- **database** (String) Name of the database that the tag was created in.
+- **schema** (String) Name of the schema that the tag was created in.
 
 ## Import
 

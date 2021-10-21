@@ -39,6 +39,20 @@ resource snowflake_schema schema {
 - **id** (String) The ID of this resource.
 - **is_managed** (Boolean) Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.
 - **is_transient** (Boolean) Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
+- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+
+<a id="nestedblock--tag"></a>
+### Nested Schema for `tag`
+
+Required:
+
+- **name** (String) Tag name, e.g. department.
+- **value** (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- **database** (String) Name of the database that the tag was created in.
+- **schema** (String) Name of the schema that the tag was created in.
 
 ## Import
 

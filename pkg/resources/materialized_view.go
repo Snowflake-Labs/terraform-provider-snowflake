@@ -61,6 +61,7 @@ var materializedViewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"tag": tagReferenceSchema,
 }
 
 // View returns a pointer to the resource representing a view
@@ -150,6 +151,11 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	q := builder.Create()
@@ -294,6 +300,8 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+
+	handleTagChanges(db, d, builder)
 
 	return ReadMaterializedView(d, meta)
 }

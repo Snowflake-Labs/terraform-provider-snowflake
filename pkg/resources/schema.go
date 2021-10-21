@@ -58,6 +58,7 @@ var schemaSchema = map[string]*schema.Schema{
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(0, 90),
 	},
+	"tag": tagReferenceSchema,
 }
 
 type schemaID struct {
@@ -142,6 +143,11 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("data_retention_days"); ok {
 		builder.WithDataRetentionDays(v.(int))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	q := builder.Create()
@@ -299,6 +305,8 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error updating data retention days on %v", d.Id())
 		}
 	}
+
+	handleTagChanges(db, d, builder)
 
 	return ReadSchema(d, meta)
 }
