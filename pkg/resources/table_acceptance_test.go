@@ -969,3 +969,86 @@ resource "snowflake_table" "test_table" {
 `
 	return fmt.Sprintf(s, name, name, name, name)
 }
+
+func TestAcc_TableTags(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: tableWithTags(accName, tagName, tag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.name", tagName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.value", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.name", tag2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.value", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.schema", accName),
+				),
+			},
+		},
+	})
+}
+
+func tableWithTags(name string, tagName string, tag2Name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%[1]s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%[1]s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_tag" "test_tag" {
+	name     = "%[2]s"
+	database = snowflake_database.test_database.name
+	schema   = snowflake_schema.test_schema.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_tag" "test2_tag" {
+	name     = "%[3]s"
+	database = snowflake_database.test_database.name
+	schema   = snowflake_schema.test_schema.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_table" "test_table" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%[1]s"
+	comment             = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+	}
+
+	tag {
+		name = snowflake_tag.test_tag.name
+		schema = snowflake_tag.test_tag.schema
+		database = snowflake_tag.test_tag.database
+		value = "%[1]s"
+	}
+
+	tag {
+		name = snowflake_tag.test2_tag.name
+		schema = snowflake_tag.test2_tag.schema
+		database = snowflake_tag.test2_tag.database
+		value = "%[1]s"
+	}
+}
+`
+	return fmt.Sprintf(s, name, tagName, tag2Name)
+}

@@ -161,6 +161,14 @@ func stream(t *testing.T, id string, params map[string]interface{}) *schema.Reso
 	return d
 }
 
+func tag(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Tag().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func providers() map[string]*schema.Provider {
 	p := provider.Provider()
 	return map[string]*schema.Provider{

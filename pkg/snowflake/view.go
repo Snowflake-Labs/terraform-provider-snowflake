@@ -20,6 +20,7 @@ type ViewBuilder struct {
 	replace   bool
 	comment   string
 	statement string
+	tags      []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -66,6 +67,30 @@ func (vb *ViewBuilder) WithSecure() *ViewBuilder {
 func (vb *ViewBuilder) WithStatement(s string) *ViewBuilder {
 	vb.statement = s
 	return vb
+}
+
+// WithTags sets the tags on the ViewBuilder
+func (vb *ViewBuilder) WithTags(tags []TagValue) *ViewBuilder {
+	vb.tags = tags
+	return vb
+}
+
+// AddTag returns the SQL query that will add a new tag to the view.
+func (vb *ViewBuilder) AddTag(tag TagValue) string {
+	qn, _ := vb.QualifiedName()
+	return fmt.Sprintf(`ALTER VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, qn, tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the view.
+func (vb *ViewBuilder) ChangeTag(tag TagValue) string {
+	qn, _ := vb.QualifiedName()
+	return fmt.Sprintf(`ALTER VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, qn, tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the view.
+func (vb *ViewBuilder) UnsetTag(tag TagValue) string {
+	qn, _ := vb.QualifiedName()
+	return fmt.Sprintf(`ALTER VIEW %s UNSET TAG "%v"."%v"."%v"`, qn, tag.Database, tag.Schema, tag.Name)
 }
 
 // View returns a pointer to a Builder that abstracts the DDL operations for a view.

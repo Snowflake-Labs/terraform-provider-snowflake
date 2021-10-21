@@ -268,6 +268,7 @@ type TableBuilder struct {
 	dataRetentionTimeInDays int
 	changeTracking          bool
 	defaultDDLCollation     string
+	tags                    []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -327,10 +328,46 @@ func (tb *TableBuilder) WithChangeTracking(changeTracking bool) *TableBuilder {
 	return tb
 }
 
+// WithTags sets the tags on the TableBuilder
+func (tb *TableBuilder) WithTags(tags []TagValue) *TableBuilder {
+	tb.tags = tags
+	return tb
+}
+
+// AddTag returns the SQL query that will add a new tag to the table.
+func (tb *TableBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER TABLE %s SET TAG "%v"."%v"."%v" = "%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the table.
+func (tb *TableBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER TABLE %s SET TAG "%v"."%v"."%v" = "%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the table.
+func (tb *TableBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER TABLE %s UNSET TAG "%v"."%v"."%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
+}
+
 //Function to get clustering definition
 func (tb *TableBuilder) GetClusterKeyString() string {
 
 	return JoinStringList(tb.clusterBy[:], ", ")
+}
+
+func (tb *TableBuilder) GetTagValueString() string {
+	var q strings.Builder
+	for _, v := range tb.tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
 }
 
 func JoinStringList(instrings []string, delimiter string) string {
@@ -441,6 +478,10 @@ func (tb *TableBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` DATA_RETENTION_TIME_IN_DAYS = %d`, tb.dataRetentionTimeInDays))
 	q.WriteString(fmt.Sprintf(` CHANGE_TRACKING = %t`, tb.changeTracking))
+
+	if tb.tags != nil {
+		q.WriteString(fmt.Sprintf(` WITH TAG (%v)`, tb.GetTagValueString()))
+	}
 
 	return q.String()
 }

@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -56,4 +57,13 @@ func sortStringsBool(strs map[string]bool) []string {
 	}
 	sort.Strings(sortedStringProperties)
 	return sortedStringProperties
+}
+
+func sortTags(tags []TagValue) []TagValue {
+	sort.Slice(tags, func(i, j int) bool {
+		qn1 := fmt.Sprintf("%s.%s.%s", tags[i].Database, tags[i].Schema, tags[i].Name)
+		qn2 := fmt.Sprintf("%s.%s.%s", tags[j].Database, tags[j].Schema, tags[j].Name)
+		return qn1 < qn2
+	})
+	return tags
 }
