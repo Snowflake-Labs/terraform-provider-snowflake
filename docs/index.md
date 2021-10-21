@@ -37,7 +37,7 @@ provider "snowflake" {
   
   // auth section: private key
   private_key_path       = "..." // or environment variable SNOWFLAKE_PRIVATE_KEY_PATH
-  private_key            = "..." // or environment variable 
+  private_key            = "..." // or environment variable SNOWFLAKE_PRIVATE_KEY
   private_key_passphrase = "..." // or environment variable SNOWFLAKE_PRIVATE_KEY_PASSPHRASE
   // passphrase is only required if the key has one
   
