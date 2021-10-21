@@ -14,22 +14,33 @@ Coverage is focused on part of Snowflake related to access control.
 ```terraform
 provider "snowflake" {
   // required
-  username = "..."
-  account  = "..."
-  region   = "..."
+  username = "..." // or environment variable SNOWFLAKE_USER
+  account  = "..." // or environment variable SNOWFLAKE_ACCOUNT
+  region   = "..." // or environment variable SNOWFLAKE_REGION
 
-  // optional, at exactly one must be set
-  password               = "..."
-  oauth_access_token     = "..."
-  private_key_path       = "..."
-  private_key            = "..."
-  private_key_passphrase = "..."
-  oauth_refresh_token    = "..."
-  oauth_client_id        = "..."
-  oauth_client_secret    = "..."
-  oauth_endpoint         = "..."
-  oauth_redirect_url     = "..."
-
+  // each "section" of auth parameters is mutually-exclusive with the others
+  // auth section: password
+  password               = "..." // or environment variable SNOWFLAKE_PASSWORD
+  
+  // auth section: browser auth
+  browser_auth           = "..." // or environment variable SNOWFLAKE_USE_BROWSER_AUTH (Boolean)
+  
+  // auth section: oauth access token
+  oauth_access_token     = "..." // or environment variable SNOWFLAKE_OAUTH_ACCESS_TOKEN
+  
+  // auth section: oauth refresh token
+  oauth_refresh_token    = "..." // or environment variable SNOWFLAKE_OAUTH_REFRESH_TOKEN
+  oauth_client_id        = "..." // or environment variable SNOWFLAKE_OAUTH_CLIENT_ID
+  oauth_client_secret    = "..." // or environment variable SNOWFLAKE_OAUTH_CLIENT_SECRET
+  oauth_endpoint         = "..." // or environment variable SNOWFLAKE_OAUTH_ENDPOINT
+  oauth_redirect_url     = "..." // or environment variable SNOWFLAKE_OAUTH_REDIRECT_URL
+  
+  // auth section: private key
+  private_key_path       = "..." // or environment variable SNOWFLAKE_PRIVATE_KEY_PATH
+  private_key            = "..." // or environment variable 
+  private_key_passphrase = "..." // or environment variable SNOWFLAKE_PRIVATE_KEY_PASSPHRASE
+  // passphrase is only required if the key has one
+  
   // optional
   role = "..."
 }
@@ -156,31 +167,60 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 (e.g. `alias` and `version`), the following arguments are supported in the Snowflake
  `provider` block:
 
-* `account` - (required) The name of the Snowflake account. Can also come from the
-  `SNOWFLAKE_ACCOUNT` environment variable.
-* `username` - (required) Username for username+password authentication. Can come from the
-  `SNOWFLAKE_USER` environment variable.
-* `region` - (required) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Can be source from the `SNOWFLAKE_REGION` environment variable.
-* `password` - (optional) Password for username+password auth. Cannot be used with `browser_auth` or
-  `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.
-* `oauth_access_token` - (optional) Token for use with OAuth. Generating the token is left to other
-  tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`.
-  Can be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
-* `oauth_refresh_token` - (optional) Token for use with OAuth. Setup and generation of the token is
-  left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`,
-  `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`,
-  `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment
+* `account` - (required)  
+  The name of the Snowflake account.  
+  Can also be sourced from the `SNOWFLAKE_ACCOUNT` environment variable.[^1]
+* `username` - (required)  
+  Username for username+password authentication.  
+  Can also be sourced from the `SNOWFLAKE_USER` environment variable.[^1]
+* `region` - (required)  
+  [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  
+  Can also be sourced from the `SNOWFLAKE_REGION` environment variable.[^1]
+* `browser_auth` - (optional)  
+  Boolean value indicating whether to use browser-based auth.  
+  `True` value conflicts with `password`, `private_key_path`, `private_key`, `private_key_passphrase`, `oauth_access_token`, and `oauth_refresh_token`.  
+  Can also be sourced from the `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.
+* `password` - (optional)  
+  Password for username+password auth.  
+  Conflicts with `browser_auth`, `private_key_path`, `private_key`, `private_key_passphrase`, `oauth_access_token`, and `oauth_refresh_token`.  
+  Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.
+* `oauth_access_token` - (optional)  
+  Token for use with OAuth. Generating the token is left to other tools.  
+  Conflicts with `browser_auth`, `private_key_path`, `private_key`, `private_key_passphrase`, `password`, and `oauth_refresh_token`.  
+  Can also be sourced from the `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
+* `oauth_refresh_token` - (optional)  
+  Token for use with OAuth. Setup and generation of the token is
+  left to other tools.  
+  Must be used in conjunction with `oauth_client_id`, `oauth_client_secret`,
+  `oauth_endpoint`, `oauth_redirect_url`.  
+  Conflicts with `browser_auth`, `private_key`, `private_key_path`, `private_key_passphrase`, `password` and `oauth_access_token`.  
+  Can also be sourced from the `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment
   variable.
-* `oauth_client_id` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
-  `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
-* `oauth_client_secret` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
-  `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
-* `oauth_endpoint` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
-  `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
-* `oauth_redirect_url` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
-  `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
-* `private_key_path` - (optional) Path to a private key for using keypair authentication.. Cannot be
-  used with `browser_auth`, `oauth_access_token` or `password`. Can be source from
-  `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
-* `role` - (optional) Snowflake role to use for operations. If left unset, default role for user
-  will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
+* `oauth_client_id` - (optional)  
+  Required when `oauth_refresh_token` is used.  
+  Can also be sourced from the `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
+* `oauth_client_secret` - (optional)  
+  Required when `oauth_refresh_token` is used. 
+  Can also be sourced from the `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
+* `oauth_endpoint` - (optional)  
+  Required when `oauth_refresh_token` is used.  
+  Can also be sourced from the `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
+* `oauth_redirect_url` - (optional)  
+  Required when `oauth_refresh_token` is used. 
+  Can also be sourced from the `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
+* `private_key` - (optional)  
+  Contents of a private key for using keypair authentication.  
+  Conflicts with `browser_auth`, `oauth_access_token`, `password`, and `private_key_path`.[^2]
+* `private_key_path` - (optional) 
+  Path to a private key for using keypair authentication.  
+  Conflicts with `browser_auth`, `oauth_access_token`, `password`, and `private_key`.[^2]  
+  Can also be sourced from the `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
+* `role` - (optional)  
+  Snowflake role to use for operations. 
+  If left unset, default role for user will be used.  
+  Can also be sourced from the `SNOWFLAKE_ROLE` environment variable.
+
+
+[^1]: While these can be set via environment variables, the fields are still required in the provider block. The provider block will also prefer values provided directly in the block over environment variables.  
+[^2]: When authenticating with a Private Key, exactly one of `private_key` and `private_key_path` must be provided, whether directly in the provider block or in environment variables.
+
