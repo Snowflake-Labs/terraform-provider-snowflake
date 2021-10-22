@@ -7,11 +7,11 @@ import (
 )
 
 func SystemGetSnowflakePlatformInfoQuery() string {
-	return `SELECT SYSTEM$GET_SNOWFLAKE_PLATFORM_INFO() AS "info"`
+	return `SELECT SYSTEM$GET_SNOWFLAKE_PLATFORM_INFO() AS "INFO"`
 }
 
 type RawSnowflakePlatformInfo struct {
-	Info string `db:"info"`
+	Info string `db:"INFO"`
 }
 
 type snowflakePlatformInfoInternal struct {
