@@ -12,22 +12,23 @@ Coverage is focused on part of Snowflake related to access control.
 ## Example Provider Configuration
 
 ```terraform
-provider snowflake {
+provider "snowflake" {
   // required
   username = "..."
   account  = "..."
   region   = "..."
 
   // optional, at exactly one must be set
-  password              = "..."
-  oauth_access_token    = "..."
-  private_key_path      = "..."
-  private_key           = "..."
-  oauth_refresh_token   = "..."
-  oauth_client_id       = "..."
-  oauth_client_secret   = "..."
-  oauth_endpoint        = "..."
-  oauth_redirect_url    = "..."
+  password               = "..."
+  oauth_access_token     = "..."
+  private_key_path       = "..."
+  private_key            = "..."
+  private_key_passphrase = "..."
+  oauth_refresh_token    = "..."
+  oauth_client_id        = "..."
+  oauth_client_secret    = "..."
+  oauth_endpoint         = "..."
+  oauth_redirect_url     = "..."
 
   // optional
   role = "..."
@@ -57,6 +58,7 @@ provider snowflake {
 - **oauth_refresh_token** (String, Sensitive)
 - **password** (String, Sensitive)
 - **private_key** (String, Sensitive)
+- **private_key_passphrase** (String, Sensitive) Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc
 - **private_key_path** (String, Sensitive)
 - **region** (String)
 - **role** (String)
@@ -89,6 +91,29 @@ To export the variables into your provider:
 ```shell
 export SNOWFLAKE_USER="..."
 export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+### Keypair Authentication Passhrase
+
+If your private key requires a passphrase, then this can be supplied via the
+environment variable `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE`.
+
+Only the ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm,
+aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported on the private key
+
+```shell
+cd ~/.ssh
+openssl genrsa -out snowflake_key 4096
+openssl rsa -in snowflake_key -pubout -out snowflake_key.pub
+openssl pkcs8 -topk8 -inform pem -in snowflake_key -outform PEM -v2 aes-256-cbc -out snowflake_key.p8
+```
+
+To export the variables into your provider:
+
+```shell
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key.p8"
+export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
 ```
 
 ### OAuth Access Token
@@ -139,24 +164,23 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `password` - (optional) Password for username+password auth. Cannot be used with `browser_auth` or
   `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.
 * `oauth_access_token` - (optional) Token for use with OAuth. Generating the token is left to other
-  tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. 
+  tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`.
   Can be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
-* `oauth_refresh_token` - (optional) Token for use with OAuth. Setup and generation of the token is 
-  left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, 
-  `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, 
-  `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment 
+* `oauth_refresh_token` - (optional) Token for use with OAuth. Setup and generation of the token is
+  left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`,
+  `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`,
+  `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment
   variable.
-* `oauth_client_id` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+* `oauth_client_id` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
   `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
-* `oauth_client_secret` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+* `oauth_client_secret` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
   `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
-* `oauth_endpoint` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
+* `oauth_endpoint` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
   `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
-* `oauth_redirect_url` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from 
-  `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable. 
+* `oauth_redirect_url` - (optional) Required when `oauth_refresh_token` is used. Can be sourced from
+  `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
 * `private_key_path` - (optional) Path to a private key for using keypair authentication.. Cannot be
   used with `browser_auth`, `oauth_access_token` or `password`. Can be source from
   `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 * `role` - (optional) Snowflake role to use for operations. If left unset, default role for user
   will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
-

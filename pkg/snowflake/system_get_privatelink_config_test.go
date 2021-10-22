@@ -27,7 +27,7 @@ func TestSystemGetPrivateLinkGetStructuredConfigAws(t *testing.T) {
 	r.Equal("com.amazonaws.vpce.eu-west-1.vpce-svc-123456789abcdef12", c.AwsVpceID)
 	r.Equal("", c.AzurePrivateLinkServiceID)
 	r.Equal("ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.AccountURL)
-	r.Equal("ocsp.ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.OSCPURL)
+	r.Equal("ocsp.ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.OCSPURL)
 }
 
 func TestSystemGetPrivateLinkGetStructuredConfigAwsAsPerDocumentation(t *testing.T) {
@@ -44,7 +44,7 @@ func TestSystemGetPrivateLinkGetStructuredConfigAwsAsPerDocumentation(t *testing
 	r.Equal("com.amazonaws.vpce.eu-west-1.vpce-svc-123456789abcdef12", c.AwsVpceID)
 	r.Equal("", c.AzurePrivateLinkServiceID)
 	r.Equal("ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.AccountURL)
-	r.Equal("ocsp.ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.OSCPURL)
+	r.Equal("ocsp.ab1234.eu-west-1.privatelink.snowflakecomputing.com", c.OCSPURL)
 }
 
 func TestSystemGetPrivateLinkGetStructuredConfigAzure(t *testing.T) {
@@ -61,5 +61,5 @@ func TestSystemGetPrivateLinkGetStructuredConfigAzure(t *testing.T) {
 	r.Equal("", c.AwsVpceID)
 	r.Equal("sf-pvlinksvc-azeastus2.east-us-2.azure.something", c.AzurePrivateLinkServiceID)
 	r.Equal("ab1234.east-us-2.azure.privatelink.snowflakecomputing.com", c.AccountURL)
-	r.Equal("ocsp.ab1234.east-us-2.azure.privatelink.snowflakecomputing.com", c.OSCPURL)
+	r.Equal("ocsp.ab1234.east-us-2.azure.privatelink.snowflakecomputing.com", c.OCSPURL)
 }

@@ -45,6 +45,17 @@ resource "snowflake_table" "table" {
   }
 
   column {
+    name     = "identity"
+    type     = "NUMBER(38,0)"
+    nullable = true
+
+    identity {
+      start_num = 1
+      step_num  = 3
+    }
+  }
+
+  column {
     name     = "data"
     type     = "text"
     nullable = false
@@ -86,6 +97,7 @@ resource "snowflake_table" "table" {
 - **data_retention_days** (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
 - **id** (String) The ID of this resource.
 - **primary_key** (Block List, Max: 1) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
+- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
@@ -103,6 +115,7 @@ Optional:
 
 - **comment** (String) Column comment
 - **default** (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
+- **identity** (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
 - **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
 <a id="nestedblock--column--default"></a>
@@ -113,6 +126,15 @@ Optional:
 - **constant** (String) The default constant value for the column
 - **expression** (String) The default expression value for the column
 - **sequence** (String) The default sequence to use for the column
+
+
+<a id="nestedblock--column--identity"></a>
+### Nested Schema for `column.identity`
+
+Optional:
+
+- **start_num** (Number) The number to start incrementing at.
+- **step_num** (Number) Step size to increment by.
 
 
 
@@ -126,6 +148,20 @@ Required:
 Optional:
 
 - **name** (String) Name of constraint
+
+
+<a id="nestedblock--tag"></a>
+### Nested Schema for `tag`
+
+Required:
+
+- **name** (String) Tag name, e.g. department.
+- **value** (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- **database** (String) Name of the database that the tag was created in.
+- **schema** (String) Name of the schema that the tag was created in.
 
 ## Import
 
