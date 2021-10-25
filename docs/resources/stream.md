@@ -55,6 +55,6 @@ resource snowflake_stream stream {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | on table name
-terraform import snowflake_stream.example 'dbName|schemaName|tableName'
+# format is database name | schema name | stream name
+terraform import snowflake_stream.example 'dbName|schemaName|streamName'
 ```
