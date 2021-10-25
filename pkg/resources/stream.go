@@ -246,6 +246,16 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("database", stream.DatabaseName.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("schema", stream.SchemaName.String)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("on_table", stream.TableName.String)
 	if err != nil {
 		return err
