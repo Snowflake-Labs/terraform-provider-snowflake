@@ -51,7 +51,7 @@ resource "snowflake_external_function" "test_ext_func" {
 - **comment** (String) A description of the external function.
 - **compression** (String) If specified, the JSON payload is compressed when sent from Snowflake to the proxy service, and when sent back from the proxy service to Snowflake.
 - **context_headers** (List of String) Binds Snowflake context function results to HTTP headers.
-- **header** (Block List) Allows users to specify key-value metadata that is sent with every request as HTTP headers. (see [below for nested schema](#nestedblock--header))
+- **header** (Block Set) Allows users to specify key-value metadata that is sent with every request as HTTP headers. (see [below for nested schema](#nestedblock--header))
 - **id** (String) The ID of this resource.
 - **max_batch_rows** (Number) This specifies the maximum number of rows in each batch sent to the proxy service.
 - **null_input_behavior** (String) Specifies the behavior of the external function when called with null inputs.

@@ -8,6 +8,7 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -99,7 +100,7 @@ func TestExternalFunctionRead(t *testing.T) {
 		r.Equal("data", test_func_args["name"].(string))
 		r.Equal("varchar", test_func_args["type"].(string))
 
-		headers := d.Get("header").([]interface{})
+		headers := d.Get("header").(*schema.Set).List()
 		r.Len(headers, 1)
 		test_func_headers := headers[0].(map[string]interface{})
 		r.Len(test_func_headers, 2)
@@ -134,7 +135,7 @@ func TestExternalFunctionReadReturnTypeVariant(t *testing.T) {
 		r.Equal("data", test_func_args["name"].(string))
 		r.Equal("varchar", test_func_args["type"].(string))
 
-		headers := d.Get("header").([]interface{})
+		headers := d.Get("header").(*schema.Set).List()
 		r.Len(headers, 1)
 		test_func_headers := headers[0].(map[string]interface{})
 		r.Len(test_func_headers, 2)
