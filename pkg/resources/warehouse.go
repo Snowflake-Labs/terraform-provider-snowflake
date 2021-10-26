@@ -120,6 +120,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Default:     0,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
+	"tag": tagReferenceSchema,
 }
 
 // Warehouse returns a pointer to the resource representing a warehouse

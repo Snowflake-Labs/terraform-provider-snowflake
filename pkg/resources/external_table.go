@@ -128,6 +128,7 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Name of the role that owns the external table.",
 	},
+	"tag": tagReferenceSchema,
 }
 
 func ExternalTable() *schema.Resource {
@@ -231,6 +232,11 @@ func CreateExternalTable(data *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := data.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := data.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	stmt := builder.Create()

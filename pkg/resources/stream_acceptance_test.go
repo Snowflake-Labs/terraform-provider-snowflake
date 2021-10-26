@@ -40,6 +40,11 @@ func TestAcc_Stream(t *testing.T) {
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},
+			{
+				ResourceName:      "snowflake_stream.test_stream",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

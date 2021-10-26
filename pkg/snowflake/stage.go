@@ -26,6 +26,7 @@ type StageBuilder struct {
 	fileFormat         string
 	copyOptions        string
 	comment            string
+	tags               []TagValue
 }
 
 // QualifiedName prepends the db and schema and escapes everything nicely
@@ -77,6 +78,27 @@ func (sb *StageBuilder) WithCopyOptions(c string) *StageBuilder {
 func (sb *StageBuilder) WithComment(c string) *StageBuilder {
 	sb.comment = c
 	return sb
+}
+
+// WithTags sets the tags on the ExternalTableBuilder
+func (sb *StageBuilder) WithTags(tags []TagValue) *StageBuilder {
+	sb.tags = tags
+	return sb
+}
+
+// AddTag returns the SQL query that will add a new tag to the view.
+func (sb *StageBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the view.
+func (sb *StageBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the view.
+func (sb *StageBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // Stage returns a pointer to a Builder that abstracts the DDL operations for a stage.
