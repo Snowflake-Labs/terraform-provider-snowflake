@@ -279,7 +279,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("header"); ok {
 		headers := []map[string]string{}
-		for _, header := range d.Get("header").([]interface{}) {
+		for _, header := range d.Get("header").(*schema.Set).List() {
 			headerDef := map[string]string{}
 			for key, val := range header.(map[string]interface{}) {
 				headerDef[key] = val.(string)
