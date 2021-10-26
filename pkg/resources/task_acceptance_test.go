@@ -3,6 +3,7 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 	"text/template"
 
@@ -160,7 +161,6 @@ var (
 )
 
 func TestAcc_Task(t *testing.T) {
-	t.Skip("broken by a change to snowflake")
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -304,4 +304,144 @@ resource "snowflake_task" "solo_task" {
 	config.Execute(&result, settings) //nolint
 
 	return result.String()
+}
+
+func TestAcc_Task_Managed(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: taskConfigManaged1(accName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.managed_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "XSMALL"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
+				),
+			},
+			{
+				Config: taskConfigManaged2(accName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.managed_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", ""),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", accName),
+				),
+			},
+			{
+				Config: taskConfigManaged1(accName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.managed_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "XSMALL"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
+				),
+			},
+			{
+				Config: taskConfigManaged3(accName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.managed_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "SMALL"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
+				),
+			},
+		},
+	})
+}
+
+func taskConfigManaged1(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+resource "snowflake_task" "managed_task" {
+	name     	                             = "%s"
+	database  	                             = snowflake_database.test_database.name
+	schema    	                             = snowflake_schema.test_schema.name
+	sql_statement                            = "SELECT 1"
+	enabled  	                             = true
+	schedule                                 = "5 MINUTE"
+    user_task_managed_initial_warehouse_size = "XSMALL"
+}
+
+`
+	return fmt.Sprintf(s, name, name, name)
+}
+
+func taskConfigManaged2(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_warehouse" "test_wh" {
+	name = "%s"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_task" "managed_task" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	schedule      = "5 MINUTE"
+	warehouse     = snowflake_warehouse.test_wh.name
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
+}
+
+func taskConfigManaged3(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_task" "managed_task" {
+	name     	                             = "%s"
+	database  	                             = snowflake_database.test_database.name
+	schema    	                             = snowflake_schema.test_schema.name
+	sql_statement                            = "SELECT 1"
+	enabled  	                             = true
+	schedule                                 = "5 MINUTE"
+    user_task_managed_initial_warehouse_size = "SMALL"
+}
+`
+	return fmt.Sprintf(s, name, name, name)
 }

@@ -45,8 +45,8 @@ var taskSchema = map[string]*schema.Schema{
 	},
 	"warehouse": {
 		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The warehouse the task will use.",
+		Optional:    true,
+		Description: "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task.",
 		ForceNew:    false,
 	},
 	"schedule": {
@@ -87,6 +87,14 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
 		ForceNew:         false,
 		DiffSuppressFunc: DiffSuppressStatement,
+	},
+	"user_task_managed_initial_warehouse_size": {
+		Type:     schema.TypeString,
+		Optional: true,
+		ValidateFunc: validation.StringInSlice([]string{
+			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE", "X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE",
+		}, true),
+		Description: "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting.",
 	},
 }
 
@@ -335,11 +343,19 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		paramMap := map[string]interface{}{}
 		for _, param := range params {
 			log.Printf("[TRACE] %+v\n", param)
-			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" {
+
+			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" || param.Level == "SYSTEM" {
 				continue
 			}
 
-			paramMap[param.Key] = param.Value
+			if param.Key == "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE" {
+				err = d.Set("user_task_managed_initial_warehouse_size", param.Value)
+				if err != nil {
+					return err
+				}
+			} else {
+				paramMap[param.Key] = param.Value
+			}
 		}
 
 		err := d.Set("session_parameters", paramMap)
@@ -359,15 +375,21 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	warehouse := d.Get("warehouse").(string)
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
 	builder := snowflake.Task(name, database, dbSchema)
-	builder.WithWarehouse(warehouse)
 	builder.WithStatement(sql)
 
 	// Set optionals
+	if v, ok := d.GetOk("warehouse"); ok {
+		builder.WithWarehouse(v.(string))
+	}
+
+	if v, ok := d.GetOk("user_task_managed_initial_warehouse_size"); ok {
+		builder.WithInitialWarehouseSize(v.(string))
+	}
+
 	if v, ok := d.GetOk("schedule"); ok {
 		builder.WithSchedule(v.(string))
 	}
@@ -443,15 +465,35 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer resumeTask(root, meta)
 
 	if d.HasChange("warehouse") {
-		new := d.Get("warehouse")
-		q := builder.ChangeWarehouse(new.(string))
+		var q string
+		newWarehouse := d.Get("warehouse")
+
+		if newWarehouse == "" {
+			q = builder.SwitchWarehouseToManaged()
+		} else {
+			q = builder.ChangeWarehouse(newWarehouse.(string))
+		}
+
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating warehouse on task %v", d.Id())
 		}
+	}
+
+	if d.HasChange("user_task_managed_initial_warehouse_size") {
+		newSize := d.Get("user_task_managed_initial_warehouse_size")
+		warehouse := d.Get("warehouse")
+
+		if warehouse == "" && newSize != "" {
+			var q = builder.SwitchManagedWithInitialSize(newSize.(string))
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
+			}
+		}
+
 	}
 
 	if d.HasChange("schedule") {
@@ -604,6 +646,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	resumeTask(root, meta)
 	return ReadTask(d, meta)
 }
 
