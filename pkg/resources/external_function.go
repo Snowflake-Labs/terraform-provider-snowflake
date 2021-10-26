@@ -404,12 +404,25 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		case "returns":
-			// Format in Snowflake DB is returnType(<some number>)
-			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
+			returnType := desc.Value.String
+			// We first check for VARIANT
+			if returnType == "VARIANT" {
+				if err = d.Set("return_type", returnType); err != nil {
+					return err
+				}
+				break
+			}
+
+			// otherwise, format in Snowflake DB is returnType(<some number>)
+			re := regexp.MustCompile(`^(\w+)\([0-9]*\)$`)
 			match := re.FindStringSubmatch(desc.Value.String)
+			if len(match) < 2 {
+				return errors.Errorf("return_type %s not recognized", returnType)
+			}
 			if err = d.Set("return_type", match[1]); err != nil {
 				return err
 			}
+
 		case "null handling":
 			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err

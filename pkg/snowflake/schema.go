@@ -19,6 +19,7 @@ type SchemaBuilder struct {
 	transient            bool
 	setDataRetentionDays bool
 	dataRetentionDays    int
+	tags                 []TagValue
 }
 
 // QualifiedName prepends the db if set and escapes everything nicely
@@ -64,6 +65,27 @@ func (sb *SchemaBuilder) WithDataRetentionDays(d int) *SchemaBuilder {
 func (sb *SchemaBuilder) WithDB(db string) *SchemaBuilder {
 	sb.db = db
 	return sb
+}
+
+// WithTags sets the tags on the SchemaBuilder
+func (sb *SchemaBuilder) WithTags(tags []TagValue) *SchemaBuilder {
+	sb.tags = tags
+	return sb
+}
+
+// AddTag returns the SQL query that will add a new tag to the schema.
+func (sb *SchemaBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the schema.
+func (sb *SchemaBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the schema.
+func (sb *SchemaBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // Schema returns a pointer to a Builder that abstracts the DDL operations for a schema.
