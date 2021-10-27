@@ -44,10 +44,11 @@ var taskSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"warehouse": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task.",
-		ForceNew:    false,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)",
+		ForceNew:      false,
+		ConflictsWith: []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
 		Type:        schema.TypeString,
@@ -94,7 +95,8 @@ var taskSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{
 			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE", "X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE",
 		}, true),
-		Description: "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting.",
+		Description:   "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)",
+		ConflictsWith: []string{"warehouse"},
 	},
 }
 
@@ -341,24 +343,29 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 
 	if len(params) > 0 {
 		paramMap := map[string]interface{}{}
+		var userTaskManagedInitialWarehouseSize = ""
+
 		for _, param := range params {
 			log.Printf("[TRACE] %+v\n", param)
 
-			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" || param.Level == "SYSTEM" {
+			if param.Level != "TASK" {
 				continue
 			}
 
 			if param.Key == "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE" {
-				err = d.Set("user_task_managed_initial_warehouse_size", param.Value)
-				if err != nil {
-					return err
-				}
+				userTaskManagedInitialWarehouseSize = param.Value
+
 			} else {
 				paramMap[param.Key] = param.Value
 			}
 		}
 
 		err := d.Set("session_parameters", paramMap)
+		if err != nil {
+			return err
+		}
+
+		err = d.Set("user_task_managed_initial_warehouse_size", userTaskManagedInitialWarehouseSize)
 		if err != nil {
 			return err
 		}

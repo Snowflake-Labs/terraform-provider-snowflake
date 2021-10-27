@@ -321,6 +321,8 @@ func TestAcc_Task_Managed(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "XSMALL"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "user_task_managed_initial_warehouse_size", ""),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "session_parameters.TIMESTAMP_INPUT_FORMAT", "YYYY-MM-DD HH24"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
 				),
 			},
@@ -344,7 +346,8 @@ func TestAcc_Task_Managed(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
-					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "XSMALL"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "session_parameters.TIMESTAMP_INPUT_FORMAT", "YYYY-MM-DD HH24"),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "user_task_managed_initial_warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
 				),
 			},
@@ -385,9 +388,20 @@ resource "snowflake_task" "managed_task" {
 	schedule                                 = "5 MINUTE"
     user_task_managed_initial_warehouse_size = "XSMALL"
 }
+resource "snowflake_task" "managed_task_no_init" {
+	name     	  = "%s3"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	schedule      = "5 MINUTE"
+	session_parameters = {
+		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
+	}
+}
 
 `
-	return fmt.Sprintf(s, name, name, name)
+	return fmt.Sprintf(s, name, name, name, name)
 }
 
 func taskConfigManaged2(name string) string {
