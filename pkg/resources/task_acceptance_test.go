@@ -507,8 +507,8 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "after", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "after", taskRootName),
 				),
 			},
 		},
@@ -610,7 +610,7 @@ resource "snowflake_task" "test_task" {
 	schema    	  = snowflake_schema.test_schema.name
 	sql_statement = "SELECT 1"
 	enabled  	  = false
-	schedule      = "5 MINUTE"
+	after         = snowflake_task.test_task_root.name
 }
 
 `

@@ -513,16 +513,13 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		)
 
 		old, _ := d.GetChange("after")
-		enabled := d.Get("enabled").(bool)
 
-		if enabled {
-			q = builder.Suspend()
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error suspending task %v", d.Id())
-			}
-			needResumeCurrentTask = true
+		q = builder.Suspend()
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error suspending task %v", d.Id())
 		}
+		needResumeCurrentTask = true
 
 		if old != "" {
 			q = builder.RemoveDependency(old.(string))
