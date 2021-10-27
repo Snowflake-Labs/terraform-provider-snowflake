@@ -68,11 +68,11 @@ resource snowflake_task serverless_task {
 
 ### Optional
 
-- **after** (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag).
+- **after** (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)
 - **comment** (String) Specifies a comment for the task.
 - **enabled** (Boolean) Specifies if the task should be started (enabled) after creation or should remain suspended (default).
 - **id** (String) The ID of this resource.
-- **schedule** (String) The schedule for periodically running the task. This can be a cron or interval in minutes.
+- **schedule** (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)
 - **session_parameters** (Map of String) Specifies session parameters to set for the session when the task runs. A task supports all session parameters.
 - **user_task_managed_initial_warehouse_size** (String) Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)
 - **user_task_timeout_ms** (Number) Specifies the time limit on a single run of the task before it times out (in milliseconds).

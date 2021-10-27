@@ -459,3 +459,160 @@ resource "snowflake_task" "managed_task" {
 `
 	return fmt.Sprintf(s, name, name, name)
 }
+
+func TestAcc_Task_SwitchScheduled(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: taskConfigManagedScheduled(accName, taskRootName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckNoResourceAttr("snowflake_task.test_task", "after"),
+				),
+			},
+			{
+				Config: taskConfigManagedScheduled2(accName, taskRootName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "after", taskRootName),
+				),
+			},
+			{
+				Config: taskConfigManagedScheduled(accName, taskRootName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "after", ""),
+				),
+			},
+			{
+				Config: taskConfigManagedScheduled3(accName, taskRootName),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", false),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "after", ""),
+				),
+			},
+		},
+	})
+}
+
+func taskConfigManagedScheduled(name string, taskRootName string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+resource "snowflake_task" "test_task_root" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	schedule      = "5 MINUTE"
+}
+
+resource "snowflake_task" "test_task" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	schedule      = "5 MINUTE"
+}
+
+`
+	return fmt.Sprintf(s, name, name, taskRootName, name)
+}
+
+func taskConfigManagedScheduled2(name string, taskRootName string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_task" "test_task_root" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	schedule      = "5 MINUTE"
+}
+
+resource "snowflake_task" "test_task" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = true
+	after         = snowflake_task.test_task_root.name
+}
+`
+	return fmt.Sprintf(s, name, name, taskRootName, name)
+}
+
+func taskConfigManagedScheduled3(name string, taskRootName string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+resource "snowflake_task" "test_task_root" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = false
+	schedule      = "5 MINUTE"
+}
+
+resource "snowflake_task" "test_task" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_database.name
+	schema    	  = snowflake_schema.test_schema.name
+	sql_statement = "SELECT 1"
+	enabled  	  = false
+	schedule      = "5 MINUTE"
+}
+
+`
+	return fmt.Sprintf(s, name, name, taskRootName, name)
+}

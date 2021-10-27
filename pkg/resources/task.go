@@ -51,9 +51,10 @@ var taskSchema = map[string]*schema.Schema{
 		ConflictsWith: []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The schedule for periodically running the task. This can be a cron or interval in minutes.",
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)",
+		ConflictsWith: []string{"after"},
 	},
 	"session_parameters": {
 		Type:        schema.TypeMap,
@@ -73,9 +74,10 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the task.",
 	},
 	"after": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag).",
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)",
+		ConflictsWith: []string{"schedule"},
 	},
 	"when": {
 		Type:        schema.TypeString,
@@ -458,6 +460,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 // UpdateTask implements schema.UpdateFunc
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
+	var needResumeCurrentTask = false
 	if err != nil {
 		return err
 	}
@@ -467,7 +470,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	dbSchema := taskID.SchemaName
 	name := taskID.TaskName
 	builder := snowflake.Task(name, database, dbSchema)
-
 	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
 		return err
@@ -501,6 +503,34 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+	}
+
+	// Need to remove dependency before adding schedule if needed
+	if d.HasChange("after") {
+		var (
+			q   string
+			err error
+		)
+
+		old, _ := d.GetChange("after")
+		enabled := d.Get("enabled").(bool)
+
+		if enabled {
+			q = builder.Suspend()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error suspending task %v", d.Id())
+			}
+			needResumeCurrentTask = true
+		}
+
+		if old != "" {
+			q = builder.RemoveDependency(old.(string))
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
+			}
+		}
 	}
 
 	if d.HasChange("schedule") {
@@ -547,29 +577,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("after") {
 		var (
-			q   string
-			err error
+			q string
 		)
-
-		old, new := d.GetChange("after")
-		enabled := d.Get("enabled").(bool)
-
-		if enabled {
-			q = builder.Suspend()
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error suspending task %v", d.Id())
-			}
-			defer resumeTask(builder, meta)
-		}
-
-		if old != "" {
-			q = builder.RemoveDependency(old.(string))
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
-			}
-		}
+		_, new := d.GetChange("after")
 
 		if new != "" {
 			q = builder.AddDependency(new.(string))
@@ -642,6 +652,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.Suspend()
 			// make sure defer doesn't enable task again
 			// when standalone or root task and status is supsended
+			needResumeCurrentTask = false
 			if root != nil && builder.QualifiedName() == root.QualifiedName() {
 				root = root.SetDisabled() //nolint
 			}
@@ -651,6 +662,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
+	}
+
+	if needResumeCurrentTask {
+		resumeTask(builder, meta)
 	}
 
 	resumeTask(root, meta)
