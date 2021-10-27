@@ -519,7 +519,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error suspending task %v", d.Id())
 		}
-		needResumeCurrentTask = true
+		needResumeCurrentTask = d.Get("enabled").(bool)
 
 		if old != "" {
 			q = builder.RemoveDependency(old.(string))
