@@ -14,18 +14,19 @@ import (
 
 // TaskBuilder abstracts the creation of sql queries for a snowflake task
 type TaskBuilder struct {
-	name                 string
-	db                   string
-	schema               string
-	warehouse            string
-	schedule             string
-	session_parameters   map[string]interface{}
-	user_task_timeout_ms int
-	comment              string
-	after                string
-	when                 string
-	sql_statement        string
-	disabled             bool
+	name                                     string
+	db                                       string
+	schema                                   string
+	warehouse                                string
+	schedule                                 string
+	session_parameters                       map[string]interface{}
+	user_task_timeout_ms                     int
+	comment                                  string
+	after                                    string
+	when                                     string
+	sql_statement                            string
+	disabled                                 bool
+	user_task_managed_initial_warehouse_size string
 }
 
 // GetFullName prepends db and schema to in parameter
@@ -95,6 +96,12 @@ func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
 	return tb
 }
 
+// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder
+func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *TaskBuilder {
+	tb.user_task_managed_initial_warehouse_size = initialWarehouseSize
+	return tb
+}
+
 // Task returns a pointer to a Builder that abstracts the DDL operations for a task.
 //
 // Supported DDL operations are:
@@ -119,7 +126,14 @@ func (tb *TaskBuilder) Create() string {
 	q.WriteString(`CREATE`)
 
 	q.WriteString(fmt.Sprintf(` TASK %v`, tb.QualifiedName()))
-	q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
+
+	if tb.warehouse != "" {
+		q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
+	} else {
+		if tb.user_task_managed_initial_warehouse_size != "" {
+			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.user_task_managed_initial_warehouse_size)))
+		}
+	}
 
 	if tb.schedule != "" {
 		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, EscapeString(tb.schedule)))
@@ -165,6 +179,16 @@ func (tb *TaskBuilder) Create() string {
 // ChangeWarehouse returns the sql that will change the warehouse for the task.
 func (tb *TaskBuilder) ChangeWarehouse(newWh string) string {
 	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = "%v"`, tb.QualifiedName(), EscapeString(newWh))
+}
+
+// SwitchWarehouseToManaged returns the sql that will switch to managed warehouse.
+func (tb *TaskBuilder) SwitchWarehouseToManaged() string {
+	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = null`, tb.QualifiedName())
+}
+
+// SwitchManagedWithInitialSize returns the sql that will update warehouse initial size .
+func (tb *TaskBuilder) SwitchManagedWithInitialSize(initialSize string) string {
+	return fmt.Sprintf(`ALTER TASK %v SET USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, tb.QualifiedName(), EscapeString(initialSize))
 }
 
 // ChangeSchedule returns the sql that will change the schedule for the task.
@@ -293,7 +317,7 @@ type task struct {
 	SchemaName   string  `db:"schema_name"`
 	Owner        string  `db:"owner"`
 	Comment      *string `db:"comment"`
-	Warehouse    string  `db:"warehouse"`
+	Warehouse    *string `db:"warehouse"`
 	Schedule     *string `db:"schedule"`
 	Predecessors *string `db:"predecessors"`
 	State        string  `db:"state"`
