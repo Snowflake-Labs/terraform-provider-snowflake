@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strings"
 
@@ -148,6 +149,9 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stmt := snowflake.Warehouse(d.Id()).Show()
+
+	fmt.Println("statement.....")
+	fmt.Println(stmt)
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
