@@ -40,6 +40,11 @@ func TestWarehouseCreate(t *testing.T) {
 func expectReadWarehouse(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
 	mock.ExpectQuery("SHOW WAREHOUSES LIKE 'good_name'").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows(
+		[]string{"key", "value", "default", "level", "description", "type"},
+	).AddRow("MAX_CONCURRENCY_LEVEL", 8, 8, "WAREHOUSE", "", "NUMBER")
+	mock.ExpectQuery("SHOW PARAMETERS IN WAREHOUSE good_name").WillReturnRows(rows)
 }
 
 func TestWarehouseRead(t *testing.T) {
