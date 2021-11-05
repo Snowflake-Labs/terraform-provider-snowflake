@@ -13,6 +13,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 	privilegeCreateTable,
+	privilegeCreateTag,
 	privilegeCreateView,
 	privilegeCreateFileFormat,
 	privilegeCreateStage,
