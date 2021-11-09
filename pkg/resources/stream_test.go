@@ -57,6 +57,8 @@ func TestStreamRead(t *testing.T) {
 		err := resources.ReadStream(d, db)
 		r.NoError(err)
 		r.Equal("stream_name", d.Get("name").(string))
+		r.Equal("database_name", d.Get("database").(string))
+		r.Equal("schema_name", d.Get("schema").(string))
 		r.Equal("grand comment", d.Get("comment").(string))
 
 		// Test when resource is not found, checking if state will be empty

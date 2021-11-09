@@ -25,6 +25,7 @@ const (
 	privilegeUsage                     Privilege = "USAGE"
 	privilegeWrite                     Privilege = "WRITE"
 	privilegeCreateTable               Privilege = "CREATE TABLE"
+	privilegeCreateTag                 Privilege = "CREATE TAG"
 	privilegeCreateView                Privilege = "CREATE VIEW"
 	privilegeCreateFileFormat          Privilege = "CREATE FILE FORMAT"
 	privilegeCreateStage               Privilege = "CREATE STAGE"

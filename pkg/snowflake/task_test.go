@@ -42,6 +42,18 @@ func TestChangeWarehouse(t *testing.T) {
 	r.Equal(st.ChangeWarehouse("much_wh"), `ALTER TASK "test_db"."test_schema"."test_task" SET WAREHOUSE = "much_wh"`)
 }
 
+func TestSwitchWarehouseToManaged(t *testing.T) {
+	r := require.New(t)
+	st := Task("test_task", "test_db", "test_schema")
+	r.Equal(st.SwitchWarehouseToManaged(), `ALTER TASK "test_db"."test_schema"."test_task" SET WAREHOUSE = null`)
+}
+
+func TestSwitchManagedWithInitialSize(t *testing.T) {
+	r := require.New(t)
+	st := Task("test_task", "test_db", "test_schema")
+	r.Equal(st.SwitchManagedWithInitialSize("SMALL"), `ALTER TASK "test_db"."test_schema"."test_task" SET USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'`)
+}
+
 func TestChangeSchedule(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
