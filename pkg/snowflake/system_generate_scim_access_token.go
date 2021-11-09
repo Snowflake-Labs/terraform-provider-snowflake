@@ -24,7 +24,7 @@ func (pb *SystemGenerateSCIMAccessTokenBuilder) Select() string {
 }
 
 type scimAccessToken struct {
-	Token string `db:"token"`
+	Token string `db:"TOKEN"`
 }
 
 // ScanSCIMAccessToken convert a result into a
