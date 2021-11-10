@@ -211,6 +211,12 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		switch k {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
+		case "COMMENT":
+			if val := v.(string); val != "" {
+				if err = d.Set("comment", v.(string)); err != nil {
+					return err
+				}
+			}
 		case "STORAGE_PROVIDER":
 			if err = d.Set("storage_provider", v.(string)); err != nil {
 				return err
