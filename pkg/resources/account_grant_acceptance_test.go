@@ -38,7 +38,7 @@ resource "snowflake_account_grant" "test" {
 `, role)
 }
 
-func TestAccAccountGrant_grant_manged_task(t *testing.T) {
+func TestAcc_AccountGrantManagedTask(t *testing.T) {
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +62,7 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_account_grant" "test" {
-  roles          = [snowflake_role.test.name]
+  roles     = [snowflake_role.test.name]
   privilege = "EXECUTE MANAGED TASK"
 }
 `, role)
