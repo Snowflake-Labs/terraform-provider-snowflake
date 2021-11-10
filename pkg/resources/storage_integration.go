@@ -309,8 +309,10 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// also need to UNSET STORAGE_AWS_OBJECT_ACL if removed
 	if d.HasChange("storage_aws_object_acl") {
 		if _, ok := d.GetOk("storage_aws_object_acl"); ok {
-			runSetStatement = true
-			stmt.SetString("STORAGE_AWS_OBJECT_ACL", d.Get("storage_aws_object_acl").(string))
+			err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control")
+			if err != nil {
+				return fmt.Errorf("error setting storage_aws_object_acl: %w", err)
+			}
 		} else {
 			err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL")
 			if err != nil {
@@ -396,6 +398,11 @@ func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.Settin
 	}
 
 	return nil
+}
+
+func setStorageIntegrationProp(db *sql.DB, name string, prop string, val string) error {
+	stmt := fmt.Sprintf(`ALTER STORAGE INTEGRATION "%s" SET %s = '%s'`, name, prop, val)
+	return snowflake.Exec(db, stmt)
 }
 
 func unsetStorageIntegrationProp(db *sql.DB, name string, prop string) error {
