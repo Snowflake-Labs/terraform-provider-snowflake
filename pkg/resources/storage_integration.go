@@ -68,6 +68,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"bucket-owner-full-control"}, false),
+		Description:  "\"bucket-owner-full-control\" Enables support for AWS access control lists (ACLs) to grant the bucket owner full control.",
 	},
 	"storage_aws_role_arn": {
 		Type:     schema.TypeString,

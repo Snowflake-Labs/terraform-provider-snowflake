@@ -3,7 +3,7 @@
 page_title: "snowflake_storage_integration Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_storage_integration (Resource)
