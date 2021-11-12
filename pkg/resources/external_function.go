@@ -161,7 +161,6 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Default:     "user-defined function",
-		ForceNew:    true,
 		Description: "A description of the external function.",
 	},
 	"created_on": {
@@ -177,6 +176,7 @@ func ExternalFunction() *schema.Resource {
 		Create: CreateExternalFunction,
 		Read:   ReadExternalFunction,
 		Delete: DeleteExternalFunction,
+		Update: UpdateExternalFunction,
 
 		Schema: externalFunctionSchema,
 		Importer: &schema.ResourceImporter{
@@ -225,6 +225,34 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 		ExternalFunctionName:     lines[0][2],
 		ExternalFunctionArgTypes: lines[0][3],
 	}, nil
+}
+
+// UpdateExternalFunction implements schema.UpdateFunc
+func UpdateExternalFunction(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+
+	externalFunctionID, err := externalFunctionIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := externalFunctionID.DatabaseName
+	dbSchema := externalFunctionID.SchemaName
+	name := externalFunctionID.ExternalFunctionName
+	argtypes := externalFunctionID.ExternalFunctionArgTypes
+
+	// For now, we only allow updating the comment
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		builder := snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes)
+		stmt := builder.ChangeComment(comment)
+		err := snowflake.Exec(db, stmt)
+		if err != nil {
+			return errors.Wrapf(err, "could not update external function comment on %s", d.Id())
+		}
+	}
+
+	return ReadExternalFunction(d, meta)
 }
 
 // CreateExternalFunction implements schema.CreateFunc

@@ -40,3 +40,26 @@ func TestExternalFunctionShow(t *testing.T) {
 	s := ExternalFunction("test_function", "test_db", "test_schema")
 	r.Equal(s.Show(), `SHOW EXTERNAL FUNCTIONS LIKE 'test_function' IN SCHEMA "test_db"."test_schema"`)
 }
+
+func TestExternalFunctionChangeComment(t *testing.T) {
+	r := require.New(t)
+
+	argTypes := []map[string]string{}
+	argTypes = append(argTypes,
+		map[string]string{"type": "BOOL"},
+		map[string]string{"type": "VARIANT"},
+		map[string]string{"type": "STRING"},
+		map[string]string{"type": "NUMBER"},
+	)
+
+	fb := &ExternalFunctionBuilder{
+		name:   "ext_function",
+		db:     "a_database",
+		schema: "a_schema",
+		args:   argTypes,
+	}
+	stmt := fb.ChangeComment("My New Comment")
+
+	expected := `ALTER FUNCTION "a_database"."a_schema"."ext_function"  (BOOL, VARIANT, STRING, NUMBER) SET COMMENT = 'My New Comment'`
+	r.Equal(expected, stmt)
+}

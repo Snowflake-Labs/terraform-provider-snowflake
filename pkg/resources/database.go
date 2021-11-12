@@ -71,7 +71,11 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		return createDatabaseFromDatabase(d, meta)
 	}
 
-	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+	return CreateResource(
+		"database",
+		databaseProperties,
+		databaseSchema,
+		snowflake.Database, ReadDatabase)(d, meta)
 }
 
 func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {

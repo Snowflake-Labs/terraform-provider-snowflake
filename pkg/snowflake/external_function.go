@@ -137,6 +137,14 @@ func (fb *ExternalFunctionBuilder) WithComment(c string) *ExternalFunctionBuilde
 	return fb
 }
 
+// ChangeComment returns the SQL query that will update the comment on the external_function.
+func (fb *ExternalFunctionBuilder) ChangeComment(c string) string {
+	return fmt.Sprintf(
+		`ALTER FUNCTION %v SET COMMENT = '%v'`,
+		fb.QualifiedNameWithArgTypes(),
+		EscapeString(c))
+}
+
 // ExternalFunction returns a pointer to a Builder that abstracts the DDL operations for an external function.
 //
 // Supported DDL operations are:

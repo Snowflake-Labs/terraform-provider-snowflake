@@ -2,12 +2,15 @@ package resources_test
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -38,45 +41,11 @@ func TestExternalFunctionCreate(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE EXTERNAL FUNCTION "database_name"."schema_name"."my_test_function" \(data varchar\) RETURNS varchar NULL CALLED ON NULL INPUT IMMUTABLE COMMENT = 'user-defined function' API_INTEGRATION = 'test_api_integration_01' HEADERS = \('x-custom-header' = 'snowflake'\) CONTEXT_HEADERS = \(current_timestamp\) COMPRESSION = 'AUTO' AS 'https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function'`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		expectExternalFunctionRead(mock)
+		expectExternalFunctionRead(mock, nil, map[string]string{"returns": "VARCHAR(123456789)"})
 		err := resources.CreateExternalFunction(d, db)
 		r.NoError(err)
 		r.Equal("my_test_function", d.Get("name").(string))
 	})
-}
-
-func expectExternalFunctionRead(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure", "is_external_function", "language"}).AddRow("now", "my_test_function", "schema_name", "N", "N", "N", "1", "1", "MY_TEST_FUNCTION(VARCHAR) RETURN VARCHAR", "mock comment", "database_name", "N", "N", "N", "Y", "EXTERNAL")
-	mock.ExpectQuery(`SHOW EXTERNAL FUNCTIONS LIKE 'my_test_function' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
-
-	describeRows := sqlmock.NewRows([]string{"property", "value"}).
-		AddRow("returns", "VARCHAR(123456789)"). // This is how return type is stored in Snowflake DB
-		AddRow("null handling", "CALLED ON NULL INPUT").
-		AddRow("volatility", "IMMUTABLE").
-		AddRow("body", "https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function").
-		AddRow("headers", "{\"x-custom-header\":\"snowflake\"").
-		AddRow("context_headers", "[\"CURRENT_TIMESTAMP\"]").
-		AddRow("max_batch_rows", "not set").
-		AddRow("compression", "AUTO")
-
-	mock.ExpectQuery(`DESCRIBE FUNCTION "database_name"."schema_name"."my_test_function" \(varchar\)`).WillReturnRows(describeRows)
-}
-
-func expectExternalFunctionReadVariant(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure", "is_external_function", "language"}).AddRow("now", "my_test_function", "schema_name", "N", "N", "N", "1", "1", "MY_TEST_FUNCTION(VARCHAR) RETURN VARCHAR", "mock comment", "database_name", "N", "N", "N", "Y", "EXTERNAL")
-	mock.ExpectQuery(`SHOW EXTERNAL FUNCTIONS LIKE 'my_test_function' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
-
-	describeRows := sqlmock.NewRows([]string{"property", "value"}).
-		AddRow("returns", "VARIANT"). // VARIANTs are different format
-		AddRow("null handling", "CALLED ON NULL INPUT").
-		AddRow("volatility", "IMMUTABLE").
-		AddRow("body", "https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function").
-		AddRow("headers", "{\"x-custom-header\":\"snowflake\"").
-		AddRow("context_headers", "[\"CURRENT_TIMESTAMP\"]").
-		AddRow("max_batch_rows", "not set").
-		AddRow("compression", "AUTO")
-
-	mock.ExpectQuery(`DESCRIBE FUNCTION "database_name"."schema_name"."my_test_function" \(varchar\)`).WillReturnRows(describeRows)
 }
 
 func TestExternalFunctionRead(t *testing.T) {
@@ -85,7 +54,7 @@ func TestExternalFunctionRead(t *testing.T) {
 	d := externalFunction(t, "database_name|schema_name|my_test_function|varchar", map[string]interface{}{"name": "my_test_function", "arg": []interface{}{map[string]interface{}{"name": "data", "type": "varchar"}}, "return_type": "varchar", "comment": "mock comment"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectExternalFunctionRead(mock)
+		expectExternalFunctionRead(mock, nil, map[string]string{"returns": "VARCHAR(123456789)"})
 
 		err := resources.ReadExternalFunction(d, db)
 		r.NoError(err)
@@ -120,7 +89,7 @@ func TestExternalFunctionReadReturnTypeVariant(t *testing.T) {
 	d := externalFunction(t, "database_name|schema_name|my_test_function|varchar", map[string]interface{}{"name": "my_test_function", "arg": []interface{}{map[string]interface{}{"name": "data", "type": "varchar"}}, "return_type": "variant", "comment": "mock comment"})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectExternalFunctionReadVariant(mock)
+		expectExternalFunctionRead(mock, nil, nil)
 
 		err := resources.ReadExternalFunction(d, db)
 		r.NoError(err)
@@ -160,6 +129,103 @@ func TestExternalFunctionDelete(t *testing.T) {
 		err := resources.DeleteExternalFunction(d, db)
 		r.NoError(err)
 	})
+}
+
+func TestExternalFunctionUpdateComment(t *testing.T) {
+	// r := require.New(t)
+
+	// d := externalFunction(t, "database_name|schema_name|my_test_function|varchar", map[string]interface{}{"name": "my_test_function", "arg": []interface{}{map[string]interface{}{"name": "data", "type": "varchar"}}, "return_type": "variant", "comment": "mock comment"})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		providers := providers()
+		providers["snowflake"].ConfigureFunc = func(s *schema.ResourceData) (interface{}, error) {
+			fmt.Println("HERE")
+			panic("foobar")
+			return db, nil
+		}
+
+		accName := "accName"
+
+		resource.Test(t, resource.TestCase{
+			Providers:  providers,
+			IsUnitTest: true, // we've mocked the DB
+			Steps: []resource.TestStep{
+				{
+					Config: externalFunctionConfig(accName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}, "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr("snowflake_external_function.test_func", "name", accName),
+						resource.TestCheckResourceAttr("snowflake_external_function.test_func", "comment", "Terraform acceptance test"),
+						resource.TestCheckResourceAttrSet("snowflake_external_function.test_func", "created_on"),
+					),
+				},
+			},
+		})
+	})
+}
+
+// helpers
+// ------------------------------
+func expectExternalFunctionRead(mock sqlmock.Sqlmock, overrideShow map[string]string, overrideDescribe map[string]string) {
+	// order matters
+	columns := []string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure", "is_external_function", "language"}
+	defaultRowFields := []string{"now", "my_test_function", "schema_name", "N", "N", "N", "1", "1", "MY_TEST_FUNCTION(VARCHAR) RETURN VARCHAR", "mock comment", "database_name", "N", "N", "N", "Y", "EXTERNAL"}
+	defaultRow := zip(columns, defaultRowFields)
+
+	r := getRow(columns, defaultRow, overrideShow)
+
+	fmt.Printf("col %d, row %d", len(columns), len(r))
+	rows := sqlmock.NewRows(columns).AddRow(r...)
+	mock.ExpectQuery(`SHOW EXTERNAL FUNCTIONS LIKE 'my_test_function' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
+
+	defaultDescribeRows := map[string]string{
+		"returns":         "VARIANT",
+		"null_handling":   "CALLED ON NULL INPUT",
+		"volatility":      "IMMUTABLE",
+		"body":            "https://123456.execute-api.us-west-2.amazonaws.com/prod/my_test_function",
+		"headers":         "{\"x-custom-header\":\"snowflake\"",
+		"context_headers": "[\"CURRENT_TIMESTAMP\"]",
+		"max_batch_rows":  "not set",
+		"compression":     "AUTO",
+	}
+
+	describeRows := sqlmock.NewRows([]string{"property", "value"})
+	for property, _ := range defaultDescribeRows {
+		describeRows.AddRow(property, getDefault(property, defaultDescribeRows, overrideDescribe))
+	}
+	mock.ExpectQuery(`DESCRIBE FUNCTION "database_name"."schema_name"."my_test_function" \(varchar\)`).WillReturnRows(describeRows)
+}
+
+func getRow(columns []string, defaultRow map[string]string, override map[string]string) []driver.Value {
+	ret := []driver.Value{}
+
+	// order matters
+	for _, col := range columns {
+		ret = append(ret, getDefault(col, defaultRow, override))
+	}
+
+	return ret
+}
+
+func getDefault(key string, defaults map[string]string, overrides map[string]string) string {
+	val, ok := overrides[key]
+	if ok {
+		return val
+	}
+
+	return defaults[key]
+}
+
+func zip(keys []string, values []string) map[string]string {
+	if len(keys) != len(values) {
+		panic("keys and values must have same length")
+	}
+
+	ret := map[string]string{}
+
+	for i := 0; i < len(keys); i++ {
+		ret[keys[i]] = values[i]
+	}
+	return ret
 }
 
 func expandStringList(configured []interface{}) []string {
