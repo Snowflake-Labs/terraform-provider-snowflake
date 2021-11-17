@@ -93,7 +93,7 @@ To run all tests, including the acceptance tests, run `make test-acceptance`.
 
 Our CI jobs run the full acceptence test suite, which involves creating and destroying resources in a live snowflake account. Github Actions is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
 
-If you are making a PR from a forked repo, you can create a new Snowflake trial account and set up Travis to build it by setting these environement variables:
+If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
 
 * `SNOWFLAKE_ACCOUNT` - The account name
 * `SNOWFLAKE_USER` - A snowflake user for running tests.
@@ -101,10 +101,9 @@ If you are making a PR from a forked repo, you can create a new Snowflake trial 
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
 * `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
 
-If you are using the Standard Snowflake plan, it's recommended you also set up the following environment variables to skip tests for features not enabled for it:
+You will also need to generate a Github API token and add the secret:
 
-* `SKIP_DATABASE_TESTS` - to skip tests with retention time larger than 1 day
-* `SKIP_WAREHOUSE_TESTS` - to skip tests with multi warehouses
+* `REVIEWDOG_GITHUB_API_TOKEN` - A token for reviewdog to use to access your github account with privileges to read/write discussion.
 
 ## Releasing
 
