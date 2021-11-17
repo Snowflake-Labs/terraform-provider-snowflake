@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -344,8 +345,10 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(params) > 0 {
-		paramMap := map[string]interface{}{}
-		var userTaskManagedInitialWarehouseSize = ""
+		sessionParameters := map[string]interface{}{}
+		fieldParameters := map[string]interface{}{
+			"user_task_managed_initial_warehouse_size": "",
+		}
 
 		for _, param := range params {
 			log.Printf("[TRACE] %+v\n", param)
@@ -353,24 +356,33 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 			if param.Level != "TASK" {
 				continue
 			}
+			switch param.Key {
+			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
+				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
+			case "USER_TASK_TIMEOUT_MS":
+				timeout, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
 
-			if param.Key == "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE" {
-				userTaskManagedInitialWarehouseSize = param.Value
-
-			} else {
-				paramMap[param.Key] = param.Value
+				fieldParameters["user_task_timeout_ms"] = timeout
+			default:
+				sessionParameters[param.Key] = param.Value
 			}
 		}
 
-		err := d.Set("session_parameters", paramMap)
+		err := d.Set("session_parameters", sessionParameters)
 		if err != nil {
 			return err
 		}
 
-		err = d.Set("user_task_managed_initial_warehouse_size", userTaskManagedInitialWarehouseSize)
-		if err != nil {
-			return err
+		for key, value := range fieldParameters {
+			err = d.Set(key, value)
+			if err != nil {
+				return err
+			}
 		}
+
 	}
 
 	return nil
