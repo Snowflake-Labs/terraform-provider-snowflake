@@ -10,5 +10,5 @@ func TestSystemGenerateSCIMAccessToken(t *testing.T) {
 	r := require.New(t)
 	sb := SystemGenerateSCIMAccessToken("AAD_PROVISIONING")
 
-	r.Equal(sb.Select(), `SELECT SYSTEM$GENERATE_SCIM_ACCESS_TOKEN('AAD_PROVISIONING') AS "token"`)
+	r.Equal(sb.Select(), `SELECT SYSTEM$GENERATE_SCIM_ACCESS_TOKEN('AAD_PROVISIONING') AS "TOKEN"`)
 }

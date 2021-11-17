@@ -26,6 +26,7 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegeMonitorUsage,
 	privilegeMonitorExecution,
 	privilegeOverrideShareRestrictions,
+	privilegeExecuteManagedTask,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{

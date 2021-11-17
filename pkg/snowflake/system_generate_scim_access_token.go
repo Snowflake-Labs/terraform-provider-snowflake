@@ -20,11 +20,11 @@ func SystemGenerateSCIMAccessToken(integrationName string) *SystemGenerateSCIMAc
 
 // Select generates the select statement for obtaining the scim access token
 func (pb *SystemGenerateSCIMAccessTokenBuilder) Select() string {
-	return fmt.Sprintf(`SELECT SYSTEM$GENERATE_SCIM_ACCESS_TOKEN('%v') AS "token"`, pb.integrationName)
+	return fmt.Sprintf(`SELECT SYSTEM$GENERATE_SCIM_ACCESS_TOKEN('%v') AS "TOKEN"`, pb.integrationName)
 }
 
 type scimAccessToken struct {
-	Token string `db:"token"`
+	Token string `db:"TOKEN"`
 }
 
 // ScanSCIMAccessToken convert a result into a
