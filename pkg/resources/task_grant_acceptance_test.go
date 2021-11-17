@@ -68,8 +68,8 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_warehouse" "test" {
-  name 						   = snowflake_database.test.name
-  max_concurrency_level 	   = %d
+  name                         = snowflake_database.test.name
+  max_concurrency_level        = %d
   statement_timeout_in_seconds = 172800
 }
 
