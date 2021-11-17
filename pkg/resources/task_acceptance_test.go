@@ -36,8 +36,8 @@ var (
 	rootname      = "root_task"
 	childname     = "child_task"
 	soloname      = "standalone_task"
-	warehousename = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	warehousename = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databasename  = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,

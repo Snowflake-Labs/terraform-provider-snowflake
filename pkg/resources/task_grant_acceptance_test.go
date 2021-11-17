@@ -24,7 +24,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OPERATE"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.test", "max_concurrency_level", "8"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "86400"),
 				),
 			},
 			// UPDATE MAX_CONCURRENCY_LEVEL
@@ -37,7 +37,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OPERATE"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.test", "max_concurrency_level", "10"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "86400"),
 				),
 			},
 			// IMPORT
@@ -70,7 +70,7 @@ resource "snowflake_role" "test" {
 resource "snowflake_warehouse" "test" {
   name                         = snowflake_database.test.name
   max_concurrency_level        = %d
-  statement_timeout_in_seconds = 172800
+  statement_timeout_in_seconds = 86400
 }
 
 resource "snowflake_task" "test" {

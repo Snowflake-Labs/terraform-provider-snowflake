@@ -106,7 +106,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
+		Default:     172800,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
 	"statement_queued_timeout_in_seconds": {
@@ -118,7 +118,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"max_concurrency_level": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
+		Default:     8,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 	"tag": tagReferenceSchema,

@@ -43,7 +43,9 @@ func tasks(databaseName string, schemaName string, taskName string) string {
 	}
 
 	resource snowflake_warehouse "test" {
-		name = snowflake_database.test.name
+		name                         = snowflake_database.test.name
+		max_concurrency_level        = 8
+		statement_timeout_in_seconds = 172800
 	}
 
 	resource snowflake_task "test" {
