@@ -7,6 +7,7 @@ resource snowflake_storage_integration integration {
 
   #   storage_allowed_locations = [""]
   #   storage_blocked_locations = [""]
+  #   storage_aws_object_acl    = "bucket-owner-full-control"
 
   storage_provider         = "S3"
   storage_aws_external_id  = "..."

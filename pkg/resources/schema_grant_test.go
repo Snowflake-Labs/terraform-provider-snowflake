@@ -23,7 +23,7 @@ func TestSchemaGrant(t *testing.T) {
 func TestSchemaGrantCreate(t *testing.T) {
 	r := require.New(t)
 
-	for _, test_priv := range []string{"USAGE", "MODIFY"} {
+	for _, test_priv := range []string{"USAGE", "MODIFY", "CREATE TAG"} {
 		in := map[string]interface{}{
 			"schema_name":       "test-schema",
 			"database_name":     "test-db",

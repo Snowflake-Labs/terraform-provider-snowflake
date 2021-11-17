@@ -22,6 +22,7 @@ resource snowflake_storage_integration integration {
 
   #   storage_allowed_locations = [""]
   #   storage_blocked_locations = [""]
+  #   storage_aws_object_acl    = "bucket-owner-full-control"
 
   storage_provider         = "S3"
   storage_aws_external_id  = "..."
@@ -47,6 +48,7 @@ resource snowflake_storage_integration integration {
 - **comment** (String)
 - **enabled** (Boolean)
 - **id** (String) The ID of this resource.
+- **storage_aws_object_acl** (String) "bucket-owner-full-control" Enables support for AWS access control lists (ACLs) to grant the bucket owner full control.
 - **storage_aws_role_arn** (String)
 - **storage_blocked_locations** (List of String) Explicitly prohibits external stages that use the integration from referencing one or more storage locations.
 - **type** (String)
