@@ -309,7 +309,7 @@ resource "snowflake_task" "root_task" {
 
 	{{ if .ChildTask.SessionParams }}
 	session_parameters = {
-	{{ range $key, $value :=  .ChildTask.SessionParams}}
+	{{ range $key, $value :=  .RootTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
 	}
 	{{- end }}
