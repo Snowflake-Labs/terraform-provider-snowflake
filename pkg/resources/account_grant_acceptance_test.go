@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestAccAccountGrant_defaults(t *testing.T) {
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
@@ -39,7 +40,7 @@ resource "snowflake_account_grant" "test" {
 }
 
 func TestAcc_AccountGrantManagedTask(t *testing.T) {
-	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
