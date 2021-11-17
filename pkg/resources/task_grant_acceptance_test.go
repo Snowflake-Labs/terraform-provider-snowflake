@@ -27,7 +27,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "172800"),
 				),
 			},
-			// UPDATE MAX_CONCURRENCY
+			// UPDATE MAX_CONCURRENCY_LEVEL
 			{
 				Config: taskGrantConfig(accName, 10),
 				Check: resource.ComposeTestCheckFunc(
@@ -50,7 +50,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 	})
 }
 
-func taskGrantConfig(name string, concurrency int64) string {
+func taskGrantConfig(name string, concurrency int32) string {
 	s := `
 resource "snowflake_database" "test" {
   name = "%v"
