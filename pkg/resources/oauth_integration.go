@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -48,6 +47,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 	},
 	"blocked_roles_list": {
 		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "List of roles that a user cannot explicitly consent to using after authenticating.",
 	},
@@ -59,7 +59,6 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     true,
 		Description: "Specifies whether this OAuth integration is enabled or disabled.",
 	},
 	"created_on": {
@@ -185,19 +184,11 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		case "COMMENT":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "OAUTH_ISSUE_REFRESH_TOKENS":
-			b, err := strconv.ParseBool(v.(string))
-			if err != nil {
-				return errors.Wrap(err, "returned OAuth issue refresh tokens that is not boolean")
-			}
-			if err = d.Set("oauth_issue_refresh_tokens", b); err != nil {
+			if err = d.Set("oauth_issue_refresh_tokens", v.(bool)); err != nil {
 				return errors.Wrap(err, "unable to set OAuth issue refresh tokens for security integration")
 			}
 		case "OAUTH_REFRESH_TOKEN_VALIDITY":
-			i, err := strconv.Atoi(v.(string))
-			if err != nil {
-				return errors.Wrap(err, "returned OAuth refresh token validity that is not integer")
-			}
-			if err = d.Set("oauth_refresh_token_validity", i); err != nil {
+			if err = d.Set("oauth_refresh_token_validity", v.(int64)); err != nil {
 				return errors.Wrap(err, "unable to set OAuth refresh token validity for security integration")
 			}
 		case "OAUTH_USE_SECONDARY_ROLES":

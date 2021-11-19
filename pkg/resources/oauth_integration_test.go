@@ -30,7 +30,7 @@ func TestOAuthIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURITY INTEGRATION "test_oauth_integration" TYPE=OAUTH OAUTH_CLIENT='CLIENT'$`,
+			`^CREATE SECURITY INTEGRATION "test_oauth_integration" TYPE=OAUTH OAUTH_CLIENT='TABLEAU_DESKTOP'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadOAuthIntegration(mock)
 
@@ -66,14 +66,14 @@ func TestOAuthIntegrationDelete(t *testing.T) {
 
 func expectReadOAuthIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "created_on"},
-	).AddRow("test_oauth_integration", "OAUTH - TABLEAU_DESKTOP", "SECURITY", "now")
+		"name", "type", "category", "enabled", "comment", "created_on"},
+	).AddRow("test_oauth_integration", "OAUTH - TABLEAU_DESKTOP", "SECURITY", true, nil, "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_oauth_integration'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
 	}).AddRow("OAUTH_REFRESH_TOKEN_VALIDITY", "Integer", 86400, nil).
-		AddRow("BLOCKED_ROLES_LIST", "String", "ACCOUNTADMIN,SECURITYADMIN", nil)
+		AddRow("BLOCKED_ROLES_LIST", "List", "ACCOUNTADMIN,SECURITYADMIN", nil)
 
 	mock.ExpectQuery(`DESCRIBE SECURITY INTEGRATION "test_oauth_integration"$`).WillReturnRows(descRows)
 }
