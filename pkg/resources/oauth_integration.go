@@ -46,7 +46,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 		}, false),
 	},
 	"blocked_roles_list": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "List of roles that a user cannot explicitly consent to using after authenticating.",
