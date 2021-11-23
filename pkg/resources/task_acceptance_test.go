@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 type (
@@ -21,14 +22,15 @@ type (
 	}
 
 	TaskSettings struct {
-		Name          string
-		Enabled       bool
-		Schema        string
-		SQL           string
-		Schedule      string
-		Comment       string
-		When          string
-		SessionParams bool
+		Name              string
+		Enabled           bool
+		Schema            string
+		SQL               string
+		Schedule          string
+		Comment           string
+		When              string
+		SessionParams     map[string]string
+		UserTaskTimeoutMs int64
 	}
 )
 
@@ -36,19 +38,20 @@ var (
 	rootname      = "root_task"
 	childname     = "child_task"
 	soloname      = "standalone_task"
-	warehousename = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	databasename  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	warehousename = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databasename  = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
 
 		RootTask: &TaskSettings{
-			Name:     rootname,
-			Schema:   "PUBLIC",
-			SQL:      "SHOW FUNCTIONS",
-			Enabled:  true,
-			Schedule: "5 MINUTE",
+			Name:              rootname,
+			Schema:            "PUBLIC",
+			SQL:               "SHOW FUNCTIONS",
+			Enabled:           true,
+			Schedule:          "5 MINUTE",
+			UserTaskTimeoutMs: 1800000,
 		},
 
 		ChildTask: &TaskSettings{
@@ -59,12 +62,11 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:          soloname,
-			Schema:        "PUBLIC",
-			SQL:           "SELECT 1",
-			When:          "TRUE",
-			Enabled:       false,
-			SessionParams: true,
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT 1",
+			When:    "TRUE",
+			Enabled: false,
 		},
 	}
 
@@ -74,11 +76,12 @@ var (
 		DatabaseName:  databasename,
 
 		RootTask: &TaskSettings{
-			Name:     rootname,
-			Schema:   "PUBLIC",
-			SQL:      "SHOW FUNCTIONS",
-			Enabled:  true,
-			Schedule: "5 MINUTE",
+			Name:              rootname,
+			Schema:            "PUBLIC",
+			SQL:               "SHOW FUNCTIONS",
+			Enabled:           true,
+			Schedule:          "5 MINUTE",
+			UserTaskTimeoutMs: 1800000,
 		},
 
 		ChildTask: &TaskSettings{
@@ -89,13 +92,16 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:          soloname,
-			Schema:        "PUBLIC",
-			SQL:           "SELECT *",
-			When:          "TRUE",
-			Enabled:       true,
-			SessionParams: false,
-			Schedule:      "5 MINUTE",
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT *",
+			When:    "TRUE",
+			Enabled: true,
+			SessionParams: map[string]string{
+				"TIMESTAMP_INPUT_FORMAT": "YYYY-MM-DD HH24",
+			},
+			Schedule:          "5 MINUTE",
+			UserTaskTimeoutMs: 1800000,
 		},
 	}
 
@@ -105,11 +111,12 @@ var (
 		DatabaseName:  databasename,
 
 		RootTask: &TaskSettings{
-			Name:     rootname,
-			Schema:   "PUBLIC",
-			SQL:      "SHOW TABLES",
-			Enabled:  true,
-			Schedule: "15 MINUTE",
+			Name:              rootname,
+			Schema:            "PUBLIC",
+			SQL:               "SHOW TABLES",
+			Enabled:           true,
+			Schedule:          "15 MINUTE",
+			UserTaskTimeoutMs: 1800000,
 		},
 
 		ChildTask: &TaskSettings{
@@ -120,12 +127,13 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:     soloname,
-			Schema:   "PUBLIC",
-			SQL:      "SELECT *",
-			When:     "FALSE",
-			Enabled:  true,
-			Schedule: "15 MINUTE",
+			Name:              soloname,
+			Schema:            "PUBLIC",
+			SQL:               "SELECT *",
+			When:              "FALSE",
+			Enabled:           true,
+			Schedule:          "15 MINUTE",
+			UserTaskTimeoutMs: 900000,
 		},
 	}
 
@@ -134,11 +142,12 @@ var (
 		DatabaseName:  databasename,
 
 		RootTask: &TaskSettings{
-			Name:     rootname,
-			Schema:   "PUBLIC",
-			SQL:      "SHOW FUNCTIONS",
-			Enabled:  false,
-			Schedule: "5 MINUTE",
+			Name:              rootname,
+			Schema:            "PUBLIC",
+			SQL:               "SHOW FUNCTIONS",
+			Enabled:           false,
+			Schedule:          "5 MINUTE",
+			UserTaskTimeoutMs: 1800000,
 		},
 
 		ChildTask: &TaskSettings{
@@ -149,19 +158,21 @@ var (
 		},
 
 		SoloTask: &TaskSettings{
-			Name:          soloname,
-			Schema:        "PUBLIC",
-			SQL:           "SELECT 1",
-			When:          "TRUE",
-			Enabled:       true,
-			SessionParams: true,
-			Schedule:      "5 MINUTE",
+			Name:    soloname,
+			Schema:  "PUBLIC",
+			SQL:     "SELECT 1",
+			When:    "TRUE",
+			Enabled: true,
+			SessionParams: map[string]string{
+				"TIMESTAMP_INPUT_FORMAT": "YYYY-MM-DD HH24",
+			},
+			Schedule:          "5 MINUTE",
+			UserTaskTimeoutMs: 0,
 		},
 	}
 )
 
 func TestAcc_Task(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
@@ -180,6 +191,10 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", initialState.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "after", rootname),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
+					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", initialState.RootTask.UserTaskTimeoutMs),
+					resource.TestCheckNoResourceAttr("snowflake_task.solo_task", "user_task_timeout_ms"),
 				),
 			},
 			{
@@ -196,6 +211,10 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepOne.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepOne.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepOne.ChildTask.Comment),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepOne.RootTask.Schedule),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepOne.ChildTask.Schedule),
+					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepOne.SoloTask.UserTaskTimeoutMs),
 				),
 			},
 			{
@@ -212,6 +231,10 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepTwo.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepTwo.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepTwo.ChildTask.Comment),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepTwo.RootTask.Schedule),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepTwo.ChildTask.Schedule),
+					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepTwo.RootTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepTwo.SoloTask.UserTaskTimeoutMs),
 				),
 			},
 			{
@@ -228,6 +251,10 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepThree.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepThree.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepThree.ChildTask.Comment),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepThree.RootTask.Schedule),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepThree.ChildTask.Schedule),
+					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepThree.RootTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepThree.SoloTask.UserTaskTimeoutMs),
 				),
 			},
 			{
@@ -244,6 +271,16 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", initialState.RootTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", initialState.ChildTask.SQL),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
+					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
+					// Terraform SDK is not able to differenciate if the
+					// attribute has deleted or set to zero value.
+					// ResourceData.GetChange returns the zero value of defined
+					// type in schema as new the value. Provider handles 0 for
+					// `user_task_timeout_ms` by unsetting the
+					// USER_TASK_TIMEOUT_MS session variable.
+					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", initialState.ChildTask.UserTaskTimeoutMs),
 				),
 			},
 		},
@@ -266,6 +303,17 @@ resource "snowflake_task" "root_task" {
 	sql_statement = "{{ .RootTask.SQL }}"
 	enabled  	  = {{ .RootTask.Enabled }}
 	schedule 	  = "{{ .RootTask.Schedule }}"
+	{{ if .RootTask.UserTaskTimeoutMs }}
+	user_task_timeout_ms = {{ .RootTask.UserTaskTimeoutMs }}
+	{{- end }}
+
+	{{ if .ChildTask.SessionParams }}
+	session_parameters = {
+	{{ range $key, $value :=  .RootTask.SessionParams}}
+        {{ $key }} = "{{ $value }}",
+	}
+	{{- end }}
+	{{- end }}
 }
 resource "snowflake_task" "child_task" {
 	name     	  = "{{ .ChildTask.Name }}"
@@ -276,6 +324,17 @@ resource "snowflake_task" "child_task" {
 	enabled  	  = {{ .ChildTask.Enabled }}
 	after    	  = snowflake_task.root_task.name
 	comment 	  = "{{ .ChildTask.Comment }}"
+	{{ if .ChildTask.UserTaskTimeoutMs }}
+	user_task_timeout_ms = {{ .ChildTask.UserTaskTimeoutMs }}
+	{{- end }}
+
+	{{ if .ChildTask.SessionParams }}
+	session_parameters = {
+	{{ range $key, $value :=  .ChildTask.SessionParams}}
+        {{ $key }} = "{{ $value }}",
+	}
+	{{- end }}
+	{{- end }}
 }
 resource "snowflake_task" "solo_task" {
 	name     	  = "{{ .SoloTask.Name }}"
@@ -288,10 +347,17 @@ resource "snowflake_task" "solo_task" {
 	{{ if .SoloTask.Schedule }}
 	schedule    = "{{ .SoloTask.Schedule }}"
 	{{- end }}
-	{{ if .SoloTask.SessionParams}}
+
+	{{ if .SoloTask.UserTaskTimeoutMs }}
+	user_task_timeout_ms = {{ .SoloTask.UserTaskTimeoutMs }}
+	{{- end }}
+
+	{{ if .SoloTask.SessionParams }}
 	session_parameters = {
-		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
+	{{ range $key, $value :=  .SoloTask.SessionParams}}
+        {{ $key }} = "{{ $value }}",
 	}
+	{{- end }}
 	{{- end }}
 }
 	`)
@@ -615,4 +681,10 @@ resource "snowflake_task" "test_task" {
 
 `
 	return fmt.Sprintf(s, name, name, taskRootName, name)
+}
+
+func checkInt64(name, key string, value int64) func(*terraform.State) error {
+	return func(state *terraform.State) error {
+		return resource.TestCheckResourceAttr(name, key, fmt.Sprintf("%v", value))(state)
+	}
 }
