@@ -21,9 +21,13 @@ func ValidateIdentifier(val interface{}) (warns []string, errs []error) {
 		return
 	}
 
-	// TODO initial character cannot be a digit
+	// TODO handle quoted identifiers
+	for k, r := range name {
+		if k == 0 && !isInitialIdentifierRune(r) {
+			errs = append(errs, errors.Errorf("'%s' can not start an identifier.", string(r)))
+			continue
+		}
 
-	for _, r := range name {
 		if !isIdentifierRune(r) {
 			errs = append(errs, errors.Errorf("'%s' is not a valid identifier character.", string(r)))
 		}
@@ -33,9 +37,11 @@ func ValidateIdentifier(val interface{}) (warns []string, errs []error) {
 }
 
 func isIdentifierRune(r rune) bool {
+	return isInitialIdentifierRune(r) || r == '$' || (r >= '0' && r <= '9')
+}
+
+func isInitialIdentifierRune(r rune) bool {
 	return (r == '_' ||
 		(r >= 'A' && r <= 'Z') ||
-		(r >= 'a' && r <= 'z')) ||
-		(r >= '0' && r <= '9')
-
+		(r >= 'a' && r <= 'z'))
 }
