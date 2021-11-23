@@ -22,17 +22,19 @@ func TestValidateIdentifier(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errs := snowflake.ValidateIdentifier(tc.candidate)
-		actual := len(errs) == 0
+		t.Run(tc.candidate, func(t *testing.T) {
+			_, errs := snowflake.ValidateIdentifier(tc.candidate)
+			actual := len(errs) == 0
 
-		if actual == tc.valid {
-			continue
-		}
+			if actual == tc.valid {
+				return
+			}
 
-		if tc.valid {
-			t.Fatalf("identifier %s should pass validation", tc.candidate)
-		} else {
-			t.Fatalf("identifier %s should fail validation", tc.candidate)
-		}
+			if tc.valid {
+				t.Fatalf("identifier %s should pass validation", tc.candidate)
+			} else {
+				t.Fatalf("identifier %s should fail validation", tc.candidate)
+			}
+		})
 	}
 }
