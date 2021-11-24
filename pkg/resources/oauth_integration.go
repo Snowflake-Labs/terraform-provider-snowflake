@@ -105,7 +105,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetString(`OAUTH_USE_SECONDARY_ROLES`, d.Get("oauth_use_secondary_roles").(string))
 	}
 	if _, ok := d.GetOk("blocked_roles_list"); ok {
-		stmt.SetStringList(`BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles_list").([]interface{})))
+		stmt.SetStringList(`BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles_list").(*schema.Set).List()))
 	}
 	if _, ok := d.GetOk("enabled"); ok {
 		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
