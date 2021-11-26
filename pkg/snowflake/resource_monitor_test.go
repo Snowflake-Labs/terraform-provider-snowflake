@@ -34,3 +34,12 @@ func TestResourceMonitor(t *testing.T) {
 	q = cb.Statement()
 	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
 }
+
+func TestResourceMonitorSetOnAccount(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.ResourceMonitor("test_resource_monitor")
+	r.NotNil(s)
+
+	q := s.Create().SetOnAccount()
+	r.Equal(`ALTER ACCOUNT SET RESOURCE_MONITOR = "test_resource_monitor"`, q)
+}

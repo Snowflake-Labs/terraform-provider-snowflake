@@ -29,6 +29,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 		"notify_triggers":            []interface{}{75, 88},
 		"suspend_triggers":           []interface{}{99},
 		"suspend_immediate_triggers": []interface{}{105},
+		"set_for_account":            true,
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
@@ -38,6 +39,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 		mock.ExpectExec(
 			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER ACCOUNT SET RESOURCE_MONITOR = "good_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadResourceMonitor(mock)
 		err := resources.CreateResourceMonitor(d, db)
