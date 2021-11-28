@@ -15,6 +15,9 @@ func TestUser(t *testing.T) {
 	q := u.Show()
 	r.Equal("SHOW USERS LIKE 'user1'", q)
 
+	q = u.Describe()
+	r.Equal(`DESCRIBE USER "user1"`, q)
+
 	q = u.Drop()
 	r.Equal(`DROP USER "user1"`, q)
 

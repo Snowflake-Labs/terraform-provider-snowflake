@@ -54,59 +54,41 @@ func TestUserCreate(t *testing.T) {
 }
 
 func expectReadUser(mock sqlmock.Sqlmock, name string) {
+	rowsmap := map[string]string{
+		"NAME":                 name,
+		"CREATED_ON":           "created_on",
+		"LOGIN_NAME":           "myloginname",
+		"DISPLAY_NAME":         "display_name",
+		"FIRST_NAME":           "first_name",
+		"LAST_NAME":            "last_name",
+		"EMAIL":                "email",
+		"MINS_TO_UNLOCK":       "mins_to_unlock",
+		"DAYS_TO_EXPIRY":       "days_to_expiry",
+		"COMMENT":              "mock comment",
+		"DISABLED":             "false",
+		"MUST_CHANGE_PASSWORD": "true",
+		"SNOWFLAKE_LOCK":       "snowflake_lock",
+		"DEFAULT_WAREHOUSE":    "default_warehouse",
+		"DEFAULT_NAMESPACE":    "default_namespace",
+		"DEFAULT_ROLE":         "default_role",
+		"EXT_AUTHN_DUO":        "ext_authn_duo",
+		"EXT_AUTHN_UID":        "ext_authn_uid",
+		"MINS_TO_BYPASS_MFA":   "mins_to_bypass_mfa",
+		"OWNER":                "owner",
+		"LAST_SUCCESS_LOGIN":   "last_success_login",
+		"EXPIRES_AT_TIME":      "expires_at_time",
+		"LOCKED_UNTIL_TIME":    "locked_until_time",
+		"HAS_PASSWORD":         "has_password",
+		"HAS_RSA_PUBLIC_KEY":   "false",
+	}
+
 	rows := sqlmock.NewRows(
 		[]string{"property", "value", "default", "description"},
-	).AddRow(
-		"NAME", name, "", "",
-	).AddRow(
-		"CREATED_ON", "created_on", "", "",
-	).AddRow(
-		"LOGIN_NAME", "myloginname", "", "",
-	).AddRow(
-		"DISPLAY_NAME", "display_name", "", "",
-	).AddRow(
-		"FIRST_NAME", "first_name", "", "",
-	).AddRow(
-		"LAST_NAME", "last_name", "", "",
-	).AddRow(
-		"EMAIL", "email", "", "",
-	).AddRow(
-		"MINS_TO_UNLOCK", "mins_to_unlock", "", "",
-	).AddRow(
-		"DAYS_TO_EXPIRY", "days_to_expiry", "", "",
-	).AddRow(
-		"COMMENT", "mock comment", "", "",
-	).AddRow(
-		"DISABLED", "false", "", "",
-	).AddRow(
-		"MUST_CHANGE_PASSWORD", "true", "", "",
-	).AddRow(
-		"SNOWFLAKE_LOCK", "snowflake_lock", "", "",
-	).AddRow(
-		"DEFAULT_WAREHOUSE", "default_warehouse", "", "",
-	).AddRow(
-		"DEFAULT_NAMESPACE", "default_namespace", "", "",
-	).AddRow(
-		"DEFAULT_ROLE", "default_role", "", "",
-	).AddRow(
-		"EXT_AUTHN_DUO", "ext_authn_duo", "", "",
-	).AddRow(
-		"EXT_AUTHN_UID", "ext_authn_uid", "", "",
-	).AddRow(
-		"MINS_TO_BYPASS_MFA", "mins_to_bypass_mfa", "", "",
-	).AddRow(
-		"OWNER", "owner", "", "",
-	).AddRow(
-		"LAST_SUCCESS_LOGIN", "last_success_login", "", "",
-	).AddRow(
-		"EXPIRES_AT_TIME", "expires_at_time", "", "",
-	).AddRow(
-		"LOCKED_UNTIL_TIME", "locked_until_time", "", "",
-	).AddRow(
-		"HAS_PASSWORD", "has_password", "", "",
-	).AddRow(
-		"HAS_RSA_PUBLIC_KEY", "false", "", "",
 	)
+
+	for k, v := range rowsmap {
+		rows.AddRow(k, v, "", "")
+	}
 
 	q := fmt.Sprintf(`^DESCRIBE USER "%s"$`, name)
 	mock.ExpectQuery(q).WillReturnRows(rows)
