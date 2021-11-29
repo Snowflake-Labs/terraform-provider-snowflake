@@ -118,6 +118,7 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Last name of the user.",
 	},
+	"tag": tagReferenceSchema,
 
 	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE

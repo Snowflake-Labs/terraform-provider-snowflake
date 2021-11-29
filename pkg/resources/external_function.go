@@ -105,7 +105,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Description: "The name of the API integration object that should be used to authenticate the call to the proxy service.",
 	},
 	"header": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Optional:    true,
 		ForceNew:    true,
 		Description: "Allows users to specify key-value metadata that is sent with every request as HTTP headers.",
@@ -114,11 +114,13 @@ var externalFunctionSchema = map[string]*schema.Schema{
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
+					ForceNew:    true,
 					Description: "Header name",
 				},
 				"value": {
 					Type:        schema.TypeString,
 					Required:    true,
+					ForceNew:    true,
 					Description: "Header value",
 				},
 			},
@@ -277,7 +279,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("header"); ok {
 		headers := []map[string]string{}
-		for _, header := range d.Get("header").([]interface{}) {
+		for _, header := range d.Get("header").(*schema.Set).List() {
 			headerDef := map[string]string{}
 			for key, val := range header.(map[string]interface{}) {
 				headerDef[key] = val.(string)
@@ -404,12 +406,25 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		case "returns":
-			// Format in Snowflake DB is returnType(<some number>)
-			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
+			returnType := desc.Value.String
+			// We first check for VARIANT
+			if returnType == "VARIANT" {
+				if err = d.Set("return_type", returnType); err != nil {
+					return err
+				}
+				break
+			}
+
+			// otherwise, format in Snowflake DB is returnType(<some number>)
+			re := regexp.MustCompile(`^(\w+)\([0-9]*\)$`)
 			match := re.FindStringSubmatch(desc.Value.String)
+			if len(match) < 2 {
+				return errors.Errorf("return_type %s not recognized", returnType)
+			}
 			if err = d.Set("return_type", match[1]); err != nil {
 				return err
 			}
+
 		case "null handling":
 			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err

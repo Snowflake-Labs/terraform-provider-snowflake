@@ -25,6 +25,7 @@ type ExternalTableBuilder struct {
 	copyGrants      bool
 	awsSNSTopic     string
 	comment         string
+	tags            []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -89,6 +90,12 @@ func (tb *ExternalTableBuilder) WithCopyGrants(c bool) *ExternalTableBuilder {
 }
 func (tb *ExternalTableBuilder) WithAwsSNSTopic(c string) *ExternalTableBuilder {
 	tb.awsSNSTopic = c
+	return tb
+}
+
+// WithTags sets the tags on the ExternalTableBuilder
+func (tb *ExternalTableBuilder) WithTags(tags []TagValue) *ExternalTableBuilder {
+	tb.tags = tags
 	return tb
 }
 

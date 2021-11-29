@@ -95,6 +95,32 @@ var tableSchema = map[string]*schema.Schema{
 						},
 					},
 				},
+				/*Note: Identity and default are mutually exclusive. From what I can tell we can't enforce this here
+				the snowflake query will error so we can defer enforcement to there.
+				*/
+				"identity": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive.",
+					MinItems:    1,
+					MaxItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"start_num": {
+								Type:        schema.TypeInt,
+								Optional:    true,
+								Description: "The number to start incrementing at.",
+								Default:     1,
+							},
+							"step_num": {
+								Type:        schema.TypeInt,
+								Optional:    true,
+								Description: "Step size to increment by.",
+								Default:     1,
+							},
+						},
+					},
+				},
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -150,6 +176,7 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
+	"tag": tagReferenceSchema,
 }
 
 func Table() *schema.Resource {
@@ -250,11 +277,23 @@ func (cd *columnDefault) _type() string {
 	return "unknown"
 }
 
+type columnIdentity struct {
+	startNum int
+	stepNum  int
+}
+
+func (identity *columnIdentity) toSnowflakeColumnIdentity() *snowflake.ColumnIdentity {
+	snowIdentity := snowflake.ColumnIdentity{}
+	return snowIdentity.WithStartNum(identity.startNum).WithStep(identity.stepNum)
+
+}
+
 type column struct {
 	name     string
 	dataType string
 	nullable bool
 	_default *columnDefault
+	identity *columnIdentity
 	comment  string
 }
 
@@ -263,6 +302,10 @@ func (c column) toSnowflakeColumn() snowflake.Column {
 
 	if c._default != nil {
 		sC = sC.WithDefault(c._default.toSnowflakeColumnDefault())
+	}
+
+	if c.identity != nil {
+		sC = sC.WithIdentity(c.identity.toSnowflakeColumnIdentity())
 	}
 
 	return *sC.WithName(c.name).
@@ -279,23 +322,6 @@ func (c columns) toSnowflakeColumns() []snowflake.Column {
 		sC[i] = col.toSnowflakeColumn()
 	}
 	return sC
-}
-
-func (old columns) getNewIn(new columns) (added columns) {
-	added = columns{}
-	for _, cO := range old {
-		found := false
-		for _, cN := range new {
-			if cO.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, cO)
-		}
-	}
-	return
 }
 
 type changedColumns []changedColumn
@@ -365,13 +391,30 @@ func getColumnDefault(def map[string]interface{}) *columnDefault {
 	return nil
 }
 
+func getColumnIdentity(identity map[string]interface{}) *columnIdentity {
+	if len(identity) > 0 {
+
+		startNum := identity["start_num"].(int)
+		stepNum := identity["step_num"].(int)
+		return &columnIdentity{startNum, stepNum}
+	}
+
+	return nil
+}
+
 func getColumn(from interface{}) (to column) {
 	c := from.(map[string]interface{})
 	var cd *columnDefault
+	var id *columnIdentity
 
 	_default := c["default"].([]interface{})
+	identity := c["identity"].([]interface{})
+
 	if len(_default) == 1 {
 		cd = getColumnDefault(_default[0].(map[string]interface{}))
+	}
+	if len(identity) == 1 {
+		id = getColumnIdentity(identity[0].(map[string]interface{}))
 	}
 
 	return column{
@@ -379,6 +422,7 @@ func getColumn(from interface{}) (to column) {
 		dataType: c["type"].(string),
 		nullable: c["nullable"].(bool),
 		_default: cd,
+		identity: id,
 		comment:  c["comment"].(string),
 	}
 }
@@ -446,6 +490,11 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("change_tracking"); ok {
 		builder.WithChangeTracking(v.(bool))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	stmt := builder.Create()
@@ -584,14 +633,17 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 		for _, cA := range added {
 			var q string
-			if cA._default == nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.comment)
+
+			if cA.identity == nil && cA._default == nil {
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment)
+			} else if cA.identity != nil {
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment)
 			} else {
 				if cA._default._type() != "constant" {
 					return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), cA.comment)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment)
 			}
 
 			err := snowflake.Exec(db, q)
@@ -680,6 +732,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
 	}
+	handleTagChanges(db, d, builder)
 
 	return ReadTable(d, meta)
 }

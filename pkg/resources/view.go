@@ -56,6 +56,7 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"tag": tagReferenceSchema,
 }
 
 func normalizeQuery(str string) string {
@@ -112,6 +113,11 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	q, err := builder.Create()
@@ -253,6 +259,33 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			err = snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error unsetting secure for view %v", d.Id())
+			}
+		}
+	}
+	handleTagChanges(db, d, builder)
+	if d.HasChange("tag") {
+		old, new := d.GetChange("tag")
+		removed, added, changed := getTags(old).diffs(getTags(new))
+		for _, tA := range removed {
+			q := builder.UnsetTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+			}
+		}
+		for _, tA := range added {
+			q := builder.AddTag(tA.toSnowflakeTagValue())
+
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding column on %v", d.Id())
+			}
+		}
+		for _, tA := range changed {
+			q := builder.ChangeTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing property on %v", d.Id())
 			}
 		}
 	}

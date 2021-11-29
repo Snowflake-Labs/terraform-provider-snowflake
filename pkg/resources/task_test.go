@@ -51,11 +51,74 @@ func TestTaskCreate(t *testing.T) {
 	})
 }
 
+func TestTaskCreateManagedWithInitSize(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"enabled":       true,
+		"name":          "test_task",
+		"database":      "test_db",
+		"schema":        "test_schema",
+		"sql_statement": "select hi from hello",
+		"comment":       "wow comment",
+		"user_task_managed_initial_warehouse_size": "XSMALL",
+	}
+
+	d := schema.TestResourceDataRaw(t, resources.Task().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE TASK "test_db"."test_schema"."test_task" USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL' COMMENT = 'wow comment' AS select hi from hello$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(
+			`^ALTER TASK "test_db"."test_schema"."test_task" RESUME$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadTask(mock)
+		expectReadTaskParams(mock)
+		err := resources.CreateTask(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestTaskCreateManagedWithoutInitSize(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"enabled":       true,
+		"name":          "test_task",
+		"database":      "test_db",
+		"schema":        "test_schema",
+		"sql_statement": "select hi from hello",
+		"comment":       "wow comment",
+	}
+
+	d := schema.TestResourceDataRaw(t, resources.Task().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(
+			`^CREATE TASK "test_db"."test_schema"."test_task" COMMENT = 'wow comment' AS select hi from hello$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(
+			`^ALTER TASK "test_db"."test_schema"."test_task" RESUME$`,
+		).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadTask(mock)
+		expectReadTaskParams(mock)
+		err := resources.CreateTask(d, db)
+		r.NoError(err)
+	})
+}
+
 func expectReadTask(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition"},
 	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "")
-	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 
 func expectReadTaskParams(mock sqlmock.Sqlmock) {

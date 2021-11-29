@@ -58,10 +58,24 @@ resource snowflake_user user {
 - **password** (String, Sensitive) **WARNING:** this will put the password in the terraform state file. Use carefully.
 - **rsa_public_key** (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
 - **rsa_public_key_2** (String) Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.
+- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
 - **has_rsa_public_key** (Boolean) Will be true if user as an RSA key set.
+
+<a id="nestedblock--tag"></a>
+### Nested Schema for `tag`
+
+Required:
+
+- **name** (String) Tag name, e.g. department.
+- **value** (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- **database** (String) Name of the database that the tag was created in.
+- **schema** (String) Name of the schema that the tag was created in.
 
 ## Import
 

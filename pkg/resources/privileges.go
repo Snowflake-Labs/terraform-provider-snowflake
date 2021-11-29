@@ -25,6 +25,7 @@ const (
 	privilegeUsage                     Privilege = "USAGE"
 	privilegeWrite                     Privilege = "WRITE"
 	privilegeCreateTable               Privilege = "CREATE TABLE"
+	privilegeCreateTag                 Privilege = "CREATE TAG"
 	privilegeCreateView                Privilege = "CREATE VIEW"
 	privilegeCreateFileFormat          Privilege = "CREATE FILE FORMAT"
 	privilegeCreateStage               Privilege = "CREATE STAGE"
@@ -52,15 +53,16 @@ const (
 	privilegeApply                     Privilege = "APPLY"
 	privilegeAttachPolicy              Privilege = "ATTACH POLICY"
 
-	privilegeCreateRole        Privilege = "CREATE ROLE"
-	privilegeCreateUser        Privilege = "CREATE USER"
-	privilegeCreateWarehouse   Privilege = "CREATE WAREHOUSE"
-	privilegeCreateDatabase    Privilege = "CREATE DATABASE"
-	privilegeCreateIntegration Privilege = "CREATE INTEGRATION"
-	privilegeManageGrants      Privilege = "MANAGE GRANTS"
-	privilegeMonitorUsage      Privilege = "MONITOR USAGE"
-	privilegeMonitorExecution  Privilege = "MONITOR EXECUTION"
-	privilegeExecuteTask       Privilege = "EXECUTE TASK"
+	privilegeCreateRole         Privilege = "CREATE ROLE"
+	privilegeCreateUser         Privilege = "CREATE USER"
+	privilegeCreateWarehouse    Privilege = "CREATE WAREHOUSE"
+	privilegeCreateDatabase     Privilege = "CREATE DATABASE"
+	privilegeCreateIntegration  Privilege = "CREATE INTEGRATION"
+	privilegeManageGrants       Privilege = "MANAGE GRANTS"
+	privilegeMonitorUsage       Privilege = "MONITOR USAGE"
+	privilegeMonitorExecution   Privilege = "MONITOR EXECUTION"
+	privilegeExecuteTask        Privilege = "EXECUTE TASK"
+	privilegeExecuteManagedTask Privilege = "EXECUTE MANAGED TASK"
 )
 
 type PrivilegeSet map[Privilege]struct{}

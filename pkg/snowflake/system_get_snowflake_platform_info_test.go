@@ -10,7 +10,7 @@ func TestSystemGetSnowflakePlatformInfoQuery(t *testing.T) {
 	r := require.New(t)
 	sb := SystemGetSnowflakePlatformInfoQuery()
 
-	r.Equal(sb, `SELECT SYSTEM$GET_SNOWFLAKE_PLATFORM_INFO() AS "info"`)
+	r.Equal(sb, `SELECT SYSTEM$GET_SNOWFLAKE_PLATFORM_INFO() AS "INFO"`)
 }
 
 func TestSystemGetSnowflakePlatformInfoGetStructuredConfigAws(t *testing.T) {
