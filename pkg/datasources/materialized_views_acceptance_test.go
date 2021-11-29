@@ -35,7 +35,7 @@ func TestAccMaterializedViews(t *testing.T) {
 func materializedViews(warehouseName string, databaseName string, schemaName string, tableName string, viewName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_warehouse" "w" {
-		name = "%v"
+		name                = "%v"
 		initially_suspended = false
 	}
 
