@@ -28,7 +28,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 			{
 				ResourceName:      "snowflake_resource_monitor.test",
 				ImportState:       true,
-				ImportStateVerify: false,
+				ImportStateVerify: true,
 			},
 		},
 	})

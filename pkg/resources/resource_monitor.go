@@ -136,14 +136,14 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	if err := ReadResourceMonitor(d, meta); err != nil {
-		return err
-	}
-
 	if d.Get("set_for_account").(bool) {
 		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
 			return errors.Wrapf(err, "error setting resource monitor %v on account", name)
 		}
+	}
+
+	if err := ReadResourceMonitor(d, meta); err != nil {
+		return err
 	}
 
 	return nil
@@ -214,6 +214,9 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("notify_triggers", nTrigs)
+
+	// Account level
+	d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
 
 	return err
 }

@@ -53,7 +53,7 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 		"frequency", "start_time", "end_time", "notify_at", "suspend_at",
 		"suspend_immediately_at", "created_on", "owner", "comment",
 	}).AddRow(
-		"good_name", 100.00, 0.00, 100.00, "", "MONTHLY", "2001-01-01 00:00:00.000 -0700",
+		"good_name", 100.00, 0.00, 100.00, "ACCOUNT", "MONTHLY", "2001-01-01 00:00:00.000 -0700",
 		"", "75%,88%", "99%", "105%", "2001-01-01 00:00:00.000 -0700", "ACCOUNTADMIN", "")
 	mock.ExpectQuery(`^SHOW RESOURCE MONITORS LIKE 'good_name'$`).WillReturnRows(rows)
 }
