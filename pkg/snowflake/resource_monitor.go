@@ -119,6 +119,11 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	return sb.String()
 }
 
+// SetOnAccount returns the SQL query that will set the resource monitor globally on your Snowflake account
+func (rcb *ResourceMonitorCreateBuilder) SetOnAccount() string {
+	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = "%v"`, rcb.name)
+}
+
 type resourceMonitor struct {
 	Name                 sql.NullString `db:"name"`
 	CreditQuota          sql.NullString `db:"credit_quota"`

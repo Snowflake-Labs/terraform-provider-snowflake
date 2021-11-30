@@ -70,6 +70,13 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
 		ForceNew:    true,
 	},
+	"set_for_account": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // ResourceMonitor returns a pointer to the resource representing a resource monitor
@@ -129,7 +136,17 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	return ReadResourceMonitor(d, meta)
+	if d.Get("set_for_account").(bool) {
+		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
+			return errors.Wrapf(err, "error setting resource monitor %v on account", name)
+		}
+	}
+
+	if err := ReadResourceMonitor(d, meta); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ReadResourceMonitor implements schema.ReadFunc
@@ -197,6 +214,9 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("notify_triggers", nTrigs)
+
+	// Account level
+	d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
 
 	return err
 }
