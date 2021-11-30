@@ -41,6 +41,7 @@ resource snowflake_resource_monitor monitor {
 - **frequency** (String) The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.
 - **id** (String) The ID of this resource.
 - **notify_triggers** (Set of Number) A list of percentage thresholds at which to send an alert to subscribed users.
+- **set_for_account** (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account.
 - **start_timestamp** (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
 - **suspend_immediate_triggers** (Set of Number) A list of percentage thresholds at which to immediately suspend all warehouses.
 - **suspend_triggers** (Set of Number) A list of percentage thresholds at which to suspend all warehouses.

@@ -56,6 +56,19 @@ func TestStorageIntegrationRead(t *testing.T) {
 	})
 }
 
+func TestStorageIntegrationReadEmpty(t *testing.T) {
+	r := require.New(t)
+
+	d := storageIntegration(t, "test_storage_integration", map[string]interface{}{"name": "not_existing_storage_integration"})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadStorageIntegrationEmpty(mock)
+
+		err := resources.ReadStorageIntegration(d, db)
+		r.Nil(err)
+  })
+}
+
 func TestStorageIntegrationUpdate(t *testing.T) {
 	r := require.New(t)
 
@@ -133,4 +146,11 @@ func expectReadStorageIntegrationForGCS(mock sqlmock.Sqlmock) {
 		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
+}
+
+func expectReadStorageIntegrationEmpty(mock sqlmock.Sqlmock) {
+	noRows := sqlmock.NewRows([]string{
+		"name", "type", "category", "enabled", "created_on"},
+	)
+	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS.*`).WillReturnRows(noRows)
 }
