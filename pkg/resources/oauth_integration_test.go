@@ -72,7 +72,8 @@ func expectReadOAuthIntegration(mock sqlmock.Sqlmock) {
 
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
-	}).AddRow("OAUTH_REFRESH_TOKEN_VALIDITY", "Integer", 86400, nil).
+	}).AddRow("OAUTH_ISSUE_REFRESH_TOKENS", "Boolean", "true", "true").
+		AddRow("OAUTH_REFRESH_TOKEN_VALIDITY", "Integer", "86400", "7776000").
 		AddRow("BLOCKED_ROLES_LIST", "List", "ACCOUNTADMIN,SECURITYADMIN", nil)
 
 	mock.ExpectQuery(`DESCRIBE SECURITY INTEGRATION "test_oauth_integration"$`).WillReturnRows(descRows)
