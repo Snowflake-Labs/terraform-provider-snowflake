@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -105,7 +106,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
+		Default:     172800,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
 	"statement_queued_timeout_in_seconds": {
@@ -117,7 +118,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"max_concurrency_level": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
+		Default:     8,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 	"tag": tagReferenceSchema,
@@ -141,13 +142,22 @@ func Warehouse() *schema.Resource {
 // CreateWarehouse implements schema.CreateFunc
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	props := append(warehouseProperties, warehouseCreateProperties...)
-	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
+	return CreateResource(
+		"warehouse",
+		props,
+		warehouseSchema,
+		func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+		ReadWarehouse,
+	)(d, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.Warehouse(d.Id()).Show()
+	warehouseBuilder := snowflake.Warehouse(d.Id())
+	stmt := warehouseBuilder.Show()
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
@@ -193,29 +203,64 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("statement_timeout_in_seconds", w.StatementTimeoutInSeconds)
-	if err != nil {
-		return err
-	}
-	err = d.Set("statement_queued_timeout_in_seconds", w.StatementQueuedTimeoutInSeconds)
-	if err != nil {
-		return err
-	}
-	err = d.Set("max_concurrency_level", w.MaxConcurrencyLevel)
-	if err != nil {
-		return err
-	}
 	err = d.Set("resource_monitor", w.ResourceMonitor)
+	if err != nil {
+		return err
+	}
 
-	return err
+	stmt = warehouseBuilder.ShowParameters()
+	paramRows, err := snowflake.Query(db, stmt)
+	if err != nil {
+		return err
+	}
+
+	warehouseParams, err := snowflake.ScanWarehouseParameters(paramRows)
+	if err != nil {
+		return err
+	}
+
+	for _, param := range warehouseParams {
+		log.Printf("[TRACE] %+v\n", param)
+
+		var value interface{} = param.DefaultValue
+		if strings.EqualFold(param.Type, "number") {
+			i, err := strconv.ParseInt(param.Value, 10, 64)
+			if err != nil {
+				return err
+			}
+			value = i
+		} else {
+			value = param.Value
+		}
+
+		key := strings.ToLower(param.Key)
+		err = d.Set(key, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateWarehouse implements schema.UpdateFunc
 func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(d, meta)
+	return UpdateResource(
+		"warehouse",
+		warehouseProperties,
+		warehouseSchema,
+		func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+		ReadWarehouse,
+	)(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("warehouse", snowflake.Warehouse)(d, meta)
+	return DeleteResource(
+		"warehouse", func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+	)(d, meta)
 }
