@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -19,18 +18,6 @@ func TestUserPublicKeys(t *testing.T) {
 	r.NoError(err)
 }
 
-func rowsFromMap(in map[string]string) *sqlmock.Rows {
-	cols := []string{}
-	vals := []driver.Value{}
-	for col, val := range in {
-		cols = append(cols, col)
-		vals = append(vals, val)
-	}
-	rows := sqlmock.NewRows(cols)
-	rows.AddRow(vals...)
-	return rows
-}
-
 func TestUserPublicKeysCreate(t *testing.T) {
 	r := require.New(t)
 
@@ -42,14 +29,10 @@ func TestUserPublicKeysCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.UserPublicKeys().Schema, in)
 	r.NotNil(d)
 
-	rows := map[string]string{
-		"name": "good_name",
-	}
-
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key = 'asdf'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`ALTER USER "good_name" SET rsa_public_key_2 = 'asdf2'`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectQuery(`SHOW USERS LIKE 'good_name'`).WillReturnRows(rowsFromMap(rows))
+		expectReadUser(mock, "good_name")
 		err := resources.CreateUserPublicKeys(d, db)
 		r.NoError(err)
 

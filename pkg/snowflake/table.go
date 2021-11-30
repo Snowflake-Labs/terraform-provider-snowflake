@@ -639,6 +639,7 @@ type table struct {
 	RetentionTime       sql.NullInt32  `db:"retention_time"`
 	AutomaticClustering sql.NullString `db:"automatic_clustering"`
 	ChangeTracking      sql.NullString `db:"change_tracking"`
+	IsExternal          sql.NullString `db:"is_external"`
 }
 
 func ScanTable(row *sqlx.Row) (*table, error) {
