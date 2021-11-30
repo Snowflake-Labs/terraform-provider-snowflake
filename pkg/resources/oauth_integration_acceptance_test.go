@@ -11,7 +11,7 @@ import (
 
 func TestAcc_OAuthIntegration(t *testing.T) {
 	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	integrationType := "TABLEAU_DESKTOP"
+	integrationType := "TABLEAU_SERVER"
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: providers(),
