@@ -21,14 +21,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
-				),
-			},
-			{
-				Config: resourceMonitorConfigSetForAccount(name, true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
-					resource.TestCheckResourceAttrSet("snowflake_resource_monitor.test", "set_for_account"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 				),
 			},
 			// IMPORT
@@ -44,18 +37,9 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 func resourceMonitorConfig(accName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {
-	name           = "%v"
-	credit_quota   = 100
-}
-`, accName)
-}
-
-func resourceMonitorConfigSetForAccount(accName string, setForAccount bool) string {
-	return fmt.Sprintf(`
-resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
-	set_for_account = %t
+	set_for_account = false
 }
-`, accName, setForAccount)
+`, accName)
 }
