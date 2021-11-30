@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -44,15 +45,17 @@ var taskSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"warehouse": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The warehouse the task will use.",
-		ForceNew:    false,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)",
+		ForceNew:      false,
+		ConflictsWith: []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The schedule for periodically running the task. This can be a cron or interval in minutes.",
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)",
+		ConflictsWith: []string{"after"},
 	},
 	"session_parameters": {
 		Type:        schema.TypeMap,
@@ -72,9 +75,10 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the task.",
 	},
 	"after": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag).",
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)",
+		ConflictsWith: []string{"schedule"},
 	},
 	"when": {
 		Type:        schema.TypeString,
@@ -87,6 +91,15 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
 		ForceNew:         false,
 		DiffSuppressFunc: DiffSuppressStatement,
+	},
+	"user_task_managed_initial_warehouse_size": {
+		Type:     schema.TypeString,
+		Optional: true,
+		ValidateFunc: validation.StringInSlice([]string{
+			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE", "X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE",
+		}, true),
+		Description:   "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)",
+		ConflictsWith: []string{"warehouse"},
 	},
 }
 
@@ -332,20 +345,44 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(params) > 0 {
-		paramMap := map[string]interface{}{}
-		for _, param := range params {
-			log.Printf("[TRACE] %+v\n", param)
-			if param.Value == param.DefaultValue || param.Level == "ACCOUNT" {
-				continue
-			}
-
-			paramMap[param.Key] = param.Value
+		sessionParameters := map[string]interface{}{}
+		fieldParameters := map[string]interface{}{
+			"user_task_managed_initial_warehouse_size": "",
 		}
 
-		err := d.Set("session_parameters", paramMap)
+		for _, param := range params {
+			log.Printf("[TRACE] %+v\n", param)
+
+			if param.Level != "TASK" {
+				continue
+			}
+			switch param.Key {
+			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
+				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
+			case "USER_TASK_TIMEOUT_MS":
+				timeout, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["user_task_timeout_ms"] = timeout
+			default:
+				sessionParameters[param.Key] = param.Value
+			}
+		}
+
+		err := d.Set("session_parameters", sessionParameters)
 		if err != nil {
 			return err
 		}
+
+		for key, value := range fieldParameters {
+			err = d.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -359,15 +396,21 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	warehouse := d.Get("warehouse").(string)
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
 	builder := snowflake.Task(name, database, dbSchema)
-	builder.WithWarehouse(warehouse)
 	builder.WithStatement(sql)
 
 	// Set optionals
+	if v, ok := d.GetOk("warehouse"); ok {
+		builder.WithWarehouse(v.(string))
+	}
+
+	if v, ok := d.GetOk("user_task_managed_initial_warehouse_size"); ok {
+		builder.WithInitialWarehouseSize(v.(string))
+	}
+
 	if v, ok := d.GetOk("schedule"); ok {
 		builder.WithSchedule(v.(string))
 	}
@@ -429,6 +472,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 // UpdateTask implements schema.UpdateFunc
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
+	var needResumeCurrentTask = false
 	if err != nil {
 		return err
 	}
@@ -438,19 +482,63 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	dbSchema := taskID.SchemaName
 	name := taskID.TaskName
 	builder := snowflake.Task(name, database, dbSchema)
-
 	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
 		return err
 	}
-	defer resumeTask(root, meta)
 
 	if d.HasChange("warehouse") {
-		new := d.Get("warehouse")
-		q := builder.ChangeWarehouse(new.(string))
+		var q string
+		newWarehouse := d.Get("warehouse")
+
+		if newWarehouse == "" {
+			q = builder.SwitchWarehouseToManaged()
+		} else {
+			q = builder.ChangeWarehouse(newWarehouse.(string))
+		}
+
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating warehouse on task %v", d.Id())
+		}
+	}
+
+	if d.HasChange("user_task_managed_initial_warehouse_size") {
+		newSize := d.Get("user_task_managed_initial_warehouse_size")
+		warehouse := d.Get("warehouse")
+
+		if warehouse == "" && newSize != "" {
+			var q = builder.SwitchManagedWithInitialSize(newSize.(string))
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
+			}
+		}
+
+	}
+
+	// Need to remove dependency before adding schedule if needed
+	if d.HasChange("after") {
+		var (
+			q   string
+			err error
+		)
+
+		old, _ := d.GetChange("after")
+
+		q = builder.Suspend()
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error suspending task %v", d.Id())
+		}
+		needResumeCurrentTask = d.Get("enabled").(bool)
+
+		if old != "" {
+			q = builder.RemoveDependency(old.(string))
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
+			}
 		}
 	}
 
@@ -498,29 +586,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("after") {
 		var (
-			q   string
-			err error
+			q string
 		)
-
-		old, new := d.GetChange("after")
-		enabled := d.Get("enabled").(bool)
-
-		if enabled {
-			q = builder.Suspend()
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error suspending task %v", d.Id())
-			}
-			defer resumeTask(builder, meta)
-		}
-
-		if old != "" {
-			q = builder.RemoveDependency(old.(string))
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
-			}
-		}
+		_, new := d.GetChange("after")
 
 		if new != "" {
 			q = builder.AddDependency(new.(string))
@@ -593,6 +661,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.Suspend()
 			// make sure defer doesn't enable task again
 			// when standalone or root task and status is supsended
+			needResumeCurrentTask = false
 			if root != nil && builder.QualifiedName() == root.QualifiedName() {
 				root = root.SetDisabled() //nolint
 			}
@@ -604,6 +673,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if needResumeCurrentTask {
+		resumeTask(builder, meta)
+	}
+
+	resumeTask(root, meta)
 	return ReadTask(d, meta)
 }
 

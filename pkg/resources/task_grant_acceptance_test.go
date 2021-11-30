@@ -16,20 +16,41 @@ func TestAcc_TaskGrant(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: taskGrantConfig(accName),
+				Config: taskGrantConfig(accName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", accName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", accName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "task_name", accName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OPERATE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "86400"),
 				),
+			},
+			// UPDATE MAX_CONCURRENCY_LEVEL
+			{
+				Config: taskGrantConfig(accName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", accName),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "task_name", accName),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OPERATE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "max_concurrency_level", "10"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.test", "statement_timeout_in_seconds", "86400"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_task_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func taskGrantConfig(name string) string {
+func taskGrantConfig(name string, concurrency int32) string {
 	s := `
 resource "snowflake_database" "test" {
   name = "%v"
@@ -47,7 +68,9 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_warehouse" "test" {
-  name = snowflake_database.test.name
+  name                         = snowflake_database.test.name
+  max_concurrency_level        = %d
+  statement_timeout_in_seconds = 86400
 }
 
 resource "snowflake_task" "test" {
@@ -71,5 +94,5 @@ resource "snowflake_task_grant" "test" {
   privilege 	= "OPERATE"
 }
 `
-	return fmt.Sprintf(s, name, name)
+	return fmt.Sprintf(s, name, name, concurrency)
 }

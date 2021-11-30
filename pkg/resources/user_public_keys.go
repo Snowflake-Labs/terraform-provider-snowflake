@@ -61,9 +61,8 @@ func UserPublicKeys() *schema.Resource {
 
 func checkUserExists(db *sql.DB, name string) (bool, error) {
 	// First check if user exists
-	stmt := snowflake.User(name).Show()
-	row := snowflake.QueryRow(db, stmt)
-	_, err := snowflake.ScanUser(row)
+	stmt := snowflake.User(name).Describe()
+	_, err := snowflake.Query(db, stmt)
 	if err == sql.ErrNoRows {
 		log.Printf("[DEBUG] user (%s) not found", name)
 		return false, nil
