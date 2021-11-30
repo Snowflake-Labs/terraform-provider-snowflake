@@ -68,7 +68,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// OAuthIntegration returns a pointer to the resource representing a network policy
+// OAuthIntegration returns a pointer to the resource representing an OAuth integration
 func OAuthIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateOAuthIntegration,
@@ -96,7 +96,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	// Set optional fields
 	if _, ok := d.GetOk("oauth_issue_refresh_tokens"); ok {
-		stmt.SetBool(`OAUTH_ISSUE_REFRESH_TOKENS`, d.Get("network_policy").(bool))
+		stmt.SetBool(`OAUTH_ISSUE_REFRESH_TOKENS`, d.Get("oauth_issue_refresh_tokens").(bool))
 	}
 	if _, ok := d.GetOk("oauth_refresh_token_validity"); ok {
 		stmt.SetInt(`OAUTH_REFRESH_TOKEN_VALIDITY`, d.Get("oauth_refresh_token_validity").(int))

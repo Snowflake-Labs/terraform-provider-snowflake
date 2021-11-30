@@ -21,10 +21,10 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", oauthIntName),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", integrationType),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration.test", "oauth_issue_refresh_tokens"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration.test", "oauth_refresh_token_validity"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration.test", "blocked_roles_list"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration.test", "created_on"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_issue_refresh_tokens", "true"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_refresh_token_validity", "3600"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.0", "SYSADMIN"),
 				),
 			},
 			{
@@ -39,12 +39,12 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 func oauthIntegrationConfig(name string, integrationType string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_oauth_integration" "test" {
-		name = "%s"
-		oauth_client = "%s"
-		enabled = true
-  		oauth_issue_refresh_tokens = true
+		name                         = "%s"
+		oauth_client                 = "%s"
+		enabled                      = true
+  		oauth_issue_refresh_tokens   = true
   		oauth_refresh_token_validity = 3600
-  		blocked_roles_list = ["SYSADMIN"]
+  		blocked_roles_list           = ["SYSADMIN"]
 	}
 	`, name, integrationType)
 }
