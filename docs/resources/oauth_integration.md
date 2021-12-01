@@ -33,7 +33,7 @@ resource "snowflake_oauth_integration" "tableau_desktop" {
 
 ### Optional
 
-- **blocked_roles_list** (Set of String) List of roles that a user cannot explicitly consent to using after authenticating.
+- **blocked_roles_list** (Set of String) List of roles that a user cannot explicitly consent to using after authenticating. Do not include ACCOUNTADMIN, ORGADMIN or SECURITYADMIN as they are already implicitly enforced and will cause in-place updates.
 - **comment** (String) Specifies a comment for the OAuth integration.
 - **enabled** (Boolean) Specifies whether this OAuth integration is enabled or disabled.
 - **id** (String) The ID of this resource.

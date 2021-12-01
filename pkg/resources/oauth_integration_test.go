@@ -30,7 +30,7 @@ func TestOAuthIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURITY INTEGRATION "test_oauth_integration" TYPE=OAUTH OAUTH_CLIENT='TABLEAU_DESKTOP'$`,
+			`^CREATE SECURITY INTEGRATION "test_oauth_integration" TYPE=OAUTH OAUTH_CLIENT='TABLEAU_DESKTOP' OAUTH_USE_SECONDARY_ROLES='NONE'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadOAuthIntegration(mock)
 

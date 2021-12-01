@@ -66,7 +66,7 @@ func TestStorageIntegrationReadEmpty(t *testing.T) {
 
 		err := resources.ReadStorageIntegration(d, db)
 		r.Nil(err)
-  })
+	})
 }
 
 func TestStorageIntegrationUpdate(t *testing.T) {

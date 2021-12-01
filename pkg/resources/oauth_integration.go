@@ -51,7 +51,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "List of roles that a user cannot explicitly consent to using after authenticating.",
+		Description: "List of roles that a user cannot explicitly consent to using after authenticating. Do not include ACCOUNTADMIN, ORGADMIN or SECURITYADMIN as they are already implicitly enforced and will cause in-place updates.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -206,7 +206,18 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set OAuth use secondary roles for security integration")
 			}
 		case "BLOCKED_ROLES_LIST":
-			if err = d.Set("blocked_roles_list", strings.Split(v.(string), ",")); err != nil {
+			blockedRolesAll := strings.Split(v.(string), ",")
+
+			// Only roles other than ACCOUNTADMIN, ORGADMIN and SECURITYADMIN can be specified custom,
+			// those three are enforced with no option to remove them
+			blockedRolesCustom := []string{}
+			for _, role := range blockedRolesAll {
+				if role != "ACCOUNTADMIN" && role != "ORGADMIN" && role != "SECURITYADMIN" {
+					blockedRolesCustom = append(blockedRolesCustom, role)
+				}
+			}
+
+			if err = d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
 				return errors.Wrap(err, "unable to set blocked roles list for security integration")
 			}
 		case "OAUTH_CLIENT_TYPE":
