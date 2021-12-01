@@ -41,6 +41,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 	"oauth_use_secondary_roles": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Default:     "NONE",
 		Description: "Specifies whether default secondary roles set in the user properties are activated by default in the session being opened.",
 		ValidateFunc: validation.StringInSlice([]string{
 			"IMPLICIT", "NONE",
