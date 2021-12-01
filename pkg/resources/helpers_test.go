@@ -208,6 +208,14 @@ func scimIntegration(t *testing.T, id string, params map[string]interface{}) *sc
 	return d
 }
 
+func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.OAuthIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
