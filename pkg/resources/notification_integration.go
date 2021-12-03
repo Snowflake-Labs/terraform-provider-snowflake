@@ -40,7 +40,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"notification_provider": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS" "GCP_PUBSUB"}, true),
+		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)",
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
