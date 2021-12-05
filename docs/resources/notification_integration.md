@@ -30,11 +30,11 @@ resource snowflake_notification_integration integration {
   notification_provider = "AWS_SQS"
   aws_sqs_arn           = "..." 
   aws_sqs_role_arn      = "..."
-	
+
   # AWS_SNS
-	notification_provider = "AWS_SNS"
-	aws_sns_arn           = "..." 
-	aws_sns_role_arn      = "..."
+  notification_provider = "AWS_SNS"
+  aws_sns_arn           = "..." 
+  aws_sns_role_arn      = "..."
 }
 ```
 
@@ -47,10 +47,10 @@ resource snowflake_notification_integration integration {
 
 ### Optional
 
+- **aws_sns_arn** (String) AWS SNS Topic ARN for notification integration to connect to
+- **aws_sns_role_arn** (String) AWS IAM role ARN for notification integration to assume
 - **aws_sqs_arn** (String) AWS SQS queue ARN for notification integration to connect to
 - **aws_sqs_role_arn** (String) AWS IAM role ARN for notification integration to assume
-- **aws_sns_arn** (String) AWS SNS topic ARN for notification integration to connect to
-- **aws_sns_role_arn** (String) AWS IAM role ARN for notification integration to assume
 - **azure_storage_queue_primary_uri** (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
 - **azure_tenant_id** (String) The ID of the Azure Active Directory tenant used for identity management
 - **comment** (String)
@@ -63,10 +63,10 @@ resource snowflake_notification_integration integration {
 
 ### Read-Only
 
-- **aws_sqs_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
-- **aws_sqs_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
 - **aws_sns_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
 - **aws_sns_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
+- **aws_sqs_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
+- **aws_sqs_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
 - **created_on** (String) Date and time when the notification integration was created.
 
 ## Import
