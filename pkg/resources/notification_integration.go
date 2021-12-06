@@ -271,7 +271,7 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			if err = data.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
-		case "AWS_SNS_TOPIC_ARN":
+		case "AWS_SNS_ARN":
 			if err = data.Set("aws_sns_arn", v.(string)); err != nil {
 				return err
 			}
@@ -357,7 +357,7 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 
 	if data.HasChange("aws_sns_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SNS_TOPIC_ARN", data.Get("aws_sns_arn").(string))
+		stmt.SetString("AWS_SNS_ARN", data.Get("aws_sns_arn").(string))
 	}
 
 	if data.HasChange("aws_sns_role_arn") {
