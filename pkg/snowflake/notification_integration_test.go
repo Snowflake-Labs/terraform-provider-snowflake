@@ -45,3 +45,23 @@ func TestNotificationIntegration_AWS(t *testing.T) {
 
 	r.Equal(`CREATE NOTIFICATION INTEGRATION "aws_sqs" AWS_SQS_ARN='some-sqs-arn' AWS_SQS_ROLE_ARN='some-iam-role-arn' DIRECTION='OUTBOUND' TYPE='QUEUE' ENABLED=true`, q)
 }
+
+func TestNotificationIntegration_AWS_SNS(t *testing.T) {
+	r := require.New(t)
+	builder := snowflake.NotificationIntegration("aws_sns")
+	r.NotNil(builder)
+
+	q := builder.Show()
+	r.Equal("SHOW NOTIFICATION INTEGRATIONS LIKE 'aws_sns'", q)
+
+	c := builder.Create()
+
+	c.SetString(`type`, `QUEUE`)
+	c.SetString(`direction`, `OUTBOUND`)
+	c.SetString(`aws_sns_arn`, `some-sns-arn`)
+	c.SetString(`aws_sns_role_arn`, `some-iam-role-arn`)
+	c.SetBool(`enabled`, true)
+	q = c.Statement()
+
+	r.Equal(`CREATE NOTIFICATION INTEGRATION "aws_sns" AWS_SNS_ARN='some-sns-arn' AWS_SNS_ROLE_ARN='some-iam-role-arn' DIRECTION='OUTBOUND' TYPE='QUEUE' ENABLED=true`, q)
+}

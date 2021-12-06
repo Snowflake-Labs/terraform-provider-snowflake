@@ -40,8 +40,8 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"notification_provider": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "GCP_PUBSUB"}, true),
-		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS)",
+		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
+		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)",
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
 		Type:        schema.TypeString,
@@ -69,6 +69,26 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Description: "AWS SQS queue ARN for notification integration to connect to",
 	},
 	"aws_sqs_role_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "AWS IAM role ARN for notification integration to assume",
+	},
+	"aws_sns_external_id": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The external ID that Snowflake will use when assuming the AWS role",
+	},
+	"aws_sns_iam_user_arn": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The Snowflake user that will attempt to assume the AWS role.",
+	},
+	"aws_sns_arn": &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "AWS SNS Topic ARN for notification integration to connect to",
+	},
+	"aws_sns_role_arn": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS IAM role ARN for notification integration to assume",
@@ -141,6 +161,12 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	}
 	if v, ok := data.GetOk("aws_sqs_role_arn"); ok {
 		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
+	}
+	if v, ok := data.GetOk("aws_sns_arn"); ok {
+		stmt.SetString(`AWS_SNS_ARN`, v.(string))
+	}
+	if v, ok := data.GetOk("aws_sns_role_arn"); ok {
+		stmt.SetString(`AWS_SNS_ROLE_ARN`, v.(string))
 	}
 	if v, ok := data.GetOk("gcp_pubsub_subscription_name"); ok {
 		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
@@ -245,6 +271,22 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			if err = data.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
+		case "AWS_SNS_ARN":
+			if err = data.Set("aws_sns_arn", v.(string)); err != nil {
+				return err
+			}
+		case "AWS_SNS_ROLE_ARN":
+			if err = data.Set("aws_sns_role_arn", v.(string)); err != nil {
+				return err
+			}
+		case "SF_AWS_EXTERNAL_ID":
+			if err = data.Set("aws_sns_external_id", v.(string)); err != nil {
+				return err
+			}
+		case "SF_AWS_IAM_USER_ARN":
+			if err = data.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
+				return err
+			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
 			if err = data.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
 				return err
@@ -311,6 +353,16 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	if data.HasChange("aws_sqs_role_arn") {
 		runSetStatement = true
 		stmt.SetString("AWS_SQS_ROLE_ARN", data.Get("aws_sqs_role_arn").(string))
+	}
+
+	if data.HasChange("aws_sns_arn") {
+		runSetStatement = true
+		stmt.SetString("AWS_SNS_ARN", data.Get("aws_sns_arn").(string))
+	}
+
+	if data.HasChange("aws_sns_role_arn") {
+		runSetStatement = true
+		stmt.SetString("AWS_SNS_ROLE_ARN", data.Get("aws_sns_role_arn").(string))
 	}
 
 	if data.HasChange("gcp_pubsub_subscription_name") {

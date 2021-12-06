@@ -48,6 +48,18 @@ func TestNotificationIntegrationCreate(t *testing.T) {
 			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" AWS_SQS_ARN='some-sqs-arn' AWS_SQS_ROLE_ARN='some-iam-role-arn' COMMENT='great comment' DIRECTION='OUTBOUND' NOTIFICATION_PROVIDER='AWS_SQS' TYPE='QUEUE' ENABLED=true$`,
 		},
 		{
+			notificationProvider: "AWS_SNS",
+			raw: map[string]interface{}{
+				"name":                  "test_notification_integration",
+				"comment":               "great comment",
+				"direction":             "OUTBOUND",
+				"notification_provider": "AWS_SNS",
+				"aws_sns_arn":           "some-sns-arn",
+				"aws_sns_role_arn":      "some-iam-role-arn",
+			},
+			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" AWS_SNS_ARN='some-sns-arn' AWS_SNS_ROLE_ARN='some-iam-role-arn' COMMENT='great comment' DIRECTION='OUTBOUND' NOTIFICATION_PROVIDER='AWS_SNS' TYPE='QUEUE' ENABLED=true$`,
+		},
+		{
 			notificationProvider: "GCP_PUBSUB",
 			raw: map[string]interface{}{
 				"name":                         "test_notification_integration",
@@ -82,6 +94,9 @@ func TestNotificationIntegrationRead(t *testing.T) {
 		},
 		{
 			notificationProvider: "AWS_SQS",
+		},
+		{
+			notificationProvider: "AWS_SNS",
 		},
 		{
 			notificationProvider: "GCP_PUBSUB",
@@ -137,6 +152,14 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 			AddRow("AWS_SQS_ROLE_ARN", "String", "some-iam-role-arn", nil).
 			AddRow("AWS_SQS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
 			AddRow("AWS_SQS_IAM_USER_ARN", "String", "some-iam-user-arn", nil)
+	case "AWS_SNS":
+		descRows = descRows.
+			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
+			AddRow("DIRECTION", "String", "OUTBOUND", nil).
+			AddRow("AWS_SNS_ARN", "String", "some-sns-arn", nil).
+			AddRow("AWS_SNS_ROLE_ARN", "String", "some-iam-role-arn", nil).
+			AddRow("SF_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
+			AddRow("SF_AWS_IAM_USER_ARN", "String", "some-iam-user-arn", nil)
 	case "GCP_PUBSUB":
 		descRows = descRows.
 			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).

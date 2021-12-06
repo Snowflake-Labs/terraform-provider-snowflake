@@ -15,4 +15,9 @@ resource snowflake_notification_integration integration {
   notification_provider = "AWS_SQS"
   aws_sqs_arn           = "..." 
   aws_sqs_role_arn      = "..."
+
+  # AWS_SNS
+  notification_provider = "AWS_SNS"
+  aws_sns_arn           = "..." 
+  aws_sns_role_arn      = "..."
 }
