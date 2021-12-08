@@ -132,39 +132,6 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
 		},
-<<<<<<< HEAD
-		ResourcesMap: map[string]*schema.Resource{
-			"snowflake_account_grant":          resources.AccountGrant(),
-			"snowflake_database":               resources.Database(),
-			"snowflake_database_grant":         resources.DatabaseGrant(),
-			"snowflake_integration_grant":      resources.IntegrationGrant(),
-			"snowflake_managed_account":        resources.ManagedAccount(),
-			"snowflake_pipe":                   resources.Pipe(),
-			"snowflake_resource_monitor":       resources.ResourceMonitor(),
-			"snowflake_resource_monitor_grant": resources.ResourceMonitorGrant(),
-			"snowflake_role":                   resources.Role(),
-			"snowflake_role_grants":            resources.RoleGrants(),
-			"snowflake_schema":                 resources.Schema(),
-			"snowflake_schema_grant":           resources.SchemaGrant(),
-			"snowflake_share":                  resources.Share(),
-			"snowflake_stage":                  resources.Stage(),
-			"snowflake_stage_grant":            resources.StageGrant(),
-			"snowflake_storage_integration":    resources.StorageIntegration(),
-			"snowflake_stream":                 resources.Stream(),
-			"snowflake_user":                   resources.User(),
-			"snowflake_view":                   resources.View(),
-			"snowflake_view_grant":             resources.ViewGrant(),
-			"snowflake_task":                   resources.Task(),
-			"snowflake_table":                  resources.Table(),
-			"snowflake_table_grant":            resources.TableGrant(),
-			"snowflake_warehouse":              resources.Warehouse(),
-			"snowflake_warehouse_grant":        resources.WarehouseGrant(),
-		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"snowflake_system_get_aws_sns_iam_policy": datasources.SystemGetAWSSNSIAMPolicy(),
-		},
-		ConfigureFunc: ConfigureProvider,
-=======
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
 		ConfigureFunc:  ConfigureProvider,
@@ -233,7 +200,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_user_public_keys":          resources.UserPublicKeys(),
 		"snowflake_view":                      resources.View(),
 		"snowflake_warehouse":                 resources.Warehouse(),
->>>>>>> be74d18f7f46c07cc6e4849460ef3eb859a5d53c
 	}
 
 	return mergeSchemas(
