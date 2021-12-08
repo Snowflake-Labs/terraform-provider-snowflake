@@ -7,8 +7,9 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,6 +40,11 @@ func TestWarehouseCreate(t *testing.T) {
 func expectReadWarehouse(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"name", "comment", "size"}).AddRow("good_name", "mock comment", "SMALL")
 	mock.ExpectQuery("SHOW WAREHOUSES LIKE 'good_name'").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows(
+		[]string{"key", "value", "default", "level", "description", "type"},
+	).AddRow("MAX_CONCURRENCY_LEVEL", 8, 8, "WAREHOUSE", "", "NUMBER")
+	mock.ExpectQuery("SHOW PARAMETERS IN WAREHOUSE good_name").WillReturnRows(rows)
 }
 
 func TestWarehouseRead(t *testing.T) {
@@ -51,6 +57,14 @@ func TestWarehouseRead(t *testing.T) {
 		err := resources.ReadWarehouse(d, db)
 		r.NoError(err)
 		r.Equal("mock comment", d.Get("comment").(string))
+
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.Warehouse(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err2 := resources.ReadWarehouse(d, db)
+		r.Empty(d.State())
+		r.Nil(err2)
 	})
 }
 

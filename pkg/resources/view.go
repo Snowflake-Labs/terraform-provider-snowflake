@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -28,8 +28,7 @@ var viewSchema = map[string]*schema.Schema{
 	},
 	"schema": {
 		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "PUBLIC",
+		Required:    true,
 		Description: "The schema in which to create the view. Don't use the | character.",
 		ForceNew:    true,
 	},
@@ -57,6 +56,7 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"tag": tagReferenceSchema,
 }
 
 func normalizeQuery(str string) string {
@@ -71,7 +71,7 @@ func normalizeQuery(str string) string {
 // semantically significant.
 //
 // If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
-// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldnt'
+// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldn't
 // find such a library.
 func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
@@ -84,54 +84,60 @@ func View() *schema.Resource {
 		Read:   ReadView,
 		Update: UpdateView,
 		Delete: DeleteView,
-		Exists: ViewExists,
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateView implements schema.CreateFunc
-func CreateView(data *schema.ResourceData, meta interface{}) error {
+func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-	schema := data.Get("schema").(string)
-	database := data.Get("database").(string)
-	s := data.Get("statement").(string)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	s := d.Get("statement").(string)
 
 	builder := snowflake.View(name).WithDB(database).WithSchema(schema).WithStatement(s)
 
 	// Set optionals
-	if v, ok := data.GetOk("or_replace"); ok && v.(bool) {
+	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		builder.WithReplace()
 	}
 
-	if v, ok := data.GetOk("is_secure"); ok && v.(bool) {
+	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
 		builder.WithSecure()
 	}
 
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	q := builder.Create()
-	log.Print("[DEBUG] xxx ", q)
-	err := snowflake.Exec(db, q)
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
+	}
+
+	q, err := builder.Create()
+	if err != nil {
+		return err
+	}
+	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
 
-	data.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
+	d.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
 
-	return ReadView(data, meta)
+	return ReadView(d, meta)
 }
 
 // ReadView implements schema.ReadFunc
-func ReadView(data *schema.ResourceData, meta interface{}) error {
+func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(data.Id())
+	dbName, schema, view, err := splitViewID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,26 +145,32 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] view (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", v.Name.String)
+	err = d.Set("name", v.Name.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("is_secure", v.IsSecure)
+	err = d.Set("is_secure", v.IsSecure)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("comment", v.Comment.String)
+	err = d.Set("comment", v.Comment.String)
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("schema", v.SchemaName.String)
+	err = d.Set("schema", v.SchemaName.String)
 	if err != nil {
 		return err
 	}
@@ -171,20 +183,17 @@ func ReadView(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("statement", substringOfQuery)
+	err = d.Set("statement", substringOfQuery)
 	if err != nil {
 		return err
 	}
 
-	return data.Set("database", v.DatabaseName.String)
+	return d.Set("database", v.DatabaseName.String)
 }
 
 // UpdateView implements schema.UpdateFunc
-func UpdateView(data *schema.ResourceData, meta interface{}) error {
-	// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	data.Partial(true)
-
-	dbName, schema, view, err := splitViewID(data.Id())
+func UpdateView(d *schema.ResourceData, meta interface{}) error {
+	dbName, schema, view, err := splitViewID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -192,77 +201,117 @@ func UpdateView(data *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.View(view).WithDB(dbName).WithSchema(schema)
 
 	db := meta.(*sql.DB)
-	if data.HasChange("name") {
-		_, name := data.GetChange("name")
+	if d.HasChange("name") {
+		name := d.Get("name")
 
-		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
+		q, err := builder.Rename(name.(string))
 		if err != nil {
-			return errors.Wrapf(err, "error renaming view %v", data.Id())
+			return err
+		}
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error renaming view %v", d.Id())
 		}
 
-		data.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
-		data.SetPartial("name")
+		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
 	}
 
-	if data.HasChange("comment") {
-		_, comment := data.GetChange("comment")
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
-			q := builder.RemoveComment()
-			err := snowflake.Exec(db, q)
+			q, err := builder.RemoveComment()
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for view %v", data.Id())
+				return err
+			}
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error unsetting comment for view %v", d.Id())
 			}
 		} else {
-			q := builder.ChangeComment(c)
-			err := snowflake.Exec(db, q)
+			q, err := builder.ChangeComment(c)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for view %v", data.Id())
+				return err
+			}
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error updating comment for view %v", d.Id())
 			}
 		}
-
-		data.SetPartial("comment")
 	}
-
-	data.Partial(false)
-	if data.HasChange("is_secure") {
-		_, secure := data.GetChange("is_secure")
+	if d.HasChange("is_secure") {
+		secure := d.Get("is_secure")
 
 		if secure.(bool) {
-			q := builder.Secure()
-			err := snowflake.Exec(db, q)
+			q, err := builder.Secure()
 			if err != nil {
-				return errors.Wrapf(err, "error setting secure for view %v", data.Id())
+				return err
+			}
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error setting secure for view %v", d.Id())
 			}
 		} else {
-			q := builder.Unsecure()
+			q, err := builder.Unsecure()
+			if err != nil {
+				return err
+			}
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error unsetting secure for view %v", d.Id())
+			}
+		}
+	}
+	handleTagChanges(db, d, builder)
+	if d.HasChange("tag") {
+		old, new := d.GetChange("tag")
+		removed, added, changed := getTags(old).diffs(getTags(new))
+		for _, tA := range removed {
+			q := builder.UnsetTag(tA.toSnowflakeTagValue())
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting secure for view %v", data.Id())
+				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+			}
+		}
+		for _, tA := range added {
+			q := builder.AddTag(tA.toSnowflakeTagValue())
+
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding column on %v", d.Id())
+			}
+		}
+		for _, tA := range changed {
+			q := builder.ChangeTag(tA.toSnowflakeTagValue())
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error changing property on %v", d.Id())
 			}
 		}
 	}
 
-	return ReadView(data, meta)
+	return ReadView(d, meta)
 }
 
 // DeleteView implements schema.DeleteFunc
-func DeleteView(data *schema.ResourceData, meta interface{}) error {
+func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(data.Id())
+	dbName, schema, view, err := splitViewID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
+	q, err := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
+	if err != nil {
+		return err
+	}
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting view %v", data.Id())
+		return errors.Wrapf(err, "error deleting view %v", d.Id())
 	}
 
-	data.SetId("")
+	d.SetId("")
 
 	return nil
 }

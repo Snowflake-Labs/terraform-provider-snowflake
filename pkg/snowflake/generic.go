@@ -3,7 +3,6 @@ package snowflake
 import (
 	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 	"text/template"
 )
@@ -11,14 +10,17 @@ import (
 type EntityType string
 
 const (
-	DatabaseType           EntityType = "DATABASE"
-	ManagedAccountType     EntityType = "MANAGED ACCOUNT"
-	ResourceMonitorType    EntityType = "RESOURCE MONITOR"
-	RoleType               EntityType = "ROLE"
-	ShareType              EntityType = "SHARE"
-	StorageIntegrationType EntityType = "STORAGE INTEGRATION"
-	UserType               EntityType = "USER"
-	WarehouseType          EntityType = "WAREHOUSE"
+	ApiIntegrationType          EntityType = "API INTEGRATION"
+	DatabaseType                EntityType = "DATABASE"
+	ManagedAccountType          EntityType = "MANAGED ACCOUNT"
+	ResourceMonitorType         EntityType = "RESOURCE MONITOR"
+	RoleType                    EntityType = "ROLE"
+	ShareType                   EntityType = "SHARE"
+	StorageIntegrationType      EntityType = "STORAGE INTEGRATION"
+	NotificationIntegrationType EntityType = "NOTIFICATION INTEGRATION"
+	SecurityIntegrationType     EntityType = "SECURITY INTEGRATION"
+	UserType                    EntityType = "USER"
+	WarehouseType               EntityType = "WAREHOUSE"
 )
 
 type Builder struct {
@@ -49,6 +51,7 @@ type SettingBuilder interface {
 	SetBool(string, bool)
 	SetInt(string, int)
 	SetFloat(string, float64)
+	SetRaw(string)
 }
 
 type AlterPropertiesBuilder struct {
@@ -59,6 +62,8 @@ type AlterPropertiesBuilder struct {
 	boolProperties       map[string]bool
 	intProperties        map[string]int
 	floatProperties      map[string]float64
+	rawStatement         string
+	tags                 []TagValue
 }
 
 func (b *Builder) Alter() *AlterPropertiesBuilder {
@@ -93,28 +98,44 @@ func (ab *AlterPropertiesBuilder) SetFloat(key string, value float64) {
 	ab.floatProperties[key] = value
 }
 
+func (ab *AlterPropertiesBuilder) SetRaw(rawStatement string) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`%s %s`, ab.rawStatement, rawStatement))
+	ab.rawStatement = sb.String()
+}
+
+func (b *AlterPropertiesBuilder) SetTags(tags []TagValue) {
+	b.tags = tags
+}
+
 func (ab *AlterPropertiesBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`ALTER %s "%s" SET`, ab.entityType, ab.name)) // TODO handle error
 
-	for k, v := range ab.stringProperties {
-		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(v)))
+	sb.WriteString(ab.rawStatement)
+
+	for _, k := range sortStrings(ab.stringProperties) {
+		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(ab.stringProperties[k])))
 	}
 
-	for k, v := range ab.stringListProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
+	for _, k := range sortStringList(ab.stringListProperties) {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(ab.stringListProperties[k])))
 	}
 
-	for k, v := range ab.boolProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), v))
+	for _, k := range sortStringsBool(ab.boolProperties) {
+		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), ab.boolProperties[k]))
 	}
 
-	for k, v := range ab.intProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), v))
+	for _, k := range sortStringsInt(ab.intProperties) {
+		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), ab.intProperties[k]))
 	}
 
-	for k, v := range ab.floatProperties {
-		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), v))
+	for _, k := range sortStringsFloat(ab.floatProperties) {
+		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), ab.floatProperties[k]))
+	}
+
+	for _, t := range sortTags(ab.tags) {
+		sb.WriteString(fmt.Sprintf(` TAG "%v"."%v"."%v" = "%v"`, t.Database, t.Schema, t.Name, t.Value))
 	}
 
 	return sb.String()
@@ -128,6 +149,8 @@ type CreateBuilder struct {
 	boolProperties       map[string]bool
 	intProperties        map[string]int
 	floatProperties      map[string]float64
+	rawStatement         string
+	tags                 []TagValue
 }
 
 func (b *Builder) Create() *CreateBuilder {
@@ -162,57 +185,49 @@ func (b *CreateBuilder) SetFloat(key string, value float64) {
 	b.floatProperties[key] = value
 }
 
+func (b *CreateBuilder) SetRaw(rawStatement string) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`%s %s`, b.rawStatement, rawStatement))
+	b.rawStatement = sb.String()
+}
+
+func (b *CreateBuilder) SetTags(tags []TagValue) {
+	b.tags = tags
+}
+
 func (b *CreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %s "%s"`, b.entityType, b.name)) // TODO handle error
 
-	sortedStringProperties := make([]string, 0)
-	for k := range b.stringProperties {
-		sortedStringProperties = append(sortedStringProperties, k)
-	}
-	sort.Strings(sortedStringProperties)
+	sb.WriteString(b.rawStatement)
 
-	for _, k := range sortedStringProperties {
+	for _, k := range sortStrings(b.stringProperties) {
 		sb.WriteString(fmt.Sprintf(" %s='%s'", strings.ToUpper(k), EscapeString(b.stringProperties[k])))
 	}
 
-	sortedStringListProperties := make([]string, 0)
-	for k := range b.stringListProperties {
-		sortedStringListProperties = append(sortedStringListProperties, k)
-	}
-
-	for _, k := range sortedStringListProperties {
+	for _, k := range sortStringList(b.stringListProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(b.stringListProperties[k])))
 	}
 
-	sortedBoolProperties := make([]string, 0)
-	for k := range b.boolProperties {
-		sortedBoolProperties = append(sortedBoolProperties, k)
-	}
-	sort.Strings(sortedBoolProperties)
-
-	for _, k := range sortedBoolProperties {
+	for _, k := range sortStringsBool(b.boolProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%t", strings.ToUpper(k), b.boolProperties[k]))
 	}
 
-	sortedIntProperties := make([]string, 0)
-	for k := range b.intProperties {
-		sortedIntProperties = append(sortedIntProperties, k)
-	}
-	sort.Strings(sortedIntProperties)
-
-	for _, k := range sortedIntProperties {
+	for _, k := range sortStringsInt(b.intProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%d", strings.ToUpper(k), b.intProperties[k]))
 	}
 
-	sortedFloatProperties := make([]string, 0)
-	for k := range b.floatProperties {
-		sortedFloatProperties = append(sortedFloatProperties, k)
-	}
-	sort.Strings(sortedFloatProperties)
-
-	for _, k := range sortedFloatProperties {
+	for _, k := range sortStringsFloat(b.floatProperties) {
 		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), b.floatProperties[k]))
+	}
+
+	for i, t := range sortTags(b.tags) {
+		if i == 0 {
+			sb.WriteString(` TAG`)
+		} else if i < len(b.tags)-1 {
+			sb.WriteString(`, `)
+		}
+		sb.WriteString(fmt.Sprintf(`"%v"."%v"."%v" = "%v"`, t.Database, t.Schema, t.Name, t.Value))
 	}
 
 	return sb.String()
@@ -232,4 +247,14 @@ func formatStringList(list []string) string {
 	}
 
 	return buf.String()
+}
+
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }

@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 )
 
@@ -24,10 +25,11 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	in := map[string]interface{}{
 		"name":                       "good_name",
-		"credit_quota":               100.00,
+		"credit_quota":               100,
 		"notify_triggers":            []interface{}{75, 88},
 		"suspend_triggers":           []interface{}{99},
 		"suspend_immediate_triggers": []interface{}{105},
+		"set_for_account":            true,
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
@@ -35,8 +37,9 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100.00 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
+			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER ACCOUNT SET RESOURCE_MONITOR = "good_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadResourceMonitor(mock)
 		err := resources.CreateResourceMonitor(d, db)
@@ -50,7 +53,7 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 		"frequency", "start_time", "end_time", "notify_at", "suspend_at",
 		"suspend_immediately_at", "created_on", "owner", "comment",
 	}).AddRow(
-		"good_name", 100.00, 0, 100, "", "MONTHLY", "2001-01-01 00:00:00.000 -0700",
+		"good_name", 100.00, 0.00, 100.00, "ACCOUNT", "MONTHLY", "2001-01-01 00:00:00.000 -0700",
 		"", "75%,88%", "99%", "105%", "2001-01-01 00:00:00.000 -0700", "ACCOUNTADMIN", "")
 	mock.ExpectQuery(`^SHOW RESOURCE MONITORS LIKE 'good_name'$`).WillReturnRows(rows)
 }
@@ -89,5 +92,25 @@ func TestResourceMonitorExists(t *testing.T) {
 		ok, err := resources.ResourceMonitorExists(d, db)
 		r.NoError(err)
 		r.True(ok)
+	})
+}
+
+func TestResourceMonitorRead(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name": "good_name",
+	}
+
+	d := resourceMonitor(t, "good_name", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.ResourceMonitor(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadResourceMonitor(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
 	})
 }

@@ -1,15 +1,54 @@
 package snowflake
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
-func Warehouse(name string) *Builder {
-	return &Builder{
-		name:       name,
-		entityType: WarehouseType,
+type WarehouseBuilder struct {
+	*Builder
+}
+
+func (wb *WarehouseBuilder) Show() string {
+	return wb.Builder.Show()
+}
+
+func (wb *WarehouseBuilder) Describe() string {
+	return wb.Builder.Describe()
+}
+
+func (wb *WarehouseBuilder) Drop() string {
+	return wb.Builder.Drop()
+}
+
+func (wb *WarehouseBuilder) Rename(newName string) string {
+	return wb.Builder.Rename(newName)
+}
+
+func (wb *WarehouseBuilder) Alter() *AlterPropertiesBuilder {
+	return wb.Builder.Alter()
+}
+
+func (wb *WarehouseBuilder) Create() *CreateBuilder {
+	return wb.Builder.Create()
+}
+
+// ShowParameters returns the query to show the parameters for the warehouse
+func (wb *WarehouseBuilder) ShowParameters() string {
+	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %v", wb.Builder.name)
+}
+
+func Warehouse(name string) *WarehouseBuilder {
+	return &WarehouseBuilder{
+		&Builder{
+			name:       name,
+			entityType: WarehouseType,
+		},
 	}
 }
 
@@ -47,8 +86,50 @@ type warehouse struct {
 	ScalingPolicy   string    `db:"scaling_policy"`
 }
 
+// warehouseParams struct to represent a row of parameters
+type warehouseParams struct {
+	Key          string `db:"key"`
+	Value        string `db:"value"`
+	DefaultValue string `db:"default"`
+	Level        string `db:"level"`
+	Description  string `db:"description"`
+	Type         string `db:"type"`
+}
+
 func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
 	w := &warehouse{}
 	err := row.StructScan(w)
 	return w, err
+}
+
+// ScanWarehouseParameters takes a database row and converts it to a warehouse parameter pointer
+func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
+	params := []*warehouseParams{}
+
+	for rows.Next() {
+		w := &warehouseParams{}
+		err := rows.StructScan(w)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, w)
+	}
+	return params, nil
+}
+
+func ListWarehouses(db *sql.DB) ([]warehouse, error) {
+	stmt := "SHOW WAREHOUSES"
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []warehouse{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no warehouses found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

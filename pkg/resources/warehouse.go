@@ -2,26 +2,30 @@ package resources
 
 import (
 	"database/sql"
+	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // warehouseCreateProperties are only available via the CREATE statement
-var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning", "statement_timeout_in_seconds"}
+var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
 
 var warehouseProperties = []string{
 	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
 	"scaling_policy", "auto_suspend", "auto_resume",
-	"resource_monitor",
+	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
+	"statement_timeout_in_seconds",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Identifier for the virtual warehouse; must be unique for your account.",
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -35,7 +39,8 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{
 			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE",
 			"X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE", "XXXLARGE", "X3LARGE",
-			"3X-LARGE", "X4LARGE", "4X-LARGE",
+			"3X-LARGE", "X4LARGE", "4X-LARGE", "X5LARGE", "5X-LARGE", "X6LARGE",
+			"6X-LARGE",
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -43,6 +48,7 @@ var warehouseSchema = map[string]*schema.Schema{
 			}
 			return normalize(old) == normalize(new)
 		},
+		Description: "Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).",
 	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
@@ -70,7 +76,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(60),
+		ValidateFunc: validation.IntAtLeast(1),
 	},
 	// @TODO add a disable_auto_suspend property that sets the value of auto_suspend to NULL
 	"auto_resume": {
@@ -83,6 +89,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"resource_monitor": {
 		Type:        schema.TypeString,
@@ -94,14 +101,27 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
+		ForceNew:    true,
 	},
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
-		ForceNew:    false,
+		Default:     172800,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
+	"statement_queued_timeout_in_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     0,
+		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+	},
+	"max_concurrency_level": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     8,
+		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+	},
+	"tag": tagReferenceSchema,
 }
 
 // Warehouse returns a pointer to the resource representing a warehouse
@@ -114,71 +134,133 @@ func Warehouse() *schema.Resource {
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateWarehouse implements schema.CreateFunc
-func CreateWarehouse(data *schema.ResourceData, meta interface{}) error {
+func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	props := append(warehouseProperties, warehouseCreateProperties...)
-	return CreateResource("warehouse", props, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+	return CreateResource(
+		"warehouse",
+		props,
+		warehouseSchema,
+		func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+		ReadWarehouse,
+	)(d, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc
-func ReadWarehouse(data *schema.ResourceData, meta interface{}) error {
+func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.Warehouse(data.Id()).Show()
+	warehouseBuilder := snowflake.Warehouse(d.Id())
+	stmt := warehouseBuilder.Show()
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] warehouse (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
-	err = data.Set("name", w.Name)
+	err = d.Set("name", w.Name)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", w.Comment)
+	err = d.Set("comment", w.Comment)
 	if err != nil {
 		return err
 	}
-	err = data.Set("warehouse_size", w.Size)
+	err = d.Set("warehouse_size", w.Size)
 	if err != nil {
 		return err
 	}
-	err = data.Set("max_cluster_count", w.MaxClusterCount)
+	err = d.Set("max_cluster_count", w.MaxClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("min_cluster_count", w.MinClusterCount)
+	err = d.Set("min_cluster_count", w.MinClusterCount)
 	if err != nil {
 		return err
 	}
-	err = data.Set("scaling_policy", w.ScalingPolicy)
+	err = d.Set("scaling_policy", w.ScalingPolicy)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_suspend", w.AutoSuspend)
+	err = d.Set("auto_suspend", w.AutoSuspend)
 	if err != nil {
 		return err
 	}
-	err = data.Set("auto_resume", w.AutoResume)
+	err = d.Set("auto_resume", w.AutoResume)
 	if err != nil {
 		return err
 	}
-	err = data.Set("resource_monitor", w.ResourceMonitor)
+	err = d.Set("resource_monitor", w.ResourceMonitor)
+	if err != nil {
+		return err
+	}
 
-	return err
+	stmt = warehouseBuilder.ShowParameters()
+	paramRows, err := snowflake.Query(db, stmt)
+	if err != nil {
+		return err
+	}
+
+	warehouseParams, err := snowflake.ScanWarehouseParameters(paramRows)
+	if err != nil {
+		return err
+	}
+
+	for _, param := range warehouseParams {
+		log.Printf("[TRACE] %+v\n", param)
+
+		var value interface{} = param.DefaultValue
+		if strings.EqualFold(param.Type, "number") {
+			i, err := strconv.ParseInt(param.Value, 10, 64)
+			if err != nil {
+				return err
+			}
+			value = i
+		} else {
+			value = param.Value
+		}
+
+		key := strings.ToLower(param.Key)
+		err = d.Set(key, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateWarehouse implements schema.UpdateFunc
-func UpdateWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("warehouse", warehouseProperties, warehouseSchema, snowflake.Warehouse, ReadWarehouse)(data, meta)
+func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return UpdateResource(
+		"warehouse",
+		warehouseProperties,
+		warehouseSchema,
+		func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+		ReadWarehouse,
+	)(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc
-func DeleteWarehouse(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("warehouse", snowflake.Warehouse)(data, meta)
+func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource(
+		"warehouse", func(name string) *snowflake.Builder {
+			return snowflake.Warehouse(name).Builder
+		},
+	)(d, meta)
 }

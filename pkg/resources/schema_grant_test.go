@@ -10,20 +10,20 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSchemaGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.SchemaGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.SchemaGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
 func TestSchemaGrantCreate(t *testing.T) {
 	r := require.New(t)
 
-	for _, test_priv := range []string{"USAGE", "MODIFY"} {
+	for _, test_priv := range []string{"USAGE", "MODIFY", "CREATE TAG"} {
 		in := map[string]interface{}{
 			"schema_name":       "test-schema",
 			"database_name":     "test-db",
@@ -32,7 +32,7 @@ func TestSchemaGrantCreate(t *testing.T) {
 			"shares":            []interface{}{"test-share-1", "test-share-2"},
 			"with_grant_option": true,
 		}
-		d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
+		d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Resource.Schema, in)
 		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -53,6 +53,36 @@ func TestSchemaGrantCreate(t *testing.T) {
 			r.NoError(err)
 		})
 	}
+}
+
+func TestSchemaGrantRead(t *testing.T) {
+	r := require.New(t)
+
+	d := schemaGrant(t, "test-db|test-schema||USAGE|false", map[string]interface{}{
+		"schema_name":       "test-schema",
+		"database_name":     "test-db",
+		"privilege":         "USAGE",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
+		"with_grant_option": false,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadSchemaGrant(mock, "USAGE")
+		err := resources.ReadSchemaGrant(d, db)
+		r.NoError(err)
+	})
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
 }
 
 func expectReadSchemaGrant(mock sqlmock.Sqlmock, test_priv string) {
@@ -80,7 +110,7 @@ func TestFutureSchemaGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

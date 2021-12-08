@@ -4,6 +4,16 @@ export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else 
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
 export GO111MODULE=on
+export TF_ACC_TERRAFORM_VERSION=0.13.0
+export SKIP_EXTERNAL_TABLE_TESTS=true
+export SKIP_SCIM_INTEGRATION_TESTS=true
+
+go_test ?= -
+ifeq (, $(shell which gotest))
+	go_test=go test
+else
+	go_test=gotest
+endif
 
 all: test docs install
 .PHONY: all
@@ -13,10 +23,11 @@ setup: ## setup development dependencies
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 	bash .download-tfproviderlint.sh
+	go get golang.org/x/tools/cmd/goimports
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff master"
+	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
 
 lint-ci: ## run the fast go linters
@@ -24,9 +35,16 @@ lint-ci: ## run the fast go linters
 .PHONY: lint-ci
 
 lint-all: fmt ## run the fast go linters
-	# doesn't seem to be a way to get reviewdog to not filter by diff
-	./bin/golangci-lint run
+	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
 .PHONY: lint-all
+
+lint-missing-acceptance-tests:
+	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
+		if [ ! -f pkg/resources/"$$r"_acceptance_test.go ]; then \
+			echo $$r; \
+		fi; \
+	done
+.PHONY: lint-missing-acceptance-tests
 
 check-release-prereqs:
 ifndef KEYBASE_KEY_ID
@@ -34,7 +52,7 @@ ifndef KEYBASE_KEY_ID
 endif
 .PHONY: check-release-prereqs
 
-release: check-release-prereqs ## run a release
+release: setup check-release-prereqs ## run a release
 	./bin/bff bump
 	git push
 	goreleaser release --debug --rm-dist
@@ -61,15 +79,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test: fmt deps ## run the tests
-	go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
 test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
-.PHONY: test-acceptance
-
-test-acceptance-ci: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_WAREHOUSE_GRANT_TESTS=1 SKIP_SHARE_TESTS=1 SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 go test -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 $(go_test) -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 deps:
@@ -99,8 +113,8 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs: 
-	go run ./docgen
+docs:
+	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
 check-docs: docs ## check that docs have been generated

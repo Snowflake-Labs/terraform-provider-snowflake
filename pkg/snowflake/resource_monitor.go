@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // ResourceMonitorBuilder extends the generic builder to provide support for triggers
@@ -117,25 +119,47 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	return sb.String()
 }
 
+// SetOnAccount returns the SQL query that will set the resource monitor globally on your Snowflake account
+func (rcb *ResourceMonitorCreateBuilder) SetOnAccount() string {
+	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = "%v"`, rcb.name)
+}
+
 type resourceMonitor struct {
-	Name                 sql.NullString  `db:"name"`
-	CreditQuota          sql.NullFloat64 `db:"credit_quota"`
-	UsedCredits          sql.NullString  `db:"used_credits"`
-	RemainingCredits     sql.NullString  `db:"remaining_credits"`
-	Level                sql.NullString  `db:"level"`
-	Frequency            sql.NullString  `db:"frequency"`
-	StartTime            sql.NullString  `db:"start_time"`
-	EndTime              sql.NullString  `db:"end_time"`
-	NotifyAt             sql.NullString  `db:"notify_at"`
-	SuspendAt            sql.NullString  `db:"suspend_at"`
-	SuspendImmediatelyAt sql.NullString  `db:"suspend_immediately_at"`
-	CreatedOn            sql.NullString  `db:"created_on"`
-	Owner                sql.NullString  `db:"owner"`
-	Comment              sql.NullString  `db:"comment"`
+	Name                 sql.NullString `db:"name"`
+	CreditQuota          sql.NullString `db:"credit_quota"`
+	UsedCredits          sql.NullString `db:"used_credits"`
+	RemainingCredits     sql.NullString `db:"remaining_credits"`
+	Level                sql.NullString `db:"level"`
+	Frequency            sql.NullString `db:"frequency"`
+	StartTime            sql.NullString `db:"start_time"`
+	EndTime              sql.NullString `db:"end_time"`
+	NotifyAt             sql.NullString `db:"notify_at"`
+	SuspendAt            sql.NullString `db:"suspend_at"`
+	SuspendImmediatelyAt sql.NullString `db:"suspend_immediately_at"`
+	CreatedOn            sql.NullString `db:"created_on"`
+	Owner                sql.NullString `db:"owner"`
+	Comment              sql.NullString `db:"comment"`
 }
 
 func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {
 	rm := &resourceMonitor{}
 	err := row.StructScan(rm)
 	return rm, err
+}
+
+func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
+	stmt := "SHOW RESOURCE MONITORS"
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []resourceMonitor{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no resouce monitors found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

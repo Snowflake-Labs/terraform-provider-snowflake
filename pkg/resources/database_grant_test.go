@@ -8,7 +8,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
@@ -17,7 +17,7 @@ import (
 
 func TestDatabaseGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.DatabaseGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.DatabaseGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -31,7 +31,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 		"shares":            []interface{}{"test-share-1", "test-share-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -48,11 +48,11 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := databaseGrant(t, "test-database|||IMPORTED PRIVILIGES|false", map[string]interface{}{
+	d := databaseGrant(t, "test-database|||USAGE|false", map[string]interface{}{
 		"database_name":     "test-database",
-		"privilege":         "IMPORTED PRIVILIGES",
-		"roles":             []interface{}{"test-role-1", "test-role-2"},
-		"shares":            []interface{}{"test-share-1", "test-share-2"},
+		"privilege":         "USAGE",
+		"roles":             []interface{}{},
+		"shares":            []interface{}{},
 		"with_grant_option": false,
 	})
 
@@ -63,6 +63,15 @@ func TestDatabaseGrantRead(t *testing.T) {
 		err := resources.ReadDatabaseGrant(d, db)
 		r.NoError(err)
 	})
+	roles := d.Get("roles").(*schema.Set)
+	r.True(roles.Contains("test-role-1"))
+	r.True(roles.Contains("test-role-2"))
+	r.Equal(roles.Len(), 2)
+
+	shares := d.Get("shares").(*schema.Set)
+	r.True(shares.Contains("test-share-1"))
+	r.True(shares.Contains("test-share-2"))
+	r.Equal(shares.Len(), 2)
 }
 
 func expectReadDatabaseGrant(mock sqlmock.Sqlmock) {

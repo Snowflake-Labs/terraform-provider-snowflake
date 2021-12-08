@@ -69,6 +69,70 @@ from bar;`
 	}
 }
 
+func TestViewSelectStatementExtractor_ExtractMaterializedView(t *testing.T) {
+	basic := "create materialized view foo as select * from bar;"
+	caps := "CREATE MATERIALIZED VIEW FOO AS SELECT * FROM BAR;"
+	parens := "create materialized view foo as (select * from bar);"
+	multiline := `
+create materialized view foo as
+select *
+from bar;`
+
+	multilineComment := `
+create materialized view foo as
+-- comment
+select *
+from bar;`
+
+	secure := "create secure materialized view foo as select * from bar;"
+	replace := "create or replace materialized view foo as select * from bar;"
+	ine := "create materialized view if not exists foo as select * from bar;"
+
+	comment := `create materialized view foo comment='asdf' as select * from bar;`
+	commentEscape := `create materialized view foo comment='asdf\'s are fun' as select * from bar;`
+	clusterBy := "create materialized view foo cluster by (c1, c2) as select * from bar;"
+	identifier := `create materialized view "foo"."bar"."bam" comment='asdf\'s are fun' as select * from bar;`
+
+	full := `CREATE SECURE MATERIALIZED VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' CLUSTER BY (C1, C2) AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"basic", args{basic}, "select * from bar;", false},
+		{"caps", args{caps}, "SELECT * FROM BAR;", false},
+		{"parens", args{parens}, "(select * from bar);", false},
+		{"multiline", args{multiline}, "select *\nfrom bar;", false},
+		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
+		{"secure", args{secure}, "select * from bar;", false},
+		{"replace", args{replace}, "select * from bar;", false},
+		{"ine", args{ine}, "select * from bar;", false},
+		{"comment", args{comment}, "select * from bar;", false},
+		{"commentEscape", args{commentEscape}, "select * from bar;", false},
+		{"clusterBy", args{clusterBy}, "select * from bar;", false},
+		{"identifier", args{identifier}, "select * from bar;", false},
+		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := NewViewSelectStatementExtractor(tt.args.input)
+			got, err := e.ExtractMaterializedView()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ViewSelectStatementExtractor.ExtractMaterializedView() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ViewSelectStatementExtractor.ExtractMaterializedView() = '%v', want '%v'", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestViewSelectStatementExtractor_consumeToken(t *testing.T) {
 	type fields struct {
 		input []rune
@@ -152,6 +216,35 @@ func TestViewSelectStatementExtractor_consumeComment(t *testing.T) {
 				pos:   tt.fields.pos,
 			}
 			e.consumeComment()
+
+			if e.pos != tt.posAfter {
+				t.Errorf("pos after = %v, want %v", e.pos, tt.posAfter)
+			}
+		})
+	}
+}
+
+func TestViewSelectStatementExtractor_consumeClusterBy(t *testing.T) {
+	type fields struct {
+		input []rune
+		pos   int
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		posAfter int
+	}{
+		{"none", fields{[]rune("as foo"), 0}, 0},
+		{"single", fields{[]rune("(c1)"), 0}, 4},
+		{"double", fields{[]rune("(c1, c2)"), 0}, 8},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := &ViewSelectStatementExtractor{
+				input: tt.fields.input,
+				pos:   tt.fields.pos,
+			}
+			e.consumeClusterBy()
 
 			if e.pos != tt.posAfter {
 				t.Errorf("pos after = %v, want %v", e.pos, tt.posAfter)

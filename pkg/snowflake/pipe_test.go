@@ -24,6 +24,10 @@ func TestPipeCreate(t *testing.T) {
 
 	s.WithAwsSnsTopicArn("arn:aws:sns:us-east-1:1234567890123456:mytopic")
 	r.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE AWS_SNS_TOPIC = 'arn:aws:sns:us-east-1:1234567890123456:mytopic' COMMENT = 'Yeehaw' AS test copy statement `)
+
+	s.WithIntegration("myintegration")
+	r.Equal(s.Create(), `CREATE PIPE "test_db"."test_schema"."test_pipe" AUTO_INGEST = TRUE INTEGRATION = 'myintegration' AWS_SNS_TOPIC = 'arn:aws:sns:us-east-1:1234567890123456:mytopic' COMMENT = 'Yeehaw' AS test copy statement `)
+
 }
 
 func TestPipeChangeComment(t *testing.T) {
@@ -47,5 +51,5 @@ func TestPipeDrop(t *testing.T) {
 func TestPipeShow(t *testing.T) {
 	r := require.New(t)
 	s := Pipe("test_pipe", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW PIPES LIKE 'test_pipe' IN DATABASE "test_db"`)
+	r.Equal(s.Show(), `SHOW PIPES LIKE 'test_pipe' IN SCHEMA "test_db"."test_schema"`)
 }

@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 func fixFileFormat(inputFileFormat string) string {
@@ -24,6 +26,7 @@ type StageBuilder struct {
 	fileFormat         string
 	copyOptions        string
 	comment            string
+	tags               []TagValue
 }
 
 // QualifiedName prepends the db and schema and escapes everything nicely
@@ -75,6 +78,27 @@ func (sb *StageBuilder) WithCopyOptions(c string) *StageBuilder {
 func (sb *StageBuilder) WithComment(c string) *StageBuilder {
 	sb.comment = c
 	return sb
+}
+
+// WithTags sets the tags on the ExternalTableBuilder
+func (sb *StageBuilder) WithTags(tags []TagValue) *StageBuilder {
+	sb.tags = tags
+	return sb
+}
+
+// AddTag returns the SQL query that will add a new tag to the view.
+func (sb *StageBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the view.
+func (sb *StageBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the view.
+func (sb *StageBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER STAGE %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // Stage returns a pointer to a Builder that abstracts the DDL operations for a stage.
@@ -195,7 +219,7 @@ func (sb *StageBuilder) Describe() string {
 
 // Show returns the SQL query that will show a stage.
 func (sb *StageBuilder) Show() string {
-	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
 type stage struct {
@@ -268,4 +292,21 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	r.FileFormat = strings.Join(ff, " ")
 	r.CopyOptions = strings.Join(co, " ")
 	return r, nil
+}
+
+func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, error) {
+	stmt := fmt.Sprintf(`SHOW STAGES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []stage{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no stages found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

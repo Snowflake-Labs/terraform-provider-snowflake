@@ -1,14 +1,12 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var ValidStagePrivileges = newPrivilegeSet(
-	privilegeAll,
+var validStagePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 	// These privileges are only valid for internal stages
@@ -18,10 +16,11 @@ var ValidStagePrivileges = newPrivilegeSet(
 
 var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the stage on which to grant privileges.",
-		ForceNew:    true,
+		Type:          schema.TypeString,
+		Optional:      true,
+		Description:   "The name of the stage on which to grant privilege (only valid if on_future is false).",
+		ForceNew:      true,
+		ConflictsWith: []string{"on_future"},
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -40,7 +39,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the stage.",
 		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(ValidStagePrivileges.toList(), true),
+		ValidateFunc: validation.ValidatePrivilege(validStagePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -54,8 +53,16 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares.",
+		Description: "Grants privilege to these shares (only valid if on_future is false).",
 		ForceNew:    true,
+	},
+	"on_future": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name and shares fields must be unset in order to use on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stage_name", "shares"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -67,36 +74,42 @@ var stageGrantSchema = map[string]*schema.Schema{
 }
 
 // StageGrant returns a pointer to the resource representing a stage grant
-func StageGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateStageGrant,
-		Read:   ReadStageGrant,
-		Delete: DeleteStageGrant,
+func StageGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateStageGrant,
+			Read:   ReadStageGrant,
+			Delete: DeleteStageGrant,
 
-		Schema: stageGrantSchema,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			Schema: stageGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
+		ValidPrivs: validStagePrivileges,
 	}
 }
 
 // CreateStageGrant implements schema.CreateFunc
-func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
+func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	var stageName string
-	if _, ok := data.GetOk("stage_name"); ok {
-		stageName = data.Get("stage_name").(string)
-	} else {
-		stageName = ""
+	if name, ok := d.GetOk("stage_name"); ok {
+		stageName = name.(string)
 	}
-	schemaName := data.Get("schema_name").(string)
-	dbName := data.Get("database_name").(string)
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+	dbName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	priv := d.Get("privilege").(string)
+	futureStages := d.Get("on_future").(bool)
+	grantOption := d.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
-	builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -112,14 +125,14 @@ func CreateStageGrant(data *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadStageGrant(data, meta)
+	return ReadStageGrant(d, meta)
 }
 
 // ReadStageGrant implements schema.ReadFunc
-func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -128,35 +141,48 @@ func ReadStageGrant(data *schema.ResourceData, meta interface{}) error {
 	stageName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = data.Set("database_name", dbName)
+	err = d.Set("database_name", dbName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("schema_name", schemaName)
+	err = d.Set("schema_name", schemaName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("stage_name", stageName)
+	futureStagesEnabled := false
+	if stageName == "" {
+		futureStagesEnabled = true
+	}
+	err = d.Set("stage_name", stageName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", priv)
+	err = d.Set("on_future", futureStagesEnabled)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("privilege", priv)
+	if err != nil {
+		return err
+	}
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	var builder snowflake.GrantBuilder
+	if futureStagesEnabled {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
-	return readGenericGrant(data, meta, builder, false, ValidStagePrivileges)
+	return readGenericGrant(d, meta, stageGrantSchema, builder, futureStagesEnabled, validStagePrivileges)
 }
 
 // DeleteStageGrant implements schema.DeleteFunc
-func DeleteStageGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
@@ -164,7 +190,14 @@ func DeleteStageGrant(data *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
 
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	futureStages := (stageName == "")
 
-	return deleteGenericGrant(data, meta, builder)
+	var builder snowflake.GrantBuilder
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
+
+	return deleteGenericGrant(d, meta, builder)
 }
