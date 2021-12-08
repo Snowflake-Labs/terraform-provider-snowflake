@@ -18,6 +18,6 @@ resource snowflake_notification_integration integration {
 
   # AWS_SNS
   notification_provider = "AWS_SNS"
-  aws_sns_arn           = "..." 
+  aws_sns_topic_arn     = "..." 
   aws_sns_role_arn      = "..."
 }

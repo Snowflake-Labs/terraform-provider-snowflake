@@ -54,10 +54,10 @@ func TestNotificationIntegrationCreate(t *testing.T) {
 				"comment":               "great comment",
 				"direction":             "OUTBOUND",
 				"notification_provider": "AWS_SNS",
-				"aws_sns_arn":           "some-sns-arn",
+				"aws_sns_topic_arn":     "some-sns-arn",
 				"aws_sns_role_arn":      "some-iam-role-arn",
 			},
-			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" AWS_SNS_ARN='some-sns-arn' AWS_SNS_ROLE_ARN='some-iam-role-arn' COMMENT='great comment' DIRECTION='OUTBOUND' NOTIFICATION_PROVIDER='AWS_SNS' TYPE='QUEUE' ENABLED=true$`,
+			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" AWS_SNS_ROLE_ARN='some-iam-role-arn' AWS_SNS_TOPIC_ARN='some-sns-arn' COMMENT='great comment' DIRECTION='OUTBOUND' NOTIFICATION_PROVIDER='AWS_SNS' TYPE='QUEUE' ENABLED=true$`,
 		},
 		{
 			notificationProvider: "GCP_PUBSUB",
@@ -156,7 +156,7 @@ func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvide
 		descRows = descRows.
 			AddRow("NOTIFICATION_PROVIDER", "String", notificationProvider, nil).
 			AddRow("DIRECTION", "String", "OUTBOUND", nil).
-			AddRow("AWS_SNS_ARN", "String", "some-sns-arn", nil).
+			AddRow("AWS_SNS_TOPIC_ARN", "String", "some-sns-arn", nil).
 			AddRow("AWS_SNS_ROLE_ARN", "String", "some-iam-role-arn", nil).
 			AddRow("SF_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil).
 			AddRow("SF_AWS_IAM_USER_ARN", "String", "some-iam-user-arn", nil)
