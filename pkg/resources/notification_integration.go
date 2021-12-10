@@ -83,7 +83,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
-	"aws_sns_arn": &schema.Schema{
+	"aws_sns_topic_arn": &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS SNS Topic ARN for notification integration to connect to",
@@ -162,8 +162,8 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	if v, ok := data.GetOk("aws_sqs_role_arn"); ok {
 		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
 	}
-	if v, ok := data.GetOk("aws_sns_arn"); ok {
-		stmt.SetString(`AWS_SNS_ARN`, v.(string))
+	if v, ok := data.GetOk("aws_sns_topic_arn"); ok {
+		stmt.SetString(`AWS_SNS_TOPIC_ARN`, v.(string))
 	}
 	if v, ok := data.GetOk("aws_sns_role_arn"); ok {
 		stmt.SetString(`AWS_SNS_ROLE_ARN`, v.(string))
@@ -271,8 +271,8 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			if err = data.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
-		case "AWS_SNS_ARN":
-			if err = data.Set("aws_sns_arn", v.(string)); err != nil {
+		case "AWS_SNS_TOPIC_ARN":
+			if err = data.Set("aws_sns_topic_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SNS_ROLE_ARN":
@@ -355,9 +355,9 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 		stmt.SetString("AWS_SQS_ROLE_ARN", data.Get("aws_sqs_role_arn").(string))
 	}
 
-	if data.HasChange("aws_sns_arn") {
+	if data.HasChange("aws_sns_topic_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SNS_ARN", data.Get("aws_sns_arn").(string))
+		stmt.SetString("AWS_SNS_TOPIC_ARN", data.Get("aws_sns_topic_arn").(string))
 	}
 
 	if data.HasChange("aws_sns_role_arn") {

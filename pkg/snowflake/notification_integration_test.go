@@ -58,10 +58,10 @@ func TestNotificationIntegration_AWS_SNS(t *testing.T) {
 
 	c.SetString(`type`, `QUEUE`)
 	c.SetString(`direction`, `OUTBOUND`)
-	c.SetString(`aws_sns_arn`, `some-sns-arn`)
+	c.SetString(`aws_sns_topic_arn`, `some-sns-arn`)
 	c.SetString(`aws_sns_role_arn`, `some-iam-role-arn`)
 	c.SetBool(`enabled`, true)
 	q = c.Statement()
 
-	r.Equal(`CREATE NOTIFICATION INTEGRATION "aws_sns" AWS_SNS_ARN='some-sns-arn' AWS_SNS_ROLE_ARN='some-iam-role-arn' DIRECTION='OUTBOUND' TYPE='QUEUE' ENABLED=true`, q)
+	r.Equal(`CREATE NOTIFICATION INTEGRATION "aws_sns" AWS_SNS_ROLE_ARN='some-iam-role-arn' AWS_SNS_TOPIC_ARN='some-sns-arn' DIRECTION='OUTBOUND' TYPE='QUEUE' ENABLED=true`, q)
 }

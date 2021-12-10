@@ -33,7 +33,7 @@ resource snowflake_notification_integration integration {
 
   # AWS_SNS
   notification_provider = "AWS_SNS"
-  aws_sns_arn           = "..." 
+  aws_sns_topic_arn     = "..." 
   aws_sns_role_arn      = "..."
 }
 ```
@@ -47,8 +47,8 @@ resource snowflake_notification_integration integration {
 
 ### Optional
 
-- **aws_sns_arn** (String) AWS SNS Topic ARN for notification integration to connect to
 - **aws_sns_role_arn** (String) AWS IAM role ARN for notification integration to assume
+- **aws_sns_topic_arn** (String) AWS SNS Topic ARN for notification integration to connect to
 - **aws_sqs_arn** (String) AWS SQS queue ARN for notification integration to connect to
 - **aws_sqs_role_arn** (String) AWS IAM role ARN for notification integration to assume
 - **azure_storage_queue_primary_uri** (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
