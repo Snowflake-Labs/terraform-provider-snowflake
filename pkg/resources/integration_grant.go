@@ -50,6 +50,9 @@ func IntegrationGrant() *TerraformGrantResource {
 			Delete: DeleteIntegrationGrant,
 
 			Schema: integrationGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
 		ValidPrivs: validIntegrationPrivileges,
 	}

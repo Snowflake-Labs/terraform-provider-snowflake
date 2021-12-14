@@ -7,18 +7,26 @@ import (
 )
 
 var validAccountPrivileges = NewPrivilegeSet(
+	privilegeApplyMaskingPolicy,
+	privilegeApplyRowAccessPolicy,
+	privilegeApplyTag,
+	privilegeAttachPolicy,
+	privilegeCreateAccount,
+	privilegeCreateDatabase,
+	privilegeCreateDataExchangeListing,
+	privilegeCreateIntegration,
+	privilegeCreateNetworkPolicy,
 	privilegeCreateRole,
+	privilegeCreateShare,
 	privilegeCreateUser,
 	privilegeCreateWarehouse,
-	privilegeCreateDatabase,
-	privilegeCreateIntegration,
+	privilegeExecuteTask,
+	privilegeImportShare,
 	privilegeManageGrants,
 	privilegeMonitorUsage,
 	privilegeMonitorExecution,
-	privilegeExecuteTask,
-	privilegeApplyMaskingPolicy,
-	privilegeCreateShare,
-	privilegeImportShare,
+	privilegeOverrideShareRestrictions,
+	privilegeExecuteManagedTask,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
@@ -54,6 +62,9 @@ func AccountGrant() *TerraformGrantResource {
 			Update: UpdateAccountGrant,
 
 			Schema: accountGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 		},
 		ValidPrivs: validAccountPrivileges,
 	}

@@ -28,11 +28,12 @@ func TestExternalTableCreate(t *testing.T) {
 		"column":      []interface{}{map[string]interface{}{"name": "column1", "type": "OBJECT", "as": "a"}, map[string]interface{}{"name": "column2", "type": "VARCHAR", "as": "b"}},
 		"location":    "location",
 		"file_format": "format",
+		"pattern":     "pattern",
 	}
 	d := externalTable(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE EXTERNAL TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT AS a, "column2" VARCHAR AS b\) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true FILE_FORMAT = \( format \) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE EXTERNAL TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT AS a, "column2" VARCHAR AS b\) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true PATTERN = 'pattern' FILE_FORMAT = \( format \) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectExternalTableRead(mock)
 		err := resources.CreateExternalTable(d, db)

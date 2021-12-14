@@ -7,6 +7,7 @@ resource snowflake_stream stream {
 
   on_table    = "table"
   append_only = false
+  insert_only = false
 
   owner = "role1"
 }

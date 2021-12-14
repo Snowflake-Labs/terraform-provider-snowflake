@@ -28,6 +28,8 @@ You can also just download a binary from our [releases](https://github.com/chanz
 
 ### For Terraform v0.13+ users
 
+> We are now (7/29/2021) using Terraform 0.13 for testing purposes due to an issue for data sources for versions <0.13. Related PR for this change [here](https://github.com/chanzuckerberg/terraform-provider-snowflake/pull/622#issuecomment-888879621).
+
 You can use [Explicit Provider Source Locations](https://www.terraform.io/upgrade-guides/0-13.html#explicit-provider-source-locations).
 
 The following maybe work well.
@@ -91,7 +93,7 @@ To run all tests, including the acceptance tests, run `make test-acceptance`.
 
 Our CI jobs run the full acceptence test suite, which involves creating and destroying resources in a live snowflake account. Github Actions is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
 
-If you are making a PR from a forked repo, you can create a new Snowflake trial account and set up Travis to build it by setting these environement variables:
+If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
 
 * `SNOWFLAKE_ACCOUNT` - The account name
 * `SNOWFLAKE_USER` - A snowflake user for running tests.
@@ -99,16 +101,17 @@ If you are making a PR from a forked repo, you can create a new Snowflake trial 
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
 * `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
 
-If you are using the Standard Snowflake plan, it's recommended you also set up the following environment variables to skip tests for features not enabled for it:
+You will also need to generate a Github API token and add the secret:
 
-* `SKIP_DATABASE_TESTS` - to skip tests with retention time larger than 1 day
-* `SKIP_WAREHOUSE_TESTS` - to skip tests with multi warehouses
+* `REVIEWDOG_GITHUB_API_TOKEN` - A token for reviewdog to use to access your github account with privileges to read/write discussion.
 
 ## Releasing
 
 ## Running a release
 
 **Note: releases can only be done by those with keybase pgp keys allowed in the terraform registry.**
+
+Releases will be performed once a week on **Monday around 11am PST**. If your change is more urgent and you need to use it sooner, use the commit hash.
 
 Releases are done by [goreleaser](https://goreleaser.com/) and run by our make files. There two goreleaser configs, `.goreleaser.yml` for regular releases and `.goreleaser.prerelease.yml` for doing prereleases (for testing).
 

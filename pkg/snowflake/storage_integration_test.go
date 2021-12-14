@@ -19,8 +19,9 @@ func TestStorageIntegration(t *testing.T) {
 
 	c.SetString(`type`, `EXTERNAL_STAGE`)
 	c.SetStringList(`storage_allowed_locations`, []string{"s3://my-bucket/my-path/", "s3://another-bucket/"})
+	c.SetString(`storage_aws_object_acl`, `bucket-owner-full-control`)
 	c.SetBool(`enabled`, true)
 	q = c.Statement()
 
-	r.Equal(`CREATE STORAGE INTEGRATION "aws" TYPE='EXTERNAL_STAGE' STORAGE_ALLOWED_LOCATIONS=('s3://my-bucket/my-path/', 's3://another-bucket/') ENABLED=true`, q)
+	r.Equal(`CREATE STORAGE INTEGRATION "aws" STORAGE_AWS_OBJECT_ACL='bucket-owner-full-control' TYPE='EXTERNAL_STAGE' STORAGE_ALLOWED_LOCATIONS=('s3://my-bucket/my-path/', 's3://another-bucket/') ENABLED=true`, q)
 }

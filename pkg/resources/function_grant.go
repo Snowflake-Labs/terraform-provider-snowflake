@@ -38,7 +38,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 			},
 		},
 		Optional:    true,
-		Description: "List of the arguments for the function (must be present if function_name is present)",
+		Description: "List of the arguments for the function (must be present if function has arguments and function_name is present)",
 		ForceNew:    true,
 	},
 	"return_type": {
@@ -125,11 +125,6 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	)
 	if name, ok := d.GetOk("function_name"); ok {
 		functionName = name.(string)
-		if args, ok := d.GetOk("arguments"); ok {
-			arguments = args.([]interface{})
-		} else {
-			return errors.New("arguments must be set when specifying function_name.")
-		}
 		if ret, ok := d.GetOk("return_type"); ok {
 			returnType = strings.ToUpper(ret.(string))
 		} else {
@@ -141,6 +136,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureFunctions := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	arguments = d.Get("arguments").([]interface{})
 
 	if (functionName == "") && !futureFunctions {
 		return errors.New("function_name must be set unless on_future is true.")

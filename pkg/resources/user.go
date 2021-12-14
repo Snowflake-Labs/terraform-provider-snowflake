@@ -118,6 +118,7 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Last name of the user.",
 	},
+	"tag": tagReferenceSchema,
 
 	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
@@ -155,7 +156,7 @@ func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
 	id := data.Id()
 
-	stmt := snowflake.User(id).Show()
+	stmt := snowflake.User(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return false, err
@@ -172,10 +173,10 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.User(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	u, err := snowflake.ScanUser(row)
+	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
+	// requires the "MANAGE GRANTS" global privilege
+	stmt := snowflake.User(id).Describe()
+	rows, err := snowflake.Query(db, stmt)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] user (%s) not found", d.Id())
@@ -186,10 +187,16 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	u, err := snowflake.ScanUserDescription(rows)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("name", u.Name.String)
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("comment", u.Comment.String)
 	if err != nil {
 		return err

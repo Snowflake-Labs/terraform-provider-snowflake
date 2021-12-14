@@ -51,7 +51,9 @@ resource snowflake_external_table external_table {
 - **copy_grants** (Boolean) Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant
 - **id** (String) The ID of this resource.
 - **partition_by** (List of String) Specifies any partition columns to evaluate for the external table.
+- **pattern** (String) Specifies the file names and/or paths on the external stage to match.
 - **refresh_on_create** (Boolean) Specifies weather to refresh when an external table is created.
+- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
@@ -65,6 +67,20 @@ Required:
 - **as** (String) String that specifies the expression for the column. When queried, the column returns results derived from this expression.
 - **name** (String) Column name
 - **type** (String) Column type, e.g. VARIANT
+
+
+<a id="nestedblock--tag"></a>
+### Nested Schema for `tag`
+
+Required:
+
+- **name** (String) Tag name, e.g. department.
+- **value** (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- **database** (String) Name of the database that the tag was created in.
+- **schema** (String) Name of the schema that the tag was created in.
 
 ## Import
 

@@ -82,6 +82,7 @@ var stageSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
+	"tag": tagReferenceSchema,
 }
 
 type stageID struct {
@@ -181,6 +182,11 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	q := builder.Create()
@@ -363,6 +369,8 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error updating stage comment on %v", d.Id())
 		}
 	}
+
+	handleTagChanges(db, d, builder)
 
 	return ReadStage(d, meta)
 }

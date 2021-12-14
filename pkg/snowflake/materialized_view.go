@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	pe "github.com/pkg/errors"
 )
 
 // MaterializedViewBuilder abstracts the creation of SQL queries for a Snowflake Materialized View
@@ -18,6 +20,7 @@ type MaterializedViewBuilder struct {
 	replace   bool
 	comment   string
 	statement string
+	tags      []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -82,6 +85,27 @@ func (vb *MaterializedViewBuilder) WithSecure() *MaterializedViewBuilder {
 func (vb *MaterializedViewBuilder) WithStatement(s string) *MaterializedViewBuilder {
 	vb.statement = s
 	return vb
+}
+
+// WithTags sets the tags on the ExternalTableBuilder
+func (vb *MaterializedViewBuilder) WithTags(tags []TagValue) *MaterializedViewBuilder {
+	vb.tags = tags
+	return vb
+}
+
+// AddTag returns the SQL query that will add a new tag to the view.
+func (vb *MaterializedViewBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER MATERIALIZED VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, vb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the view.
+func (vb *MaterializedViewBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER MATERIALIZED VIEW %s SET TAG "%v"."%v"."%v" = "%v"`, vb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the view.
+func (vb *MaterializedViewBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER MATERIALIZED VIEW %s UNSET TAG "%v"."%v"."%v"`, vb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // View returns a pointer to a Builder that abstracts the DDL operations for a view.
@@ -190,4 +214,21 @@ func ScanMaterializedView(row *sqlx.Row) (*materializedView, error) {
 	r := &materializedView{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) ([]materializedView, error) {
+	stmt := fmt.Sprintf(`SHOW MATERIALIZED VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []materializedView{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no materialized views found")
+		return nil, nil
+	}
+	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
 }

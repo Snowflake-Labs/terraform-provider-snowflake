@@ -129,6 +129,14 @@ func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *sc
 	return d
 }
 
+func sequence(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Sequence().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func share(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, params)
@@ -148,6 +156,14 @@ func stage(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 func stream(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Stream().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func tag(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Tag().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -176,9 +192,56 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
+func apiIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.APIIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func scimIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.OAuthIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func procedure(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Procedure().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+func notificationIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
@@ -283,6 +346,54 @@ func functionGrant(t *testing.T, id string, params map[string]interface{}) *sche
 func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func maskingPolicyGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.MaskingPolicyGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func pipeGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.PipeGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func taskGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.TaskGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func rowAccessPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.RowAccessPolicy().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func rowAccessPolicyGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.RowAccessPolicyGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func function(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.Function().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

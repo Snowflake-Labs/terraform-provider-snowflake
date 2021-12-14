@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // externalTableBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -23,6 +25,7 @@ type ExternalTableBuilder struct {
 	copyGrants      bool
 	awsSNSTopic     string
 	comment         string
+	tags            []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -90,6 +93,12 @@ func (tb *ExternalTableBuilder) WithAwsSNSTopic(c string) *ExternalTableBuilder 
 	return tb
 }
 
+// WithTags sets the tags on the ExternalTableBuilder
+func (tb *ExternalTableBuilder) WithTags(tags []TagValue) *ExternalTableBuilder {
+	tb.tags = tags
+	return tb
+}
+
 // ExternalexternalTable returns a pointer to a Builder that abstracts the DDL operations for a externalTable.
 //
 // Supported DDL operations are:
@@ -113,14 +122,15 @@ func (tb *ExternalTableBuilder) Create() string {
 	q.WriteString(fmt.Sprintf(` (`))
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), EscapeString(columnDefinition["as"])))
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
 	q.WriteString(fmt.Sprintf(`)`))
 
-	if len(tb.partitionBys) > 1 {
-		q.WriteString(` PARTIION BY `)
+	if len(tb.partitionBys) > 0 {
+		q.WriteString(` PARTITION BY ( `)
 		q.WriteString(EscapeString(strings.Join(tb.partitionBys, ", ")))
+		q.WriteString(` )`)
 	}
 
 	q.WriteString(` WITH LOCATION = ` + EscapeString(tb.location))
@@ -171,4 +181,21 @@ func ScanExternalTable(row *sqlx.Row) (*externalTable, error) {
 	t := &externalTable{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]externalTable, error) {
+	stmt := fmt.Sprintf(`SHOW EXTERNAL TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []externalTable{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no external tables found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

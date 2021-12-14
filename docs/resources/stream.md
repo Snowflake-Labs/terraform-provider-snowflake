@@ -22,6 +22,7 @@ resource snowflake_stream stream {
 
   on_table    = "table"
   append_only = false
+  insert_only = false
 
   owner = "role1"
 }
@@ -41,7 +42,9 @@ resource snowflake_stream stream {
 - **append_only** (Boolean) Type of the stream that will be created.
 - **comment** (String) Specifies a comment for the stream.
 - **id** (String) The ID of this resource.
+- **insert_only** (Boolean) Create an insert only stream type.
 - **on_table** (String) Name of the table the stream will monitor.
+- **show_initial_rows** (Boolean) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.
 
 ### Read-Only
 
@@ -52,6 +55,6 @@ resource snowflake_stream stream {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | on table name
-terraform import snowflake_stream.example 'dbName|schemaName|tableName'
+# format is database name | schema name | stream name
+terraform import snowflake_stream.example 'dbName|schemaName|streamName'
 ```

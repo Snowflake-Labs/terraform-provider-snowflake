@@ -3,19 +3,23 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
 type StreamBuilder struct {
-	name       string
-	db         string
-	schema     string
-	onTable    string
-	appendOnly bool
-	comment    string
+	name            string
+	db              string
+	schema          string
+	onTable         string
+	appendOnly      bool
+	insertOnly      bool
+	showInitialRows bool
+	comment         string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -50,12 +54,17 @@ func (sb *StreamBuilder) WithOnTable(d string, s string, t string) *StreamBuilde
 }
 
 func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
-	sb.appendOnly = false
+	sb.appendOnly = b
+	return sb
+}
 
-	if b {
-		sb.appendOnly = b
-	}
+func (sb *StreamBuilder) WithInsertOnly(b bool) *StreamBuilder {
+	sb.insertOnly = b
+	return sb
+}
 
+func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
+	sb.showInitialRows = b
 	return sb
 }
 
@@ -89,6 +98,10 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
 
+	q.WriteString(fmt.Sprintf(` INSERT_ONLY = %v`, sb.insertOnly))
+
+	q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
+
 	return q.String()
 }
 
@@ -109,24 +122,44 @@ func (sb *StreamBuilder) Drop() string {
 
 // Show returns the SQL query that will show a stream.
 func (sb *StreamBuilder) Show() string {
-	return fmt.Sprintf(`SHOW STREAMS LIKE '%v' IN DATABASE "%v"`, sb.name, sb.db)
+	return fmt.Sprintf(`SHOW STREAMS LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
 type descStreamRow struct {
-	CreatedOn    sql.NullString `db:"created_on"`
-	StreamName   sql.NullString `db:"name"`
-	DatabaseName sql.NullString `db:"database_name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Owner        sql.NullString `db:"owner"`
-	Comment      sql.NullString `db:"comment"`
-	TableName    sql.NullString `db:"table_name"`
-	Type         sql.NullString `db:"type"`
-	Stale        sql.NullString `db:"stale"`
-	Mode         sql.NullString `db:"mode"`
+	CreatedOn       sql.NullString `db:"created_on"`
+	StreamName      sql.NullString `db:"name"`
+	DatabaseName    sql.NullString `db:"database_name"`
+	SchemaName      sql.NullString `db:"schema_name"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
+	AppendOnly      bool           `db:"append_only"`
+	InsertOnly      bool           `db:"insert_only"`
+	ShowInitialRows bool           `db:"show_initial_rows"`
+	TableName       sql.NullString `db:"table_name"`
+	Type            sql.NullString `db:"type"`
+	Stale           sql.NullString `db:"stale"`
+	Mode            sql.NullString `db:"mode"`
 }
 
 func ScanStream(row *sqlx.Row) (*descStreamRow, error) {
 	t := &descStreamRow{}
 	e := row.StructScan(t)
 	return t, e
+}
+
+func ListStreams(databaseName string, schemaName string, db *sql.DB) ([]descStreamRow, error) {
+	stmt := fmt.Sprintf(`SHOW STREAMS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []descStreamRow{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no stages found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
