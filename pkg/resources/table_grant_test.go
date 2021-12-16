@@ -46,6 +46,33 @@ func TestTableGrantCreate(t *testing.T) {
 		r.NoError(err)
 	})
 }
+
+func TestTableGrantUpdate(t *testing.T) {
+	r := require.New(t)
+
+	// d := schema.TestResourceDataRaw(t, resources.TableGrant().Resource.Schema, in)
+	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT|false", map[string]interface{}{
+		"table_name":    "test-table",
+		"schema_name":   "PUBLIC",
+		"database_name": "test-db",
+		"privilege":     "SELECT",
+		"roles":         []interface{}{"test-role-1", "test-role-2"},
+		"shares":        []interface{}{"test-share-1", "test-share-2"},
+	})
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO ROLE "test-role-1"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO ROLE "test-role-2"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-1"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-2"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadTableGrant(mock)
+
+		err := resources.UpdateTableGrant(d, db)
+		r.NoError(err)
+	})
+}
+
 func TestTableGrantRead(t *testing.T) {
 	r := require.New(t)
 
