@@ -53,7 +53,7 @@ resource snowflake_notification_integration integration {
 - **aws_sqs_role_arn** (String) AWS IAM role ARN for notification integration to assume
 - **azure_storage_queue_primary_uri** (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
 - **azure_tenant_id** (String) The ID of the Azure Active Directory tenant used for identity management
-- **comment** (String)
+- **comment** (String) A comment for the integration
 - **direction** (String) Direction of the cloud messaging with respect to Snowflake (required only for error notifications)
 - **enabled** (Boolean)
 - **gcp_pubsub_subscription_name** (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
