@@ -29,12 +29,14 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Default:      "QUEUE",
 		ValidateFunc: validation.StringInSlice([]string{"QUEUE"}, true),
 		Description:  "A type of integration",
+		ForceNew:     true,
 	},
 	"direction": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
 		Description:  "Direction of the cloud messaging with respect to Snowflake (required only for error notifications)",
+		ForceNew:     true,
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"notification_provider": &schema.Schema{
@@ -42,6 +44,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)",
+		ForceNew:     true,
 	},
 	"azure_storage_queue_primary_uri": &schema.Schema{
 		Type:        schema.TypeString,
@@ -94,9 +97,9 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Description: "AWS IAM role ARN for notification integration to assume",
 	},
 	"comment": &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  "A comment for the integration",
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "A comment for the integration",
 	},
 	"created_on": &schema.Schema{
 		Type:        schema.TypeString,
