@@ -51,13 +51,19 @@ func TestTableCreate(t *testing.T) {
 					},
 				},
 			},
+			map[string]interface{}{
+				"name":           "column5",
+				"type":           "VARCHAR",
+				"nullable":       true,
+				"masking_policy": "TEST_MP",
+			},
 		},
 		"primary_key": []interface{}{map[string]interface{}{"name": "MY_KEY", "keys": []interface{}{"column1"}}},
 	}
 	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '', "column5" VARCHAR COMMENT '' WITH MASKING POLICY 'TEST_MP' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
