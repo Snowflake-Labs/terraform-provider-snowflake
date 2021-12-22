@@ -135,6 +135,7 @@ func ExternalTable() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateExternalTable,
 		Read:   ReadExternalTable,
+		Update: UpdateExternalTable,
 		Delete: DeleteExternalTable,
 
 		Schema: externalTableSchema,
@@ -289,6 +290,75 @@ func ReadExternalTable(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// UpdateExternalTable implements schema.UpdateFunc
+func UpdateExternalTable(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	database := data.Get("database").(string)
+	dbSchema := data.Get("schema").(string)
+	name := data.Get("name").(string)
+
+	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
+	// for data types in the HCL2ValueFromConfigValue method.
+	columns := []map[string]string{}
+	for _, column := range data.Get("column").([]interface{}) {
+		columnDef := map[string]string{}
+		for key, val := range column.(map[string]interface{}) {
+			columnDef[key] = val.(string)
+		}
+		columns = append(columns, columnDef)
+	}
+	builder := snowflake.ExternalTable(name, database, dbSchema)
+	builder.WithColumns(columns)
+	builder.WithFileFormat(data.Get("file_format").(string))
+	builder.WithLocation(data.Get("location").(string))
+
+	builder.WithAutoRefresh(data.Get("auto_refresh").(bool))
+	builder.WithRefreshOnCreate(data.Get("refresh_on_create").(bool))
+	builder.WithCopyGrants(data.Get("copy_grants").(bool))
+
+	// Set optionals
+	if v, ok := data.GetOk("partition_by"); ok {
+		partitionBys := expandStringList(v.([]interface{}))
+		builder.WithPartitionBys(partitionBys)
+	}
+
+	if v, ok := data.GetOk("pattern"); ok {
+		builder.WithPattern(v.(string))
+	}
+
+	if v, ok := data.GetOk("aws_sns_topic"); ok {
+		builder.WithAwsSNSTopic(v.(string))
+	}
+
+	if v, ok := data.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+
+	if v, ok := data.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
+	}
+
+	stmt := builder.Update()
+	err := snowflake.Exec(db, stmt)
+	if err != nil {
+		return errors.Wrapf(err, "error updating externalTable %v", name)
+	}
+
+	externalTableID := &externalTableID{
+		DatabaseName:      database,
+		SchemaName:        dbSchema,
+		ExternalTableName: name,
+	}
+	dataIDInput, err := externalTableID.String()
+	if err != nil {
+		return err
+	}
+	data.SetId(dataIDInput)
+
+	return ReadExternalTable(data, meta)
 }
 
 // DeleteExternalTable implements schema.DeleteFunc

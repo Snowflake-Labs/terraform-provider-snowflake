@@ -158,6 +158,50 @@ func (tb *ExternalTableBuilder) Create() string {
 	return q.String()
 }
 
+// Update returns the SQL statement required to update an externalTable
+func (tb *ExternalTableBuilder) Update() string {
+	q := strings.Builder{}
+	q.WriteString(fmt.Sprintf(`ALTER EXTERNAL TABLE %v`, tb.QualifiedName()))
+
+	q.WriteString(fmt.Sprintf(` (`))
+	columnDefinitions := []string{}
+	for _, columnDefinition := range tb.columns {
+		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
+	}
+	q.WriteString(strings.Join(columnDefinitions, ", "))
+	q.WriteString(fmt.Sprintf(`)`))
+
+	if len(tb.partitionBys) > 0 {
+		q.WriteString(` PARTITION BY ( `)
+		q.WriteString(EscapeString(strings.Join(tb.partitionBys, ", ")))
+		q.WriteString(` )`)
+	}
+
+	q.WriteString(` WITH LOCATION = ` + EscapeString(tb.location))
+	q.WriteString(fmt.Sprintf(` REFRESH_ON_CREATE = %t`, tb.refreshOnCreate))
+	q.WriteString(fmt.Sprintf(` AUTO_REFRESH = %t`, tb.autoRefresh))
+
+	if tb.pattern != "" {
+		q.WriteString(fmt.Sprintf(` PATTERN = '%v'`, EscapeString(tb.pattern)))
+	}
+
+	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, EscapeString(tb.fileFormat)))
+
+	if tb.awsSNSTopic != "" {
+		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))
+	}
+
+	if tb.copyGrants {
+		q.WriteString(" COPY GRANTS")
+	}
+
+	if tb.comment != "" {
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
+	}
+
+	return q.String()
+}
+
 // Drop returns the SQL query that will drop a externalTable.
 func (tb *ExternalTableBuilder) Drop() string {
 	return fmt.Sprintf(`DROP EXTERNAL TABLE %v`, tb.QualifiedName())
