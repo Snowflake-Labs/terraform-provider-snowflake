@@ -127,6 +127,12 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Column comment",
 				},
+				"masking_policy": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Masking policy to apply on column",
+				},
 			},
 		},
 	},
@@ -289,12 +295,13 @@ func (identity *columnIdentity) toSnowflakeColumnIdentity() *snowflake.ColumnIde
 }
 
 type column struct {
-	name     string
-	dataType string
-	nullable bool
-	_default *columnDefault
-	identity *columnIdentity
-	comment  string
+	name          string
+	dataType      string
+	nullable      bool
+	_default      *columnDefault
+	identity      *columnIdentity
+	comment       string
+	maskingPolicy string
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
@@ -311,7 +318,8 @@ func (c column) toSnowflakeColumn() snowflake.Column {
 	return *sC.WithName(c.name).
 		WithType(c.dataType).
 		WithNullable(c.nullable).
-		WithComment(c.comment)
+		WithComment(c.comment).
+		WithMaskingPolicy(c.maskingPolicy)
 }
 
 type columns []column
@@ -332,13 +340,14 @@ type changedColumn struct {
 	changedNullConstraint bool
 	dropedDefault         bool
 	changedComment        bool
+	changedMaskingPolicy  bool
 }
 
 func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range old {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
@@ -351,6 +360,10 @@ func (old columns) getChangedColumnProperties(new columns) (changed changedColum
 
 			if cO.name == cN.name && cO.comment != cN.comment {
 				changeColumn.changedComment = true
+			}
+
+			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
+				changeColumn.changedMaskingPolicy = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -418,12 +431,13 @@ func getColumn(from interface{}) (to column) {
 	}
 
 	return column{
-		name:     c["name"].(string),
-		dataType: c["type"].(string),
-		nullable: c["nullable"].(bool),
-		_default: cd,
-		identity: id,
-		comment:  c["comment"].(string),
+		name:          c["name"].(string),
+		dataType:      c["type"].(string),
+		nullable:      c["nullable"].(bool),
+		_default:      cd,
+		identity:      id,
+		comment:       c["comment"].(string),
+		maskingPolicy: c["masking_policy"].(string),
 	}
 }
 
@@ -635,15 +649,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			var q string
 
 			if cA.identity == nil && cA._default == nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
 			} else if cA.identity != nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)
 			} else {
 				if cA._default._type() != "constant" {
 					return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
 			}
 
 			err := snowflake.Exec(db, q)
@@ -687,7 +701,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 				}
 			}
+			if cA.changedMaskingPolicy {
+				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.maskingPolicy)
+				err := snowflake.Exec(db, q)
+				if err != nil {
+					return errors.Wrapf(err, "error changing property on %v", d.Id())
 
+				}
+			}
 		}
 	}
 	if d.HasChange("primary_key") {
