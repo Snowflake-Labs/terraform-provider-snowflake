@@ -25,6 +25,15 @@ resource "snowflake_sequence" "sequence" {
   name     = "sequence"
 }
 
+resource "snowflake_masking_policy" "masking_policy" {
+  name               = "masking_policy"
+  database           = snowflake_schema.schema.database
+  schema             = snowflake_schema.schema.name
+  value_data_type    = "string"
+  masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+  return_data_type   = "string"
+}
+
 resource "snowflake_table" "table" {
   database            = snowflake_schema.schema.database
   schema              = snowflake_schema.schema.name
@@ -67,9 +76,10 @@ resource "snowflake_table" "table" {
   }
 
   column {
-    name    = "extra"
-    type    = "VARIANT"
-    comment = "extra data"
+    name           = "extra"
+    type           = "VARIANT"
+    comment        = "extra data"
+    masking_policy = snowflake_masking_policy.masking_policy.name
   }
 
   primary_key {
@@ -114,6 +124,7 @@ Required:
 Optional:
 
 - **comment** (String) Column comment
+- **masking_policy** (String) Name of masking policy to apply to this column
 - **default** (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
 - **identity** (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
 - **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
