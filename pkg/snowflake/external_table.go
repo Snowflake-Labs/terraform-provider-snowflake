@@ -155,6 +155,10 @@ func (tb *ExternalTableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
+	if len(tb.tags) > 0 {
+		q.WriteString(fmt.Sprintf(` WITH TAG (%s)`, tb.GetTagValueString()))
+	}
+
 	return q.String()
 }
 
@@ -163,40 +167,8 @@ func (tb *ExternalTableBuilder) Update() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`ALTER EXTERNAL TABLE %v`, tb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` (`))
-	columnDefinitions := []string{}
-	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
-	}
-	q.WriteString(strings.Join(columnDefinitions, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
-
-	if len(tb.partitionBys) > 0 {
-		q.WriteString(` PARTITION BY ( `)
-		q.WriteString(EscapeString(strings.Join(tb.partitionBys, ", ")))
-		q.WriteString(` )`)
-	}
-
-	q.WriteString(` WITH LOCATION = ` + EscapeString(tb.location))
-	q.WriteString(fmt.Sprintf(` REFRESH_ON_CREATE = %t`, tb.refreshOnCreate))
-	q.WriteString(fmt.Sprintf(` AUTO_REFRESH = %t`, tb.autoRefresh))
-
-	if tb.pattern != "" {
-		q.WriteString(fmt.Sprintf(` PATTERN = '%v'`, EscapeString(tb.pattern)))
-	}
-
-	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, EscapeString(tb.fileFormat)))
-
-	if tb.awsSNSTopic != "" {
-		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))
-	}
-
-	if tb.copyGrants {
-		q.WriteString(" COPY GRANTS")
-	}
-
-	if tb.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
+	if len(tb.tags) > 0 {
+		q.WriteString(fmt.Sprintf(` TAG %s`, tb.GetTagValueString()))
 	}
 
 	return q.String()
@@ -211,6 +183,22 @@ func (tb *ExternalTableBuilder) Drop() string {
 func (tb *ExternalTableBuilder) Show() string {
 	return fmt.Sprintf(`SHOW EXTERNAL TABLES LIKE '%v' IN SCHEMA "%v"."%v"`, tb.name, tb.db, tb.schema)
 }
+
+func (tb *ExternalTableBuilder) GetTagValueString() string {
+	var q strings.Builder
+	for _, v := range tb.tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
+}
+
 
 type externalTable struct {
 	CreatedOn         sql.NullString `db:"created_on"`
