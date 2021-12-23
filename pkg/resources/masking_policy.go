@@ -57,6 +57,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the masking policy.",
 	},
+	"qualified_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Specifies the qualified identifier for the masking policy.",
+	},
 }
 
 type maskingPolicyID struct {
@@ -200,6 +205,11 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("comment", s.Comment.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("qualified_name", builder.QualifiedName())
 	if err != nil {
 		return err
 	}
