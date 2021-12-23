@@ -702,7 +702,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 			if cA.changedMaskingPolicy {
-				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.maskingPolicy)
+				q := builder.ChangeColumnMaskingPolicy(cA.newColumn.name, cA.newColumn.maskingPolicy)
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
