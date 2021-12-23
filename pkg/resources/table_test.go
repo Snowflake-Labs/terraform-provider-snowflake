@@ -42,7 +42,13 @@ func TestTableCreate(t *testing.T) {
 				"comment": "some comment",
 			},
 			map[string]interface{}{
-				"name":     "column4",
+				"name":           "column4",
+				"type":           "VARCHAR",
+				"nullable":       true,
+				"masking_policy": "TEST_MP",
+			},
+			map[string]interface{}{
+				"name":     "column5",
 				"type":     "VARCHAR",
 				"nullable": false,
 				"default": []interface{}{
@@ -51,25 +57,19 @@ func TestTableCreate(t *testing.T) {
 					},
 				},
 			},
-			map[string]interface{}{
-				"name":           "column5",
-				"type":           "VARCHAR",
-				"nullable":       true,
-				"masking_policy": "TEST_MP",
-			},
 		},
 		"primary_key": []interface{}{map[string]interface{}{"name": "MY_KEY", "keys": []interface{}{"column1"}}},
 	}
 	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '', "column5" VARCHAR COMMENT '' WITH MASKING POLICY 'TEST_MP' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column5" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
 		r.Equal("good_name", d.Get("name").(string))
 		columns := d.Get("column").([]interface{})
-		r.Equal(4, len(columns))
+		r.Equal(5, len(columns))
 		col1 := columns[0].(map[string]interface{})
 		r.Equal("column1", col1["name"].(string))
 		r.Equal("OBJECT", col1["type"].(string))
@@ -86,11 +86,16 @@ func TestTableCreate(t *testing.T) {
 		col4 := columns[3].(map[string]interface{})
 		r.Equal("column4", col4["name"].(string))
 		r.Equal("VARCHAR", col4["type"].(string))
-		r.NotNil(col4["default"])
-		col4Default := col4["default"].([]interface{})
-		r.Equal(1, len(col4Default))
-		col4DefaultParams := col4Default[0].(map[string]interface{})
-		r.Equal("hello", col4DefaultParams["constant"].(string))
+		r.Equal(true, col4["nullable"].(bool))
+		r.Equal("TEST_MP", col4["masking_policy"].(string))
+		col5 := columns[4].(map[string]interface{})
+		r.Equal("column5", col5["name"].(string))
+		r.Equal("VARCHAR", col5["type"].(string))
+		r.NotNil(col5["default"])
+		col5Default := col5["default"].([]interface{})
+		r.Equal(1, len(col5Default))
+		col5DefaultParams := col5Default[0].(map[string]interface{})
+		r.Equal("hello", col5DefaultParams["constant"].(string))
 	})
 }
 
@@ -98,11 +103,12 @@ func expectTableRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "primary key", "unique key", "check", "expression", "comment"}).AddRow("good_name", "VARCHAR()", "COLUMN", "Y", "NULL", "NULL", "N", "N", "NULL", "mock comment")
 	mock.ExpectQuery(`SHOW TABLES LIKE 'good_name' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
 
-	describeRows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "comment"}).
-		AddRow("column1", "OBJECT", "COLUMN", "Y", nil, nil).
-		AddRow("column2", "VARCHAR", "COLUMN", "N", nil, nil).
-		AddRow("column3", "NUMBER(38,0)", "COLUMN", "Y", nil, "some comment").
-		AddRow("column4", "VARCHAR", "COLUMN", "N", "'hello'", nil)
+	describeRows := sqlmock.NewRows([]string{"name", "type", "kind", "null?", "default", "policy name", "comment"}).
+		AddRow("column1", "OBJECT", "COLUMN", "Y", nil, nil, nil).
+		AddRow("column2", "VARCHAR", "COLUMN", "N", nil, nil, nil).
+		AddRow("column3", "NUMBER(38,0)", "COLUMN", "Y", nil, nil, "some comment").
+		AddRow("column4", "VARCHAR", "COLUMN", "Y", nil, "TEST_MP", nil).
+		AddRow("column5", "VARCHAR", "COLUMN", "N", "'hello'", nil, nil)
 
 	mock.ExpectQuery(`DESC TABLE "database_name"."schema_name"."good_name"`).WillReturnRows(describeRows)
 
