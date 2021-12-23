@@ -585,12 +585,10 @@ func (tb *TableBuilder) ChangeColumnComment(name string, comment string) string 
 }
 
 func (tb *TableBuilder) ChangeColumnMaskingPolicy(name string, maskingPolicy string) string {
+	if strings.TrimSpace(maskingPolicy) == "" {
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET MASKING POLICY`, tb.QualifiedName(), EscapeString(name))
+	}
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
-}
-
-// RemoveColumnMaskingPolicy returns the SQL query that will remove the masking policy on the column.
-func (tb *TableBuilder) RemoveColumnMaskingPolicy(name string) string {
-	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET MASKING POLICY`, tb.QualifiedName(), EscapeString(name))
 }
 
 func (tb *TableBuilder) DropColumnDefault(name string) string {
