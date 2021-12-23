@@ -180,12 +180,12 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 		colDef.WriteString(fmt.Sprintf(` IDENTITY(%v, %v)`, c.identity.startNum, c.identity.stepNum))
 	}
 
-	if withComment {
-		colDef.WriteString(fmt.Sprintf(` COMMENT '%v'`, EscapeString(c.comment)))
+	if strings.TrimSpace(c.masking_policy) != "" {
+		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.masking_policy)))
 	}
 
-	if strings.TrimSpace(c.masking_policy) != "" {
-		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY '%v'`, EscapeString(c.masking_policy)))
+	if withComment {
+		colDef.WriteString(fmt.Sprintf(` COMMENT '%v'`, EscapeString(c.comment)))
 	}
 
 	return colDef.String()
@@ -290,7 +290,7 @@ func (c Columns) Flatten() []interface{} {
 	return flattened
 }
 
-func (c Columns) getColumnDefinitions(withInlineConstraints bool, withComments bool, withMaskingPolicy bool) string {
+func (c Columns) getColumnDefinitions(withInlineConstraints bool, withComments bool) string {
 	// TODO(el): verify Snowflake reflects column order back in desc table calls
 	columnDefinitions := []string{}
 	for _, column := range c {
@@ -314,7 +314,6 @@ type TableBuilder struct {
 	changeTracking          bool
 	defaultDDLCollation     string
 	tags                    []TagValue
-	maskingPolicy           string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -341,12 +340,6 @@ func (tb *TableBuilder) QualifiedName() string {
 // WithComment adds a comment to the TableBuilder
 func (tb *TableBuilder) WithComment(c string) *TableBuilder {
 	tb.comment = c
-	return tb
-}
-
-// WithMaskingPolicy adds a masking policy to the TableBuilder
-func (tb *TableBuilder) WithMaskingPolicy(mp string) *TableBuilder {
-	tb.maskingPolicy = mp
 	return tb
 }
 
@@ -442,7 +435,7 @@ func quoteStringList(instrings []string) []string {
 func (tb *TableBuilder) getCreateStatementBody() string {
 	var q strings.Builder
 
-	colDef := tb.columns.getColumnDefinitions(true, true, true)
+	colDef := tb.columns.getColumnDefinitions(true, true)
 
 	if len(tb.primaryKey.keys) > 0 {
 		colDef = strings.TrimSuffix(colDef, ")") //strip trailing
@@ -592,7 +585,7 @@ func (tb *TableBuilder) ChangeColumnComment(name string, comment string) string 
 }
 
 func (tb *TableBuilder) ChangeColumnMaskingPolicy(name string, maskingPolicy string) string {
-	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY '%v'`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
 }
 
 // RemoveColumnMaskingPolicy returns the SQL query that will remove the masking policy on the column.
