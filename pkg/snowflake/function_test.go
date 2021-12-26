@@ -18,6 +18,24 @@ func getJavaScriptFuction(withArgs bool) *FunctionBuilder {
 	return s
 }
 
+const javafunc = `class CoolFunc {` + "\n" +
+	`  public static String test(String u, int c) {` + "\n" +
+	`    return u;` + "\n" +
+	`  }` + "\n" +
+	`}`
+
+func getJavaFuction(withArgs bool) *FunctionBuilder {
+	s := Function("test_db", "test_schema", "test_func", []string{})
+	s.WithReturnType("varchar")
+	s.WithStatement(javafunc)
+	if withArgs {
+		s.WithArgs([]map[string]string{
+			{"name": "user", "type": "varchar"},
+			{"name": "count", "type": "number"}})
+	}
+	return s
+}
+
 func TestFunctionQualifiedName(t *testing.T) {
 	r := require.New(t)
 	s := getJavaScriptFuction(true)
@@ -51,6 +69,58 @@ func TestFunctionCreateWithJavaScriptFunction(t *testing.T) {
 		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR LANGUAGE JAVASCRIPT RETURNS NULL ON NULL INPUT` +
 		` IMMUTABLE COMMENT = 'this is cool func!' AS $$` +
 		`var message = "Hi"` + "\nreturn message$$"
+	r.Equal(expected, createStmnt)
+}
+
+func TestFunctionCreateWithJavaFunction(t *testing.T) {
+	r := require.New(t)
+	s := getJavaFuction(true)
+	s.WithNullInputBehavior("RETURNS NULL ON NULL INPUT")
+	s.WithReturnBehavior("IMMUTABLE")
+	s.WithComment("this is cool func!")
+	s.WithLanguage("JAVA")
+	s.WithHandler("CoolFunc.test")
+	createStmnt, _ := s.Create()
+	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
+		`(user VARCHAR, count NUMBER) RETURNS VARCHAR` +
+		` LANGUAGE JAVA RETURNS NULL ON NULL INPUT IMMUTABLE COMMENT = 'this is cool func!'` +
+		` HANDLER = 'CoolFunc.test' AS $$` + javafunc + `$$`
+	r.Equal(expected, createStmnt)
+}
+
+func TestFunctionCreateWithJavaFunctionWithImports(t *testing.T) {
+	r := require.New(t)
+	s := getJavaFuction(true)
+	s.WithNullInputBehavior("RETURNS NULL ON NULL INPUT")
+	s.WithReturnBehavior("IMMUTABLE")
+	s.WithComment("this is cool func!")
+	s.WithLanguage("JAVA")
+	s.WithImports([]string{"@~/stage/myudf1.jar", "@~/stage/myudf2.jar"})
+	s.WithHandler("CoolFunc.test")
+	createStmnt, _ := s.Create()
+	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
+		`(user VARCHAR, count NUMBER) RETURNS VARCHAR` +
+		` LANGUAGE JAVA RETURNS NULL ON NULL INPUT IMMUTABLE COMMENT = 'this is cool func!'` +
+		` IMPORTS = ('@~/stage/myudf1.jar', '@~/stage/myudf2.jar') HANDLER = 'CoolFunc.test'` +
+		` AS $$` + javafunc + `$$`
+	r.Equal(expected, createStmnt)
+}
+
+func TestFunctionCreateWithJavaFunctionWithTargetPath(t *testing.T) {
+	r := require.New(t)
+	s := getJavaFuction(true)
+	s.WithNullInputBehavior("RETURNS NULL ON NULL INPUT")
+	s.WithReturnBehavior("IMMUTABLE")
+	s.WithComment("this is cool func!")
+	s.WithLanguage("JAVA")
+	s.WithTargetPath("@~/stage/myudf1.jar")
+	s.WithHandler("CoolFunc.test")
+	createStmnt, _ := s.Create()
+	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
+		`(user VARCHAR, count NUMBER) RETURNS VARCHAR` +
+		` LANGUAGE JAVA RETURNS NULL ON NULL INPUT IMMUTABLE COMMENT = 'this is cool func!'` +
+		` HANDLER = 'CoolFunc.test' TARGET_PATH = '@~/stage/myudf1.jar'` +
+		` AS $$` + javafunc + `$$`
 	r.Equal(expected, createStmnt)
 }
 
