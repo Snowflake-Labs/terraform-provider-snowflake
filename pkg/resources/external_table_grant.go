@@ -22,7 +22,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The name of the schema containing the current or future external tables on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -99,6 +99,9 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	futureExternalTables := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 
+	if (schemaName == "") && !futureExternalTables {
+		return errors.New("schema_name must be set unless on_future is true.")
+	}
 	if (externalTableName == "") && !futureExternalTables {
 		return errors.New("external_table_name must be set unless on_future is true.")
 	}
