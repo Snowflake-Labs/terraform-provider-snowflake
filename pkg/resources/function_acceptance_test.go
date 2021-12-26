@@ -21,6 +21,7 @@ func TestAcc_Function(t *testing.T) {
 	expBody1 := "3.141592654::FLOAT"
 	expBody2 := "var X=3\nreturn X"
 	expBody3 := "select 1, 2\nunion all\nselect 3, 4\n"
+	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -45,6 +46,13 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.name", "ARG2"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.type", "DATE"),
+
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "comment", "Terraform acceptance test for java"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "statement", expBody4),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.name", "ARG1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
 				),
 			},
 		},
@@ -86,6 +94,21 @@ func functionConfig(db, schema, name string) string {
 		statement = "var X=3\nreturn X"
 	}
 
+	resource "snowflake_function" "test_funct_java" {
+		name = "%s"
+		database = snowflake_database.test_database.name
+		schema   = snowflake_schema.test_schema.name
+		arguments {
+			name = "arg1"
+			type = "number"
+		}
+		comment = "Terraform acceptance test for java"
+		return_type = "varchar"
+		language = "java"
+		handler = "CoolFunc.test"
+		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
+	}
+
 	resource "snowflake_function" "test_funct_complex" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -106,5 +129,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name)
+	`, db, schema, name, name, name, name)
 }
