@@ -22,6 +22,9 @@ type FunctionBuilder struct {
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
 	returnType        string
 	language          string
+	imports           []string // for Java imports
+	handler           string   // for Java handler
+	targetPath        string   // for Java target path for compiled jar file
 	comment           string
 	statement         string
 }
@@ -80,6 +83,24 @@ func (pb *FunctionBuilder) WithReturnType(s string) *FunctionBuilder {
 // WithLanguage sets the language to SQL, JAVA or JAVASCRIPT
 func (pb *FunctionBuilder) WithLanguage(s string) *FunctionBuilder {
 	pb.language = s
+	return pb
+}
+
+// WithImports adds jar files to import for Java function
+func (pb *FunctionBuilder) WithImports(s []string) *FunctionBuilder {
+	pb.imports = s
+	return pb
+}
+
+// WithHandler sets the handler method for Java function
+func (pb *FunctionBuilder) WithHandler(s string) *FunctionBuilder {
+	pb.handler = s
+	return pb
+}
+
+// WithTargetPath sets the target path for compiled jar file for Java function
+func (pb *FunctionBuilder) WithTargetPath(s string) *FunctionBuilder {
+	pb.targetPath = s
 	return pb
 }
 
@@ -152,6 +173,21 @@ func (pb *FunctionBuilder) Create() (string, error) {
 	}
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(pb.comment)))
+	}
+	if len(pb.imports) > 0 {
+		q.WriteString(` IMPORTS = (`)
+		imports := []string{}
+		for _, imp := range pb.imports {
+			imports = append(imports, fmt.Sprintf(`'%v'`, imp))
+		}
+		q.WriteString(strings.Join(imports, ", "))
+		q.WriteString(`)`)
+	}
+	if pb.handler != "" {
+		q.WriteString(fmt.Sprintf(" HANDLER = '%v'", pb.handler))
+	}
+	if pb.targetPath != "" {
+		q.WriteString(fmt.Sprintf(" TARGET_PATH = '%v'", pb.targetPath))
 	}
 	q.WriteString(fmt.Sprintf(" AS $$%v$$", pb.statement))
 	return q.String(), nil
