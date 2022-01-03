@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,14 +35,12 @@ func CreateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
-				case schema.TypeList:
-					tags, ok := val.([]snowflake.TagValue)
-					if !ok {
-						continue
-					}
-					qb.SetTags(tags)
 				}
 			}
+		}
+		if v, ok := d.GetOk("tag"); ok {
+			tags := getTags(v)
+			qb.SetTags(tags.toSnowflakeTagValues())
 		}
 		err := snowflake.Exec(db, qb.Statement())
 
@@ -103,12 +102,19 @@ func UpdateResource(
 					qb.SetInt(field, valInt)
 				}
 			}
+			if d.HasChange("tag") {
+				log.Printf("[DEBUG] updating tags")
+				v := d.Get("tag")
+				tags := getTags(v)
+				qb.SetTags(tags.toSnowflakeTagValues())
+			}
 
 			err := snowflake.Exec(db, qb.Statement())
 			if err != nil {
 				return errors.Wrapf(err, "error altering %s", t)
 			}
 		}
+		log.Printf("[DEBUG] performing read")
 		return read(d, meta)
 	}
 }
