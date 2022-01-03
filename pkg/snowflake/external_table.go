@@ -155,6 +155,22 @@ func (tb *ExternalTableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
+	if len(tb.tags) > 0 {
+		q.WriteString(fmt.Sprintf(` WITH TAG (%s)`, tb.GetTagValueString()))
+	}
+
+	return q.String()
+}
+
+// Update returns the SQL statement required to update an externalTable
+func (tb *ExternalTableBuilder) Update() string {
+	q := strings.Builder{}
+	q.WriteString(fmt.Sprintf(`ALTER EXTERNAL TABLE %v`, tb.QualifiedName()))
+
+	if len(tb.tags) > 0 {
+		q.WriteString(fmt.Sprintf(` TAG %s`, tb.GetTagValueString()))
+	}
+
 	return q.String()
 }
 
@@ -167,6 +183,22 @@ func (tb *ExternalTableBuilder) Drop() string {
 func (tb *ExternalTableBuilder) Show() string {
 	return fmt.Sprintf(`SHOW EXTERNAL TABLES LIKE '%v' IN SCHEMA "%v"."%v"`, tb.name, tb.db, tb.schema)
 }
+
+func (tb *ExternalTableBuilder) GetTagValueString() string {
+	var q strings.Builder
+	for _, v := range tb.tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
+}
+
 
 type externalTable struct {
 	CreatedOn         sql.NullString `db:"created_on"`

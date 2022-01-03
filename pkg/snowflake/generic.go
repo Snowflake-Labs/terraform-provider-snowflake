@@ -108,6 +108,21 @@ func (b *AlterPropertiesBuilder) SetTags(tags []TagValue) {
 	b.tags = tags
 }
 
+func (ab *AlterPropertiesBuilder) GetTagValueString() string {
+	var q strings.Builder
+	for _, v := range ab.tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
+}
+
 func (ab *AlterPropertiesBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`ALTER %s "%s" SET`, ab.entityType, ab.name)) // TODO handle error
@@ -134,10 +149,9 @@ func (ab *AlterPropertiesBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), ab.floatProperties[k]))
 	}
 
-	for _, t := range sortTags(ab.tags) {
-		sb.WriteString(fmt.Sprintf(` TAG "%v"."%v"."%v" = "%v"`, t.Database, t.Schema, t.Name, t.Value))
+	if len(ab.tags) > 0 {
+		sb.WriteString(fmt.Sprintf(` TAG %s`, ab.GetTagValueString()))
 	}
-
 	return sb.String()
 }
 
@@ -195,6 +209,21 @@ func (b *CreateBuilder) SetTags(tags []TagValue) {
 	b.tags = tags
 }
 
+func (b *CreateBuilder) GetTagValueString() string {
+	var q strings.Builder
+	for _, v := range b.tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
+}
+
 func (b *CreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %s "%s"`, b.entityType, b.name)) // TODO handle error
@@ -221,13 +250,8 @@ func (b *CreateBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s=%.2f", strings.ToUpper(k), b.floatProperties[k]))
 	}
 
-	for i, t := range sortTags(b.tags) {
-		if i == 0 {
-			sb.WriteString(` TAG`)
-		} else if i < len(b.tags)-1 {
-			sb.WriteString(`, `)
-		}
-		sb.WriteString(fmt.Sprintf(`"%v"."%v"."%v" = "%v"`, t.Database, t.Schema, t.Name, t.Value))
+	if len(b.tags) > 0 {
+		sb.WriteString(fmt.Sprintf(` WITH TAG (%s)`, b.GetTagValueString()))
 	}
 
 	return sb.String()

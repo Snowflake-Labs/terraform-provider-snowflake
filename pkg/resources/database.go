@@ -44,7 +44,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-var databaseProperties = []string{"comment", "data_retention_time_in_days"}
+var databaseProperties = []string{"comment", "data_retention_time_in_days", "tag"}
 
 // Database returns a pointer to the resource representing a database
 func Database() *schema.Resource {
@@ -152,6 +152,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] updating database %v", d.Id())
 	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
