@@ -135,6 +135,7 @@ func ExternalTable() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateExternalTable,
 		Read:   ReadExternalTable,
+		Update: UpdateExternalTable,
 		Delete: DeleteExternalTable,
 
 		Schema: externalTableSchema,
@@ -289,6 +290,41 @@ func ReadExternalTable(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// UpdateExternalTable implements schema.UpdateFunc
+func UpdateExternalTable(data *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	database := data.Get("database").(string)
+	dbSchema := data.Get("schema").(string)
+	name := data.Get("name").(string)
+
+	builder := snowflake.ExternalTable(name, database, dbSchema)
+
+	if data.HasChange("tag") {
+		v := data.Get("tag")
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
+	}
+
+	stmt := builder.Update()
+	err := snowflake.Exec(db, stmt)
+	if err != nil {
+		return errors.Wrapf(err, "error updating externalTable %v", name)
+	}
+
+	externalTableID := &externalTableID{
+		DatabaseName:      database,
+		SchemaName:        dbSchema,
+		ExternalTableName: name,
+	}
+	dataIDInput, err := externalTableID.String()
+	if err != nil {
+		return err
+	}
+	data.SetId(dataIDInput)
+
+	return ReadExternalTable(data, meta)
 }
 
 // DeleteExternalTable implements schema.DeleteFunc
