@@ -293,9 +293,17 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_sp_initiated_login_page_label for security integration")
 			}
 		case "SAML2_ENABLE_SP_INITIATED":
-			b, err := strconv.ParseBool(v.(string))
-			if err != nil {
-				return errors.Wrap(err, "returned saml2_enable_sp_initiated that is not boolean")
+			b := false
+			switch v2 := v.(type) {
+			case bool:
+				b = v2
+			case string:
+				b, err = strconv.ParseBool(v.(string))
+				if err != nil {
+					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				}
+			default:
+				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
 			}
 			if err = d.Set("saml2_enable_sp_initiated", b); err != nil {
 				return errors.Wrap(err, "unable to set saml2_enable_sp_initiated for security integration")
@@ -305,9 +313,17 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_snowflake_x509_cert for security integration")
 			}
 		case "SAML2_SIGN_REQUEST":
-			b, err := strconv.ParseBool(v.(string))
-			if err != nil {
-				return errors.Wrap(err, "returned saml2_sign_request that is not boolean")
+			b := false
+			switch v2 := v.(type) {
+			case bool:
+				b = v2
+			case string:
+				b, err = strconv.ParseBool(v.(string))
+				if err != nil {
+					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				}
+			default:
+				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
 			}
 			if err = d.Set("saml2_sign_request", b); err != nil {
 				return errors.Wrap(err, "unable to set saml2_sign_request for security integration")
@@ -321,8 +337,16 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_post_logout_redirect_url for security integration")
 			}
 		case "SAML2_FORCE_AUTHN":
-			b, err := strconv.ParseBool(v.(string))
-			if err != nil {
+			b := false
+			switch v2 := v.(type) {
+			case bool:
+				b = v2
+			case string:
+				b, err = strconv.ParseBool(v.(string))
+				if err != nil {
+					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				}
+			default:
 				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
 			}
 			if err = d.Set("saml2_force_authn", b); err != nil {
