@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -292,7 +293,11 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_sp_initiated_login_page_label for security integration")
 			}
 		case "SAML2_ENABLE_SP_INITIATED":
-			if err = d.Set("saml2_enable_sp_initiated", v.(bool)); err != nil {
+			b, err := strconv.ParseBool(v.(string))
+			if err != nil {
+				return errors.Wrap(err, "returned saml2_enable_sp_initiated that is not boolean")
+			}
+			if err = d.Set("saml2_enable_sp_initiated", b); err != nil {
 				return errors.Wrap(err, "unable to set saml2_enable_sp_initiated for security integration")
 			}
 		case "SAML2_SNOWFLAKE_X509_CERT":
@@ -300,7 +305,11 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_snowflake_x509_cert for security integration")
 			}
 		case "SAML2_SIGN_REQUEST":
-			if err = d.Set("saml2_sign_request", v.(bool)); err != nil {
+			b, err := strconv.ParseBool(v.(string))
+			if err != nil {
+				return errors.Wrap(err, "returned saml2_sign_request that is not boolean")
+			}
+			if err = d.Set("saml2_sign_request", b); err != nil {
 				return errors.Wrap(err, "unable to set saml2_sign_request for security integration")
 			}
 		case "SAML2_REQUESTED_NAMEID_FORMAT":
@@ -312,7 +321,11 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set saml2_post_logout_redirect_url for security integration")
 			}
 		case "SAML2_FORCE_AUTHN":
-			if err = d.Set("saml2_force_authn", v.(bool)); err != nil {
+			b, err := strconv.ParseBool(v.(string))
+			if err != nil {
+				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+			}
+			if err = d.Set("saml2_force_authn", b); err != nil {
 				return errors.Wrap(err, "unable to set saml2_force_authn for security integration")
 			}
 		case "SAML2_SNOWFLAKE_ISSUER_URL":
