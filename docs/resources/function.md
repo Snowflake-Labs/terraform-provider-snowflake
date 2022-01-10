@@ -27,10 +27,13 @@ description: |-
 
 - **arguments** (Block List) List of the arguments for the function (see [below for nested schema](#nestedblock--arguments))
 - **comment** (String) Specifies a comment for the function.
+- **handler** (String) the handler method for Java function.
 - **id** (String) The ID of this resource.
+- **imports** (List of String) jar files to import for Java function.
 - **language** (String) The language of the statement
 - **null_input_behavior** (String) Specifies the behavior of the function when called with null inputs.
 - **return_behavior** (String) Specifies the behavior of the function when returning results
+- **target_path** (String) the target path for compiled jar file for Java function.
 
 <a id="nestedblock--arguments"></a>
 ### Nested Schema for `arguments`
