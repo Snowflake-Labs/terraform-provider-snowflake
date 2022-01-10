@@ -66,7 +66,7 @@ If you do not have Go installed:
 
 4. Fork this repo and clone it into `go_projects`
 5. cd to `terraform-provider-snowflake` and install all the required packages with `make setup`
-6. Finally install goimports with `(cd && go get golang.org/x/tools/cmd/goimports)`.
+6. Finally install goimports with `(cd && go install golang.org/x/tools/cmd/goimports@latest)`.
 7. You should now be able to successfully run the tests with `make test`
 
 It has not been tested on Windows, so if you find problems let us know.
