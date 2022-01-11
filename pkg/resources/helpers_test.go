@@ -200,6 +200,14 @@ func apiIntegration(t *testing.T, id string, params map[string]interface{}) *sch
 	return d
 }
 
+func samlIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.SAMLIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func scimIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, params)
