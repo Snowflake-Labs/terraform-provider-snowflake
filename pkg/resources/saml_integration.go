@@ -472,5 +472,5 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSAMLIntegration implements schema.DeleteFunc
 func DeleteSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.ScimIntegration)(d, meta)
+	return DeleteResource("", snowflake.SamlIntegration)(d, meta)
 }
