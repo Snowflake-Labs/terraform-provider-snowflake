@@ -6,7 +6,7 @@ resource snowflake_task task {
   warehouse = "warehouse"
 
   name          = "task"
-  schedule      = "10"
+  schedule      = "10 MINUTE"
   sql_statement = "select * from foo;"
 
   session_parameters = {
@@ -26,7 +26,7 @@ resource snowflake_task serverless_task {
   schema   = "schema"
 
   name          = "serverless_task"
-  schedule      = "10"
+  schedule      = "10 MINUTE"
   sql_statement = "select * from foo;"
 
   session_parameters = {
