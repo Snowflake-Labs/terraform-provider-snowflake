@@ -47,7 +47,7 @@ func TestProcedureCreate(t *testing.T) {
 		expectProcedureRead(mock)
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
-		r.Equal("my_proc", d.Get("name").(string))
+		r.Equal("MY_PROC", d.Get("name").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 	})
@@ -55,7 +55,7 @@ func TestProcedureCreate(t *testing.T) {
 
 func expectProcedureRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure"}).
-		AddRow("now", "my_proc", "my_schema", "N", "N", "N", "1", "1", "MY_PROC(VARCHAR, DATE) RETURN VARCHAR", "mock comment", "my_db", "N", "N", "N")
+		AddRow("now", "MY_PROC", "MY_SCHEMA", "N", "N", "N", "1", "1", "MY_PROC(VARCHAR, DATE) RETURN VARCHAR", "mock comment", "MY_DB", "N", "N", "N")
 	mock.ExpectQuery(`SHOW PROCEDURES LIKE 'my_proc' IN SCHEMA "my_db"."my_schema"`).WillReturnRows(rows)
 
 	describeRows := sqlmock.NewRows([]string{"property", "value"}).
@@ -80,9 +80,9 @@ func TestProcedureRead(t *testing.T) {
 
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
-		r.Equal("my_proc", d.Get("name").(string))
-		r.Equal("my_db", d.Get("database").(string))
-		r.Equal("my_schema", d.Get("schema").(string))
+		r.Equal("MY_PROC", d.Get("name").(string))
+		r.Equal("MY_DB", d.Get("database").(string))
+		r.Equal("MY_SCHEMA", d.Get("schema").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal("IMMUTABLE", d.Get("return_behavior").(string))
