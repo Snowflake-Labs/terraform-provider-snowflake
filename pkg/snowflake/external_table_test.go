@@ -21,7 +21,7 @@ func TestExternalTableCreate(t *testing.T) {
 	r.Equal(s.Create(), `CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( file format ) COMMENT = 'Test Comment'`)
 }
 
-func TestExternalTableUpdate(t *testing.T) {
+func TestExternalTableUpdate(t *testing.T){
 	r := require.New(t)
 	s := ExternalTable("test_table", "test_db", "test_schema")
 	s.WithTags([]TagValue{{Name: "tag1", Value: "value1", Schema: "test_schema", Database: "test_db"}})
