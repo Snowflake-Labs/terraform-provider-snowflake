@@ -1,4 +1,4 @@
-resource snowflake_pipe_grant grant {
+resource "snowflake_pipe_grant" "grant" {
   database_name = "db"
   schema_name   = "schema"
   sequence_name = "sequence"

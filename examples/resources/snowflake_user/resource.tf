@@ -1,4 +1,4 @@
-resource snowflake_user user {
+resource "snowflake_user" "user" {
   name         = "Snowflake User"
   login_name   = "snowflake_user"
   comment      = "A user of snowflake."

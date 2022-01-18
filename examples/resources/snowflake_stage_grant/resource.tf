@@ -1,4 +1,4 @@
-resource snowflake_stage_grant grant {
+resource "snowflake_stage_grant" "grant" {
   database_name = "db"
   schema_name   = "schema"
   stage_name    = "stage"

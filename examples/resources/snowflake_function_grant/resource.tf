@@ -1,4 +1,4 @@
-resource snowflake_function_grant grant {
+resource "snowflake_function_grant" "grant" {
   database_name   = "db"
   schema_name     = "schema"
   function_name  = "function"

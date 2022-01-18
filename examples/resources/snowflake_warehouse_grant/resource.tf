@@ -1,4 +1,4 @@
-resource snowflake_warehouse_grant grant {
+resource "snowflake_warehouse_grant" "grant" {
   warehouse_name = "wh"
   privilege      = "MODIFY"
 

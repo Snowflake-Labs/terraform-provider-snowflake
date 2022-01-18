@@ -1,4 +1,4 @@
-resource snowflake_database_grant grant {
+resource "snowflake_database_grant" "grant" {
   database_name = "db"
 
   privilege = "USAGE"

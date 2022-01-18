@@ -1,4 +1,4 @@
-resource snowflake_external_table_grant grant {
+resource "snowflake_external_table_grant" "grant" {
   database_name       = "db"
   schema_name         = "schema"
   external_table_name = "external_table"

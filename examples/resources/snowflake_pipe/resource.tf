@@ -1,4 +1,4 @@
-resource snowflake_pipe pipe {
+resource "snowflake_pipe" "pipe" {
   database = "db"
   schema   = "schema"
   name     = "pipe"

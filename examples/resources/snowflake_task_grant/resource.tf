@@ -1,4 +1,4 @@
-resource snowflake_task_grant grant {
+resource "snowflake_task_grant" "grant" {
   database_name = "db"
   schema_name   = "schema"
   task_name = "task"

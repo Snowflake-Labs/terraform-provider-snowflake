@@ -1,4 +1,3 @@
-
 resource "snowflake_stage" "example_stage" {
   name        = "EXAMPLE_STAGE"
   url         = "s3://com.example.bucket/prefix"
