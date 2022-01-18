@@ -37,7 +37,7 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc", "execute_as", "OWNER"),
 
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_simple", "name", procName),
-					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_simple", "comment", "user-defined function"),
+					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_simple", "comment", "user-defined procedure"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_simple", "statement", expBody1),
 
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "name", procName),
@@ -50,6 +50,11 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "return_behavior", "IMMUTABLE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
 				),
+			},
+			{
+				ResourceName:      "snowflake_procedure.test_proc_complex",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

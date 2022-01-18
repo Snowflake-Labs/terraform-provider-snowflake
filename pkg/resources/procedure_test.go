@@ -24,6 +24,7 @@ func prepDummyProcedureResource(t *testing.T) *schema.ResourceData {
 		"schema":          "my_schema",
 		"arguments":       []interface{}{argument1, argument2},
 		"return_type":     "varchar",
+		"comment":         "mock comment",
 		"return_behavior": "IMMUTABLE",
 		"statement":       procedureBody, //var message = DATA + DATA;return message
 	}
@@ -42,19 +43,19 @@ func TestProcedureCreate(t *testing.T) {
 	d := prepDummyProcedureResource(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE javascript CALLED ON NULL INPUT IMMUTABLE COMMENT = 'user-defined function' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE javascript CALLED ON NULL INPUT IMMUTABLE COMMENT = 'mock comment' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectProcedureRead(mock)
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
-		r.Equal("my_proc", d.Get("name").(string))
+		r.Equal("MY_PROC", d.Get("name").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
-		r.Equal("user-defined function", d.Get("comment").(string))
+		r.Equal("mock comment", d.Get("comment").(string))
 	})
 }
 
 func expectProcedureRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure"}).
-		AddRow("now", "my_proc", "my_schema", "N", "N", "N", "1", "1", "MY_TEST_FUNCTION(VARCHAR) RETURN VARCHAR", "mock comment", "my_db", "N", "N", "N")
+		AddRow("now", "MY_PROC", "MY_SCHEMA", "N", "N", "N", "1", "1", "MY_PROC(VARCHAR, DATE) RETURN VARCHAR", "mock comment", "MY_DB", "N", "N", "N")
 	mock.ExpectQuery(`SHOW PROCEDURES LIKE 'my_proc' IN SCHEMA "my_db"."my_schema"`).WillReturnRows(rows)
 
 	describeRows := sqlmock.NewRows([]string{"property", "value"}).
@@ -72,16 +73,19 @@ func expectProcedureRead(mock sqlmock.Sqlmock) {
 func TestProcedureRead(t *testing.T) {
 	r := require.New(t)
 
-	d := prepDummyProcedureResource(t)
+	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", map[string]interface{}{})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectProcedureRead(mock)
 
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
-		r.Equal("my_proc", d.Get("name").(string))
-		r.Equal("user-defined function", d.Get("comment").(string))
+		r.Equal("MY_PROC", d.Get("name").(string))
+		r.Equal("MY_DB", d.Get("database").(string))
+		r.Equal("MY_SCHEMA", d.Get("schema").(string))
+		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
+		r.Equal("IMMUTABLE", d.Get("return_behavior").(string))
 		r.Equal(procedureBody, d.Get("statement").(string))
 
 		args := d.Get("arguments").([]interface{})
@@ -100,7 +104,7 @@ func TestProcedureRead(t *testing.T) {
 func TestProcedureDelete(t *testing.T) {
 	r := require.New(t)
 
-	d := prepDummyProcedureResource(t)
+	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", map[string]interface{}{})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP PROCEDURE "my_db"."my_schema"."my_proc"\(VARCHAR, DATE\)`).WillReturnResult(sqlmock.NewResult(1, 1))
