@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_notification_integration integration {
+resource "snowflake_notification_integration" "integration" {
   name    = "notification"
   comment = "A notification integration."
   

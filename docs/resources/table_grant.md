@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_table_grant grant {
+resource "snowflake_table_grant" "grant" {
   database_name = "database"
   schema_name   = "schema"
   table_name    = "table"

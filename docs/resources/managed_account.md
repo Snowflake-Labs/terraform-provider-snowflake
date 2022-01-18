@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_managed_account account {
+resource "snowflake_managed_account" "account" {
   name           = "managed account"
   admin_name     = "admin"
   admin_password = "secret"

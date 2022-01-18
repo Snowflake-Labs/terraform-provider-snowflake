@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_view view {
+resource "snowflake_view" "view" {
   database = "db"
   schema   = "schema"
   name     = "view"

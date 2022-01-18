@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_storage_integration integration {
+resource "snowflake_storage_integration" "integration" {
   name    = "storage"
   comment = "A storage integration."
   type    = "EXTERNAL_STAGE"

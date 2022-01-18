@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_task task {
+resource "snowflake_task" "task" {
   comment = "my task"
 
   database  = "db"
