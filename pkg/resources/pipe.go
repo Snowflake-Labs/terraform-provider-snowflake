@@ -58,6 +58,7 @@ var pipeSchema = map[string]*schema.Schema{
 	"aws_sns_topic_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
 	},
 	"integration": &schema.Schema{
