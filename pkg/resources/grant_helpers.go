@@ -86,7 +86,7 @@ type grantID struct {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|GrantOption
+// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -102,7 +102,7 @@ func (gi *grantID) String() (string, error) {
 	return strGrantID, nil
 }
 
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege
+// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
