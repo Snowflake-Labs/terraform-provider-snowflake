@@ -25,6 +25,16 @@ type TerraformGrantResource struct {
 
 type TerraformGrantResources map[string]*TerraformGrantResource
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (t TerraformGrantResources) GetTfSchemas() map[string]*schema.Resource {
 	out := map[string]*schema.Resource{}
 	for name, grant := range t {
@@ -179,7 +189,7 @@ func createGenericGrant(d *schema.ResourceData, meta interface{}, builder snowfl
 func readGenericGrant(
 	d *schema.ResourceData,
 	meta interface{},
-	schema map[string]*schema.Schema,
+	schemaName map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
 	validPrivileges PrivilegeSet) error {
@@ -246,11 +256,13 @@ func readGenericGrant(
 		}
 	}
 
+	existingRoles := expandStringList(d.Get("roles").(*schema.Set).List())
 	var roles, shares []string
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
-		if privileges.hasString(priv) {
+		// Match to currently assigned roles or let everything through if no specific role grants
+		if privileges.hasString(priv) && (contains(existingRoles, roleName) || len(existingRoles) == 0) {
 			roles = append(roles, roleName)
 		}
 	}
@@ -272,7 +284,7 @@ func readGenericGrant(
 		return err
 	}
 
-	_, sharesOk := schema["shares"]
+	_, sharesOk := schemaName["shares"]
 	if sharesOk && !futureObjects {
 		err = d.Set("shares", shares)
 		if err != nil {
