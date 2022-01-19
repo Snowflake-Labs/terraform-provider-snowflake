@@ -48,7 +48,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := databaseGrant(t, "test-database|||USAGE|false", map[string]interface{}{
+	d := databaseGrant(t, "test-database|||USAGE||false", map[string]interface{}{
 		"database_name":     "test-database",
 		"privilege":         "USAGE",
 		"roles":             []interface{}{},

@@ -51,7 +51,7 @@ func TestStageGrantCreate(t *testing.T) {
 func TestStageGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := stageGrant(t, "test-db|test-schema|test-stage|USAGE|false", map[string]interface{}{
+	d := stageGrant(t, "test-db|test-schema|test-stage|USAGE||false", map[string]interface{}{
 		"stage_name":        "test-stage",
 		"schema_name":       "test-schema",
 		"database_name":     "test-db",

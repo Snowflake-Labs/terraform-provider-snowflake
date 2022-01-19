@@ -45,7 +45,7 @@ func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS|true", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS||true", map[string]interface{}{
 		"privilege":         "MANAGE GRANTS",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
@@ -63,7 +63,7 @@ func TestAccountGrantRead(t *testing.T) {
 func TestMonitorExecution(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION|true", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION||true", map[string]interface{}{
 		"privilege":         "MONITOR EXECUTION",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
@@ -81,7 +81,7 @@ func TestMonitorExecution(t *testing.T) {
 func TestExecuteTask(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK|false", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK||false", map[string]interface{}{
 		"privilege":         "EXECUTE TASK",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
@@ -110,7 +110,7 @@ func expectReadAccountGrant(mock sqlmock.Sqlmock) {
 func TestApplyMaskingPolicy(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||APPLY MASKING POLICY|true", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||APPLY MASKING POLICY||true", map[string]interface{}{
 		"privilege":         "APPLY MASKING POLICY",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,

@@ -56,7 +56,7 @@ func TestProcedureGrantCreate(t *testing.T) {
 func TestProcedureGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := procedureGrant(t, "test-db|PUBLIC|test-procedure(A ARRAY, B STRING):STRING|USAGE|false", map[string]interface{}{
+	d := procedureGrant(t, "test-db|PUBLIC|test-procedure(A ARRAY, B STRING):STRING|USAGE||false", map[string]interface{}{
 		"procedure_name": "test-procedure",
 		"arguments": []interface{}{map[string]interface{}{
 			"name": "a",

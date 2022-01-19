@@ -48,7 +48,7 @@ func TestExternalTableGrantCreate(t *testing.T) {
 func TestExternalTableGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := externalTableGrant(t, "test-db|PUBLIC|test-external-table|SELECT|false", map[string]interface{}{
+	d := externalTableGrant(t, "test-db|PUBLIC|test-external-table|SELECT||false", map[string]interface{}{
 		"external_table_name": "test-external-table",
 		"schema_name":         "PUBLIC",
 		"database_name":       "test-db",
