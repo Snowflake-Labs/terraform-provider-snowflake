@@ -81,6 +81,7 @@ type grantID struct {
 	SchemaName   string
 	ObjectName   string
 	Privilege    string
+	Roles        []string
 	GrantOption  bool
 }
 
@@ -91,7 +92,8 @@ func (gi *grantID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = grantIDDelimiter
 	grantOption := fmt.Sprintf("%v", gi.GrantOption)
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, grantOption}}
+	roles := strings.Join(gi.Roles, ",")
+	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, roles, grantOption}}
 	err := csvWriter.WriteAll(dataIdentifiers)
 	if err != nil {
 		return "", err
@@ -113,12 +115,12 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 4 && len(lines[0]) != 5 {
-		return nil, fmt.Errorf("4 or 5 fields allowed")
+	if len(lines[0]) != 5 && len(lines[0]) != 6 {
+		return nil, fmt.Errorf("5 or 6 fields allowed")
 	}
 
 	grantOption := false
-	if len(lines[0]) == 5 && lines[0][4] == "true" {
+	if len(lines[0]) == 6 && lines[0][5] == "true" {
 		grantOption = true
 	}
 
@@ -127,6 +129,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		SchemaName:   lines[0][1],
 		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
+		Roles:        strings.Split(lines[0][4], ","),
 		GrantOption:  grantOption,
 	}
 	return grantResult, nil

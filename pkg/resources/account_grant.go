@@ -74,6 +74,7 @@ func AccountGrant() *TerraformGrantResource {
 func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	builder := snowflake.AccountGrant()
 
@@ -86,6 +87,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 		ResourceName: "ACCOUNT",
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grantID.String()
 	if err != nil {

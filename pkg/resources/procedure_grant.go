@@ -137,6 +137,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	futureProcedures := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	arguments = d.Get("arguments").([]interface{})
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (procedureName == "") && !futureProcedures {
 		return errors.New("procedure_name must be set unless on_future is true.")
@@ -169,6 +170,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   procedureSignature,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

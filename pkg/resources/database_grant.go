@@ -36,6 +36,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
+		ForceNew:    true,
 		Description: "Grants privilege to these roles.",
 	},
 	"shares": {
@@ -77,6 +78,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.DatabaseGrant(dbName)
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
@@ -87,6 +89,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		ResourceName: dbName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

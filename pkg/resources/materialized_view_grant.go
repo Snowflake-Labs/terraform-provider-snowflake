@@ -103,6 +103,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	priv := d.Get("privilege").(string)
 	futureMaterializedViews := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !futureMaterializedViews {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -133,6 +134,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		ObjectName:   materializedViewName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
