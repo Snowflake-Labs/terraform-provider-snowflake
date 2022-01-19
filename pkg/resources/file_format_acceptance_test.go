@@ -182,6 +182,29 @@ func TestAcc_FileFormatXML(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_FileFormatSimpleParquet(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigSimple(accName, "PARQUET"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "PARQUET"),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "compression", "AUTO"),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "binary_as_text", "true"),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "trim_space", "false"),
+				),
+			},
+		},
+	})
+}
+
 func fileFormatConfigCSV(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
@@ -369,4 +392,26 @@ resource "snowflake_file_format" "test" {
 	comment = "Terraform acceptance test"
 }
 `, n, n, n)
+}
+
+func fileFormatConfigSimple(n, formatType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%v"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test" {
+	name = "%v"
+	database = snowflake_database.test.name
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_file_format" "test" {
+	name = "%v"
+	database = snowflake_database.test.name
+	schema = snowflake_schema.test.name
+	format_type = "%v"
+}
+`, n, n, n, formatType)
 }

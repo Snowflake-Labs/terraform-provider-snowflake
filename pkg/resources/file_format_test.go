@@ -36,7 +36,7 @@ func TestFileFormatCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE FILE FORMAT "test_db"."test_schema"."test_file_format" TYPE = 'CSV' NULL_IF = \('NULL'\) SKIP_BLANK_LINES = false TRIM_SPACE = false ERROR_ON_COLUMN_COUNT_MISMATCH = true REPLACE_INVALID_CHARACTERS = false VALIDATE_UTF8 = true EMPTY_FIELD_AS_NULL = false SKIP_BYTE_ORDER_MARK = false COMMENT = 'great comment'$`,
+			`^CREATE FILE FORMAT "test_db"."test_schema"."test_file_format" TYPE = 'CSV' NULL_IF = \('NULL'\) ERROR_ON_COLUMN_COUNT_MISMATCH = true VALIDATE_UTF8 = true COMMENT = 'great comment'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFileFormat(mock)
 		err := resources.CreateFileFormat(d, db)

@@ -22,32 +22,32 @@ type FileFormatBuilder struct {
 	fieldDelimiter             string
 	fileExtension              string
 	skipHeader                 int
-	skipBlankLines             bool
+	skipBlankLines             *bool
 	dateFormat                 string
 	timeFormat                 string
 	timestampFormat            string
 	binaryFormat               string
 	escape                     string
 	escapeUnenclosedField      string
-	trimSpace                  bool
+	trimSpace                  *bool
 	fieldOptionallyEnclosedBy  string
-	nullIf                     []string
-	errorOnColumnCountMismatch bool
-	replaceInvalidCharacters   bool
-	validateUTF8               bool
-	emptyFieldAsNull           bool
-	skipByteOrderMark          bool
+	nullIf                     *[]string
+	errorOnColumnCountMismatch *bool
+	replaceInvalidCharacters   *bool
+	validateUTF8               *bool
+	emptyFieldAsNull           *bool
+	skipByteOrderMark          *bool
 	encoding                   string
-	enableOctal                bool
-	allowDuplicate             bool
-	stripOuterArray            bool
-	stripNullValues            bool
-	ignoreUTF8Errors           bool
-	binaryAsText               bool
-	preserveSpace              bool
-	stripOuterElement          bool
-	disableSnowflakeData       bool
-	disableAutoConvert         bool
+	enableOctal                *bool
+	allowDuplicate             *bool
+	stripOuterArray            *bool
+	stripNullValues            *bool
+	ignoreUTF8Errors           *bool
+	binaryAsText               *bool
+	preserveSpace              *bool
+	stripOuterElement          *bool
+	disableSnowflakeData       *bool
+	disableAutoConvert         *bool
 	comment                    string
 }
 
@@ -98,7 +98,7 @@ func (ffb *FileFormatBuilder) WithSkipHeader(n int) *FileFormatBuilder {
 
 // WithSkipBlankLines adds skip blank lines to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithSkipBlankLines(n bool) *FileFormatBuilder {
-	ffb.skipBlankLines = n
+	ffb.skipBlankLines = &n
 	return ffb
 }
 
@@ -140,7 +140,7 @@ func (ffb *FileFormatBuilder) WithEscapeUnenclosedField(s string) *FileFormatBui
 
 // WithTrimSpace adds trim space to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithTrimSpace(n bool) *FileFormatBuilder {
-	ffb.trimSpace = n
+	ffb.trimSpace = &n
 	return ffb
 }
 
@@ -152,97 +152,97 @@ func (ffb *FileFormatBuilder) WithFieldOptionallyEnclosedBy(s string) *FileForma
 
 // WithNullIf adds null if to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithNullIf(s []string) *FileFormatBuilder {
-	ffb.nullIf = s
+	ffb.nullIf = &s
 	return ffb
 }
 
 // WithErrorOnColumnCountMismatch adds error on column count mistmatch to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithErrorOnColumnCountMismatch(n bool) *FileFormatBuilder {
-	ffb.errorOnColumnCountMismatch = n
+	ffb.errorOnColumnCountMismatch = &n
 	return ffb
 }
 
 // WithReplaceInvalidCharacters adds replace invalid characters to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithReplaceInvalidCharacters(n bool) *FileFormatBuilder {
-	ffb.replaceInvalidCharacters = n
+	ffb.replaceInvalidCharacters = &n
 	return ffb
 }
 
 // WithValidateUTF8 adds validate utf8 to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithValidateUTF8(n bool) *FileFormatBuilder {
-	ffb.validateUTF8 = n
+	ffb.validateUTF8 = &n
 	return ffb
 }
 
 // WithEmptyFieldAsNull adds empty field as null to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithEmptyFieldAsNull(n bool) *FileFormatBuilder {
-	ffb.emptyFieldAsNull = n
+	ffb.emptyFieldAsNull = &n
 	return ffb
 }
 
 // WithSkipByteOrderMark adds skip byte order mark to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithSkipByteOrderMark(n bool) *FileFormatBuilder {
-	ffb.skipByteOrderMark = n
+	ffb.skipByteOrderMark = &n
 	return ffb
 }
 
 // WithEnableOctal adds enable octal to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithEnableOctal(n bool) *FileFormatBuilder {
-	ffb.enableOctal = n
+	ffb.enableOctal = &n
 	return ffb
 }
 
 // WithAllowDuplicate adds allow duplicate to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithAllowDuplicate(n bool) *FileFormatBuilder {
-	ffb.allowDuplicate = n
+	ffb.allowDuplicate = &n
 	return ffb
 }
 
 // WithStripOuterArray adds strip outer array to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithStripOuterArray(n bool) *FileFormatBuilder {
-	ffb.stripOuterArray = n
+	ffb.stripOuterArray = &n
 	return ffb
 }
 
 // WithStripNullValues adds strip null values to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithStripNullValues(n bool) *FileFormatBuilder {
-	ffb.stripNullValues = n
+	ffb.stripNullValues = &n
 	return ffb
 }
 
 // WithIgnoreUTF8Errors adds ignore UTF8 errors to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithIgnoreUTF8Errors(n bool) *FileFormatBuilder {
-	ffb.ignoreUTF8Errors = n
+	ffb.ignoreUTF8Errors = &n
 	return ffb
 }
 
 // WithBinaryAsText adds binary as text to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithBinaryAsText(n bool) *FileFormatBuilder {
-	ffb.binaryAsText = n
+	ffb.binaryAsText = &n
 	return ffb
 }
 
 // WithPreserveSpace adds preserve space to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithPreserveSpace(n bool) *FileFormatBuilder {
-	ffb.preserveSpace = n
+	ffb.preserveSpace = &n
 	return ffb
 }
 
 // WithStripOuterElement adds strip outer element to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithStripOuterElement(n bool) *FileFormatBuilder {
-	ffb.stripOuterElement = n
+	ffb.stripOuterElement = &n
 	return ffb
 }
 
 // WithDisableSnowflakeData adds disable Snowflake data to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithDisableSnowflakeData(n bool) *FileFormatBuilder {
-	ffb.disableSnowflakeData = n
+	ffb.disableSnowflakeData = &n
 	return ffb
 }
 
 // WithDisableAutoConvert adds disbale auto convert to the FileFormatBuilder
 func (ffb *FileFormatBuilder) WithDisableAutoConvert(n bool) *FileFormatBuilder {
-	ffb.disableAutoConvert = n
+	ffb.disableAutoConvert = &n
 	return ffb
 }
 
@@ -332,11 +332,13 @@ func (ffb *FileFormatBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` FIELD_OPTIONALLY_ENCLOSED_BY = '%v'`, EscapeString(ffb.fieldOptionallyEnclosedBy)))
 	}
 
-	if len(ffb.nullIf) > 0 {
-		nullIfStr := "'" + strings.Join(ffb.nullIf, "', '") + "'"
-		q.WriteString(fmt.Sprintf(` NULL_IF = (%v)`, nullIfStr))
-	} else if strings.ToUpper(ffb.formatType) != "XML" {
-		q.WriteString(` NULL_IF = ()`)
+	if ffb.nullIf != nil {
+		if len(*ffb.nullIf) > 0 {
+			nullIfStr := "'" + strings.Join(*ffb.nullIf, "', '") + "'"
+			q.WriteString(fmt.Sprintf(` NULL_IF = (%v)`, nullIfStr))
+		} else if strings.ToUpper(ffb.formatType) != "XML" {
+			q.WriteString(` NULL_IF = ()`)
+		}
 	}
 
 	if ffb.encoding != "" {
@@ -345,34 +347,82 @@ func (ffb *FileFormatBuilder) Create() string {
 
 	// set boolean values
 	if ffb.formatType == "CSV" {
-		q.WriteString(fmt.Sprintf(` SKIP_BLANK_LINES = %v`, ffb.skipBlankLines))
-		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
-		q.WriteString(fmt.Sprintf(` ERROR_ON_COLUMN_COUNT_MISMATCH = %v`, ffb.errorOnColumnCountMismatch))
-		q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, ffb.replaceInvalidCharacters))
-		q.WriteString(fmt.Sprintf(` VALIDATE_UTF8 = %v`, ffb.validateUTF8))
-		q.WriteString(fmt.Sprintf(` EMPTY_FIELD_AS_NULL = %v`, ffb.emptyFieldAsNull))
-		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
+		if ffb.skipBlankLines != nil {
+			q.WriteString(fmt.Sprintf(` SKIP_BLANK_LINES = %v`, *ffb.skipBlankLines))
+		}
+		if ffb.trimSpace != nil {
+			q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, *ffb.trimSpace))
+		}
+		if ffb.errorOnColumnCountMismatch != nil {
+			q.WriteString(fmt.Sprintf(` ERROR_ON_COLUMN_COUNT_MISMATCH = %v`, *ffb.errorOnColumnCountMismatch))
+		}
+		if ffb.replaceInvalidCharacters != nil {
+			q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, *ffb.replaceInvalidCharacters))
+		}
+		if ffb.validateUTF8 != nil {
+			q.WriteString(fmt.Sprintf(` VALIDATE_UTF8 = %v`, *ffb.validateUTF8))
+		}
+		if ffb.emptyFieldAsNull != nil {
+			q.WriteString(fmt.Sprintf(` EMPTY_FIELD_AS_NULL = %v`, *ffb.emptyFieldAsNull))
+		}
+		if ffb.skipByteOrderMark != nil {
+			q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, *ffb.skipByteOrderMark))
+		}
 	} else if ffb.formatType == "JSON" {
-		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
-		q.WriteString(fmt.Sprintf(` ENABLE_OCTAL = %v`, ffb.enableOctal))
-		q.WriteString(fmt.Sprintf(` ALLOW_DUPLICATE = %v`, ffb.allowDuplicate))
-		q.WriteString(fmt.Sprintf(` STRIP_OUTER_ARRAY = %v`, ffb.stripOuterArray))
-		q.WriteString(fmt.Sprintf(` STRIP_NULL_VALUES = %v`, ffb.stripNullValues))
-		q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, ffb.replaceInvalidCharacters))
-		q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, ffb.ignoreUTF8Errors))
-		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
+		if ffb.trimSpace != nil {
+			q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, *ffb.trimSpace))
+		}
+		if ffb.enableOctal != nil {
+			q.WriteString(fmt.Sprintf(` ENABLE_OCTAL = %v`, *ffb.enableOctal))
+		}
+		if ffb.allowDuplicate != nil {
+			q.WriteString(fmt.Sprintf(` ALLOW_DUPLICATE = %v`, *ffb.allowDuplicate))
+		}
+		if ffb.stripOuterArray != nil {
+			q.WriteString(fmt.Sprintf(` STRIP_OUTER_ARRAY = %v`, *ffb.stripOuterArray))
+		}
+		if ffb.stripNullValues != nil {
+			q.WriteString(fmt.Sprintf(` STRIP_NULL_VALUES = %v`, *ffb.stripNullValues))
+		}
+		if ffb.replaceInvalidCharacters != nil {
+			q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, *ffb.replaceInvalidCharacters))
+		}
+		if ffb.ignoreUTF8Errors != nil {
+			q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, *ffb.ignoreUTF8Errors))
+		}
+		if ffb.skipByteOrderMark != nil {
+			q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, *ffb.skipByteOrderMark))
+		}
 	} else if ffb.formatType == "AVRO" || ffb.formatType == "ORC" {
-		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
+		if ffb.trimSpace != nil {
+			q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, *ffb.trimSpace))
+		}
 	} else if ffb.formatType == "PARQUET" {
-		q.WriteString(fmt.Sprintf(` BINARY_AS_TEXT = %v`, ffb.binaryAsText))
-		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
+		if ffb.binaryAsText != nil {
+			q.WriteString(fmt.Sprintf(` BINARY_AS_TEXT = %v`, *ffb.binaryAsText))
+		}
+		if ffb.trimSpace != nil {
+			q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, *ffb.trimSpace))
+		}
 	} else if ffb.formatType == "XML" {
-		q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, ffb.ignoreUTF8Errors))
-		q.WriteString(fmt.Sprintf(` PRESERVE_SPACE = %v`, ffb.preserveSpace))
-		q.WriteString(fmt.Sprintf(` STRIP_OUTER_ELEMENT = %v`, ffb.stripOuterElement))
-		q.WriteString(fmt.Sprintf(` DISABLE_SNOWFLAKE_DATA = %v`, ffb.disableSnowflakeData))
-		q.WriteString(fmt.Sprintf(` DISABLE_AUTO_CONVERT = %v`, ffb.disableAutoConvert))
-		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
+		if ffb.ignoreUTF8Errors != nil {
+			q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, *ffb.ignoreUTF8Errors))
+		}
+		if ffb.preserveSpace != nil {
+			q.WriteString(fmt.Sprintf(` PRESERVE_SPACE = %v`, *ffb.preserveSpace))
+		}
+		if ffb.stripOuterElement != nil {
+			q.WriteString(fmt.Sprintf(` STRIP_OUTER_ELEMENT = %v`, *ffb.stripOuterElement))
+		}
+		if ffb.disableSnowflakeData != nil {
+			q.WriteString(fmt.Sprintf(` DISABLE_SNOWFLAKE_DATA = %v`, *ffb.disableSnowflakeData))
+		}
+		if ffb.disableAutoConvert != nil {
+			q.WriteString(fmt.Sprintf(` DISABLE_AUTO_CONVERT = %v`, *ffb.disableAutoConvert))
+		}
+		if ffb.skipByteOrderMark != nil {
+			q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, *ffb.skipByteOrderMark))
+		}
 	}
 
 	if ffb.comment != "" {

@@ -55,7 +55,7 @@ func TestFileFormatCreateJSON(t *testing.T) {
 	f.WithStripNullValues(false)
 	f.WithIgnoreUTF8Errors(true)
 
-	r.Equal(`CREATE FILE FORMAT "test_db"."test_schema"."test_file_format_json" TYPE = 'JSON' COMPRESSION = 'AUTO' DATE_FORMAT = 'AUTO' TIME_FORMAT = 'AUTO' TIMESTAMP_FORMAT = 'AUTO' BINARY_FORMAT = 'HEX' NULL_IF = ('\n', 'NULL') TRIM_SPACE = true ENABLE_OCTAL = false ALLOW_DUPLICATE = false STRIP_OUTER_ARRAY = false STRIP_NULL_VALUES = false REPLACE_INVALID_CHARACTERS = false IGNORE_UTF8_ERRORS = true SKIP_BYTE_ORDER_MARK = false`, f.Create())
+	r.Equal(`CREATE FILE FORMAT "test_db"."test_schema"."test_file_format_json" TYPE = 'JSON' COMPRESSION = 'AUTO' DATE_FORMAT = 'AUTO' TIME_FORMAT = 'AUTO' TIMESTAMP_FORMAT = 'AUTO' BINARY_FORMAT = 'HEX' NULL_IF = ('\n', 'NULL') TRIM_SPACE = true ALLOW_DUPLICATE = false STRIP_OUTER_ARRAY = false STRIP_NULL_VALUES = false IGNORE_UTF8_ERRORS = true`, f.Create())
 }
 
 func TestFileFormatChangeComment(t *testing.T) {
