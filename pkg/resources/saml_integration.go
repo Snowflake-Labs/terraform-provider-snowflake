@@ -177,7 +177,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("saml2_enable_sp_initiated"); ok {
-		stmt.SetString(`SAML2_ENABLE_SP_INITIATED`, d.Get("saml2_enable_sp_initiated").(string))
+		stmt.SetBool(`SAML2_ENABLE_SP_INITIATED`, d.Get("saml2_enable_sp_initiated").(bool))
 	}
 
 	if _, ok := d.GetOk("saml2_snowflake_x509_cert"); ok {
