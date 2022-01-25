@@ -73,9 +73,16 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"set_for_account": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account. Conflicts with warehouse_id.",
 		Default:     false,
 		ForceNew:    true,
+	},
+	"warehouses": {
+		Type:		schema.TypeSet,
+		Optional: true,
+		Description: "A list of warehouses to apply the resource monitor to.",
+		Elem:		&schema.Schema{Type: schema.TypeString},
+		ForceNew: true,
 	},
 }
 
@@ -139,6 +146,14 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("set_for_account").(bool) {
 		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
 			return errors.Wrapf(err, "error setting resource monitor %v on account", name)
+		}
+	}
+
+	if v, ok := d.GetOk("warehouses"); ok {
+		for _, w := range v.(*schema.Set).List() {
+			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
+				return errors.Wrapf(err, "error setting resource monitor %v on warehouse %v", name, w.(string))
+			}
 		}
 	}
 
