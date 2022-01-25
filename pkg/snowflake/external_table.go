@@ -199,7 +199,6 @@ func (tb *ExternalTableBuilder) GetTagValueString() string {
 	return strings.TrimSuffix(q.String(), ", ")
 }
 
-
 type externalTable struct {
 	CreatedOn         sql.NullString `db:"created_on"`
 	ExternalTableName sql.NullString `db:"name"`
