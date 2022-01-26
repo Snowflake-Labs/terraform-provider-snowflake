@@ -78,11 +78,11 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"warehouses": {
-		Type:		schema.TypeSet,
-		Optional: true,
+		Type:        schema.TypeSet,
+		Optional:    true,
 		Description: "A list of warehouses to apply the resource monitor to.",
-		Elem:		&schema.Schema{Type: schema.TypeString},
-		ForceNew: true,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		ForceNew:    true,
 	},
 }
 
