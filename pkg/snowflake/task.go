@@ -164,6 +164,10 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
+	if tb.errorIntegration != "" {
+		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(tb.errorIntegration)))
+	}
+
 	if tb.user_task_timeout_ms > 0 {
 		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.user_task_timeout_ms))
 	}
