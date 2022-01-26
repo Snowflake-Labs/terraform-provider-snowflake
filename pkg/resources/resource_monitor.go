@@ -73,7 +73,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"set_for_account": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account. Conflicts with warehouse_id.",
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
 		Default:     false,
 		ForceNew:    true,
 	},
