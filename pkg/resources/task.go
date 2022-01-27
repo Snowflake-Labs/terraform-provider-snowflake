@@ -322,6 +322,11 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// The "DESCRIBE TASK ..." command returns the string "null" for error_integration
+	if t.ErrorIntegration.String == "null" {
+		t.ErrorIntegration.Valid = false
+		t.ErrorIntegration.String = ""
+	}
 	err = d.Set("error_integration", t.ErrorIntegration.String)
 	if err != nil {
 		return err
