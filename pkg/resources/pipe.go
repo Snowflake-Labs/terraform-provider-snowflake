@@ -277,6 +277,11 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// The "DESCRIBE PIPE ..." command returns the string "null" for error_integration
+	if pipe.ErrorIntegration.String == "null" {
+		pipe.ErrorIntegration.Valid = false
+		pipe.ErrorIntegration.String = ""
+	}
 	err = d.Set("error_integration", pipe.ErrorIntegration.String)
 	if err != nil {
 		return err
