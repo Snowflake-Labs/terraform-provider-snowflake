@@ -537,8 +537,12 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("error_integration") {
-		errorIntegration := d.Get("error_integration")
-		q := builder.ChangeErrorIntegration(errorIntegration.(string))
+		var q string
+		if errorIntegration, ok := d.GetOk("error_integration"); ok {
+			q = builder.ChangeErrorIntegration(errorIntegration.(string))
+		} else {
+			q = builder.RemoveErrorIntegration()
+		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating task error_integration on %v", d.Id())
