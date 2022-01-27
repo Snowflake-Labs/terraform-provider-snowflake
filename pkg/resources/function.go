@@ -102,6 +102,27 @@ var functionSchema = map[string]*schema.Schema{
 		Default:     "user-defined function",
 		Description: "Specifies a comment for the function.",
 	},
+	"imports": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "jar files to import for Java function.",
+	},
+	"handler": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "the handler method for Java function.",
+	},
+	"target_path": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "the target path for compiled jar file for Java function.",
+	},
 }
 
 // Function returns a pointer to the resource representing a stored function
@@ -160,6 +181,25 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	// Set optionals, imports for Java
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []string{}
+		for _, imp := range d.Get("imports").([]interface{}) {
+			imports = append(imports, imp.(string))
+		}
+		builder.WithImports(imports)
+	}
+
+	// handler for Java
+	if v, ok := d.GetOk("handler"); ok {
+		builder.WithHandler(v.(string))
+	}
+
+	// target path for Java
+	if v, ok := d.GetOk("target_path"); ok {
+		builder.WithTargetPath(v.(string))
 	}
 
 	q, err := builder.Create()
@@ -263,6 +303,24 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			}
+		case "imports":
+			importsString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			if importsString != "" { // Do nothing for Java functions without imports
+				imports := strings.Split(importsString, ", ")
+				if err = d.Set("imports", imports); err != nil {
+					return err
+				}
+			}
+		case "handler":
+			if err = d.Set("handler", desc.Value.String); err != nil {
+				return err
+			}
+		case "target_path":
+			if err = d.Set("target_path", desc.Value.String); err != nil {
+				return err
+			}
+		case "runtime_version":
+			// runtime version for Java function. currently not used.
 		default:
 			log.Printf("[WARN] unexpected function property %v returned from Snowflake", desc.Property.String)
 		}

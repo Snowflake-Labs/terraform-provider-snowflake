@@ -124,8 +124,8 @@ func TestProcedureArgumentsSignature(t *testing.T) {
 	r := require.New(t)
 	s := getProcedure(false)
 	sign, _ := s.ArgumentsSignature()
-	r.Equal("test_proc() RETURN VARCHAR", sign)
+	r.Equal("TEST_PROC()", sign)
 	s = getProcedure(true)
 	sign, _ = s.ArgumentsSignature()
-	r.Equal("test_proc(VARCHAR, DATE) RETURN VARCHAR", sign)
+	r.Equal("TEST_PROC(VARCHAR, DATE)", sign)
 }

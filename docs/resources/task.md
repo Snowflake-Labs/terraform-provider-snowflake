@@ -21,7 +21,7 @@ resource snowflake_task task {
   warehouse = "warehouse"
 
   name          = "task"
-  schedule      = "10"
+  schedule      = "10 MINUTE"
   sql_statement = "select * from foo;"
 
   session_parameters = {
@@ -41,7 +41,7 @@ resource snowflake_task serverless_task {
   schema   = "schema"
 
   name          = "serverless_task"
-  schedule      = "10"
+  schedule      = "10 MINUTE"
   sql_statement = "select * from foo;"
 
   session_parameters = {
@@ -71,6 +71,7 @@ resource snowflake_task serverless_task {
 - **after** (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)
 - **comment** (String) Specifies a comment for the task.
 - **enabled** (Boolean) Specifies if the task should be started (enabled) after creation or should remain suspended (default).
+- **error_integration** (String) Specifies the name of the notification integration used for error notifications.
 - **id** (String) The ID of this resource.
 - **schedule** (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)
 - **session_parameters** (Map of String) Specifies session parameters to set for the session when the task runs. A task supports all session parameters.

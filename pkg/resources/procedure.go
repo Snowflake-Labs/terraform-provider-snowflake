@@ -96,7 +96,7 @@ var procedureSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "user-defined function",
+		Default:     "user-defined procedure",
 		Description: "Specifies a comment for the procedure.",
 	},
 }
@@ -287,7 +287,20 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	argSig, _ := proc.ArgumentsSignature()
 
 	for _, v := range foundProcedures {
-		if v.Arguments.String == argSig {
+		showArgs := strings.Split(v.Arguments.String, " RETURN ")
+		if showArgs[0] == argSig {
+			err = d.Set("name", v.Name.String)
+			if err != nil {
+				return err
+			}
+			err = d.Set("database", v.DatabaseName.String)
+			if err != nil {
+				return err
+			}
+			err = d.Set("schema", v.SchemaName.String)
+			if err != nil {
+				return err
+			}
 			err = d.Set("comment", v.Comment.String)
 			if err != nil {
 				return err

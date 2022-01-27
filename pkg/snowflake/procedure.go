@@ -42,9 +42,9 @@ func (pb *ProcedureBuilder) QualifiedNameWithoutArguments() (string, error) {
 	return fmt.Sprintf(`"%v"."%v"."%v"`, pb.db, pb.schema, pb.name), nil
 }
 
-// Returns the arguments signature of the procedure in a form <procedure>(<type>, <type>, ..) RETURN <type>
+// Returns the arguments signature of the procedure in a form <PROCEDURE>(<TYPE>, <TYPE>, ..)
 func (pb *ProcedureBuilder) ArgumentsSignature() (string, error) {
-	return fmt.Sprintf(`%v(%v) RETURN %v`, pb.name, strings.Join(pb.argumentTypes, ", "), pb.returnType), nil
+	return fmt.Sprintf(`%v(%v)`, strings.ToUpper(pb.name), strings.ToUpper(strings.Join(pb.argumentTypes, ", "))), nil
 }
 
 // WithArgs sets the args and argumentTypes on the ProcedureBuilder
@@ -230,7 +230,7 @@ type procedure struct {
 	Name         sql.NullString `db:"name"`
 	SchemaName   sql.NullString `db:"schema_name"`
 	Text         sql.NullString `db:"text"`
-	DatabaseName sql.NullString `db:"database_name"`
+	DatabaseName sql.NullString `db:"catalog_name"`
 	Arguments    sql.NullString `db:"arguments"`
 }
 
