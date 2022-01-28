@@ -325,6 +325,11 @@ func (tb *TaskBuilder) ChangeErrorIntegration(c string) string {
 	return fmt.Sprintf(`ALTER TASK %v SET ERROR_INTEGRATION = %v`, tb.QualifiedName(), EscapeString(c))
 }
 
+// RemoveErrorIntegration returns the SQL query that will remove the error_integration on the task.
+func (tb *TaskBuilder) RemoveErrorIntegration() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET ERROR_INTEGRATION`, tb.QualifiedName())
+}
+
 type task struct {
 	Id               string         `db:"id"`
 	CreatedOn        string         `db:"created_on"`
