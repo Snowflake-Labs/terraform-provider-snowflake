@@ -27,6 +27,7 @@ type TaskBuilder struct {
 	sql_statement                            string
 	disabled                                 bool
 	user_task_managed_initial_warehouse_size string
+	errorIntegration                         string
 }
 
 // GetFullName prepends db and schema to in parameter
@@ -102,6 +103,12 @@ func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *Ta
 	return tb
 }
 
+/// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
+func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
+	tb.errorIntegration = s
+	return tb
+}
+
 // Task returns a pointer to a Builder that abstracts the DDL operations for a task.
 //
 // Supported DDL operations are:
@@ -155,6 +162,10 @@ func (tb *TaskBuilder) Create() string {
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
+	}
+
+	if tb.errorIntegration != "" {
+		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(tb.errorIntegration)))
 	}
 
 	if tb.user_task_timeout_ms > 0 {
@@ -309,20 +320,31 @@ func (tb *TaskBuilder) IsDisabled() bool {
 	return tb.disabled
 }
 
+// ChangeErrorIntegration return SQL query that will update the error_integration on the task.
+func (tb *TaskBuilder) ChangeErrorIntegration(c string) string {
+	return fmt.Sprintf(`ALTER TASK %v SET ERROR_INTEGRATION = %v`, tb.QualifiedName(), EscapeString(c))
+}
+
+// RemoveErrorIntegration returns the SQL query that will remove the error_integration on the task.
+func (tb *TaskBuilder) RemoveErrorIntegration() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET ERROR_INTEGRATION`, tb.QualifiedName())
+}
+
 type task struct {
-	Id           string  `db:"id"`
-	CreatedOn    string  `db:"created_on"`
-	Name         string  `db:"name"`
-	DatabaseName string  `db:"database_name"`
-	SchemaName   string  `db:"schema_name"`
-	Owner        string  `db:"owner"`
-	Comment      *string `db:"comment"`
-	Warehouse    *string `db:"warehouse"`
-	Schedule     *string `db:"schedule"`
-	Predecessors *string `db:"predecessors"`
-	State        string  `db:"state"`
-	Definition   string  `db:"definition"`
-	Condition    *string `db:"condition"`
+	Id               string         `db:"id"`
+	CreatedOn        string         `db:"created_on"`
+	Name             string         `db:"name"`
+	DatabaseName     string         `db:"database_name"`
+	SchemaName       string         `db:"schema_name"`
+	Owner            string         `db:"owner"`
+	Comment          *string        `db:"comment"`
+	Warehouse        *string        `db:"warehouse"`
+	Schedule         *string        `db:"schedule"`
+	Predecessors     *string        `db:"predecessors"`
+	State            string         `db:"state"`
+	Definition       string         `db:"definition"`
+	Condition        *string        `db:"condition"`
+	ErrorIntegration sql.NullString `db:"error_integration"`
 }
 
 func (t *task) IsEnabled() bool {

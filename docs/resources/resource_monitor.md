@@ -45,6 +45,7 @@ resource snowflake_resource_monitor monitor {
 - **start_timestamp** (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
 - **suspend_immediate_triggers** (Set of Number) A list of percentage thresholds at which to immediately suspend all warehouses.
 - **suspend_triggers** (Set of Number) A list of percentage thresholds at which to suspend all warehouses.
+- **warehouses** (Set of String) A list of warehouses to apply the resource monitor to.
 
 ## Import
 

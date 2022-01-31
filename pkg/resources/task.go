@@ -101,6 +101,11 @@ var taskSchema = map[string]*schema.Schema{
 		Description:   "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)",
 		ConflictsWith: []string{"warehouse"},
 	},
+	"error_integration": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the name of the notification integration used for error notifications.",
+	},
 }
 
 type taskID struct {
@@ -317,6 +322,16 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// The "DESCRIBE TASK ..." command returns the string "null" for error_integration
+	if t.ErrorIntegration.String == "null" {
+		t.ErrorIntegration.Valid = false
+		t.ErrorIntegration.String = ""
+	}
+	err = d.Set("error_integration", t.ErrorIntegration.String)
+	if err != nil {
+		return err
+	}
+
 	if t.Predecessors != nil {
 		err = d.Set("after", t.GetPredecessorName())
 		if err != nil {
@@ -427,6 +442,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("error_integration"); ok {
+		builder.WithErrorIntegration((v.(string)))
+	}
+
 	if v, ok := d.GetOk("after"); ok {
 		root, err := getActiveRootTaskAndSuspend(d, meta)
 		if err != nil {
@@ -515,6 +534,19 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+	}
+
+	if d.HasChange("error_integration") {
+		var q string
+		if errorIntegration, ok := d.GetOk("error_integration"); ok {
+			q = builder.ChangeErrorIntegration(errorIntegration.(string))
+		} else {
+			q = builder.RemoveErrorIntegration()
+		}
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating task error_integration on %v", d.Id())
+		}
 	}
 
 	// Need to remove dependency before adding schedule if needed

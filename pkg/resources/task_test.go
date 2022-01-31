@@ -23,13 +23,14 @@ func TestTaskCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"enabled":       true,
-		"name":          "test_task",
-		"database":      "test_db",
-		"schema":        "test_schema",
-		"warehouse":     "much_warehouse",
-		"sql_statement": "select hi from hello",
-		"comment":       "wow comment",
+		"enabled":           true,
+		"name":              "test_task",
+		"database":          "test_db",
+		"schema":            "test_schema",
+		"warehouse":         "much_warehouse",
+		"sql_statement":     "select hi from hello",
+		"comment":           "wow comment",
+		"error_integration": "test_notification_integration",
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.Task().Schema, in)
@@ -37,7 +38,7 @@ func TestTaskCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "much_warehouse" COMMENT = 'wow comment' AS select hi from hello$`,
+			`^CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "much_warehouse" COMMENT = 'wow comment' ERROR_INTEGRATION = 'test_notification_integration' AS select hi from hello$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(
@@ -48,6 +49,8 @@ func TestTaskCreate(t *testing.T) {
 		expectReadTaskParams(mock)
 		err := resources.CreateTask(d, db)
 		r.NoError(err)
+
+		r.Empty(d.Get("error_integration"), "Null string must be treated as empty")
 	})
 }
 
@@ -55,12 +58,13 @@ func TestTaskCreateManagedWithInitSize(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"enabled":       true,
-		"name":          "test_task",
-		"database":      "test_db",
-		"schema":        "test_schema",
-		"sql_statement": "select hi from hello",
-		"comment":       "wow comment",
+		"enabled":           true,
+		"name":              "test_task",
+		"database":          "test_db",
+		"schema":            "test_schema",
+		"sql_statement":     "select hi from hello",
+		"comment":           "wow comment",
+		"error_integration": "test_notification_integration",
 		"user_task_managed_initial_warehouse_size": "XSMALL",
 	}
 
@@ -69,7 +73,7 @@ func TestTaskCreateManagedWithInitSize(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE TASK "test_db"."test_schema"."test_task" USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL' COMMENT = 'wow comment' AS select hi from hello$`,
+			`^CREATE TASK "test_db"."test_schema"."test_task" USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL' COMMENT = 'wow comment' ERROR_INTEGRATION = 'test_notification_integration' AS select hi from hello$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(
@@ -116,8 +120,8 @@ func TestTaskCreateManagedWithoutInitSize(t *testing.T) {
 
 func expectReadTask(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition"},
-	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "")
+		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition", "error_integration"},
+	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "", "null")
 	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 

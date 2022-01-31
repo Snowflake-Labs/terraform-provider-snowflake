@@ -43,3 +43,12 @@ func TestResourceMonitorSetOnAccount(t *testing.T) {
 	q := s.Create().SetOnAccount()
 	r.Equal(`ALTER ACCOUNT SET RESOURCE_MONITOR = "test_resource_monitor"`, q)
 }
+
+func TestResourceMonitorSetOnWarehouse(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.ResourceMonitor("test_resource_monitor")
+	r.NotNil(s)
+
+	q := s.Create().SetOnWarehouse("test_warehouse")
+	r.Equal(`ALTER WAREHOUSE "test_warehouse" SET RESOURCE_MONITOR = "test_resource_monitor"`, q)
+}
