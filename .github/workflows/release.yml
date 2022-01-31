@@ -60,4 +60,5 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
         if: ${{ steps.release.outputs.release_created }}
