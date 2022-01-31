@@ -145,6 +145,11 @@ func (pb *PipeBuilder) ChangeErrorIntegration(c string) string {
 	return fmt.Sprintf(`ALTER PIPE %v SET ERROR_INTEGRATION = %v`, pb.QualifiedName(), EscapeString(c))
 }
 
+// RemoveErrorIntegration returns the SQL query that will remove the error_integration on the pipe.
+func (pb *PipeBuilder) RemoveErrorIntegration() string {
+	return fmt.Sprintf(`ALTER PIPE %v UNSET ERROR_INTEGRATION`, pb.QualifiedName())
+}
+
 // Drop returns the SQL query that will drop a pipe.
 func (pb *PipeBuilder) Drop() string {
 	return fmt.Sprintf(`DROP PIPE %v`, pb.QualifiedName())

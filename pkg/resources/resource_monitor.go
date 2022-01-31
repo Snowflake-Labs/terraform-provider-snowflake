@@ -77,6 +77,13 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"warehouses": {
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Description: "A list of warehouses to apply the resource monitor to.",
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		ForceNew:    true,
+	},
 }
 
 // ResourceMonitor returns a pointer to the resource representing a resource monitor
@@ -139,6 +146,14 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("set_for_account").(bool) {
 		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
 			return errors.Wrapf(err, "error setting resource monitor %v on account", name)
+		}
+	}
+
+	if v, ok := d.GetOk("warehouses"); ok {
+		for _, w := range v.(*schema.Set).List() {
+			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
+				return errors.Wrapf(err, "error setting resource monitor %v on warehouse %v", name, w.(string))
+			}
 		}
 	}
 
