@@ -56,7 +56,7 @@ func TestFunctionGrantCreate(t *testing.T) {
 func TestFunctionGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := functionGrant(t, "test-db|PUBLIC|test-function(A ARRAY, B STRING):STRING|USAGE|false", map[string]interface{}{
+	d := functionGrant(t, "test-db|PUBLIC|test-function(A ARRAY, B STRING):STRING|USAGE||false", map[string]interface{}{
 		"function_name": "test-function",
 		"arguments": []interface{}{map[string]interface{}{
 			"name": "a",

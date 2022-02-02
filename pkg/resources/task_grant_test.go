@@ -45,7 +45,7 @@ func TestTaskGrantCreate(t *testing.T) {
 func TestTaskGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := taskGrant(t, "test-db|PUBLIC|test-task|OPERATE|false", map[string]interface{}{
+	d := taskGrant(t, "test-db|PUBLIC|test-task|OPERATE||false", map[string]interface{}{
 		"task_name":         "test-task",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",

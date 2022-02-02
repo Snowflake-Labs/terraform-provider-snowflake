@@ -56,7 +56,7 @@ func expectReadRoleGrants(mock sqlmock.Sqlmock) {
 func TestRoleGrantsRead(t *testing.T) {
 	r := require.New(t)
 
-	d := roleGrants(t, "good_name", map[string]interface{}{
+	d := roleGrants(t, "good_name||||role1,role2|false", map[string]interface{}{
 		"role_name": "good_name",
 		"roles":     []interface{}{"role1", "role2"},
 		"users":     []interface{}{"user1", "user2"},
@@ -74,7 +74,7 @@ func TestRoleGrantsRead(t *testing.T) {
 func TestRoleGrantsDelete(t *testing.T) {
 	r := require.New(t)
 
-	d := roleGrants(t, "drop_it", map[string]interface{}{
+	d := roleGrants(t, "drop_it||||role1,role2|false", map[string]interface{}{
 		"role_name": "drop_it",
 		"roles":     []interface{}{"role1", "role2"},
 		"users":     []interface{}{"user1", "user2"},

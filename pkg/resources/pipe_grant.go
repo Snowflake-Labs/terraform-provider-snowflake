@@ -91,6 +91,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futurePipes := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (pipeName == "") && !futurePipes {
 		return errors.New("pipe_name must be set unless on_future is true.")
@@ -117,6 +118,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   pipeName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

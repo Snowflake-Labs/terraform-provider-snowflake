@@ -48,7 +48,7 @@ func TestViewGrantCreate(t *testing.T) {
 func TestViewGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := viewGrant(t, "test-db|PUBLIC|test-view|SELECT|false", map[string]interface{}{
+	d := viewGrant(t, "test-db|PUBLIC|test-view|SELECT||false", map[string]interface{}{
 		"view_name":         "test-view",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
