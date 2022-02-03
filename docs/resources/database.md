@@ -40,9 +40,6 @@ resource "snowflake_database" "test2" {
 - **from_replica** (String) Specify a fully-qualified path to a database to create a replica from.
 - **from_share** (Map of String) Specify a provider and a share in this map to create a database from a share.
 - **id** (String) The ID of this resource.
-- **replication_accounts** (Set of String) A list of accounts to be added to the replication.
-- **replication_failover_accounts** (Set of String) A list of accounts to be added to the failover replication.
-- **replication_is_primary** (Boolean) When this is set to true, sets the database as primary for failover.
 - **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 <a id="nestedblock--tag"></a>
