@@ -32,14 +32,21 @@ var databaseSchema = map[string]*schema.Schema{
 		Description:   "Specify a provider and a share in this map to create a database from a share.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_database"},
+		ConflictsWith: []string{"from_database", "from_replica"},
 	},
 	"from_database": {
 		Type:          schema.TypeString,
 		Description:   "Specify a database to create a clone from.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_share"},
+		ConflictsWith: []string{"from_share", "from_replica"},
+	},
+	"from_replica": {
+		Type:          schema.TypeString,
+		Description:   "Specify a fully-qualified path to a database to create a replica from.",
+		Optional:      true,
+		ForceNew:      true,
+		ConflictsWith: []string{"from_share", "from_database"},
 	},
 	"tag": tagReferenceSchema,
 }
@@ -69,6 +76,10 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("from_database"); ok {
 		return createDatabaseFromDatabase(d, meta)
+	}
+
+	if _, ok := d.GetOk("from_replica"); ok {
+		return createDatabaseFromReplica(d, meta)
 	}
 
 	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
@@ -114,6 +125,23 @@ func createDatabaseFromDatabase(d *schema.ResourceData, meta interface{}) error 
 	return ReadDatabase(d, meta)
 }
 
+func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_replica").(string)
+
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	builder := snowflake.DatabaseFromReplica(name, sourceDb)
+
+	err := snowflake.Exec(db, builder.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+	}
+
+	d.SetId(name)
+
+	return ReadDatabase(d, meta)
+}
+
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
@@ -147,12 +175,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("data_retention_time_in_days", i)
-	return err
+	return d.Set("data_retention_time_in_days", i)
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] updating database %v", d.Id())
 	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 

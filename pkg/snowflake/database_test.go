@@ -63,6 +63,13 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 	r.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)
 }
 
+func TestDatabaseCreateFromReplica(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.DatabaseFromReplica("db1", "abc123")
+	q := db.Create()
+	r.Equal(`CREATE DATABASE "db1" AS REPLICA OF "abc123"`, q)
+}
+
 func TestListDatabases(t *testing.T) {
 	r := require.New(t)
 	mockDB, mock, err := sqlmock.New()
