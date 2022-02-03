@@ -3,11 +3,13 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 func RoleGrants() *schema.Resource {
@@ -57,6 +59,16 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
+	grant := &grantID{
+		ResourceName: roleName,
+		Roles:        roles,
+	}
+	dataIDInput, err := grant.String()
+	d.SetId(dataIDInput)
+
+	if err != nil {
+		return errors.Wrap(err, "error creating role grant")
+	}
 	for _, role := range roles {
 		err := grantRoleToRole(db, roleName, role)
 		if err != nil {
@@ -70,7 +82,7 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	d.SetId(roleName)
+
 	return ReadRoleGrants(d, meta)
 }
 
@@ -96,7 +108,12 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := d.Id()
+	log.Println(d.Id())
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+	roleName := grantID.ResourceName
 
 	tfRoles := expandStringList(d.Get("roles").(*schema.Set).List())
 	tfUsers := expandStringList(d.Get("users").(*schema.Set).List())

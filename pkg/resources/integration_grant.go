@@ -63,6 +63,8 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("integration_name").(string)
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+
 	builder := snowflake.IntegrationGrant(w)
 
 	err := createGenericGrant(d, meta, builder)
@@ -74,6 +76,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 		ResourceName: w,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

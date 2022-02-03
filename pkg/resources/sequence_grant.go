@@ -90,6 +90,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureSequences := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (sequenceName == "") && !futureSequences {
 		return errors.New("sequence_name must be set unless on_future is true.")
@@ -116,6 +117,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   sequenceName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

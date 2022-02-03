@@ -81,6 +81,7 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
 
@@ -95,6 +96,7 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   maskingPolicyName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

@@ -62,6 +62,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 	builder := snowflake.ResourceMonitorGrant(w)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
@@ -72,6 +73,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		ResourceName: w,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

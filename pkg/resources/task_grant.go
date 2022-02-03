@@ -91,6 +91,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureTasks := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (taskName == "") && !futureTasks {
 		return errors.New("task_name must be set unless on_future is true.")
@@ -117,6 +118,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   taskName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
