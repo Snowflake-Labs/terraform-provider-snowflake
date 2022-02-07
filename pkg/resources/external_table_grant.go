@@ -98,6 +98,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureExternalTables := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (externalTableName == "") && !futureExternalTables {
 		return errors.New("external_table_name must be set unless on_future is true.")
@@ -124,6 +125,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   externalTableName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

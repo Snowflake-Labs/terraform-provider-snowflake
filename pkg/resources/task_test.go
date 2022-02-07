@@ -49,6 +49,8 @@ func TestTaskCreate(t *testing.T) {
 		expectReadTaskParams(mock)
 		err := resources.CreateTask(d, db)
 		r.NoError(err)
+
+		r.Empty(d.Get("error_integration"), "Null string must be treated as empty")
 	})
 }
 
@@ -119,7 +121,7 @@ func TestTaskCreateManagedWithoutInitSize(t *testing.T) {
 func expectReadTask(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "name", "database_name", "schema_name", "owner", "comment", "warehouse", "schedule", "predecessors", "state", "definition", "condition", "error_integration"},
-	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "", "test_integration")
+	).AddRow("2020-05-14 17:20:50.088 +0000", "test_task", "test_db", "test_schema", "ACCOUNTADMIN", "wow comment", "", "", "", "started", "select hi from hello", "", "null")
 	mock.ExpectQuery(`^SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 
@@ -134,10 +136,9 @@ func TestTaskRead(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":              "test_task",
-		"database":          "test_db",
-		"schema":            "test_schema",
-		"error_integration": "test_notification_integration",
+		"name":     "test_task",
+		"database": "test_db",
+		"schema":   "test_schema",
 	}
 
 	d := task(t, "test_db|test_schema|test_task", in)

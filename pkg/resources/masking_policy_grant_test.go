@@ -44,7 +44,7 @@ func TestMaskingPolicyGrantCreate(t *testing.T) {
 func TestMaskingPolicyGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := maskingPolicyGrant(t, "test-db|PUBLIC|test-masking-policy|APPLY|false", map[string]interface{}{
+	d := maskingPolicyGrant(t, "test-db|PUBLIC|test-masking-policy|APPLY||false", map[string]interface{}{
 		"masking_policy_name": "test-masking-policy",
 		"schema_name":         "PUBLIC",
 		"database_name":       "test-db",

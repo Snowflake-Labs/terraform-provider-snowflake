@@ -44,7 +44,7 @@ func TestRowAccessPolicyGrantCreate(t *testing.T) {
 func TestRowAccessPolicyGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := rowAccessPolicyGrant(t, "test-db|PUBLIC|test-row-access-policy|APPLY|false", map[string]interface{}{
+	d := rowAccessPolicyGrant(t, "test-db|PUBLIC|test-row-access-policy|APPLY||false", map[string]interface{}{
 		"row_access_policy_name": "test-row-access-policy",
 		"schema_name":            "PUBLIC",
 		"database_name":          "test-db",

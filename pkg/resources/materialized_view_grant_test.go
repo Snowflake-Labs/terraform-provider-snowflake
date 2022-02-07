@@ -48,7 +48,7 @@ func TestMaterializedViewGrantCreate(t *testing.T) {
 func TestMaterializedViewGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := materializedViewGrant(t, "test-db|PUBLIC|test-materialized-view|SELECT|false", map[string]interface{}{
+	d := materializedViewGrant(t, "test-db|PUBLIC|test-materialized-view|SELECT||false", map[string]interface{}{
 		"materialized_view_name": "test-materialized-view",
 		"schema_name":            "PUBLIC",
 		"database_name":          "test-db",

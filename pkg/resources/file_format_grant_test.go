@@ -45,7 +45,7 @@ func TestFileFormatGrantCreate(t *testing.T) {
 func TestFileFormatGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := fileFormatGrant(t, "test-db|PUBLIC|test-file-format|USAGE|false", map[string]interface{}{
+	d := fileFormatGrant(t, "test-db|PUBLIC|test-file-format|USAGE||false", map[string]interface{}{
 		"file_format_name":  "test-file-format",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",

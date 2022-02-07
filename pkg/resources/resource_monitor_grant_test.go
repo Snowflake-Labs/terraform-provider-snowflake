@@ -45,7 +45,7 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 func TestResourceMonitorGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := resourceMonitorGrant(t, "test-monitor|||MONITOR|false", map[string]interface{}{
+	d := resourceMonitorGrant(t, "test-monitor|||MONITOR||false", map[string]interface{}{
 		"monitor_name":      "test-monitor",
 		"privilege":         "MONITOR",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},

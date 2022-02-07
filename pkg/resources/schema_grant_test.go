@@ -58,7 +58,7 @@ func TestSchemaGrantCreate(t *testing.T) {
 func TestSchemaGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := schemaGrant(t, "test-db|test-schema||USAGE|false", map[string]interface{}{
+	d := schemaGrant(t, "test-db|test-schema||USAGE||false", map[string]interface{}{
 		"schema_name":       "test-schema",
 		"database_name":     "test-db",
 		"privilege":         "USAGE",

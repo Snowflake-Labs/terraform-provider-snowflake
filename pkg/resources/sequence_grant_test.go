@@ -45,7 +45,7 @@ func TestSequenceGrantCreate(t *testing.T) {
 func TestSequenceGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := sequenceGrant(t, "test-db|PUBLIC|test-sequence|USAGE|false", map[string]interface{}{
+	d := sequenceGrant(t, "test-db|PUBLIC|test-sequence|USAGE||false", map[string]interface{}{
 		"sequence_name":     "test-sequence",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",

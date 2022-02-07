@@ -37,6 +37,7 @@ resource "snowflake_database" "test2" {
 - **comment** (String)
 - **data_retention_time_in_days** (Number)
 - **from_database** (String) Specify a database to create a clone from.
+- **from_replica** (String) Specify a fully-qualified path to a database to create a replica from.
 - **from_share** (Map of String) Specify a provider and a share in this map to create a database from a share.
 - **id** (String) The ID of this resource.
 - **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
