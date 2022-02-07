@@ -33,18 +33,3 @@ archives:
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
-
-signs:
-  - artifacts: checksum
-    cmd: keybase
-    args:
-      - pgp
-      - sign
-      - "-b"
-      - "-d"
-      - "-i"
-      - "${artifact}"
-      - "-o"
-      - "${signature}"
-      - "-k"
-      - "{{.Env.KEYBASE_KEY_ID}}"
