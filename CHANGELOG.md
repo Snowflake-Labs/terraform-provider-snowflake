@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.26.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.0...v0.26.1) (2022-02-07)
+
+
+### BugFixes
+
+* Release tag ([#848](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/848)) ([610a85a](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/610a85a08c8c6c299aed423b14ecd9d115665a36))
+
 ## [0.26.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.25.36...v0.26.0) (2022-02-03)
 
 
