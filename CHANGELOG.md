@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.26.2](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.1...v0.26.2) (2022-02-07)
+
+
+### BugFixes
+
+* Update goreleaser env Dirty to false ([#850](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/850)) ([402f7e0](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/402f7e0d0fb19d9cbe71f384883ebc3563dc82dc))
+
 ### [0.26.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.0...v0.26.1) (2022-02-07)
 
 
