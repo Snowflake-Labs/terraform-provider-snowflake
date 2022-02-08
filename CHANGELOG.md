@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.26.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.2...v0.26.3) (2022-02-08)
+
+
+### BugFixes
+
+* Remove keybase since moving to github actions ([#852](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/852)) ([6e14906](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/6e14906be91553c62b24e9ab0e8da7b12b37153f))
+
 ### [0.26.2](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.1...v0.26.2) (2022-02-07)
 
 
