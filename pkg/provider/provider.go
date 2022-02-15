@@ -235,6 +235,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
 		"snowflake_functions":                          datasources.Functions(),
 		"snowflake_procedures":                         datasources.Procedures(),
+		"snowflake_databases":                          datasources.Databases(),
 	}
 
 	return dataSources
