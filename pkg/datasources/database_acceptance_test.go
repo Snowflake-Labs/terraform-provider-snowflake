@@ -24,8 +24,6 @@ func TestDatabase(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "created_on"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "owner"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "retention_time"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "options"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "origin"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "is_current"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "is_default"),
 				),
