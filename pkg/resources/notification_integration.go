@@ -111,6 +111,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
 	},
+	"gcp_pubsub_service_account": &schema.Schema{
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The GCP service account identifier that Snowflake will use when assuming the GCP role",
+	},
 }
 
 // NotificationIntegration returns a pointer to the resource representing a notification integration
@@ -292,6 +297,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
 			if err = data.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+				return err
+			}
+		case "GCP_PUBSUB_SERVICE_ACCOUNT":
+			if err = data.Set("gcp_pubsub_service_account", v.(string)); err != nil {
 				return err
 			}
 		default:
