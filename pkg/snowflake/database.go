@@ -110,3 +110,27 @@ func ListDatabases(sdb *sqlx.DB) ([]database, error) {
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
+
+func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
+	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", databaseName)
+	rows, err := sdb.Queryx(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []database{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows || len(dbs) == 0 {
+		log.Printf("[DEBUG] no databases found")
+		return nil, nil
+	}
+	db := &database{}
+	for _, d := range dbs {
+		if d.DBName.String == databaseName {
+			db = &d
+			break
+		}
+	}
+	return db, errors.Wrapf(err, "unable to scan row for %s", stmt)
+}
