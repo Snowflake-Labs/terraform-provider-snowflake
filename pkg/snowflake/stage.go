@@ -21,6 +21,7 @@ type StageBuilder struct {
 	schema             string
 	url                string
 	credentials        string
+	directory          string
 	storageIntegration string
 	encryption         string
 	fileFormat         string
@@ -71,6 +72,12 @@ func (sb *StageBuilder) WithFileFormat(f string) *StageBuilder {
 // WithCopyOptions adds copy options to the StageBuilder
 func (sb *StageBuilder) WithCopyOptions(c string) *StageBuilder {
 	sb.copyOptions = c
+	return sb
+}
+
+// WithDirectory adds directory option to the StageBuilder
+func (sb *StageBuilder) WithDirectory(d string) *StageBuilder {
+	sb.directory = d
 	return sb
 }
 
@@ -148,6 +155,10 @@ func (sb *StageBuilder) Create() string {
 
 	if sb.copyOptions != "" {
 		q.WriteString(fmt.Sprintf(` COPY_OPTIONS = (%v)`, sb.copyOptions))
+	}
+
+	if sb.directory != "" {
+		q.WriteString(fmt.Sprintf(` DIRECTORY = (%v)`, sb.directory))
 	}
 
 	if sb.comment != "" {
