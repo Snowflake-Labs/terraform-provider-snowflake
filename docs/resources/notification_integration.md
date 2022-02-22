@@ -68,6 +68,7 @@ resource snowflake_notification_integration integration {
 - **aws_sqs_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
 - **aws_sqs_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
 - **created_on** (String) Date and time when the notification integration was created.
+- **gcp_pubsub_service_account** (String) The GCP service account identifier that Snowflake will use when assuming the GCP role
 
 ## Import
 
