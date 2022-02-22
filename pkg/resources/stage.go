@@ -283,6 +283,11 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("directory", stageDesc.Directory)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("storage_integration", s.StorageIntegration)
 	if err != nil {
 		return err

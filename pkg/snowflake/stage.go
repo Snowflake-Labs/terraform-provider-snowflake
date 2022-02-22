@@ -253,6 +253,7 @@ type descStageResult struct {
 	SnowflakeIamUser string
 	FileFormat       string
 	CopyOptions      string
+	Directory        string
 }
 
 type descStageRow struct {
@@ -266,6 +267,7 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	r := &descStageResult{}
 	var ff []string
 	var co []string
+	var dir []string
 	rows, err := Query(db, query)
 	if err != nil {
 		return r, err
@@ -297,11 +299,16 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 			if row.PropertyValue != row.PropertyDefault {
 				co = append(co, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
 			}
+		case "DIRECTORY":
+			if row.PropertyValue != row.PropertyDefault {
+				dir = append(dir, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
+			}
 		}
 	}
 
 	r.FileFormat = strings.Join(ff, " ")
 	r.CopyOptions = strings.Join(co, " ")
+	r.Directory = strings.Join(dir, " ")
 	return r, nil
 }
 

@@ -73,7 +73,8 @@ func expectReadStage(mock sqlmock.Sqlmock) {
 		"parent_property", "property", "property_type", "property_value", "property_default"},
 	).AddRow("STAGE_LOCATION", "URL", "string", `["s3://load/test/"]`, "").
 		AddRow("STAGE_CREDENTIALS", "AWS_EXTERNAL_ID", "string", "test", "").
-		AddRow("STAGE_FILE_FORMAT", "FORMAT_NAME", "string", "CSV", "")
+		AddRow("STAGE_FILE_FORMAT", "FORMAT_NAME", "string", "CSV", "").
+		AddRow("DIRECTORY", "ENABLED", "Boolean", true, false)
 	mock.ExpectQuery(`^DESCRIBE STAGE "test_db"."test_schema"."test_stage"$`).WillReturnRows(rows)
 }
 
