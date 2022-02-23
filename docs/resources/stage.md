@@ -45,6 +45,7 @@ resource "snowflake_stage_grant" "grant_example_stage" {
 - **comment** (String) Specifies a comment for the stage.
 - **copy_options** (String) Specifies the copy options for the stage.
 - **credentials** (String, Sensitive) Specifies the credentials for the stage.
+- **directory** (String) Specifies the directory settings for the stage.
 - **encryption** (String) Specifies the encryption settings for the stage.
 - **file_format** (String) Specifies the file format for the stage.
 - **id** (String) The ID of this resource.

@@ -72,6 +72,12 @@ var stageSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the stage.",
 	},
+	"directory": {
+		Type:        schema.TypeString,
+		ForceNew:    true,
+		Optional:    true,
+		Description: "Specifies the directory settings for the stage.",
+	},
 	"aws_external_id": {
 		Type:     schema.TypeString,
 		Optional: true,
@@ -176,6 +182,10 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 		builder.WithCopyOptions(v.(string))
 	}
 
+	if v, ok := d.GetOk("directory"); ok {
+		builder.WithDirectory(v.(string))
+	}
+
 	if v, ok := d.GetOk("encryption"); ok {
 		builder.WithEncryption(v.(string))
 	}
@@ -269,6 +279,11 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("copy_options", stageDesc.CopyOptions)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("directory", stageDesc.Directory)
 	if err != nil {
 		return err
 	}
