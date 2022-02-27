@@ -391,7 +391,7 @@ func CreateFileFormat(data *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok, err := getFormatTypeOption(data, formatType, "escape_unenclosed_field"); ok && err == nil {
-		builder.WithEscapeUnenclosedField(v.(string))
+		builder.WithEscapeUnenclosedField(snowflake.EscapeString(v.(string)))
 	} else if err != nil {
 		return err
 	}
