@@ -6,7 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/chanzuckerberg/go-misc v0.0.0-20220225174031-459a5d237fbd
-	github.com/hashicorp/terraform-plugin-docs v0.4.0
+	github.com/hashicorp/terraform-plugin-docs v0.5.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/luna-duclos/instrumentedsql v1.1.3
@@ -29,9 +29,9 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
-	github.com/apparentlymart/go-cidr v1.1.0 // indirect
+	github.com/apparentlymart/go-cidr v1.0.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/aws/aws-sdk-go v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.3.0 // indirect
@@ -69,6 +69,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.4.0 // indirect
+	github.com/hashicorp/hc-install v0.3.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.11.1 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.15.0 // indirect
@@ -81,7 +82,6 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/klauspost/compress v1.14.4 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-ieproxy v0.0.3 // indirect
@@ -96,7 +96,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/posener/complete v1.2.1 // indirect
+	github.com/posener/complete v1.1.1 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
@@ -105,7 +105,6 @@ require (
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1 // indirect
