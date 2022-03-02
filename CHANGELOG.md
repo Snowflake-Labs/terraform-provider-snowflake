@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.27.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.3...v0.27.0) (2022-03-02)
+
+
+### Features
+
+* Data source for list databases ([#861](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/861)) ([537428d](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/537428da16024707afab2b989f95f2fe2efc0e94))
+* Expose GCP_PUBSUB_SERVICE_ACCOUNT attribute in notification integration ([#871](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/871)) ([9cb863c](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/9cb863cc1fb27f76030984917124bcbdef47dc7a))
+* Support DIRECTORY option on stage create ([#872](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/872)) ([0ea9a1e](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/0ea9a1e0fb9617a2359ed1e1f60b572bd4df49a6))
+
+
+### Misc
+
+* Upgarde all dependencies to latest ([#878](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/878)) ([2f1c91a](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/2f1c91a63859f8f9dc3075ab20aa1ded23c16179))
+
 ### [0.26.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.2...v0.26.3) (2022-02-08)
 
 
