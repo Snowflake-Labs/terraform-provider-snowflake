@@ -40,14 +40,14 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 func externalOauthIntegrationConfig(name string, integrationType string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_external_oauth_integration" "test" {
-		name                             = "%s"
-		type		                     = "%s"
-		enabled                          = true
-  		issuer					     	 = "https://sts.windows.net/00000000-0000-0000-0000-000000000000"
+		name = "%s"
+		type = "%s"
+		enabled = true
+  		issuer = "https://sts.windows.net/00000000-0000-0000-0000-000000000000"
   		snowflake_user_mapping_attribute = "LOGIN_NAME"
-		jws_keys_urls					 = ["https://login.windows.net/common/discovery/keys"]
-		audience_urls	 				 = ["https://analysis.windows.net/powerbi/connector/Snowflake"]
-  		token_user_mapping_claims        = ["upn"]
+		jws_keys_urls = ["https://login.windows.net/common/discovery/keys"]
+		audience_urls = ["https://analysis.windows.net/powerbi/connector/Snowflake"]
+  		token_user_mapping_claims = ["upn"]
 	}
 	`, name, integrationType)
 }
