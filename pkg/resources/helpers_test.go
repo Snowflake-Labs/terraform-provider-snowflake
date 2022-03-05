@@ -224,6 +224,14 @@ func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *s
 	return d
 }
 
+func externalOauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.ExternalOauthIntegration().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
