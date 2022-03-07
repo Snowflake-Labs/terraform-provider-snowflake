@@ -603,7 +603,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
 		}
 	}
-
+	if d.HasChange("name") {
+		name := d.Get("name")
+		q := builder.Rename(name.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table name on %v", d.Id())
+		}
+	}
 	if d.HasChange("cluster_by") {
 		cb := expandStringList(d.Get("cluster_by").([]interface{}))
 
