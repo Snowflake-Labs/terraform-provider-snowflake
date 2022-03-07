@@ -22,7 +22,6 @@ var tableSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		ForceNew:    true,
 		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the table is created.",
 	},
 	"schema": {
