@@ -1208,3 +1208,66 @@ resource "snowflake_table" "test_table" {
 `
 	return fmt.Sprintf(s, name, name, name, name)
 }
+
+func TestAcc_TableRename(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithName(accName, oldTableName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldTableName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+			{
+				Config: tableConfigWithName(accName, newTableName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newTableName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithName(name string, tableName string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name = "%s"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+}
+
+resource "snowflake_table" "test_table" {
+	database = snowflake_database.test_database.name
+	schema   = snowflake_schema.test_schema.name
+	name     = "%s"
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+}
+`
+	return fmt.Sprintf(s, name, name, tableName)
+}
