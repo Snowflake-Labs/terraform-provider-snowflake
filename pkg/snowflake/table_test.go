@@ -247,3 +247,9 @@ func TestTableUnsetTag(t *testing.T) {
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.UnsetTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db"}), `ALTER TABLE "test_db"."test_schema"."test_table" UNSET TAG "test_db"."test_schema"."tag"`)
 }
+
+func TestTableRename(t *testing.T) {
+	r := require.New(t)
+	s := Table("test_table1", "test_db", "test_schema")
+	r.Equal(s.Rename("test_table2"), `ALTER TABLE "test_db"."test_schema"."test_table1" RENAME TO "test_db"."test_schema"."test_table2"`)
+}
