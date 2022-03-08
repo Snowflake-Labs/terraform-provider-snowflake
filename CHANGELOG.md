@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.28.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.27.0...v0.28.0) (2022-03-05)
+
+
+### Features
+
+* Implemented External OAuth Security Integration Resource ([#879](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/879)) ([83997a7](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/83997a742332f1376adfd31cf7e79c36c03760ff))
+
+
+### BugFixes
+
+* escape string escape_unenclosed_field ([#877](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/877)) ([6f5578f](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/6f5578f55221f460f1dcc2fa48848cddea5ade20))
+
 ## [0.27.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.3...v0.27.0) (2022-03-02)
 
 
