@@ -59,7 +59,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2.9.0
+        uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
           args: release --rm-dist
