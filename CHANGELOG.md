@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.2](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.1...v0.28.2) (2022-03-09)
+
+
+### BugFixes
+
+* Ran make deps to fix dependencies ([#899](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/899)) ([a65fcd6](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/a65fcd611e6c631e026ed0560ed9bd75b87708d2))
+
 ### [0.28.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.0...v0.28.1) (2022-03-09)
 
 
