@@ -89,7 +89,7 @@ require (
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-ieproxy v0.0.3 // indirect
+	github.com/mattn/go-ieproxy v0.0.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/mitchellh/cli v1.1.2 // indirect
@@ -126,3 +126,7 @@ require (
 )
 
 exclude github.com/hashicorp/terraform-exec v0.16.0
+
+exclude github.co/mattn/go-ieproxy v0.0.3
+
+exclude github.co/mattn/go-ieproxy v0.0.2
