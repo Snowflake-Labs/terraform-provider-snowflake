@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.0...v0.28.1) (2022-03-09)
+
+
+### BugFixes
+
+* Release by updating go dependencies ([#894](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/894)) ([79ec370](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/79ec370e596356f1b4824e7b476fad76d15a210e))
+
 ## [0.28.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.27.0...v0.28.0) (2022-03-05)
 
 
