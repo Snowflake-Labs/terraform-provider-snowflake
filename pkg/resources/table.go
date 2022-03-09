@@ -595,20 +595,20 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Table(tableName, dbName, schema)
 
 	db := meta.(*sql.DB)
-	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
-		}
-	}
 	if d.HasChange("name") {
 		name := d.Get("name")
 		q := builder.Rename(name.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating table name on %v", d.Id())
+		}
+	}
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
+		q := builder.ChangeComment(comment.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
 		}
 	}
 	if d.HasChange("cluster_by") {
