@@ -3,7 +3,7 @@
 page_title: "snowflake_function_grant Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_function_grant (Resource)
@@ -30,7 +30,7 @@ resource snowflake_function_grant grant {
   ]
   return_type = "string"
 
-  privilege = "select"
+  privilege = "USAGE"
   roles = [
     "role1",
     "role2",
@@ -60,7 +60,7 @@ resource snowflake_function_grant grant {
 - **function_name** (String) The name of the function on which to grant privileges immediately (only valid if on_future is false).
 - **id** (String) The ID of this resource.
 - **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name, arguments, return_type, and shares fields must be unset in order to use on_future.
-- **privilege** (String) The privilege to grant on the current or future function.
+- **privilege** (String) The privilege to grant on the current or future function. Must be one of `USAGE` or `OWNERSHIP`.
 - **return_type** (String) The return type of the function (must be present if function_name is present)
 - **roles** (Set of String) Grants privilege to these roles.
 - **shares** (Set of String) Grants privilege to these shares (only valid if on_future is false).
