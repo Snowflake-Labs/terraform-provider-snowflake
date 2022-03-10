@@ -42,6 +42,7 @@ func isIdentifierRune(r rune) bool {
 
 func isInitialIdentifierRune(r rune) bool {
 	return (r == '_' ||
+		r == '-' ||
 		(r >= 'A' && r <= 'Z') ||
 		(r >= 'a' && r <= 'z'))
 }
