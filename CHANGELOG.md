@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.4](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.3...v0.28.4) (2022-03-11)
+
+
+### BugFixes
+
+* Add gpg signing to goreleaser ([#911](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/911)) ([8ae3312](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/8ae3312ea09233323ac96d3d3ade755125ef1869))
+
 ### [0.28.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.2...v0.28.3) (2022-03-10)
 
 
