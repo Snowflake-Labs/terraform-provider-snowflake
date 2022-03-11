@@ -47,9 +47,5 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return err
+	return nil
 }
