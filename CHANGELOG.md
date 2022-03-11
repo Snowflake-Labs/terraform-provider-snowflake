@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.2...v0.28.3) (2022-03-10)
+
+
+### BugFixes
+
+* issue with ie-proxy ([#903](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/903)) ([e028bc8](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/e028bc8dde8bc60144f75170de09d4cf0b54c2e2))
+
 ### [0.28.2](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.1...v0.28.2) (2022-03-09)
 
 
