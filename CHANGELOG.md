@@ -1,5 +1,38 @@
 # Changelog
 
+### [0.28.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.2...v0.28.3) (2022-03-10)
+
+
+### BugFixes
+
+* issue with ie-proxy ([#903](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/903)) ([e028bc8](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/e028bc8dde8bc60144f75170de09d4cf0b54c2e2))
+
+### [0.28.2](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.1...v0.28.2) (2022-03-09)
+
+
+### BugFixes
+
+* Ran make deps to fix dependencies ([#899](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/899)) ([a65fcd6](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/a65fcd611e6c631e026ed0560ed9bd75b87708d2))
+
+### [0.28.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.0...v0.28.1) (2022-03-09)
+
+
+### BugFixes
+
+* Release by updating go dependencies ([#894](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/894)) ([79ec370](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/79ec370e596356f1b4824e7b476fad76d15a210e))
+
+## [0.28.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.27.0...v0.28.0) (2022-03-05)
+
+
+### Features
+
+* Implemented External OAuth Security Integration Resource ([#879](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/879)) ([83997a7](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/83997a742332f1376adfd31cf7e79c36c03760ff))
+
+
+### BugFixes
+
+* escape string escape_unenclosed_field ([#877](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/877)) ([6f5578f](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/6f5578f55221f460f1dcc2fa48848cddea5ade20))
+
 ## [0.27.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.26.3...v0.27.0) (2022-03-02)
 
 
