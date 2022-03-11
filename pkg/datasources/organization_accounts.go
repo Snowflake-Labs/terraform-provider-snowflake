@@ -75,6 +75,7 @@ func OrganizationAccounts() *schema.Resource {
 
 // ReadCurrentAccount read the current snowflake account information
 func ReadOrganizationAccounts(d *schema.ResourceData, meta interface{}) error {
+
 	db := meta.(*sql.DB)
 	currentOrgAccounts, err := snowflake.ListOrganizationAccounts(db)
 	if err == sql.ErrNoRows {
@@ -106,5 +107,6 @@ func ReadOrganizationAccounts(d *schema.ResourceData, meta interface{}) error {
 		orgAccounts = append(orgAccounts, orgAccountMap)
 	}
 
+	d.SetId("12345")
 	return d.Set("accounts", orgAccounts)
 }
