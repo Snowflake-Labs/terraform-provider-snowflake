@@ -1,0 +1,1 @@
+terraform import snowflake_ownership_grants.example owner
