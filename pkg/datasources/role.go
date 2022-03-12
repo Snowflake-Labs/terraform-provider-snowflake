@@ -22,6 +22,9 @@ func Role() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadRole,
 		Schema: roleSchema,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
