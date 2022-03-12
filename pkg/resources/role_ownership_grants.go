@@ -22,7 +22,7 @@ func RoleOwnershipGrants() *schema.Resource {
 				Type:        schema.TypeString,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
-				Description: "The name of the role to grant ownership to. Please ensure that the role that terraform is using is granted access.",
+				Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					return snowflake.ValidateIdentifier(val)
 				},
@@ -31,13 +31,13 @@ func RoleOwnershipGrants() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Description: "Grants role to this specified role.",
+				Description: "Grants role ownership to these specified roles.",
 			},
 			"users": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Description: "Grants role to this specified user.",
+				Description: "Grants role ownership to these specified users.",
 			},
 		},
 
