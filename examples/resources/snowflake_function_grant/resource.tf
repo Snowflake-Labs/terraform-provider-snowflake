@@ -1,16 +1,16 @@
-resource "snowflake_function_grant" "grant" {
-  database_name = "db"
-  schema_name   = "schema"
-  function_name = "function"
+resource snowflake_function_grant grant {
+  database_name   = "db"
+  schema_name     = "schema"
+  function_name  = "function"
 
-  arguments = [
+  arguments   = [
     {
-      "name" : "a",
-      "type" : "array"
+      "name": "a",
+      "type": "array"
     },
     {
-      "name" : "b",
-      "type" : "string"
+      "name": "b",
+      "type": "string"
     }
   ]
   return_type = "string"
