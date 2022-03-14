@@ -9,7 +9,6 @@ import (
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jmoiron/sqlx"
 )
 
 func RoleOwnershipGrant() *schema.Resource {
@@ -74,6 +73,19 @@ func CreateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadRoleOwnershipGrant(d, meta)
 }
 
+type roleOwnershipGrant struct {
+	CreatedOn       sql.RawBytes   `db:"created_on"`
+	Name            sql.NullString `db:"name"`
+	IsDefault       sql.NullBool   `db:"is_default"`
+	IsCurrent       sql.NullBool   `db:"is_current"`
+	IsInherited     sql.NullBool   `db:"is_inherited"`
+	AssignedToUsers sql.NullString `db:"assigned_to_users"`
+	GrantedToRoles  sql.NullString `db:"granted_to_roles"`
+	GrantedRoles    sql.NullString `db:"granted_roles"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
+}
+
 func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	log.Println(d.Id())
@@ -81,9 +93,13 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	toRoleName := strings.Split(d.Id(), "|")[1]
 	currentGrants := strings.Split(d.Id(), "|")[2]
 
-	err := readOwnershipGrants(db, onRoleName)
-	if err != nil {
-		return err
+	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", onRoleName))
+	err := row.StructScan(&roleOwnershipGrant{})
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] role (%s) not found", onRoleName)
+		d.SetId("")
+		return nil
 	}
 
 	err = d.Set("on_role_name", onRoleName)
@@ -99,42 +115,6 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	err = d.Set("current_grants", currentGrants)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-type roleOwnershipGrant struct {
-	CreatedOn       sql.RawBytes   `db:"created_on"`
-	Name            sql.NullString `db:"name"`
-	IsDefault       sql.NullString `db:"is_default"`
-	IsCurrent       sql.NullString `db:"is_current"`
-	IsInherited     sql.NullString `db:"is_inherited"`
-	AssignedToUsers sql.NullString `db:"assigned_to_users"`
-	GrantedToRoles  sql.NullString `db:"granted_to_roles"`
-	GrantedRoles    sql.NullString `db:"granted_roles"`
-	Owner           sql.NullString `db:"owner"`
-	Comment         sql.NullString `db:"comment"`
-}
-
-func readOwnershipGrants(db *sql.DB, onRoleName string) error {
-	sdb := sqlx.NewDb(db, "snowflake")
-
-	stmt := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, onRoleName)
-
-	row := sdb.QueryRowx(stmt)
-
-	g := &roleOwnershipGrant{}
-	err := row.StructScan(g)
-	if err != nil {
-		return err
-	}
-
-	if g.Owner.Valid {
-		s := g.Owner.String
-		s = strings.TrimPrefix(s, `"`)
-		s = strings.TrimSuffix(s, `"`)
-		g.Owner = sql.NullString{String: s}
 	}
 
 	return nil
@@ -160,6 +140,8 @@ func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	onRoleName := d.Get("on_role_name").(string)
 	toRoleName := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
+
+	d.SetId(fmt.Sprintf(`%s|%s|%s`, onRoleName, toRoleName, currentGrants))
 
 	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
 	err := snowflake.Exec(db, g.Role(toRoleName).Revoke())

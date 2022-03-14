@@ -20,9 +20,9 @@ func RoleOwnershipGrant(role string, currentGrants string) *RoleOwnershipGrantBu
 
 func (gb *RoleOwnershipGrantBuilder) Role(role string) *RoleOwnershipGrantExecutable {
 	return &RoleOwnershipGrantExecutable{
-		role:          gb.role,
-		granteeType:   "Role",
-		grantee:       role,
+		role:          role,
+		granteeType:   "ROLE",
+		grantee:       gb.role,
 		currentGrants: gb.currentGrants,
 	}
 }
