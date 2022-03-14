@@ -12,12 +12,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func RoleOwnershipGrants() *schema.Resource {
+func RoleOwnershipGrant() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateRoleOwnershipGrants,
-		Read:   ReadRoleOwnershipGrants,
-		Delete: DeleteRoleOwnershipGrants,
-		Update: UpdateRoleOwnershipGrants,
+		Create: CreateRoleOwnershipGrant,
+		Read:   ReadRoleOwnershipGrant,
+		Delete: DeleteRoleOwnershipGrant,
+		Update: UpdateRoleOwnershipGrant,
 
 		Schema: map[string]*schema.Schema{
 			"on_role_name": {
@@ -57,24 +57,24 @@ func RoleOwnershipGrants() *schema.Resource {
 	}
 }
 
-func CreateRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
+func CreateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	onRoleName := d.Get("on_role_name").(string)
 	toRoleName := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
-	g := snowflake.RoleOwnershipGrant(onRoleName)
-	err := snowflake.Exec(db, g.Role(toRoleName, currentGrants).Grant())
+	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
+	err := snowflake.Exec(db, g.Role(toRoleName).Grant())
 	if err != nil {
 		return err
 	}
 
 	d.SetId(fmt.Sprintf(`%s|%s|%s`, onRoleName, toRoleName, currentGrants))
 
-	return ReadRoleOwnershipGrants(d, meta)
+	return ReadRoleOwnershipGrant(d, meta)
 }
 
-func ReadRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
+func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	log.Println(d.Id())
 	onRoleName := strings.Split(d.Id(), "|")[0]
@@ -140,7 +140,7 @@ func readOwnershipGrants(db *sql.DB, onRoleName string) error {
 	return nil
 }
 
-func DeleteRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
+func DeleteRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	onRoleName := d.Get("on_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
@@ -155,7 +155,7 @@ func DeleteRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func UpdateRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
+func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	onRoleName := d.Get("on_role_name").(string)
 	toRoleName := d.Get("to_role_name").(string)
@@ -167,5 +167,5 @@ func UpdateRoleOwnershipGrants(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return ReadRoleOwnershipGrants(d, meta)
+	return ReadRoleOwnershipGrant(d, meta)
 }
