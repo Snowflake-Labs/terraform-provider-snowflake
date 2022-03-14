@@ -1,5 +1,26 @@
 # Changelog
 
+### [0.28.6](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.5...v0.28.6) (2022-03-14)
+
+
+### BugFixes
+
+* Add release step in goreleaser ([#919](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/919)) ([63f221e](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/63f221e6c2db8ceec85b7bca71b4953f67331e79))
+
+### [0.28.5](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.4...v0.28.5) (2022-03-12)
+
+
+### BugFixes
+
+* Add manifest json ([#914](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/914)) ([c61fcdd](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/c61fcddef12e9e2fa248d5da8df5038cdcd99b3b))
+
+### [0.28.4](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.3...v0.28.4) (2022-03-11)
+
+
+### BugFixes
+
+* Add gpg signing to goreleaser ([#911](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/911)) ([8ae3312](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/8ae3312ea09233323ac96d3d3ade755125ef1869))
+
 ### [0.28.3](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.2...v0.28.3) (2022-03-10)
 
 
