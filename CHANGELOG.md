@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.6](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.5...v0.28.6) (2022-03-14)
+
+
+### BugFixes
+
+* Add release step in goreleaser ([#919](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/919)) ([63f221e](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/63f221e6c2db8ceec85b7bca71b4953f67331e79))
+
 ### [0.28.5](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.4...v0.28.5) (2022-03-12)
 
 
