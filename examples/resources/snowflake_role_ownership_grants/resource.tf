@@ -3,16 +3,6 @@ resource "snowflake_role" "role" {
   comment = "for testing"
 }
 
-resource "snowflake_user" "user" {
-  name    = "rking_test_user"
-  comment = "for testing"
-}
-
-resource "snowflake_user" "user2" {
-  name    = "rking_test_user2"
-  comment = "for testing"
-}
-
 resource "snowflake_role" "other_role" {
   name = "rking_test_role2"
 }
@@ -28,13 +18,9 @@ resource "snowflake_role_grants" "grants" {
 }
 
 resource "snowflake_role_ownership_grants" "grants" {
-  role_name = "${snowflake_role.role.name}"
+  on_role_name = "${snowflake_role.role.name}"
 
-  roles = [
-    "${snowflake_role.other_role.name}",
-  ]
+  to_role_name = "${snowflake_role.other_role.name}"
 
-  users = [
-    "${snowflake_user.user.name}",
-  ]
+  current_grants = "COPY"
 }
