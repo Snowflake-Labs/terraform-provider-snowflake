@@ -46,6 +46,12 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`%v.%v.%v`, accName, accName, accName)),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_sequence.test_sequence",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

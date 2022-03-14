@@ -115,12 +115,26 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 5 && len(lines[0]) != 6 {
-		return nil, fmt.Errorf("5 or 6 fields allowed")
+
+	// Len 4 is allowing for legacy IDs where role names are not included
+	if len(lines[0]) < 4 || len(lines[0]) > 6 {
+		return nil, fmt.Errorf("4 to 6 fields allowed in ID")
 	}
 
+	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
+	// Checking for true/false to eliminate scenarios where it would pick up the grant option.
+	// Roles will be empty list if legacy IDs are used, roles from grants are not
+	// used in Read functions, just for uniqueness in IDs of resources
+	roles := []string{}
+	if len(lines[0]) > 4 && lines[0][4] != "true" && lines[0][4] != "false" {
+		roles = strings.Split(lines[0][4], ",")
+	}
+
+	// Allowing legacy IDs to check grant option
 	grantOption := false
 	if len(lines[0]) == 6 && lines[0][5] == "true" {
+		grantOption = true
+	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
 		grantOption = true
 	}
 
@@ -129,7 +143,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		SchemaName:   lines[0][1],
 		ObjectName:   lines[0][2],
 		Privilege:    lines[0][3],
-		Roles:        strings.Split(lines[0][4], ","),
+		Roles:        roles,
 		GrantOption:  grantOption,
 	}
 	return grantResult, nil
