@@ -71,8 +71,8 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 .PHONY: install
 
 install-tf: build ## installs plugin where terraform can find it
-	mkdir -p /usr/local/lib/terraform/registry.terraform.io/chanzuckerberg/snowflake/$(VERSION)/darwin_amd64
-	cp ./$(BASE_BINARY_NAME) /usr/local/lib/terraform/registry.terraform.io/chanzuckerberg/snowflake/$(VERSION)/darwin_amd64/
+	mkdir -p $(HOME)/.terraform.d/plugins
+	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
 .PHONY: install-tf
 
 uninstall-tf: build ## uninstalls plugin from where terraform can find it
