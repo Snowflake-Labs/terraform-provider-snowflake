@@ -1,5 +1,5 @@
 SHA=$(shell git rev-parse --short HEAD)
-VERSION=$(shell cat VERSION)
+VERSION=0.28.5
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
 LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
@@ -71,8 +71,8 @@ install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
 .PHONY: install
 
 install-tf: build ## installs plugin where terraform can find it
-	mkdir -p $(HOME)/.terraform.d/plugins
-	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
+	mkdir -p /usr/local/lib/terraform/registry.terraform.io/chanzuckerberg/snowflake/$(VERSION)/darwin_amd64
+	cp ./$(BASE_BINARY_NAME) /usr/local/lib/terraform/registry.terraform.io/chanzuckerberg/snowflake/$(VERSION)/darwin_amd64/
 .PHONY: install-tf
 
 uninstall-tf: build ## uninstalls plugin from where terraform can find it
