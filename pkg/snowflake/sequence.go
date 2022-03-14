@@ -46,7 +46,7 @@ func (sb *SequenceBuilder) Drop() string {
 	return fmt.Sprintf(`DROP SEQUENCE %v`, sb.QualifiedName())
 }
 
-// Drop returns the SQL query that will drop a sequence.
+// Show returns the SQL query that will show a sequence.
 func (sb *SequenceBuilder) Show() string {
 	return fmt.Sprintf(`SHOW SEQUENCES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
