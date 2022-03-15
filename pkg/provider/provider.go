@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
-	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
