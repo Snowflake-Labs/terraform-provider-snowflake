@@ -15,7 +15,7 @@ resource snowflake_function_grant grant {
   ]
   return_type = "string"
 
-  privilege = "select"
+  privilege = "USAGE"
   roles = [
     "role1",
     "role2",
