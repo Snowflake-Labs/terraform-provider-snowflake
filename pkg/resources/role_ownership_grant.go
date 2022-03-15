@@ -11,45 +11,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+var roleOwnershipGrantSchema = map[string]*schema.Schema{
+	"on_role_name": {
+		Type:        schema.TypeString,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Required:    true,
+		Description: "The name of the role ownership is granted on.",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			return snowflake.ValidateIdentifier(val)
+		},
+	},
+	"to_role_name": {
+		Type:        schema.TypeString,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Required:    true,
+		Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			return snowflake.ValidateIdentifier(val)
+		},
+	},
+	"current_grants": {
+		Type:        schema.TypeString,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.",
+		Default:     "COPY",
+		ValidateFunc: validation.StringInSlice([]string{
+			"COPY",
+			"REVOKE",
+		}, true),
+	},
+}
+
 func RoleOwnershipGrant() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateRoleOwnershipGrant,
 		Read:   ReadRoleOwnershipGrant,
 		Delete: DeleteRoleOwnershipGrant,
 		Update: UpdateRoleOwnershipGrant,
-
-		Schema: map[string]*schema.Schema{
-			"on_role_name": {
-				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Required:    true,
-				Description: "The name of the role ownership is granted on.",
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
-				},
-			},
-			"to_role_name": {
-				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Required:    true,
-				Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
-				},
-			},
-			"current_grants": {
-				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.",
-				Default:     "COPY",
-				ValidateFunc: validation.StringInSlice([]string{
-					"COPY",
-					"REVOKE",
-				}, true),
-			},
-		},
-
+		Schema: roleOwnershipGrantSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -119,6 +119,23 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	onRoleName := d.Get("on_role_name").(string)
+	toRoleName := d.Get("to_role_name").(string)
+	currentGrants := d.Get("current_grants").(string)
+
+	d.SetId(fmt.Sprintf(`%s|%s|%s`, onRoleName, toRoleName, currentGrants))
+
+	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
+	err := snowflake.Exec(db, g.Role(toRoleName).Grant())
+	if err != nil {
+		return err
+	}
+
+	return ReadRoleOwnershipGrant(d, meta)
+}
+
 func DeleteRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	onRoleName := d.Get("on_role_name").(string)
@@ -132,21 +149,4 @@ func DeleteRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 	return nil
-}
-
-func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	onRoleName := d.Get("on_role_name").(string)
-	toRoleName := d.Get("to_role_name").(string)
-	currentGrants := d.Get("current_grants").(string)
-
-	d.SetId(fmt.Sprintf(`%s|%s|%s`, onRoleName, toRoleName, currentGrants))
-
-	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
-	err := snowflake.Exec(db, g.Role(toRoleName).Revoke())
-	if err != nil {
-		return err
-	}
-
-	return ReadRoleOwnershipGrant(d, meta)
 }
