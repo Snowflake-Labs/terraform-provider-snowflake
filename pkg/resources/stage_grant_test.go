@@ -30,7 +30,6 @@ func TestStageGrantCreate(t *testing.T) {
 			"database_name":     "test-db",
 			"privilege":         test_priv,
 			"roles":             []interface{}{"test-role-1", "test-role-2"},
-			"shares":            []interface{}{"test-share-1", "test-share-2"},
 			"with_grant_option": true,
 		}
 		d := schema.TestResourceDataRaw(t, resources.StageGrant().Resource.Schema, in)
@@ -39,8 +38,6 @@ func TestStageGrantCreate(t *testing.T) {
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-2" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-1" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO SHARE "test-share-2" WITH GRANT OPTION$`, test_priv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadStageGrant(mock, test_priv)
 			err := resources.CreateStageGrant(d, db)
 			r.NoError(err)
@@ -57,7 +54,6 @@ func TestStageGrantRead(t *testing.T) {
 		"database_name":     "test-db",
 		"privilege":         "USAGE",
 		"roles":             []interface{}{},
-		"shares":            []interface{}{},
 		"with_grant_option": false,
 	})
 
@@ -73,11 +69,6 @@ func TestStageGrantRead(t *testing.T) {
 	r.True(roles.Contains("test-role-1"))
 	r.True(roles.Contains("test-role-2"))
 	r.Equal(roles.Len(), 2)
-
-	shares := d.Get("shares").(*schema.Set)
-	r.True(shares.Contains("test-share-1"))
-	r.True(shares.Contains("test-share-2"))
-	r.Equal(shares.Len(), 2)
 }
 
 func expectReadStageGrant(mock sqlmock.Sqlmock, test_priv string) {
@@ -87,10 +78,6 @@ func expectReadStageGrant(mock sqlmock.Sqlmock, test_priv string) {
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), test_priv, "STAGE", "test-stage", "ROLE", "test-role-1", false, "bob",
 	).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), test_priv, "STAGE", "test-stage", "ROLE", "test-role-2", false, "bob",
-	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), test_priv, "STAGE", "test-stage", "SHARE", "test-share-1", false, "bob",
-	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), test_priv, "STAGE", "test-stage", "SHARE", "test-share-2", false, "bob",
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON STAGE "test-db"."test-schema"."test-stage"$`).WillReturnRows(rows)
 }

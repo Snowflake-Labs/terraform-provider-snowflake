@@ -1,5 +1,14 @@
 # Changelog
 
+### [0.28.7](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.6...v0.28.7) (2022-03-15)
+
+
+### BugFixes
+
+* Allow legacy version of GrantIDs to be used with new grant functionality ([#923](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/923)) ([b640a60](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/b640a6011a1f2761f857d024d700d4363a0dc927))
+* Make ReadWarehouse compatible with quoted resource identifiers ([#907](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/907)) ([72cedc4](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/72cedc4853042ff2fbc4e89a6c8ee6f4adb35c74))
+* sequence import ([#775](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/775)) ([e728d2e](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/e728d2e70d25de76ddbf274bcd2c3fc989c7c449))
+
 ### [0.28.6](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.5...v0.28.6) (2022-03-14)
 
 
