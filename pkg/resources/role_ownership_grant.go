@@ -77,7 +77,6 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	log.Println(d.Id())
 	onRoleName := strings.Split(d.Id(), "|")[0]
-	// toRoleName := strings.Split(d.Id(), "|")[1]
 	currentGrants := strings.Split(d.Id(), "|")[2]
 
 	stmt := fmt.Sprintf("SHOW ROLES LIKE '%s'", onRoleName)
@@ -98,11 +97,15 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no role found like '%s'", onRoleName)
 	}
 
+	grant.Name.String = strings.TrimPrefix(grant.Name.String, `"`)
+	grant.Name.String = strings.TrimSuffix(grant.Name.String, `"`)
 	err = d.Set("on_role_name", grant.Name.String)
 	if err != nil {
 		return err
 	}
 
+	grant.Owner.String = strings.TrimPrefix(grant.Owner.String, `"`)
+	grant.Owner.String = strings.TrimSuffix(grant.Owner.String, `"`)
 	err = d.Set("to_role_name", grant.Owner.String)
 	if err != nil {
 		return err
