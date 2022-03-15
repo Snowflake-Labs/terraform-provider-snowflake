@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
+	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
@@ -304,17 +306,41 @@ func DSN(
 	region,
 	role string) (string, error) {
 
+	host := ""
+
 	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
 	if region == "us-west-2" {
 		region = ""
 	}
-
+	// Since valid PrivateLink URLs have region and region-less representations,
+	// We configure based on the number of "." characters supplied.
+	// - <account_name>.<region>.privatelink
+	// - <orgname>-<account_name>.privatelink
+	if strings.Contains(account, "privatelink") {
+		accountTokens := strings.Split(account, ".")
+		lenAccountTokens := len(accountTokens)
+		if lenAccountTokens == 2 {
+			account = accountTokens[0]
+			host = fmt.Sprint(account, ".privatelink.snowflakecomputing.com")
+		} else if lenAccountTokens == 3 {
+			account = accountTokens[0]
+			host = fmt.Sprint(account, ".", accountTokens[1], ".privatelink.snowflakecomputing.com")
+		}
+	}
 	config := gosnowflake.Config{
 		Account: account,
 		User:    user,
 		Region:  region,
 		Role:    role,
+	}
+	if host != "" {
+		config = gosnowflake.Config{
+			Account: account,
+			User:    user,
+			Role:    role,
+			Host:    host,
+		}
 	}
 
 	if privateKeyPath != "" {

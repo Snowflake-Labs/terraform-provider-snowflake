@@ -45,6 +45,10 @@ func TestDSN(t *testing.T) {
 			"user:pass@acct.region.snowflakecomputing.com:443?ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
 		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2"},
 			"user2:pass2@acct2.snowflakecomputing.com:443?ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
+		{"regionless privatelink", args{"orgname-accountname.privatelink", "user3", "pass3", false, "", "role3"},
+			"user3:pass3@orgname-accountname.privatelink.snowflakecomputing.com:443?account=orgname-accountname&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
+		{"regioned privatelink", args{"accountname.us-east-1.privatelink", "user3", "pass3", false, "us-east-1", "role3"},
+			"user3:pass3@accountname.us-east-1.privatelink.snowflakecomputing.com:443?account=accountname&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
