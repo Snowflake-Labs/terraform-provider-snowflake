@@ -44,17 +44,17 @@ func TestGrantIDFromString(t *testing.T) {
 	// Bad ID -- not enough fields
 	id = "database|name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("5 or 6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
 
 	// Bad ID -- privilege in wrong area
 	id = "database||name-privilege"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("5 or 6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
 
 	// too many fields
 	id = "database_name|schema|view_name|privilege|false|2|too-many"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("5 or 6 fields allowed"), err)
+	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
 
 	// 0 lines
 	id = ""
@@ -108,4 +108,39 @@ func TestGrantStruct(t *testing.T) {
 	r.Equal("priv", newGrant.Privilege)
 	r.Equal([]string{"test3", "test4"}, newGrant.Roles)
 	r.Equal(false, newGrant.GrantOption)
+}
+
+func TestGrantLegacyID(t *testing.T) {
+	// Testing that grants with legacy ID structure resolves to expected output
+	r := require.New(t)
+	gID := "database_name|schema|view_name|priv|true"
+	grant, err := grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("database_name", grant.ResourceName)
+	r.Equal("schema", grant.SchemaName)
+	r.Equal("view_name", grant.ObjectName)
+	r.Equal("priv", grant.Privilege)
+	r.Equal([]string{}, grant.Roles)
+	r.Equal(true, grant.GrantOption)
+
+	gID = "database_name|schema|view_name|priv|false"
+	grant, err = grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("database_name", grant.ResourceName)
+	r.Equal("schema", grant.SchemaName)
+	r.Equal("view_name", grant.ObjectName)
+	r.Equal("priv", grant.Privilege)
+	r.Equal([]string{}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	gID = "database_name|schema|view_name|priv"
+	grant, err = grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("database_name", grant.ResourceName)
+	r.Equal("schema", grant.SchemaName)
+	r.Equal("view_name", grant.ObjectName)
+	r.Equal("priv", grant.Privilege)
+	r.Equal([]string{}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
 }
