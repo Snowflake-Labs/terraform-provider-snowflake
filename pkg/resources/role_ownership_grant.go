@@ -73,41 +73,37 @@ func CreateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadRoleOwnershipGrant(d, meta)
 }
 
-type roleOwnershipGrant struct {
-	CreatedOn       sql.RawBytes   `db:"created_on"`
-	Name            sql.NullString `db:"name"`
-	IsDefault       sql.NullBool   `db:"is_default"`
-	IsCurrent       sql.NullBool   `db:"is_current"`
-	IsInherited     sql.NullBool   `db:"is_inherited"`
-	AssignedToUsers sql.NullString `db:"assigned_to_users"`
-	GrantedToRoles  sql.NullString `db:"granted_to_roles"`
-	GrantedRoles    sql.NullString `db:"granted_roles"`
-	Owner           sql.NullString `db:"owner"`
-	Comment         sql.NullString `db:"comment"`
-}
-
 func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	log.Println(d.Id())
 	onRoleName := strings.Split(d.Id(), "|")[0]
-	toRoleName := strings.Split(d.Id(), "|")[1]
+	// toRoleName := strings.Split(d.Id(), "|")[1]
 	currentGrants := strings.Split(d.Id(), "|")[2]
 
-	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", onRoleName))
-	err := row.StructScan(&roleOwnershipGrant{})
+	stmt := fmt.Sprintf("SHOW ROLES LIKE '%s'", onRoleName)
+	row := snowflake.QueryRow(db, stmt)
+
+	grant, err := snowflake.ScanRoleOwnershipGrant(row)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] role (%s) not found", onRoleName)
+		log.Printf("[DEBUG] role (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-
-	err = d.Set("on_role_name", onRoleName)
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("to_role_name", toRoleName)
+	if onRoleName != grant.Name.String {
+		return fmt.Errorf("no role found like '%s'", onRoleName)
+	}
+
+	err = d.Set("on_role_name", grant.Name.String)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("to_role_name", grant.Owner.String)
 	if err != nil {
 		return err
 	}
