@@ -16,6 +16,7 @@ func TestValidateIdentifier(t *testing.T) {
 		{"_1", true},
 		{"Aword", true},
 		{"azAZ09_$", true},
+		{"-30-Ab-", true},
 		{"invalidcharacter!", false},
 		{"1startwithnumber", false},
 		{"$startwithdollar", false},
