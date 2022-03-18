@@ -104,7 +104,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Default:     "DISABLE",
 		Description: "Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"DISABLE ", "ENABLE ", "ENABLE_FOR_PRIVILEGE",
+			"DISABLE", "ENABLE", "ENABLE_FOR_PRIVILEGE",
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
