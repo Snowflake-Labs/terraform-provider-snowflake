@@ -33,7 +33,8 @@ func TestDSN(t *testing.T) {
 		password string
 		browserAuth bool
 		region,
-		role string
+		role,
+		host string
 	}
 	tests := []struct {
 		name    string
@@ -41,14 +42,18 @@ func TestDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple", args{"acct", "user", "pass", false, "region", "role"},
+		{"simple", args{"acct", "user", "pass", false, "region", "role", ""},
 			"user:pass@acct.region.snowflakecomputing.com:443?ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
-		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2"},
+		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", ""},
 			"user2:pass2@acct2.snowflakecomputing.com:443?ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
+		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com"},
+			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
+		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com"},
+			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:443?account=acct4&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role)
+			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -84,7 +89,7 @@ func TestOAuthDSN(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role)
+			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, "")
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)

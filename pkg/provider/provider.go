@@ -131,6 +131,12 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
+			"host": {
+				Type:        schema.TypeString,
+				Description: "Supports passing in a custom host value to the snowflake go driver for use with privatelink",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
+			},
 		},
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
@@ -259,6 +265,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	oauthClientSecret := s.Get("oauth_client_secret").(string)
 	oauthEndpoint := s.Get("oauth_endpoint").(string)
 	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
+	host := s.Get("host").(string)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -279,6 +286,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		oauthAccessToken,
 		region,
 		role,
+		host,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
@@ -302,7 +310,8 @@ func DSN(
 	privateKeyPassphrase,
 	oauthAccessToken,
 	region,
-	role string) (string, error) {
+	role,
+	host string) (string, error) {
 
 	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -315,6 +324,12 @@ func DSN(
 		User:    user,
 		Region:  region,
 		Role:    role,
+	}
+
+	// If host is set trust it and do not use the region value
+	if host != "" {
+		config.Region = ""
+		config.Host = host
 	}
 
 	if privateKeyPath != "" {
