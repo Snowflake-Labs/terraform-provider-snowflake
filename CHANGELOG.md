@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.28.8](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.7...v0.28.8) (2022-03-18)
+
+
+### BugFixes
+
+* change the function_grant documentation example privilege to usage ([#901](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/901)) ([70d9550](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/70d9550a7bd05959e709cfbc440d3c72844457ac))
+* remove share feature from stage because it isn't supported ([#918](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/918)) ([7229387](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/7229387e760eab4ba4316448273b000be514704e))
+
 ### [0.28.7](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.6...v0.28.7) (2022-03-15)
 
 
