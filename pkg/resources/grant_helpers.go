@@ -102,6 +102,39 @@ func (gi *grantID) String() (string, error) {
 	return strGrantID, nil
 }
 
+// roleGrantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
+// and returns a grantID object
+// function is needed to support legacy role grant ID structure
+func roleGrantIDFromString(stringID string) (*grantID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = grantIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line per grant")
+	}
+
+	// Len 1 is allowing for legacy IDs where role names are not included
+	if len(lines[0]) < 1 || len(lines[0]) > 6 {
+		return nil, fmt.Errorf("Empty ID or longer than 6 not allowed")
+	}
+
+	// Roles will be empty list if legacy IDs are used, roles from grants are not
+	// used in Read functions, just for uniqueness in IDs of resources
+	roles := []string{}
+	if len(lines[0]) > 5 {
+		roles = strings.Split(lines[0][4], ",")
+	}
+	grantResult := &grantID{
+		ResourceName: lines[0][0],
+		Roles:        roles,
+	}
+	return grantResult, nil
+}
+
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {

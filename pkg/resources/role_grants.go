@@ -109,7 +109,7 @@ type roleGrant struct {
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	log.Println(d.Id())
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := roleGrantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}

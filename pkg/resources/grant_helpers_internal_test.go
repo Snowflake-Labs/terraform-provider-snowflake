@@ -144,3 +144,45 @@ func TestGrantLegacyID(t *testing.T) {
 	r.Equal(false, grant.GrantOption)
 
 }
+
+func TestRoleGrantIDFromString(t *testing.T) {
+	r := require.New(t)
+	gID := "role_a||||role1,role2|"
+	grant, err := roleGrantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_a", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{"role1", "role2"}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	// Testing the legacy ID structure passes as expected
+	gID = "role_a"
+	grant, err = roleGrantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_a", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	gID = "role_b||||role3,role4|false"
+	grant, err = roleGrantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_b", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{"role3", "role4"}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	gID = "role_b||||role3,role4|false|too_long"
+	grant, err = roleGrantIDFromString(gID)
+	r.Equal(fmt.Errorf("Empty ID or longer than 6 not allowed"), err)
+
+	gID = ""
+	grant, err = roleGrantIDFromString(gID)
+	r.Equal(fmt.Errorf("1 line per grant"), err)
+}
