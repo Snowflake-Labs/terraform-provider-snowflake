@@ -41,6 +41,12 @@ func RoleGrants() *schema.Resource {
 				Optional:    true,
 				Description: "Grants role to this specified user.",
 			},
+			"enable_multiple_grants": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+				Default:     false,
+			},
 		},
 
 		Importer: &schema.ResourceImporter{

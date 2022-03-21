@@ -270,12 +270,15 @@ func readGenericGrant(
 	}
 
 	existingRoles := d.Get("roles").(*schema.Set)
+	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
 		// Match to currently assigned roles or let everything through if no specific role grants
-		if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) {
+		if privileges.hasString(priv) && !multipleGrantFeatureFlag {
+			roles = append(roles, roleName)
+		} else if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) && multipleGrantFeatureFlag {
 			roles = append(roles, roleName)
 		}
 	}
