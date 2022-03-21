@@ -125,7 +125,7 @@ func roleGrantIDFromString(stringID string) (*grantID, error) {
 	// Roles will be empty list if legacy IDs are used, roles from grants are not
 	// used in Read functions, just for uniqueness in IDs of resources
 	roles := []string{}
-	if len(lines[0]) > 5 {
+	if len(lines[0]) > 4 {
 		roles = strings.Split(lines[0][4], ",")
 	}
 	grantResult := &grantID{
