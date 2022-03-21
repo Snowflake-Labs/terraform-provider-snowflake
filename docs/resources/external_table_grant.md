@@ -44,6 +44,7 @@ resource snowflake_external_table_grant grant {
 
 ### Optional
 
+- **enable_multiple_grants** (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - **external_table_name** (String) The name of the external table on which to grant privileges immediately (only valid if on_future is false).
 - **id** (String) The ID of this resource.
 - **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.
