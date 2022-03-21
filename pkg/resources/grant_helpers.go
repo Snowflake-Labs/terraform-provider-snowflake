@@ -102,39 +102,6 @@ func (gi *grantID) String() (string, error) {
 	return strGrantID, nil
 }
 
-// roleGrantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
-// and returns a grantID object
-// function is needed to support legacy role grant ID structure
-func roleGrantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = grantIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per grant")
-	}
-
-	// Len 1 is allowing for legacy IDs where role names are not included
-	if len(lines[0]) < 1 || len(lines[0]) > 6 {
-		return nil, fmt.Errorf("Empty ID or longer than 6 not allowed")
-	}
-
-	// Roles will be empty list if legacy IDs are used, roles from grants are not
-	// used in Read functions, just for uniqueness in IDs of resources
-	roles := []string{}
-	if len(lines[0]) > 4 {
-		roles = strings.Split(lines[0][4], ",")
-	}
-	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		Roles:        roles,
-	}
-	return grantResult, nil
-}
-
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
 // and returns a grantID object
 func grantIDFromString(stringID string) (*grantID, error) {
@@ -150,8 +117,8 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	}
 
 	// Len 4 is allowing for legacy IDs where role names are not included
-	if len(lines[0]) < 4 || len(lines[0]) > 6 {
-		return nil, fmt.Errorf("4 to 6 fields allowed in ID")
+	if len(lines[0]) < 1 || len(lines[0]) > 6 {
+		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
 	}
 
 	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
@@ -170,12 +137,21 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
 		grantOption = true
 	}
+	schemaName := ""
+	objectName := ""
+	privilege := ""
+
+	if len(lines[0]) > 3 {
+		schemaName = lines[0][1]
+		objectName = lines[0][2]
+		privilege = lines[0][3]
+	}
 
 	grantResult := &grantID{
 		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ObjectName:   lines[0][2],
-		Privilege:    lines[0][3],
+		SchemaName:   schemaName,
+		ObjectName:   objectName,
+		Privilege:    privilege,
 		Roles:        roles,
 		GrantOption:  grantOption,
 	}

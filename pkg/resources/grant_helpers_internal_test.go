@@ -41,20 +41,10 @@ func TestGrantIDFromString(t *testing.T) {
 	r.Equal("privilege", grant.Privilege)
 	r.Equal(false, grant.GrantOption)
 
-	// Bad ID -- not enough fields
-	id = "database|name-privilege"
-	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
-
-	// Bad ID -- privilege in wrong area
-	id = "database||name-privilege"
-	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
-
 	// too many fields
 	id = "database_name|schema|view_name|privilege|false|2|too-many"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
+	r.Equal(fmt.Errorf("1 to 6 fields allowed in ID"), err)
 
 	// 0 lines
 	id = ""
@@ -145,10 +135,10 @@ func TestGrantLegacyID(t *testing.T) {
 
 }
 
-func TestRoleGrantIDFromString(t *testing.T) {
+func TestGrantIDFromStringRoleGrant(t *testing.T) {
 	r := require.New(t)
 	gID := "role_a||||role1,role2|"
-	grant, err := roleGrantIDFromString(gID)
+	grant, err := grantIDFromString(gID)
 	r.NoError(err)
 	r.Equal("role_a", grant.ResourceName)
 	r.Equal("", grant.SchemaName)
@@ -159,7 +149,7 @@ func TestRoleGrantIDFromString(t *testing.T) {
 
 	// Testing the legacy ID structure passes as expected
 	gID = "role_a"
-	grant, err = roleGrantIDFromString(gID)
+	grant, err = grantIDFromString(gID)
 	r.NoError(err)
 	r.Equal("role_a", grant.ResourceName)
 	r.Equal("", grant.SchemaName)
@@ -169,7 +159,7 @@ func TestRoleGrantIDFromString(t *testing.T) {
 	r.Equal(false, grant.GrantOption)
 
 	gID = "role_b||||role3,role4|false"
-	grant, err = roleGrantIDFromString(gID)
+	grant, err = grantIDFromString(gID)
 	r.NoError(err)
 	r.Equal("role_b", grant.ResourceName)
 	r.Equal("", grant.SchemaName)
@@ -177,12 +167,4 @@ func TestRoleGrantIDFromString(t *testing.T) {
 	r.Equal("", grant.Privilege)
 	r.Equal([]string{"role3", "role4"}, grant.Roles)
 	r.Equal(false, grant.GrantOption)
-
-	gID = "role_b||||role3,role4|false|too_long"
-	grant, err = roleGrantIDFromString(gID)
-	r.Equal(fmt.Errorf("Empty ID or longer than 6 not allowed"), err)
-
-	gID = ""
-	grant, err = roleGrantIDFromString(gID)
-	r.Equal(fmt.Errorf("1 line per grant"), err)
 }
