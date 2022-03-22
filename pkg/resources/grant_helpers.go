@@ -116,7 +116,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		return nil, fmt.Errorf("1 line per grant")
 	}
 
-	// Len 4 is allowing for legacy IDs where role names are not included
+	// Len 1 is allowing for legacy IDs where role names are not included
 	if len(lines[0]) < 1 || len(lines[0]) > 6 {
 		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
 	}
@@ -137,6 +137,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
 		grantOption = true
 	}
+    
 	schemaName := ""
 	objectName := ""
 	privilege := ""
