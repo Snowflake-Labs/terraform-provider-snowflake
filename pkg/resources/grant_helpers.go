@@ -116,9 +116,9 @@ func grantIDFromString(stringID string) (*grantID, error) {
 		return nil, fmt.Errorf("1 line per grant")
 	}
 
-	// Len 4 is allowing for legacy IDs where role names are not included
-	if len(lines[0]) < 4 || len(lines[0]) > 6 {
-		return nil, fmt.Errorf("4 to 6 fields allowed in ID")
+	// Len 1 is allowing for legacy IDs where role names are not included
+	if len(lines[0]) < 1 || len(lines[0]) > 6 {
+		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
 	}
 
 	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
@@ -137,12 +137,22 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
 		grantOption = true
 	}
+    
+	schemaName := ""
+	objectName := ""
+	privilege := ""
+
+	if len(lines[0]) > 3 {
+		schemaName = lines[0][1]
+		objectName = lines[0][2]
+		privilege = lines[0][3]
+	}
 
 	grantResult := &grantID{
 		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ObjectName:   lines[0][2],
-		Privilege:    lines[0][3],
+		SchemaName:   schemaName,
+		ObjectName:   objectName,
+		Privilege:    privilege,
 		Roles:        roles,
 		GrantOption:  grantOption,
 	}
@@ -261,12 +271,15 @@ func readGenericGrant(
 	}
 
 	existingRoles := d.Get("roles").(*schema.Set)
+	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
 		// Match to currently assigned roles or let everything through if no specific role grants
-		if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) {
+		if privileges.hasString(priv) && !multipleGrantFeatureFlag {
+			roles = append(roles, roleName)
+		} else if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) && multipleGrantFeatureFlag {
 			roles = append(roles, roleName)
 		}
 	}

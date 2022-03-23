@@ -40,6 +40,13 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
 // ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant
