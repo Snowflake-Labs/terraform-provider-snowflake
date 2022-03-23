@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.29.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.8...v0.29.0) (2022-03-23)
+
+
+### Features
+
+* Allow in-place renaming of Snowflake tables ([#904](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/904)) ([6ac5188](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/6ac5188f62be3dcaf5a420b0e4277bd161d4d71f))
+* create snowflake_role_ownership_grant resource ([#917](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/917)) ([17de20f](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/17de20f5d5103ccc518ce07cb58a1e9b7cea2865))
+
+
+### BugFixes
+
+* Legacy role grantID to work with new grant functionality ([#941](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/941)) ([5182361](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/5182361c48463325e7ad830702ad58a9617064df))
+
+### [0.28.8](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.7...v0.28.8) (2022-03-18)
+
+
+### BugFixes
+
+* change the function_grant documentation example privilege to usage ([#901](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/901)) ([70d9550](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/70d9550a7bd05959e709cfbc440d3c72844457ac))
+* remove share feature from stage because it isn't supported ([#918](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/918)) ([7229387](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/7229387e760eab4ba4316448273b000be514704e))
+
 ### [0.28.7](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.6...v0.28.7) (2022-03-15)
 
 

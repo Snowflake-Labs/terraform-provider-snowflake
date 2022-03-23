@@ -25,6 +25,7 @@ resource snowflake_account_grant grant {
 
 ### Optional
 
+- **enable_multiple_grants** (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - **id** (String) The ID of this resource.
 - **privilege** (String) The privilege to grant on the account.
 - **roles** (Set of String) Grants privilege to these roles.

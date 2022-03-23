@@ -39,6 +39,9 @@ func TestAcc_SchemaGrant(t *testing.T) {
 				ResourceName:      "snowflake_schema_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
@@ -67,6 +70,9 @@ func TestAcc_SchemaFutureGrants(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.select_on_future_views",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

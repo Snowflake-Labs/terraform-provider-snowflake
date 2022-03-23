@@ -41,20 +41,11 @@ func TestGrantIDFromString(t *testing.T) {
 	r.Equal("privilege", grant.Privilege)
 	r.Equal(false, grant.GrantOption)
 
-	// Bad ID -- not enough fields
-	id = "database|name-privilege"
-	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
-
-	// Bad ID -- privilege in wrong area
-	id = "database||name-privilege"
-	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
-
 	// too many fields
 	id = "database_name|schema|view_name|privilege|false|2|too-many"
 	_, err = grantIDFromString(id)
-	r.Equal(fmt.Errorf("4 to 6 fields allowed in ID"), err)
+	r.Equal(fmt.Errorf("1 to 6 fields allowed in ID"), err)
+
 
 	// 0 lines
 	id = ""
@@ -144,3 +135,38 @@ func TestGrantLegacyID(t *testing.T) {
 	r.Equal(false, grant.GrantOption)
 
 }
+
+func TestGrantIDFromStringRoleGrant(t *testing.T) {
+	r := require.New(t)
+	gID := "role_a||||role1,role2|"
+	grant, err := grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_a", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{"role1", "role2"}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	// Testing the legacy ID structure passes as expected
+	gID = "role_a"
+	grant, err = grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_a", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+
+	gID = "role_b||||role3,role4|false"
+	grant, err = grantIDFromString(gID)
+	r.NoError(err)
+	r.Equal("role_b", grant.ResourceName)
+	r.Equal("", grant.SchemaName)
+	r.Equal("", grant.ObjectName)
+	r.Equal("", grant.Privilege)
+	r.Equal([]string{"role3", "role4"}, grant.Roles)
+	r.Equal(false, grant.GrantOption)
+}
+

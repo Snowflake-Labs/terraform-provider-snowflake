@@ -32,6 +32,9 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 				ResourceName:      "snowflake_warehouse_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

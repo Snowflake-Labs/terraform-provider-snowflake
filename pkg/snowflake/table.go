@@ -625,6 +625,12 @@ func (tb *TableBuilder) ShowPrimaryKeys() string {
 	return fmt.Sprintf(`SHOW PRIMARY KEYS IN TABLE %s`, tb.QualifiedName())
 }
 
+func (tb *TableBuilder) Rename(newName string) string {
+	oldName := tb.QualifiedName()
+	tb.name = newName
+	return fmt.Sprintf(`ALTER TABLE %s RENAME TO %s`, oldName, tb.QualifiedName())
+}
+
 type table struct {
 	CreatedOn           sql.NullString `db:"created_on"`
 	TableName           sql.NullString `db:"name"`

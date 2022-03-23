@@ -22,7 +22,6 @@ var tableSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		ForceNew:    true,
 		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the table is created.",
 	},
 	"schema": {
@@ -596,6 +595,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Table(tableName, dbName, schema)
 
 	db := meta.(*sql.DB)
+	if d.HasChange("name") {
+		name := d.Get("name")
+		q := builder.Rename(name.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating table name on %v", d.Id())
+		}
+		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
+	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
@@ -604,7 +612,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
 		}
 	}
-
 	if d.HasChange("cluster_by") {
 		cb := expandStringList(d.Get("cluster_by").([]interface{}))
 

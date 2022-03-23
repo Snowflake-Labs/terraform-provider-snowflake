@@ -153,7 +153,7 @@ func TestAcc_GrantRole(t *testing.T) {
 				ResourceName:            "snowflake_role_grants.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"roles", "users"},
+				ImportStateVerifyIgnore: []string{"roles", "users", "enable_multiple_grants"},
 			},
 		},
 	})
