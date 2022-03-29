@@ -50,6 +50,7 @@ provider "snowflake" {
 ### Optional
 
 - **browser_auth** (Boolean)
+- **host** (String) Supports passing in a custom host value to the snowflake go driver for use with privatelink
 - **oauth_access_token** (String, Sensitive)
 - **oauth_client_id** (String, Sensitive)
 - **oauth_client_secret** (String, Sensitive)
