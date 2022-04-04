@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.29.0...v0.30.0) (2022-03-29)
+
+
+### Features
+
+* support host option to pass down to driver ([#939](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/939)) ([f75f102](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/f75f102f04d8587a393a6c304ea34ae8d999882d))
+
 ## [0.29.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.28.8...v0.29.0) (2022-03-23)
 
 
