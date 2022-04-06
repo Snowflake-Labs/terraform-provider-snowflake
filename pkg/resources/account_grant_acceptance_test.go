@@ -78,7 +78,7 @@ func TestAcc_AccountGrantManageSupportCases(t *testing.T) {
 			{
 				Config: accountGrantManageSupportCasesConfig(roleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE ORGANIZATION SUPPORT CASES"),
+					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE ACCOUNT SUPPORT CASES"),
 				),
 			},
 		},
@@ -94,7 +94,7 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_account_grant" "test" {
   roles     = [snowflake_role.test.name]
-  privilege = "MANAGE ORGANIZATION SUPPORT CASES"
+  privilege = "MANAGE ACCOUNT SUPPORT CASES"
 }
 `, role)
 }
