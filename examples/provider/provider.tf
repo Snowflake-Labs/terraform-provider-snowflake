@@ -18,4 +18,5 @@ provider "snowflake" {
 
   // optional
   role = "..."
+  host = "..."
 }
