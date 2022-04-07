@@ -23,7 +23,8 @@ func TestAccProcedures(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "database", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "schema", schemaName),
 					resource.TestCheckResourceAttrSet("data.snowflake_procedures.t", "procedures.#"),
-					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "procedures.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "procedures.#", "3"),
+					// Extra 1 in procedure count above due to ASSOCIATE_SEMANTIC_CATEGORY_TAGS appearing in all "SHOW PROCEDURES IN ..." commands
 				),
 			},
 		},
