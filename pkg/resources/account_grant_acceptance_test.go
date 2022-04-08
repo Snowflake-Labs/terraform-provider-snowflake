@@ -68,3 +68,33 @@ resource "snowflake_account_grant" "test" {
 }
 `, role)
 }
+
+func TestAcc_AccountGrantManageSupportCases(t *testing.T) {
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: providers(),
+		Steps: []resource.TestStep{
+			{
+				Config: accountGrantManageSupportCasesConfig(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE ACCOUNT SUPPORT CASES"),
+				),
+			},
+		},
+	})
+}
+
+func accountGrantManageSupportCasesConfig(role string) string {
+	return fmt.Sprintf(`
+
+resource "snowflake_role" "test" {
+  name = "%v"
+}
+
+resource "snowflake_account_grant" "test" {
+  roles     = [snowflake_role.test.name]
+  privilege = "MANAGE ACCOUNT SUPPORT CASES"
+}
+`, role)
+}
