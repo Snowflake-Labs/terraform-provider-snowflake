@@ -137,7 +137,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
 		grantOption = true
 	}
-    
+
 	schemaName := ""
 	objectName := ""
 	privilege := ""

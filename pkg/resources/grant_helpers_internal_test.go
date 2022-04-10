@@ -46,7 +46,6 @@ func TestGrantIDFromString(t *testing.T) {
 	_, err = grantIDFromString(id)
 	r.Equal(fmt.Errorf("1 to 6 fields allowed in ID"), err)
 
-
 	// 0 lines
 	id = ""
 	_, err = grantIDFromString(id)
@@ -169,4 +168,3 @@ func TestGrantIDFromStringRoleGrant(t *testing.T) {
 	r.Equal([]string{"role3", "role4"}, grant.Roles)
 	r.Equal(false, grant.GrantOption)
 }
-
