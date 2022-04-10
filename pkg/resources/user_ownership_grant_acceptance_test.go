@@ -29,6 +29,7 @@ func TestAccUserOwnershipGrant_defaults(t *testing.T) {
 
 func userOwnershipGrantConfig(user, role string) string {
 	return fmt.Sprintf(`
+
 resource "snowflake_user" "user" {
 	name = "%v"
 }
@@ -46,8 +47,10 @@ resource "snowflake_role_grants" "grants" {
 }
 
 resource "snowflake_user_ownership_grant" "grant" {
-	user           = snowflake_user.user.name
-	role           = snowflake_role.role.name
+	user = snowflake_user.user.name
+
+	role = snowflake_role.role.name
+
 	current_grants = "COPY"
 }
 `, user, role)
