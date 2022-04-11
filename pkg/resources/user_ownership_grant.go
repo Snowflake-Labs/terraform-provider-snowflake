@@ -12,7 +12,7 @@ import (
 )
 
 var userOwnershipGrantSchema = map[string]*schema.Schema{
-	"user": {
+	"on_user_name": {
 		Type:        schema.TypeString,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
@@ -21,7 +21,7 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 			return snowflake.ValidateIdentifier(val)
 		},
 	},
-	"role": {
+	"to_role_name": {
 		Type:        schema.TypeString,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
@@ -58,8 +58,8 @@ func UserOwnershipGrant() *schema.Resource {
 
 func CreateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	user := d.Get("user").(string)
-	role := d.Get("role").(string)
+	user := d.Get("on_user_name").(string)
+	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
 	g := snowflake.UserOwnershipGrant(user, currentGrants)
@@ -99,14 +99,14 @@ func ReadUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 	grant.Name.String = strings.TrimPrefix(grant.Name.String, `"`)
 	grant.Name.String = strings.TrimSuffix(grant.Name.String, `"`)
-	err = d.Set("user", grant.Name.String)
+	err = d.Set("on_user_name", grant.Name.String)
 	if err != nil {
 		return err
 	}
 
 	grant.Owner.String = strings.TrimPrefix(grant.Owner.String, `"`)
 	grant.Owner.String = strings.TrimSuffix(grant.Owner.String, `"`)
-	err = d.Set("role", grant.Owner.String)
+	err = d.Set("to_role_name", grant.Owner.String)
 	if err != nil {
 		return err
 	}
@@ -121,8 +121,8 @@ func ReadUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	user := d.Get("user").(string)
-	role := d.Get("role").(string)
+	user := d.Get("on_user_name").(string)
+	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
 	d.SetId(fmt.Sprintf(`%s|%s|%s`, user, role, currentGrants))
@@ -138,7 +138,7 @@ func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	user := d.Get("user").(string)
+	user := d.Get("on_user_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
 	g := snowflake.UserOwnershipGrant(user, currentGrants)

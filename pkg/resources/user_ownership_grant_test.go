@@ -21,8 +21,8 @@ func TestUserOwnershipGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	d := userOwnershipGrant(t, "user1", map[string]interface{}{
-		"user":           "user1",
-		"role":           "role1",
+		"on_user_name":   "user1",
+		"to_role_name":   "role1",
 		"current_grants": "COPY",
 	})
 
@@ -38,8 +38,8 @@ func TestUserOwnershipGrantRead(t *testing.T) {
 	r := require.New(t)
 
 	d := userOwnershipGrant(t, "user1|role1|COPY", map[string]interface{}{
-		"user":           "user1",
-		"role":           "role1",
+		"on_user_name":   "user1",
+		"to_role_name":   "role1",
 		"current_grants": "COPY",
 	})
 
@@ -86,8 +86,8 @@ func TestUserOwnershipGrantDelete(t *testing.T) {
 	r := require.New(t)
 
 	d := userOwnershipGrant(t, "user1|role1|COPY", map[string]interface{}{
-		"user":           "user1",
-		"role":           "role1",
+		"on_user_name":   "user1",
+		"to_role_name":   "role1",
 		"current_grants": "COPY",
 	})
 

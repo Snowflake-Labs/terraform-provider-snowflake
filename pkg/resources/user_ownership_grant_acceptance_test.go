@@ -18,8 +18,8 @@ func TestAccUserOwnershipGrant_defaults(t *testing.T) {
 			{
 				Config: userOwnershipGrantConfig(user, role),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user_ownership_grant.grant", "user", user),
-					resource.TestCheckResourceAttr("snowflake_user_ownership_grant.grant", "role", role),
+					resource.TestCheckResourceAttr("snowflake_user_ownership_grant.grant", "on_user_name", user),
+					resource.TestCheckResourceAttr("snowflake_user_ownership_grant.grant", "to_role_name", role),
 					resource.TestCheckResourceAttr("snowflake_user_ownership_grant.grant", "current_grants", "COPY"),
 				),
 			},
@@ -47,9 +47,9 @@ resource "snowflake_role_grants" "grants" {
 }
 
 resource "snowflake_user_ownership_grant" "grant" {
-	user = snowflake_user.user.name
+	on_user_name = snowflake_user.user.name
 
-	role = snowflake_role.role.name
+	to_role_name = snowflake_role.role.name
 
 	current_grants = "COPY"
 }
