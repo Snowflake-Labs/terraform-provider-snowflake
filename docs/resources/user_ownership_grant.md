@@ -17,8 +17,8 @@ description: |-
 
 ### Required
 
-- **role** (String) The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.
-- **user** (String) The name of the user ownership is granted on.
+- **on_user_name** (String) The name of the user ownership is granted on.
+- **to_role_name** (String) The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.
 
 ### Optional
 
