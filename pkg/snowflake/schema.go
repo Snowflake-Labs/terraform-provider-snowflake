@@ -133,13 +133,17 @@ func (sb *SchemaBuilder) Create() string {
 
 // Rename returns the SQL query that will rename the schema.
 func (sb *SchemaBuilder) Rename(newName string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO "%v"`, sb.QualifiedName(), newName)
+	oldName := sb.QualifiedName()
+	sb.name = newName
+	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO %v`, oldName, sb.QualifiedName())
 }
 
 // Swap returns the SQL query that Swaps all objects (tables, views, etc.) and
 // metadata, including identifiers, between the two specified schemas.
 func (sb *SchemaBuilder) Swap(targetSchema string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH "%v"`, sb.QualifiedName(), targetSchema)
+	sourceSchema := sb.QualifiedName()
+	sb.name = targetSchema
+	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH %v`, sourceSchema, sb.QualifiedName())
 }
 
 // ChangeComment returns the SQL query that will update the comment on the schema.
