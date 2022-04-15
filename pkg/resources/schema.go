@@ -25,7 +25,6 @@ var schemaSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
-		ForceNew:    true,
 	},
 	"database": {
 		Type:        schema.TypeString,
@@ -272,6 +271,16 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.Schema(schema).WithDB(dbName)
 
 	db := meta.(*sql.DB)
+	if d.HasChange("name") {
+		name := d.Get("name")
+		q := builder.Rename(name.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating schema name on %v", d.Id())
+		}
+		d.SetId(fmt.Sprintf("%v|%v", dbName, name.(string)))
+	}
+
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
