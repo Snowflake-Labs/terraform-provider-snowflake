@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.31.0...v0.32.0) (2022-04-14)
+
+
+### Features
+
+* allow in-place renaming of Snowflake schemas ([#972](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/972)) ([2a18b96](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/2a18b967b92f716bfc0ae788be36ce762b8ab2f4))
+
 ## [0.31.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.30.0...v0.31.0) (2022-04-11)
 
 
