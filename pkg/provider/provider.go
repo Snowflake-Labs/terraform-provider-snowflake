@@ -260,6 +260,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_procedures":                         datasources.Procedures(),
 		"snowflake_databases":                          datasources.Databases(),
 		"snowflake_database":                           datasources.Database(),
+		"snowflake_role":                               datasources.Role(),
 	}
 
 	return dataSources
