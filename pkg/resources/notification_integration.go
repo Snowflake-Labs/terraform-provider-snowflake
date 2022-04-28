@@ -34,6 +34,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"direction": &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
+		Default:      "INBOUND",
 		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
 		Description:  "Direction of the cloud messaging with respect to Snowflake (required only for error notifications)",
 		ForceNew:     true,
