@@ -17,6 +17,7 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	storageUri := "azure://great-bucket/great-path/"
 	tenant := "some-guid"
+	gcpNotificationDirection := "INBOUND"
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers(),
@@ -38,11 +39,12 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
-				Config: gcpNotificationIntegrationConfig(accName, pubsubName),
+				Config: gcpNotificationIntegrationConfig(accName, pubsubName, gcpNotificationDirection),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", pubsubName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", gcpNotificationDirection),
 				),
 			},
 		},
@@ -61,13 +63,14 @@ resource "snowflake_notification_integration" "test" {
 	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
 }
 
-func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string) string {
+func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string, gcpNotificationDirection string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
   name                            = "%s"
   notification_provider           = "%s"
   gcp_pubsub_subscription_name    = "%s"
+  direction                       = "%s"
 }
 `
-	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName, gcpNotificationDirection)
 }
