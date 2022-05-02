@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.32.0...v0.33.0) (2022-04-28)
+
+
+### Features
+
+* Add 'snowflake_role' datasource ([#986](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/986)) ([6983d17](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/6983d17a47d0155c82faf95a948ebf02f44ef157))
+
 ## [0.32.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.31.0...v0.32.0) (2022-04-14)
 
 
