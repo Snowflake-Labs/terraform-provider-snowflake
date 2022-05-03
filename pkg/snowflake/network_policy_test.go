@@ -121,3 +121,21 @@ func TestNetworkPolicyUnsetOnUser(t *testing.T) {
 	q := s.UnsetOnUser("testuser")
 	r.Equal(`ALTER USER "testuser" UNSET NETWORK_POLICY`, q)
 }
+
+func TestNetworkPolicyShowOnUser(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.NetworkPolicy("test_network_policy")
+	r.NotNil(s)
+
+	q := s.ShowOnUser("testuser")
+	r.Equal(`SHOW PARAMETERS LIKE 'network_policy' IN USER "testuser"`, q)
+}
+
+func TestNetworkPolicyShowOnAccount(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.NetworkPolicy("test_network_policy")
+	r.NotNil(s)
+
+	q := s.ShowOnAccount()
+	r.Equal(`SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`, q)
+}

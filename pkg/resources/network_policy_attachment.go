@@ -2,6 +2,8 @@ package resources
 
 import (
 	"database/sql"
+	"log"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -70,13 +72,60 @@ func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return nil
+	return ReadNetworkPolicyAttachment(d, meta)
 }
 
 // ReadNetworkPolicyAttachment implements schema.ReadFunc
 func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	// HACK: InternalValidate requires Read to be implemented
-	// There is no way of using SHOW/DESC on Network Policies/Users to pull attachment information, so we can't actually Read
+	db := meta.(*sql.DB)
+	policyName := strings.Replace(d.Id(), "_attachment", "", 1)
+	builder := snowflake.NetworkPolicy(policyName)
+
+	var currentUsers []string
+
+	err := d.Set("network_policy_name", policyName)
+	if err != nil {
+		return err
+	}
+
+	if u, ok := d.GetOk("users"); ok {
+		users := expandStringList(u.(*schema.Set).List())
+		for _, user := range users {
+			row := snowflake.QueryRow(db, builder.ShowOnUser(user))
+			attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
+			if err == sql.ErrNoRows {
+				log.Printf("[DEBUG] network policy (%s) not found on user (%s)", d.Id(), user)
+				continue
+			}
+
+			if attachment.Level.String == "USER" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+				currentUsers = append(currentUsers, user)
+			}
+		}
+
+		err := d.Set("users", currentUsers)
+		if err != nil {
+			return err
+		}
+	}
+
+	isSetOnAccount := false
+	row := snowflake.QueryRow(db, builder.ShowOnAccount())
+	attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] network policy (%s) not found on account", d.Id())
+		isSetOnAccount = false
+	}
+
+	if err == nil && attachment.Level.String == "ACCOUNT" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+		isSetOnAccount = true
+	}
+
+	err = d.Set("set_for_account", isSetOnAccount)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -128,7 +177,7 @@ func UpdateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return nil
+	return ReadNetworkPolicyAttachment(d, meta)
 }
 
 // DeleteNetworkPolicyAttachment implements schema.DeleteFunc
@@ -136,9 +185,11 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 	policyName := d.Get("network_policy_name").(string)
 	d.SetId(policyName + "_attachment")
 
-	err := unsetOnAccount(d, meta)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+	if d.Get("set_for_account").(bool) {
+		err := unsetOnAccount(d, meta)
+		if err != nil {
+			return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+		}
 	}
 
 	if u, ok := d.GetOk("users"); ok {
