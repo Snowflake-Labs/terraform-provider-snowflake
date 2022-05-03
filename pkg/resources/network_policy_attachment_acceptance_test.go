@@ -23,6 +23,14 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{
+				Config: networkPolicyAttachmentConfigSingle(user1, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyName),
+					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "set_for_account", "false"),
+					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "1"),
+				),
+			},
+			{
 				Config: networkPolicyAttachmentConfig(user1, user2, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyName),
@@ -30,14 +38,27 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "2"),
 				),
 			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_network_policy_attachment.test",
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
 		},
 	})
+}
+
+func networkPolicyAttachmentConfigSingle(user1, policyName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_user" "test-user1" {
+	name = "%s"
+}
+
+resource "snowflake_network_policy" "test" {
+	name            = "%v"
+	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
+}
+
+resource "snowflake_network_policy_attachment" "test" {
+	network_policy_name = snowflake_network_policy.test.name
+	set_for_account     = false
+	users               = [snowflake_user.test-user1.name]
+}
+`, user1, policyName)
 }
 
 func networkPolicyAttachmentConfig(user1, user2, policyName string) string {

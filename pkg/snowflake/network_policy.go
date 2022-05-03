@@ -112,6 +112,16 @@ func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
 	return `SHOW NETWORK POLICIES`
 }
 
+//ShowOnUser returns the SQL query that will SHOW network policy set on a specific User
+func (npb *NetworkPolicyBuilder) ShowOnUser(u string) string {
+	return fmt.Sprintf(`SHOW PARAMETERS LIKE 'network_policy' IN USER "%v"`, u)
+}
+
+//ShowOnAccount returns the SQL query that will SHOW network policy set on Account
+func (npb *NetworkPolicyBuilder) ShowOnAccount() string {
+	return `SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`
+}
+
 // IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')
 func IpListToString(ips []string) string {
 	for index, element := range ips {
@@ -129,6 +139,12 @@ type NetworkPolicyStruct struct {
 	EntriesInBlockedIpList sql.NullString `db:"entries_in_blocked_ip_list"`
 }
 
+type NetworkPolicyAttachmentStruct struct {
+	Key   sql.NullString `db:"key"`
+	Value sql.NullString `db:"value"`
+	Level sql.NullString `db:"level"`
+}
+
 // ScanNetworkPolicies takes database rows and converts them to a list of NetworkPolicyStruct pointers
 func ScanNetworkPolicies(rows *sqlx.Rows) ([]*NetworkPolicyStruct, error) {
 	var n []*NetworkPolicyStruct
@@ -142,4 +158,10 @@ func ScanNetworkPolicies(rows *sqlx.Rows) ([]*NetworkPolicyStruct, error) {
 		n = append(n, r)
 	}
 	return n, nil
+}
+
+func ScanNetworkPolicyAttachment(row *sqlx.Row) (*NetworkPolicyAttachmentStruct, error) {
+	r := &NetworkPolicyAttachmentStruct{}
+	err := row.StructScan(r)
+	return r, err
 }
