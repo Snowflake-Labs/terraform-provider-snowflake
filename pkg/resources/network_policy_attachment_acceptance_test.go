@@ -38,6 +38,12 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "2"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_network_policy_attachment.test",
+				ImportState:       true,
+				ImportStateVerify: false,
+			},
 		},
 	})
 }

@@ -126,12 +126,6 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	if len(currentUsers) == 0 && !isSetOnAccount {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		d.SetId("")
-		return nil
-	}
-
 	return nil
 }
 
