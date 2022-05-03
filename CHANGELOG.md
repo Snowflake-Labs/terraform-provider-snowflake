@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.33.1](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.33.0...v0.33.1) (2022-05-03)
+
+
+### BugFixes
+
+* Network Attachment (Set For Account) ([#990](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/990)) ([1dde150](https://github.com/chanzuckerberg/terraform-provider-snowflake/commit/1dde150fdc74937b67d6e94d0be3a1163ac9ebc7))
+
 ## [0.33.0](https://github.com/chanzuckerberg/terraform-provider-snowflake/compare/v0.32.0...v0.33.0) (2022-04-28)
 
 
