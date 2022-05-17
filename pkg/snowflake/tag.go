@@ -12,10 +12,10 @@ import (
 
 // TagBuilder abstracts the creation of SQL queries for a Snowflake tag
 type TagBuilder struct {
-	name    string
-	db      string
-	schema  string
-	comment string
+	name          string
+	db            string
+	schema        string
+	comment       string
 	allowedValues string
 }
 
@@ -63,7 +63,7 @@ func (tb *TagBuilder) WithAllowedValues(av []string) *TagBuilder {
 func AvListToString(avs []string) string {
 	newavs := avs
 	for index, element := range avs {
-		newavs[index] = fmt.Sprintf(`'%v'`,strings.ReplaceAll(element, "'", "\\'"))
+		newavs[index] = fmt.Sprintf(`'%v'`, strings.ReplaceAll(element, "'", "\\'"))
 	}
 
 	str := fmt.Sprintf(strings.Join(newavs, ", "))
@@ -160,10 +160,10 @@ func (tb *TagBuilder) Show() string {
 }
 
 type tag struct {
-	Name         sql.NullString `db:"name"`
-	DatabaseName sql.NullString `db:"database_name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Comment      sql.NullString `db:"comment"`
+	Name          sql.NullString `db:"name"`
+	DatabaseName  sql.NullString `db:"database_name"`
+	SchemaName    sql.NullString `db:"schema_name"`
+	Comment       sql.NullString `db:"comment"`
 	AllowedValues sql.NullString `db:"allowed_values"`
 }
 

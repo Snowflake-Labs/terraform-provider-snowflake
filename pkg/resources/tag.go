@@ -329,10 +329,10 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 
 			newValue := ns
 			addQuery := builder.AddAllowedValues(newValue)
-				err := snowflake.Exec(db, addQuery)
-				if err != nil {
-					return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
-				}
+			err := snowflake.Exec(db, addQuery)
+			if err != nil {
+				return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
+			}
 		} else {
 			q := builder.RemoveAllowedValues()
 			err := snowflake.Exec(db, q)

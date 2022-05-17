@@ -23,10 +23,10 @@ func TestTagCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":     "good_name",
-		"database": "test_db",
-		"schema":   "test_schema",
-		"comment":  "great comment",
+		"name":           "good_name",
+		"database":       "test_db",
+		"schema":         "test_schema",
+		"comment":        "great comment",
 		"allowed_values": []interface{}{"marketing", "finance"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Tag().Schema, in)
@@ -47,10 +47,10 @@ func TestTagUpdate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":     "good_name",
-		"database": "test_db",
-		"schema":   "test_schema",
-		"comment":  "great comment",
+		"name":           "good_name",
+		"database":       "test_db",
+		"schema":         "test_schema",
+		"comment":        "great comment",
 		"allowed_values": []interface{}{"marketing", "finance"},
 	}
 
