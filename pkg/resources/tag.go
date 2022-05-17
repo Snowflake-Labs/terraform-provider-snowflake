@@ -80,13 +80,6 @@ var tagReferenceSchema = &schema.Schema{
 				Optional:    true,
 				Description: "Name of the schema that the tag was created in.",
 			},
-			"allowed_values": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Required:    false,
-				Optional:    true,
-				Description: "List of allowed values for the tag e.g. allowed_values = [`FOO`, `BAR`].",
-			},
 		},
 	},
 }

@@ -23,6 +23,7 @@ description: |-
 
 ### Optional
 
+- **allowed_values** (List of String) List of allowed values for the tag.
 - **comment** (String) Specifies a comment for the tag.
 - **id** (String) The ID of this resource.
 
