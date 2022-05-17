@@ -36,6 +36,51 @@ func TestDatabaseCreate(t *testing.T) {
 	})
 }
 
+func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":    "good_name",
+		"comment": "great comment",
+		"replication_configuration": []interface{}{map[string]interface{}{
+			"accounts":             []interface{}{"acc_to_replicate"},
+			"ignore_edition_check": "true",
+		}},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS acc_to_replicate`).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectRead(mock)
+
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestDatabase_Create_WithReplicationConfig_AndFalseIgnoreEditionCheck(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":    "good_name",
+		"comment": "great comment",
+		"replication_configuration": []interface{}{map[string]interface{}{
+			"accounts":             "good_name_2",
+			"ignore_edition_check": "false",
+		}},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateDatabase(d, db)
+		r.EqualError(err, "error when enabling replication - ignore edition check was set to false")
+	})
+}
+
 func expectRead(mock sqlmock.Sqlmock) {
 	dbRows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
 	mock.ExpectQuery("SHOW DATABASES LIKE 'good_name'").WillReturnRows(dbRows)
@@ -121,6 +166,28 @@ func TestDatabaseCreateFromReplica(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" AS REPLICA OF "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestDatabaseCreateFromReplicaConfig(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name": "good_name",
+		"from_replica_config": []interface{}{map[string]interface{}{
+			"organization_name": "org1",
+			"account_name":      "account1",
+			"primary_db_name":   "primaryDb1",
+		}},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" AS REPLICA OF "org1"."account1"."primaryDb1"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
