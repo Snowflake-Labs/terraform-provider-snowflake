@@ -267,8 +267,8 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
-	av = strings.ReplaceAll(av, "[", "")
-	av = strings.ReplaceAll(av, "]", "")
+	av = strings.Replace(av, "[", "", 1)
+//	av = strings.ReplaceAll(av, "]", "")
 	split := strings.Split(av, ",")
 
 	err = d.Set("allowed_values", split)
