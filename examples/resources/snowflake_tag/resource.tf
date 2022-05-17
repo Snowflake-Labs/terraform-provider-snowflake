@@ -6,5 +6,5 @@ resource "snowflake_tag" "test_tag" {
 
     // Optionals
     comment = "test comment"
-    allowed_values = ["foo", "bar"]  
+    allowed_values = ["foo", "bar"]
 }
