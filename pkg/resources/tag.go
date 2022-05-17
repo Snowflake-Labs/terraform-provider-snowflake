@@ -266,8 +266,8 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-//	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
-	av := strings.Replace(t.AllowedValues.String, "[", "", 1)
+	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
+	av = strings.TrimSuffix(av, "[")
 	av = strings.TrimSuffix(av, "]")
 //	av = strings.ReplaceAll(av, "]", "")
 
