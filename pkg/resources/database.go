@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,6 +49,51 @@ var databaseSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share", "from_database"},
 	},
+	"from_replica_config": {
+		Type:          schema.TypeList,
+		Description:   "Specifies the fully qualified path to a database for replication purposes.",
+		Optional:      true,
+		ForceNew:      true,
+		MaxItems:      1,
+		ConflictsWith: []string{"from_share", "from_database", "from_replica"},
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"organization_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"account_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"primary_db_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	},
+	"replication_configuration": {
+		Type:        schema.TypeList,
+		Description: "When set, specifies the configurations for database replication.",
+		Optional:    true,
+		ForceNew:    true,
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"accounts": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"ignore_edition_check": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+			},
+		},
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -82,7 +128,35 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		return createDatabaseFromReplica(d, meta)
 	}
 
+	if _, ok := d.GetOk("from_replica_config"); ok {
+		return createDatabaseFromReplicaConfig(d, meta)
+	}
+
+	// If set, verify parameters are valid and attempt to enable replication
+	if v, ok := d.GetOk("replication_configuration"); ok {
+		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
+		ignoreEditionCheck := replicationConfiguration["ignore_edition_check"].(bool)
+
+		if ignoreEditionCheck == false {
+			return errors.New("error when enabling replication - ignore edition check was set to false")
+		}
+		resource := CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+		if err := enableReplication(d, meta, replicationConfiguration); err != nil {
+			return errors.Wrapf(err, "error enabling replication - System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
+		}
+		return resource
+	}
+
 	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+}
+
+func enableReplication(d *schema.ResourceData, meta interface{}, replicationConfig map[string]interface{}) error {
+	db := meta.(*sql.DB)
+	primaryDbName := d.Get("name").(string)
+	accounts := replicationConfig["accounts"].([]interface{})
+	accountsToEnableReplication := strings.Join(expandStringList(accounts), ", ")
+	enableReplicationStmt := fmt.Sprintf(`ALTER DATABASE "%s" ENABLE REPLICATION TO ACCOUNTS %s`, primaryDbName, accountsToEnableReplication)
+	return snowflake.Exec(db, enableReplicationStmt)
 }
 
 func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
@@ -137,6 +211,22 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
 	}
 
+	d.SetId(name)
+
+	return ReadDatabase(d, meta)
+}
+
+func createDatabaseFromReplicaConfig(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_replica_config").([]interface{})[0].(map[string]interface{})
+	args := []string{sourceDb["organization_name"].(string), sourceDb["account_name"].(string), sourceDb["primary_db_name"].(string)}
+	dbFullyQualifiedPath := strings.Join(args, "\".\"")
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	builder := snowflake.DatabaseFromReplica(name, dbFullyQualifiedPath)
+	err := snowflake.Exec(db, builder.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+	}
 	d.SetId(name)
 
 	return ReadDatabase(d, meta)
