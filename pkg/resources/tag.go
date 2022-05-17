@@ -42,6 +42,12 @@ var tagSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the tag.",
 	},
+	"allowed_values": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "List of allowed values for the tag.",
+	},
 }
 
 var tagReferenceSchema = &schema.Schema{
@@ -73,6 +79,13 @@ var tagReferenceSchema = &schema.Schema{
 				Required:    false,
 				Optional:    true,
 				Description: "Name of the schema that the tag was created in.",
+			},
+			"allowed_values": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Required:    false,
+				Optional:    true,
+				Description: "List of allowed values for the tag e.g. allowed_values = [`FOO`, `BAR`].",
 			},
 		},
 	},
@@ -189,6 +202,10 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("allowed_values"); ok {
+		builder.WithAllowedValues(expandStringList(v.([]interface{})))
+	}
+
 	q := builder.Create()
 
 	err := snowflake.Exec(db, q)
@@ -256,6 +273,16 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
+	av = strings.ReplaceAll(av, "[", "")
+	av = strings.ReplaceAll(av, "]", "")
+	split := strings.Split(av, ",")
+
+	err = d.Set("allowed_values", split)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -287,7 +314,46 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// If there is change in allowed_values field
+	if d.HasChange("allowed_values") {
+		if _, ok := d.GetOk("allowed_values"); ok {
+			_, n := d.GetChange("allowed_values")
+
+			ns := AvChangeToSliceOfString(n)
+
+			q := builder.RemoveAllowedValues()
+			err1 := snowflake.Exec(db, q)
+			if err1 != nil {
+				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+			}
+
+			newValue := ns
+			addQuery := builder.AddAllowedValues(newValue)
+				err := snowflake.Exec(db, addQuery)
+				if err != nil {
+					return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
+				}
+		} else {
+			q := builder.RemoveAllowedValues()
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+			}
+		}
+	}
+
 	return ReadTag(d, meta)
+}
+
+// Returns the slice of strings for inputed allowed values
+func AvChangeToSliceOfString(avChangeSet interface{}) []string {
+	avList := avChangeSet.([]interface{})
+	newAvs := make([]string, len(avList))
+	for idx, value := range avList {
+		newAvs[idx] = fmt.Sprintf("%v", value)
+	}
+
+	return newAvs
 }
 
 // DeleteTag implements schema.DeleteFunc
