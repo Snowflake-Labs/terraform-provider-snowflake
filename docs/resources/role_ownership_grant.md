@@ -17,12 +17,15 @@ description: |-
 
 ### Required
 
-- **on_role_name** (String) The name of the role ownership is granted on.
-- **to_role_name** (String) The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.
+- `on_role_name` (String) The name of the role ownership is granted on.
+- `to_role_name` (String) The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.
 
 ### Optional
 
-- **current_grants** (String) Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.
-- **id** (String) The ID of this resource.
+- `current_grants` (String) Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

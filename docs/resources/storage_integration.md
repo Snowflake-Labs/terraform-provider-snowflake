@@ -38,29 +38,29 @@ resource snowflake_storage_integration integration {
 
 ### Required
 
-- **name** (String)
-- **storage_allowed_locations** (List of String) Explicitly limits external stages that use the integration to reference one or more storage locations.
-- **storage_provider** (String)
+- `name` (String)
+- `storage_allowed_locations` (List of String) Explicitly limits external stages that use the integration to reference one or more storage locations.
+- `storage_provider` (String)
 
 ### Optional
 
-- **azure_tenant_id** (String)
-- **comment** (String)
-- **enabled** (Boolean)
-- **id** (String) The ID of this resource.
-- **storage_aws_object_acl** (String) "bucket-owner-full-control" Enables support for AWS access control lists (ACLs) to grant the bucket owner full control.
-- **storage_aws_role_arn** (String)
-- **storage_blocked_locations** (List of String) Explicitly prohibits external stages that use the integration from referencing one or more storage locations.
-- **type** (String)
+- `azure_tenant_id` (String)
+- `comment` (String)
+- `enabled` (Boolean)
+- `storage_aws_object_acl` (String) "bucket-owner-full-control" Enables support for AWS access control lists (ACLs) to grant the bucket owner full control.
+- `storage_aws_role_arn` (String)
+- `storage_blocked_locations` (List of String) Explicitly prohibits external stages that use the integration from referencing one or more storage locations.
+- `type` (String)
 
 ### Read-Only
 
-- **azure_consent_url** (String) The consent URL that is used to create an Azure Snowflake service principle inside your tenant.
-- **azure_multi_tenant_app_name** (String) This is the name of the Snowflake client application created for your account.
-- **created_on** (String) Date and time when the storage integration was created.
-- **storage_aws_external_id** (String) The external ID that Snowflake will use when assuming the AWS role.
-- **storage_aws_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
-- **storage_gcp_service_account** (String) This is the name of the Snowflake Google Service Account created for your account.
+- `azure_consent_url` (String) The consent URL that is used to create an Azure Snowflake service principle inside your tenant.
+- `azure_multi_tenant_app_name` (String) This is the name of the Snowflake client application created for your account.
+- `created_on` (String) Date and time when the storage integration was created.
+- `id` (String) The ID of this resource.
+- `storage_aws_external_id` (String) The external ID that Snowflake will use when assuming the AWS role.
+- `storage_aws_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.
+- `storage_gcp_service_account` (String) This is the name of the Snowflake Google Service Account created for your account.
 
 ## Import
 

@@ -34,18 +34,21 @@ resource snowflake_pipe_grant grant {
 
 ### Required
 
-- **database_name** (String) The name of the database containing the current or future pipes on which to grant privileges.
-- **schema_name** (String) The name of the schema containing the current or future pipes on which to grant privileges.
+- `database_name` (String) The name of the database containing the current or future pipes on which to grant privileges.
+- `schema_name` (String) The name of the schema containing the current or future pipes on which to grant privileges.
 
 ### Optional
 
-- **enable_multiple_grants** (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- **id** (String) The ID of this resource.
-- **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future pipes in the given schema. When this is true and no schema_name is provided apply this grant on all future pipes in the given database. The pipe_name field must be unset in order to use on_future.
-- **pipe_name** (String) The name of the pipe on which to grant privileges immediately (only valid if on_future is false).
-- **privilege** (String) The privilege to grant on the current or future pipe.
-- **roles** (Set of String) Grants privilege to these roles.
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future pipes in the given schema. When this is true and no schema_name is provided apply this grant on all future pipes in the given database. The pipe_name field must be unset in order to use on_future.
+- `pipe_name` (String) The name of the pipe on which to grant privileges immediately (only valid if on_future is false).
+- `privilege` (String) The privilege to grant on the current or future pipe.
+- `roles` (Set of String) Grants privilege to these roles.
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

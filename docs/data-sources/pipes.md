@@ -24,26 +24,23 @@ data "snowflake_pipes" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the pipes from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the pipes from.
 
 ### Read-Only
 
-- **pipes** (List of Object) The pipes in the schema (see [below for nested schema](#nestedatt--pipes))
+- `id` (String) The ID of this resource.
+- `pipes` (List of Object) The pipes in the schema (see [below for nested schema](#nestedatt--pipes))
 
 <a id="nestedatt--pipes"></a>
 ### Nested Schema for `pipes`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **integration** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `integration` (String)
+- `name` (String)
+- `schema` (String)
 
 

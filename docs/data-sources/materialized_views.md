@@ -24,25 +24,22 @@ data "snowflake_materialized_views" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the views from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the views from.
 
 ### Read-Only
 
-- **materialized_views** (List of Object) The views in the schema (see [below for nested schema](#nestedatt--materialized_views))
+- `id` (String) The ID of this resource.
+- `materialized_views` (List of Object) The views in the schema (see [below for nested schema](#nestedatt--materialized_views))
 
 <a id="nestedatt--materialized_views"></a>
 ### Nested Schema for `materialized_views`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
 
 
