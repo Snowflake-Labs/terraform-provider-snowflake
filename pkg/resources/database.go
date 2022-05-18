@@ -137,12 +137,12 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
 		ignoreEditionCheck := replicationConfiguration["ignore_edition_check"].(bool)
 
-		if ignoreEditionCheck == false {
-			return errors.New("error when enabling replication - ignore edition check was set to false")
+		if !ignoreEditionCheck {
+			return errors.New("error enabling replication - ignore edition check was set to false")
 		}
 		resource := CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 		if err := enableReplication(d, meta, replicationConfiguration); err != nil {
-			return errors.Wrapf(err, "error enabling replication - System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
+			return errors.Wrapf(err, "error enabling replication - account does not exist or System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
 		}
 		return resource
 	}
@@ -225,7 +225,7 @@ func createDatabaseFromReplicaConfig(d *schema.ResourceData, meta interface{}) e
 	builder := snowflake.DatabaseFromReplica(name, dbFullyQualifiedPath)
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, dbFullyQualifiedPath)
 	}
 	d.SetId(name)
 
