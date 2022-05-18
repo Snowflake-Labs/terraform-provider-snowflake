@@ -1227,7 +1227,7 @@ func TestAcc_TableRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -1241,7 +1241,7 @@ func TestAcc_TableRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 		},
