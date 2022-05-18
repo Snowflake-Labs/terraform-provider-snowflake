@@ -7,7 +7,7 @@ require (
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/chanzuckerberg/go-misc v0.0.0-20220511162418-977461fac2a3
 	github.com/hashicorp/terraform-plugin-docs v0.5.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.13.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mitchellh/go-homedir v1.1.0
@@ -77,7 +77,7 @@ require (
 	github.com/hashicorp/hc-install v0.3.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.12.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.16.1 // indirect
+	github.com/hashicorp/terraform-exec v0.15.0 // indirect
 	github.com/hashicorp/terraform-json v0.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.9.1 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.4.0 // indirect
