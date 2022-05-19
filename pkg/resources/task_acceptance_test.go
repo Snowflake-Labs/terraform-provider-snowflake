@@ -174,7 +174,8 @@ var (
 
 func TestAcc_Task(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfig(initialState),

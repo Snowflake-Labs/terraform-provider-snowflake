@@ -21,7 +21,8 @@ func TestAcc_MaterializedView(t *testing.T) {
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: materializedViewConfig(warehouseName, dbName, schemaName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName)),

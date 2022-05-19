@@ -20,7 +20,8 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 	gcpNotificationDirection := "INBOUND"
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: azureNotificationIntegrationConfig(accName, storageUri, tenant),

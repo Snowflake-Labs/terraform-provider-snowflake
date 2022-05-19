@@ -19,7 +19,8 @@ func TestAccStreamGrant_basic(t *testing.T) {
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: streamGrantConfigExisting(t, databaseName, schemaName, roleName, streamName, tableName),
