@@ -44,34 +44,10 @@ var databaseSchema = map[string]*schema.Schema{
 	},
 	"from_replica": {
 		Type:          schema.TypeString,
-		Description:   "Specify a fully-qualified path to a database to create a replica from.",
+		Description:   "Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of \"<organization_name>\".\"<account_name>\".\"<db_name>\". An example would be: \"myorg1\".\"account1\".\"db1\"",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share", "from_database"},
-	},
-	"from_replica_config": {
-		Type:          schema.TypeList,
-		Description:   "Specifies the fully qualified path to a database for replication purposes.",
-		Optional:      true,
-		ForceNew:      true,
-		MaxItems:      1,
-		ConflictsWith: []string{"from_share", "from_database", "from_replica"},
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"organization_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"account_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"primary_db_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-			},
-		},
 	},
 	"replication_configuration": {
 		Type:        schema.TypeList,
@@ -126,10 +102,6 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("from_replica"); ok {
 		return createDatabaseFromReplica(d, meta)
-	}
-
-	if _, ok := d.GetOk("from_replica_config"); ok {
-		return createDatabaseFromReplicaConfig(d, meta)
 	}
 
 	// If set, verify parameters are valid and attempt to enable replication
@@ -211,22 +183,6 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
 	}
 
-	d.SetId(name)
-
-	return ReadDatabase(d, meta)
-}
-
-func createDatabaseFromReplicaConfig(d *schema.ResourceData, meta interface{}) error {
-	sourceDb := d.Get("from_replica_config").([]interface{})[0].(map[string]interface{})
-	args := []string{sourceDb["organization_name"].(string), sourceDb["account_name"].(string), sourceDb["primary_db_name"].(string)}
-	dbFullyQualifiedPath := strings.Join(args, "\".\"")
-	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.DatabaseFromReplica(name, dbFullyQualifiedPath)
-	err := snowflake.Exec(db, builder.Create())
-	if err != nil {
-		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, dbFullyQualifiedPath)
-	}
 	d.SetId(name)
 
 	return ReadDatabase(d, meta)

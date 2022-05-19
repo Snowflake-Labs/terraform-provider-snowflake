@@ -171,25 +171,3 @@ func TestDatabaseCreateFromReplica(t *testing.T) {
 		r.NoError(err)
 	})
 }
-
-func TestDatabaseCreateFromReplicaConfig(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name": "good_name",
-		"from_replica_config": []interface{}{map[string]interface{}{
-			"organization_name": "org1",
-			"account_name":      "account1",
-			"primary_db_name":   "primaryDb1",
-		}},
-	}
-	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
-	r.NotNil(d)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "good_name" AS REPLICA OF "org1"."account1"."primaryDb1"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectRead(mock)
-		err := resources.CreateDatabase(d, db)
-		r.NoError(err)
-	})
-}

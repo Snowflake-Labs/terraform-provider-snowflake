@@ -37,22 +37,11 @@ resource "snowflake_database" "test2" {
 - **comment** (String)
 - **data_retention_time_in_days** (Number)
 - **from_database** (String) Specify a database to create a clone from.
-- **from_replica** (String) Specify a fully-qualified path to a database to create a replica from.
-- **from_replica_config** (Block List, Max: 1) Specifies the fully qualified path to a database for replication purposes. (see [below for nested schema](#nestedblock--from_replica_config))
+- **from_replica** (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
 - **from_share** (Map of String) Specify a provider and a share in this map to create a database from a share.
 - **id** (String) The ID of this resource.
-- **replication_configuration** (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration)). This will fail if the system parameter has not yet been set to true using the ORGADMIN role. Read [here](https://docs.snowflake.com/en/user-guide/database-replication-config.html#enabling-replication-for-accounts-in-your-organization) for more details
+- **replication_configuration** (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
 - **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
-
-<a id="nestedblock--from_replica_config"></a>
-### Nested Schema for `from_replica_config`
-
-Required:
-
-- **account_name** (String)
-- **organization_name** (String)
-- **primary_db_name** (String)
-
 
 <a id="nestedblock--replication_configuration"></a>
 ### Nested Schema for `replication_configuration`

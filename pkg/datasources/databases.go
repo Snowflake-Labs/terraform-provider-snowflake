@@ -53,6 +53,23 @@ var databasesSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"replication_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accounts": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ignore_edition_check": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
 			},
 		},
 	},
