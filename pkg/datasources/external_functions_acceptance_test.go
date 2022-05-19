@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccExternalFunctions(t *testing.T) {
+func TestAcc_ExternalFunctions(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	apiName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
