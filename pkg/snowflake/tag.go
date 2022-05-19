@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -111,12 +112,12 @@ func (tb *TagBuilder) RemoveComment() string {
 
 // AddAllowedValues returns the SQL query that will add the allowed_values
 func (tb *TagBuilder) AddAllowedValues(avs []string) string {
-	return fmt.Sprintf(`ALTER TAG %v ADD ALLOWED_VALUES %v`, tb.QualifiedName(),  helpers.ListToSnowflakeString(avs))
+	return fmt.Sprintf(`ALTER TAG %v ADD ALLOWED_VALUES %v`, tb.QualifiedName(), helpers.ListToSnowflakeString(avs))
 }
 
 // DropAllowedValues returns the SQL query that will drop the unwanted allowed_values
 func (tb *TagBuilder) DropAllowedValues(davs []string) string {
-	return fmt.Sprintf(`ALTER TAG %v DROP ALLOWED_VALUES %v`, tb.QualifiedName(),  helpers.ListToSnowflakeString(davs))
+	return fmt.Sprintf(`ALTER TAG %v DROP ALLOWED_VALUES %v`, tb.QualifiedName(), helpers.ListToSnowflakeString(davs))
 }
 
 // RemoveAllowedValues returns the SQL query that will remove the allowed_values from the tag.

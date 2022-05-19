@@ -3,6 +3,7 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 )
@@ -29,7 +30,7 @@ func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *Network
 
 // WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder
 func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
-	npb.blockedIpList =  helpers.IpListToSnowflakeString(blockedIps)
+	npb.blockedIpList = helpers.IpListToSnowflakeString(blockedIps)
 	return npb
 }
 
@@ -77,7 +78,7 @@ func (npb *NetworkPolicyBuilder) RemoveComment() string {
 
 // ChangeIpList returns the SQL query that will update the ip list (of the specified listType) on the network policy.
 func (npb *NetworkPolicyBuilder) ChangeIpList(listType string, ips []string) string {
-	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType,  helpers.IpListToSnowflakeString(ips))
+	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, helpers.IpListToSnowflakeString(ips))
 }
 
 // Drop returns the SQL query that will drop a network policy.
