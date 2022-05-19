@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
+	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -56,18 +56,8 @@ func (tb *TagBuilder) WithSchema(schema string) *TagBuilder {
 
 // WithAllowedValues adds the allowed values to the query
 func (tb *TagBuilder) WithAllowedValues(av []string) *TagBuilder {
-	tb.allowedValues = AvListToString(av)
+	tb.allowedValues = helpers.ListToSnowflakeString(av)
 	return tb
-}
-
-func AvListToString(avs []string) string {
-	newavs := avs
-	for index, element := range avs {
-		newavs[index] = fmt.Sprintf(`'%v'`, strings.ReplaceAll(element, "'", "\\'"))
-	}
-
-	str := fmt.Sprintf(strings.Join(newavs, ", "))
-	return str
 }
 
 // Tag returns a pointer to a Builder that abstracts the DDL operations for a tag.
@@ -121,12 +111,12 @@ func (tb *TagBuilder) RemoveComment() string {
 
 // AddAllowedValues returns the SQL query that will add the allowed_values
 func (tb *TagBuilder) AddAllowedValues(avs []string) string {
-	return fmt.Sprintf(`ALTER TAG %v ADD ALLOWED_VALUES %v`, tb.QualifiedName(), AvListToString(avs))
+	return fmt.Sprintf(`ALTER TAG %v ADD ALLOWED_VALUES %v`, tb.QualifiedName(),  helpers.ListToSnowflakeString(avs))
 }
 
 // DropAllowedValues returns the SQL query that will drop the unwanted allowed_values
 func (tb *TagBuilder) DropAllowedValues(davs []string) string {
-	return fmt.Sprintf(`ALTER TAG %v DROP ALLOWED_VALUES %v`, tb.QualifiedName(), AvListToString(davs))
+	return fmt.Sprintf(`ALTER TAG %v DROP ALLOWED_VALUES %v`, tb.QualifiedName(),  helpers.ListToSnowflakeString(davs))
 }
 
 // RemoveAllowedValues returns the SQL query that will remove the allowed_values from the tag.
