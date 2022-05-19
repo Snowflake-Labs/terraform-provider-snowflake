@@ -311,19 +311,18 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 	// If there is change in allowed_values field
 	if d.HasChange("allowed_values") {
 		if _, ok := d.GetOk("allowed_values"); ok {
-			_, n := d.GetChange("allowed_values")
+			_, v := d.GetChange("allowed_values")
 
-			ns := AvChangeToSliceOfString(n)
+			ns := expandAllowedValues(v)
 
 			q := builder.RemoveAllowedValues()
-			err1 := snowflake.Exec(db, q)
-			if err1 != nil {
+			err := snowflake.Exec(db, q)
+			if err != nil {
 				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
 			}
 
-			newValue := ns
-			addQuery := builder.AddAllowedValues(newValue)
-			err := snowflake.Exec(db, addQuery)
+			addQuery := builder.AddAllowedValues(ns)
+			err = snowflake.Exec(db, addQuery)
 			if err != nil {
 				return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
 			}
@@ -340,7 +339,7 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Returns the slice of strings for inputed allowed values
-func AvChangeToSliceOfString(avChangeSet interface{}) []string {
+func expandAllowedValues(avChangeSet interface{}) []string {
 	avList := avChangeSet.([]interface{})
 	newAvs := make([]string, len(avList))
 	for idx, value := range avList {
