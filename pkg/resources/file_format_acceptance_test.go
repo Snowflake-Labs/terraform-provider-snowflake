@@ -55,7 +55,8 @@ func TestAcc_FileFormatJSON(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigJSON(accName),
@@ -90,7 +91,8 @@ func TestAcc_FileFormatAvro(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigAvro(accName),
@@ -114,7 +116,8 @@ func TestAcc_FileFormatORC(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigORC(accName),
@@ -137,7 +140,8 @@ func TestAcc_FileFormatParquet(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigParquet(accName),
@@ -162,7 +166,8 @@ func TestAcc_FileFormatXML(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigXML(accName),

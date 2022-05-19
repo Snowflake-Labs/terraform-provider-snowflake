@@ -44,7 +44,8 @@ func TestAcc_AccountGrantManagedTask(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: accountGrantManagedTaskConfig(roleName),
@@ -74,7 +75,8 @@ func TestAcc_AccountGrantManageSupportCases(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: accountGrantManageSupportCasesConfig(roleName),

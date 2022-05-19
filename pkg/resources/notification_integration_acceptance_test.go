@@ -37,7 +37,8 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 
 	pubsubName := "projects/project-1234/subscriptions/sub2"
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: gcpNotificationIntegrationConfig(accName, pubsubName, gcpNotificationDirection),
