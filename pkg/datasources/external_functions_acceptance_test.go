@@ -15,7 +15,8 @@ func TestAccExternalFunctions(t *testing.T) {
 	apiName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	externalFunctionName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: externalFunctions(databaseName, schemaName, apiName, externalFunctionName),
