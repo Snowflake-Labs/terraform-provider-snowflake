@@ -32,7 +32,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.comment", ""),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -52,7 +52,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.comment", ""),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -124,7 +124,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.nullable", "false"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -165,7 +165,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.nullable", "false"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.keys.0", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.keys.0", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.keys.1", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.name", "new_name"),
 				),
@@ -189,7 +189,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.nullable", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.comment", "some comment"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key.0"),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.nullable", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.comment", ""),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key.0"),
 				),
 			},
 			{
@@ -237,7 +237,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.2.nullable", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.2.comment", "extra"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key.0"),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
 			},
 			{
@@ -273,7 +273,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
 			},
 			{
@@ -291,7 +291,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
 			},
 			{
@@ -309,7 +309,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 		},
@@ -843,7 +843,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf("%v.%v.%v", accName, accName, accName)),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -867,7 +867,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf("%v.%v.%v", accName, accName, accName)),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 		},
@@ -1083,7 +1083,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.start_num", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.step_num", "1"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
@@ -1111,7 +1111,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 					// we've dropped the previous identity column and making sure that adding a new column as an identity works
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.start_num", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.identity.0.step_num", "4"),
-					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key"),
+					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 		},
