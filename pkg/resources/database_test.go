@@ -77,7 +77,7 @@ func TestDatabase_Create_WithReplicationConfig_AndFalseIgnoreEditionCheck(t *tes
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		err := resources.CreateDatabase(d, db)
-		r.EqualError(err, "error when enabling replication - ignore edition check was set to false")
+		r.EqualError(err, "error enabling replication - ignore edition check was set to false")
 	})
 }
 
