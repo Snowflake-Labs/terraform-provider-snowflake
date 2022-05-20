@@ -17,7 +17,7 @@ const (
 	asciiz = 122
 )
 
-// ValidatePassword checks that you password meets the Snowflake Password Policy
+// ValidatePassword checks that your password meets the Snowflake Password Policy
 //
 // Must be at least 8 characters long.
 // Must contain at least 1 digit.
