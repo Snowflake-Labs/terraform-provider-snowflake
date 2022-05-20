@@ -301,7 +301,7 @@ func FileFormat() *schema.Resource {
 		Read:   ReadFileFormat,
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
-		Check:  CheckFileFormat,
+		Exists: FileFormatExists, //lintignore:R003
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{
@@ -1074,8 +1074,8 @@ func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// CheckFileFormat implements schema.ExistsFunc
-func CheckFileFormat(d *schema.ResourceData, meta interface{}) (bool, error) {
+// FileFormatExists implements schema.ExistsFunc
+func FileFormatExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
 	fileFormatID, err := fileFormatIDFromString(d.Id())
 	if err != nil {
