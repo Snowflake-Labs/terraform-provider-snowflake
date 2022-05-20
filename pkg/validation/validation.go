@@ -64,7 +64,7 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 // ValidatePrivilege validates the privilege is in the authorized set.
 // Will also check for the ALL privilege and hopefully provide a helpful error message.
 func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
-	//lintignore:V011
+	//lintignore:V013
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {

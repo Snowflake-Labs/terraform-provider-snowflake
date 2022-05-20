@@ -126,7 +126,7 @@ func NotificationIntegration() *schema.Resource {
 		Update: UpdateNotificationIntegration,
 		Delete: DeleteNotificationIntegration,
 		//lintignore:R003
-		Exists: NotificationIntegrationExists,
+		Exists: CheckNotificationIntegration,
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -397,8 +397,8 @@ func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
 }
 
-// NotificationIntegrationExists implements schema.ExistsFunc
-func NotificationIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+// CheckNotificationIntegration implements schema.ExistsFunc
+func CheckNotificationIntegration(d *schema.ResourceData, meta interface{}) (bool, error) {
 	db := meta.(*sql.DB)
 	id := d.Id()
 

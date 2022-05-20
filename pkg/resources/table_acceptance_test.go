@@ -166,7 +166,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.nullable", "false"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by.0"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.keys.0", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.keys.0", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.keys.1", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "primary_key.0.name", "new_name"),
 				),
