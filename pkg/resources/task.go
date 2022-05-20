@@ -620,7 +620,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		var (
 			q string
 		)
-		_, new := d.GetChange("after")
+		new := d.Get("after")
 
 		if new != "" {
 			q = builder.AddDependency(new.(string))

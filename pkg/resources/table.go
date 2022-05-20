@@ -722,7 +722,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("data_retention_days") {
-		_, ndr := d.GetChange("data_retention_days")
+		ndr := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetention(ndr.(int))
 		err := snowflake.Exec(db, q)
@@ -731,7 +731,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("change_tracking") {
-		_, nct := d.GetChange("change_tracking")
+		nct := d.Get("change_tracking")
 
 		q := builder.ChangeChangeTracking(nct.(bool))
 		err := snowflake.Exec(db, q)
