@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccExternalTable(t *testing.T) {
+func TestAcc_ExternalTable(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
 		t.Skip("Skipping TestAccExternalTable")
 	}

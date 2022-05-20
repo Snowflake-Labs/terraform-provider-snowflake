@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccRoleOwnershipGrant_defaults(t *testing.T) {
+func TestAcc_RoleOwnershipGrant_defaults(t *testing.T) {
 	onRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	toRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 

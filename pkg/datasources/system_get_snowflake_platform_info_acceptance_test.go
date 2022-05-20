@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccSystemGetSnowflakePlatformInfo(t *testing.T) {
+func TestAcc_SystemGetSnowflakePlatformInfo(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,

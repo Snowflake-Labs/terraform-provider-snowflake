@@ -41,7 +41,7 @@ func databases(databaseName, comment string) string {
 	`, databaseName, comment)
 }
 
-func testAccCheckDatabases(databaseName string, comment string) resource.TestCheckFunc {
+func TestAcc_CheckDatabases(databaseName string, comment string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState := s.Modules[0].Resources["data.snowflake_databases.t"]
 		if resourceState == nil {
