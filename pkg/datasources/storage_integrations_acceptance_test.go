@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccStorageIntegrations(t *testing.T) {
+func TestAcc_StorageIntegrations(t *testing.T) {
 	storageIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),

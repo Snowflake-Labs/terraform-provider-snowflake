@@ -46,7 +46,6 @@ var tagSchema = map[string]*schema.Schema{
 
 var tagReferenceSchema = &schema.Schema{
 	Type:        schema.TypeList,
-	Required:    false,
 	Optional:    true,
 	MinItems:    0,
 	Description: "Definitions of a tag to associate with the resource.",
@@ -64,13 +63,11 @@ var tagReferenceSchema = &schema.Schema{
 			},
 			"database": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of the database that the tag was created in.",
 			},
 			"schema": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of the schema that the tag was created in.",
 			},

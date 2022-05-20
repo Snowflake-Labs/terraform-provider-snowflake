@@ -14,7 +14,6 @@ import (
 var userOwnershipGrantSchema = map[string]*schema.Schema{
 	"on_user_name": {
 		Type:        schema.TypeString,
-		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		Description: "The name of the user ownership is granted on.",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
@@ -23,7 +22,6 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 	},
 	"to_role_name": {
 		Type:        schema.TypeString,
-		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
@@ -32,7 +30,6 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 	},
 	"current_grants": {
 		Type:        schema.TypeString,
-		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.",
 		Default:     "COPY",
