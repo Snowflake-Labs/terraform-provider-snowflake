@@ -234,6 +234,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		key := strings.ToLower(param.Key)
+		//lintignore:R001
 		err = d.Set(key, value)
 		if err != nil {
 			return err

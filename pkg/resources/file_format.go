@@ -301,7 +301,8 @@ func FileFormat() *schema.Resource {
 		Read:   ReadFileFormat,
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
-		Exists: FileFormatExists, //lintignore:R003
+		//lintignore:R003
+		Exists: FileFormatExists,
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{

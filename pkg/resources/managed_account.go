@@ -114,6 +114,7 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // wait until the locator is generated.
 func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 	return ReadManagedAccount(d, meta)
 }

@@ -392,6 +392,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for key, value := range fieldParameters {
+			//lintignore:R001
 			err = d.Set(key, value)
 			if err != nil {
 				return err

@@ -22,6 +22,7 @@ const (
 // Must be at least 8 characters long.
 // Must contain at least 1 digit.
 // Must contain at least 1 uppercase letter and 1 lowercase letter.
+//lintignore:V011
 func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	pass, ok := i.(string)
 	if !ok {
@@ -63,6 +64,7 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 // ValidatePrivilege validates the privilege is in the authorized set.
 // Will also check for the ALL privilege and hopefully provide a helpful error message.
 func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
+	//lintignore:V011
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {

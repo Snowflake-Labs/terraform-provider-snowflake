@@ -125,7 +125,8 @@ func NotificationIntegration() *schema.Resource {
 		Read:   ReadNotificationIntegration,
 		Update: UpdateNotificationIntegration,
 		Delete: DeleteNotificationIntegration,
-		Exists: NotificationIntegrationExists, //lintignore:R003
+		//lintignore:R003
+		Exists: NotificationIntegrationExists,
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
