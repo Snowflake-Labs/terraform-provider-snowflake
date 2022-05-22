@@ -23,7 +23,7 @@ data "snowflake_users" "current" {
 
 ### Required
 
-- **pattern** (String) Users pattern for which to return metadata. Please refers to LIKE keyword from snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters
+- **pattern** (String) Users pattern for which to return metadata. Please refer to LIKE keyword from snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters
 
 ### Optional
 

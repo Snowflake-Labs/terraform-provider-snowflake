@@ -13,7 +13,7 @@ var usersSchema = map[string]*schema.Schema{
 	"pattern": {
 		Type:     schema.TypeString,
 		Required: true,
-		Description: "Users pattern for which to return metadata. Please refers to LIKE keyword from " +
+		Description: "Users pattern for which to return metadata. Please refer to LIKE keyword from " +
 			"snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters",
 	},
 	"users": {
