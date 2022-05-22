@@ -2,6 +2,10 @@ package snowflake
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
+
+	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -84,4 +88,21 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 type DescribeUserProp struct {
 	Property string         `db:"property"`
 	Value    sql.NullString `db:"value"`
+}
+
+func ListUsers(pattern string, db *sql.DB) ([]user, error) {
+	stmt := fmt.Sprintf(`SHOW USERS like '%s'`, pattern)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []user{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no users found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }
