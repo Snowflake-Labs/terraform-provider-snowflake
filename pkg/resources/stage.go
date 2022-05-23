@@ -413,29 +413,3 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// StageExists implements schema.ExistsFunc
-func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
-
-	q := snowflake.Stage(stage, dbName, schema).Describe()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}

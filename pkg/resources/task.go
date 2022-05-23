@@ -746,29 +746,3 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// TaskExists implements schema.ExistsFunc
-func TaskExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
-
-	q := snowflake.Task(name, database, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}

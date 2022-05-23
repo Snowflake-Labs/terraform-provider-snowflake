@@ -349,29 +349,3 @@ func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// ExternalTableExists implements schema.ExistsFunc
-func ExternalTableExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	externalTableID, err := externalTableIDFromString(d.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := externalTableID.DatabaseName
-	schema := externalTableID.SchemaName
-	externalTableName := externalTableID.ExternalTableName
-
-	q := snowflake.ExternalTable(externalTableName, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}

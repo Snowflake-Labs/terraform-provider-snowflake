@@ -120,13 +120,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 
 // NotificationIntegration returns a pointer to the resource representing a notification integration
 func NotificationIntegration() *schema.Resource {
-	//lintignore:R003
 	return &schema.Resource{
 		Create: CreateNotificationIntegration,
 		Read:   ReadNotificationIntegration,
 		Update: UpdateNotificationIntegration,
 		Delete: DeleteNotificationIntegration,
-		Exists: CheckNotificationIntegration,
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -395,22 +393,4 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 // DeleteNotificationIntegration implements schema.DeleteFunc
 func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
-}
-
-// CheckNotificationIntegration implements schema.ExistsFunc
-func CheckNotificationIntegration(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.NotificationIntegration(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }

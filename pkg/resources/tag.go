@@ -311,32 +311,6 @@ func DeleteTag(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// SchemaExists implements schema.ExistsFunc
-func TagExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	tagID, err := tagIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := tagID.DatabaseName
-	schemaName := tagID.SchemaName
-	tag := tagID.TagName
-
-	q := snowflake.Tag(tag).WithDB(dbName).WithSchema(schemaName).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 type tags []tag
 
 func (t tags) toSnowflakeTagValues() []snowflake.TagValue {

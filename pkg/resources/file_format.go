@@ -296,13 +296,11 @@ func (ffi *fileFormatID) String() (string, error) {
 
 // FileFormat returns a pointer to the resource representing a file format
 func FileFormat() *schema.Resource {
-	//lintignore:R003
 	return &schema.Resource{
 		Create: CreateFileFormat,
 		Read:   ReadFileFormat,
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
-		Exists: CheckFileFormat,
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{
@@ -1073,32 +1071,6 @@ func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// CheckFileFormat implements schema.ExistsFunc
-func CheckFileFormat(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	fileFormatID, err := fileFormatIDFromString(d.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := fileFormatID.DatabaseName
-	schemaName := fileFormatID.SchemaName
-	fileFormatName := fileFormatID.FileFormatName
-
-	q := snowflake.FileFormat(fileFormatName, dbName, schemaName).Describe()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func fileFormatIDFromString(stringID string) (*fileFormatID, error) {

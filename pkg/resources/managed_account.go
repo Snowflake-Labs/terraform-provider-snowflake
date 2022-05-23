@@ -185,21 +185,3 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
 }
-
-// ManagedAccountExists implements schema.ExistsFunc
-func ManagedAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.ManagedAccount(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
-}

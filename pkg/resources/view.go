@@ -316,28 +316,6 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ViewExists implements schema.ExistsFunc
-func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 // splitViewID takes the <database_name>|<schema_name>|<view_name> ID and returns the database
 // name, schema name and view name.
 func splitViewID(v string) (string, string, string, error) {

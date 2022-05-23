@@ -342,28 +342,3 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// SchemaExists implements schema.ExistsFunc
-func SchemaExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
-
-	q := snowflake.Schema(schema).WithDB(dbName).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}

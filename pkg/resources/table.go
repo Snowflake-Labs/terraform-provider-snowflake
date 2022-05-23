@@ -767,29 +767,3 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// TableExists implements schema.ExistsFunc
-func TableExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
-
-	q := snowflake.Table(tableName, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}
