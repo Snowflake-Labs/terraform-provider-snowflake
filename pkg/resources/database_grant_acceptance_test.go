@@ -31,13 +31,14 @@ func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(
 	}
 }
 
-func TestAccDatabaseGrant_basic(t *testing.T) {
+func TestAcc_DatabaseGrant(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: databaseGrantConfig(dbName, roleName, shareName),

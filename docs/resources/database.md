@@ -41,18 +41,24 @@ resource "snowflake_database" "test3" {
 
 ### Required
 
-- **name** (String)
+- `name` (String)
 
 ### Optional
 
-- **comment** (String)
-- **data_retention_time_in_days** (Number)
-- **from_database** (String) Specify a database to create a clone from.
-- **from_replica** (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
-- **from_share** (Map of String) Specify a provider and a share in this map to create a database from a share.
-- **id** (String) The ID of this resource.
-- **replication_configuration** (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+
+- `comment` (String)
+- `data_retention_time_in_days` (Number)
+- `from_database` (String) Specify a database to create a clone from.
+- `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
+- `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share.
+- `id` (String) The ID of this resource.
+- `replication_configuration` (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
+- `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
+
 
 <a id="nestedblock--replication_configuration"></a>
 ### Nested Schema for `replication_configuration`
@@ -71,13 +77,13 @@ Optional:
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

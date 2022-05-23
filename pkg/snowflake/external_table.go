@@ -119,13 +119,13 @@ func (tb *ExternalTableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE EXTERNAL TABLE %v`, tb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` (`))
+	q.WriteString(` (`)
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
 		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
+	q.WriteString(`)`)
 
 	if len(tb.partitionBys) > 0 {
 		q.WriteString(` PARTITION BY ( `)

@@ -448,32 +448,6 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// FunctionExists implements schema.ExistsFunc
-func FunctionExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pID, err := splitFunctionID(d.Id())
-	if err != nil {
-		return false, err
-	}
-	builder := snowflake.Function(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.FunctionName,
-		pID.ArgTypes,
-	)
-
-	q := builder.Show()
-	showRows, err := snowflake.Query(db, q)
-	if err != nil {
-		return false, err
-	}
-	defer showRows.Close()
-	if showRows.Next() {
-		return true, nil
-	}
-	return false, nil
-}
-
 type functionID struct {
 	DatabaseName string
 	SchemaName   string

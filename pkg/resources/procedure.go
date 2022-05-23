@@ -412,32 +412,6 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ProcedureExists implements schema.ExistsFunc
-func ProcedureExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pID, err := splitProcedureID(d.Id())
-	if err != nil {
-		return false, err
-	}
-	builder := snowflake.Procedure(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.ProcedureName,
-		pID.ArgTypes,
-	)
-
-	q := builder.Show()
-	showRows, err := snowflake.Query(db, q)
-	if err != nil {
-		return false, err
-	}
-	defer showRows.Close()
-	if showRows.Next() {
-		return true, nil
-	}
-	return false, nil
-}
-
 type procedureID struct {
 	DatabaseName  string
 	SchemaName    string

@@ -301,7 +301,10 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	handleTagChanges(db, d, builder)
+	handleErr := handleTagChanges(db, d, builder)
+	if handleErr != nil {
+		return handleErr
+	}
 
 	return ReadMaterializedView(d, meta)
 }

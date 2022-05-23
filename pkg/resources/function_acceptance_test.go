@@ -24,7 +24,8 @@ func TestAcc_Function(t *testing.T) {
 	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: functionConfig(dbName, schemaName, functName),

@@ -24,25 +24,22 @@ data "snowflake_sequences" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the sequences from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the sequences from.
 
 ### Read-Only
 
-- **sequences** (List of Object) The sequences in the schema (see [below for nested schema](#nestedatt--sequences))
+- `id` (String) The ID of this resource.
+- `sequences` (List of Object) The sequences in the schema (see [below for nested schema](#nestedatt--sequences))
 
 <a id="nestedatt--sequences"></a>
 ### Nested Schema for `sequences`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
 
 

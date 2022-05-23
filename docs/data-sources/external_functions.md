@@ -24,26 +24,23 @@ data "snowflake_external_functions" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the external functions from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the external functions from.
 
 ### Read-Only
 
-- **external_functions** (List of Object) The external functions in the schema (see [below for nested schema](#nestedatt--external_functions))
+- `external_functions` (List of Object) The external functions in the schema (see [below for nested schema](#nestedatt--external_functions))
+- `id` (String) The ID of this resource.
 
 <a id="nestedatt--external_functions"></a>
 ### Nested Schema for `external_functions`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **language** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `language` (String)
+- `name` (String)
+- `schema` (String)
 
 

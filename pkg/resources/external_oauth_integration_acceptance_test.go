@@ -14,7 +14,8 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 	integrationType := "AZURE"
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: externalOauthIntegrationConfig(oauthIntName, integrationType),

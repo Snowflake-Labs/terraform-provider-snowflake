@@ -30,29 +30,29 @@ resource "snowflake_external_oauth_integration" "azure" {
 
 ### Required
 
-- **enabled** (Boolean) Specifies whether to initiate operation of the integration or suspend it.
-- **issuer** (String) Specifies the URL to define the OAuth 2.0 authorization server.
-- **name** (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
-- **snowflake_user_mapping_attribute** (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record.
-- **token_user_mapping_claims** (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.
-- **type** (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server.
+- `enabled` (Boolean) Specifies whether to initiate operation of the integration or suspend it.
+- `issuer` (String) Specifies the URL to define the OAuth 2.0 authorization server.
+- `name` (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
+- `snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record.
+- `token_user_mapping_claims` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.
+- `type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server.
 
 ### Optional
 
-- **allowed_roles** (Set of String) Specifies the list of roles that the client can set as the primary role.
-- **any_role_mode** (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.
-- **audience_urls** (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
-- **blocked_roles** (Set of String) Specifies the list of roles that a client cannot set as the primary role. Do not include ACCOUNTADMIN, ORGADMIN or SECURITYADMIN as they are already implicitly enforced and will cause in-place updates.
-- **comment** (String) Specifies a comment for the OAuth integration.
-- **id** (String) The ID of this resource.
-- **jws_keys_urls** (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.
-- **rsa_public_key** (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
-- **rsa_public_key_2** (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
-- **scope_delimiter** (String) Specifies the scope delimiter in the authorization token.
+- `allowed_roles` (Set of String) Specifies the list of roles that the client can set as the primary role.
+- `any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.
+- `audience_urls` (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
+- `blocked_roles` (Set of String) Specifies the list of roles that a client cannot set as the primary role. Do not include ACCOUNTADMIN, ORGADMIN or SECURITYADMIN as they are already implicitly enforced and will cause in-place updates.
+- `comment` (String) Specifies a comment for the OAuth integration.
+- `jws_keys_urls` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.
+- `rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
+- `rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
+- `scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
 
 ### Read-Only
 
-- **created_on** (String) Date and time when the External OAUTH integration was created.
+- `created_on` (String) Date and time when the External OAUTH integration was created.
+- `id` (String) The ID of this resource.
 
 ## Import
 

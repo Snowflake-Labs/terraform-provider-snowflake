@@ -24,26 +24,23 @@ data "snowflake_stages" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the stages from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the stages from.
 
 ### Read-Only
 
-- **stages** (List of Object) The stages in the schema (see [below for nested schema](#nestedatt--stages))
+- `id` (String) The ID of this resource.
+- `stages` (List of Object) The stages in the schema (see [below for nested schema](#nestedatt--stages))
 
 <a id="nestedatt--stages"></a>
 ### Nested Schema for `stages`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
-- **storage_integration** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
+- `storage_integration` (String)
 
 

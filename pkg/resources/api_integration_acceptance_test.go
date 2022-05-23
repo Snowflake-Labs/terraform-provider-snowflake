@@ -19,7 +19,8 @@ func TestAcc_ApiIntegration(t *testing.T) {
 	apiIntName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: apiIntegrationConfig_aws(apiIntName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}),
