@@ -40,6 +40,10 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 
 	for rows.Next() {
 		userProp := &DescribeUserProp{}
+		err := rows.StructScan(userProp)
+		if err != nil {
+			return nil, err
+		}
 
 		// The "DESCRIBE USER ..." command returns the string "null" for null values
 		if userProp.Value.String == "null" {

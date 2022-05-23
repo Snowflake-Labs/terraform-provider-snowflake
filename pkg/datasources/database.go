@@ -111,7 +111,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	if dbData.RetentionTime.Valid {
 		v, err := strconv.Atoi(dbData.RetentionTime.String)
 		if err == nil {
-			d.Set("retention_time", v)
+			retentionTimeErr := d.Set("retention_time", v)
+			if retentionTimeErr != nil {
+				return retentionTimeErr
+			}
 		}
 	}
 	return nil
