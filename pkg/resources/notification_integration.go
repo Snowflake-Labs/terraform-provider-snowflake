@@ -120,12 +120,12 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 
 // NotificationIntegration returns a pointer to the resource representing a notification integration
 func NotificationIntegration() *schema.Resource {
+	//lintignore:R003
 	return &schema.Resource{
 		Create: CreateNotificationIntegration,
 		Read:   ReadNotificationIntegration,
 		Update: UpdateNotificationIntegration,
 		Delete: DeleteNotificationIntegration,
-		//lintignore:R003
 		Exists: CheckNotificationIntegration,
 
 		Schema: notificationIntegrationSchema,

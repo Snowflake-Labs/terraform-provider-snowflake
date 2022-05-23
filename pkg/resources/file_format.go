@@ -296,12 +296,12 @@ func (ffi *fileFormatID) String() (string, error) {
 
 // FileFormat returns a pointer to the resource representing a file format
 func FileFormat() *schema.Resource {
+	//lintignore:R003
 	return &schema.Resource{
 		Create: CreateFileFormat,
 		Read:   ReadFileFormat,
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
-		//lintignore:R003
 		Exists: CheckFileFormat,
 
 		Schema: fileFormatSchema,
