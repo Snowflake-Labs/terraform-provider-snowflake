@@ -24,25 +24,22 @@ data "snowflake_tables" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the tables from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the tables from.
 
 ### Read-Only
 
-- **tables** (List of Object) The tables in the schema (see [below for nested schema](#nestedatt--tables))
+- `id` (String) The ID of this resource.
+- `tables` (List of Object) The tables in the schema (see [below for nested schema](#nestedatt--tables))
 
 <a id="nestedatt--tables"></a>
 ### Nested Schema for `tables`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
 
 

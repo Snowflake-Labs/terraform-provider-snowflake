@@ -76,25 +76,6 @@ func TestResourceMonitorDelete(t *testing.T) {
 	})
 }
 
-func TestResourceMonitorExists(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name": "good_name",
-	}
-
-	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
-	d.SetId("good_name")
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectReadResourceMonitor(mock)
-
-		ok, err := resources.ResourceMonitorExists(d, db)
-		r.NoError(err)
-		r.True(ok)
-	})
-}
-
 func TestResourceMonitorRead(t *testing.T) {
 	r := require.New(t)
 

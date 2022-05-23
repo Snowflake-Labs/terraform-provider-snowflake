@@ -61,8 +61,6 @@ var sequenceSchema = map[string]*schema.Schema{
 	},
 }
 
-var sequenceProperties = []string{"comment", "data_retention_time_in_days"}
-
 type sequenceID struct {
 	DatabaseName string
 	SchemaName   string
@@ -228,7 +226,10 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	sequence, err := snowflake.ScanSequence(row)
-	DeleteSequence(d, meta)
+	deleteSequenceErr := DeleteSequence(d, meta)
+	if deleteSequenceErr != nil {
+		return deleteSequenceErr
+	}
 
 	if i, ok := d.GetOk("increment"); ok {
 		sq.WithIncrement(i.(int))

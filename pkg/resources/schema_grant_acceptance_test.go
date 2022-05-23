@@ -15,7 +15,8 @@ func TestAcc_SchemaGrant(t *testing.T) {
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: schemaGrantConfig(sName, roleName, shareName, false),
@@ -54,7 +55,8 @@ func TestAcc_SchemaFutureGrants(t *testing.T) {
 	roleNameView := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// TABLE AND VIEW FUTURE GRANTS
 			{

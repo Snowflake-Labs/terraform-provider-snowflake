@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccStreamGrant_basic(t *testing.T) {
+func TestAcc_StreamGrant_basic(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -19,7 +19,8 @@ func TestAccStreamGrant_basic(t *testing.T) {
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: streamGrantConfigExisting(t, databaseName, schemaName, roleName, streamName, tableName),
@@ -36,13 +37,14 @@ func TestAccStreamGrant_basic(t *testing.T) {
 	})
 }
 
-func TestAccStreamGrante_future(t *testing.T) {
+func TestAcc_StreamGrant_future(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: streamGrantConfigFuture(t, databaseName, schemaName, roleName),

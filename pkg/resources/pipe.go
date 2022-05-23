@@ -352,29 +352,3 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// PipeExists implements schema.ExistsFunc
-func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
-
-	q := snowflake.Pipe(pipe, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
-}

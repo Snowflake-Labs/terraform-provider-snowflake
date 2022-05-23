@@ -17,7 +17,8 @@ func TestAcc_Share(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: shareConfig(name),

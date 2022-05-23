@@ -17,13 +17,16 @@ description: |-
 
 ### Required
 
-- **database** (String) The database in which to create the tag.
-- **name** (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created.
-- **schema** (String) The schema in which to create the tag.
+- `database` (String) The database in which to create the tag.
+- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created.
+- `schema` (String) The schema in which to create the tag.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the tag.
-- **id** (String) The ID of this resource.
+- `comment` (String) Specifies a comment for the tag.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 
