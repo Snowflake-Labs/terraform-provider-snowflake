@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -114,7 +113,7 @@ func parseArguments(arguments string) (map[string]interface{}, error) {
 	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\) RETURN (?P<return_type>.*)`)
 	matches := r.FindStringSubmatch(arguments)
 	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf(`Could not parse arguments: %v`, arguments))
+		return nil, fmt.Errorf(`could not parse arguments: %v`, arguments)
 	}
 	callableSignatureMap := make(map[string]interface{})
 

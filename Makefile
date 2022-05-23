@@ -20,7 +20,7 @@ all: test docs install
 
 setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.46.2
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 	bash .download-tfproviderlint.sh
 	go get golang.org/x/tools/cmd/goimports

@@ -315,7 +315,10 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 
 	return ReadSchema(d, meta)
 }

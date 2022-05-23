@@ -171,7 +171,7 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 		}
 
 		if task.Predecessors == nil {
-			log.Println(fmt.Sprintf("[DEBUG] found root task: %v", name))
+			log.Printf("[DEBUG] found root task: %v", name)
 			// we only want to deal with suspending the root task when its enabled (started)
 			if task.IsEnabled() {
 				return snowflake.Task(name, database, dbSchema), nil
