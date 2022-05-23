@@ -128,7 +128,7 @@ func NotificationIntegration() *schema.Resource {
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

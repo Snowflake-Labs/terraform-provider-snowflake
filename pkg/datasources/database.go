@@ -76,14 +76,38 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] list database: %v", dbData)
 	d.SetId(dbData.DBName.String)
-	d.Set("comment", dbData.Comment.String)
-	d.Set("owner", dbData.Owner.String)
-	d.Set("is_default", dbData.IsDefault.String == "Y")
-	d.Set("is_current", dbData.IsCurrent.String == "Y")
-	d.Set("origin", dbData.Origin.String)
-	d.Set("created_on", dbData.CreatedOn.String)
-	d.Set("options", dbData.Options.String)
-	d.Set("retention_time", -1)
+	commentErr := d.Set("comment", dbData.Comment.String)
+	if commentErr != nil {
+		return commentErr
+	}
+	ownerErr := d.Set("owner", dbData.Owner.String)
+	if ownerErr != nil {
+		return ownerErr
+	}
+	isDefaultErr := d.Set("is_default", dbData.IsDefault.String == "Y")
+	if isDefaultErr != nil {
+		return isDefaultErr
+	}
+	isCurrentErr := d.Set("is_current", dbData.IsCurrent.String == "Y")
+	if isCurrentErr != nil {
+		return isCurrentErr
+	}
+	originErr := d.Set("origin", dbData.Origin.String)
+	if originErr != nil {
+		return originErr
+	}
+	createdOnErr := d.Set("created_on", dbData.CreatedOn.String)
+	if createdOnErr != nil {
+		return createdOnErr
+	}
+	optionsErr := d.Set("options", dbData.Options.String)
+	if optionsErr != nil {
+		return optionsErr
+	}
+	retentionTimeErr := d.Set("retention_time", -1)
+	if retentionTimeErr != nil {
+		return retentionTimeErr
+	}
 	if dbData.RetentionTime.Valid {
 		v, err := strconv.Atoi(dbData.RetentionTime.String)
 		if err == nil {

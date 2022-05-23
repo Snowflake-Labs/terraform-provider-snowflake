@@ -304,7 +304,7 @@ func FileFormat() *schema.Resource {
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

@@ -739,7 +739,10 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
 	}
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 
 	return ReadTable(d, meta)
 }
@@ -753,10 +756,10 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
+	schemaName := tableID.SchemaName
 	tableName := tableID.TableName
 
-	q := snowflake.Table(tableName, dbName, schema).Drop()
+	q := snowflake.Table(tableName, dbName, schemaName).Drop()
 
 	err = snowflake.Exec(db, q)
 	if err != nil {

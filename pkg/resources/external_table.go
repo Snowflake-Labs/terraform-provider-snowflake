@@ -139,7 +139,7 @@ func ExternalTable() *schema.Resource {
 
 		Schema: externalTableSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

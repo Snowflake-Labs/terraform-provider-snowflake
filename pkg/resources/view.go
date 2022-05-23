@@ -262,7 +262,10 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 	if d.HasChange("tag") {
 		old, new := d.GetChange("tag")
 		removed, added, changed := getTags(old).diffs(getTags(new))
