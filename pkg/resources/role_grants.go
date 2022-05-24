@@ -22,7 +22,6 @@ func RoleGrants() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"role_name": {
 				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {

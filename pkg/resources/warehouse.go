@@ -222,7 +222,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	for _, param := range warehouseParams {
 		log.Printf("[TRACE] %+v\n", param)
 
-		var value interface{} = param.DefaultValue
+		var value interface{}
 		if strings.EqualFold(param.Type, "number") {
 			i, err := strconv.ParseInt(param.Value, 10, 64)
 			if err != nil {
@@ -234,6 +234,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		key := strings.ToLower(param.Key)
+		//lintignore:R001
 		err = d.Set(key, value)
 		if err != nil {
 			return err

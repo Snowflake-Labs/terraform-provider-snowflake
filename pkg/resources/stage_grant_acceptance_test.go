@@ -12,11 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccStageGrant_defaults(t *testing.T) {
+func TestAcc_StageGrant_defaults(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: stageGrantConfig(name),
@@ -87,7 +88,8 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: stageGrantConfigFuture(t, databaseName, schemaName, roleName),

@@ -300,7 +300,6 @@ type TableBuilder struct {
 	primaryKey              PrimaryKey
 	dataRetentionTimeInDays int
 	changeTracking          bool
-	defaultDDLCollation     string
 	tags                    []TagValue
 }
 

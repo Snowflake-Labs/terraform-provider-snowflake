@@ -24,26 +24,23 @@ data "snowflake_streams" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the streams from.
-- **schema** (String) The schema from which to return the streams from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the streams from.
+- `schema` (String) The schema from which to return the streams from.
 
 ### Read-Only
 
-- **streams** (List of Object) The streams in the schema (see [below for nested schema](#nestedatt--streams))
+- `id` (String) The ID of this resource.
+- `streams` (List of Object) The streams in the schema (see [below for nested schema](#nestedatt--streams))
 
 <a id="nestedatt--streams"></a>
 ### Nested Schema for `streams`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
-- **table** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
+- `table` (String)
 
 

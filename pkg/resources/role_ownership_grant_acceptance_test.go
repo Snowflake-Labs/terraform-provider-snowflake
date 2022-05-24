@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccRoleOwnershipGrant_defaults(t *testing.T) {
+func TestAcc_RoleOwnershipGrant_defaults(t *testing.T) {
 	onRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	toRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: roleOwnershipGrantConfig(onRoleName, toRoleName),

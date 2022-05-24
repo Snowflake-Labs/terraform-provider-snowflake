@@ -171,7 +171,7 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 		}
 
 		if task.Predecessors == nil {
-			log.Println(fmt.Sprintf("[DEBUG] found root task: %v", name))
+			log.Printf("[DEBUG] found root task: %v", name)
 			// we only want to deal with suspending the root task when its enabled (started)
 			if task.IsEnabled() {
 				return snowflake.Task(name, database, dbSchema), nil
@@ -392,6 +392,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for key, value := range fieldParameters {
+			//lintignore:R001
 			err = d.Set(key, value)
 			if err != nil {
 				return err
@@ -620,7 +621,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		var (
 			q string
 		)
-		_, new := d.GetChange("after")
+		new := d.Get("after")
 
 		if new != "" {
 			q = builder.AddDependency(new.(string))
@@ -744,30 +745,4 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// TaskExists implements schema.ExistsFunc
-func TaskExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
-
-	q := snowflake.Task(name, database, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

@@ -24,26 +24,23 @@ data "snowflake_masking_policies" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the maskingPolicies from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the maskingPolicies from.
 
 ### Read-Only
 
-- **masking_policies** (List of Object) The maskingPolicies in the schema (see [below for nested schema](#nestedatt--masking_policies))
+- `id` (String) The ID of this resource.
+- `masking_policies` (List of Object) The maskingPolicies in the schema (see [below for nested schema](#nestedatt--masking_policies))
 
 <a id="nestedatt--masking_policies"></a>
 ### Nested Schema for `masking_policies`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **kind** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `kind` (String)
+- `name` (String)
+- `schema` (String)
 
 

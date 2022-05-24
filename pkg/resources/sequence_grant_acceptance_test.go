@@ -17,7 +17,8 @@ func TestAcc_SequenceFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: sequenceGrantConfigFuture(t, databaseName, schemaName, roleName),

@@ -11,17 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestDatabases(t *testing.T) {
+func TestAcc_Databases(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: databases(databaseName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabases(databaseName, comment),
+					checkDatabases(databaseName, comment),
 				),
 			},
 		},
@@ -40,7 +41,7 @@ func databases(databaseName, comment string) string {
 	`, databaseName, comment)
 }
 
-func testAccCheckDatabases(databaseName string, comment string) resource.TestCheckFunc {
+func checkDatabases(databaseName string, comment string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState := s.Modules[0].Resources["data.snowflake_databases.t"]
 		if resourceState == nil {

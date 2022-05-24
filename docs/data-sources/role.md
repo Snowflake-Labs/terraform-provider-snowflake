@@ -23,14 +23,11 @@ data "snowflake_role" "this" {
 
 ### Required
 
-- **name** (String) The role for which to return metadata.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `name` (String) The role for which to return metadata.
 
 ### Read-Only
 
-- **comment** (String) The comment on the role
+- `comment` (String) The comment on the role
+- `id` (String) The ID of this resource.
 
 

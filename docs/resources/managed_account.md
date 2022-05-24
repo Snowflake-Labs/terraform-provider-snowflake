@@ -30,23 +30,23 @@ resource snowflake_managed_account account {
 
 ### Required
 
-- **admin_name** (String) Identifier, as well as login name, for the initial user in the managed account. This user serves as the account administrator for the account.
-- **admin_password** (String, Sensitive) Password for the initial user in the managed account.
-- **name** (String) Identifier for the managed account; must be unique for your account.
+- `admin_name` (String) Identifier, as well as login name, for the initial user in the managed account. This user serves as the account administrator for the account.
+- `admin_password` (String, Sensitive) Password for the initial user in the managed account.
+- `name` (String) Identifier for the managed account; must be unique for your account.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the managed account.
-- **id** (String) The ID of this resource.
-- **type** (String) Specifies the type of managed account.
+- `comment` (String) Specifies a comment for the managed account.
+- `type` (String) Specifies the type of managed account.
 
 ### Read-Only
 
-- **cloud** (String) Cloud in which the managed account is located.
-- **created_on** (String) Date and time when the managed account was created.
-- **locator** (String) Display name of the managed account.
-- **region** (String) Snowflake Region in which the managed account is located.
-- **url** (String) URL for accessing the managed account, particularly through the web interface.
+- `cloud` (String) Cloud in which the managed account is located.
+- `created_on` (String) Date and time when the managed account was created.
+- `id` (String) The ID of this resource.
+- `locator` (String) Display name of the managed account.
+- `region` (String) Snowflake Region in which the managed account is located.
+- `url` (String) URL for accessing the managed account, particularly through the web interface.
 
 ## Import
 
