@@ -41,7 +41,7 @@ func TestValidatePrivilege(t *testing.T) {
 	r.Empty(w)
 	r.Len(errs, 1)
 	r.Equal(
-		"the ALL privilege is deprecated, see https://github.com/chanzuckerberg/terraform-provider-snowflake/discussions/318",
+		"the ALL privilege is deprecated, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/318",
 		errs[0].Error(),
 	)
 
