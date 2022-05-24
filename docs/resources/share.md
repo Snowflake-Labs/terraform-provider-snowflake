@@ -24,13 +24,16 @@ resource snowflake_share test {
 
 ### Required
 
-- **name** (String) Specifies the identifier for the share; must be unique for the account in which the share is created.
+- `name` (String) Specifies the identifier for the share; must be unique for the account in which the share is created.
 
 ### Optional
 
-- **accounts** (List of String) A list of accounts to be added to the share.
-- **comment** (String) Specifies a comment for the managed account.
-- **id** (String) The ID of this resource.
+- `accounts` (List of String) A list of accounts to be added to the share.
+- `comment` (String) Specifies a comment for the managed account.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

@@ -61,24 +61,27 @@ resource snowflake_task serverless_task {
 
 ### Required
 
-- **database** (String) The database in which to create the task.
-- **name** (String) Specifies the identifier for the task; must be unique for the database and schema in which the task is created.
-- **schema** (String) The schema in which to create the task.
-- **sql_statement** (String) Any single SQL statement, or a call to a stored procedure, executed when the task runs.
+- `database` (String) The database in which to create the task.
+- `name` (String) Specifies the identifier for the task; must be unique for the database and schema in which the task is created.
+- `schema` (String) The schema in which to create the task.
+- `sql_statement` (String) Any single SQL statement, or a call to a stored procedure, executed when the task runs.
 
 ### Optional
 
-- **after** (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)
-- **comment** (String) Specifies a comment for the task.
-- **enabled** (Boolean) Specifies if the task should be started (enabled) after creation or should remain suspended (default).
-- **error_integration** (String) Specifies the name of the notification integration used for error notifications.
-- **id** (String) The ID of this resource.
-- **schedule** (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)
-- **session_parameters** (Map of String) Specifies session parameters to set for the session when the task runs. A task supports all session parameters.
-- **user_task_managed_initial_warehouse_size** (String) Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)
-- **user_task_timeout_ms** (Number) Specifies the time limit on a single run of the task before it times out (in milliseconds).
-- **warehouse** (String) The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)
-- **when** (String) Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.
+- `after` (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)
+- `comment` (String) Specifies a comment for the task.
+- `enabled` (Boolean) Specifies if the task should be started (enabled) after creation or should remain suspended (default).
+- `error_integration` (String) Specifies the name of the notification integration used for error notifications.
+- `schedule` (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)
+- `session_parameters` (Map of String) Specifies session parameters to set for the session when the task runs. A task supports all session parameters.
+- `user_task_managed_initial_warehouse_size` (String) Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)
+- `user_task_timeout_ms` (Number) Specifies the time limit on a single run of the task before it times out (in milliseconds).
+- `warehouse` (String) The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)
+- `when` (String) Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

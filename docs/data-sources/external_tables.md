@@ -24,25 +24,22 @@ data "snowflake_external_tables" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the external tables from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the external tables from.
 
 ### Read-Only
 
-- **external_tables** (List of Object) The external tables in the schema (see [below for nested schema](#nestedatt--external_tables))
+- `external_tables` (List of Object) The external tables in the schema (see [below for nested schema](#nestedatt--external_tables))
+- `id` (String) The ID of this resource.
 
 <a id="nestedatt--external_tables"></a>
 ### Nested Schema for `external_tables`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
 
 

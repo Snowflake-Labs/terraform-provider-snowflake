@@ -17,30 +17,33 @@ description: |-
 
 ### Required
 
-- **database** (String) The database in which to create the function. Don't use the | character.
-- **name** (String) Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.
-- **return_type** (String) The return type of the function
-- **schema** (String) The schema in which to create the function. Don't use the | character.
-- **statement** (String) Specifies the javascript / java / sql code used to create the function.
+- `database` (String) The database in which to create the function. Don't use the | character.
+- `name` (String) Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.
+- `return_type` (String) The return type of the function
+- `schema` (String) The schema in which to create the function. Don't use the | character.
+- `statement` (String) Specifies the javascript / java / sql code used to create the function.
 
 ### Optional
 
-- **arguments** (Block List) List of the arguments for the function (see [below for nested schema](#nestedblock--arguments))
-- **comment** (String) Specifies a comment for the function.
-- **handler** (String) the handler method for Java function.
-- **id** (String) The ID of this resource.
-- **imports** (List of String) jar files to import for Java function.
-- **language** (String) The language of the statement
-- **null_input_behavior** (String) Specifies the behavior of the function when called with null inputs.
-- **return_behavior** (String) Specifies the behavior of the function when returning results
-- **target_path** (String) the target path for compiled jar file for Java function.
+- `arguments` (Block List) List of the arguments for the function (see [below for nested schema](#nestedblock--arguments))
+- `comment` (String) Specifies a comment for the function.
+- `handler` (String) the handler method for Java function.
+- `imports` (List of String) jar files to import for Java function.
+- `language` (String) The language of the statement
+- `null_input_behavior` (String) Specifies the behavior of the function when called with null inputs.
+- `return_behavior` (String) Specifies the behavior of the function when returning results
+- `target_path` (String) the target path for compiled jar file for Java function.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--arguments"></a>
 ### Nested Schema for `arguments`
 
 Required:
 
-- **name** (String) The argument name
-- **type** (String) The argument type
+- `name` (String) The argument name
+- `type` (String) The argument type
 
 

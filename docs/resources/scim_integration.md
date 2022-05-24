@@ -26,18 +26,18 @@ resource "snowflake_scim_integration" "aad" {
 
 ### Required
 
-- **name** (String) Specifies the name of the SCIM integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
-- **provisioner_role** (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.
-- **scim_client** (String) Specifies the client type for the scim integration
+- `name` (String) Specifies the name of the SCIM integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
+- `provisioner_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.
+- `scim_client` (String) Specifies the client type for the scim integration
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **network_policy** (String) Specifies an existing network policy active for your account. The network policy restricts the list of user IP addresses when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access token. If this parameter is not set, the network policy for the account (if any) is used instead.
+- `network_policy` (String) Specifies an existing network policy active for your account. The network policy restricts the list of user IP addresses when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access token. If this parameter is not set, the network policy for the account (if any) is used instead.
 
 ### Read-Only
 
-- **created_on** (String) Date and time when the SCIM integration was created.
+- `created_on` (String) Date and time when the SCIM integration was created.
+- `id` (String) The ID of this resource.
 
 ## Import
 

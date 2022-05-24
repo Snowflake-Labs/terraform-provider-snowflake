@@ -24,25 +24,22 @@ data "snowflake_row_access_policies" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the row access policyfrom.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the row access policyfrom.
 
 ### Read-Only
 
-- **row_access_policies** (List of Object) The row access policy in the schema (see [below for nested schema](#nestedatt--row_access_policies))
+- `id` (String) The ID of this resource.
+- `row_access_policies` (List of Object) The row access policy in the schema (see [below for nested schema](#nestedatt--row_access_policies))
 
 <a id="nestedatt--row_access_policies"></a>
 ### Nested Schema for `row_access_policies`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
 
 
