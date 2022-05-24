@@ -24,26 +24,23 @@ data "snowflake_tasks" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the tasks from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the tasks from.
 
 ### Read-Only
 
-- **tasks** (List of Object) The tasks in the schema (see [below for nested schema](#nestedatt--tasks))
+- `id` (String) The ID of this resource.
+- `tasks` (List of Object) The tasks in the schema (see [below for nested schema](#nestedatt--tasks))
 
 <a id="nestedatt--tasks"></a>
 ### Nested Schema for `tasks`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **schema** (String)
-- **warehouse** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `schema` (String)
+- `warehouse` (String)
 
 

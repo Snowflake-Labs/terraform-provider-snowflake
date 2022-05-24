@@ -152,23 +152,6 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
 }
 
-func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := data.Id()
-
-	stmt := snowflake.User(id).Describe()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
-}
-
 func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()

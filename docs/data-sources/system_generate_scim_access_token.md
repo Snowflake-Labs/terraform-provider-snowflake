@@ -23,14 +23,11 @@ data "snowflake_system_generate_scim_access_token" "scim" {
 
 ### Required
 
-- **integration_name** (String) SCIM Integration Name
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `integration_name` (String) SCIM Integration Name
 
 ### Read-Only
 
-- **access_token** (String) SCIM Access Token
+- `access_token` (String) SCIM Access Token
+- `id` (String) The ID of this resource.
 
 

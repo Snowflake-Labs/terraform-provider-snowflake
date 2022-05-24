@@ -16,9 +16,10 @@ func providers() map[string]*schema.Provider {
 	}
 }
 
-func TestAccSystemGetAWSSNSIAMPolicy_basic(t *testing.T) {
+func TestAcc_SystemGetAWSSNSIAMPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: policyConfig(),

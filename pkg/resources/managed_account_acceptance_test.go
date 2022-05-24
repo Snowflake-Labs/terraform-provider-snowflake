@@ -24,7 +24,8 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: managedAccountConfig(accName, adminName, adminPass),

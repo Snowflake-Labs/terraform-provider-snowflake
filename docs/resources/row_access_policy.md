@@ -30,16 +30,19 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
 
 ### Required
 
-- **database** (String) The database in which to create the row access policy.
-- **name** (String) Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created.
-- **row_access_expression** (String) Specifies the SQL expression. The expression can be any boolean-valued SQL expression.
-- **schema** (String) The schema in which to create the row access policy.
-- **signature** (Map of String) Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.
+- `database` (String) The database in which to create the row access policy.
+- `name` (String) Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created.
+- `row_access_expression` (String) Specifies the SQL expression. The expression can be any boolean-valued SQL expression.
+- `schema` (String) The schema in which to create the row access policy.
+- `signature` (Map of String) Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the row access policy.
-- **id** (String) The ID of this resource.
+- `comment` (String) Specifies a comment for the row access policy.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

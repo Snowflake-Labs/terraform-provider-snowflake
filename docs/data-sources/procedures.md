@@ -24,27 +24,24 @@ data "snowflake_procedures" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the procedures from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the procedures from.
 
 ### Read-Only
 
-- **procedures** (List of Object) The procedures in the schema (see [below for nested schema](#nestedatt--procedures))
+- `id` (String) The ID of this resource.
+- `procedures` (List of Object) The procedures in the schema (see [below for nested schema](#nestedatt--procedures))
 
 <a id="nestedatt--procedures"></a>
 ### Nested Schema for `procedures`
 
 Read-Only:
 
-- **argument_types** (List of String)
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **return_type** (String)
-- **schema** (String)
+- `argument_types` (List of String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `return_type` (String)
+- `schema` (String)
 
 
