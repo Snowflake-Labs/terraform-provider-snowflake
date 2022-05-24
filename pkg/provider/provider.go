@@ -7,9 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/datasources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/db"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"

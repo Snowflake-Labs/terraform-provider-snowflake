@@ -3,7 +3,7 @@ package snowflake_test
 import (
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/stretchr/testify/require"
 )
 
