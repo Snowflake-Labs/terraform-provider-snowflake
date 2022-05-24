@@ -29,7 +29,6 @@ data "snowflake_databases" "this" {}
 
 Read-Only:
 
-
 - `comment` (String)
 - `created_on` (String)
 - `is_current` (Boolean)
@@ -46,7 +45,7 @@ Read-Only:
 
 Read-Only:
 
-- **accounts** (List of String)
-- **ignore_edition_check** (Boolean)
+- `accounts` (List of String)
+- `ignore_edition_check` (Boolean)
 
 

@@ -45,13 +45,11 @@ resource "snowflake_database" "test3" {
 
 ### Optional
 
-
 - `comment` (String)
 - `data_retention_time_in_days` (Number)
 - `from_database` (String) Specify a database to create a clone from.
 - `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
 - `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share.
-- `id` (String) The ID of this resource.
 - `replication_configuration` (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
 - `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
@@ -59,17 +57,16 @@ resource "snowflake_database" "test3" {
 
 - `id` (String) The ID of this resource.
 
-
 <a id="nestedblock--replication_configuration"></a>
 ### Nested Schema for `replication_configuration`
 
 Required:
 
-- **accounts** (List of String)
+- `accounts` (List of String)
 
 Optional:
 
-- **ignore_edition_check** (Boolean)
+- `ignore_edition_check` (Boolean)
 
 
 <a id="nestedblock--tag"></a>
