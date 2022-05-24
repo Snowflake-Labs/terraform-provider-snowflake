@@ -23,32 +23,29 @@ data "snowflake_users" "current" {
 
 ### Required
 
-- **pattern** (String) Users pattern for which to return metadata. Please refer to LIKE keyword from snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `pattern` (String) Users pattern for which to return metadata. Please refer to LIKE keyword from snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters
 
 ### Read-Only
 
-- **users** (List of Object) The users in the database (see [below for nested schema](#nestedatt--users))
+- `id` (String) The ID of this resource.
+- `users` (List of Object) The users in the database (see [below for nested schema](#nestedatt--users))
 
 <a id="nestedatt--users"></a>
 ### Nested Schema for `users`
 
 Read-Only:
 
-- **comment** (String)
-- **default_namespace** (String)
-- **default_role** (String)
-- **default_warehouse** (String)
-- **disabled** (Boolean)
-- **display_name** (String)
-- **email** (String)
-- **first_name** (String)
-- **has_rsa_public_key** (Boolean)
-- **last_name** (String)
-- **login_name** (String)
-- **name** (String)
+- `comment` (String)
+- `default_namespace` (String)
+- `default_role` (String)
+- `default_warehouse` (String)
+- `disabled` (Boolean)
+- `display_name` (String)
+- `email` (String)
+- `first_name` (String)
+- `has_rsa_public_key` (Boolean)
+- `last_name` (String)
+- `login_name` (String)
+- `name` (String)
 
 
