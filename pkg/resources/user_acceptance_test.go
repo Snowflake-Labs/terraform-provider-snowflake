@@ -40,7 +40,8 @@ func TestAcc_User(t *testing.T) {
 	r.NoError(err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: uConfig(prefix, sshkey1, sshkey2),

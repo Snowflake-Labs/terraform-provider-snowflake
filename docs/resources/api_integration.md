@@ -27,26 +27,26 @@ resource "snowflake_api_integration" "api_integration" {
 
 ### Required
 
-- **api_allowed_prefixes** (List of String) Explicitly limits external functions that use the integration to reference one or more HTTPS proxy service endpoints and resources within those proxies.
-- **api_provider** (String) Specifies the HTTPS proxy service type.
-- **name** (String) Specifies the name of the API integration. This name follows the rules for Object Identifiers. The name should be unique among api integrations in your account.
+- `api_allowed_prefixes` (List of String) Explicitly limits external functions that use the integration to reference one or more HTTPS proxy service endpoints and resources within those proxies.
+- `api_provider` (String) Specifies the HTTPS proxy service type.
+- `name` (String) Specifies the name of the API integration. This name follows the rules for Object Identifiers. The name should be unique among api integrations in your account.
 
 ### Optional
 
-- **api_aws_role_arn** (String) ARN of a cloud platform role.
-- **api_blocked_prefixes** (List of String) Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.
-- **azure_ad_application_id** (String) The 'Application (client) id' of the Azure AD app for your remote service.
-- **azure_tenant_id** (String) Specifies the ID for your Office 365 tenant that all Azure API Management instances belong to.
-- **enabled** (Boolean) Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.
-- **id** (String) The ID of this resource.
+- `api_aws_role_arn` (String) ARN of a cloud platform role.
+- `api_blocked_prefixes` (List of String) Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.
+- `azure_ad_application_id` (String) The 'Application (client) id' of the Azure AD app for your remote service.
+- `azure_tenant_id` (String) Specifies the ID for your Office 365 tenant that all Azure API Management instances belong to.
+- `enabled` (Boolean) Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.
 
 ### Read-Only
 
-- **api_aws_external_id** (String) The external ID that Snowflake will use when assuming the AWS role.
-- **api_aws_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
-- **azure_consent_url** (String)
-- **azure_multi_tenant_app_name** (String)
-- **created_on** (String) Date and time when the API integration was created.
+- `api_aws_external_id` (String) The external ID that Snowflake will use when assuming the AWS role.
+- `api_aws_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.
+- `azure_consent_url` (String)
+- `azure_multi_tenant_app_name` (String)
+- `created_on` (String) Date and time when the API integration was created.
+- `id` (String) The ID of this resource.
 
 ## Import
 

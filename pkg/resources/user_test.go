@@ -117,19 +117,6 @@ func TestUserRead(t *testing.T) {
 	})
 }
 
-func TestUserExists(t *testing.T) {
-	r := require.New(t)
-	name := "good_name"
-	d := user(t, name, map[string]interface{}{"name": name})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectReadUser(mock, name)
-		b, err := resources.UserExists(d, db)
-		r.NoError(err)
-		r.True(b)
-	})
-}
-
 func TestUserDelete(t *testing.T) {
 	r := require.New(t)
 

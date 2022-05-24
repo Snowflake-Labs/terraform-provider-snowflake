@@ -17,7 +17,8 @@ func TestAcc_FileFormatGrantFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatGrantConfigFuture(t, databaseName, schemaName, roleName),

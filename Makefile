@@ -20,7 +20,7 @@ all: test docs install
 
 setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 	bash .download-tfproviderlint.sh
 	go get golang.org/x/tools/cmd/goimports
@@ -31,7 +31,7 @@ lint: fmt ## run the fast go linters
 .PHONY: lint
 
 lint-ci: ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee
+	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
 lint-all: fmt ## run the fast go linters

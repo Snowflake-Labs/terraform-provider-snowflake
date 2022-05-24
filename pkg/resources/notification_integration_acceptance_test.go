@@ -10,17 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAcc_NotificationIntegration(t *testing.T) {
+func TestAcc_NotificationAzureIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccNotificationIntegration")
+		t.Skip("Skipping TestAcc_NotificationAzureIntegration")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	storageUri := "azure://great-bucket/great-path/"
 	tenant := "some-guid"
-	gcpNotificationDirection := "INBOUND"
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: azureNotificationIntegrationConfig(accName, storageUri, tenant),
@@ -33,10 +33,19 @@ func TestAcc_NotificationIntegration(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_NotificationGCPIntegration(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_NotificationGCPIntegration")
+	}
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	gcpNotificationDirection := "INBOUND"
 
 	pubsubName := "projects/project-1234/subscriptions/sub2"
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: gcpNotificationIntegrationConfig(accName, pubsubName, gcpNotificationDirection),

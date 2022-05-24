@@ -6,9 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccSystemGetPrivateLinkConfig_aws(t *testing.T) {
+func TestAcc_SystemGetPrivateLinkConfig_aws(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: privateLinkConfig(),

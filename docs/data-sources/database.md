@@ -23,21 +23,18 @@ data "snowflake_database" "this" {
 
 ### Required
 
-- **name** (String) The database from which to return its metadata.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `name` (String) The database from which to return its metadata.
 
 ### Read-Only
 
-- **comment** (String)
-- **created_on** (String)
-- **is_current** (Boolean)
-- **is_default** (Boolean)
-- **options** (String)
-- **origin** (String)
-- **owner** (String)
-- **retention_time** (Number)
+- `comment` (String)
+- `created_on` (String)
+- `id` (String) The ID of this resource.
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `options` (String)
+- `origin` (String)
+- `owner` (String)
+- `retention_time` (Number)
 
 

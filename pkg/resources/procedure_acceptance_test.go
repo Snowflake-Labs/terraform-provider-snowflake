@@ -23,7 +23,8 @@ func TestAcc_Procedure(t *testing.T) {
 	expBody3 := "var X=1\nreturn X\n"
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: procedureConfig(dbName, schemaName, procName),

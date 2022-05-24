@@ -24,26 +24,23 @@ data "snowflake_file_formats" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the file formats from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the file formats from.
 
 ### Read-Only
 
-- **file_formats** (List of Object) The file formats in the schema (see [below for nested schema](#nestedatt--file_formats))
+- `file_formats` (List of Object) The file formats in the schema (see [below for nested schema](#nestedatt--file_formats))
+- `id` (String) The ID of this resource.
 
 <a id="nestedatt--file_formats"></a>
 ### Nested Schema for `file_formats`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **format_type** (String)
-- **name** (String)
-- **schema** (String)
+- `comment` (String)
+- `database` (String)
+- `format_type` (String)
+- `name` (String)
+- `schema` (String)
 
 

@@ -197,24 +197,6 @@ func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
 }
 
-// ShareExists implements schema.ExistsFunc
-func ShareExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.Share(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
-}
-
 // StripAccountFromName removes the accout prefix from a resource (e.g. a share)
 // that returns it (e.g. yt12345.my_share should just be my_share)
 func StripAccountFromName(s string) string {
