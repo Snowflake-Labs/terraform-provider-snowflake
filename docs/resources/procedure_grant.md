@@ -18,14 +18,16 @@ resource snowflake_procedure_grant grant {
   schema_name     = "schema"
   procedure_name  = "procedure"
 
-  arguments {
-    name = "arg1"
-    type = "VARCHAR"
-  }
-  arguments {
-    name = "arg2"
-    type = "DATE"
-  }
+  arguments   = [
+    {
+      "name": "a",
+      "type": "array"
+    },
+    {
+      "name": "b",
+      "type": "string"
+    }
+  ]
   return_type = "string"
 
   privilege = "select"
