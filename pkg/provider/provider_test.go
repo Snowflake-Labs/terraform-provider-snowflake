@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	_ "github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
