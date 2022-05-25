@@ -1,18 +1,5 @@
 # Changelog
 
-## [0.34.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.33.1...v0.34.0) (2022-05-24)
-
-
-### Features
-
-* Adding Database Replication ([#1007](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1007)) ([26aa08e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/26aa08e767be2ee4ed8a588b796845f76a75c02d))
-* Adding users datasource ([#1013](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1013)) ([4cd86e4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4cd86e4abd58292ebf6fdfa0c5f250e7e9de9fcb))
-
-
-### BugFixes
-
-* Update go and docs package ([#1009](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1009)) ([72c3180](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/72c318052ad6c29866cfee01e9a50a1aaed8f6d0))
-
 ### [0.33.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.33.0...v0.33.1) (2022-05-03)
 
 
