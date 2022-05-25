@@ -5,6 +5,14 @@
 
 ### Misc
 
+* **main:** release 0.34.0 ([#1019](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1019)) ([83db3a4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/83db3a4c14ec6f1539fbef55c72ae36b22e76906))
+* release 0.34.0 ([836dfcb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/836dfcb28020519a5c4dee820f61581c65b4f3f2))
+
+## [0.34.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.34.0...v0.34.0) (2022-05-25)
+
+
+### Misc
+
 * release 0.34.0 ([836dfcb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/836dfcb28020519a5c4dee820f61581c65b4f3f2))
 
 ### [0.33.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.33.0...v0.33.1) (2022-05-03)
