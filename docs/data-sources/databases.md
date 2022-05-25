@@ -37,6 +37,15 @@ Read-Only:
 - `options` (String)
 - `origin` (String)
 - `owner` (String)
+- `replication_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--databases--replication_configuration))
 - `retention_time` (Number)
+
+<a id="nestedobjatt--databases--replication_configuration"></a>
+### Nested Schema for `databases.replication_configuration`
+
+Read-Only:
+
+- `accounts` (List of String)
+- `ignore_edition_check` (Boolean)
 
 

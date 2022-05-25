@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -33,6 +33,51 @@ func TestDatabaseCreate(t *testing.T) {
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
+	})
+}
+
+func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":    "good_name",
+		"comment": "great comment",
+		"replication_configuration": []interface{}{map[string]interface{}{
+			"accounts":             []interface{}{"acc_to_replicate"},
+			"ignore_edition_check": "true",
+		}},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS acc_to_replicate`).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectRead(mock)
+
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestDatabase_Create_WithReplicationConfig_AndFalseIgnoreEditionCheck(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":    "good_name",
+		"comment": "great comment",
+		"replication_configuration": []interface{}{map[string]interface{}{
+			"accounts":             "good_name_2",
+			"ignore_edition_check": "false",
+		}},
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateDatabase(d, db)
+		r.EqualError(err, "error enabling replication - ignore edition check was set to false")
 	})
 }
 
