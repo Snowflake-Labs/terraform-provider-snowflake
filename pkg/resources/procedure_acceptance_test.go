@@ -79,6 +79,7 @@ func procedureConfig(db, schema, name string) string {
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
 		return_type = "varchar"
+		language = "JAVASCRIPT"
 		statement = EOF<< 
 		return "Hi"
 		EOF
@@ -93,6 +94,7 @@ func procedureConfig(db, schema, name string) string {
 			type = "varchar"
 		}
 		comment = "Terraform acceptance test"
+		language = "JAVASCRIPT"
 		return_type = "varchar"
 		statement = EOF<<
 		var X=3
@@ -117,10 +119,11 @@ func procedureConfig(db, schema, name string) string {
 		execute_as = "CALLER"
 		return_behavior = "IMMUTABLE"
 		null_input_behavior = "RETURNS NULL ON NULL INPUT"
+		language = "JAVASCRIPT"
 		statement = <<EOT
-var X=1
-return X
-EOT
+		var X=1
+		return X
+		EOT
 	}
 	`, db, schema, name, name, name)
 }
