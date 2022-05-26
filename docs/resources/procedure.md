@@ -28,6 +28,7 @@ resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
   database = snowflake_database.db.name
   schema   = snowflake_schema.schema.name
+  language = "JAVASCRIPT"
   arguments {
     name = "arg1"
     type = "varchar"
@@ -64,6 +65,7 @@ EOT
 - `arguments` (Block List) List of the arguments for the procedure (see [below for nested schema](#nestedblock--arguments))
 - `comment` (String) Specifies a comment for the procedure.
 - `execute_as` (String) Sets execute context - see caller's rights and owner's rights
+- `language` (String) Specifies the language of the stored procedure code.
 - `null_input_behavior` (String) Specifies the behavior of the procedure when called with null inputs.
 - `return_behavior` (String) Specifies the behavior of the function when returning results
 

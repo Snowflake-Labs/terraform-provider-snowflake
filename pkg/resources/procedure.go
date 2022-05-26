@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var procedureLanguages = []string{"JAVASCRIPT", "JAVA", "SCALA", "SQL"}
+
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -69,6 +71,13 @@ var procedureSchema = map[string]*schema.Schema{
 		Description:      "Specifies the javascript code used to create the procedure.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
+	},
+	"language": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      "SQL",
+		ValidateFunc: validation.StringInSlice(procedureLanguages, false),
+		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -157,6 +166,11 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	// Set optionals, default is OWNER
 	if v, ok := d.GetOk("execute_as"); ok {
 		builder.WithExecuteAs(v.(string))
+	}
+
+	// Set optionals, default is SQL
+	if v, ok := d.GetOk("language"); ok {
+		builder.WithLanguage(v.(string))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -259,7 +273,11 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "language":
-			// To ignore
+			if snowflake.Contains(languages, desc.Value.String) {
+				if err = d.Set("language", desc.Value.String); err != nil {
+					return err
+				}
+			}
 		default:
 			log.Printf("[WARN] unexpected procedure property %v returned from Snowflake", desc.Property.String)
 		}
