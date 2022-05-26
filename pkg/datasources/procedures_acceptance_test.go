@@ -51,9 +51,9 @@ resource "snowflake_procedure" "test_proc_simple" {
 	schema   = snowflake_schema.test_schema.name
 	return_type = "VARCHAR"
 	language = "JAVASCRIPT"
-	statement = <<EOT
-	return "Hi"
-	EOT
+	statement = <<-EOF
+		return "Hi"
+	EOF
 }
 
 resource "snowflake_procedure" "test_proc" {
@@ -67,10 +67,10 @@ resource "snowflake_procedure" "test_proc" {
 	comment = "Terraform acceptance test"
 	return_type = "varchar"
 	language = "JAVASCRIPT"
-	statement = <<EOT
-	var X=1
-	return X
-	EOT
+	statement = <<-EOF
+		var X=1
+		return X
+	EOF
 }
 
 data snowflake_procedures "t" {
