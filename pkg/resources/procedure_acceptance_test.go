@@ -79,7 +79,9 @@ func procedureConfig(db, schema, name string) string {
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
 		return_type = "varchar"
-		statement = "return \"Hi\""
+		statement = EOF<< 
+		return "Hi"
+		EOF
 	}
 
 	resource "snowflake_procedure" "test_proc" {
@@ -92,7 +94,10 @@ func procedureConfig(db, schema, name string) string {
 		}
 		comment = "Terraform acceptance test"
 		return_type = "varchar"
-		statement = "var X=3\nreturn X"
+		statement = EOF<<
+		var X=3
+		return X
+		EOF
 	}
 
 	resource "snowflake_procedure" "test_proc_complex" {
