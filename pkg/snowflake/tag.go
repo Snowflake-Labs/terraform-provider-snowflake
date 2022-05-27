@@ -6,16 +6,18 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
 // TagBuilder abstracts the creation of SQL queries for a Snowflake tag
 type TagBuilder struct {
-	name    string
-	db      string
-	schema  string
-	comment string
+	name          string
+	db            string
+	schema        string
+	comment       string
+	allowedValues string
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -53,6 +55,12 @@ func (tb *TagBuilder) WithSchema(schema string) *TagBuilder {
 	return tb
 }
 
+// WithAllowedValues adds the allowed values to the query
+func (tb *TagBuilder) WithAllowedValues(av []string) *TagBuilder {
+	tb.allowedValues = helpers.ListToSnowflakeString(av)
+	return tb
+}
+
 // Tag returns a pointer to a Builder that abstracts the DDL operations for a tag.
 //
 // Supported DDL operations are:
@@ -76,6 +84,10 @@ func (tb *TagBuilder) Create() string {
 
 	q.WriteString(fmt.Sprintf(` TAG %v`, tb.QualifiedName()))
 
+	if tb.allowedValues != "" {
+		q.WriteString(fmt.Sprintf(` ALLOWED_VALUES %v`, tb.allowedValues))
+	}
+
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
@@ -96,6 +108,21 @@ func (tb *TagBuilder) ChangeComment(c string) string {
 // RemoveComment returns the SQL query that will remove the comment on the tag.
 func (tb *TagBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TAG %v UNSET COMMENT`, tb.QualifiedName())
+}
+
+// AddAllowedValues returns the SQL query that will add the allowed_values
+func (tb *TagBuilder) AddAllowedValues(avs []string) string {
+	return fmt.Sprintf(`ALTER TAG %v ADD ALLOWED_VALUES %v`, tb.QualifiedName(), helpers.ListToSnowflakeString(avs))
+}
+
+// DropAllowedValues returns the SQL query that will drop the unwanted allowed_values
+func (tb *TagBuilder) DropAllowedValues(davs []string) string {
+	return fmt.Sprintf(`ALTER TAG %v DROP ALLOWED_VALUES %v`, tb.QualifiedName(), helpers.ListToSnowflakeString(davs))
+}
+
+// RemoveAllowedValues returns the SQL query that will remove the allowed_values from the tag.
+func (tb *TagBuilder) RemoveAllowedValues() string {
+	return fmt.Sprintf(`ALTER TAG %v UNSET ALLOWED_VALUES`, tb.QualifiedName())
 }
 
 // Drop returns the SQL query that will drop a tag.
@@ -124,10 +151,11 @@ func (tb *TagBuilder) Show() string {
 }
 
 type tag struct {
-	Name         sql.NullString `db:"name"`
-	DatabaseName sql.NullString `db:"database_name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Comment      sql.NullString `db:"comment"`
+	Name          sql.NullString `db:"name"`
+	DatabaseName  sql.NullString `db:"database_name"`
+	SchemaName    sql.NullString `db:"schema_name"`
+	Comment       sql.NullString `db:"comment"`
+	AllowedValues sql.NullString `db:"allowed_values"`
 }
 
 type TagValue struct {

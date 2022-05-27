@@ -3,8 +3,8 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -24,13 +24,13 @@ func (npb *NetworkPolicyBuilder) WithComment(c string) *NetworkPolicyBuilder {
 
 // WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder
 func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *NetworkPolicyBuilder {
-	npb.allowedIpList = IpListToString(allowedIps)
+	npb.allowedIpList = helpers.IpListToSnowflakeString(allowedIps)
 	return npb
 }
 
 // WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder
 func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
-	npb.blockedIpList = IpListToString(blockedIps)
+	npb.blockedIpList = helpers.IpListToSnowflakeString(blockedIps)
 	return npb
 }
 
@@ -78,7 +78,7 @@ func (npb *NetworkPolicyBuilder) RemoveComment() string {
 
 // ChangeIpList returns the SQL query that will update the ip list (of the specified listType) on the network policy.
 func (npb *NetworkPolicyBuilder) ChangeIpList(listType string, ips []string) string {
-	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, IpListToString(ips))
+	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, helpers.IpListToSnowflakeString(ips))
 }
 
 // Drop returns the SQL query that will drop a network policy.
@@ -120,15 +120,6 @@ func (npb *NetworkPolicyBuilder) ShowOnUser(u string) string {
 //ShowOnAccount returns the SQL query that will SHOW network policy set on Account
 func (npb *NetworkPolicyBuilder) ShowOnAccount() string {
 	return `SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`
-}
-
-// IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')
-func IpListToString(ips []string) string {
-	for index, element := range ips {
-		ips[index] = fmt.Sprintf(`'%v'`, element)
-	}
-
-	return fmt.Sprintf("(%v)", strings.Join(ips, ", "))
 }
 
 type NetworkPolicyStruct struct {

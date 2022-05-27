@@ -1017,6 +1017,7 @@ resource "snowflake_tag" "test_tag" {
 	name     = "%[2]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
+	allowed_values = ["alv1", "alv2"]
 	comment  = "Terraform acceptance test"
 }
 
@@ -1024,6 +1025,7 @@ resource "snowflake_tag" "test2_tag" {
 	name     = "%[3]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
+	allowed_values = ["alv1", "alv2"]
 	comment  = "Terraform acceptance test"
 }
 
