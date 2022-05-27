@@ -80,7 +80,7 @@ func procedureConfig(db, schema, name string) string {
 		schema   = snowflake_schema.test_schema.name
 		return_type = "varchar"
 		language = "JAVASCRIPT"
-		statement = EOF<<-
+		statement = <<-EOF
 			return "Hi"
 		EOF
 	}
@@ -96,7 +96,7 @@ func procedureConfig(db, schema, name string) string {
 		comment = "Terraform acceptance test"
 		language = "JAVASCRIPT"
 		return_type = "varchar"
-		statement = EOF<<-
+		statement = <<-EOF
 			var X=3
 			return X
 		EOF
