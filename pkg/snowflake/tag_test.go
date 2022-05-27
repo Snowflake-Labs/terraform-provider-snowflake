@@ -19,8 +19,11 @@ func TestTagCreate(t *testing.T) {
 
 	r.Equal(o.Create(), `CREATE TAG "db"."schema"."test"`)
 
+	allowedValues := []string{"marketing", "finance"}
+	o.WithAllowedValues(allowedValues)
+
 	o.WithComment("Yee'haw")
-	r.Equal(`CREATE TAG "db"."schema"."test" COMMENT = 'Yee\'haw'`, o.Create())
+	r.Equal(`CREATE TAG "db"."schema"."test" ALLOWED_VALUES 'marketing', 'finance' COMMENT = 'Yee\'haw'`, o.Create())
 }
 
 func TestTagRename(t *testing.T) {
@@ -39,6 +42,26 @@ func TestTagRemoveComment(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
 	r.Equal(o.RemoveComment(), `ALTER TAG "test" UNSET COMMENT`)
+}
+
+func TestTagAddAllowedValues(t *testing.T) {
+	r := require.New(t)
+	o := Tag("test")
+	avs := []string{"foo", "bar"}
+	r.Equal(o.AddAllowedValues(avs), `ALTER TAG "test" ADD ALLOWED_VALUES 'foo', 'bar'`)
+}
+
+func TestTagDropAllowedValues(t *testing.T) {
+	r := require.New(t)
+	o := Tag("test")
+	avs := []string{"foo"}
+	r.Equal(o.DropAllowedValues(avs), `ALTER TAG "test" DROP ALLOWED_VALUES 'foo'`)
+}
+
+func TestTagRemoveAllowedValues(t *testing.T) {
+	r := require.New(t)
+	o := Tag("test")
+	r.Equal(o.RemoveAllowedValues(), `ALTER TAG "test" UNSET ALLOWED_VALUES`)
 }
 
 func TestTagDrop(t *testing.T) {

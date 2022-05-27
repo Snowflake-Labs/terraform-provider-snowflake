@@ -20,6 +20,7 @@ type ProcedureBuilder struct {
 	args              []map[string]string
 	returnBehavior    string // VOLATILE, IMMUTABLE
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
+	language          string // SQL, JAVASCRIPT, JAVA, SCALA
 	returnType        string
 	executeAs         string
 	comment           string
@@ -83,6 +84,12 @@ func (pb *ProcedureBuilder) WithExecuteAs(s string) *ProcedureBuilder {
 	return pb
 }
 
+// WithLanguage sets the language to SQL, JAVA, SCALA or JAVASCRIPT
+func (pb *ProcedureBuilder) WithLanguage(s string) *ProcedureBuilder {
+	pb.language = s
+	return pb
+}
+
 // WithComment adds a comment to the ProcedureBuilder
 func (pb *ProcedureBuilder) WithComment(c string) *ProcedureBuilder {
 	pb.comment = c
@@ -141,7 +148,9 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 	q.WriteString(`)`)
 
 	q.WriteString(fmt.Sprintf(" RETURNS %v", pb.returnType))
-	q.WriteString(" LANGUAGE javascript")
+	if pb.language != "" {
+		q.WriteString(fmt.Sprintf(" LANGUAGE %v", EscapeString(pb.language)))
+	}
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}

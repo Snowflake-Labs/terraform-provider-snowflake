@@ -13,6 +13,7 @@ resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
   database = snowflake_database.db.name
   schema   = snowflake_schema.schema.name
+  language = "JAVASCRIPT"
   arguments {
     name = "arg1"
     type = "varchar"
