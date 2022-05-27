@@ -18,7 +18,7 @@ func TestAcc_Procedure(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	procName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	expBody1 := "return \"Hi\""
+	expBody1 := "return \"Hi\"\n"
 	expBody2 := "var X=3\nreturn X\n"
 	expBody3 := "var X=1\nreturn X\n"
 
