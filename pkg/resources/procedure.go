@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var procedureLanguages = []string{"JAVASCRIPT", "JAVA", "SCALA", "SQL"}
+var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
@@ -76,7 +76,9 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      "SQL",
-		ValidateFunc: validation.StringInSlice(procedureLanguages, false),
+		// Suppress the diff shown if the values are equal when both compared in lower case.
+		DiffSuppressFunc: DiffTypes,
+		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
 		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
@@ -170,7 +172,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 
 	// Set optionals, default is SQL
 	if v, ok := d.GetOk("language"); ok {
-		builder.WithLanguage(v.(string))
+		builder.WithLanguage(strings.ToUpper(v.(string)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -273,11 +275,10 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "language":
-			if snowflake.Contains(languages, desc.Value.String) {
-				if err = d.Set("language", desc.Value.String); err != nil {
-					return err
-				}
+			if err = d.Set("language", desc.Value.String); err != nil {
+				return err
 			}
+		
 		default:
 			log.Printf("[WARN] unexpected procedure property %v returned from Snowflake", desc.Property.String)
 		}
