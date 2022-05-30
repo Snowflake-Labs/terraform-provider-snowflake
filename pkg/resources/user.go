@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
@@ -132,6 +133,11 @@ var userSchema = map[string]*schema.Schema{
 	//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
 }
 
+func isUserNotExistOrNotAuthorized(errorString string) bool {
+	var userNotExistOrNotAuthorizedRegEx, _ = regexp.Compile("SQL compilation error:User '.*' does not exist or not authorized.")
+	return userNotExistOrNotAuthorizedRegEx.MatchString(strings.ReplaceAll(errorString, "\n", ""))
+}
+
 func User() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateUser,
@@ -159,7 +165,11 @@ func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
 	stmt := snowflake.User(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return false, err
+		if isUserNotExistOrNotAuthorized(err.Error()) {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
 	defer rows.Close()
 
@@ -177,9 +187,10 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	// requires the "MANAGE GRANTS" global privilege
 	stmt := snowflake.User(id).Describe()
 	rows, err := snowflake.Query(db, stmt)
-	if err == sql.ErrNoRows {
+
+	if err != nil && isUserNotExistOrNotAuthorized(err.Error()) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] user (%s) not found", d.Id())
+		log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 		d.SetId("")
 		return nil
 	}
