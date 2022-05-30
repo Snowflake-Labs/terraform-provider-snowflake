@@ -5,7 +5,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 )
@@ -52,6 +52,23 @@ var databasesSchema = map[string]*schema.Schema{
 				"options": {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"replication_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accounts": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ignore_edition_check": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -102,6 +119,9 @@ func ReadDatabases(d *schema.ResourceData, meta interface{}) error {
 		databases = append(databases, dbR)
 
 	}
-	d.Set("databases", databases)
+	databasesErr := d.Set("databases", databases)
+	if databasesErr != nil {
+		return databasesErr
+	}
 	return nil
 }

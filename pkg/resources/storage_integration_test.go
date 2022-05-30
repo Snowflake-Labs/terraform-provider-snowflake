@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -127,23 +127,6 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 		AddRow("STORAGE_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).
 		AddRow("STORAGE_AWS_OBJECT_ACL", "String", "bucket-owner-full-control", nil).
 		AddRow("STORAGE_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
-
-	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
-}
-
-func expectReadStorageIntegrationForGCS(mock sqlmock.Sqlmock) {
-	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
-	).AddRow("test_storage_integration", "EXTERNAL_STAGE", "STORAGE", true, "now")
-	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration'$`).WillReturnRows(showRows)
-
-	descRows := sqlmock.NewRows([]string{
-		"property", "property_type", "property_value", "property_default",
-	}).AddRow("ENABLED", "Boolean", true, false).
-		AddRow("STORAGE_PROVIDER", "String", "GCS", nil).
-		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "gcs://bucket-a/path-a/,gcs://bucket-b/", nil).
-		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "gcs://bucket-c/path-c/,gcs://bucket-d/", nil).
-		AddRow("STORAGE_GCP_SERVICE_ACCOUNT", "String", "random@region-something.iam.google.gcp", nil)
 
 	mock.ExpectQuery(`DESCRIBE STORAGE INTEGRATION "test_storage_integration"$`).WillReturnRows(descRows)
 }

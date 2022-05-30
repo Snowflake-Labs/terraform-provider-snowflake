@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	snowflakeValidation "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -114,6 +114,7 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // wait until the locator is generated.
 func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 	return ReadManagedAccount(d, meta)
 }
@@ -183,22 +184,4 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // DeleteManagedAccount implements schema.DeleteFunc
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
-}
-
-// ManagedAccountExists implements schema.ExistsFunc
-func ManagedAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.ManagedAccount(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }

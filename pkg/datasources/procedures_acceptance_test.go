@@ -9,13 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccProcedures(t *testing.T) {
+func TestAcc_Procedures(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	procedureName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	procedureWithArgumentsName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: procedures(databaseName, schemaName, procedureName, procedureWithArgumentsName),
@@ -49,7 +50,10 @@ resource "snowflake_procedure" "test_proc_simple" {
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
 	return_type = "VARCHAR"
-	statement = "return \"Hi\""
+	language = "JAVASCRIPT"
+	statement = <<-EOF
+		return "Hi"
+	EOF
 }
 
 resource "snowflake_procedure" "test_proc" {
@@ -62,7 +66,11 @@ resource "snowflake_procedure" "test_proc" {
 	}
 	comment = "Terraform acceptance test"
 	return_type = "varchar"
-	statement = "var X=3\nreturn X"
+	language = "JAVASCRIPT"
+	statement = <<-EOF
+		var X=1
+		return X
+	EOF
 }
 
 data snowflake_procedures "t" {

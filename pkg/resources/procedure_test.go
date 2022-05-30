@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,6 +24,7 @@ func prepDummyProcedureResource(t *testing.T) *schema.ResourceData {
 		"schema":          "my_schema",
 		"arguments":       []interface{}{argument1, argument2},
 		"return_type":     "varchar",
+		"language":        "SCALA",
 		"comment":         "mock comment",
 		"return_behavior": "IMMUTABLE",
 		"statement":       procedureBody, //var message = DATA + DATA;return message
@@ -43,7 +44,7 @@ func TestProcedureCreate(t *testing.T) {
 	d := prepDummyProcedureResource(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE javascript CALLED ON NULL INPUT IMMUTABLE COMMENT = 'mock comment' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE SCALA CALLED ON NULL INPUT IMMUTABLE COMMENT = 'mock comment' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectProcedureRead(mock)
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
@@ -61,7 +62,7 @@ func expectProcedureRead(mock sqlmock.Sqlmock) {
 	describeRows := sqlmock.NewRows([]string{"property", "value"}).
 		AddRow("signature", "(data VARCHAR, event_dt DATE)").
 		AddRow("returns", "VARCHAR(123456789)"). // This is how return type is stored in Snowflake DB
-		AddRow("language", "JAVASCRIPT").
+		AddRow("language", "SQL").
 		AddRow("null handling", "CALLED ON NULL INPUT").
 		AddRow("volatility", "IMMUTABLE").
 		AddRow("execute as", "CALLER").
@@ -85,6 +86,7 @@ func TestProcedureRead(t *testing.T) {
 		r.Equal("MY_SCHEMA", d.Get("schema").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal("VARCHAR", d.Get("return_type").(string))
+		r.Equal("SQL", d.Get("language").(string))
 		r.Equal("IMMUTABLE", d.Get("return_behavior").(string))
 		r.Equal(procedureBody, d.Get("statement").(string))
 

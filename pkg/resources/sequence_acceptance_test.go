@@ -14,7 +14,8 @@ func TestAcc_Sequence(t *testing.T) {
 	accRename := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// CREATE
 			{

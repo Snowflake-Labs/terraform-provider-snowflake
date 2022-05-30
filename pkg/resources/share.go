@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var shareProperties = []string{
@@ -195,24 +195,6 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 // DeleteShare implements schema.DeleteFunc
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
-}
-
-// ShareExists implements schema.ExistsFunc
-func ShareExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.Share(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 // StripAccountFromName removes the accout prefix from a resource (e.g. a share)

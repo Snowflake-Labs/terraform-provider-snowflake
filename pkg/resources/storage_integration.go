@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -367,24 +367,6 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 // DeleteStorageIntegration implements schema.DeleteFunc
 func DeleteStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.StorageIntegration)(d, meta)
-}
-
-// StorageIntegrationExists implements schema.ExistsFunc
-func StorageIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.StorageIntegration(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {

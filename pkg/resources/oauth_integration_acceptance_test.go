@@ -14,7 +14,8 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 	integrationType := "TABLEAU_SERVER"
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: oauthIntegrationConfig(oauthIntName, integrationType),

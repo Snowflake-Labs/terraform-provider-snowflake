@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -722,7 +722,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("data_retention_days") {
-		_, ndr := d.GetChange("data_retention_days")
+		ndr := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetention(ndr.(int))
 		err := snowflake.Exec(db, q)
@@ -731,7 +731,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("change_tracking") {
-		_, nct := d.GetChange("change_tracking")
+		nct := d.Get("change_tracking")
 
 		q := builder.ChangeChangeTracking(nct.(bool))
 		err := snowflake.Exec(db, q)
@@ -739,7 +739,10 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error changing property on %v", d.Id())
 		}
 	}
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 
 	return ReadTable(d, meta)
 }
@@ -753,10 +756,10 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
+	schemaName := tableID.SchemaName
 	tableName := tableID.TableName
 
-	q := snowflake.Table(tableName, dbName, schema).Drop()
+	q := snowflake.Table(tableName, dbName, schemaName).Drop()
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
@@ -766,30 +769,4 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// TableExists implements schema.ExistsFunc
-func TableExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
-
-	q := snowflake.Table(tableName, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

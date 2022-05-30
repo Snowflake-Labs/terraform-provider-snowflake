@@ -23,23 +23,20 @@ data "snowflake_schemas" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
 
 ### Read-Only
 
-- **schemas** (List of Object) The schemas in the database (see [below for nested schema](#nestedatt--schemas))
+- `id` (String) The ID of this resource.
+- `schemas` (List of Object) The schemas in the database (see [below for nested schema](#nestedatt--schemas))
 
 <a id="nestedatt--schemas"></a>
 ### Nested Schema for `schemas`
 
 Read-Only:
 
-- **comment** (String)
-- **database** (String)
-- **name** (String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
 
 

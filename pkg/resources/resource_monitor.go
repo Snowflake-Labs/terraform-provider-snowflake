@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -284,23 +284,4 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 	return nil
-}
-
-// ResourceMonitorExists implements schema.ExistsFunc
-func ResourceMonitorExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-
-	q := snowflake.ResourceMonitor(data.Id()).Show()
-
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

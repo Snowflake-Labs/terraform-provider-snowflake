@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -222,7 +222,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	for _, param := range warehouseParams {
 		log.Printf("[TRACE] %+v\n", param)
 
-		var value interface{} = param.DefaultValue
+		var value interface{}
 		if strings.EqualFold(param.Type, "number") {
 			i, err := strconv.ParseInt(param.Value, 10, 64)
 			if err != nil {
@@ -234,6 +234,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		key := strings.ToLower(param.Key)
+		//lintignore:R001
 		err = d.Set(key, value)
 		if err != nil {
 			return err

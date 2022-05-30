@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func TestResourceMonitor(t *testing.T) {
@@ -73,25 +73,6 @@ func TestResourceMonitorDelete(t *testing.T) {
 
 		err := resources.DeleteResourceMonitor(d, db)
 		r.NoError(err)
-	})
-}
-
-func TestResourceMonitorExists(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name": "good_name",
-	}
-
-	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)
-	d.SetId("good_name")
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectReadResourceMonitor(mock)
-
-		ok, err := resources.ResourceMonitorExists(d, db)
-		r.NoError(err)
-		r.True(ok)
 	})
 }
 

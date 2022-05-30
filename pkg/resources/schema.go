@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 const (
@@ -315,7 +315,10 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 
 	return ReadSchema(d, meta)
 }
@@ -341,29 +344,4 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// SchemaExists implements schema.ExistsFunc
-func SchemaExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
-
-	q := snowflake.Schema(schema).WithDB(dbName).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

@@ -28,17 +28,20 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 
 ### Required
 
-- **database** (String) The database in which to create the masking policy.
-- **masking_expression** (String) Specifies the SQL expression that transforms the data.
-- **name** (String) Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.
-- **return_data_type** (String) Specifies the data type to return.
-- **schema** (String) The schema in which to create the masking policy.
-- **value_data_type** (String) Specifies the data type to mask.
+- `database` (String) The database in which to create the masking policy.
+- `masking_expression` (String) Specifies the SQL expression that transforms the data.
+- `name` (String) Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.
+- `return_data_type` (String) Specifies the data type to return.
+- `schema` (String) The schema in which to create the masking policy.
+- `value_data_type` (String) Specifies the data type to mask.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the masking policy.
-- **id** (String) The ID of this resource.
+- `comment` (String) Specifies a comment for the masking policy.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

@@ -1,8 +1,7 @@
 SHA=$(shell git rev-parse --short HEAD)
-VERSION=$(shell cat VERSION)
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Version=${VERSION} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
-export BASE_BINARY_NAME=terraform-provider-snowflake_v$(VERSION)
+LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
+export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.13.0
 export SKIP_EXTERNAL_TABLE_TESTS=true
@@ -20,10 +19,10 @@ all: test docs install
 
 setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 	bash .download-tfproviderlint.sh
-	go get golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
@@ -31,7 +30,7 @@ lint: fmt ## run the fast go linters
 .PHONY: lint
 
 lint-ci: ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee
+	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
 lint-all: fmt ## run the fast go linters

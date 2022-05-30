@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -351,30 +351,4 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// PipeExists implements schema.ExistsFunc
-func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
-
-	q := snowflake.Pipe(pipe, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

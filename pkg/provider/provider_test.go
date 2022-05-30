@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	_ "github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
@@ -240,7 +240,10 @@ func TestGetOauthAccessToken(t *testing.T) {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}
 			var result provider.Result
-			json.Unmarshal([]byte(got), &result)
+			unmarshalErr := json.Unmarshal([]byte(got), &result)
+			if unmarshalErr != nil {
+				return
+			}
 			if result.AccessToken != tt.wantTok {
 				t.Errorf("TestGetAccessToken() = %v, want %v", result.AccessToken, tt.want)
 			}

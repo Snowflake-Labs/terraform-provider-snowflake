@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -262,7 +262,10 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 	if d.HasChange("tag") {
 		old, new := d.GetChange("tag")
 		removed, added, changed := getTags(old).diffs(getTags(new))
@@ -314,28 +317,6 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// ViewExists implements schema.ExistsFunc
-func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 // splitViewID takes the <database_name>|<schema_name>|<view_name> ID and returns the database

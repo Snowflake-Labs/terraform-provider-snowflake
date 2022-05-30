@@ -17,7 +17,8 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),
@@ -38,7 +39,8 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigShares(t, databaseName, viewName, roleName, shareName),
@@ -57,7 +59,8 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),

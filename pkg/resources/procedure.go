@@ -7,11 +7,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
+
+var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
@@ -69,6 +71,15 @@ var procedureSchema = map[string]*schema.Schema{
 		Description:      "Specifies the javascript code used to create the procedure.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
+	},
+	"language": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      "SQL",
+		// Suppress the diff shown if the values are equal when both compared in lower case.
+		DiffSuppressFunc: DiffTypes,
+		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
+		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -157,6 +168,11 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	// Set optionals, default is OWNER
 	if v, ok := d.GetOk("execute_as"); ok {
 		builder.WithExecuteAs(v.(string))
+	}
+
+	// Set optionals, default is SQL
+	if v, ok := d.GetOk("language"); ok {
+		builder.WithLanguage(strings.ToUpper(v.(string)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -259,7 +275,10 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "language":
-			// To ignore
+			if err = d.Set("language", desc.Value.String); err != nil {
+				return err
+			}
+		
 		default:
 			log.Printf("[WARN] unexpected procedure property %v returned from Snowflake", desc.Property.String)
 		}
@@ -410,32 +429,6 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// ProcedureExists implements schema.ExistsFunc
-func ProcedureExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pID, err := splitProcedureID(d.Id())
-	if err != nil {
-		return false, err
-	}
-	builder := snowflake.Procedure(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.ProcedureName,
-		pID.ArgTypes,
-	)
-
-	q := builder.Show()
-	showRows, err := snowflake.Query(db, q)
-	if err != nil {
-		return false, err
-	}
-	defer showRows.Close()
-	if showRows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 type procedureID struct {

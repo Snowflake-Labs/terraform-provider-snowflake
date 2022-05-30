@@ -17,11 +17,12 @@ const (
 	asciiz = 122
 )
 
-// ValidatePassword checks that you password meets the Snowflake Password Policy
+// ValidatePassword checks that your password meets the Snowflake Password Policy
 //
 // Must be at least 8 characters long.
 // Must contain at least 1 digit.
 // Must contain at least 1 uppercase letter and 1 lowercase letter.
+//lintignore:V011
 func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	pass, ok := i.(string)
 	if !ok {
@@ -63,6 +64,7 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 // ValidatePrivilege validates the privilege is in the authorized set.
 // Will also check for the ALL privilege and hopefully provide a helpful error message.
 func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
+	//lintignore:V013
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {
@@ -71,7 +73,7 @@ func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFun
 		}
 
 		if v == "ALL" || (ignoreCase && strings.ToUpper(v) == "ALL") {
-			errors = append(errors, fmt.Errorf("the ALL privilege is deprecated, see https://github.com/chanzuckerberg/terraform-provider-snowflake/discussions/318"))
+			errors = append(errors, fmt.Errorf("the ALL privilege is deprecated, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/318"))
 			return warnings, errors
 		}
 

@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -23,17 +23,18 @@ func TestTagCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":     "good_name",
-		"database": "test_db",
-		"schema":   "test_schema",
-		"comment":  "great comment",
+		"name":           "good_name",
+		"database":       "test_db",
+		"schema":         "test_schema",
+		"comment":        "great comment",
+		"allowed_values": []interface{}{"marketing", "finance"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Tag().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE TAG "test_db"."test_schema"."good_name" COMMENT = 'great comment'$`,
+			`^CREATE TAG "test_db"."test_schema"."good_name" ALLOWED_VALUES 'marketing', 'finance' COMMENT = 'great comment'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTag(mock)
@@ -46,19 +47,20 @@ func TestTagUpdate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":     "good_name",
-		"database": "test_db",
-		"schema":   "test_schema",
-		"comment":  "great comment",
+		"name":           "good_name",
+		"database":       "test_db",
+		"schema":         "test_schema",
+		"comment":        "great comment",
+		"allowed_values": []interface{}{"marketing", "finance"},
 	}
 
 	d := tag(t, "test_db|test_schema|good_name", in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(
-			`^ALTER TAG "test_db"."test_schema"."good_name" SET COMMENT = 'great comment'$`,
-		).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" SET COMMENT = 'great comment'$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" UNSET ALLOWED_VALUES$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" ADD ALLOWED_VALUES 'marketing', 'finance'$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTag(mock)
 		err := resources.UpdateTag(d, db)
@@ -114,7 +116,7 @@ func TestTagRead(t *testing.T) {
 
 func expectReadTag(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "owner", "comment"},
-	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "test_db", "test_schema", "admin", "great comment")
+		"created_on", "name", "database_name", "schema_name", "owner", "comment", "allowed_values"},
+	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "test_db", "test_schema", "admin", "great comment", "'al1','al2'")
 	mock.ExpectQuery(`^SHOW TAGS LIKE 'good_name' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
