@@ -56,6 +56,7 @@ func TestAcc_User(t *testing.T) {
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles", "('ALL')"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
 					checkBool("snowflake_user.w", "must_change_password", true),
@@ -121,6 +122,7 @@ resource "snowflake_user" "w" {
 	disabled = false
 	default_warehouse="foo"
 	default_role="foo"
+	default_secondary_roles=('ALL')
 	default_namespace="foo"
 	rsa_public_key = <<KEY
 %s

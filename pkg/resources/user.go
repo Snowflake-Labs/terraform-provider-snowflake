@@ -17,6 +17,7 @@ var userProperties = []string{
 	"disabled",
 	"default_namespace",
 	"default_role",
+	"default_secondary_roles",
 	"default_warehouse",
 	"rsa_public_key",
 	"rsa_public_key_2",
@@ -77,6 +78,12 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "Specifies the role that is active by default for the user’s session upon login.",
+	},
+	"default_secondary_roles": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Specifies the set of secondary roles that are active for the user’s session upon login.",
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
@@ -207,6 +214,11 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("default_secondary_roles", removeEmptyStrings(strings.Split(u.DefaultSecondaryRoles.String, ",")))
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("default_namespace", u.DefaultNamespace.String)
 	if err != nil {
 		return err
@@ -248,4 +260,14 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteUser(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("user", snowflake.User)(d, meta)
+}
+
+func removeEmptyStrings(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
 }

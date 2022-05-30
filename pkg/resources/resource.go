@@ -35,6 +35,10 @@ func CreateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := val.([]string)
+					qb.SetStringList(field, valList)
+
 				}
 			}
 		}
@@ -100,7 +104,11 @@ func UpdateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := expandStringList(val.(*schema.Set).List())
+					qb.SetStringList(field, valList)
 				}
+
 			}
 			if d.HasChange("tag") {
 				log.Printf("[DEBUG] updating tags")

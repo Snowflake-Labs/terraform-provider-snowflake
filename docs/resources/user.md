@@ -46,6 +46,7 @@ resource snowflake_user user {
 - `comment` (String)
 - `default_namespace` (String) Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.
 - `default_role` (String) Specifies the role that is active by default for the user’s session upon login.
+- `default_secondary_roles` (Set of String) Specifies the set of secondary roles that are active for the user’s session upon login.
 - `default_warehouse` (String) Specifies the virtual warehouse that is active by default for the user’s session upon login.
 - `disabled` (Boolean)
 - `display_name` (String) Name displayed for the user in the Snowflake web interface.

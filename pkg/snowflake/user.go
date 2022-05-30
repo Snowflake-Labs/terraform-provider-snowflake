@@ -2,10 +2,11 @@ package snowflake
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"log"
-
 	"github.com/pkg/errors"
+	"log"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -18,18 +19,19 @@ func User(name string) *Builder {
 }
 
 type user struct {
-	Comment          sql.NullString `db:"comment"`
-	DefaultNamespace sql.NullString `db:"default_namespace"`
-	DefaultRole      sql.NullString `db:"default_role"`
-	DefaultWarehouse sql.NullString `db:"default_warehouse"`
-	Disabled         bool           `db:"disabled"`
-	DisplayName      sql.NullString `db:"display_name"`
-	Email            sql.NullString `db:"email"`
-	FirstName        sql.NullString `db:"first_name"`
-	HasRsaPublicKey  bool           `db:"has_rsa_public_key"`
-	LastName         sql.NullString `db:"last_name"`
-	LoginName        sql.NullString `db:"login_name"`
-	Name             sql.NullString `db:"name"`
+	Comment               sql.NullString `db:"comment"`
+	DefaultNamespace      sql.NullString `db:"default_namespace"`
+	DefaultRole           sql.NullString `db:"default_role"`
+	DefaultSecondaryRoles sql.NullString `db:"default_secondary_roles"`
+	DefaultWarehouse      sql.NullString `db:"default_warehouse"`
+	Disabled              bool           `db:"disabled"`
+	DisplayName           sql.NullString `db:"display_name"`
+	Email                 sql.NullString `db:"email"`
+	FirstName             sql.NullString `db:"first_name"`
+	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
+	LastName              sql.NullString `db:"last_name"`
+	LoginName             sql.NullString `db:"login_name"`
+	Name                  sql.NullString `db:"name"`
 }
 
 func ScanUser(row *sqlx.Row) (*user, error) {
@@ -62,6 +64,17 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 			r.DefaultNamespace = userProp.Value
 		case "DEFAULT_ROLE":
 			r.DefaultRole = userProp.Value
+		case "DEFAULT_SECONDARY_ROLES":
+			if len(userProp.Value.String) > 0 {
+				var secondaryRoles []string
+				err := json.Unmarshal([]byte(userProp.Value.String), &secondaryRoles)
+				if err != nil {
+					return nil, err
+				}
+				r.DefaultSecondaryRoles = sql.NullString{String: strings.Join(secondaryRoles, ","), Valid: true}
+			} else {
+				r.DefaultSecondaryRoles = sql.NullString{Valid: false}
+			}
 		case "DEFAULT_WAREHOUSE":
 			r.DefaultWarehouse = userProp.Value
 		case "DISABLED":

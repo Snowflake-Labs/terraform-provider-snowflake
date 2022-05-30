@@ -56,6 +56,12 @@ var usersSchema = map[string]*schema.Schema{
 					Optional: true,
 					Computed: true,
 				},
+				"default_secondary_roles": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Optional:    true,
+					Computed: true,
+				},
 				"has_rsa_public_key": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -132,6 +138,7 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 		userMap["default_warehouse"] = user.DefaultWarehouse.String
 		userMap["default_namespace"] = user.DefaultNamespace.String
 		userMap["default_role"] = user.DefaultRole.String
+		userMap["default_secondary_roles"] = user.DefaultSecondaryRoles
 		userMap["has_rsa_public_key"] = user.HasRsaPublicKey
 		userMap["email"] = user.Email.String
 		userMap["display_name"] = user.DisplayName.String
