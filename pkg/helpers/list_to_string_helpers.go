@@ -13,8 +13,7 @@ func ListToSnowflakeString(list []string) string {
 		list[index] = fmt.Sprintf(`'%v'`, strings.ReplaceAll(element, "'", "\\'"))
 	}
 
-	str := fmt.Sprintf(strings.Join(list, ", "))
-	return str
+	return fmt.Sprintf("%v", strings.Join(list, ", "))
 }
 
 // IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')
