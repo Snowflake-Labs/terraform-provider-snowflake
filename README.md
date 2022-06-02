@@ -64,6 +64,10 @@ terraform {
   }
 }
 ```
+If you are not pinning your provider versions, you may find it useful to forcefully upgrade providers using the command: 
+```
+terraform init -upgrade
+```
 
 >**Note**:  0.34 is the first version published after the transfer. When the provider was transferred over not all releases were transferred for some reason. Only versions 0.28 and newer were transferred.
 
