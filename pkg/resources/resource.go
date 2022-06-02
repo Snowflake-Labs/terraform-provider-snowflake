@@ -36,7 +36,7 @@ func CreateResource(
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
 				case schema.TypeSet:
-					valList := val.([]string)
+					valList := expandStringList(val.(*schema.Set).List())
 					qb.SetStringList(field, valList)
 
 				}
