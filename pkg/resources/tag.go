@@ -308,7 +308,7 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 	// If there is change in allowed_values field
 	if d.HasChange("allowed_values") {
 		if _, ok := d.GetOk("allowed_values"); ok {
-			_, v := d.GetChange("allowed_values")
+			v := d.Get("allowed_values")
 
 			ns := expandAllowedValues(v)
 
