@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
 )

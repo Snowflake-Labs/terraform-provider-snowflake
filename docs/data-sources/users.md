@@ -38,6 +38,7 @@ Read-Only:
 - `comment` (String)
 - `default_namespace` (String)
 - `default_role` (String)
+- `default_secondary_roles` (Set of String)
 - `default_warehouse` (String)
 - `disabled` (Boolean)
 - `display_name` (String)

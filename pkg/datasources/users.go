@@ -57,9 +57,9 @@ var usersSchema = map[string]*schema.Schema{
 					Computed: true,
 				},
 				"default_secondary_roles": {
-					Type:        schema.TypeSet,
-					Elem:        &schema.Schema{Type: schema.TypeString},
-					Optional:    true,
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
 					Computed: true,
 				},
 				"has_rsa_public_key": {
