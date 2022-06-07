@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.35.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.34.0...v0.35.0) (2022-06-07)
+
+
+### Features
+
+* add allowed values ([#1006](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1006)) ([e7dcfd4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e7dcfd4c1f9b77b4d03bfb9c13a8753000f281e2))
+* Add allowed values ([#1028](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1028)) ([e756867](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e7568674807af2899a2d1579aec53c706598bccf))
+* Add support for creation of streams on external tables ([#999](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/999)) ([0ee1d55](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0ee1d556abcf6aaa14ff041155c57ff635c5cf94))
+* Support for selecting language in snowflake_procedure ([#1010](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1010)) ([3161827](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/31618278866604e8bfd7d2fa984ec9502c0b7bbb))
+
+
+### BugFixes
+
+* makefile remove outdated version reference ([#1027](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1027)) ([d066d0b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d066d0b7b7b1604e157d70cc14e5babae2b3ef6b))
+* provider upgrade doc ([#1039](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1039)) ([e1e23b9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e1e23b94c536f40e1e2418d8af6aa727dfec0d52))
+
+
+### Misc
+
+* **deps:** bump github.com/hashicorp/terraform-plugin-sdk/v2 ([#1035](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1035)) ([f885f1c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f885f1c0325c019eb3bb6c0d27e58a0aedcd1b53))
+
 ## [0.34.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.34.0...v0.34.0) (2022-05-25)
 
 
