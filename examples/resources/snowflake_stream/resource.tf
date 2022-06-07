@@ -1,4 +1,4 @@
-resource snowflake_stream stream {
+resource "snowflake_stream" "stream" {
   comment = "A stream."
 
   database = "db"

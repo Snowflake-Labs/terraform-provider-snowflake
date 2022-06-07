@@ -15,6 +15,7 @@ type StreamBuilder struct {
 	name            string
 	db              string
 	schema          string
+	externalTable   bool
 	onTable         string
 	appendOnly      bool
 	insertOnly      bool
@@ -50,6 +51,11 @@ func (sb *StreamBuilder) WithComment(c string) *StreamBuilder {
 
 func (sb *StreamBuilder) WithOnTable(d string, s string, t string) *StreamBuilder {
 	sb.onTable = fmt.Sprintf(`"%v"."%v"."%v"`, d, s, t)
+	return sb
+}
+
+func (sb *StreamBuilder) WithExternalTable(b bool) *StreamBuilder {
+	sb.externalTable = b
 	return sb
 }
 
@@ -90,7 +96,13 @@ func (sb *StreamBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE STREAM %v`, sb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` ON TABLE %v`, sb.onTable))
+	q.WriteString(` ON`)
+
+	if sb.externalTable {
+		q.WriteString(` EXTERNAL`)
+	}
+
+	q.WriteString(fmt.Sprintf(` TABLE %v`, sb.onTable))
 
 	if sb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(sb.comment)))
