@@ -186,7 +186,16 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder.WithOnTable(resultOnTable.DatabaseName, resultOnTable.SchemaName, resultOnTable.OnTableName)
+	tq := snowflake.Table(resultOnTable.OnTableName, resultOnTable.DatabaseName, resultOnTable.SchemaName).Show()
+	tableRow := snowflake.QueryRow(db, tq)
+
+	t, err := snowflake.ScanTable(tableRow)
+	if err != nil {
+		return err
+	}
+
+	builder.WithExternalTable(t.IsExternal.String == "Y")
+	builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
 	builder.WithAppendOnly(appendOnly)
 	builder.WithInsertOnly(insertOnly)
 	builder.WithShowInitialRows(showInitialRows)
