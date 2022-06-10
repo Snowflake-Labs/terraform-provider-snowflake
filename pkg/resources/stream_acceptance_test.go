@@ -43,11 +43,12 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "append_only", true),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},
 			{
-				Config: externalTableStreamConfig(accNameExternalTable),
+				Config: externalTableStreamConfig(accNameExternalTable, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
@@ -55,6 +56,20 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
+			{
+				Config: externalTableStreamConfig(accNameExternalTable, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", true),
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},
@@ -114,9 +129,14 @@ resource "snowflake_stream" "test_stream" {
 	return fmt.Sprintf(s, name, name, name, append_only_config)
 }
 
-func externalTableStreamConfig(name string) string {
+func externalTableStreamConfig(name string, insert_only bool) string {
 	// Refer to external_table_acceptance_test.go for the original source on
 	// external table resources and dependents (modified slightly here).
+	insert_only_config := ""
+	if insert_only {
+		insert_only_config = "insert_only = true"
+	}
+
 	locations := []string{"s3://com.example.bucket/prefix"}
 	s := `
 resource "snowflake_database" "test" {
@@ -166,8 +186,9 @@ resource "snowflake_stream" "test_external_table_stream" {
 	name     = "%s"
 	comment  = "Terraform acceptance test"
 	on_table = "${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_external_table.test_external_stream_table.name}"
+	%s
 }
 `
 
-	return fmt.Sprintf(s, name, name, name, name, locations, name)
+	return fmt.Sprintf(s, name, name, name, name, locations, name, insert_only_config)
 }
