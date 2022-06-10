@@ -121,6 +121,20 @@ func TestStreamReadAppendOnlyMode(t *testing.T) {
 	})
 }
 
+func TestStreamReadInsertOnlyMode(t *testing.T) {
+	r := require.New(t)
+
+	d := stream(t, "database_name|schema_name|stream_name", map[string]interface{}{"name": "stream_name", "comment": "grand comment"})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		rows := sqlmock.NewRows([]string{"name", "database_name", "schema_name", "owner", "comment", "table_name", "type", "stale", "mode"}).AddRow("stream_name", "database_name", "schema_name", "owner_name", "grand comment", "target_table", "DELTA", false, "INSERT_ONLY")
+		mock.ExpectQuery(`SHOW STREAMS LIKE 'stream_name' IN SCHEMA "database_name"."schema_name"`).WillReturnRows(rows)
+		err := resources.ReadStream(d, db)
+		r.NoError(err)
+		r.Equal(true, d.Get("insert_only").(bool))
+	})
+}
+
 func TestStreamReadDefaultMode(t *testing.T) {
 	r := require.New(t)
 
