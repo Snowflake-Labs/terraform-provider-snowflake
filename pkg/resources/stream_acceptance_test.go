@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,7 +11,11 @@ import (
 )
 
 func TestAcc_Stream(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
+		t.Skip("Skipping TestAccStream")
+	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
@@ -38,6 +43,33 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_stream.test_stream", "append_only", true),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
+			{
+				Config: externalTableStreamConfig(accNameExternalTable, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
+			{
+				Config: externalTableStreamConfig(accNameExternalTable, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", true),
 					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
 				),
 			},
@@ -95,4 +127,68 @@ resource "snowflake_stream" "test_stream" {
 }
 `
 	return fmt.Sprintf(s, name, name, name, append_only_config)
+}
+
+func externalTableStreamConfig(name string, insert_only bool) string {
+	// Refer to external_table_acceptance_test.go for the original source on
+	// external table resources and dependents (modified slightly here).
+	insert_only_config := ""
+	if insert_only {
+		insert_only_config = "insert_only = true"
+	}
+
+	locations := []string{"s3://com.example.bucket/prefix"}
+	s := `
+resource "snowflake_database" "test" {
+	name = "%v"
+	comment = "Terraform acceptance test"
+}
+resource "snowflake_schema" "test" {
+	name = "%v"
+	database = snowflake_database.test.name
+	comment = "Terraform acceptance test"
+}
+resource "snowflake_stage" "test" {
+	name = "%v"
+	url = "s3://com.example.bucket/prefix"
+	database = snowflake_database.test.name
+	schema = snowflake_schema.test.name
+	comment = "Terraform acceptance test"
+	storage_integration = snowflake_storage_integration.external_table_stream_integration.name
+}
+resource "snowflake_storage_integration" "external_table_stream_integration" {
+	name = "%v"
+	storage_allowed_locations = %q
+	storage_provider = "S3"
+	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
+}
+resource "snowflake_external_table" "test_external_stream_table" {
+	database = snowflake_database.test.name
+	schema   = snowflake_schema.test.name
+	name     = "STREAM_ON_EXTERNAL_TABLE"
+	comment  = "Terraform acceptance test"
+	column {
+		name = "column1"
+		type = "STRING"
+		as   = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
+	}
+	column {
+		name = "column2"
+		type = "TIMESTAMP_NTZ(9)"
+		as   = "($1:\"CreatedDate\"::timestamp)"
+	}
+  file_format = "TYPE = CSV"
+  location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"
+}
+resource "snowflake_stream" "test_external_table_stream" {
+	database = snowflake_database.test.name
+	schema   = snowflake_schema.test.name
+	name     = "%s"
+	comment  = "Terraform acceptance test"
+	on_table = "${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_external_table.test_external_stream_table.name}"
+	%s
+}
+`
+
+	return fmt.Sprintf(s, name, name, name, name, locations, name, insert_only_config)
 }
