@@ -6,14 +6,14 @@ import (
 	"log"
 	"regexp"
 	"strings"
-
+    "strconv"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
-var languages = []string{"javascript", "java"}
+var languages = []string{"javascript", "java", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
@@ -68,7 +68,7 @@ var functionSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript / java / sql code used to create the function.",
+		Description:      "Specifies the javascript / java / sql / python code used to create the function.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
@@ -102,6 +102,13 @@ var functionSchema = map[string]*schema.Schema{
 		Default:     "user-defined function",
 		Description: "Specifies a comment for the function.",
 	},
+	"runtime_version": {
+		Type:        schema.TypeFloat,
+		Optional:    true,
+		ForceNew:    true,
+		Default:     3.8,
+		Description: "runtime version for python.",
+	},
 	"imports": {
 		Type: schema.TypeList,
 		Elem: &schema.Schema{
@@ -109,19 +116,19 @@ var functionSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "jar files to import for Java function.",
+		Description: "jar files to import for Java function or for importing python files.",
 	},
 	"handler": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the handler method for Java function.",
+		Description: "the handler method for Java and python function.",
 	},
 	"target_path": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the target path for compiled jar file for Java function.",
+		Description: "the target path for compiled jar file for Java function or the python file for python function.",
 	},
 }
 
@@ -178,12 +185,16 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("language"); ok {
 		builder.WithLanguage(v.(string))
 	}
+    // Set optionals, runtime version for python
+	if v, ok := d.GetOk("runtime_version"); ok {
+		builder.WithRuntimeVersion(v.(float64))
+	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	// Set optionals, imports for Java
+	// Set optionals, imports for Java / python
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []string{}
 		for _, imp := range d.Get("imports").([]interface{}) {
@@ -192,12 +203,12 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithImports(imports)
 	}
 
-	// handler for Java
+	// handler for Java / python
 	if v, ok := d.GetOk("handler"); ok {
 		builder.WithHandler(v.(string))
 	}
 
-	// target path for Java
+	// target path for Java / python
 	if v, ok := d.GetOk("target_path"); ok {
 		builder.WithTargetPath(v.(string))
 	}
@@ -320,7 +331,14 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "runtime_version":
-			// runtime version for Java function. currently not used.
+			i, err := strconv.ParseFloat(desc.Value.String, 64)
+			if err != nil {
+				return err
+			}
+
+			if err = d.Set("runtime_version", i); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected function property %v returned from Snowflake", desc.Property.String)
 		}

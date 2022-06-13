@@ -22,11 +22,12 @@ type FunctionBuilder struct {
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
 	returnType        string
 	language          string
-	imports           []string // for Java imports
-	handler           string   // for Java handler
-	targetPath        string   // for Java target path for compiled jar file
+	imports           []string // for Java / pyhon imports
+	handler           string   // for Java / python handler
+	targetPath        string   // for Java / python target path for compiled jar file / python file 
 	comment           string
 	statement         string
+	runtimeVersion    float64  // for python runtime version
 }
 
 // QualifiedName prepends the db and schema and appends argument types
@@ -59,6 +60,12 @@ func (pb *FunctionBuilder) WithArgs(args []map[string]string) *FunctionBuilder {
 		pb.args = append(pb.args, map[string]string{"name": argName, "type": argType})
 		pb.argumentTypes = append(pb.argumentTypes, argType)
 	}
+	return pb
+}
+
+// WithRuntimeVersion
+func (pb *FunctionBuilder) WithRuntimeVersion(r float64) *FunctionBuilder {
+	pb.runtimeVersion = r
 	return pb
 }
 
@@ -165,6 +172,11 @@ func (pb *FunctionBuilder) Create() (string, error) {
 	if pb.language != "" {
 		q.WriteString(fmt.Sprintf(" LANGUAGE %v", pb.language))
 	}
+
+	if pb.runtimeVersion != 0 {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = %v", pb.runtimeVersion))
+	}
+	
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
