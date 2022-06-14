@@ -41,7 +41,7 @@ func ValidateIdentifier(val interface{}, exclusions []string) (warns []string, e
 }
 
 func isIdentifierRune(r rune, excludedCharacters map[string]bool) bool {
-	return isInitialIdentifierRune(r) || excludedCharacters[string(r)] == true || r == '$' || (r >= '0' && r <= '9')
+	return isInitialIdentifierRune(r) || excludedCharacters[string(r)] || r == '$' || (r >= '0' && r <= '9')
 }
 
 func isInitialIdentifierRune(r rune) bool {
