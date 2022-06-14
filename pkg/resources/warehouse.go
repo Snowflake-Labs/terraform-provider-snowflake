@@ -55,7 +55,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntBetween(1, 10),
+		ValidateFunc: validation.IntAtLeast(1),
 	},
 	"min_cluster_count": {
 		Type:         schema.TypeInt,
