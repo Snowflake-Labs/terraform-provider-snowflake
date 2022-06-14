@@ -1,8 +1,6 @@
 package snowflake
 
-import (
-	"github.com/pkg/errors"
-)
+import "github.com/pkg/errors"
 
 // ValidateIdentifier implements a strict definition of valid identifiers from
 // https://docs.snowflake.net/manuals/sql-reference/identifiers-syntax.html
