@@ -214,7 +214,11 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("default_secondary_roles", removeEmptyStrings(strings.Split(u.DefaultSecondaryRoles.String, ",")))
+	var defaultSecondaryRoles []string
+	if len(u.DefaultSecondaryRoles.String) > 0 {
+		defaultSecondaryRoles = strings.Split(u.DefaultSecondaryRoles.String, ",")
+	}
+	err = d.Set("default_secondary_roles", defaultSecondaryRoles)
 	if err != nil {
 		return err
 	}
@@ -260,14 +264,4 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteUser(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("user", snowflake.User)(d, meta)
-}
-
-func removeEmptyStrings(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
 }
