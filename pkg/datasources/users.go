@@ -3,8 +3,8 @@ package datasources
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -132,9 +132,6 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 
 	for _, user := range currentUsers {
 		userMap := map[string]interface{}{}
-		re := regexp.MustCompile(`[\"\[\]]`)
-		defaultSecondaryRoles := strings.Split(re.ReplaceAllString(user.DefaultSecondaryRoles.String, ""), ",")
-
 		userMap["name"] = user.Name.String
 		userMap["login_name"] = user.LoginName.String
 		userMap["comment"] = user.Comment.String
@@ -142,7 +139,8 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 		userMap["default_warehouse"] = user.DefaultWarehouse.String
 		userMap["default_namespace"] = user.DefaultNamespace.String
 		userMap["default_role"] = user.DefaultRole.String
-		userMap["default_secondary_roles"] = defaultSecondaryRoles
+		userMap["default_secondary_roles"] = strings.Split(
+			helpers.ListContentToString(user.DefaultSecondaryRoles.String), ",")
 		userMap["has_rsa_public_key"] = user.HasRsaPublicKey
 		userMap["email"] = user.Email.String
 		userMap["display_name"] = user.DisplayName.String

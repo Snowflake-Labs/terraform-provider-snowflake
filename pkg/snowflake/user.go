@@ -2,14 +2,11 @@ package snowflake
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"log"
-	"strings"
-
-	"github.com/pkg/errors"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"log"
 )
 
 func User(name string) *Builder {
@@ -67,12 +64,8 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 			r.DefaultRole = userProp.Value
 		case "DEFAULT_SECONDARY_ROLES":
 			if len(userProp.Value.String) > 0 {
-				var secondaryRoles []string
-				err := json.Unmarshal([]byte(userProp.Value.String), &secondaryRoles)
-				if err != nil {
-					return nil, err
-				}
-				r.DefaultSecondaryRoles = sql.NullString{String: strings.Join(secondaryRoles, ","), Valid: true}
+				defaultSecondaryRoles := helpers.ListContentToString(userProp.Value.String)
+				r.DefaultSecondaryRoles = sql.NullString{String: defaultSecondaryRoles, Valid: true}
 			} else {
 				r.DefaultSecondaryRoles = sql.NullString{Valid: false}
 			}
