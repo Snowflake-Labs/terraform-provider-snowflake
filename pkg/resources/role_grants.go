@@ -25,7 +25,8 @@ func RoleGrants() *schema.Resource {
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
+					additionalCharsToIgnoreValidation := []string{"."}
+					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 				},
 			},
 			"roles": {
