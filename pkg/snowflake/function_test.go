@@ -210,6 +210,15 @@ func TestFunctionCreateWithPythonFunctionWithTargetPath(t *testing.T) {
 	r.Equal(expected, createStmnt)
 }
 
+func TestFuctionUseWarehouse(t *testing.T) {
+	r := require.New(t)
+	s := getPythonFuction(false)
+
+	s.WithWarehouse("test_wh")
+	stmnt, _ := s.UseWarehouse()
+	r.Equal(stmnt, `USE WAREHOUSE test_wh`)
+}
+
 func TestFunctionDrop(t *testing.T) {
 	r := require.New(t)
 

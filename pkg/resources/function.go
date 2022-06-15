@@ -25,7 +25,7 @@ var functionSchema = map[string]*schema.Schema{
 	"warehouse": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The warehouse in which to create the function. Don't use the | character.",
+		Description: "The warehouse in which to create the function. Only for Python language.",
 		ForceNew:    true,
 	},
 	"database": {

@@ -18,6 +18,8 @@ func TestAcc_Function(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	functName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	expBody1 := "3.141592654::FLOAT"
 	expBody2 := "var X=3\nreturn X"
 	expBody3 := "select 1, 2\nunion all\nselect 3, 4\n"
@@ -29,7 +31,7 @@ func TestAcc_Function(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(dbName, schemaName, functName),
+				Config: functionConfig(dbName, schemaName, functName, warehouseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
@@ -68,7 +70,7 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name string) string {
+func functionConfig(db, schema, name , warehouse string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test_database" {
 		name    = "%s"
@@ -122,6 +124,7 @@ func functionConfig(db, schema, name string) string {
 		name = "%s"
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
+		warehouse = "%s"
 		arguments {
 			name = "arg1"
 			type = "int"
@@ -154,5 +157,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name, name, name)
+	`, db, schema, name, name, name, name, warehouse, name)
 }
