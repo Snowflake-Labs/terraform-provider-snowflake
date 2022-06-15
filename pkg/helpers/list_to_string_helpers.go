@@ -27,7 +27,7 @@ func IpListToSnowflakeString(ips []string) string {
 }
 
 // ListContentToString strips list elements of double quotes or brackets
-func ListContentToString( listString string) string {
+func ListContentToString(listString string) string {
 	re := regexp.MustCompile(`[\"\[\]]`)
 	return re.ReplaceAllString(listString, "")
 }

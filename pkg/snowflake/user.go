@@ -3,10 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"log"
 )
 
 func User(name string) *Builder {
