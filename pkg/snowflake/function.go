@@ -29,6 +29,7 @@ type FunctionBuilder struct {
 	comment           string
 	statement         string
 	runtimeVersion    float64 // for python runtime version
+	warehouse         string
 }
 
 // QualifiedName prepends the db and schema and appends argument types
@@ -91,6 +92,12 @@ func (pb *FunctionBuilder) WithReturnType(s string) *FunctionBuilder {
 // WithLanguage sets the language to SQL, JAVA or JAVASCRIPT
 func (pb *FunctionBuilder) WithLanguage(s string) *FunctionBuilder {
 	pb.language = s
+	return pb
+}
+
+// Withwarehouse
+func (pb *FunctionBuilder) WithWarehouse(s string) *FunctionBuilder {
+	pb.warehouse = s
 	return pb
 }
 
@@ -158,7 +165,12 @@ func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
 func (pb *FunctionBuilder) Create() (string, error) {
 	var q strings.Builder
 
-	q.WriteString("CREATE OR REPLACE")
+	if pb.warehouse != "" {
+		q.WriteString(fmt.Sprintf("USE WAREHOUSE %v;", pb.warehouse))
+		q.WriteString("\nCREATE OR REPLACE")
+	} else {
+		q.WriteString("CREATE OR REPLACE")
+	}
 
 	qn, err := pb.QualifiedNameWithoutArguments()
 	if err != nil {
