@@ -24,7 +24,7 @@ func TestValidateIdentifier(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.candidate, func(t *testing.T) {
-			_, errs := snowflake.ValidateIdentifier(tc.candidate)
+			_, errs := snowflake.ValidateIdentifier(tc.candidate, []string{})
 			actual := len(errs) == 0
 
 			if actual == tc.valid {
