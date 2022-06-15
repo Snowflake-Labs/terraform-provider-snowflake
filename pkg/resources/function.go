@@ -207,6 +207,14 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	// Set optionals, warehouse in which to create the function
 	if v, ok := d.GetOk("warehouse"); ok {
 		builder.WithWarehouse(v.(string))
+		q, err := builder.UseWarehouse()
+		if err != nil {
+			return err
+		}
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error using warehouse %v", v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("comment"); ok {

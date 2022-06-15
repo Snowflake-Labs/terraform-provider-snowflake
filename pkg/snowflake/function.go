@@ -161,16 +161,18 @@ func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
 	}
 }
 
+func (pb *FunctionBuilder) UseWarehouse() (string, error) {
+    var q strings.Builder
+
+	q.WriteString(fmt.Sprintf("USE WAREHOUSE %v", pb.warehouse))
+	return q.String(), nil
+}
+
 // Create returns the SQL query that will create a new function.
 func (pb *FunctionBuilder) Create() (string, error) {
 	var q strings.Builder
 
-	if pb.warehouse != "" {
-		q.WriteString(fmt.Sprintf("USE WAREHOUSE %v;", pb.warehouse))
-		q.WriteString("\nCREATE OR REPLACE")
-	} else {
-		q.WriteString("CREATE OR REPLACE")
-	}
+	q.WriteString("CREATE OR REPLACE")
 
 	qn, err := pb.QualifiedNameWithoutArguments()
 	if err != nil {
