@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
-    "strconv"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -82,7 +83,6 @@ var functionSchema = map[string]*schema.Schema{
 	"null_input_behavior": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default:  "CALLED ON NULL INPUT",
 		ForceNew: true,
 		// We do not use STRICT, because Snowflake then in the Read phase returns RETURNS NULL ON NULL INPUT
 		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT"}, false),
@@ -91,7 +91,6 @@ var functionSchema = map[string]*schema.Schema{
 	"return_behavior": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Default:      "VOLATILE",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
 		Description:  "Specifies the behavior of the function when returning results",
@@ -106,8 +105,16 @@ var functionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeFloat,
 		Optional:    true,
 		ForceNew:    true,
-		Default:     3.8,
 		Description: "runtime version for python.",
+	},
+	"packages": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "For java the value should be of the form package_name:version_number, where package_name is snowflake_domain:package and for python use it as packages = ('numpy','pandas','xgboost==1.5.0').",
 	},
 	"imports": {
 		Type: schema.TypeList,
@@ -185,13 +192,22 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("language"); ok {
 		builder.WithLanguage(v.(string))
 	}
-    // Set optionals, runtime version for python
+	// Set optionals, runtime version for python
 	if v, ok := d.GetOk("runtime_version"); ok {
 		builder.WithRuntimeVersion(v.(float64))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	// Set optionals, packages for Java / python
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []string{}
+		for _, pack := range d.Get("packages").([]interface{}) {
+			packages = append(packages, pack.(string))
+		}
+		builder.WithPackages(packages)
 	}
 
 	// Set optionals, imports for Java / python
@@ -311,6 +327,14 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 		case "language":
 			if snowflake.Contains(languages, desc.Value.String) {
 				if err = d.Set("language", desc.Value.String); err != nil {
+					return err
+				}
+			}
+		case "packages":
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			if packagesString != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(packagesString, ", ")
+				if err = d.Set("packages", packages); err != nil {
 					return err
 				}
 			}

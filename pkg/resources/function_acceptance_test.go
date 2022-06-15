@@ -22,6 +22,7 @@ func TestAcc_Function(t *testing.T) {
 	expBody2 := "var X=3\nreturn X"
 	expBody3 := "select 1, 2\nunion all\nselect 3, 4\n"
 	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
+	expBody5 := "def add_py(i): return i+1"
 
 	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
@@ -54,6 +55,13 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.name", "ARG1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
+
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "INT"),
 				),
 			},
 		},
@@ -110,6 +118,21 @@ func functionConfig(db, schema, name string) string {
 		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
 	}
 
+	resource "snowflake_function" "test_funct_python" {
+		name = "%s"
+		database = snowflake_database.test_database.name
+		schema   = snowflake_schema.test_schema.name
+		arguments {
+			name = "arg1"
+			type = "int"
+		}
+		comment = "Terraform acceptance test for python"
+		return_type = "int"
+		language = "python"
+		handler = "add_py"
+		statement = "def add_py(i): return i+1"
+	}
+
 	resource "snowflake_function" "test_funct_complex" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -130,5 +153,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name, name)
+	`, db, schema, name, name, name, name, name)
 }
