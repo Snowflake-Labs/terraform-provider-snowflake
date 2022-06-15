@@ -129,6 +129,7 @@ func functionConfig(db, schema, name string) string {
 		comment = "Terraform acceptance test for python"
 		return_type = "int"
 		language = "python"
+		runtime_version = 3.8
 		handler = "add_py"
 		statement = "def add_py(i): return i+1"
 	}
