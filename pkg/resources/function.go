@@ -89,6 +89,7 @@ var functionSchema = map[string]*schema.Schema{
 	"null_input_behavior": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Default:  "CALLED ON NULL INPUT",
 		ForceNew: true,
 		// We do not use STRICT, because Snowflake then in the Read phase returns RETURNS NULL ON NULL INPUT
 		ValidateFunc: validation.StringInSlice([]string{"CALLED ON NULL INPUT", "RETURNS NULL ON NULL INPUT"}, false),
@@ -97,6 +98,7 @@ var functionSchema = map[string]*schema.Schema{
 	"return_behavior": {
 		Type:         schema.TypeString,
 		Optional:     true,
+		Default:      "VOLATILE",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
 		Description:  "Specifies the behavior of the function when returning results",

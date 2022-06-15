@@ -194,15 +194,15 @@ func (pb *FunctionBuilder) Create() (string, error) {
 		q.WriteString(fmt.Sprintf(" LANGUAGE %v", pb.language))
 	}
 
-	if pb.runtimeVersion != 0 {
-		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = %v", pb.runtimeVersion))
-	}
-
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
 	if pb.returnBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
+	}
+
+	if pb.runtimeVersion != 0 {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = %v", pb.runtimeVersion))
 	}
 
 	if len(pb.packages) > 0 {
