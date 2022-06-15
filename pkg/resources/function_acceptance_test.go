@@ -70,7 +70,7 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name , warehouse string) string {
+func functionConfig(db, schema, name, warehouse string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test_database" {
 		name    = "%s"
