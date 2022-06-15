@@ -151,7 +151,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	s, err := snowflake.ScanApiIntegration(row)
 	if err != nil {
 		// If no such resource exists, it is not an error but rather not exist
-		if err == snowflake.ErrNoRowInRS {
+		if err.Error() == snowflake.ErrNoRowInRS {
 			d.SetId("")
 			return nil
 		} else {

@@ -342,7 +342,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	externalFunction, err := snowflake.ScanExternalFunction(row)
 	if err != nil {
-		if err == snowflake.ErrNoRowInRS {
+		if err.Error() == snowflake.ErrNoRowInRS {
 			d.SetId("")
 			return nil
 		} else {
