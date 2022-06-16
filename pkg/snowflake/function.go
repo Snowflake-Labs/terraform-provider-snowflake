@@ -28,7 +28,7 @@ type FunctionBuilder struct {
 	targetPath        string   // for Java / python target path for compiled jar file / python file
 	comment           string
 	statement         string
-	runtimeVersion    float64 // for python runtime version
+	runtimeVersion    string // for python runtime version
 	warehouse         string
 }
 
@@ -66,7 +66,7 @@ func (pb *FunctionBuilder) WithArgs(args []map[string]string) *FunctionBuilder {
 }
 
 // WithRuntimeVersion
-func (pb *FunctionBuilder) WithRuntimeVersion(r float64) *FunctionBuilder {
+func (pb *FunctionBuilder) WithRuntimeVersion(r string) *FunctionBuilder {
 	pb.runtimeVersion = r
 	return pb
 }
@@ -201,8 +201,8 @@ func (pb *FunctionBuilder) Create() (string, error) {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
 	}
 
-	if pb.runtimeVersion != 0 {
-		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = %v", pb.runtimeVersion))
+	if pb.runtimeVersion != "" {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = '%v'", EscapeString(pb.runtimeVersion)))
 	}
 
 	if len(pb.packages) > 0 {

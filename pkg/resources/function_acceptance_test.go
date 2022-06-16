@@ -83,6 +83,13 @@ func functionConfig(db, schema, name, warehouse string) string {
 		comment  = "Terraform acceptance test"
 	}
 
+	resource "snowflake_warehouse" "test_wh" {
+		name = "%s"
+		auto_suspend = 400
+		auto_resume = true
+		comment = "Warehouse for terraform acceptance test"
+	}
+
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -124,7 +131,7 @@ func functionConfig(db, schema, name, warehouse string) string {
 		name = "%s"
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
-		warehouse = "%s"
+		warehouse = snowflake_warehouse.test_wh.name
 		arguments {
 			name = "arg1"
 			type = "int"
@@ -157,5 +164,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name, name, warehouse, name)
+	`, db, schema, warehouse, name, name, name, name, name)
 }

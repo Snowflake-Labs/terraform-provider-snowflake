@@ -33,7 +33,7 @@ description: |-
 - `null_input_behavior` (String) Specifies the behavior of the function when called with null inputs.
 - `packages` (List of String) For java the value should be of the form package_name:version_number, where package_name is snowflake_domain:package and for python use it as packages = ('numpy','pandas','xgboost==1.5.0').
 - `return_behavior` (String) Specifies the behavior of the function when returning results
-- `runtime_version` (Number) runtime version for python.
+- `runtime_version` (String) runtime version for python.
 - `target_path` (String) the target path for compiled jar file for Java function or the python file for python function.
 - `warehouse` (String) The warehouse in which to create the function. Only for Python language.
 

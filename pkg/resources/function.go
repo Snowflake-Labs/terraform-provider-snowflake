@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -110,7 +109,7 @@ var functionSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the function.",
 	},
 	"runtime_version": {
-		Type:        schema.TypeFloat,
+		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
 		Description: "runtime version for python.",
@@ -203,7 +202,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 
 	// Set optionals, runtime version for python
 	if v, ok := d.GetOk("runtime_version"); ok {
-		builder.WithRuntimeVersion(v.(float64))
+		builder.WithRuntimeVersion(v.(string))
 	}
 
 	// Set optionals, warehouse in which to create the function
@@ -381,12 +380,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "runtime_version":
-			i, err := strconv.ParseFloat(desc.Value.String, 64)
-			if err != nil {
-				return err
-			}
-
-			if err = d.Set("runtime_version", i); err != nil {
+			if err = d.Set("runtime_version", desc.Value.String); err != nil {
 				return err
 			}
 		default:

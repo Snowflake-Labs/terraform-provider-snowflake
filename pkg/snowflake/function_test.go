@@ -143,12 +143,12 @@ func TestFunctionCreateWithPythonFunction(t *testing.T) {
 	s := getPythonFuction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
-	s.WithRuntimeVersion(3.8)
+	s.WithRuntimeVersion("3.8")
 	s.WithHandler("CoolFunc.test")
 	createStmnt, _ := s.Create()
 	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
 		`(arg INT) RETURNS INT` +
-		` LANGUAGE PYTHON RUNTIME_VERSION = 3.8 COMMENT = 'this is cool func!'` +
+		` LANGUAGE PYTHON RUNTIME_VERSION = '3.8' COMMENT = 'this is cool func!'` +
 		` HANDLER = 'CoolFunc.test' AS $$` + pythonfunc + `$$`
 	r.Equal(expected, createStmnt)
 }
@@ -161,7 +161,7 @@ func TestFunctionCreateWithPythonFunctionWithPackages(t *testing.T) {
 
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
-	s.WithRuntimeVersion(3.8)
+	s.WithRuntimeVersion("3.8")
 	s.WithPackages(pkgs)
 	s.WithHandler("CoolFunc.test")
 
@@ -169,7 +169,7 @@ func TestFunctionCreateWithPythonFunctionWithPackages(t *testing.T) {
 
 	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
 		`(arg INT) RETURNS INT` +
-		` LANGUAGE PYTHON RUNTIME_VERSION = 3.8 PACKAGES = ('numpy', 'pandas') COMMENT = 'this is cool func!'` +
+		` LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') COMMENT = 'this is cool func!'` +
 		` HANDLER = 'CoolFunc.test' AS $$` + pythonfunc + `$$`
 	r.Equal(expected, createStmnt)
 }
@@ -179,14 +179,14 @@ func TestFunctionCreateWithPythonFunctionWithImports(t *testing.T) {
 	s := getPythonFuction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
-	s.WithRuntimeVersion(3.8)
+	s.WithRuntimeVersion("3.8")
 	s.WithHandler("CoolFunc.test")
 	s.WithImports([]string{"@~/stage/myudf1.py", "@~/stage/myudf2.py"})
 
 	createStmnt, _ := s.Create()
 	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
 		`(arg INT) RETURNS INT` +
-		` LANGUAGE PYTHON RUNTIME_VERSION = 3.8 COMMENT = 'this is cool func!'` +
+		` LANGUAGE PYTHON RUNTIME_VERSION = '3.8' COMMENT = 'this is cool func!'` +
 		` IMPORTS = ('@~/stage/myudf1.py', '@~/stage/myudf2.py') HANDLER = 'CoolFunc.test'` +
 		` AS $$` + pythonfunc + `$$`
 	r.Equal(expected, createStmnt)
@@ -197,14 +197,14 @@ func TestFunctionCreateWithPythonFunctionWithTargetPath(t *testing.T) {
 	s := getPythonFuction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
-	s.WithRuntimeVersion(3.8)
+	s.WithRuntimeVersion("3.8")
 	s.WithTargetPath("@~/stage/myudf1.py")
 	s.WithHandler("CoolFunc.test")
 
 	createStmnt, _ := s.Create()
 	expected := `CREATE OR REPLACE FUNCTION "test_db"."test_schema"."test_func"` +
 		`(arg INT) RETURNS INT` +
-		` LANGUAGE PYTHON RUNTIME_VERSION = 3.8 COMMENT = 'this is cool func!'` +
+		` LANGUAGE PYTHON RUNTIME_VERSION = '3.8' COMMENT = 'this is cool func!'` +
 		` HANDLER = 'CoolFunc.test' TARGET_PATH = '@~/stage/myudf1.py'` +
 		` AS $$` + pythonfunc + `$$`
 	r.Equal(expected, createStmnt)

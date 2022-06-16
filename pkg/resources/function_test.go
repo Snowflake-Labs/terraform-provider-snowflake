@@ -26,7 +26,7 @@ func prepDummyFunctionResource(t *testing.T) *schema.ResourceData {
 		"language":             "PYTHON",
 		"null_input_behaviour": "CALLED ON NULL INPUT",
 		"return_behavior":      "VOLATILE",
-		"runtime_version":      3.8,
+		"runtime_version":      "3.8",
 		"packages":             []interface{}{"numpy", "pandas"},
 		"handler":              "add_py",
 		"return_type":          "varchar",
@@ -47,7 +47,7 @@ func TestFunctionCreate(t *testing.T) {
 	d := prepDummyFunctionResource(t)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE OR REPLACE FUNCTION "my_db"."my_schema"."my_funct"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE PYTHON CALLED ON NULL INPUT VOLATILE RUNTIME_VERSION = 3.8 PACKAGES = \('numpy', 'pandas'\) COMMENT = 'user-defined function' HANDLER = 'add_py' AS \$\$def add_py\(i, j\)\: return i\+j\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE OR REPLACE FUNCTION "my_db"."my_schema"."my_funct"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE PYTHON CALLED ON NULL INPUT VOLATILE RUNTIME_VERSION = '3.8' PACKAGES = \('numpy', 'pandas'\) COMMENT = 'user-defined function' HANDLER = 'add_py' AS \$\$def add_py\(i, j\)\: return i\+j\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectFunctionRead(mock)
 		err := resources.CreateFunction(d, db)
 		r.NoError(err)
@@ -86,7 +86,7 @@ func TestFunctionRead(t *testing.T) {
 		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal(functionBody, d.Get("statement").(string))
 		r.Equal("PYTHON", d.Get("language").(string))
-		r.Equal(3.8, d.Get("runtime_version").(float64))
+		r.Equal("3.8", d.Get("runtime_version").(string))
 		r.Equal("add_py", d.Get("handler").(string))
 		r.Equal("CALLED ON NULL INPUT", d.Get("null_input_behavior").(string))
 		r.Equal("VOLATILE", d.Get("return_behavior").(string))
