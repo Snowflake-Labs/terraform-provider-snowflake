@@ -73,13 +73,13 @@ var procedureSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"language": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      "SQL",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "SQL",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
 		DiffSuppressFunc: DiffTypes,
-		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
-		Description:  "Specifies the language of the stored procedure code.",
+		ValidateFunc:     validation.StringInSlice(procedureLanguages, true),
+		Description:      "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -278,7 +278,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 			if err = d.Set("language", desc.Value.String); err != nil {
 				return err
 			}
-		
+
 		default:
 			log.Printf("[WARN] unexpected procedure property %v returned from Snowflake", desc.Property.String)
 		}
