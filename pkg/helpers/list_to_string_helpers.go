@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -23,4 +24,10 @@ func IpListToSnowflakeString(ips []string) string {
 	}
 
 	return fmt.Sprintf("(%v)", strings.Join(ips, ", "))
+}
+
+// ListContentToString strips list elements of double quotes or brackets
+func ListContentToString(listString string) string {
+	re := regexp.MustCompile(`[\"\[\]]`)
+	return re.ReplaceAllString(listString, "")
 }
