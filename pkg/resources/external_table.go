@@ -275,7 +275,13 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	externalTable, err := snowflake.ScanExternalTable(row)
 	if err != nil {
-		return err
+		if err.Error() == snowflake.ErrNoRowInRS {
+			fmt.Println("Good !!")
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	err = d.Set("name", externalTable.ExternalTableName.String)

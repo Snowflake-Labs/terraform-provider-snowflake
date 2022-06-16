@@ -56,6 +56,7 @@ func TestAcc_User(t *testing.T) {
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
 					checkBool("snowflake_user.w", "must_change_password", true),
@@ -75,6 +76,7 @@ func TestAcc_User(t *testing.T) {
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 				),
 			},
@@ -93,6 +95,7 @@ func TestAcc_User(t *testing.T) {
 					checkBool("snowflake_user.w", "disabled", true),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", false),
 				),
@@ -121,6 +124,7 @@ resource "snowflake_user" "w" {
 	disabled = false
 	default_warehouse="foo"
 	default_role="foo"
+	default_secondary_roles=["ALL"]
 	default_namespace="foo"
 	rsa_public_key = <<KEY
 %s
@@ -150,6 +154,7 @@ resource "snowflake_user" "w" {
 	disabled = true
 	default_warehouse="bar"
 	default_role="bar"
+	default_secondary_roles=[]
 	default_namespace="bar"
 }
 `

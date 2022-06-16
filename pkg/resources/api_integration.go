@@ -150,7 +150,13 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanApiIntegration(row)
 	if err != nil {
-		return fmt.Errorf("Could not show api integration: %w", err)
+		// If no such resource exists, it is not an error but rather not exist
+		if err.Error() == snowflake.ErrNoRowInRS {
+			d.SetId("")
+			return nil
+		} else {
+			return fmt.Errorf("Could not show api integration: %w", err)
+		}
 	}
 
 	// Note: category must be API or something is broken

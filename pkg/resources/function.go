@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var languages = []string{"javascript", "java"}
+var languages = []string{"javascript", "java", "sql"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
