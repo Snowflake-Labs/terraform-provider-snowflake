@@ -61,7 +61,7 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
 				),
@@ -136,12 +136,16 @@ func functionConfig(db, schema, name, warehouse string) string {
 			name = "ARG1"
 			type = "NUMBER"
 		}
+		arguments {
+			name = "ARG2"
+			type = "NUMBER"
+		}
 		comment = "Terraform acceptance test for python"
 		return_type = "NUMBER(38,0)"
 		language = "python"
-		runtime_version = 3.8
+		runtime_version = "3.8"
 		handler = "add_py"
-		statement = "def add_py(i): return i+1"
+		statement = "def add_py(i, j): return i+j"
 	}
 
 	resource "snowflake_function" "test_funct_complex" {
