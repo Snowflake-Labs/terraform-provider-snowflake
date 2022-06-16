@@ -275,7 +275,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("insert_only", stream.InsertOnly)
+	err = d.Set("insert_only", stream.Mode.String == "INSERT_ONLY")
 	if err != nil {
 		return err
 	}
