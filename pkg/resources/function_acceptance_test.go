@@ -63,7 +63,7 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
 				),
 			},
 		},
@@ -133,11 +133,11 @@ func functionConfig(db, schema, name, warehouse string) string {
 		schema   = snowflake_schema.test_schema.name
 		warehouse = snowflake_warehouse.test_wh.name
 		arguments {
-			name = "arg1"
-			type = "int"
+			name = "ARG1"
+			type = "NUMBER"
 		}
 		comment = "Terraform acceptance test for python"
-		return_type = "int"
+		return_type = "NUMBER(38,0)"
 		language = "python"
 		runtime_version = 3.8
 		handler = "add_py"
