@@ -24,7 +24,7 @@ func TestAcc_Function(t *testing.T) {
 	expBody2 := "var X=3\nreturn X"
 	expBody3 := "select 1, 2\nunion all\nselect 3, 4\n"
 	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
-	expBody5 := "def add_py(i): return i+1"
+	expBody5 := "def add_py(i, j): return i+j"
 
 	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
