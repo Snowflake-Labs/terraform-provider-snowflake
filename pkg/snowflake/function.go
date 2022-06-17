@@ -23,12 +23,12 @@ type FunctionBuilder struct {
 	returnType        string
 	language          string
 	packages          []string
-	imports           []string // for Java / python imports
-	handler           string   // for Java / python handler
-	targetPath        string   // for Java / python target path for compiled jar file / python file
+	imports           []string // for Java / Python imports
+	handler           string   // for Java / Python handler
+	targetPath        string   // for Java / Python target path
 	comment           string
 	statement         string
-	runtimeVersion    string // for python runtime version
+	runtimeVersion    string // for Python runtime version
 	warehouse         string
 }
 

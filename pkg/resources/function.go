@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var languages = []string{"javascript", "java", "python"}
+var languages = []string{"javascript", "java", "sql", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
@@ -112,7 +112,7 @@ var functionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "runtime version for python.",
+		Description: "Required for Python functions. Specifies Python runtime version.",
 	},
 	"packages": {
 		Type: schema.TypeList,
@@ -121,7 +121,7 @@ var functionSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "For java the value should be of the form package_name:version_number, where package_name is snowflake_domain:package and for python use it as packages = ('numpy','pandas','xgboost==1.5.0').",
+		Description: "List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
 	},
 	"imports": {
 		Type: schema.TypeList,
@@ -130,19 +130,19 @@ var functionSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "jar files to import for Java function or for importing python files.",
+		Description: "Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.",
 	},
 	"handler": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the handler method for Java and python function.",
+		Description: "The handler method for Java / Python function.",
 	},
 	"target_path": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the target path for compiled jar file for Java function or the python file for python function.",
+		Description: "The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.",
 	},
 }
 
