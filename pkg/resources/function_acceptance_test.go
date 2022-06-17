@@ -83,13 +83,7 @@ func functionConfig(db, schema, name, warehouse string) string {
 		comment  = "Terraform acceptance test"
 	}
 
-	resource "snowflake_warehouse" "test_wh" {
-		name = "%s"
-		auto_suspend = 10000
-		auto_resume = true
-		comment = "Warehouse for terraform acceptance test"
-	}
-
+	
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -125,6 +119,11 @@ func functionConfig(db, schema, name, warehouse string) string {
 		language = "java"
 		handler = "CoolFunc.test"
 		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
+	}
+
+	resource "snowflake_warehouse" "test_wh" {
+		name = "%s"
+		comment = "Warehouse for terraform acceptance test"
 	}
 
 	resource "snowflake_function" "test_funct_python" {
@@ -168,5 +167,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, warehouse, name, name, name, name, name)
+	`, db, schema, name, name, name, warehouse, name, name)
 }
