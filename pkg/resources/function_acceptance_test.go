@@ -85,7 +85,7 @@ func functionConfig(db, schema, name, warehouse string) string {
 
 	resource "snowflake_warehouse" "test_wh" {
 		name = "%s"
-		auto_suspend = 600
+		auto_suspend = 10000
 		auto_resume = true
 		comment = "Warehouse for terraform acceptance test"
 	}
