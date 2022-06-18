@@ -22,11 +22,14 @@ type FunctionBuilder struct {
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
 	returnType        string
 	language          string
-	imports           []string // for Java imports
-	handler           string   // for Java handler
-	targetPath        string   // for Java target path for compiled jar file
+	packages          []string
+	imports           []string // for Java / Python imports
+	handler           string   // for Java / Python handler
+	targetPath        string   // for Java / Python target path
 	comment           string
 	statement         string
+	runtimeVersion    string // for Python runtime version
+	warehouse         string
 }
 
 // QualifiedName prepends the db and schema and appends argument types
@@ -62,6 +65,12 @@ func (pb *FunctionBuilder) WithArgs(args []map[string]string) *FunctionBuilder {
 	return pb
 }
 
+// WithRuntimeVersion
+func (pb *FunctionBuilder) WithRuntimeVersion(r string) *FunctionBuilder {
+	pb.runtimeVersion = r
+	return pb
+}
+
 // WithReturnBehavior
 func (pb *FunctionBuilder) WithReturnBehavior(s string) *FunctionBuilder {
 	pb.returnBehavior = s
@@ -86,19 +95,31 @@ func (pb *FunctionBuilder) WithLanguage(s string) *FunctionBuilder {
 	return pb
 }
 
-// WithImports adds jar files to import for Java function
+// Withwarehouse
+func (pb *FunctionBuilder) WithWarehouse(s string) *FunctionBuilder {
+	pb.warehouse = s
+	return pb
+}
+
+// WithPackages
+func (pb *FunctionBuilder) WithPackages(s []string) *FunctionBuilder {
+	pb.packages = s
+	return pb
+}
+
+// WithImports adds jar files to import for Java function or Python file for Python function
 func (pb *FunctionBuilder) WithImports(s []string) *FunctionBuilder {
 	pb.imports = s
 	return pb
 }
 
-// WithHandler sets the handler method for Java function
+// WithHandler sets the handler method for Java / Python function
 func (pb *FunctionBuilder) WithHandler(s string) *FunctionBuilder {
 	pb.handler = s
 	return pb
 }
 
-// WithTargetPath sets the target path for compiled jar file for Java function
+// WithTargetPath sets the target path for compiled jar file for Java function or Python file for Python function
 func (pb *FunctionBuilder) WithTargetPath(s string) *FunctionBuilder {
 	pb.targetPath = s
 	return pb
@@ -140,6 +161,13 @@ func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
 	}
 }
 
+func (pb *FunctionBuilder) UseWarehouse() (string, error) {
+	var q strings.Builder
+
+	q.WriteString(fmt.Sprintf("USE WAREHOUSE %v", pb.warehouse))
+	return q.String(), nil
+}
+
 // Create returns the SQL query that will create a new function.
 func (pb *FunctionBuilder) Create() (string, error) {
 	var q strings.Builder
@@ -165,15 +193,32 @@ func (pb *FunctionBuilder) Create() (string, error) {
 	if pb.language != "" {
 		q.WriteString(fmt.Sprintf(" LANGUAGE %v", pb.language))
 	}
+
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
 	if pb.returnBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
 	}
+
+	if pb.runtimeVersion != "" {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = '%v'", EscapeString(pb.runtimeVersion)))
+	}
+
+	if len(pb.packages) > 0 {
+		q.WriteString(` PACKAGES = (`)
+		packages := []string{}
+		for _, pack := range pb.packages {
+			packages = append(packages, fmt.Sprintf(`'%v'`, pack))
+		}
+		q.WriteString(strings.Join(packages, ", "))
+		q.WriteString(`)`)
+	}
+
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(pb.comment)))
 	}
+
 	if len(pb.imports) > 0 {
 		q.WriteString(` IMPORTS = (`)
 		imports := []string{}
@@ -183,12 +228,15 @@ func (pb *FunctionBuilder) Create() (string, error) {
 		q.WriteString(strings.Join(imports, ", "))
 		q.WriteString(`)`)
 	}
+
 	if pb.handler != "" {
 		q.WriteString(fmt.Sprintf(" HANDLER = '%v'", pb.handler))
 	}
+
 	if pb.targetPath != "" {
 		q.WriteString(fmt.Sprintf(" TARGET_PATH = '%v'", pb.targetPath))
 	}
+
 	q.WriteString(fmt.Sprintf(" AS $$%v$$", pb.statement))
 	return q.String(), nil
 }

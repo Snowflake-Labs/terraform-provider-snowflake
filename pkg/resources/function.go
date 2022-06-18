@@ -13,13 +13,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-var languages = []string{"javascript", "java", "sql"}
+var languages = []string{"javascript", "java", "sql", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.",
+	},
+	"warehouse": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The warehouse in which to create the function. Only for Python language.",
+		ForceNew:    true,
 	},
 	"database": {
 		Type:        schema.TypeString,
@@ -68,7 +74,7 @@ var functionSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript / java / sql code used to create the function.",
+		Description:      "Specifies the javascript / java / sql / python code used to create the function.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
@@ -102,6 +108,21 @@ var functionSchema = map[string]*schema.Schema{
 		Default:     "user-defined function",
 		Description: "Specifies a comment for the function.",
 	},
+	"runtime_version": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Required for Python functions. Specifies Python runtime version.",
+	},
+	"packages": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
+	},
 	"imports": {
 		Type: schema.TypeList,
 		Elem: &schema.Schema{
@@ -109,19 +130,19 @@ var functionSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "jar files to import for Java function.",
+		Description: "Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.",
 	},
 	"handler": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the handler method for Java function.",
+		Description: "The handler method for Java / Python function.",
 	},
 	"target_path": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the target path for compiled jar file for Java function.",
+		Description: "The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.",
 	},
 }
 
@@ -179,11 +200,38 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithLanguage(v.(string))
 	}
 
+	// Set optionals, runtime version for python
+	if v, ok := d.GetOk("runtime_version"); ok {
+		builder.WithRuntimeVersion(v.(string))
+	}
+
+	// Set optionals, warehouse in which to create the function
+	if v, ok := d.GetOk("warehouse"); ok {
+		builder.WithWarehouse(v.(string))
+		q, err := builder.UseWarehouse()
+		if err != nil {
+			return err
+		}
+		err = snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error using warehouse %v", v.(string))
+		}
+	}
+
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	// Set optionals, imports for Java
+	// Set optionals, packages for Java / python
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []string{}
+		for _, pack := range d.Get("packages").([]interface{}) {
+			packages = append(packages, pack.(string))
+		}
+		builder.WithPackages(packages)
+	}
+
+	// Set optionals, imports for Java / python
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []string{}
 		for _, imp := range d.Get("imports").([]interface{}) {
@@ -192,12 +240,12 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithImports(imports)
 	}
 
-	// handler for Java
+	// handler for Java / python
 	if v, ok := d.GetOk("handler"); ok {
 		builder.WithHandler(v.(string))
 	}
 
-	// target path for Java
+	// target path for Java / python
 	if v, ok := d.GetOk("target_path"); ok {
 		builder.WithTargetPath(v.(string))
 	}
@@ -303,6 +351,14 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			}
+		case "packages":
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			if packagesString != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(packagesString, ", ")
+				if err = d.Set("packages", packages); err != nil {
+					return err
+				}
+			}
 		case "imports":
 			importsString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
 			if importsString != "" { // Do nothing for Java functions without imports
@@ -315,12 +371,18 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			if err = d.Set("handler", desc.Value.String); err != nil {
 				return err
 			}
+		case "warehouse":
+			if err = d.Set("warehouse", desc.Value.String); err != nil {
+				return err
+			}
 		case "target_path":
 			if err = d.Set("target_path", desc.Value.String); err != nil {
 				return err
 			}
 		case "runtime_version":
-			// runtime version for Java function. currently not used.
+			if err = d.Set("runtime_version", desc.Value.String); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected function property %v returned from Snowflake", desc.Property.String)
 		}
