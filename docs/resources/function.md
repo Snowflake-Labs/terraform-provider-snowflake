@@ -21,18 +21,21 @@ description: |-
 - `name` (String) Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.
 - `return_type` (String) The return type of the function
 - `schema` (String) The schema in which to create the function. Don't use the | character.
-- `statement` (String) Specifies the javascript / java / sql code used to create the function.
+- `statement` (String) Specifies the javascript / java / sql / python code used to create the function.
 
 ### Optional
 
 - `arguments` (Block List) List of the arguments for the function (see [below for nested schema](#nestedblock--arguments))
 - `comment` (String) Specifies a comment for the function.
-- `handler` (String) the handler method for Java function.
-- `imports` (List of String) jar files to import for Java function.
+- `handler` (String) The handler method for Java / Python function.
+- `imports` (List of String) Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.
 - `language` (String) The language of the statement
 - `null_input_behavior` (String) Specifies the behavior of the function when called with null inputs.
+- `packages` (List of String) List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').
 - `return_behavior` (String) Specifies the behavior of the function when returning results
-- `target_path` (String) the target path for compiled jar file for Java function.
+- `runtime_version` (String) Required for Python functions. Specifies Python runtime version.
+- `target_path` (String) The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.
+- `warehouse` (String) The warehouse in which to create the function. Only for Python language.
 
 ### Read-Only
 
