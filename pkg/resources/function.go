@@ -200,7 +200,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithLanguage(v.(string))
 	}
 
-	// Set optionals, runtime version for python
+	// Set optionals, runtime version for Python
 	if v, ok := d.GetOk("runtime_version"); ok {
 		builder.WithRuntimeVersion(v.(string))
 	}
@@ -222,7 +222,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	// Set optionals, packages for Java / python
+	// Set optionals, packages for Java / Python
 	if _, ok := d.GetOk("packages"); ok {
 		packages := []string{}
 		for _, pack := range d.Get("packages").([]interface{}) {
@@ -231,7 +231,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithPackages(packages)
 	}
 
-	// Set optionals, imports for Java / python
+	// Set optionals, imports for Java / Python
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []string{}
 		for _, imp := range d.Get("imports").([]interface{}) {
@@ -240,12 +240,12 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithImports(imports)
 	}
 
-	// handler for Java / python
+	// handler for Java / Python
 	if v, ok := d.GetOk("handler"); ok {
 		builder.WithHandler(v.(string))
 	}
 
-	// target path for Java / python
+	// target path for Java / Python
 	if v, ok := d.GetOk("target_path"); ok {
 		builder.WithTargetPath(v.(string))
 	}

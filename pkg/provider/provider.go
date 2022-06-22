@@ -151,6 +151,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
 			},
+			"warehouse": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Sets the warehouse for the session",
+				ForceNew:    true,
+			},
 		},
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
@@ -284,6 +290,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	oauthEndpoint := s.Get("oauth_endpoint").(string)
 	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
 	host := s.Get("host").(string)
+	warehouse := s.Get("warehouse").(string)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -305,6 +312,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		region,
 		role,
 		host,
+		warehouse,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
@@ -329,7 +337,8 @@ func DSN(
 	oauthAccessToken,
 	region,
 	role,
-	host string) (string, error) {
+	host,
+	warehouse string) (string, error) {
 
 	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -348,6 +357,11 @@ func DSN(
 	if host != "" {
 		config.Region = ""
 		config.Host = host
+	}
+
+	// If warehouse is set
+	if warehouse != "" {
+		config.Warehouse = warehouse
 	}
 
 	if privateKeyPath != "" {
@@ -454,7 +468,6 @@ func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret str
 	request.SetBasicAuth(clientId, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	return request, nil
-
 }
 
 func GetOauthAccessToken(
