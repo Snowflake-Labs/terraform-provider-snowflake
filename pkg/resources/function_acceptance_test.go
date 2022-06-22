@@ -30,7 +30,7 @@ func TestAcc_Function(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(dbName, schemaName, functName, warehouseName),
+				Config: functionConfig(dbName, schemaName, functName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
@@ -69,7 +69,7 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name, warehouse string) string {
+func functionConfig(db, schema, name string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test_database" {
 		name    = "%s"
@@ -81,7 +81,6 @@ func functionConfig(db, schema, name, warehouse string) string {
 		database = snowflake_database.test_database.name
 		comment  = "Terraform acceptance test"
 	}
-
 	
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
@@ -132,7 +131,7 @@ func functionConfig(db, schema, name, warehouse string) string {
 			name = "ARG2"
 			type = "NUMBER"
 		}
-		comment = "Terraform acceptance test for python"
+		comment = "Terraform acceptance test for Python"
 		return_type = "NUMBER(38,0)"
 		language = "python"
 		runtime_version = "3.8"

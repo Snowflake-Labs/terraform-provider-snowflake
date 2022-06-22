@@ -154,13 +154,6 @@ func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
 	}
 }
 
-func (pb *FunctionBuilder) UseWarehouse() (string, error) {
-	var q strings.Builder
-
-	q.WriteString(fmt.Sprintf("USE WAREHOUSE %v", pb.warehouse))
-	return q.String(), nil
-}
-
 // Create returns the SQL query that will create a new function.
 func (pb *FunctionBuilder) Create() (string, error) {
 	var q strings.Builder
