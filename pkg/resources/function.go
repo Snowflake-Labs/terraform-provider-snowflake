@@ -21,12 +21,6 @@ var functionSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.",
 	},
-	"warehouse": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The warehouse in which to create the function. Only for Python language.",
-		ForceNew:    true,
-	},
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -205,19 +199,6 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithRuntimeVersion(v.(string))
 	}
 
-	// Set optionals, warehouse in which to create the function
-	if v, ok := d.GetOk("warehouse"); ok {
-		builder.WithWarehouse(v.(string))
-		q, err := builder.UseWarehouse()
-		if err != nil {
-			return err
-		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error using warehouse %v", v.(string))
-		}
-	}
-
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
@@ -369,10 +350,6 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "handler":
 			if err = d.Set("handler", desc.Value.String); err != nil {
-				return err
-			}
-		case "warehouse":
-			if err = d.Set("warehouse", desc.Value.String); err != nil {
 				return err
 			}
 		case "target_path":

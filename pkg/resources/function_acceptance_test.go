@@ -18,7 +18,6 @@ func TestAcc_Function(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	functName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	expBody1 := "3.141592654::FLOAT"
 	expBody2 := "var X=3\nreturn X"
@@ -31,7 +30,7 @@ func TestAcc_Function(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(dbName, schemaName, functName, warehouseName),
+				Config: functionConfig(dbName, schemaName, functName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
@@ -70,7 +69,7 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name, warehouse string) string {
+func functionConfig(db, schema, name string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test_database" {
 		name    = "%s"
@@ -83,7 +82,6 @@ func functionConfig(db, schema, name, warehouse string) string {
 		comment  = "Terraform acceptance test"
 	}
 
-	
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -121,16 +119,10 @@ func functionConfig(db, schema, name, warehouse string) string {
 		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
 	}
 
-	resource "snowflake_warehouse" "test_wh" {
-		name = "%s"
-		comment = "Warehouse for terraform acceptance test"
-	}
-
 	resource "snowflake_function" "test_funct_python" {
 		name = "%s"
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
-		warehouse = snowflake_warehouse.test_wh.name
 		arguments {
 			name = "ARG1"
 			type = "NUMBER"
@@ -167,5 +159,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name, warehouse, name, name)
+	`, db, schema, name, name, name, name, name)
 }

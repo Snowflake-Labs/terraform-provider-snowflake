@@ -153,9 +153,9 @@ func Provider() *schema.Provider {
 			},
 			"warehouse": {
 				Type:        schema.TypeString,
+				Description: "Sets the warehouse for the session. Can come from the `SNOWFLAKE_WAREHOUSE` environment variable.",
 				Optional:    true,
-				Description: "Sets the warehouse for the session",
-				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
 			},
 		},
 		ResourcesMap:   getResources(),
@@ -340,7 +340,7 @@ func DSN(
 	host,
 	warehouse string) (string, error) {
 
-	// us-west-2 is their default region, but if you actually specify that it won't trigger their default code
+	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
 	if region == "us-west-2" {
 		region = ""
