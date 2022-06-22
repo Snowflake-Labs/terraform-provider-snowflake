@@ -30,7 +30,7 @@ func TestAcc_Function(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(dbName, schemaName, functName),
+				Config: functionConfig(dbName, schemaName, functName, warehouseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
@@ -69,7 +69,7 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name string) string {
+func functionConfig(db, schema, name, warehouse string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test_database" {
 		name    = "%s"
@@ -82,6 +82,7 @@ func functionConfig(db, schema, name string) string {
 		comment  = "Terraform acceptance test"
 	}
 
+	
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
 		database = snowflake_database.test_database.name
