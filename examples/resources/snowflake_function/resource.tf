@@ -5,7 +5,7 @@ provider "snowflake" {
   account   = "ACCOUNT"
   password  = "PASSWORD"
   role      = "MY_ROLE"
-  warehouse = "MY_WH"   // Required for Python language, can also be set from the `SNOWFLAKE_WAREHOUSE` environment variable
+  warehouse = "MY_WH"   // Optional attribute, some resources (e.g. Python UDFs)' require a warehouse to create and can also be set optionally from the `SNOWFLAKE_WAREHOUSE` environment variable
 }
 
 // Create database
