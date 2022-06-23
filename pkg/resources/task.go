@@ -170,7 +170,8 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 			return nil, errors.Wrapf(err, "failed to locate the root node of: %v", name)
 		}
 
-		if task.Predecessors == nil {
+		currentName := task.GetPredecessorName()
+		if currentName == "" {
 			log.Printf("[DEBUG] found root task: %v", name)
 			// we only want to deal with suspending the root task when its enabled (started)
 			if task.IsEnabled() {
@@ -179,7 +180,7 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 			return nil, nil
 		}
 
-		name = task.GetPredecessorName()
+		name = currentName
 	}
 }
 
