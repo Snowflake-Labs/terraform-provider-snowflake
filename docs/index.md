@@ -65,7 +65,7 @@ provider "snowflake" {
 - `private_key_path` (String, Sensitive) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 - `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Can be source from the `SNOWFLAKE_REGION` environment variable.
 - `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
-- `warehouse` (String) Sets the warehouse for the session. Can come from the `SNOWFLAKE_WAREHOUSE` environment variable.
+- `warehouse` (String) Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE enviornment variable.
 
 ## Authentication
 
