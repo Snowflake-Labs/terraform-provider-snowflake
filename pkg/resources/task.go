@@ -333,8 +333,9 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if t.Predecessors != nil {
-		err = d.Set("after", t.GetPredecessorName())
+	predecessorName := t.GetPredecessorName()
+	if predecessorName != "" {
+		err = d.Set("after", predecessorName)
 		if err != nil {
 			return err
 		}
