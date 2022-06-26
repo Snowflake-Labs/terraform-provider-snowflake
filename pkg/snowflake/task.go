@@ -357,11 +357,12 @@ func (t *task) GetPredecessorName() string {
 		return ""
 	}
 
-	// Since >=6.21, Snowflake returns this as a JSON array (even empty)
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
 	var fullNames []string
 	if err := json.Unmarshal([]byte(*t.Predecessors), &fullNames); err == nil {
 		for _, fullName := range fullNames {
-			return fullName[strings.LastIndex(fullName, ".")+1:] // only supports one (as <6.21 implementation)
+			name := fullName[strings.LastIndex(fullName, ".")+1:]
+			return strings.Trim(name, "\\\"")
 		}
 		return ""
 	}
