@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -54,7 +55,6 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Description: "When set, specifies the configurations for database replication.",
 		Optional:    true,
-		ForceNew:    true,
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
