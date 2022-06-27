@@ -65,8 +65,11 @@ func TestStripAccountFromName(t *testing.T) {
 	s := "yt12345.my_share"
 	r.Equal("my_share", resources.StripAccountFromName(s))
 
-	s = "yt12345.my.share"
-	r.Equal("my.share", resources.StripAccountFromName(s))
+	s = "yt12345.my_share"
+	r.Equal("my_share", resources.StripAccountFromName(s))
+
+	s = "org.account.my_share"
+	r.Equal("my_share", resources.StripAccountFromName(s))
 
 	s = "no_account_for_some_reason"
 	r.Equal("no_account_for_some_reason", resources.StripAccountFromName(s))
