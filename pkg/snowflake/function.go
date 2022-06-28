@@ -29,7 +29,6 @@ type FunctionBuilder struct {
 	comment           string
 	statement         string
 	runtimeVersion    string // for Python runtime version
-	warehouse         string
 }
 
 // QualifiedName prepends the db and schema and appends argument types
@@ -95,12 +94,6 @@ func (pb *FunctionBuilder) WithLanguage(s string) *FunctionBuilder {
 	return pb
 }
 
-// Withwarehouse
-func (pb *FunctionBuilder) WithWarehouse(s string) *FunctionBuilder {
-	pb.warehouse = s
-	return pb
-}
-
 // WithPackages
 func (pb *FunctionBuilder) WithPackages(s []string) *FunctionBuilder {
 	pb.packages = s
@@ -159,13 +152,6 @@ func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
 		schema:        schema,
 		argumentTypes: argTypes,
 	}
-}
-
-func (pb *FunctionBuilder) UseWarehouse() (string, error) {
-	var q strings.Builder
-
-	q.WriteString(fmt.Sprintf("USE WAREHOUSE %v", pb.warehouse))
-	return q.String(), nil
 }
 
 // Create returns the SQL query that will create a new function.
