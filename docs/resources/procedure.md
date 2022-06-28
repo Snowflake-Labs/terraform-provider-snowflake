@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_schema" "db" {
+resource "snowflake_database" "db" {
   name                = "MYDB"
   data_retention_days = 1
 }
