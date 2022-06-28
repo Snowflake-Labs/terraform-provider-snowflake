@@ -40,6 +40,7 @@ func users(userName string) string {
 		disabled = false
 		default_warehouse="foo"
 		default_role="foo"
+		default_secondary_roles = ["ALL"]
 		default_namespace="foo"
 	}
 

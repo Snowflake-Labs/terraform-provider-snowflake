@@ -43,7 +43,7 @@ terraform {
   required_providers {
     snowflake = {
       source  = "chanzuckerberg/snowflake"
-      version = "0.32.0"
+      version = "0.36.0"
     }
   }
 }
@@ -59,7 +59,7 @@ terraform {
   required_providers {
     snowflake = {
       source  = "Snowflake-Labs/snowflake"
-      version = "0.32.0"
+      version = "0.36.0"
     }
   }
 }
@@ -84,7 +84,7 @@ terraform {
   required_providers {
     snowflake = {
       source = "Snowflake-Labs/snowflake"
-      version = "0.33.1"
+      version = "0.36.0"
     }
   }
 }

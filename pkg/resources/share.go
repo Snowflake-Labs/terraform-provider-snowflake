@@ -198,7 +198,7 @@ func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 }
 
 // StripAccountFromName removes the accout prefix from a resource (e.g. a share)
-// that returns it (e.g. yt12345.my_share should just be my_share)
+// that returns it (e.g. yt12345.my_share or org.acc.my_share should just be my_share)
 func StripAccountFromName(s string) string {
-	return s[strings.Index(s, ".")+1:]
+	return s[strings.LastIndex(s, ".")+1:]
 }

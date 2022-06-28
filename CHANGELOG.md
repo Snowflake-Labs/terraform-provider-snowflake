@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.37.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.36.0...v0.37.0) (2022-06-28)
+
+
+### Features
+
+* add python language support for functions ([#1063](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1063)) ([ee4c2c1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ee4c2c1b3b2fecf7319a5d58d17ae87ff4bcf685))
+* Python support for functions ([#1069](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1069)) ([bab729a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bab729a802a2ae568943a89ebad53727afb86e13))
+
+
+### BugFixes
+
+* Handling 2022_03 breaking changes ([#1072](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1072)) ([88f4d44](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/88f4d44a7f33abc234b3f67aa372230095c841bb))
+* Temporarily disabling acceptance tests for release ([#1083](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1083)) ([8eeb4b7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8eeb4b7ff62ef442c45f0b8e3105cd5dc1ff7ccb))
+
+## [0.36.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.35.0...v0.36.0) (2022-06-16)
+
+
+### Features
+
+* Add support for default_secondary_roles ([#1030](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1030)) ([ae8f3da](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ae8f3dac67e8bf5c4cd73fb08101d378be32e39f))
+
+
+### BugFixes
+
+* allow custom characters to be ignored from validation ([#1059](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1059)) ([b65d692](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b65d692c83202d3e23628d727d71abf1f603d32a))
+* Correctly read INSERT_ONLY mode for streams ([#1047](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1047)) ([9c034fe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9c034fef3f6ac1e51f6a6aae3460221d642a2bc8))
+* handling not exist gracefully ([#1031](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1031)) ([101267d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/101267dd26a03cb8bc6147e06bd467fe895e3b5e))
+
 ## [0.35.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.34.0...v0.35.0) (2022-06-07)
 
 
