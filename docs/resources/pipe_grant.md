@@ -3,7 +3,7 @@
 page_title: "snowflake_pipe_grant Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_pipe_grant (Resource)
@@ -15,8 +15,8 @@ description: |-
 ```terraform
 resource snowflake_pipe_grant grant {
   database_name = "db"
-  schema_name   = "schema"
-  sequence_name = "sequence"
+  schema_name = "schema"
+  pipe_name = "pipe"
 
   privilege = "operate"
   roles = [
