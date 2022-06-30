@@ -116,24 +116,53 @@ func TestDatabaseDelete(t *testing.T) {
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name": "good_name",
-		"from_share": map[string]interface{}{
-			"provider": "abc123",
-			"share":    "my_share",
+	tests := []struct {
+		name             string
+		raw              map[string]interface{}
+		expectExec       string
+		willReturnResult sql.Result
+	}{
+		{
+			name: "old provider account",
+			raw: map[string]interface{}{
+				"name": "good_name",
+				"from_share": map[string]interface{}{
+					"provider": "abc123",
+					"share":    "my_share",
+				},
+			},
+			expectExec:       `CREATE DATABASE "good_name" FROM SHARE "abc123"."my_share"`,
+			willReturnResult: sqlmock.NewResult(1, 1),
+		},
+		{
+			name: "org provider account",
+			raw: map[string]interface{}{
+				"name": "good_name",
+				"from_share": map[string]interface{}{
+					"org":      "my_org",
+					"provider": "my_account",
+					"share":    "my_share",
+				},
+			},
+			expectExec:       `CREATE DATABASE "good_name" FROM SHARE "my_org"."my_account"."my_share"`,
+			willReturnResult: sqlmock.NewResult(1, 1),
 		},
 	}
-	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
-	r.NotNil(d)
 
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "good_name" FROM SHARE "abc123"."my_share"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectRead(mock)
-		err := resources.CreateDatabase(d, db)
-		r.NoError(err)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := require.New(t)
+			d := schema.TestResourceDataRaw(t, resources.Database().Schema, tt.raw)
+			r.NotNil(d)
+
+			WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+				mock.ExpectExec(tt.expectExec).WillReturnResult(tt.willReturnResult)
+				expectRead(mock)
+				err := resources.CreateDatabase(d, db)
+				r.NoError(err)
+			})
+		})
+	}
 }
 
 func TestDatabaseCreateFromDatabase(t *testing.T) {

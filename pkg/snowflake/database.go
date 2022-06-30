@@ -20,14 +20,16 @@ func Database(name string) *Builder {
 // DatabaseShareBuilder is a basic builder that just creates databases from shares
 type DatabaseShareBuilder struct {
 	name     string
+	org      string
 	provider string
 	share    string
 }
 
 // DatabaseFromShare returns a pointer to a builder that can create a database from a share
-func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
+func DatabaseFromShare(name, org, provider, share string) *DatabaseShareBuilder {
 	return &DatabaseShareBuilder{
 		name:     name,
+		org:      org,
 		provider: provider,
 		share:    share,
 	}
@@ -35,7 +37,11 @@ func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
 
 // Create returns the SQL statement required to create a database from a share
 func (dsb *DatabaseShareBuilder) Create() string {
-	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share)
+	share := fmt.Sprintf(`"%v"."%v"`, dsb.provider, dsb.share)
+	if dsb.org != "" {
+		share = fmt.Sprintf(`"%v".%v`, dsb.org, share)
+	}
+	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE %v`, dsb.name, share)
 }
 
 // DatabaseCloneBuilder is a basic builder that just creates databases from a source database

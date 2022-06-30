@@ -51,7 +51,7 @@ func TestDatabase(t *testing.T) {
 
 func TestDatabaseCreateFromShare(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.DatabaseFromShare("db1", "abc123", "share1")
+	db := snowflake.DatabaseFromShare("db1", "", "abc123", "share1")
 	q := db.Create()
 	r.Equal(`CREATE DATABASE "db1" FROM SHARE "abc123"."share1"`, q)
 }

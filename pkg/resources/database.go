@@ -136,6 +136,10 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 	in := d.Get("from_share").(map[string]interface{})
 	prov := in["provider"]
 	share := in["share"]
+	org := in["org"]
+	if org == nil {
+		org = ""
+	}
 
 	if prov == nil || share == nil {
 		return fmt.Errorf("from_share must contain the keys provider and share, but it had %+v", in)
@@ -143,11 +147,11 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
-	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
+	builder := snowflake.DatabaseFromShare(name, org.(string), prov.(string), share.(string))
 
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+		return errors.Wrapf(err, "error creating database %v from share %v.%v.%v", name, org, prov, share)
 	}
 
 	d.SetId(name)
