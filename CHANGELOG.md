@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
+
+
+### BugFixes
+
+* Allow creation of stage with storage integration including special characters ([#1081](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1081)) ([7b5bf00](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7b5bf00183595a5412f0a5f19c0c3df79502a711)), closes [#1080](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1080)
+* warehouse import when auto_suspend is set to null ([#1092](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1092)) ([9dc748f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9dc748f2b7ff98909bf285685a21175940b8e0d8))
+
 ## [0.37.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.36.0...v0.37.0) (2022-06-28)
 
 
