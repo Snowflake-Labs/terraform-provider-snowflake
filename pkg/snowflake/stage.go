@@ -142,7 +142,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.storageIntegration != "" {
-		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = %v`, sb.storageIntegration))
+		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = "%v"`, sb.storageIntegration))
 	}
 
 	if sb.encryption != "" {
@@ -195,7 +195,7 @@ func (sb *StageBuilder) ChangeCredentials(c string) string {
 
 // ChangeStorageIntegration returns the SQL query that will update the storage integration on the stage.
 func (sb *StageBuilder) ChangeStorageIntegration(s string) string {
-	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = %v`, sb.QualifiedName(), s)
+	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = "%v"`, sb.QualifiedName(), s)
 }
 
 // ChangeEncryption returns the SQL query that will update the encryption on the stage.
