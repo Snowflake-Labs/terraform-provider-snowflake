@@ -16,6 +16,7 @@ description: |-
 resource snowflake_share test {
 	name           = "share_name"
 	comment        = "cool comment"
+	accounts       = "organizationName.accountName"
 }
 ```
 
@@ -28,7 +29,7 @@ resource snowflake_share test {
 
 ### Optional
 
-- `accounts` (List of String) A list of accounts to be added to the share.
+- `accounts` (List of String) A list of accounts to be added to the share. Values should not be the account locator, but in the form of 'organization_name.account_name
 - `comment` (String) Specifies a comment for the managed account.
 
 ### Read-Only

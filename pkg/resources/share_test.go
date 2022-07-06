@@ -26,7 +26,7 @@ func TestShareCreate(t *testing.T) {
 	in := map[string]interface{}{
 		"name":     "test-share",
 		"comment":  "great comment",
-		"accounts": []interface{}{"bob123", "sue456"},
+		"accounts": []interface{}{"bob.123", "sue.456"},
 	}
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, in)
 	r.NotNil(d)
@@ -35,7 +35,7 @@ func TestShareCreate(t *testing.T) {
 		mock.ExpectExec(`^CREATE SHARE "test-share" COMMENT='great comment'$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^CREATE DATABASE "TEMP_test-share_\d*"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT REFERENCE_USAGE ON DATABASE "TEMP_test-share_\d*" TO SHARE "test-share"$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`^ALTER SHARE "test-share" SET ACCOUNTS=bob123,sue456$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER SHARE "test-share" SET ACCOUNTS=bob.123,sue.456$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectBegin()
 		mock.ExpectExec(`^REVOKE REFERENCE_USAGE ON DATABASE "TEMP_test-share_\d*" FROM SHARE "test-share"$`).WillReturnResult(sqlmock.NewResult(1, 1))
