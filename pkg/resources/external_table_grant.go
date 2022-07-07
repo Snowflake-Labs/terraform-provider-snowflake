@@ -22,7 +22,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The name of the schema containing the current or future external tables on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -112,6 +112,9 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	if (externalTableName != "") && futureExternalTables {
 		return errors.New("external_table_name must be empty if on_future is true.")
+	}
+	if (schemaName == "") && !futureExternalTables {
+		return errors.New("schema_name must be set when on_future is false.")
 	}
 
 	var builder snowflake.GrantBuilder

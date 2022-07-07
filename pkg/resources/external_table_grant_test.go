@@ -141,6 +141,22 @@ func TestFutureExternalTableGrantCreate(t *testing.T) {
 		err := resources.CreateExternalTableGrant(d, db)
 		b.NoError(err)
 	})
+
+	c := require.New(t)
+
+	in = map[string]interface{}{
+		"database_name":       "test-db",
+		"external_table_name": "test-table",
+		"privilege":           "SELECT",
+		"roles":               []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option":   false,
+	}
+	d = schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, in)
+	c.NotNil(d)
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateExternalTableGrant(d, db)
+		c.Error(err)
+	})
 }
 
 func expectReadFutureExternalTableGrant(mock sqlmock.Sqlmock) {
