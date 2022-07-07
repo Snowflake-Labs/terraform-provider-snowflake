@@ -1,0 +1,20 @@
+name: slack-notifications-prs-issues
+
+on: [pull_request, issues]
+
+jobs:
+  slack-action:
+    runs-on: windows-latest
+    name: Test 2 [windows-latest]
+
+    steps:
+      - name: Send Slack Message
+        uses: archive/github-actions-slack@master
+        id: send-message
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: C03KS51EF3R
+          slack-text: Event "${{ github.event_name }}""
+
+      - name: Result from "Send Slack Message"
+        run: echo '${{ steps.send-message.outputs.slack-result }}'
