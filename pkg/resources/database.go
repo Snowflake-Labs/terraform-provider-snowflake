@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -54,13 +55,13 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Description: "When set, specifies the configurations for database replication.",
 		Optional:    true,
-		ForceNew:    true,
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"accounts": {
 					Type:     schema.TypeList,
 					Required: true,
+					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				"ignore_edition_check": {
@@ -226,9 +227,51 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
+	dbName := d.Get("name").(string)
+	builder := snowflake.Database(dbName)
+	db := meta.(*sql.DB)
+
+	// If replication configuration changes, need to update accounts that have permission to replicate database
+	if d.HasChange("replication_configuration") {
+		oldConfig, newConfig := d.GetChange("replication_configuration")
+		newConfigLength := len(newConfig.([]interface{}))
+		oldConfigLength := len(oldConfig.([]interface{}))
+		// Enable replication for any new accounts and disable replication for removed accounts
+		if newConfigLength > 0 {
+			newAccounts := extractInterfaceFromAttribute(newConfig, "accounts")
+			enableQuery := builder.EnableReplicationAccounts(dbName, strings.Join(expandStringList(newAccounts), ", "))
+			err := snowflake.Exec(db, enableQuery)
+			if err != nil {
+				return errors.Wrapf(err, "error enabling replication configuration with statement %v", enableQuery)
+			}
+		}
+
+		if oldConfigLength > 0 {
+			oldAccounts := extractInterfaceFromAttribute(oldConfig, "accounts")
+			var accountsToDisableReplication []interface{}
+			if newConfigLength > 0 {
+				newAccounts := extractInterfaceFromAttribute(newConfig, "accounts")
+				accountsToDisableReplication = builder.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts)
+			} else {
+				accountsToDisableReplication = builder.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, nil)
+			}
+			// If accounts were found to be removed, disable replication
+			if len(accountsToDisableReplication) > 0 {
+				disableQuery := builder.DisableReplicationAccounts(dbName, strings.Join(expandStringList(accountsToDisableReplication), ", "))
+				err := snowflake.Exec(db, disableQuery)
+				if err != nil {
+					return errors.Wrapf(err, "error disabling replication configuration with statement %v", disableQuery)
+				}
+			}
+		}
+	}
 	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
 func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("database", snowflake.Database)(d, meta)
+}
+
+func extractInterfaceFromAttribute(config interface{}, attribute string) []interface{} {
+	return config.([]interface{})[0].(map[string]interface{})[attribute].([]interface{})
 }

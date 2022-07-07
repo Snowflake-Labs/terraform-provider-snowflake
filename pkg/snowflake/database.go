@@ -57,13 +57,13 @@ func (dsb *DatabaseCloneBuilder) Create() string {
 	return fmt.Sprintf(`CREATE DATABASE "%v" CLONE "%v"`, dsb.name, dsb.database)
 }
 
-// DatabaseReplicaBuilder is a basic builder that just creates databases from an avilable replication source
+// DatabaseReplicaBuilder is a basic builder that just creates databases from an available replication source
 type DatabaseReplicaBuilder struct {
 	name    string
 	replica string
 }
 
-// DatabaseFromReplica returns a pointer to a builder that can create a database from an avilable replication source
+// DatabaseFromReplica returns a pointer to a builder that can create a database from an available replication source
 func DatabaseFromReplica(name, replica string) *DatabaseReplicaBuilder {
 	return &DatabaseReplicaBuilder{
 		name:    name,
@@ -71,7 +71,7 @@ func DatabaseFromReplica(name, replica string) *DatabaseReplicaBuilder {
 	}
 }
 
-// Create returns the SQL statement required to create a database from an avilable replication source
+// Create returns the SQL statement required to create a database from an available replication source
 func (dsb *DatabaseReplicaBuilder) Create() string {
 	return fmt.Sprintf(`CREATE DATABASE "%v" AS REPLICA OF "%v"`, dsb.name, dsb.replica)
 }
@@ -133,4 +133,31 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
 		}
 	}
 	return db, errors.Wrapf(err, "unable to scan row for %s", stmt)
+}
+
+// EnableReplicationAccounts returns the SQL query that will enable replication to provided accounts
+func (db *Builder) EnableReplicationAccounts(dbName string, accounts string) string {
+	return fmt.Sprintf(`ALTER DATABASE "%v" ENABLE REPLICATION TO ACCOUNTS %v`, dbName, accounts)
+}
+
+// DisableReplicationAccounts returns the SQL query that will disable replication to provided accounts
+func (db *Builder) DisableReplicationAccounts(dbName string, accounts string) string {
+	return fmt.Sprintf(`ALTER DATABASE "%v" DISABLE REPLICATION TO ACCOUNTS %v`, dbName, accounts)
+}
+
+// GetRemovedAccountsFromReplicationConfiguration compares two old and new configurations and returns any values that
+// were deleted from the old configuration.
+func (db *Builder) GetRemovedAccountsFromReplicationConfiguration(oldAcc []interface{}, newAcc []interface{}) []interface{} {
+	accountMap := make(map[string]bool)
+	var removedAccounts []interface{}
+	// insert all values from new configuration into mapping
+	for _, v := range newAcc {
+		accountMap[v.(string)] = true
+	}
+	for _, v := range oldAcc {
+		if accountMap[v.(string)] == false {
+			removedAccounts = append(removedAccounts, v.(string))
+		}
+	}
+	return removedAccounts
 }
