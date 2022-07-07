@@ -1,1 +1,0 @@
-terraform import snowflake_managed_account.example name

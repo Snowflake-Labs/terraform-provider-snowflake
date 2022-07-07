@@ -1,1 +1,0 @@
-terraform import snowflake_role_ownership_grant.example rolename

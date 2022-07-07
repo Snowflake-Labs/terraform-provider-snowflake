@@ -1,1 +1,0 @@
-data "snowflake_system_get_snowflake_platform_info" "current" {}

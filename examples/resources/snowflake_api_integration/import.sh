@@ -1,1 +1,0 @@
-terraform import snowflake_api_integration.example name
