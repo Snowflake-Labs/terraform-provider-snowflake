@@ -155,7 +155,7 @@ func (db *Builder) GetRemovedAccountsFromReplicationConfiguration(oldAcc []inter
 		accountMap[v.(string)] = true
 	}
 	for _, v := range oldAcc {
-		if accountMap[v.(string)] == false {
+		if !accountMap[v.(string)] {
 			removedAccounts = append(removedAccounts, v.(string))
 		}
 	}
