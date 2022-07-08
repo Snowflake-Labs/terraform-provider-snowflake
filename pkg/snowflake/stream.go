@@ -17,6 +17,7 @@ type StreamBuilder struct {
 	schema          string
 	externalTable   bool
 	onTable         string
+	onView          string
 	appendOnly      bool
 	insertOnly      bool
 	showInitialRows bool
@@ -59,6 +60,11 @@ func (sb *StreamBuilder) WithExternalTable(b bool) *StreamBuilder {
 	return sb
 }
 
+func (sb *StreamBuilder) WithOnView(d string, s string, t string) *StreamBuilder {
+	sb.onView = fmt.Sprintf(`"%v"."%v"."%v"`, d, s, t)
+	return sb
+}
+
 func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
 	sb.appendOnly = b
 	return sb
@@ -98,11 +104,15 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(` ON`)
 
-	if sb.externalTable {
-		q.WriteString(` EXTERNAL`)
-	}
+	if sb.onTable != "" {
+		if sb.externalTable {
+			q.WriteString(` EXTERNAL`)
+		}
 
-	q.WriteString(fmt.Sprintf(` TABLE %v`, sb.onTable))
+		q.WriteString(fmt.Sprintf(` TABLE %v`, sb.onTable))
+	} else if sb.onView != "" {
+		q.WriteString(fmt.Sprintf(` VIEW %v`, sb.onView))
+	}
 
 	if sb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(sb.comment)))

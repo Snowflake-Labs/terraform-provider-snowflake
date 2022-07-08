@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	streamIDDelimiter        = '|'
-	streamOnTableIDDelimiter = '.'
+	streamIDDelimiter         = '|'
+	streamOnObjectIDDelimiter = '.'
 )
 
 var streamSchema = map[string]*schema.Schema{
@@ -43,10 +43,18 @@ var streamSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the stream.",
 	},
 	"on_table": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		ForceNew:    true,
-		Description: "Name of the table the stream will monitor.",
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  "Name of the table the stream will monitor.",
+		ExactlyOneOf: []string{"on_table", "on_view"},
+	},
+	"on_view": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  "Name of the view the stream will monitor.",
+		ExactlyOneOf: []string{"on_table", "on_view"},
 	},
 	"append_only": {
 		Type:        schema.TypeBool,
@@ -96,10 +104,10 @@ type streamID struct {
 	StreamName   string
 }
 
-type streamOnTableID struct {
+type streamOnObjectID struct {
 	DatabaseName string
 	SchemaName   string
-	OnTableName  string
+	Name         string
 }
 
 //String() takes in a streamID object and returns a pipe-delimited string:
@@ -142,11 +150,11 @@ func streamIDFromString(stringID string) (*streamID, error) {
 	return streamResult, nil
 }
 
-// streamOnTableIDFromString() takes in a dot-delimited string: DatabaseName.SchemaName.TableName
-// and returns a streamOnTableID object
-func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
+// streamOnObjectIDFromString() takes in a dot-delimited string: DatabaseName.SchemaName.TableName
+// and returns a streamOnObjectID object
+func streamOnObjectIDFromString(stringID string) (*streamOnObjectID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = streamOnTableIDDelimiter
+	reader.Comma = streamOnObjectIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("Not CSV compatible")
@@ -160,10 +168,10 @@ func streamOnTableIDFromString(stringID string) (*streamOnTableID, error) {
 		return nil, fmt.Errorf("invalid format for on_table: %v , expected: <database_name.schema_name.target_table_name>", strings.Join(lines[0], "."))
 	}
 
-	streamOnTableResult := &streamOnTableID{
+	streamOnTableResult := &streamOnObjectID{
 		DatabaseName: lines[0][0],
 		SchemaName:   lines[0][1],
-		OnTableName:  lines[0][2],
+		Name:         lines[0][2],
 	}
 	return streamOnTableResult, nil
 }
@@ -174,28 +182,47 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	onTable := d.Get("on_table").(string)
 	appendOnly := d.Get("append_only").(bool)
 	insertOnly := d.Get("insert_only").(bool)
 	showInitialRows := d.Get("show_initial_rows").(bool)
 
 	builder := snowflake.Stream(name, database, schema)
 
-	resultOnTable, err := streamOnTableIDFromString(onTable)
-	if err != nil {
-		return err
+	if onTable, onTableSet := d.GetOk("on_table"); onTableSet {
+		id, err := streamOnObjectIDFromString(onTable.(string))
+		if err != nil {
+			return err
+		}
+
+		tq := snowflake.Table(id.Name, id.DatabaseName, id.SchemaName).Show()
+		tableRow := snowflake.QueryRow(db, tq)
+
+		t, err := snowflake.ScanTable(tableRow)
+		if err != nil {
+			return err
+		}
+
+		builder.WithExternalTable(t.IsExternal.String == "Y")
+		builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
+	} else if onView, onViewSet := d.GetOk("on_view"); onViewSet {
+		id, err := streamOnObjectIDFromString(onView.(string))
+		if err != nil {
+			return err
+		}
+
+		tq := snowflake.View(id.Name).WithDB(id.DatabaseName).WithSchema(id.SchemaName).Show()
+		viewRow := snowflake.QueryRow(db, tq)
+
+		t, err := snowflake.ScanView(viewRow)
+		if err != nil {
+			return err
+		}
+
+		builder.WithOnView(t.DatabaseName.String, t.SchemaName.String, t.Name.String)
+	} else {
+		return fmt.Errorf("exactly one of 'on_table' or 'on_view' expected")
 	}
 
-	tq := snowflake.Table(resultOnTable.OnTableName, resultOnTable.DatabaseName, resultOnTable.SchemaName).Show()
-	tableRow := snowflake.QueryRow(db, tq)
-
-	t, err := snowflake.ScanTable(tableRow)
-	if err != nil {
-		return err
-	}
-
-	builder.WithExternalTable(t.IsExternal.String == "Y")
-	builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
 	builder.WithAppendOnly(appendOnly)
 	builder.WithInsertOnly(insertOnly)
 	builder.WithShowInitialRows(showInitialRows)
@@ -206,7 +233,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err = snowflake.Exec(db, stmt)
+	err := snowflake.Exec(db, stmt)
 	if err != nil {
 		return errors.Wrapf(err, "error creating stream %v", name)
 	}
