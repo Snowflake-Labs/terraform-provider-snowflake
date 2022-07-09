@@ -188,7 +188,12 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.Stream(name, database, schema)
 
-	if onTable, onTableSet := d.GetOk("on_table"); onTableSet {
+	onTable, onTableSet := d.GetOk("on_table")
+	onView, onViewSet := d.GetOk("on_view")
+
+	if (onTableSet && onViewSet) || !(onTableSet || onViewSet) {
+		return fmt.Errorf("exactly one of 'on_table' or 'on_view' expected")
+	} else if onTableSet {
 		id, err := streamOnObjectIDFromString(onTable.(string))
 		if err != nil {
 			return err
@@ -204,7 +209,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 		builder.WithExternalTable(t.IsExternal.String == "Y")
 		builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
-	} else if onView, onViewSet := d.GetOk("on_view"); onViewSet {
+	} else if onViewSet {
 		id, err := streamOnObjectIDFromString(onView.(string))
 		if err != nil {
 			return err
@@ -219,8 +224,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		builder.WithOnView(t.DatabaseName.String, t.SchemaName.String, t.Name.String)
-	} else {
-		return fmt.Errorf("exactly one of 'on_table' or 'on_view' expected")
 	}
 
 	builder.WithAppendOnly(appendOnly)
