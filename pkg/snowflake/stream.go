@@ -156,6 +156,7 @@ type descStreamRow struct {
 	Comment         sql.NullString `db:"comment"`
 	ShowInitialRows bool           `db:"show_initial_rows"`
 	TableName       sql.NullString `db:"table_name"`
+	ViewName        sql.NullString `db:"view_name"`
 	Type            sql.NullString `db:"type"`
 	Stale           sql.NullString `db:"stale"`
 	Mode            sql.NullString `db:"mode"`

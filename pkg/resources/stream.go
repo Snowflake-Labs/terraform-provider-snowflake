@@ -300,6 +300,11 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	err = d.Set("on_view", stream.ViewName.String)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("append_only", stream.Mode.String == "APPEND_ONLY")
 	if err != nil {
 		return err
