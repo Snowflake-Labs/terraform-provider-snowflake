@@ -32,7 +32,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"from_share": {
 		Type:          schema.TypeMap,
 		Elem:          &schema.Schema{Type: schema.TypeString},
-		Description:   "Specify a provider and a share in this map to create a database from a share.",
+		Description:   "Specify a organization_name, account_name and a share in this map to create a database from a share.",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_database", "from_replica"},
@@ -137,18 +137,37 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 	in := d.Get("from_share").(map[string]interface{})
 	prov := in["provider"]
 	share := in["share"]
+	organizationName := in["organization_name"]
+	accountName := in["account_name"]
 
-	if prov == nil || share == nil {
-		return fmt.Errorf("from_share must contain the keys provider and share, but it had %+v", in)
+	if share == nil || (prov == nil && (organizationName == nil || accountName == nil)) {
+		return fmt.Errorf("from_share must contain the share key, but it had %+v", in)
 	}
 
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
-	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
+	builder := snowflake.DatabaseFromShare(name, share.(string))
+
+	var fullShareName string
+
+	if prov != nil {
+		log.Printf("[WARN] Property provider is deprecated, please use organization_name and account_name instead.")
+		builder.WithProvider(prov.(string))
+		fullShareName = fmt.Sprintf(`"%v"."%v"`, prov.(string), share.(string))
+	} else if organizationName != nil && accountName != nil {
+		builder.WithOrg(organizationName.(string), accountName.(string))
+		fullShareName = fmt.Sprintf(`"%v"."%v"."%v"`, organizationName.(string), accountName.(string), share.(string))
+	} else {
+		return fmt.Errorf("from_share must contain either organization and account or provider, but it had %+v", in)
+	}
+
+	if comment, ok := d.GetOk("comment"); ok {
+		builder.WithComment(comment.(string))
+	}
 
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+		return errors.Wrapf(err, "error creating database %v from share %v.", name, fullShareName)
 	}
 
 	d.SetId(name)

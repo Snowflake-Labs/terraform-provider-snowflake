@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -19,23 +20,57 @@ func Database(name string) *Builder {
 
 // DatabaseShareBuilder is a basic builder that just creates databases from shares
 type DatabaseShareBuilder struct {
-	name     string
-	provider string
-	share    string
+	name             string
+	provider         string //Deprecated: use organization_name and account_name instead
+	share            string
+	organizationName string
+	accountName      string
+	comment          string
 }
 
 // DatabaseFromShare returns a pointer to a builder that can create a database from a share
-func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
+func DatabaseFromShare(name, share string) *DatabaseShareBuilder {
 	return &DatabaseShareBuilder{
-		name:     name,
-		provider: provider,
-		share:    share,
+		name:  name,
+		share: share,
 	}
+}
+
+// WithProvider adds a provider to the DatabaseShareBuilder
+// Deprecated: use WithOrg instead
+func (dsb *DatabaseShareBuilder) WithProvider(provider string) *DatabaseShareBuilder {
+	dsb.provider = provider
+	return dsb
+}
+
+// WithOrg adds a organizationName and accountName to the DatabaseShareBuilder
+func (dsb *DatabaseShareBuilder) WithOrg(organizationName, accountName string) *DatabaseShareBuilder {
+	dsb.organizationName = organizationName
+	dsb.accountName = accountName
+	return dsb
+}
+
+// WithComment adds a comment to the DatabaseShareBuilder
+func (dsb *DatabaseShareBuilder) WithComment(comment string) *DatabaseShareBuilder {
+	dsb.comment = comment
+	return dsb
 }
 
 // Create returns the SQL statement required to create a database from a share
 func (dsb *DatabaseShareBuilder) Create() string {
-	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share)
+	var stmt strings.Builder
+	stmt.WriteString(fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE`, dsb.name))
+	if dsb.provider != "" {
+		stmt.WriteString(fmt.Sprintf(` "%v"."%v"`, dsb.provider, dsb.share))
+	} else {
+		stmt.WriteString(fmt.Sprintf(` "%v"."%v"."%v"`, dsb.organizationName, dsb.accountName, dsb.share))
+	}
+
+	if dsb.comment != "" {
+		stmt.WriteString(fmt.Sprintf(` COMMENT = '%v'`, dsb.comment))
+	}
+
+	return stmt.String()
 }
 
 // DatabaseCloneBuilder is a basic builder that just creates databases from a source database
