@@ -140,7 +140,7 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 	organizationName := in["organization_name"]
 	accountName := in["account_name"]
 
-	if share == nil || (prov == nil && (organizationName == nil || accountName == nil)) {
+	if share == nil {
 		return fmt.Errorf("from_share must contain the share key, but it had %+v", in)
 	}
 
