@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -29,21 +31,51 @@ var databaseSchema = map[string]*schema.Schema{
 	},
 	"from_share": {
 		Type:          schema.TypeMap,
+		Elem:          &schema.Schema{Type: schema.TypeString},
 		Description:   "Specify a provider and a share in this map to create a database from a share.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_database"},
+		ConflictsWith: []string{"from_database", "from_replica"},
 	},
 	"from_database": {
 		Type:          schema.TypeString,
 		Description:   "Specify a database to create a clone from.",
 		Optional:      true,
 		ForceNew:      true,
-		ConflictsWith: []string{"from_share"},
+		ConflictsWith: []string{"from_share", "from_replica"},
 	},
+	"from_replica": {
+		Type:          schema.TypeString,
+		Description:   "Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of \"<organization_name>\".\"<account_name>\".\"<db_name>\". An example would be: \"myorg1\".\"account1\".\"db1\"",
+		Optional:      true,
+		ForceNew:      true,
+		ConflictsWith: []string{"from_share", "from_database"},
+	},
+	"replication_configuration": {
+		Type:        schema.TypeList,
+		Description: "When set, specifies the configurations for database replication.",
+		Optional:    true,
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"accounts": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"ignore_edition_check": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+			},
+		},
+	},
+	"tag": tagReferenceSchema,
 }
 
-var databaseProperties = []string{"comment", "data_retention_time_in_days"}
+var databaseProperties = []string{"comment", "data_retention_time_in_days", "tag"}
 
 // Database returns a pointer to the resource representing a database
 func Database() *schema.Resource {
@@ -55,26 +87,54 @@ func Database() *schema.Resource {
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateDatabase implements schema.CreateFunc
-func CreateDatabase(data *schema.ResourceData, meta interface{}) error {
-	if _, ok := data.GetOk("from_share"); ok {
-		return createDatabaseFromShare(data, meta)
+func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
+	if _, ok := d.GetOk("from_share"); ok {
+		return createDatabaseFromShare(d, meta)
 	}
 
-	if _, ok := data.GetOk("from_database"); ok {
-		return createDatabaseFromDatabase(data, meta)
+	if _, ok := d.GetOk("from_database"); ok {
+		return createDatabaseFromDatabase(d, meta)
 	}
 
-	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
+	if _, ok := d.GetOk("from_replica"); ok {
+		return createDatabaseFromReplica(d, meta)
+	}
+
+	// If set, verify parameters are valid and attempt to enable replication
+	if v, ok := d.GetOk("replication_configuration"); ok {
+		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
+		ignoreEditionCheck := replicationConfiguration["ignore_edition_check"].(bool)
+
+		if !ignoreEditionCheck {
+			return errors.New("error enabling replication - ignore edition check was set to false")
+		}
+		resource := CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+		if err := enableReplication(d, meta, replicationConfiguration); err != nil {
+			return errors.Wrapf(err, "error enabling replication - account does not exist or System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
+		}
+		return resource
+	}
+
+	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
-func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error {
-	in := data.Get("from_share").(map[string]interface{})
+func enableReplication(d *schema.ResourceData, meta interface{}, replicationConfig map[string]interface{}) error {
+	db := meta.(*sql.DB)
+	primaryDbName := d.Get("name").(string)
+	accounts := replicationConfig["accounts"].([]interface{})
+	accountsToEnableReplication := strings.Join(expandStringList(accounts), ", ")
+	enableReplicationStmt := fmt.Sprintf(`ALTER DATABASE "%s" ENABLE REPLICATION TO ACCOUNTS %s`, primaryDbName, accountsToEnableReplication)
+	return snowflake.Exec(db, enableReplicationStmt)
+}
+
+func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
+	in := d.Get("from_share").(map[string]interface{})
 	prov := in["provider"]
 	share := in["share"]
 
@@ -83,7 +143,7 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 	}
 
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
 
 	err := snowflake.Exec(db, builder.Create())
@@ -91,16 +151,16 @@ func createDatabaseFromShare(data *schema.ResourceData, meta interface{}) error 
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadDatabase(data, meta)
+	return ReadDatabase(d, meta)
 }
 
-func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) error {
-	sourceDb := data.Get("from_database").(string)
+func createDatabaseFromDatabase(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_database").(string)
 
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromDatabase(name, sourceDb)
 
 	err := snowflake.Exec(db, builder.Create())
@@ -108,14 +168,31 @@ func createDatabaseFromDatabase(data *schema.ResourceData, meta interface{}) err
 		return errors.Wrapf(err, "error creating a clone database %v from database %v", name, sourceDb)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadDatabase(data, meta)
+	return ReadDatabase(d, meta)
 }
 
-func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
+func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
+	sourceDb := d.Get("from_replica").(string)
+
 	db := meta.(*sql.DB)
-	name := data.Id()
+	name := d.Get("name").(string)
+	builder := snowflake.DatabaseFromReplica(name, sourceDb)
+
+	err := snowflake.Exec(db, builder.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+	}
+
+	d.SetId(name)
+
+	return ReadDatabase(d, meta)
+}
+
+func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := d.Id()
 
 	stmt := snowflake.Database(name).Show()
 	row := snowflake.QueryRow(db, stmt)
@@ -124,18 +201,19 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("[WARN] database %v not found, removing from state file", name)
-			data.SetId("")
+			// If not found, mark resource to be removed from statefile during apply or refresh
+			log.Printf("[DEBUG] database (%s) not found", d.Id())
+			d.SetId("")
 			return nil
 		}
 		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
 	}
 
-	err = data.Set("name", database.DBName.String)
+	err = d.Set("name", database.DBName.String)
 	if err != nil {
 		return err
 	}
-	err = data.Set("comment", database.Comment.String)
+	err = d.Set("comment", database.Comment.String)
 	if err != nil {
 		return err
 	}
@@ -145,14 +223,55 @@ func ReadDatabase(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = data.Set("data_retention_time_in_days", i)
-	return err
+	return d.Set("data_retention_time_in_days", i)
 }
 
-func UpdateDatabase(data *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(data, meta)
+func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
+	dbName := d.Get("name").(string)
+	builder := snowflake.Database(dbName)
+	db := meta.(*sql.DB)
+
+	// If replication configuration changes, need to update accounts that have permission to replicate database
+	if d.HasChange("replication_configuration") {
+		oldConfig, newConfig := d.GetChange("replication_configuration")
+		newConfigLength := len(newConfig.([]interface{}))
+		oldConfigLength := len(oldConfig.([]interface{}))
+		// Enable replication for any new accounts and disable replication for removed accounts
+		if newConfigLength > 0 {
+			newAccounts := extractInterfaceFromAttribute(newConfig, "accounts")
+			enableQuery := builder.EnableReplicationAccounts(dbName, strings.Join(expandStringList(newAccounts), ", "))
+			err := snowflake.Exec(db, enableQuery)
+			if err != nil {
+				return errors.Wrapf(err, "error enabling replication configuration with statement %v", enableQuery)
+			}
+		}
+
+		if oldConfigLength > 0 {
+			oldAccounts := extractInterfaceFromAttribute(oldConfig, "accounts")
+			var accountsToDisableReplication []interface{}
+			if newConfigLength > 0 {
+				newAccounts := extractInterfaceFromAttribute(newConfig, "accounts")
+				accountsToDisableReplication = builder.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts)
+			} else {
+				accountsToDisableReplication = builder.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, nil)
+			}
+			// If accounts were found to be removed, disable replication
+			if len(accountsToDisableReplication) > 0 {
+				disableQuery := builder.DisableReplicationAccounts(dbName, strings.Join(expandStringList(accountsToDisableReplication), ", "))
+				err := snowflake.Exec(db, disableQuery)
+				if err != nil {
+					return errors.Wrapf(err, "error disabling replication configuration with statement %v", disableQuery)
+				}
+			}
+		}
+	}
+	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
 }
 
-func DeleteDatabase(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("database", snowflake.Database)(data, meta)
+func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("database", snowflake.Database)(d, meta)
+}
+
+func extractInterfaceFromAttribute(config interface{}, attribute string) []interface{} {
+	return config.([]interface{})[0].(map[string]interface{})[attribute].([]interface{})
 }

@@ -3,7 +3,7 @@ package snowflake_test
 import (
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,6 +14,9 @@ func TestUser(t *testing.T) {
 
 	q := u.Show()
 	r.Equal("SHOW USERS LIKE 'user1'", q)
+
+	q = u.Describe()
+	r.Equal(`DESCRIBE USER "user1"`, q)
 
 	q = u.Drop()
 	r.Equal(`DROP USER "user1"`, q)

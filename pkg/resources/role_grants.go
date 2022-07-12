@@ -3,11 +3,13 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 func RoleGrants() *schema.Resource {
@@ -20,11 +22,11 @@ func RoleGrants() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"role_name": {
 				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
+					additionalCharsToIgnoreValidation := []string{"."}
+					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 				},
 			},
 			"roles": {
@@ -39,24 +41,40 @@ func RoleGrants() *schema.Resource {
 				Optional:    true,
 				Description: "Grants role to this specified user.",
 			},
+			"enable_multiple_grants": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+				Default:     false,
+			},
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roleName := d.Get("role_name").(string)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	users := expandStringList(d.Get("users").(*schema.Set).List())
 
 	if len(roles) == 0 && len(users) == 0 {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
+	grant := &grantID{
+		ResourceName: roleName,
+		Roles:        roles,
+	}
+	dataIDInput, err := grant.String()
+	d.SetId(dataIDInput)
+
+	if err != nil {
+		return errors.Wrap(err, "error creating role grant")
+	}
 	for _, role := range roles {
 		err := grantRoleToRole(db, roleName, role)
 		if err != nil {
@@ -70,8 +88,8 @@ func CreateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	data.SetId(roleName)
-	return ReadRoleGrants(data, meta)
+
+	return ReadRoleGrants(d, meta)
 }
 
 func grantRoleToRole(db *sql.DB, role1, role2 string) error {
@@ -94,9 +112,17 @@ type roleGrant struct {
 	Grantedby   sql.NullString `db:"granted_by"`
 }
 
-func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Id()
+	log.Println(d.Id())
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+	roleName := grantID.ResourceName
+
+	tfRoles := expandStringList(d.Get("roles").(*schema.Set).List())
+	tfUsers := expandStringList(d.Get("users").(*schema.Set).List())
 
 	roles := make([]string, 0)
 	users := make([]string, 0)
@@ -109,23 +135,31 @@ func ReadRoleGrants(data *schema.ResourceData, meta interface{}) error {
 	for _, grant := range grants {
 		switch grant.GrantedTo.String {
 		case "ROLE":
-			roles = append(roles, grant.GranteeName.String)
+			for _, tfRole := range tfRoles {
+				if tfRole == grant.GranteeName.String {
+					roles = append(roles, grant.GranteeName.String)
+				}
+			}
 		case "USER":
-			users = append(users, grant.GranteeName.String)
+			for _, tfUser := range tfUsers {
+				if tfUser == grant.GranteeName.String {
+					users = append(users, grant.GranteeName.String)
+				}
+			}
 		default:
 			return fmt.Errorf("unknown grant type %s", grant.GrantedTo.String)
 		}
 	}
 
-	err = data.Set("role_name", roleName)
+	err = d.Set("role_name", roleName)
 	if err != nil {
 		return err
 	}
-	err = data.Set("roles", roles)
+	err = d.Set("roles", roles)
 	if err != nil {
 		return err
 	}
-	err = data.Set("users", users)
+	err = d.Set("users", users)
 	if err != nil {
 		return err
 	}
@@ -166,12 +200,12 @@ func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 	return grants, nil
 }
 
-func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
+	roleName := d.Get("role_name").(string)
 
-	roles := expandStringList(data.Get("roles").(*schema.Set).List())
-	users := expandStringList(data.Get("users").(*schema.Set).List())
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	users := expandStringList(d.Get("users").(*schema.Set).List())
 
 	for _, role := range roles {
 		err := revokeRoleFromRole(db, roleName, role)
@@ -187,7 +221,7 @@ func DeleteRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	data.SetId("")
+	d.SetId("")
 	return nil
 }
 
@@ -203,12 +237,12 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	return err
 }
 
-func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
+func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := data.Get("role_name").(string)
+	roleName := d.Get("role_name").(string)
 
 	x := func(resource string, grant func(db *sql.DB, role string, target string) error, revoke func(db *sql.DB, role string, target string) error) error {
-		o, n := data.GetChange(resource)
+		o, n := d.GetChange(resource)
 
 		if o == nil {
 			o = new(schema.Set)
@@ -247,5 +281,5 @@ func UpdateRoleGrants(data *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return ReadRoleGrants(data, meta)
+	return ReadRoleGrants(d, meta)
 }

@@ -2,9 +2,10 @@ package resources
 
 import (
 	"database/sql"
+	"log"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -15,14 +16,14 @@ func CreateResource(
 	builder func(string) *snowflake.Builder,
 	read func(*schema.ResourceData, interface{}) error,
 ) func(*schema.ResourceData, interface{}) error {
-	return func(data *schema.ResourceData, meta interface{}) error {
+	return func(d *schema.ResourceData, meta interface{}) error {
 		db := meta.(*sql.DB)
-		name := data.Get("name").(string)
+		name := d.Get("name").(string)
 
 		qb := builder(name).Create()
 
 		for _, field := range properties {
-			val, ok := data.GetOk(field)
+			val, ok := d.GetOk(field)
 			if ok {
 				switch s[field].Type {
 				case schema.TypeString:
@@ -34,8 +35,16 @@ func CreateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := expandStringList(val.(*schema.Set).List())
+					qb.SetStringList(field, valList)
+
 				}
 			}
+		}
+		if v, ok := d.GetOk("tag"); ok {
+			tags := getTags(v)
+			qb.SetTags(tags.toSnowflakeTagValues())
 		}
 		err := snowflake.Exec(db, qb.Statement())
 
@@ -43,9 +52,9 @@ func CreateResource(
 			return errors.Wrapf(err, "error creating %s", t)
 		}
 
-		data.SetId(name)
+		d.SetId(name)
 
-		return read(data, meta)
+		return read(d, meta)
 	}
 }
 
@@ -56,14 +65,11 @@ func UpdateResource(
 	builder func(string) *snowflake.Builder,
 	read func(*schema.ResourceData, interface{}) error,
 ) func(*schema.ResourceData, interface{}) error {
-	return func(data *schema.ResourceData, meta interface{}) error {
-		// https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-		data.Partial(true)
-
+	return func(d *schema.ResourceData, meta interface{}) error {
 		db := meta.(*sql.DB)
-		if data.HasChange("name") {
+		if d.HasChange("name") {
 			// I wish this could be done on one line.
-			oldNameI, newNameI := data.GetChange("name")
+			oldNameI, newNameI := d.GetChange("name")
 			oldName := oldNameI.(string)
 			newName := newNameI.(string)
 
@@ -73,25 +79,21 @@ func UpdateResource(
 			if err != nil {
 				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
 			}
-
-			data.SetId(newName)
-			data.SetPartial("name")
+			d.SetId(newName)
 		}
-		data.Partial(false)
 
 		changes := []string{}
-
 		for _, prop := range properties {
-			if data.HasChange(prop) {
+			if d.HasChange(prop) {
 				changes = append(changes, prop)
 			}
 		}
 		if len(changes) > 0 {
-			name := data.Get("name").(string)
+			name := d.Get("name").(string)
 			qb := builder(name).Alter()
 
 			for _, field := range changes {
-				val := data.Get(field)
+				val := d.Get(field)
 				switch s[field].Type {
 				case schema.TypeString:
 					valStr := val.(string)
@@ -102,7 +104,17 @@ func UpdateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := expandStringList(val.(*schema.Set).List())
+					qb.SetStringList(field, valList)
 				}
+
+			}
+			if d.HasChange("tag") {
+				log.Printf("[DEBUG] updating tags")
+				v := d.Get("tag")
+				tags := getTags(v)
+				qb.SetTags(tags.toSnowflakeTagValues())
 			}
 
 			err := snowflake.Exec(db, qb.Statement())
@@ -110,14 +122,15 @@ func UpdateResource(
 				return errors.Wrapf(err, "error altering %s", t)
 			}
 		}
-		return read(data, meta)
+		log.Printf("[DEBUG] performing read")
+		return read(d, meta)
 	}
 }
 
 func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
-	return func(data *schema.ResourceData, meta interface{}) error {
+	return func(d *schema.ResourceData, meta interface{}) error {
 		db := meta.(*sql.DB)
-		name := data.Get("name").(string)
+		name := d.Get("name").(string)
 
 		stmt := builder(name).Drop()
 
@@ -126,7 +139,7 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 			return errors.Wrapf(err, "error dropping %s %s", t, name)
 		}
 
-		data.SetId("")
+		d.SetId("")
 		return nil
 	}
 }

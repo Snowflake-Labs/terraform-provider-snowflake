@@ -3,8 +3,8 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -24,13 +24,13 @@ func (npb *NetworkPolicyBuilder) WithComment(c string) *NetworkPolicyBuilder {
 
 // WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder
 func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *NetworkPolicyBuilder {
-	npb.allowedIpList = IpListToString(allowedIps)
+	npb.allowedIpList = helpers.IpListToSnowflakeString(allowedIps)
 	return npb
 }
 
 // WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder
 func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
-	npb.blockedIpList = IpListToString(blockedIps)
+	npb.blockedIpList = helpers.IpListToSnowflakeString(blockedIps)
 	return npb
 }
 
@@ -78,7 +78,7 @@ func (npb *NetworkPolicyBuilder) RemoveComment() string {
 
 // ChangeIpList returns the SQL query that will update the ip list (of the specified listType) on the network policy.
 func (npb *NetworkPolicyBuilder) ChangeIpList(listType string, ips []string) string {
-	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, IpListToString(ips))
+	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, helpers.IpListToSnowflakeString(ips))
 }
 
 // Drop returns the SQL query that will drop a network policy.
@@ -93,7 +93,7 @@ func (npb *NetworkPolicyBuilder) SetOnAccount() string {
 
 // UnsetOnAccount returns the SQL query that will unset the network policy globally on your Snowflake account
 func (npb *NetworkPolicyBuilder) UnsetOnAccount() string {
-	return fmt.Sprintf(`ALTER ACCOUNT UNSET NETWORK_POLICY`)
+	return `ALTER ACCOUNT UNSET NETWORK_POLICY`
 }
 
 // SetOnUser returns the SQL query that will set the network policy on a given user
@@ -109,16 +109,17 @@ func (npb *NetworkPolicyBuilder) UnsetOnUser(u string) string {
 // ShowAllNetworkPolicies returns the SQL query that will SHOW *all* network policies in the Snowflake account
 // Snowflake's implementation of SHOW for network policies does *not* support limiting results with LIKE
 func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
-	return fmt.Sprintf(`SHOW NETWORK POLICIES`)
+	return `SHOW NETWORK POLICIES`
 }
 
-// IpListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100')
-func IpListToString(ips []string) string {
-	for index, element := range ips {
-		ips[index] = fmt.Sprintf(`'%v'`, element)
-	}
+//ShowOnUser returns the SQL query that will SHOW network policy set on a specific User
+func (npb *NetworkPolicyBuilder) ShowOnUser(u string) string {
+	return fmt.Sprintf(`SHOW PARAMETERS LIKE 'network_policy' IN USER "%v"`, u)
+}
 
-	return fmt.Sprintf("(%v)", strings.Join(ips, ", "))
+//ShowOnAccount returns the SQL query that will SHOW network policy set on Account
+func (npb *NetworkPolicyBuilder) ShowOnAccount() string {
+	return `SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`
 }
 
 type NetworkPolicyStruct struct {
@@ -127,6 +128,12 @@ type NetworkPolicyStruct struct {
 	Comment                sql.NullString `db:"comment"`
 	EntriesInAllowedIpList sql.NullString `db:"entries_in_allowed_ip_list"`
 	EntriesInBlockedIpList sql.NullString `db:"entries_in_blocked_ip_list"`
+}
+
+type NetworkPolicyAttachmentStruct struct {
+	Key   sql.NullString `db:"key"`
+	Value sql.NullString `db:"value"`
+	Level sql.NullString `db:"level"`
 }
 
 // ScanNetworkPolicies takes database rows and converts them to a list of NetworkPolicyStruct pointers
@@ -142,4 +149,10 @@ func ScanNetworkPolicies(rows *sqlx.Rows) ([]*NetworkPolicyStruct, error) {
 		n = append(n, r)
 	}
 	return n, nil
+}
+
+func ScanNetworkPolicyAttachment(row *sqlx.Row) (*NetworkPolicyAttachmentStruct, error) {
+	r := &NetworkPolicyAttachmentStruct{}
+	err := row.StructScan(r)
+	return r, err
 }

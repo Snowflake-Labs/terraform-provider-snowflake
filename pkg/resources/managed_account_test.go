@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func TestManagedAccount(t *testing.T) {
@@ -36,6 +37,22 @@ func TestManagedAccountCreate(t *testing.T) {
 		expectReadManagedAccount(mock)
 		err := resources.CreateManagedAccount(d, db)
 		r.NoError(err)
+	})
+}
+
+func TestManagedAccountRead(t *testing.T) {
+	r := require.New(t)
+	d := managedAccount(t, "test-account", map[string]interface{}{"name": "test-account"})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.ManagedAccount(d.Id()).Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadManagedAccount(d, db)
+
+		r.Empty(d.State())
+		r.Nil(err)
 	})
 }
 

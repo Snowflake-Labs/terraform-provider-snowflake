@@ -1,39 +1,50 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var validAccountPrivileges = newPrivilegeSet(
+var validAccountPrivileges = NewPrivilegeSet(
+	privilegeApplyMaskingPolicy,
+	privilegeApplyRowAccessPolicy,
+	privilegeApplyTag,
+	privilegeAttachPolicy,
+	privilegeCreateAccount,
+	privilegeCreateDatabase,
+	privilegeCreateDataExchangeListing,
+	privilegeCreateIntegration,
+	privilegeCreateNetworkPolicy,
 	privilegeCreateRole,
+	privilegeCreateShare,
 	privilegeCreateUser,
 	privilegeCreateWarehouse,
-	privilegeCreateDatabase,
-	privilegeCreateIntegration,
+	privilegeExecuteTask,
+	privilegeImportShare,
 	privilegeManageGrants,
 	privilegeMonitorUsage,
 	privilegeMonitorExecution,
-	privilegeExecuteTask,
+	privilegeOverrideShareRestrictions,
+	privilegeExecuteManagedTask,
+	privilegeOrganizationSupportCases,
+	privilegeAccountSupportCases,
+	privilegeUserSupportCases,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the schema.",
-		Default:      "USAGE",
-		ValidateFunc: validation.StringInSlice(validAccountPrivileges.toList(), true),
-		ForceNew:     true,
+		Description:  "The privilege to grant on the account.",
+		Default:      privilegeMonitorUsage,
+		ValidateFunc: validation.ValidatePrivilege(validAccountPrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -42,27 +53,41 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
-func AccountGrant() *schema.Resource {
-	return &schema.Resource{
-		Create: CreateAccountGrant,
-		Read:   ReadAccountGrant,
-		Delete: DeleteAccountGrant,
+// AccountGrant returns a pointer to the resource representing an account grant
+func AccountGrant() *TerraformGrantResource {
+	return &TerraformGrantResource{
+		Resource: &schema.Resource{
+			Create: CreateAccountGrant,
+			Read:   ReadAccountGrant,
+			Delete: DeleteAccountGrant,
+			Update: UpdateAccountGrant,
 
-		Schema: accountGrantSchema,
+			Schema: accountGrantSchema,
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
+		},
+		ValidPrivs: validAccountPrivileges,
 	}
 }
 
 // CreateAccountGrant implements schema.CreateFunc
-func CreateAccountGrant(data *schema.ResourceData, meta interface{}) error {
-	priv := data.Get("privilege").(string)
-	grantOption := data.Get("with_grant_option").(bool)
+func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	priv := d.Get("privilege").(string)
+	grantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	builder := snowflake.AccountGrant()
 
-	err := createGenericGrant(data, meta, builder)
+	err := createGenericGrant(d, meta, builder)
 	if err != nil {
 		return err
 	}
@@ -71,39 +96,73 @@ func CreateAccountGrant(data *schema.ResourceData, meta interface{}) error {
 		ResourceName: "ACCOUNT",
 		Privilege:    priv,
 		GrantOption:  grantOption,
+		Roles:        roles,
 	}
 	dataIDInput, err := grantID.String()
 	if err != nil {
 		return err
 	}
-	data.SetId(dataIDInput)
+	d.SetId(dataIDInput)
 
-	return ReadAccountGrant(data, meta)
+	return ReadAccountGrant(d, meta)
 }
 
 // ReadAccountGrant implements schema.ReadFunc
-func ReadAccountGrant(data *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(data.Id())
+func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	err = data.Set("privilege", grantID.Privilege)
+	err = d.Set("privilege", grantID.Privilege)
 	if err != nil {
 		return err
 	}
-	err = data.Set("with_grant_option", grantID.GrantOption)
+	err = d.Set("with_grant_option", grantID.GrantOption)
 	if err != nil {
 		return err
 	}
 
 	builder := snowflake.AccountGrant()
 
-	return readGenericGrant(data, meta, builder, false, validAccountPrivileges)
+	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc
-func DeleteAccountGrant(data *schema.ResourceData, meta interface{}) error {
+func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
-	return deleteGenericGrant(data, meta, builder)
+	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateAccountGrant implements schema.UpdateFunc
+func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update is roles.
+	// if nothing changed, nothing to update and we're done.
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	builder := snowflake.AccountGrant()
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil)
+	if err != nil {
+		return err
+	}
+
+	// then add
+	err = createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil)
+	if err != nil {
+		return err
+	}
+
+	// done, refresh state
+	return ReadAccountGrant(d, meta)
 }

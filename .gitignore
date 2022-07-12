@@ -22,3 +22,8 @@ crash.log
 .envrc
 bin
 dist
+
+# JetBrains
+.idea/
+*.iml
+dist/

@@ -6,24 +6,25 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func MustParseInt(input string) int64 {
+func MustParseInt(t *testing.T, input string) int64 {
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 	return i
 }
 
 func extractList(in map[string]string, name string) ([]string, error) {
 	out := make([]string, 0)
-	r, err := regexp.Compile(fmt.Sprintf(`^%s.\d+(.+)$`, name))
+	r, err := regexp.Compile(fmt.Sprintf(`^%s.\d+$`, name))
 	if err != nil {
 		return out, err
 	}
@@ -54,12 +55,10 @@ func listSetEqual(a, b []string) bool {
 	return true
 }
 
-func testCheckRolesAndUsers(path string, roles, users []string) func(state *terraform.State) error {
-
+func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
-
-		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(c) != int64(len(roles)) {
+		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
 		r, err := extractList(is.Attributes, "roles")
@@ -72,7 +71,7 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
 		}
 
-		if c, ok := is.Attributes["users.#"]; !ok || MustParseInt(c) != int64(len(users)) {
+		if c, ok := is.Attributes["users.#"]; !ok || MustParseInt(t, c) != int64(len(users)) {
 			return fmt.Errorf("expected users.# to equal %d but got %s", len(users), c)
 		}
 		u, err := extractList(is.Attributes, "users")
@@ -88,12 +87,12 @@ func testCheckRolesAndUsers(path string, roles, users []string) func(state *terr
 	}
 }
 
-func TestAccGrantRole(t *testing.T) {
-	role1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	role2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	role3 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	user2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+func TestAcc_GrantRole(t *testing.T) {
+	role1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role3 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	basicChecks := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
@@ -106,12 +105,13 @@ func TestAccGrantRole(t *testing.T) {
 		ResourceName: "snowflake_role_grants.w",
 		Check: resource.ComposeTestCheckFunc(
 			basicChecks,
-			testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2, role3}, []string{user1, user2}),
+			testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2, role3}, []string{user1, user2}),
 		),
 	}
 
-	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// test settup + removing a role
 			baselineStep,
@@ -120,7 +120,7 @@ func TestAccGrantRole(t *testing.T) {
 				ResourceName: "snowflake_role_grants.w",
 				Check: resource.ComposeTestCheckFunc(
 					basicChecks,
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2}, []string{user1, user2})),
+					testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2}, []string{user1, user2})),
 			},
 			// back to baseline, which means adding a role
 			baselineStep,
@@ -131,7 +131,7 @@ func TestAccGrantRole(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					basicChecks,
-					testCheckRolesAndUsers("snowflake_role_grants.w", []string{role2, role3}, []string{user1})),
+					testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2, role3}, []string{user1})),
 			},
 			// add the user back to get back to baseline
 			baselineStep,
@@ -151,9 +151,10 @@ func TestAccGrantRole(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_role_grants.w",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_role_grants.w",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"roles", "users", "enable_multiple_grants"},
 			},
 		},
 	})
@@ -182,42 +183,44 @@ resource "snowflake_user" "u2" {
 
 func rgConfig(role1, role2, role3, user1, user2 string) string {
 	s := `
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
-	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
+		users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
+	}
+	`
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 
 func rgConfig2(role1, role2, role3, user1, user2 string) string {
 	s := `
 
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}"]
-	users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}"]
+		users = ["${snowflake_user.u.name}", "${snowflake_user.u2.name}"]
+	}
+	`
+
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 
 func rgConfig3(role1, role2, role3, user1, user2 string) string {
 	s := `
 
-%s
+	%s
 
-resource "snowflake_role_grants" "w" {
-	role_name = "${snowflake_role.r.name}"
-	roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
-	users = ["${snowflake_user.u.name}"]
-}
-`
+	resource "snowflake_role_grants" "w" {
+		role_name = "${snowflake_role.r.name}"
+		roles = ["${snowflake_role.r2.name}", "${snowflake_role.r3.name}"]
+		users = ["${snowflake_user.u.name}"]
+	}
+	`
+
 	return fmt.Sprintf(s, rolesAndUser(role1, role2, role3, user1, user2))
 }
 

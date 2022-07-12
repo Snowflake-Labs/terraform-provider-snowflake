@@ -3,27 +3,29 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
 	managedAccountComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccManagedAccount(t *testing.T) {
+func TestAcc_ManagedAccount(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
 		t.Skip("Skipping TestAccManagedAccount")
 	}
 
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: managedAccountConfig(accName, adminName, adminPass),

@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 func TestDatabase(t *testing.T) {
@@ -63,6 +64,13 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 	r.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)
 }
 
+func TestDatabaseCreateFromReplica(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.DatabaseFromReplica("db1", "abc123")
+	q := db.Create()
+	r.Equal(`CREATE DATABASE "db1" AS REPLICA OF "abc123"`, q)
+}
+
 func TestListDatabases(t *testing.T) {
 	r := require.New(t)
 	mockDB, mock, err := sqlmock.New()
@@ -73,4 +81,26 @@ func TestListDatabases(t *testing.T) {
 	mock.ExpectQuery(`SHOW DATABASES`).WillReturnRows(rows)
 	_, err = snowflake.ListDatabases(sqlxDB)
 	r.NoError(err)
+}
+
+func TestEnableReplicationAccounts(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("good_name")
+	r.Equal(db.EnableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1`)
+}
+
+func TestDisableReplicationAccounts(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("good_name")
+	r.Equal(db.DisableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" DISABLE REPLICATION TO ACCOUNTS account1`)
+}
+
+func TestGetRemovedAccountsFromReplicationConfiguration(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("good_name")
+
+	oldAccounts := []interface{}{"acc1", "acc2", "acc3"}
+	newAccounts := []interface{}{"acc1", "acc2"}
+
+	r.Equal(db.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts), []interface{}{"acc3"})
 }
