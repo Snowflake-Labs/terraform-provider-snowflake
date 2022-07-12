@@ -614,23 +614,6 @@ func (tb *TableBuilder) Drop() string {
 // Show returns the SQL query that will show a table.
 func (tb *TableBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TABLES LIKE '%v' IN SCHEMA "%v"."%v"`, tb.name, tb.db, tb.schema)
-<<<<<<< HEAD
-=======
-}
-
-func (tb *TableBuilder) ShowColumns() string {
-	return fmt.Sprintf(`DESC TABLE %s`, tb.QualifiedName())
-}
-
-func (tb *TableBuilder) ShowPrimaryKeys() string {
-	return fmt.Sprintf(`SHOW PRIMARY KEYS IN TABLE %s`, tb.QualifiedName())
-}
-
-func (tb *TableBuilder) Rename(newName string) string {
-	oldName := tb.QualifiedName()
-	tb.name = newName
-	return fmt.Sprintf(`ALTER TABLE %s RENAME TO %s`, oldName, tb.QualifiedName())
->>>>>>> aee8431ea64f085de0f4e9cfd46f2b82d16f09e2
 }
 
 type table struct {
