@@ -204,8 +204,6 @@ func TestTableShow(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table", "test_db", "test_schema")
 	r.Equal(s.Show(), `SHOW TABLES LIKE 'test_table' IN SCHEMA "test_db"."test_schema"`)
-<<<<<<< HEAD
-=======
 }
 
 func TestTableShowPrimaryKeys(t *testing.T) {
@@ -254,5 +252,4 @@ func TestTableRename(t *testing.T) {
 	r := require.New(t)
 	s := Table("test_table1", "test_db", "test_schema")
 	r.Equal(s.Rename("test_table2"), `ALTER TABLE "test_db"."test_schema"."test_table1" RENAME TO "test_db"."test_schema"."test_table2"`)
->>>>>>> aee8431ea64f085de0f4e9cfd46f2b82d16f09e2
 }
