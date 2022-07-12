@@ -26,7 +26,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 				Config: apiIntegrationConfig_aws(apiIntName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", apiIntName),
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_gov_api_gateway"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_api_gateway"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_iam_user_arn"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_external_id"),
@@ -50,7 +50,7 @@ func apiIntegrationConfig_aws(name string, prefixes []string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_api_integration" "test_aws_int" {
 		name = "%s"
-		api_provider = "aws_gov_api_gateway"
+		api_provider = "aws_api_gateway"
 		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
 		enabled = true
