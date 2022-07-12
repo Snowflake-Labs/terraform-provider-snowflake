@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.38.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.1...v0.38.0) (2022-07-11)
+
+
+### Features
+
+* Adding slack bot for PRs and Issues ([#1106](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1106)) ([95c255e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/95c255e5ca65b619b35692671848877793cac29e))
+
+
+### BugFixes
+
+* Allow creation of database-wide future external table grants ([#1041](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1041)) ([5dff645](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5dff645291885cd437e341148c0629fe7ab7383f))
+* Removing force new and adding update for data base replication config ([#1105](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1105)) ([f34f012](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f34f012195d0b9718904ffa7a3a529f58167a74e))
+* Updating shares to disallow account locators ([#1102](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1102)) ([4079080](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4079080dd0b9e3caf4b5d360000bd216906cb81e))
+
 ## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
 
 
