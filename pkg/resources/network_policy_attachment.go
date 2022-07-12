@@ -2,11 +2,12 @@ package resources
 
 import (
 	"database/sql"
+	"log"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var networkPolicyAttachmentSchema = map[string]*schema.Schema{
@@ -40,24 +41,24 @@ func NetworkPolicyAttachment() *schema.Resource {
 
 		Schema: networkPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // CreateNetworkPolicyAttachment implements schema.CreateFunc
-func CreateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) error {
-	policyName := data.Get("network_policy_name").(string)
-	data.SetId(policyName + "_attachment")
+func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	policyName := d.Get("network_policy_name").(string)
+	d.SetId(policyName + "_attachment")
 
-	if data.Get("set_for_account").(bool) {
-		err := setOnAccount(data, meta)
+	if d.Get("set_for_account").(bool) {
+		err := setOnAccount(d, meta)
 		if err != nil {
 			return errors.Wrapf(err, "error creating attachment for network policy %v", policyName)
 		}
 	}
 
-	if u, ok := data.GetOk("users"); ok {
+	if u, ok := d.GetOk("users"); ok {
 		users := expandStringList(u.(*schema.Set).List())
 
 		err := ensureUserAlterPrivileges(users, meta)
@@ -65,35 +66,86 @@ func CreateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) 
 			return err
 		}
 
-		err = setOnUsers(users, data, meta)
+		err = setOnUsers(users, d, meta)
 		if err != nil {
 			return errors.Wrapf(err, "error creating attachment for network policy %v", policyName)
 		}
 	}
 
-	return nil
+	return ReadNetworkPolicyAttachment(d, meta)
 }
 
 // ReadNetworkPolicyAttachment implements schema.ReadFunc
-func ReadNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) error {
-	// HACK: InternalValidate requires Read to be implemented
-	// There is no way of using SHOW/DESC on Network Policies/Users to pull attachment information, so we can't actually Read
+func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	policyName := strings.Replace(d.Id(), "_attachment", "", 1)
+	builder := snowflake.NetworkPolicy(policyName)
+
+	var currentUsers []string
+
+	err := d.Set("network_policy_name", policyName)
+	if err != nil {
+		return err
+	}
+
+	if u, ok := d.GetOk("users"); ok {
+		users := expandStringList(u.(*schema.Set).List())
+		for _, user := range users {
+			row := snowflake.QueryRow(db, builder.ShowOnUser(user))
+			attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
+			if err == sql.ErrNoRows {
+				log.Printf("[DEBUG] network policy (%s) not found on user (%s)", d.Id(), user)
+				continue
+			}
+
+			if attachment.Level.String == "USER" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+				currentUsers = append(currentUsers, user)
+			}
+		}
+
+		err := d.Set("users", currentUsers)
+		if err != nil {
+			return err
+		}
+	}
+
+	isSetOnAccount := false
+	row := snowflake.QueryRow(db, builder.ShowOnAccount())
+	attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] network policy (%s) not found on account", d.Id())
+		isSetOnAccount = false
+	}
+
+	if err == nil && attachment.Level.String == "ACCOUNT" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+		isSetOnAccount = true
+	}
+
+	err = d.Set("set_for_account", isSetOnAccount)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // UpdateNetworkPolicyAttachment implements schema.UpdateFunc
-func UpdateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) error {
-	if data.HasChange("set_for_account") {
-		oldAcctFlag, newAcctFlag := data.GetChange("set_for_account")
-		if newAcctFlag.(bool) == true {
-			setOnAccount(data, meta)
-		} else if newAcctFlag.(bool) == false && oldAcctFlag == true {
-			unsetOnAccount(data, meta)
+func UpdateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("set_for_account") {
+		oldAcctFlag, newAcctFlag := d.GetChange("set_for_account")
+		if newAcctFlag.(bool) {
+			if err := setOnAccount(d, meta); err != nil {
+				return err
+			}
+		} else if !newAcctFlag.(bool) && oldAcctFlag == true {
+			if err := unsetOnAccount(d, meta); err != nil {
+				return err
+			}
 		}
 	}
 
-	if data.HasChange("users") {
-		old, new := data.GetChange("users")
+	if d.HasChange("users") {
+		old, new := d.GetChange("users")
 		oldUsersSet := old.(*schema.Set)
 		newUsersSet := new.(*schema.Set)
 
@@ -111,34 +163,36 @@ func UpdateNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) 
 		}
 
 		for _, user := range removedUsers {
-			unsetOnUser(user, data, meta)
+			err := unsetOnUser(user, d, meta)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, user := range addedUsers {
-			setOnUser(user, data, meta)
+			err := setOnUser(user, d, meta)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return nil
+	return ReadNetworkPolicyAttachment(d, meta)
 }
 
 // DeleteNetworkPolicyAttachment implements schema.DeleteFunc
-func DeleteNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) error {
-	policyName := data.Get("network_policy_name").(string)
-	data.SetId(policyName + "_attachment")
+func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	policyName := d.Get("network_policy_name").(string)
+	d.SetId(policyName + "_attachment")
 
-	err := unsetOnAccount(data, meta)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+	if d.Get("set_for_account").(bool) {
+		err := unsetOnAccount(d, meta)
+		if err != nil {
+			return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+		}
 	}
 
-	if u, ok := data.GetOk("users"); ok {
+	if u, ok := d.GetOk("users"); ok {
 		users := expandStringList(u.(*schema.Set).List())
 
 		err := ensureUserAlterPrivileges(users, meta)
@@ -146,7 +200,7 @@ func DeleteNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) 
 			return err
 		}
 
-		err = unsetOnUsers(users, data, meta)
+		err = unsetOnUsers(users, d, meta)
 		if err != nil {
 			return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
 		}
@@ -157,9 +211,9 @@ func DeleteNetworkPolicyAttachment(data *schema.ResourceData, meta interface{}) 
 
 // setOnAccount sets the network policy globally for the Snowflake account
 // Note: the ip address of the session executing this SQL must be allowed by the network policy being set
-func setOnAccount(data *schema.ResourceData, meta interface{}) error {
+func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	policyName := data.Get("network_policy_name").(string)
+	policyName := d.Get("network_policy_name").(string)
 
 	acctSql := snowflake.NetworkPolicy(policyName).SetOnAccount()
 
@@ -172,9 +226,9 @@ func setOnAccount(data *schema.ResourceData, meta interface{}) error {
 }
 
 // setOnAccount unsets the network policy globally for the Snowflake account
-func unsetOnAccount(data *schema.ResourceData, meta interface{}) error {
+func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	policyName := data.Get("network_policy_name").(string)
+	policyName := d.Get("network_policy_name").(string)
 
 	acctSql := snowflake.NetworkPolicy(policyName).UnsetOnAccount()
 

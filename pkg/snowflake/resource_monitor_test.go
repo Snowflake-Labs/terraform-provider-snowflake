@@ -3,7 +3,7 @@ package snowflake_test
 import (
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,4 +33,22 @@ func TestResourceMonitor(t *testing.T) {
 	cb.SetInt("credit_quota", 666)
 	q = cb.Statement()
 	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
+}
+
+func TestResourceMonitorSetOnAccount(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.ResourceMonitor("test_resource_monitor")
+	r.NotNil(s)
+
+	q := s.Create().SetOnAccount()
+	r.Equal(`ALTER ACCOUNT SET RESOURCE_MONITOR = "test_resource_monitor"`, q)
+}
+
+func TestResourceMonitorSetOnWarehouse(t *testing.T) {
+	r := require.New(t)
+	s := snowflake.ResourceMonitor("test_resource_monitor")
+	r.NotNil(s)
+
+	q := s.Create().SetOnWarehouse("test_warehouse")
+	r.Equal(`ALTER WAREHOUSE "test_warehouse" SET RESOURCE_MONITOR = "test_resource_monitor"`, q)
 }

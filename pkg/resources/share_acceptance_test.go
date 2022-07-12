@@ -2,26 +2,23 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
 	shareComment = "Created by a Terraform acceptance test"
 )
 
-func TestAccShare(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SHARE_TESTS"); ok {
-		t.Skip("Skipping TestAccShare")
-	}
+func TestAcc_Share(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: shareConfig(name),
@@ -45,7 +42,6 @@ func shareConfig(name string) string {
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
-	accounts       = ["PC37737"]
 }
 `, name, shareComment)
 }

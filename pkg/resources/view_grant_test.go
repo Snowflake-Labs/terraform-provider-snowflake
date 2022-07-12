@@ -6,16 +6,16 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
 func TestViewGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.ViewGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.ViewGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -31,7 +31,7 @@ func TestViewGrantCreate(t *testing.T) {
 		"shares":            []interface{}{"test-share-1", "test-share-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -48,7 +48,7 @@ func TestViewGrantCreate(t *testing.T) {
 func TestViewGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := viewGrant(t, "test-db|PUBLIC|test-view|SELECT|false", map[string]interface{}{
+	d := viewGrant(t, "test-db|PUBLIC|test-view|SELECT||false", map[string]interface{}{
 		"view_name":         "test-view",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
@@ -103,7 +103,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -116,6 +116,14 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		expectReadFutureViewGrant(mock)
 		err := resources.CreateViewGrant(d, db)
 		r.NoError(err)
+
+		roles := d.Get("roles").(*schema.Set)
+		// After the CreateFutureViewGrant has been created a ReadViewGrant reads the current grants
+		// and this read should ignore test-role-3 what is returned by SHOW FUTURE GRANTS ON SCHEMA PUBLIC because
+		// test-role-3 has been granted to a SELECT on future TABLE and not on future VIEW
+		r.True(roles.Contains("test-role-1"))
+		r.True(roles.Contains("test-role-2"))
+		r.False(roles.Contains("test-role-3"))
 	})
 
 	b := require.New(t)
@@ -127,7 +135,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	}
-	d = schema.TestResourceDataRaw(t, resources.ViewGrant().Schema, in)
+	d = schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, in)
 	b.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -150,6 +158,8 @@ func expectReadFutureViewGrant(mock sqlmock.Sqlmock) {
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-1", false,
 	).AddRow(
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "VIEW", "test-db.PUBLIC.<VIEW>", "ROLE", "test-role-2", false,
+	).AddRow(
+		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "TABLE", "test-db.PUBLIC.<TABLE>", "ROLE", "test-role-3", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN SCHEMA "test-db"."PUBLIC"$`).WillReturnRows(rows)
 }

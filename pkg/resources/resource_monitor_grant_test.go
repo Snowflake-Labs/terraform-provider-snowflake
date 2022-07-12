@@ -8,16 +8,16 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func TestResourceMonitorGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.ResourceMonitorGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.ResourceMonitorGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -30,7 +30,7 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -45,7 +45,7 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 func TestResourceMonitorGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := resourceMonitorGrant(t, "test-monitor|||MONITOR|false", map[string]interface{}{
+	d := resourceMonitorGrant(t, "test-monitor|||MONITOR||false", map[string]interface{}{
 		"monitor_name":      "test-monitor",
 		"privilege":         "MONITOR",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},

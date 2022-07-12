@@ -1,0 +1,1 @@
+terraform import snowflake_saml_integration.example name
