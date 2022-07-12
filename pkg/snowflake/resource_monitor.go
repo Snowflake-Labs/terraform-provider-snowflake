@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // ResourceMonitorBuilder extends the generic builder to provide support for triggers
@@ -117,6 +119,16 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	return sb.String()
 }
 
+// SetOnAccount returns the SQL query that will set the resource monitor globally on your Snowflake account
+func (rcb *ResourceMonitorCreateBuilder) SetOnAccount() string {
+	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = "%v"`, rcb.name)
+}
+
+// SetOnWarehouse returns the SQL query that will set the resource monitor on the specified warehouse
+func (rcb *ResourceMonitorCreateBuilder) SetOnWarehouse(warehouse string) string {
+	return fmt.Sprintf(`ALTER WAREHOUSE "%v" SET RESOURCE_MONITOR = "%v"`, warehouse, rcb.name)
+}
+
 type resourceMonitor struct {
 	Name                 sql.NullString `db:"name"`
 	CreditQuota          sql.NullString `db:"credit_quota"`
@@ -138,4 +150,21 @@ func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {
 	rm := &resourceMonitor{}
 	err := row.StructScan(rm)
 	return rm, err
+}
+
+func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
+	stmt := "SHOW RESOURCE MONITORS"
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []resourceMonitor{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no resouce monitors found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

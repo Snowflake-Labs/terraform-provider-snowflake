@@ -8,16 +8,16 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func TestDatabaseGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.DatabaseGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.DatabaseGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
@@ -31,7 +31,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 		"shares":            []interface{}{"test-share-1", "test-share-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -48,7 +48,7 @@ func TestDatabaseGrantCreate(t *testing.T) {
 func TestDatabaseGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := databaseGrant(t, "test-database|||USAGE|false", map[string]interface{}{
+	d := databaseGrant(t, "test-database|||USAGE||false", map[string]interface{}{
 		"database_name":     "test-database",
 		"privilege":         "USAGE",
 		"roles":             []interface{}{},

@@ -3,9 +3,11 @@ package snowflake
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
@@ -17,6 +19,7 @@ type SchemaBuilder struct {
 	transient            bool
 	setDataRetentionDays bool
 	dataRetentionDays    int
+	tags                 []TagValue
 }
 
 // QualifiedName prepends the db if set and escapes everything nicely
@@ -64,6 +67,27 @@ func (sb *SchemaBuilder) WithDB(db string) *SchemaBuilder {
 	return sb
 }
 
+// WithTags sets the tags on the SchemaBuilder
+func (sb *SchemaBuilder) WithTags(tags []TagValue) *SchemaBuilder {
+	sb.tags = tags
+	return sb
+}
+
+// AddTag returns the SQL query that will add a new tag to the schema.
+func (sb *SchemaBuilder) AddTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// ChangeTag returns the SQL query that will alter a tag on the schema.
+func (sb *SchemaBuilder) ChangeTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s SET TAG "%v"."%v"."%v" = "%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
+}
+
+// UnsetTag returns the SQL query that will unset a tag on the schema.
+func (sb *SchemaBuilder) UnsetTag(tag TagValue) string {
+	return fmt.Sprintf(`ALTER SCHEMA %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
+}
+
 // Schema returns a pointer to a Builder that abstracts the DDL operations for a schema.
 //
 // Supported DDL operations are:
@@ -109,13 +133,17 @@ func (sb *SchemaBuilder) Create() string {
 
 // Rename returns the SQL query that will rename the schema.
 func (sb *SchemaBuilder) Rename(newName string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO "%v"`, sb.QualifiedName(), newName)
+	oldName := sb.QualifiedName()
+	sb.name = newName
+	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO %v`, oldName, sb.QualifiedName())
 }
 
 // Swap returns the SQL query that Swaps all objects (tables, views, etc.) and
 // metadata, including identifiers, between the two specified schemas.
 func (sb *SchemaBuilder) Swap(targetSchema string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH "%v"`, sb.QualifiedName(), targetSchema)
+	sourceSchema := sb.QualifiedName()
+	sb.name = targetSchema
+	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH %v`, sourceSchema, sb.QualifiedName())
 }
 
 // ChangeComment returns the SQL query that will update the comment on the schema.
@@ -181,11 +209,28 @@ type schema struct {
 	DatabaseName  sql.NullString `db:"database_name"`
 	Comment       sql.NullString `db:"comment"`
 	Options       sql.NullString `db:"options"`
-	RetentionTime sql.NullInt64  `db:"retention_time"`
+	RetentionTime sql.NullString `db:"retention_time"`
 }
 
 func ScanSchema(row *sqlx.Row) (*schema, error) {
 	r := &schema{}
 	err := row.StructScan(r)
 	return r, err
+}
+
+func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
+	stmt := fmt.Sprintf(`SHOW SCHEMAS IN DATABASE "%v"`, databaseName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []schema{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no schemas found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

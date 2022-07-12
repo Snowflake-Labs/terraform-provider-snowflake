@@ -6,22 +6,22 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
 )
 
+//lintignore:AT003
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
-	err := resources.AccountGrant().InternalValidate(provider.Provider().Schema, true)
+	err := resources.AccountGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-func TestAccountGrantCreate(t *testing.T) {
+//lintignore:AT003
+func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -29,7 +29,7 @@ func TestAccountGrantCreate(t *testing.T) {
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
 	}
-	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Resource.Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -41,10 +41,11 @@ func TestAccountGrantCreate(t *testing.T) {
 	})
 }
 
+//lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS|true", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||MANAGE GRANTS||true", map[string]interface{}{
 		"privilege":         "MANAGE GRANTS",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
@@ -62,7 +63,7 @@ func TestAccountGrantRead(t *testing.T) {
 func TestMonitorExecution(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION|true", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||MONITOR EXECUTION||true", map[string]interface{}{
 		"privilege":         "MONITOR EXECUTION",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": true,
@@ -80,7 +81,7 @@ func TestMonitorExecution(t *testing.T) {
 func TestExecuteTask(t *testing.T) {
 	r := require.New(t)
 
-	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK|false", map[string]interface{}{
+	d := accountGrant(t, "ACCOUNT|||EXECUTE TASK||false", map[string]interface{}{
 		"privilege":         "EXECUTE TASK",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
@@ -104,4 +105,22 @@ func expectReadAccountGrant(mock sqlmock.Sqlmock) {
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "MANAGE GRANTS", "ACCOUNT", "", "ROLE", "test-role-2", false, "bob",
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON ACCOUNT$`).WillReturnRows(rows)
+}
+
+func TestApplyMaskingPolicy(t *testing.T) {
+	r := require.New(t)
+
+	d := accountGrant(t, "ACCOUNT|||APPLY MASKING POLICY||true", map[string]interface{}{
+		"privilege":         "APPLY MASKING POLICY",
+		"roles":             []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option": true,
+	})
+
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectReadAccountGrant(mock)
+		err := resources.ReadAccountGrant(d, db)
+		r.NoError(err)
+	})
 }

@@ -1,0 +1,1 @@
+terraform import snowflake_storage_integration.example name

@@ -1,28 +1,34 @@
 package snowflake
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // TaskBuilder abstracts the creation of sql queries for a snowflake task
 type TaskBuilder struct {
-	name                 string
-	db                   string
-	schema               string
-	warehouse            string
-	schedule             string
-	session_parameters   map[string]interface{}
-	user_task_timeout_ms int
-	comment              string
-	after                string
-	when                 string
-	sql_statement        string
-	disabled             bool
+	name                                     string
+	db                                       string
+	schema                                   string
+	warehouse                                string
+	schedule                                 string
+	session_parameters                       map[string]interface{}
+	user_task_timeout_ms                     int
+	comment                                  string
+	after                                    string
+	when                                     string
+	sql_statement                            string
+	disabled                                 bool
+	user_task_managed_initial_warehouse_size string
+	errorIntegration                         string
 }
 
 // GetFullName prepends db and schema to in parameter
@@ -92,6 +98,18 @@ func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
 	return tb
 }
 
+// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder
+func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *TaskBuilder {
+	tb.user_task_managed_initial_warehouse_size = initialWarehouseSize
+	return tb
+}
+
+/// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
+func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
+	tb.errorIntegration = s
+	return tb
+}
+
 // Task returns a pointer to a Builder that abstracts the DDL operations for a task.
 //
 // Supported DDL operations are:
@@ -116,7 +134,14 @@ func (tb *TaskBuilder) Create() string {
 	q.WriteString(`CREATE`)
 
 	q.WriteString(fmt.Sprintf(` TASK %v`, tb.QualifiedName()))
-	q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
+
+	if tb.warehouse != "" {
+		q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
+	} else {
+		if tb.user_task_managed_initial_warehouse_size != "" {
+			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.user_task_managed_initial_warehouse_size)))
+		}
+	}
 
 	if tb.schedule != "" {
 		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, EscapeString(tb.schedule)))
@@ -138,6 +163,10 @@ func (tb *TaskBuilder) Create() string {
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
+	}
+
+	if tb.errorIntegration != "" {
+		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(tb.errorIntegration)))
 	}
 
 	if tb.user_task_timeout_ms > 0 {
@@ -162,6 +191,16 @@ func (tb *TaskBuilder) Create() string {
 // ChangeWarehouse returns the sql that will change the warehouse for the task.
 func (tb *TaskBuilder) ChangeWarehouse(newWh string) string {
 	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = "%v"`, tb.QualifiedName(), EscapeString(newWh))
+}
+
+// SwitchWarehouseToManaged returns the sql that will switch to managed warehouse.
+func (tb *TaskBuilder) SwitchWarehouseToManaged() string {
+	return fmt.Sprintf(`ALTER TASK %v SET WAREHOUSE = null`, tb.QualifiedName())
+}
+
+// SwitchManagedWithInitialSize returns the sql that will update warehouse initial size .
+func (tb *TaskBuilder) SwitchManagedWithInitialSize(initialSize string) string {
+	return fmt.Sprintf(`ALTER TASK %v SET USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, tb.QualifiedName(), EscapeString(initialSize))
 }
 
 // ChangeSchedule returns the sql that will change the schedule for the task.
@@ -263,7 +302,7 @@ func (tb *TaskBuilder) Describe() string {
 
 // Show returns the sql that will show a task.
 func (tb *TaskBuilder) Show() string {
-	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN DATABASE "%v"`, EscapeString(tb.name), EscapeString(tb.db))
+	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN SCHEMA "%v"."%v"`, EscapeString(tb.name), EscapeString(tb.db), EscapeString(tb.schema))
 }
 
 // ShowParameters returns the query to show the session parameters for the task
@@ -282,20 +321,31 @@ func (tb *TaskBuilder) IsDisabled() bool {
 	return tb.disabled
 }
 
+// ChangeErrorIntegration return SQL query that will update the error_integration on the task.
+func (tb *TaskBuilder) ChangeErrorIntegration(c string) string {
+	return fmt.Sprintf(`ALTER TASK %v SET ERROR_INTEGRATION = %v`, tb.QualifiedName(), EscapeString(c))
+}
+
+// RemoveErrorIntegration returns the SQL query that will remove the error_integration on the task.
+func (tb *TaskBuilder) RemoveErrorIntegration() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET ERROR_INTEGRATION`, tb.QualifiedName())
+}
+
 type task struct {
-	Id           string  `db:"id"`
-	CreatedOn    string  `db:"created_on"`
-	Name         string  `db:"name"`
-	DatabaseName string  `db:"database_name"`
-	SchemaName   string  `db:"schema_name"`
-	Owner        string  `db:"owner"`
-	Comment      *string `db:"comment"`
-	Warehouse    string  `db:"warehouse"`
-	Schedule     *string `db:"schedule"`
-	Predecessors *string `db:"predecessors"`
-	State        string  `db:"state"`
-	Definition   string  `db:"definition"`
-	Condition    *string `db:"condition"`
+	Id               string         `db:"id"`
+	CreatedOn        string         `db:"created_on"`
+	Name             string         `db:"name"`
+	DatabaseName     string         `db:"database_name"`
+	SchemaName       string         `db:"schema_name"`
+	Owner            string         `db:"owner"`
+	Comment          *string        `db:"comment"`
+	Warehouse        *string        `db:"warehouse"`
+	Schedule         *string        `db:"schedule"`
+	Predecessors     *string        `db:"predecessors"`
+	State            string         `db:"state"`
+	Definition       string         `db:"definition"`
+	Condition        *string        `db:"condition"`
+	ErrorIntegration sql.NullString `db:"error_integration"`
 }
 
 func (t *task) IsEnabled() bool {
@@ -304,6 +354,16 @@ func (t *task) IsEnabled() bool {
 
 func (t *task) GetPredecessorName() string {
 	if t.Predecessors == nil {
+		return ""
+	}
+
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
+	var fullNames []string
+	if err := json.Unmarshal([]byte(*t.Predecessors), &fullNames); err == nil {
+		for _, fullName := range fullNames {
+			name := fullName[strings.LastIndex(fullName, ".")+1:]
+			return strings.Trim(name, "\\\"")
+		}
 		return ""
 	}
 
@@ -345,4 +405,21 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 
 	}
 	return t, nil
+}
+
+func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, error) {
+	stmt := fmt.Sprintf(`SHOW TASKS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+	rows, err := Query(db, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbs := []task{}
+	err = sqlx.StructScan(rows, &dbs)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no tasks found")
+		return nil, nil
+	}
+	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

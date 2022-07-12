@@ -1,0 +1,1 @@
+terraform import snowflake_oauth_integration.example name
