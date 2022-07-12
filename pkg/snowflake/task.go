@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sort"
@@ -353,6 +354,16 @@ func (t *task) IsEnabled() bool {
 
 func (t *task) GetPredecessorName() string {
 	if t.Predecessors == nil {
+		return ""
+	}
+
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
+	var fullNames []string
+	if err := json.Unmarshal([]byte(*t.Predecessors), &fullNames); err == nil {
+		for _, fullName := range fullNames {
+			name := fullName[strings.LastIndex(fullName, ".")+1:]
+			return strings.Trim(name, "\\\"")
+		}
 		return ""
 	}
 

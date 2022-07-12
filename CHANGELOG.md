@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
+
+
+### BugFixes
+
+* Allow creation of stage with storage integration including special characters ([#1081](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1081)) ([7b5bf00](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7b5bf00183595a5412f0a5f19c0c3df79502a711)), closes [#1080](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1080)
+* warehouse import when auto_suspend is set to null ([#1092](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1092)) ([9dc748f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9dc748f2b7ff98909bf285685a21175940b8e0d8))
+
+## [0.37.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.36.0...v0.37.0) (2022-06-28)
+
+
+### Features
+
+* add python language support for functions ([#1063](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1063)) ([ee4c2c1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ee4c2c1b3b2fecf7319a5d58d17ae87ff4bcf685))
+* Python support for functions ([#1069](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1069)) ([bab729a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bab729a802a2ae568943a89ebad53727afb86e13))
+
+
+### BugFixes
+
+* Handling 2022_03 breaking changes ([#1072](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1072)) ([88f4d44](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/88f4d44a7f33abc234b3f67aa372230095c841bb))
+* Temporarily disabling acceptance tests for release ([#1083](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1083)) ([8eeb4b7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8eeb4b7ff62ef442c45f0b8e3105cd5dc1ff7ccb))
+
 ## [0.36.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.35.0...v0.36.0) (2022-06-16)
 
 

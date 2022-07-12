@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
 
 var shareProperties = []string{
@@ -31,10 +32,14 @@ var shareSchema = map[string]*schema.Schema{
 	},
 	"accounts": {
 		// Changed from Set to List to use DiffSuppressFunc: https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-		Type:             schema.TypeList,
-		Elem:             &schema.Schema{Type: schema.TypeString},
-		Optional:         true,
-		Description:      "A list of accounts to be added to the share.",
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validation.ValidateIsNotAccountLocator,
+		},
+		Optional: true,
+		Description: "A list of accounts to be added to the share. Values should not be the account locator, but " +
+			"in the form of 'organization_name.account_name",
 		DiffSuppressFunc: diffCaseInsensitive,
 	},
 }
@@ -197,8 +202,8 @@ func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
 }
 
-// StripAccountFromName removes the accout prefix from a resource (e.g. a share)
-// that returns it (e.g. yt12345.my_share should just be my_share)
+// StripAccountFromName removes the account prefix from a resource (e.g. a share)
+// that returns it (e.g. yt12345.my_share or org.acc.my_share should just be my_share)
 func StripAccountFromName(s string) string {
-	return s[strings.Index(s, ".")+1:]
+	return s[strings.LastIndex(s, ".")+1:]
 }

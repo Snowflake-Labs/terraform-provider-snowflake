@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDatabase(t *testing.T) {
@@ -43,7 +44,7 @@ func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
 		"name":    "good_name",
 		"comment": "great comment",
 		"replication_configuration": []interface{}{map[string]interface{}{
-			"accounts":             []interface{}{"acc_to_replicate"},
+			"accounts":             []interface{}{"account1", "account2"},
 			"ignore_edition_check": "true",
 		}},
 	}
@@ -52,8 +53,7 @@ func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectExec(`ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS acc_to_replicate`).WillReturnResult(sqlmock.NewResult(1, 1))
-
+		mock.ExpectExec(`ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1, account2`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 
 		err := resources.CreateDatabase(d, db)
@@ -68,7 +68,7 @@ func TestDatabase_Create_WithReplicationConfig_AndFalseIgnoreEditionCheck(t *tes
 		"name":    "good_name",
 		"comment": "great comment",
 		"replication_configuration": []interface{}{map[string]interface{}{
-			"accounts":             "good_name_2",
+			"accounts":             []interface{}{"acc_to_replicate"},
 			"ignore_edition_check": "false",
 		}},
 	}
