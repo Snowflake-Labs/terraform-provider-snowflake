@@ -30,8 +30,9 @@ jobs:
           private_key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
 
       - name: Kill GPG agent
-          id: kill_gpg_agent
-          run: kill 'pgrep gpg-agent'
+        id: kill_gpg_agent
+        run: kill 'pgrep gpg-agent'
+
       - name: Import GPG key
         id: import_gpg
         uses: hashicorp/ghaction-import-gpg@v2.1.0
