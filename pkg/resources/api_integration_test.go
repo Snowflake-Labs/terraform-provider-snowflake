@@ -113,7 +113,7 @@ func expectReadGovAPIIntegration(mock sqlmock.Sqlmock) {
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
 	}).AddRow("ENABLED", "Boolean", true, false).
-		AddRow("API_ALLOWED_PREFIXES", "List", "https://123456.execute-api.us-gov-west-2.amazonaws.com/prod/,https://123456.execute-api.us-gov-west-2.amazonaws.com/staging/", nil).
+		AddRow("API_ALLOWED_PREFIXES", "List", "https://123456.execute-api.us-gov-west-1.amazonaws.com/prod/,https://123456.execute-api.us-gov-west-1.amazonaws.com/staging/", nil).
 		AddRow("API_AWS_IAM_USER_ARN", "String", "arn:aws:iam::000000000000:/user/test", nil).
 		AddRow("API_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).
 		AddRow("API_AWS_EXTERNAL_ID", "String", "AGreatExternalID", nil)
