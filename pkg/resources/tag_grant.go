@@ -37,7 +37,6 @@ var tagGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -67,6 +66,7 @@ func TagGrant() *TerraformGrantResource {
 		Resource: &schema.Resource{
 			Create: CreateTagGrant,
 			Read:   ReadTagGrant,
+			Update: UpdateTagGrant,
 			Delete: DeleteTagGrant,
 
 			Schema: tagGrantSchema,
@@ -146,6 +146,54 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.TagGrant(dbName, schemaName, tagName)
 
 	return readGenericGrant(d, meta, tagGrantSchema, builder, false, validTagPrivileges)
+}
+
+// UpdateTagGrant implements schema.UpdateFunc
+func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update is roles. if nothing changed,
+	// nothing to update and we're done.
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	// create the builder
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	tagName := grantID.ObjectName
+	builder := snowflake.TagGrant(dbName, schemaName, tagName)
+
+	// first revoke
+	if err := deleteGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		rolesToRevoke,
+		nil,
+	); err != nil {
+		return err
+	}
+
+	// then add
+	if err := createGenericGrantRolesAndShares(
+		meta,
+		builder,
+		grantID.Privilege,
+		grantID.GrantOption,
+		rolesToAdd,
+		nil,
+	); err != nil {
+		return err
+	}
+
+	return ReadTagGrant(d, meta)
+
 }
 
 // DeleteTagGrant implements schema.DeleteFunc
