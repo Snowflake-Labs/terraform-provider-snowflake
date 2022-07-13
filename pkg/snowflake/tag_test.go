@@ -87,3 +87,19 @@ func TestTagShow(t *testing.T) {
 	o.WithSchema("schema")
 	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`)
 }
+
+func TestTagShowAttachedPolicy(t *testing.T) {
+	r := require.New(t)
+	o := Tag("test")
+	r.Equal(o.Show(), `SHOW TAGS LIKE 'test'`)
+
+	o.WithDB("db")
+	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN DATABASE "db"`)
+
+	o.WithSchema("schema")
+	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`)
+
+	mP := MaskingPolicy("policy", "db2", "schema2")
+	o.WithMaskingPolicy(mP)
+	r.Equal(o.ShowAttachedPolicy(), `SELECT * from table ("db".information_schema.policy_references(ref_entity_name => '"db"."schema"."test"', ref_entity_domain => 'TAG')) where policy_db='db2' and policy_schema='schema2' and policy_name='policy'`)
+}
