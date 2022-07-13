@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.39.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.38.0...v0.39.0) (2022-07-13)
+
+
+### Features
+
+* deleting gpg agent before importing key ([#1123](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1123)) ([e895642](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e895642db51988807aa7cb3fc3d787aee37963f1))
+
+
+### BugFixes
+
+* changing tool to ghaction-import for importing gpg keys ([#1129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1129)) ([5fadf08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5fadf08de5cba1a34988b10e12eec392842777b5))
+* Delete gpg change ([#1126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1126)) ([ea27084](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ea27084cda350684025a2a58055ea4bec7427ef5))
+
 ## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
 
 
