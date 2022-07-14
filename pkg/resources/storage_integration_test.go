@@ -141,8 +141,8 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
-		"property", "property_type", "property_value", "property_default",
-	}).AddRow("ENABLED", "Boolean", true, false).
+		"property", "property_type", "property_value", "property_default"}).
+		AddRow("ENABLED", "Boolean", true, false).
 		AddRow("STORAGE_PROVIDER", "String", "S3", nil).
 		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
 		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
@@ -161,8 +161,8 @@ func expectReadStorageIntegrationWithS3GOV(mock sqlmock.Sqlmock) {
 	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration_with_s3gov'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
-		"property", "property_type", "property_value", "property_default",
-	}).AddRow("ENABLED", "Boolean", true, false).
+		"property", "property_type", "property_value", "property_default"}).
+		AddRow("ENABLED", "Boolean", true, false).
 		AddRow("STORAGE_PROVIDER", "String", "S3GOV", nil).
 		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
 		AddRow("STORAGE_BLOCKED_LOCATIONS", "List", "s3://bucket-c/path-c/,s3://bucket-d/", nil).
