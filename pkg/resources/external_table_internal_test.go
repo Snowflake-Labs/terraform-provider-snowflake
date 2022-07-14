@@ -19,23 +19,23 @@ func ExternalTestTableIDFromString(t *testing.T) {
 
 	// Bad ID -- not enough fields
 	id = "database"
-	_, err = streamOnTableIDFromString(id)
+	_, err = streamOnObjectIDFromString(id)
 	r.Equal(fmt.Errorf("3 fields allowed"), err)
 
 	// Bad ID
 	id = "||"
-	_, err = streamOnTableIDFromString(id)
+	_, err = streamOnObjectIDFromString(id)
 	r.NoError(err)
 
 	// 0 lines
 	id = ""
-	_, err = streamOnTableIDFromString(id)
+	_, err = streamOnObjectIDFromString(id)
 	r.Equal(fmt.Errorf("1 line at a time"), err)
 
 	// 2 lines
 	id = `database_name|schema_name|table
 	database_name|schema_name|table`
-	_, err = streamOnTableIDFromString(id)
+	_, err = streamOnObjectIDFromString(id)
 	r.Equal(fmt.Errorf("1 line at a time"), err)
 }
 
@@ -65,8 +65,8 @@ func ExternalTestTableStruct(t *testing.T) {
 	}
 	sID, err = table.String()
 	r.NoError(err)
-	newTable, err := streamOnTableIDFromString(sID)
+	newTable, err := streamOnObjectIDFromString(sID)
 	r.NoError(err)
 	r.Equal("database|name", newTable.DatabaseName)
-	r.Equal("table|name", newTable.OnTableName)
+	r.Equal("table|name", newTable.Name)
 }
