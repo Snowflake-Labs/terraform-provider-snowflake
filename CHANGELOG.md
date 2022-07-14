@@ -1,18 +1,17 @@
 # Changelog
 
-## [0.38.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.1...v0.38.0) (2022-07-11)
+## [0.39.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.38.0...v0.39.0) (2022-07-13)
 
 
 ### Features
 
-* Adding slack bot for PRs and Issues ([#1106](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1106)) ([95c255e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/95c255e5ca65b619b35692671848877793cac29e))
+* deleting gpg agent before importing key ([#1123](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1123)) ([e895642](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e895642db51988807aa7cb3fc3d787aee37963f1))
 
 
 ### BugFixes
 
-* Allow creation of database-wide future external table grants ([#1041](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1041)) ([5dff645](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5dff645291885cd437e341148c0629fe7ab7383f))
-* Removing force new and adding update for data base replication config ([#1105](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1105)) ([f34f012](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f34f012195d0b9718904ffa7a3a529f58167a74e))
-* Updating shares to disallow account locators ([#1102](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1102)) ([4079080](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4079080dd0b9e3caf4b5d360000bd216906cb81e))
+* changing tool to ghaction-import for importing gpg keys ([#1129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1129)) ([5fadf08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5fadf08de5cba1a34988b10e12eec392842777b5))
+* Delete gpg change ([#1126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1126)) ([ea27084](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ea27084cda350684025a2a58055ea4bec7427ef5))
 
 ## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
 
