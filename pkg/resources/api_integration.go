@@ -21,7 +21,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	"api_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"aws_api_gateway", "aws_private_api_gateway", "azure_api_management"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"aws_api_gateway", "aws_private_api_gateway", "azure_api_management", "aws_gov_api_gateway", "aws_gov_private_api_gateway"}, false),
 		Description:  "Specifies the HTTPS proxy service type.",
 	},
 	"api_aws_role_arn": {
@@ -304,7 +304,7 @@ func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBui
 	stmt.SetRaw("API_PROVIDER=" + apiProvider)
 
 	switch apiProvider {
-	case "aws_api_gateway", "aws_private_api_gateway":
+	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
 		v, ok := data.GetOk("api_aws_role_arn")
 		if !ok {
 			return fmt.Errorf("If you use AWS api provider you must specify an api_aws_role_arn")
