@@ -40,7 +40,7 @@ func (wb *WarehouseBuilder) Create() *CreateBuilder {
 
 // ShowParameters returns the query to show the parameters for the warehouse
 func (wb *WarehouseBuilder) ShowParameters() string {
-	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %q", wb.Builder.name)
+	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %v", wb.Builder.name)
 }
 
 func Warehouse(name string) *WarehouseBuilder {
