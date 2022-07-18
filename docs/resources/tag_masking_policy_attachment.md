@@ -13,6 +13,8 @@ description: |-
 ## Example Usage
 
 ```terraform
+# Note: Currently this feature is only available to accounts that are Enterprise Edition (or higher)
+
 resource "snowflake_database" "test" {
   name                        = "TEST_DB1"
   data_retention_time_in_days = 1
