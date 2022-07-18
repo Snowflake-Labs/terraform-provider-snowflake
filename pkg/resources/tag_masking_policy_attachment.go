@@ -140,8 +140,9 @@ func CreateTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) e
 	q := builder.AddMaskingPolicy()
 
 	err := snowflake.Exec(db, q)
+
 	if err != nil {
-		return errors.Wrapf(err, "error attaching masking policy %v to tag  %v", mpName, tagName)
+		return errors.Wrapf(err, "error attaching masking policy %v to tag %v", mpName, tagName)
 	}
 
 	mpID := &attachmentID{
@@ -180,9 +181,7 @@ func ReadTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) err
 	builder := snowflake.Tag(tagName).WithDB(tagDbName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
-
 	t, err := snowflake.ScanTagPolicy(row)
-
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] attached policy (%s) not found", d.Id())
@@ -225,7 +224,7 @@ func DeleteTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) e
 
 	err = snowflake.Exec(db, builder.RemoveMaskingPolicy())
 	if err != nil {
-		return errors.Wrapf(err, "error unaattaching masping policy for %v", d.Id())
+		return errors.Wrapf(err, "error unattaching masking policy for %v", d.Id())
 	}
 
 	d.SetId("")
