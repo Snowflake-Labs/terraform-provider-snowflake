@@ -114,7 +114,6 @@ func TagMaskingPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTagMaskingPolicyAttachemt,
 		Read:   ReadTagMaskingPolicyAttachemt,
-		// Update: UpdateTagMaskingPolicyAttachemt,
 		Delete: DeleteTagMaskingPolicyAttachemt,
 
 		Schema: mpAttachmentPolicySchema,
