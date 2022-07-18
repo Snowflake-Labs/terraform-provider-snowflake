@@ -43,6 +43,30 @@ func TestTagCreate(t *testing.T) {
 	})
 }
 
+func TestTagUpdate(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":           "good_name",
+		"database":       "test_db",
+		"schema":         "test_schema",
+		"comment":        "great comment",
+		"allowed_values": []interface{}{"marketing", "finance"},
+	}
+
+	d := tag(t, "test_db|test_schema|good_name", in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" SET COMMENT = 'great comment'$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" UNSET ALLOWED_VALUES$`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" ADD ALLOWED_VALUES 'marketing', 'finance'$`).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectReadTag(mock)
+		err := resources.UpdateTag(d, db)
+		r.NoError(err)
+	})
+}
 
 func TestTagDelete(t *testing.T) {
 	r := require.New(t)
