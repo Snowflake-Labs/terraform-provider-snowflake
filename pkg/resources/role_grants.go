@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/snowflakedb/gosnowflake"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
@@ -241,8 +240,15 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 		// 002003 (02000): SQL compilation error:
 		// User 'XXX' does not exist or not authorized.
 		if driverErr.Number == 2003 {
-			log.Printf("[WARN] %s", err.Error())
-			return nil
+			users, _ := snowflake.ListUsers(user, db)
+			logins := make([]string, len(users))
+			for i, u := range users{
+				logins[i] = u.LoginName.String
+			}
+			if !snowflake.Contains(logins, user) {
+				log.Printf("[WARN] User %s does not exist. No need to revoke role %s", user, role1)
+				return nil
+			}
 		}
 	}
 	return err
