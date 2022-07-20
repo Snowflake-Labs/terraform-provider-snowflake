@@ -118,6 +118,21 @@ It has not been tested on Windows, so if you find problems let us know.
 
 If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
 
+To debug the provider with a debugger:
+1. Launch the provider with the `-debug` command line argument in your debugger session. Once the provider starts, it will print instructions on setting the `TF_REATTACH_PROVIDERS` environment variable.
+   ```
+   Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
+
+   Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
+   PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
+   ```
+2. Open a terminal where you will execute Terraform and set the `TF_REATTACH_PROVIDERS` environment variable using the command from the first step.
+3. Run Terraform as usual from this terminal. Any breakpoints you set will halt execution and you can troubleshoot the provider from your debugger.
+
+**Note**: The `TF_REATTACH_PROVIDERS` environment variable needs to be set every time you restart your debugger session as some values like the `Pid` or the TCP port will change with every execution.
+
+For further instructions, please check the official [Terraform Plugin Development guide](https://www.terraform.io/plugin/debugging#starting-a-provider-in-debug-mode).
+
 ## Testing
 
 **Note: PRs for new resources will not be accepted without passing acceptance tests.**
