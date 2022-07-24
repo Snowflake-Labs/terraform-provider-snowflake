@@ -5,16 +5,15 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
-	"regexp"
-	"strings"
-	"time"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+	"log"
+	"regexp"
+	"strings"
+	"time"
 )
 
 // TerraformGrantResource augments terraform's *schema.Resource with extra context
@@ -229,15 +228,29 @@ func readGenericGrant(
 		}
 		return err
 	}
+
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
+
+	var relevantGrants []*grant
+	for _, grant := range grants {
+		if grant.Privilege == priv && grant.GrantOption == grantOption {
+			relevantGrants = append(relevantGrants, grant)
+		}
+	}
+
+	// If no relevant grants, set id to blank and return (see HACK HACK comment above)
+	if len(relevantGrants) == 0 {
+		d.SetId("")
+		return nil
+	}
 
 	// Map of roles to privileges
 	rolePrivileges := map[string]PrivilegeSet{}
 	sharePrivileges := map[string]PrivilegeSet{}
 
 	// List of all grants for each schema_database
-	for _, grant := range grants {
+	for _, grant := range relevantGrants {
 		switch grant.GranteeType {
 		case "ROLE":
 			roleName := grant.GranteeName
@@ -312,6 +325,10 @@ func readGenericGrant(
 	if err != nil {
 		return err
 	}
+	log.Printf("[DEBUG] integration_name: %v", d.Get("integration_name"))
+	log.Printf("[DEBUG] privilege: %v", d.Get("privilege"))
+	log.Printf("[DEBUG] with_grant_option: %v", d.Get("with_grant_option"))
+	log.Printf("[DEBUG] enable_multiple_grants: %v", d.Get("enable_multiple_grants"))
 	return nil
 }
 
