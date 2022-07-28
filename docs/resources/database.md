@@ -46,6 +46,7 @@ resource "snowflake_database" "test3" {
 ### Optional
 
 - `comment` (String)
+- `is_transient` (Boolean) Specifies a database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `data_retention_time_in_days` (Number)
 - `from_database` (String) Specify a database to create a clone from.
 - `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
