@@ -14,6 +14,7 @@ import (
 type DatabaseBuilder struct {
 	name                 string
 	comment              string
+	transient            bool
 	cloneDatabase        string
 	setDataRetentionDays bool
 	dataRetentionDays    int
@@ -27,6 +28,12 @@ func (db *DatabaseBuilder) QualifiedName() string {
 // Clone adds CLONE to the DatabaseBuilder to create a clone of another database
 func (db *DatabaseBuilder) Clone(database string) *DatabaseBuilder {
 	db.cloneDatabase = database
+	return db
+}
+
+// Transient adds the TRANSIENT flag to the DatabaseBuilder
+func (db *DatabaseBuilder) Transient() *DatabaseBuilder {
+	db.transient = true
 	return db
 }
 
@@ -86,6 +93,10 @@ func Database(name string) *DatabaseBuilder {
 func (db *DatabaseBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(`CREATE`)
+
+	if db.transient {
+		q.WriteString(` TRANSIENT`)
+	}
 
 	q.WriteString(fmt.Sprintf(` DATABASE %v`, db.QualifiedName()))
 

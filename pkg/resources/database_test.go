@@ -171,3 +171,41 @@ func TestDatabaseCreateFromReplica(t *testing.T) {
 		r.NoError(err)
 	})
 }
+
+func TestDatabaseCreateTransient(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":         "good_name",
+		"comment":      "great comment",
+		"is_transient": true,
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE TRANSIENT DATABASE "good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestDatabaseCreateTransientFromDatabase(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":          "good_name",
+		"from_database": "abc123",
+		"is_transient":  true,
+	}
+	d := schema.TestResourceDataRaw(t, resources.Database().Schema, in)
+	r.NotNil(d)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`CREATE TRANSIENT DATABASE "good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
+		err := resources.CreateDatabase(d, db)
+		r.NoError(err)
+	})
+}

@@ -24,6 +24,13 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "",
 	},
+	"is_transient": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies a database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
+		ForceNew:    true,
+	},
 	"data_retention_time_in_days": {
 		Type:     schema.TypeInt,
 		Optional: true,
@@ -124,11 +131,15 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("is_transient"); ok && v.(bool) {
+		builder.Transient()
+	}
+
 	if v, ok := d.GetOk("from_database"); ok {
 		builder.Clone(v.(string))
 	}
 
-	if v, ok := d.GetOk("data_retention_days"); ok {
+	if v, ok := d.GetOk("data_retention_time_in_days"); ok {
 		builder.WithDataRetentionDays(v.(int))
 	}
 
@@ -237,11 +248,29 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// reset the options before reading back from the DB
+	err = d.Set("is_transient", false)
+	if err != nil {
+		return err
+	}
+
+	if opts := database.Options.String; opts != "" {
+		for _, opt := range strings.Split(opts, ", ") {
+			switch opt {
+			case "TRANSIENT":
+				err = d.Set("is_transient", true)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return d.Set("data_retention_time_in_days", i)
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
-	dbName := d.Get("name").(string)
+	dbName := d.Id()
 	builder := snowflake.Database(dbName)
 	db := meta.(*sql.DB)
 
@@ -299,8 +328,8 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("data_retention_days") {
-		days := d.Get("data_retention_days")
+	if d.HasChange("data_retention_time_in_days") {
+		days := d.Get("data_retention_time_in_days")
 
 		q := builder.ChangeDataRetentionDays(days.(int))
 		err := snowflake.Exec(db, q)

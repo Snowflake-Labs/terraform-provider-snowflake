@@ -22,14 +22,17 @@ func TestCreateDatabase(t *testing.T) {
 
 	r.Equal(`CREATE DATABASE "test"`, db.Create())
 
+	db.Transient()
+	r.Equal(`CREATE TRANSIENT DATABASE "test"`, db.Create())
+
 	db.Clone("other")
-	r.Equal(`CREATE DATABASE "test" CLONE "other"`, db.Create())
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other"`, db.Create())
 
 	db.WithDataRetentionDays(7)
-	r.Equal(`CREATE DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7`, db.Create())
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7`, db.Create())
 
 	db.WithComment("Yee'haw")
-	r.Equal(`CREATE DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yee\'haw'`, db.Create())
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yee\'haw'`, db.Create())
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
