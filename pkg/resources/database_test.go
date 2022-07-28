@@ -30,7 +30,7 @@ func TestDatabaseCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
@@ -52,7 +52,7 @@ func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT='great comment`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE DATABASE "good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1, account2`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
 

@@ -75,8 +75,6 @@ var databaseSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-var databaseProperties = []string{"comment", "data_retention_time_in_days", "tag"}
-
 // Database returns a pointer to the resource representing a database
 func Database() *schema.Resource {
 	return &schema.Resource{
@@ -92,18 +90,51 @@ func Database() *schema.Resource {
 	}
 }
 
+func createDatabase(d *schema.ResourceData, builder *snowflake.DatabaseBuilder, meta interface{}) error {
+	db := meta.(*sql.DB)
+	q := builder.Create()
+	name := d.Get("name").(string)
+
+	err := snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error creating database %v", name)
+	}
+
+	d.SetId(name)
+
+	return ReadDatabase(d, meta)
+}
+
 // CreateDatabase implements schema.CreateFunc
 func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
+	// TODO: Migrate database from share and from replica to iterative approach
 	if _, ok := d.GetOk("from_share"); ok {
 		return createDatabaseFromShare(d, meta)
 	}
 
-	if _, ok := d.GetOk("from_database"); ok {
-		return createDatabaseFromDatabase(d, meta)
-	}
-
 	if _, ok := d.GetOk("from_replica"); ok {
 		return createDatabaseFromReplica(d, meta)
+	}
+
+	name := d.Get("name").(string)
+	builder := snowflake.Database(name)
+
+	// Set optionals
+	if v, ok := d.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("from_database"); ok {
+		builder.Clone(v.(string))
+	}
+
+	if v, ok := d.GetOk("data_retention_days"); ok {
+		builder.WithDataRetentionDays(v.(int))
+	}
+
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
 	}
 
 	// If set, verify parameters are valid and attempt to enable replication
@@ -114,14 +145,14 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		if !ignoreEditionCheck {
 			return errors.New("error enabling replication - ignore edition check was set to false")
 		}
-		resource := CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+		resource := createDatabase(d, builder, meta)
 		if err := enableReplication(d, meta, replicationConfiguration); err != nil {
 			return errors.Wrapf(err, "error enabling replication - account does not exist or System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
 		}
 		return resource
 	}
 
-	return CreateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+	return createDatabase(d, builder, meta)
 }
 
 func enableReplication(d *schema.ResourceData, meta interface{}, replicationConfig map[string]interface{}) error {
@@ -149,23 +180,6 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
-	}
-
-	d.SetId(name)
-
-	return ReadDatabase(d, meta)
-}
-
-func createDatabaseFromDatabase(d *schema.ResourceData, meta interface{}) error {
-	sourceDb := d.Get("from_database").(string)
-
-	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.DatabaseFromDatabase(name, sourceDb)
-
-	err := snowflake.Exec(db, builder.Create())
-	if err != nil {
-		return errors.Wrapf(err, "error creating a clone database %v from database %v", name, sourceDb)
 	}
 
 	d.SetId(name)
@@ -265,11 +279,58 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	return UpdateResource("database", databaseProperties, databaseSchema, snowflake.Database, ReadDatabase)(d, meta)
+
+	if d.HasChange("name") {
+		name := d.Get("name")
+		q := builder.Rename(name.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating database name on %v", d.Id())
+		}
+		d.SetId(fmt.Sprintf("%v", name.(string)))
+	}
+
+	if d.HasChange("comment") {
+		comment := d.Get("comment")
+		q := builder.ChangeComment(comment.(string))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating database comment on %v", d.Id())
+		}
+	}
+
+	if d.HasChange("data_retention_days") {
+		days := d.Get("data_retention_days")
+
+		q := builder.ChangeDataRetentionDays(days.(int))
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating data retention days on %v", d.Id())
+		}
+	}
+
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
+
+	return ReadDatabase(d, meta)
 }
 
 func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("database", snowflake.Database)(d, meta)
+	db := meta.(*sql.DB)
+	name := d.Id()
+
+	q := snowflake.Database(name).Drop()
+
+	err := snowflake.Exec(db, q)
+	if err != nil {
+		return errors.Wrapf(err, "error deleting database %v", d.Id())
+	}
+
+	d.SetId("")
+
+	return nil
 }
 
 func extractInterfaceFromAttribute(config interface{}, attribute string) []interface{} {
