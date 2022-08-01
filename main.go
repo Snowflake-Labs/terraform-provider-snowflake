@@ -10,8 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
+const ProviderAddr = "registry.terraform.io/Snowflake-Labs/snowflake"
+
 func main() {
 	version := flag.Bool("version", false, "spit out version for resources here")
+	debug := flag.Bool("debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
 	if *version {
@@ -24,6 +27,8 @@ func main() {
 	}
 
 	plugin.Serve(&plugin.ServeOpts{
+		Debug:        *debug,
+		ProviderAddr: ProviderAddr,
 		ProviderFunc: provider.Provider,
 	})
 }
