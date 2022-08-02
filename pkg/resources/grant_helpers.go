@@ -5,15 +5,16 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
-	"log"
-	"regexp"
-	"strings"
-	"time"
 )
 
 // TerraformGrantResource augments terraform's *schema.Resource with extra context

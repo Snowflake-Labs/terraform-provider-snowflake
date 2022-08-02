@@ -235,14 +235,15 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
-	if err == sql.ErrNoRows {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] stage (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
-		return err
+		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "Stage") {
+			// If not found, mark resource to be removed from state file during apply or refresh
+			log.Printf("[DEBUG] stage (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	sq := snowflake.Stage(stage, dbName, schema).Show()
