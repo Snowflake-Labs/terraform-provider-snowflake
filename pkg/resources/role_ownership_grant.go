@@ -17,7 +17,7 @@ var roleOwnershipGrantSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "The name of the role ownership is granted on.",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			var additionalCharsToIgnoreValidation []string
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
 			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
@@ -26,7 +26,7 @@ var roleOwnershipGrantSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			var additionalCharsToIgnoreValidation []string
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
 			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
