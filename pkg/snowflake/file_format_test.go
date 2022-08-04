@@ -34,7 +34,7 @@ func TestFileFormatCreateCSV(t *testing.T) {
 	f.WithSkipByteOrderMark(true)
 	f.WithEncoding("UTF8")
 
-	r.Equal(`CREATE FILE FORMAT "test_db"."test_schema"."test_file_format" TYPE = 'CSV' COMPRESSION = 'AUTO' RECORD_DELIMITER = '\n' FIELD_DELIMITER = ',' FILE_EXTENSION = '.CSV' SKIP_HEADER = 1 DATE_FORMAT = 'AUTO' TIME_FORMAT = 'AUTO' TIMESTAMP_FORMAT = 'AUTO' BINARY_FORMAT = 'HEX' ESCAPE = 'None' ESCAPE_UNENCLOSED_FIELD = 'None' FIELD_OPTIONALLY_ENCLOSED_BY = '"' NULL_IF = () ENCODING = 'UTF8' SKIP_BLANK_LINES = true TRIM_SPACE = true ERROR_ON_COLUMN_COUNT_MISMATCH = false REPLACE_INVALID_CHARACTERS = false VALIDATE_UTF8 = false EMPTY_FIELD_AS_NULL = true SKIP_BYTE_ORDER_MARK = true`, f.Create())
+	r.Equal(`CREATE FILE FORMAT "test_db"."test_schema"."test_file_format" TYPE = 'CSV' COMPRESSION = 'AUTO' RECORD_DELIMITER = '\n' FIELD_DELIMITER = ',' FILE_EXTENSION = '.CSV' SKIP_HEADER = 1 DATE_FORMAT = 'AUTO' TIME_FORMAT = 'AUTO' TIMESTAMP_FORMAT = 'AUTO' BINARY_FORMAT = 'HEX' ESCAPE = 'None' ESCAPE_UNENCLOSED_FIELD = 'None' FIELD_OPTIONALLY_ENCLOSED_BY = '"' NULL_IF = () ENCODING = 'UTF8' SKIP_BLANK_LINES = true TRIM_SPACE = true ERROR_ON_COLUMN_COUNT_MISMATCH = false REPLACE_INVALID_CHARACTERS = false EMPTY_FIELD_AS_NULL = true SKIP_BYTE_ORDER_MARK = true`, f.Create())
 }
 
 func TestFileFormatCreateJSON(t *testing.T) {
@@ -110,12 +110,6 @@ func TestFileFormatChangeBinaryFormat(t *testing.T) {
 	r := require.New(t)
 	f := FileFormat("test_file_format", "test_db", "test_schema")
 	r.Equal(`ALTER FILE FORMAT "test_db"."test_schema"."test_file_format" SET BINARY_FORMAT = 'AUTO'`, f.ChangeBinaryFormat("AUTO"))
-}
-
-func TestFileFormatChangeValidateUTF8(t *testing.T) {
-	r := require.New(t)
-	f := FileFormat("test_file_format", "test_db", "test_schema")
-	r.Equal(`ALTER FILE FORMAT "test_db"."test_schema"."test_file_format" SET VALIDATE_UTF8 = true`, f.ChangeValidateUTF8(true))
 }
 
 func TestFileFormatChangeEmptyFieldAsNull(t *testing.T) {
