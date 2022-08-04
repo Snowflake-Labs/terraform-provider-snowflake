@@ -52,7 +52,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE", "S3GOV"}, false),
 	},
 	"storage_aws_external_id": {
 		Type:        schema.TypeString,
@@ -374,7 +374,7 @@ func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.Settin
 	stmt.SetString("STORAGE_PROVIDER", storageProvider)
 
 	switch storageProvider {
-	case "S3":
+	case "S3", "S3GOV":
 		v, ok := data.GetOk("storage_aws_role_arn")
 		if !ok {
 			return fmt.Errorf("If you use the S3 storage provider you must specify a storage_aws_role_arn")

@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.40.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.39.0...v0.40.0) (2022-07-14)
+
+
+### Features
+
+* add AWS GOV support in api_integration ([#1118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1118)) ([2705970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/270597086e3c9ec2af5b5c2161a09a5a2e3f7511))
+* S3GOV support to storage_integration ([#1133](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1133)) ([92a5e35](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/92a5e35726be737df49f2c416359d1c591418ea2))
+* Streams on views ([#1112](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1112)) ([7a27b40](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7a27b40cff5cc75fe9743e1ba775254888291662))
+
+
+### BugFixes
+
+* update team slack bot configurations ([#1134](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1134)) ([b83a461](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b83a461771c150b53f566ad4563a32bea9d3d6d7))
+
+## [0.39.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.38.0...v0.39.0) (2022-07-13)
+
+
+### Features
+
+* deleting gpg agent before importing key ([#1123](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1123)) ([e895642](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e895642db51988807aa7cb3fc3d787aee37963f1))
+
+
+### BugFixes
+
+* changing tool to ghaction-import for importing gpg keys ([#1129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1129)) ([5fadf08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5fadf08de5cba1a34988b10e12eec392842777b5))
+* Delete gpg change ([#1126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1126)) ([ea27084](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ea27084cda350684025a2a58055ea4bec7427ef5))
+
 ## [0.37.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.37.0...v0.37.1) (2022-07-01)
 
 

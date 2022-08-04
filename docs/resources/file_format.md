@@ -64,7 +64,6 @@ resource "snowflake_file_format" "example_file_format" {
 - `time_format` (String) Defines the format of time values in the data files (data loading) or table (data unloading).
 - `timestamp_format` (String) Defines the format of timestamp values in the data files (data loading) or table (data unloading).
 - `trim_space` (Boolean) Boolean that specifies whether to remove white space from fields.
-- `validate_utf8` (Boolean) Boolean that specifies whether to validate UTF-8 character encoding in string column data.
 
 ### Read-Only
 

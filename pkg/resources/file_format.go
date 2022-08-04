@@ -39,7 +39,6 @@ var formatTypeOptions = map[string][]string{
 		"null_if",
 		"error_on_column_count_mismatch",
 		"replace_invalid_characters",
-		"validate_utf8",
 		"empty_field_as_null",
 		"skip_byte_order_mark",
 		"encoding",
@@ -198,11 +197,6 @@ var fileFormatSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Boolean that specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�).",
-	},
-	"validate_utf8": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Boolean that specifies whether to validate UTF-8 character encoding in string column data.",
 	},
 	"empty_field_as_null": {
 		Type:        schema.TypeBool,
@@ -421,12 +415,6 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok, err := getFormatTypeOption(d, formatType, "replace_invalid_characters"); ok && err == nil {
 		builder.WithReplaceInvalidCharacters(v.(bool))
-	} else if err != nil {
-		return err
-	}
-
-	if v, ok, err := getFormatTypeOption(d, formatType, "validate_utf8"); ok && err == nil {
-		builder.WithValidateUTF8(v.(bool))
 	} else if err != nil {
 		return err
 	}
@@ -660,11 +648,6 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("replace_invalid_characters", opts.ReplaceInvalidCharacters)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("validate_utf8", opts.ValidateUTF8)
 	if err != nil {
 		return err
 	}
@@ -917,15 +900,6 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format replace_invalid_characters on %v", d.Id())
-		}
-	}
-
-	if d.HasChange("validate_utf8") {
-		change := d.Get("validate_utf8")
-		q := builder.ChangeValidateUTF8(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format validate_utf8 on %v", d.Id())
 		}
 	}
 
