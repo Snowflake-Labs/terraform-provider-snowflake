@@ -14,6 +14,10 @@ var roleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
 	},
 	"comment": {
 		Type:     schema.TypeString,
