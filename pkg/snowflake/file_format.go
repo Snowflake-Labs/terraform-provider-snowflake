@@ -349,7 +349,6 @@ func (ffb *FileFormatBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 		q.WriteString(fmt.Sprintf(` ERROR_ON_COLUMN_COUNT_MISMATCH = %v`, ffb.errorOnColumnCountMismatch))
 		q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, ffb.replaceInvalidCharacters))
-		q.WriteString(fmt.Sprintf(` VALIDATE_UTF8 = %v`, ffb.validateUTF8))
 		q.WriteString(fmt.Sprintf(` EMPTY_FIELD_AS_NULL = %v`, ffb.emptyFieldAsNull))
 		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
 	} else if ffb.formatType == "JSON" {
@@ -425,11 +424,6 @@ func (ffb *FileFormatBuilder) ChangeBinaryFormat(c string) string {
 // ChangeErrorOnColumnCountMismatch returns the SQL query that will update the error_on_column_count_mismatch on the file format.
 func (ffb *FileFormatBuilder) ChangeErrorOnColumnCountMismatch(c bool) string {
 	return fmt.Sprintf(`ALTER FILE FORMAT %v SET ERROR_ON_COLUMN_COUNT_MISMATCH = %v`, ffb.QualifiedName(), c)
-}
-
-// ChangeValidateUTF8 returns the SQL query that will update the error_on_column_count_mismatch on the file format.
-func (ffb *FileFormatBuilder) ChangeValidateUTF8(c bool) string {
-	return fmt.Sprintf(`ALTER FILE FORMAT %v SET VALIDATE_UTF8 = %v`, ffb.QualifiedName(), c)
 }
 
 // ChangeEmptyFieldAsNull returns the SQL query that will update the error_on_column_count_mismatch on the file format.
@@ -594,7 +588,6 @@ type fileFormatOptions struct {
 	FieldOptionallyEnclosedBy  string   `json:"FIELD_OPTIONALLY_ENCLOSED_BY,omitempty"`
 	NullIf                     []string `json:"NULL_IF,omitempty"`
 	ErrorOnColumnCountMismatch bool     `json:"ERROR_ON_COLUMN_COUNT_MISMATCH,omitempty"`
-	ValidateUTF8               bool     `json:"VALIDATE_UTF8,omitempty"`
 	SkipBlankLines             bool     `json:"SKIP_BLANK_LINES,omitempty"`
 	ReplaceInvalidCharacters   bool     `json:"REPLACE_INVALID_CHARACTERS,omitempty"`
 	EmptyFieldAsNull           bool     `json:"EMPTY_FIELD_AS_NULL,omitempty"`
