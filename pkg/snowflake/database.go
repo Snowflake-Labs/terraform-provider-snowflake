@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -22,6 +23,7 @@ type DatabaseShareBuilder struct {
 	name     string
 	provider string
 	share    string
+	comment  string
 }
 
 // DatabaseFromShare returns a pointer to a builder that can create a database from a share
@@ -33,9 +35,22 @@ func DatabaseFromShare(name, provider, share string) *DatabaseShareBuilder {
 	}
 }
 
+// WithComment adds a comment to the DatabaseShareBuilder
+func (dsb *DatabaseShareBuilder) WithComment(comment string) *DatabaseShareBuilder {
+	dsb.comment = comment
+	return dsb
+}
+
 // Create returns the SQL statement required to create a database from a share
 func (dsb *DatabaseShareBuilder) Create() string {
-	return fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share)
+	var q strings.Builder
+	q.WriteString(fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share))
+
+	if dsb.comment != "" {
+		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, dsb.comment))
+	}
+
+	return q.String()
 }
 
 // DatabaseCloneBuilder is a basic builder that just creates databases from a source database
