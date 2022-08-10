@@ -25,7 +25,6 @@ resource snowflake_pipe pipe {
 
   aws_sns_topic_arn    = "..."
   notification_channel = "..."
-  owner                = "role1"
 }
 ```
 
