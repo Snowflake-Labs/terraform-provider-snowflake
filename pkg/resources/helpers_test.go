@@ -430,3 +430,11 @@ func function(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	d.SetId(id)
 	return d
 }
+
+func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.TagGrant().Resource.Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
