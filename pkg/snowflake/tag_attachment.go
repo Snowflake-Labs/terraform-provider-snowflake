@@ -1,19 +1,19 @@
 package snowflake
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
 // TagAttachmentBuilder abstracts the creation of SQL queries for a Snowflake tag
 type TagAttachmentBuilder struct {
-	resourceId string
-	objectType string
-	comment    string
-	tag        interface{}
+	resourceId   string
+	objectType   string
+	databaseName string
+	schemaName   string
+	tagName      string
 }
 
 // WithResourceId adds the name of the schema to the TagAttachmentBuilder
@@ -38,58 +38,44 @@ func (tb *TagAttachmentBuilder) WithObjectType(object_type string) *TagAttachmen
 //   - SHOW TAGS
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
-func TagAttachment(tag interface{}) *TagAttachmentBuilder {
+func TagAttachment(tag string) *TagAttachmentBuilder {
+	s := strings.Split(tag, ".")
 	return &TagAttachmentBuilder{
-		tag: tag,
+		databaseName: s[0],
+		schemaName:   s[1],
+		tagName:      s[2],
 	}
 }
 
 // Create returns the SQL query that will set the tag on a resource.
 func (tb *TagAttachmentBuilder) Create() string {
-	tagKey := tb.tag.([]interface{})[0].(map[string]interface{})["name"]
-	tagValue := tb.tag.([]interface{})[0].(map[string]interface{})["value"]
-	return fmt.Sprintf(`ALTER %v SET TAG %v ='%v'`, tb.objectType, tagKey, tagValue)
+	return fmt.Sprintf(`ALTER %v SET TAG %v ='%v'`, tb.objectType, tb.tagName, tagValue)
+}
+
+// Drop returns the SQL query that will show a tag.
+func (tb *TagAttachmentBuilder) Show() string {
+	return fmt.Sprintf(`SHOW TAGS LIKE '%v' IN SCHEMA "%v"."%v"`, tb.tagName, tb.databaseName, tb.schemaName)
+}
+
+// Show returns the SQL query that will show a pipe.
+func (pb *PipeBuilder) Show() string {
+	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
 }
 
 // Drop returns the SQL query that will remove a tag from a resource.
 func (tb *TagAttachmentBuilder) Drop() string {
-	tagKey := tb.tag.([]interface{})[0].(map[string]interface{})["name"]
-	tagValue := tb.tag.([]interface{})[0].(map[string]interface{})["value"]
-	return fmt.Sprintf(`ALTER %v UNSET TAG %v ='%v'`, tb.objectType, tagKey, tagValue)
+	return fmt.Sprintf(`ALTER %v UNSET TAG %v ='%v'`, tb.objectType, tb.tagName, tagValue)
 }
 
-// ListTagsForResource returns a list of tags for a resource
-func ListTagsForResource(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
-	stmt := fmt.Sprintf(`SHOW TAGS IN %v %v`, object_type, resource_id)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	tags := []tag{}
-	err = sqlx.StructScan(rows, &tags)
-	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tags found")
-		return nil, nil
-	}
-	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)
+// ScanTagAttachment returns a list of tags for a resource
+func ScanTagAttachment(tb *TagAttachmentBuilder) string {
+	p := &pipe{}
+	e := row.StructScan(p)
+	return p, e
 }
 
-//// RemoveTagFromResource returns a list of tags for a resource
-//func RemoveTagFromResource(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
-//	stmt := fmt.Sprintf(`SHOW TAGS IN %v %v`, object_type, resource_id)
-//	rows, err := Query(db, stmt)
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer rows.Close()
-//
-//	tags := []tag{}
-//	err = sqlx.StructScan(rows, &tags)
-//	if err == sql.ErrNoRows {
-//		log.Printf("[DEBUG] no tags found")
-//		return nil, nil
-//	}
-//	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)
-//}
+func ScanPipe(row *sqlx.Row) (*pipe, error) {
+	p := &pipe{}
+	e := row.StructScan(p)
+	return p, e
+}
