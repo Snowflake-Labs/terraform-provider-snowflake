@@ -46,7 +46,7 @@ func (tb *TagAttachmentBuilder) WithTagValue(tagValue string) *TagAttachmentBuil
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAttachment(tag string) *TagAttachmentBuilder {
-	s := strings.Split(tag, ".")
+	s := strings.Split(strings.ToUpper(tag), ".")
 	return &TagAttachmentBuilder{
 		databaseName: s[0],
 		schemaName:   s[1],
@@ -56,7 +56,7 @@ func TagAttachment(tag string) *TagAttachmentBuilder {
 
 // Create returns the SQL query that will set the tag on a resource.
 func (tb *TagAttachmentBuilder) Create() string {
-	return fmt.Sprintf(`ALTER %v SET TAG %v ='%v'`, tb.objectType, tb.tagName, tb.tagValue)
+	return fmt.Sprintf(`ALTER %v "%v" SET TAG %v ="%v"`, tb.objectType, tb.resourceId, tb.tagName, tb.tagValue)
 }
 
 // Drop returns the SQL query that will remove a tag from a resource.

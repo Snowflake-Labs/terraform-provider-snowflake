@@ -17,13 +17,13 @@ import (
 )
 
 var tagAttachmentSchema = map[string]*schema.Schema{
-	"resourceId": {
+	"resource_id": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the resource identifier for the tag attachment.",
 		ForceNew:    true,
 	},
-	"objectType": {
+	"object_type": {
 		Type:     schema.TypeString,
 		Required: true,
 		Description: "Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. " +
@@ -34,19 +34,18 @@ var tagAttachmentSchema = map[string]*schema.Schema{
 		}, true),
 		ForceNew: true,
 	},
-	"tagName": {
+	"tag_name": {
 		Type:         schema.TypeString,
 		Required:     true,
 		Description:  "Specifies the identifier for the tag. Note: format must follow: 'database.schema.tagId'",
 		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
 		ForceNew:     true,
 	},
-	"tagValue": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the value of the tag",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
-		ForceNew:     true,
+	"tag_value": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the value of the tag",
+		ForceNew:    true,
 	},
 }
 
@@ -70,16 +69,16 @@ func TagAttachment() *schema.Resource {
 // CreateSchema implements schema.CreateFunc
 func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tagName := d.Get("tag").(string)
-	resourceId := d.Get("resourceId").(string)
-	objectType := d.Get("objectType").(string)
-	tagValue := d.Get("tagValue").(string)
+	tagName := d.Get("tag_name").(string)
+	resourceId := d.Get("resource_id").(string)
+	objectType := d.Get("object_type").(string)
+	tagValue := d.Get("tag_value").(string)
 	builder := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType).WithTagValue(tagValue)
 
 	q := builder.Create()
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error attaching tag to resource: [%v]", resourceId)
+		return errors.Wrapf(err, "error attaching tag to resource: [%v] with command: [%v]", resourceId, q)
 	}
 	// retry read until it works. add max timeout
 	return resource.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
@@ -106,10 +105,10 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	tagName := d.Get("tag").(string)
-	resourceId := d.Get("resourceId").(string)
-	objectType := d.Get("objectType").(string)
-	tagValue := d.Get("tagValue").(string)
+	tagName := d.Get("tag_name").(string)
+	resourceId := d.Get("resource_id").(string)
+	objectType := d.Get("object_type").(string)
+	tagValue := d.Get("tag_value").(string)
 
 	builder := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType).WithTagValue(tagValue)
 	_, err := snowflake.ListTagAttachments(builder, db)
@@ -130,11 +129,11 @@ func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 func DeleteTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	tagId := d.Get("tag").(string)
-	resourceId := d.Get("resourceId").(string)
-	objectType := d.Get("objectType").(string)
+	tagName := d.Get("tag_name").(string)
+	resourceId := d.Get("resource_id").(string)
+	objectType := d.Get("object_type").(string)
 
-	q := snowflake.TagAttachment(tagId).WithResourceId(resourceId).WithObjectType(objectType).Drop()
+	q := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType).Drop()
 
 	err := snowflake.Exec(db, q)
 	if err != nil {

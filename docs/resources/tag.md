@@ -30,25 +30,18 @@ resource "snowflake_tag" "test_tag" {
 
 ### Required
 
-- `objectType` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
-- `resourceId` (String) Specifies the resource identifier for the tag attachment.
-- `tagName` (String) Specifies the identifier for the tag. Note: format must follow: 'database.schema.tagId'
-- `tagValue` (String) Specifies the value of the tag
+- `database` (String) The database in which to create the tag.
+- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created.
+- `schema` (String) The schema in which to create the tag.
 
 ### Optional
 
-- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `allowed_values` (List of String) List of allowed values for the tag.
+- `comment` (String) Specifies a comment for the tag.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
-
-Optional:
-
-- `create` (String)
 
 ## Import
 
