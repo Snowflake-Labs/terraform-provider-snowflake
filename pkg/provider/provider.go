@@ -4,12 +4,14 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -17,11 +19,9 @@ import (
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
 // Provider is a provider
@@ -223,7 +223,8 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_stream":                     resources.Stream(),
 		"snowflake_table":                      resources.Table(),
 		"snowflake_external_table":             resources.ExternalTable(),
-		"snowflake_tag":                        resources.Tag(),
+		"snowflake_tag":                        resources.TagAttachment(),
+		"snowflake_tag_attachment":             resources.Tag(),
 		"snowflake_task":                       resources.Task(),
 		"snowflake_user":                       resources.User(),
 		"snowflake_user_ownership_grant":       resources.UserOwnershipGrant(),
