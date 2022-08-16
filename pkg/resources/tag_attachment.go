@@ -37,7 +37,7 @@ var tagAttachmentSchema = map[string]*schema.Schema{
 	"tagName": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "Specifies the identifier for the tag. 'database.schema.tagId'",
+		Description:  "Specifies the identifier for the tag. Note: format must follow: 'database.schema.tagId'",
 		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
 		ForceNew:     true,
 	},
