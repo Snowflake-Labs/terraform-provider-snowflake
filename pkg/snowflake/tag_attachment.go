@@ -1,19 +1,23 @@
 package snowflake
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // TagAttachmentBuilder abstracts the creation of SQL queries for a Snowflake tag
 type TagAttachmentBuilder struct {
+	databaseName string
 	resourceId   string
 	objectType   string
-	databaseName string
 	schemaName   string
 	tagName      string
+	tagValue     string
 }
 
 // WithResourceId adds the name of the schema to the TagAttachmentBuilder
@@ -23,19 +27,22 @@ func (tb *TagAttachmentBuilder) WithResourceId(resourceId string) *TagAttachment
 }
 
 // WithComment adds a comment to the TagAttachmentBuilder
-func (tb *TagAttachmentBuilder) WithObjectType(object_type string) *TagAttachmentBuilder {
-	tb.objectType = object_type
+func (tb *TagAttachmentBuilder) WithObjectType(objectType string) *TagAttachmentBuilder {
+	tb.objectType = objectType
 	return tb
 }
 
-// TagAttachment returns a pointer to a Builder that abstracts the DDL operations for a tag.
+// WithTagValue adds the name of the tag value to the TagAttachmentBuilder
+func (tb *TagAttachmentBuilder) WithTagValue(tagValue string) *TagAttachmentBuilder {
+	tb.tagValue = tagValue
+	return tb
+}
+
+// TagAttachment returns a pointer to a Builder that abstracts the DDL operations for a tag attachment.
 //
 // Supported DDL operations are:
 //   - CREATE TAG
-//   - ALTER TAG
 //   - DROP TAG
-//   - UNDROP TAG
-//   - SHOW TAGS
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAttachment(tag string) *TagAttachmentBuilder {
@@ -49,33 +56,32 @@ func TagAttachment(tag string) *TagAttachmentBuilder {
 
 // Create returns the SQL query that will set the tag on a resource.
 func (tb *TagAttachmentBuilder) Create() string {
-	return fmt.Sprintf(`ALTER %v SET TAG %v ='%v'`, tb.objectType, tb.tagName, tagValue)
-}
-
-// Drop returns the SQL query that will show a tag.
-func (tb *TagAttachmentBuilder) Show() string {
-	return fmt.Sprintf(`SHOW TAGS LIKE '%v' IN SCHEMA "%v"."%v"`, tb.tagName, tb.databaseName, tb.schemaName)
-}
-
-// Show returns the SQL query that will show a pipe.
-func (pb *PipeBuilder) Show() string {
-	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
+	return fmt.Sprintf(`ALTER %v SET TAG %v ='%v'`, tb.objectType, tb.tagName, tb.tagValue)
 }
 
 // Drop returns the SQL query that will remove a tag from a resource.
 func (tb *TagAttachmentBuilder) Drop() string {
-	return fmt.Sprintf(`ALTER %v UNSET TAG %v ='%v'`, tb.objectType, tb.tagName, tagValue)
+	return fmt.Sprintf(`ALTER %v UNSET TAG %v`, tb.objectType, tb.tagName)
 }
 
-// ScanTagAttachment returns a list of tags for a resource
-func ScanTagAttachment(tb *TagAttachmentBuilder) string {
-	p := &pipe{}
-	e := row.StructScan(p)
-	return p, e
-}
+// ListTagAttachments returns a list of tags in a database or schema
+func ListTagAttachments(tb *TagAttachmentBuilder, db *sql.DB) ([]tag, error) {
+	var stmt strings.Builder
+	stmt.WriteString(fmt.Sprintf(`SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.TAG_REFERENCES`))
 
-func ScanPipe(row *sqlx.Row) (*pipe, error) {
-	p := &pipe{}
-	e := row.StructScan(p)
-	return p, e
+	// add filters for the tag
+	stmt.WriteString(fmt.Sprintf(`WHERE TAG_NAME = '%v' AND DOMAIN = '%v' AND TAG_VALUE = '%v'`, tb.tagName, tb.objectType, tb.tagValue))
+	rows, err := Query(db, stmt.String())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []tag
+	err = sqlx.StructScan(rows, &tags)
+	if err == sql.ErrNoRows {
+		log.Printf("[DEBUG] no tags found")
+		return nil, nil
+	}
+	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)
 }

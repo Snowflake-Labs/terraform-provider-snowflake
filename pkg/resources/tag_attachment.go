@@ -2,8 +2,11 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -31,10 +34,17 @@ var tagAttachmentSchema = map[string]*schema.Schema{
 		}, true),
 		ForceNew: true,
 	},
-	"tagId": {
+	"tagName": {
 		Type:         schema.TypeString,
 		Required:     true,
 		Description:  "Specifies the identifier for the tag. 'database.schema.tagId'",
+		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
+		ForceNew:     true,
+	},
+	"tagValue": {
+		Type:         schema.TypeString,
+		Required:     true,
+		Description:  "Specifies the value of the tag",
 		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
 		ForceNew:     true,
 	},
@@ -51,6 +61,9 @@ func TagAttachment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(70 * time.Minute),
+		},
 	}
 }
 
@@ -60,7 +73,8 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	tagName := d.Get("tag").(string)
 	resourceId := d.Get("resourceId").(string)
 	objectType := d.Get("objectType").(string)
-	builder := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType)
+	tagValue := d.Get("tagValue").(string)
+	builder := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType).WithTagValue(tagValue)
 
 	q := builder.Create()
 	err := snowflake.Exec(db, q)
@@ -68,18 +82,37 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error attaching tag to resource: [%v]", resourceId)
 	}
 	// retry read until it works. add max timeout
-	return ReadTagAttachment(d, meta)
+	return resource.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		resp, err := snowflake.ListTagAttachments(builder, db)
+
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error listing tags: %s", err))
+		}
+
+		if resp == nil {
+			return resource.RetryableError(fmt.Errorf("expected tag to be created but not yet created"))
+		}
+
+		err = ReadTagAttachment(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		} else {
+			return nil
+		}
+	})
 }
 
 // ReadSchema implements schema.ReadFunc
 func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
+	tagName := d.Get("tag").(string)
 	resourceId := d.Get("resourceId").(string)
-	objectType := d.Get("resourceType").(string)
-	q := snowflake.TagAttachment(d.Get("tagId").(string)).WithResourceId(resourceId).WithObjectType(objectType).Show()
-	row := snowflake.QueryRow(db, q)
-	_, err := snowflake.ScanTag(row)
+	objectType := d.Get("objectType").(string)
+	tagValue := d.Get("tagValue").(string)
+
+	builder := snowflake.TagAttachment(tagName).WithResourceId(resourceId).WithObjectType(objectType).WithTagValue(tagValue)
+	_, err := snowflake.ListTagAttachments(builder, db)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] tag (%s) not found", d.Id())
