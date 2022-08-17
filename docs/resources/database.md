@@ -13,13 +13,13 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_database" "test" {
+resource "snowflake_database" "simple" {
   name                        = "testing"
   comment                     = "test comment"
   data_retention_time_in_days = 3
 }
 
-resource "snowflake_database" "test2" {
+resource "snowflake_database" "with_replication" {
   name    = "testing_2"
   comment = "test comment 2"
   replication_configuration {
@@ -36,7 +36,7 @@ resource "snowflake_database" "from_replica" {
 }
 
 resource "snowflake_database" "from_share" {
-  name    = "testing_3"
+  name    = "testing_4"
   comment = "test comment"
   from_share = {
     provider = "org1\".\"account1"
