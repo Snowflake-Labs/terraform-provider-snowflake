@@ -34,10 +34,10 @@ var tagAttachmentSchema = map[string]*schema.Schema{
 		}, true),
 		ForceNew: true,
 	},
-	"tag_name": {
+	"tag_id": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "Specifies the identifier for the tag. Note: format must follow: 'database.schema.tagId'",
+		Description:  "Specifies the identifier for the tag. Note: format must follow: tagName or 'database.schema.tagId' or snowflake_tag.id",
 		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagPath,
 		ForceNew:     true,
 	},
@@ -69,7 +69,7 @@ func TagAttachment() *schema.Resource {
 // CreateSchema implements schema.CreateFunc
 func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tagName := d.Get("tag_name").(string)
+	tagName := d.Get("tag_id").(string)
 	resourceId := d.Get("resource_id").(string)
 	objectType := d.Get("object_type").(string)
 	tagValue := d.Get("tag_value").(string)
@@ -78,21 +78,23 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	q := builder.Create()
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error attaching tag to resource: [%v] with command: [%v]", resourceId, q)
+		return errors.Wrapf(err, "error attaching tag to resource: [%v] with command: [%v], tagname [%v]", resourceId, q, tagName)
 	}
-	// retry read until it works. add max timeout
+	log.Printf("[DEBUG] Created tag, now verifying creation")
 	return resource.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		resp, err := snowflake.ListTagAttachments(builder, db)
+
+		//resp, err := snowflake.ListTagAttachments(builder, db)
+		err := ReadTagAttachment(d, meta)
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error listing tags: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("error: %s", err))
 		}
 
 		if resp == nil {
 			return resource.RetryableError(fmt.Errorf("expected tag to be created but not yet created"))
 		}
 
-		err = ReadTagAttachment(d, meta)
+		//err = ReadTagAttachment(d, meta)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
@@ -105,7 +107,7 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	tagName := d.Get("tag_name").(string)
+	tagName := d.Get("tag_id").(string)
 	resourceId := d.Get("resource_id").(string)
 	objectType := d.Get("object_type").(string)
 	tagValue := d.Get("tag_value").(string)
@@ -119,7 +121,8 @@ func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return err
+		//return err
+		return errors.Wrapf(err, "error listing tags, error is x")
 	}
 
 	return nil
@@ -129,7 +132,7 @@ func ReadTagAttachment(d *schema.ResourceData, meta interface{}) error {
 func DeleteTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	tagName := d.Get("tag_name").(string)
+	tagName := d.Get("tag_id").(string)
 	resourceId := d.Get("resource_id").(string)
 	objectType := d.Get("object_type").(string)
 
@@ -137,6 +140,7 @@ func DeleteTagAttachment(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
+		log.Printf("[DEBUG] error is %v", err.Error())
 		return errors.Wrapf(err, "error deleting tag attachment for resource [%v]", resourceId)
 	}
 

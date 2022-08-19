@@ -118,9 +118,14 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 
 func ValidateFullyQualifiedTagPath(i interface{}, k string) (s []string, errors []error) {
 	v, _ := i.(string)
+	if !strings.Contains(v, "|") && !strings.Contains(v, ".") {
+		errors = append(errors, fmt.Errorf("not a valid tag path. please use one of the following formats:"+
+			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName or "))
+	}
 	tagArray := strings.Split(v, ".")
 	if len(tagArray) != 3 {
-		errors = append(errors, fmt.Errorf("not a valid tag path. please use the following format 'dbName'.'schemaName'.'tagName'"))
+		errors = append(errors, fmt.Errorf("not a valid tag path. please use one of the following formats:"+
+			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName or "))
 	}
 	return
 }
