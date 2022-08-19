@@ -29,7 +29,7 @@ resource "snowflake_tag_attachment" "test_tag_attachment" {
 
 - `object_type` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
 - `resource_id` (String) Specifies the resource identifier for the tag attachment.
-- `tag_name` (String) Specifies the identifier for the tag. Note: format must follow: 'database.schema.tagId'
+- `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: tagName or 'database.schema.tagId' or snowflake_tag.id
 - `tag_value` (String) Specifies the value of the tag
 
 ### Optional

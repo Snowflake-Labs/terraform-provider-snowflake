@@ -83,8 +83,7 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Created tag, now verifying creation")
 	return resource.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
 
-		//resp, err := snowflake.ListTagAttachments(builder, db)
-		err := ReadTagAttachment(d, meta)
+		resp, err := snowflake.ListTagAttachments(builder, db)
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error: %s", err))
@@ -94,7 +93,6 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(fmt.Errorf("expected tag to be created but not yet created"))
 		}
 
-		//err = ReadTagAttachment(d, meta)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
