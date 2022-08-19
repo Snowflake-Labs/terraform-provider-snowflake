@@ -45,7 +45,7 @@ func TestProcedureCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE OR REPLACE PROCEDURE "my_db"."my_schema"."my_proc"\(data VARCHAR, event_dt DATE\) RETURNS VARCHAR LANGUAGE SCALA CALLED ON NULL INPUT IMMUTABLE COMMENT = 'mock comment' EXECUTE AS OWNER AS \$\$hi\$\$`).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectProcedureRead(mock)
+		expectProcedureRead(mock, "VARCHAR(123456789)")
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
 		r.Equal("MY_PROC", d.Get("name").(string))
@@ -54,14 +54,14 @@ func TestProcedureCreate(t *testing.T) {
 	})
 }
 
-func expectProcedureRead(mock sqlmock.Sqlmock) {
+func expectProcedureRead(mock sqlmock.Sqlmock, returnType string) {
 	rows := sqlmock.NewRows([]string{"created_on", "name", "schema_name", "is_builtin", "is_aggregate", "is_ansi", "min_num_arguments", "max_num_arguments", "arguments", "description", "catalog_name", "is_table_function", "valid_for_clustering", "is_secure"}).
 		AddRow("now", "MY_PROC", "MY_SCHEMA", "N", "N", "N", "1", "1", "MY_PROC(VARCHAR, DATE) RETURN VARCHAR", "mock comment", "MY_DB", "N", "N", "N")
 	mock.ExpectQuery(`SHOW PROCEDURES LIKE 'my_proc' IN SCHEMA "my_db"."my_schema"`).WillReturnRows(rows)
 
 	describeRows := sqlmock.NewRows([]string{"property", "value"}).
 		AddRow("signature", "(data VARCHAR, event_dt DATE)").
-		AddRow("returns", "VARCHAR(123456789)"). // This is how return type is stored in Snowflake DB
+		AddRow("returns", returnType). // This is how return type is stored in Snowflake DB
 		AddRow("language", "SQL").
 		AddRow("null handling", "CALLED ON NULL INPUT").
 		AddRow("volatility", "IMMUTABLE").
@@ -77,7 +77,7 @@ func TestProcedureRead(t *testing.T) {
 	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", map[string]interface{}{})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectProcedureRead(mock)
+		expectProcedureRead(mock, "VARCHAR(123456789)")
 
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
@@ -100,6 +100,15 @@ func TestProcedureRead(t *testing.T) {
 		r.Equal("VARCHAR", test_proc_arg1["type"].(string))
 		r.Equal("event_dt", test_proc_arg2["name"].(string))
 		r.Equal("DATE", test_proc_arg2["type"].(string))
+	})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectProcedureRead(mock, "TABLE ()")
+
+		err := resources.ReadProcedure(d, db)
+		r.NoError(err)
+		r.Equal("MY_PROC", d.Get("name").(string))
+		r.Equal("TABLE", d.Get("return_type").(string))
 	})
 }
 
