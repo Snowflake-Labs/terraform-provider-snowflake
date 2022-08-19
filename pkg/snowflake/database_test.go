@@ -10,44 +10,29 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
-func TestDatabase(t *testing.T) {
+func TestQualifiedNameDatabase(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("db1")
-	r.NotNil(db)
+	db := snowflake.Database("test")
+	r.Equal(`"test"`, db.QualifiedName())
+}
 
-	q := db.Show()
-	r.Equal("SHOW DATABASES LIKE 'db1'", q)
+func TestCreateDatabase(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
 
-	q = db.Drop()
-	r.Equal(`DROP DATABASE "db1"`, q)
+	r.Equal(`CREATE DATABASE "test"`, db.Create())
 
-	q = db.Rename("db2")
-	r.Equal(`ALTER DATABASE "db1" RENAME TO "db2"`, q)
+	db.Transient()
+	r.Equal(`CREATE TRANSIENT DATABASE "test"`, db.Create())
 
-	ab := db.Alter()
-	r.NotNil(ab)
+	db.Clone("other")
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other"`, db.Create())
 
-	ab.SetString(`foo`, `bar`)
-	q = ab.Statement()
+	db.WithDataRetentionDays(7)
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7`, db.Create())
 
-	r.Equal(`ALTER DATABASE "db1" SET FOO='bar'`, q)
-
-	ab.SetBool(`bam`, false)
-	q = ab.Statement()
-
-	r.Equal(`ALTER DATABASE "db1" SET FOO='bar' BAM=false`, q)
-
-	c := db.Create()
-	c.SetString("foo", "bar")
-	c.SetBool("bam", false)
-	q = c.Statement()
-	r.Equal(`CREATE DATABASE "db1" FOO='bar' BAM=false`, q)
-
-	// test escaping
-	c2 := db.Create()
-	c2.SetString("foo", "ba'r")
-	q = c2.Statement()
-	r.Equal(`CREATE DATABASE "db1" FOO='ba\'r'`, q)
+	db.WithComment("Yee'haw")
+	r.Equal(`CREATE TRANSIENT DATABASE "test" CLONE "other" DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yee\'haw'`, db.Create())
 }
 
 func TestDatabaseCreateFromShare(t *testing.T) {
@@ -57,18 +42,74 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 	r.Equal(`CREATE DATABASE "db1" FROM SHARE "abc123"."share1"`, q)
 }
 
-func TestDatabaseCreateFromDatabase(t *testing.T) {
-	r := require.New(t)
-	db := snowflake.DatabaseFromDatabase("db1", "abc123")
-	q := db.Create()
-	r.Equal(`CREATE DATABASE "db1" CLONE "abc123"`, q)
-}
-
 func TestDatabaseCreateFromReplica(t *testing.T) {
 	r := require.New(t)
 	db := snowflake.DatabaseFromReplica("db1", "abc123")
 	q := db.Create()
 	r.Equal(`CREATE DATABASE "db1" AS REPLICA OF "abc123"`, q)
+}
+
+func TestDatabaseRename(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("db1")
+
+	r.Equal(`ALTER DATABASE "db1" RENAME TO "db2"`, db.Rename("db2"))
+}
+
+func TestDatabaseSwap(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`ALTER DATABASE "test" SWAP WITH "target"`, db.Swap("target"))
+}
+
+func TestDatabaseChangeComment(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`ALTER DATABASE "test" SET COMMENT = 'test\' db'`, db.ChangeComment("test' db"))
+}
+
+func TestDatabaseRemoveComment(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`ALTER DATABASE "test" UNSET COMMENT`, db.RemoveComment())
+}
+
+func TestDatabaseChangeDataRetentionDays(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`ALTER DATABASE "test" SET DATA_RETENTION_TIME_IN_DAYS = 22`, db.ChangeDataRetentionDays(22))
+}
+
+func TestDatabaseRemoveDataRetentionDays(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`ALTER DATABASE "test" UNSET DATA_RETENTION_TIME_IN_DAYS`, db.RemoveDataRetentionDays())
+}
+
+func TestDatabaseDrop(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("db1")
+
+	r.Equal(`DROP DATABASE "db1"`, db.Drop())
+}
+
+func TestDatabaseUndrop(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`UNDROP DATABASE "test"`, db.Undrop())
+}
+
+func TestDatabaseUse(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("test")
+	r.Equal(`USE DATABASE "test"`, db.Use())
+}
+
+func TestDatabaseShow(t *testing.T) {
+	r := require.New(t)
+	db := snowflake.Database("db1")
+
+	r.Equal("SHOW DATABASES LIKE 'db1'", db.Show())
 }
 
 func TestListDatabases(t *testing.T) {
