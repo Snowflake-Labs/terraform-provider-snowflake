@@ -40,6 +40,11 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 	db := snowflake.DatabaseFromShare("db1", "abc123", "share1")
 	q := db.Create()
 	r.Equal(`CREATE DATABASE "db1" FROM SHARE "abc123"."share1"`, q)
+
+	db = snowflake.DatabaseFromShare("db1", "org1\".\"account1", "share1")
+	db.WithComment("This is comment")
+	q = db.Create()
+	r.Equal(`CREATE DATABASE "db1" FROM SHARE "org1"."account1"."share1" COMMENT = 'This is comment'`, q)
 }
 
 func TestDatabaseCreateFromReplica(t *testing.T) {

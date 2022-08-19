@@ -47,13 +47,13 @@ func TestFileFormatCreateInvalidOptions(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":          "test_file_format",
-		"database":      "test_db",
-		"schema":        "test_schema",
-		"format_type":   "JSON",
-		"null_if":       []interface{}{"NULL"},
+		"name":            "test_file_format",
+		"database":        "test_db",
+		"schema":          "test_schema",
+		"format_type":     "JSON",
+		"null_if":         []interface{}{"NULL"},
 		"field_delimiter": ",",
-		"comment":       "great comment",
+		"comment":         "great comment",
 	}
 	d := schema.TestResourceDataRaw(t, resources.FileFormat().Schema, in)
 	r.NotNil(d)

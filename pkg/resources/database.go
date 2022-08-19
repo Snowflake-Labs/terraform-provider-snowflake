@@ -188,6 +188,10 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromShare(name, prov.(string), share.(string))
 
+	if comment, ok := d.GetOk("comment"); ok {
+		builder.WithComment(comment.(string))
+	}
+
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
 		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
