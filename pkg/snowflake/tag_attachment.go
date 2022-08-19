@@ -54,6 +54,21 @@ func (tb *TagAttachmentBuilder) WithTagValue(tagValue string) *TagAttachmentBuil
 	return tb
 }
 
+// GetTagDatabase returns the value of the tag database of TagAttachmentBuilder
+func (tb *TagAttachmentBuilder) GetTagDatabase() string {
+	return tb.databaseName
+}
+
+// GetTagName returns the value of the tag name of TagAttachmentBuilder
+func (tb *TagAttachmentBuilder) GetTagName() string {
+	return tb.schemaName
+}
+
+// GetTagSchema returns the value of the tag schema of TagAttachmentBuilder
+func (tb *TagAttachmentBuilder) GetTagSchema() string {
+	return tb.schemaName
+}
+
 // TagAttachment returns a pointer to a Builder that abstracts the DDL operations for a tag attachment.
 //
 // Supported DDL operations are:
@@ -85,7 +100,7 @@ func (tb *TagAttachmentBuilder) Create() string {
 
 // Drop returns the SQL query that will remove a tag from a resource.
 func (tb *TagAttachmentBuilder) Drop() string {
-	return fmt.Sprintf(`ALTER %v %v UNSET TAG %v`, tb.objectType, tb.resourceId, tb.tagName)
+	return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.resourceId, tb.databaseName, tb.schemaName, tb.tagName)
 }
 
 func ListTagAttachments(tb *TagAttachmentBuilder, db *sql.DB) ([]tagAttachment, error) {

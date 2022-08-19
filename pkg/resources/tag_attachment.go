@@ -89,15 +89,18 @@ func CreateTagAttachment(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(fmt.Errorf("error: %s", err))
 		}
 
-		if resp == nil {
+		// if length of response is zero, tag attachment was not found. retry for up to 70 minutes
+		if len(resp) == 0 {
 			return resource.RetryableError(fmt.Errorf("expected tag to be created but not yet created"))
 		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		} else {
-			return nil
+		tagID := &tagID{
+			DatabaseName: builder.GetTagDatabase(),
+			SchemaName:   builder.GetTagSchema(),
+			TagName:      builder.GetTagName(),
 		}
+		dataIDInput, err := tagID.String()
+		d.SetId(dataIDInput)
+		return nil
 	})
 }
 
