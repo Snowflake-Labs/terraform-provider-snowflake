@@ -141,7 +141,7 @@ func (tb *ExternalTableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` PATTERN = '%v'`, EscapeString(tb.pattern)))
 	}
 
-	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, EscapeString(tb.fileFormat)))
+	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, tb.fileFormat))
 
 	if tb.awsSNSTopic != "" {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))
