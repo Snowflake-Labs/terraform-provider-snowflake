@@ -356,8 +356,8 @@ github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMB
 github.com/sirupsen/logrus v1.7.0/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/sirupsen/logrus v1.8.1 h1:dJKuHgqk1NNQlqoA6BTlM1Wf9DOH3NBjQyu0h9+AZZE=
 github.com/sirupsen/logrus v1.8.1/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
-github.com/snowflakedb/gosnowflake v1.6.9 h1:uFVAJw4wXXV2DPqn/F3wwyOXeXF5TnB4jSaLc6fFKYk=
-github.com/snowflakedb/gosnowflake v1.6.9/go.mod h1:BoZ0gnLERaUEiziH4Dumim10LN8cvoaCKovsAfhxzrE=
+github.com/snowflakedb/gosnowflake v1.6.13 h1:r8iozak/p3P2jYfjF3EbeteqMMzPWjwmVrdENJDW6EI=
+github.com/snowflakedb/gosnowflake v1.6.13/go.mod h1:BoZ0gnLERaUEiziH4Dumim10LN8cvoaCKovsAfhxzrE=
 github.com/spf13/cast v1.3.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
 github.com/spf13/cast v1.5.0 h1:rj3WzYc11XZaIZMPKmwP96zkFEnnAmV8s6XbB2aY32w=
 github.com/spf13/cast v1.5.0/go.mod h1:SpXXQ5YoyJw6s3/6cMTQuxvgRl3PCJiyaX9p6b155UU=
