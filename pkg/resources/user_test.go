@@ -130,9 +130,3 @@ func TestUserDelete(t *testing.T) {
 		r.NoError(err)
 	})
 }
-
-func createTestUser(db *sql.DB, mock sqlmock.Sqlmock){
-	name:="test_user"
-	q := fmt.Sprintf(`^CREATE USER "%s" COMMENT='great comment' DEFAULT_NAMESPACE='mynamespace' DEFAULT_ROLE='bestrole' DEFAULT_WAREHOUSE='mywarehouse' DISPLAY_NAME='Display Name' EMAIL='fake@email.com' FIRST_NAME='Marcin' LAST_NAME='Zukowski' LOGIN_NAME='gname' PASSWORD='awesomepassword' RSA_PUBLIC_KEY='asdf' RSA_PUBLIC_KEY_2='asdf2' DISABLED=true MUST_CHANGE_PASSWORD=true$`, name)
-	mock.ExpectExec(q).WillReturnResult(sqlmock.NewResult(1, 1))
-}

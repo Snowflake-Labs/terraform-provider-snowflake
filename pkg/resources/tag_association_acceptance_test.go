@@ -17,7 +17,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagConfig(accName),
+				Config: tagAssociationConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_type", "DATABASE"),
