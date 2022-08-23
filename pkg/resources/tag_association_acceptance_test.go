@@ -21,7 +21,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_type", "DATABASE"),
-					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_id", fmt.Sprintf("%s.%s.%s", accName, accName, accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_id", fmt.Sprintf("%s|%s|%s", accName, accName, accName)),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_value", "finance"),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "skip_validation", "true"),
 				),
