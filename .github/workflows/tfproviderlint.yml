@@ -1,7 +1,7 @@
 on: [pull_request, push]
 
 jobs:
-  example:
+  snowflake-provider:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2.0.0
