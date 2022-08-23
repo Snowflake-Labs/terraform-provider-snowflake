@@ -21,8 +21,6 @@ setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
-	bash .download-tfproviderlint.sh
-	go install golang.org/x/tools/cmd/goimports@latest
 .PHONY: setup
 
 lint: fmt ## run the fast go linters
