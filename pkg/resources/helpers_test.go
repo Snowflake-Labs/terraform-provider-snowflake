@@ -170,9 +170,9 @@ func tag(t *testing.T, id string, params map[string]interface{}) *schema.Resourc
 	return d
 }
 
-func tagAttachment(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+func tagAssociation(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.TagAttachment().Schema, params)
+	d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

@@ -116,16 +116,21 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 	return
 }
 
-func ValidateFullyQualifiedTagPath(i interface{}, k string) (s []string, errors []error) {
+func ValidateFullyQualifiedTagID(i interface{}, k string) (s []string, errors []error) {
 	v, _ := i.(string)
-	if !strings.Contains(v, "|") && !strings.Contains(v, ".") {
-		errors = append(errors, fmt.Errorf("not a valid tag path. please use one of the following formats:"+
-			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName or "))
-	}
-	tagArray := strings.Split(v, ".")
-	if len(tagArray) != 3 {
-		errors = append(errors, fmt.Errorf("not a valid tag path. please use one of the following formats:"+
-			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName or "))
+	if (strings.Contains(v,".")) {
+		tagArray := strings.Split(v, ".")
+		if len(tagArray) != 3 {
+			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using period delimiter, three parts must be specified dbName.schemaName.tagName ", v))
+		}
+	} else if (strings.Contains(v,"|")) {
+		tagArray := strings.Split(v, "|")
+		if len(tagArray) != 3 {
+			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using pipe delimiter, three parts must be specified dbName|schemaName|tagName ", v))
+		}
+	} else {
+		errors = append(errors, fmt.Errorf("%v, is not a valid tag id. please use one of the following formats:"+
+		"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName ", v))
 	}
 	return
 }

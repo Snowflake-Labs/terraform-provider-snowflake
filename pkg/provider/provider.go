@@ -224,7 +224,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_table":                      resources.Table(),
 		"snowflake_external_table":             resources.ExternalTable(),
 		"snowflake_tag":                        resources.Tag(),
-		"snowflake_tag_attachment":             resources.TagAttachment(),
+		"snowflake_tag_association":            resources.TagAssociation(),
 		"snowflake_task":                       resources.Task(),
 		"snowflake_user":                       resources.User(),
 		"snowflake_user_ownership_grant":       resources.UserOwnershipGrant(),
