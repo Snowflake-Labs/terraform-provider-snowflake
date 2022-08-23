@@ -236,7 +236,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 			if err != nil {
 				t.Errorf("Body was not returned %v", err)
 			}
-			got, err := os.ReadAll(body.Body)
+			got, err := io.ReadAll(body.Body)
 			if err != nil {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}
