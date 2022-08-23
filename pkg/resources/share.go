@@ -90,7 +90,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	accs := expandStringList(d.Get("accounts").([]interface{}))
 
-	if len(accs) > 0 {
+	if len(accs) >= 0 {
 		// There is a race condition where error accounts cannot be added to a
 		// share until after a database is added to the share. Since a database
 		// grant is dependent on the share itself, this is a hack to get the
@@ -122,10 +122,18 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// 3. Add the accounts to the share
-		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error adding accounts to share %v", name)
+		if len(accs) > 0 {
+			q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding accounts to share %v", name)
+			}
+		} else {
+			q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error unsetting accounts to share %v", name)
+			}
 		}
 
 		// 4. Revoke temporary DB grant to the share
