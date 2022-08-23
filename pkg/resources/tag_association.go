@@ -38,7 +38,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 	"tag_id": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "Specifies the identifier for the tag. Note: format must follow: tagName or 'database.schema.tagId' or snowflake_tag.id",
+		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
 		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagID,
 		ForceNew:     true,
 	},
@@ -52,7 +52,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "If true, skips validation of the tag association. It can take up to an hour for the SNOWFLAKE.TAG_REFERENCES table to update, and also requires ACCOUNT_ADMIN role to read from. https://docs.snowflake.com/en/sql-reference/account-usage/tag_references.html",
-		Default:     true,
+		Default:     false,
 	},
 }
 
