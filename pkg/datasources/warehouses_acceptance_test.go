@@ -26,19 +26,19 @@ import (
 //	})
 //}
 
-func warehouses(warehouseName string) string {
-	return fmt.Sprintf(`
-	resource snowflake_warehouse "s"{
-		name                         = "%v"
-		warehouse_size               = "XSMALL"
-		initially_suspended          = true
-		auto_suspend                 = 60
-		max_concurrency_level        = 8
-		statement_timeout_in_seconds = 172800
-	}
+// func warehouses(warehouseName string) string {
+// 	return fmt.Sprintf(`
+// 	resource snowflake_warehouse "s"{
+// 		name                         = "%v"
+// 		warehouse_size               = "XSMALL"
+// 		initially_suspended          = true
+// 		auto_suspend                 = 60
+// 		max_concurrency_level        = 8
+// 		statement_timeout_in_seconds = 172800
+// 	}
 
-	data snowflake_warehouses "s" {
-		depends_on = [snowflake_warehouse.s]
-	}
-	`, warehouseName)
-}
+// 	data snowflake_warehouses "s" {
+// 		depends_on = [snowflake_warehouse.s]
+// 	}
+// 	`, warehouseName)
+// }

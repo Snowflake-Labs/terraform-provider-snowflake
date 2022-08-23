@@ -45,7 +45,7 @@ resource "snowflake_tag_association" "association" {
 
 - `object_name` (String) Specifies the object identifier for the tag association.
 - `object_type` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
-- `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: tagName or 'database.schema.tagId' or snowflake_tag.id
+- `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 - `tag_value` (String) Specifies the value of the tag, (e.g. 'finance' or 'engineering')
 
 ### Optional

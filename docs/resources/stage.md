@@ -50,7 +50,7 @@ resource "snowflake_stage_grant" "grant_example_stage" {
 - `file_format` (String) Specifies the file format for the stage.
 - `snowflake_iam_user` (String)
 - `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
-- `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 - `url` (String) Specifies the URL for the stage.
 
 ### Read-Only
