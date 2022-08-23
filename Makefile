@@ -22,7 +22,7 @@ setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 .PHONY: setup
 
-lint: fmt ## run the fast go linters
+lint:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
 
@@ -30,7 +30,7 @@ lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
-lint-all: fmt ## run the fast go linters
+lint-all:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
 .PHONY: lint-all
 
@@ -50,11 +50,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test: fmt deps ## run the tests
+test:  ## run the tests
 	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
-test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
+test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
 	SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 $(go_test) -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
@@ -98,6 +98,3 @@ check-mod:
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
 
-fmt:
-	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
-.PHONY: fmt
