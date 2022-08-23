@@ -16,8 +16,8 @@ const (
 
 func TestAcc_Share(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	account2 := os.Getenv("account2")
-	account3 := os.Getenv("account3")
+	account2 := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
+	account3 := os.Getenv("SNOWFLAKE_ACCOUNT_THIRD")
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
