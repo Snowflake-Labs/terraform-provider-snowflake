@@ -98,7 +98,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 		// 1. Create new temporary DB
 		tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
 		tempDB := snowflake.Database(tempName)
-		err := snowflake.Exec(db, tempDB.Create().Statement())
+		err := snowflake.Exec(db, tempDB.Create())
 		if err != nil {
 			return errors.Wrapf(err, "error creating temporary DB %v", tempName)
 		}

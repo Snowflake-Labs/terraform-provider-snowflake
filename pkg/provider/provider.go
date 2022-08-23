@@ -183,6 +183,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_stage_grant":             resources.StageGrant(),
 		"snowflake_stream_grant":            resources.StreamGrant(),
 		"snowflake_table_grant":             resources.TableGrant(),
+		"snowflake_tag_grant":               resources.TagGrant(),
 		"snowflake_task_grant":              resources.TaskGrant(),
 		"snowflake_view_grant":              resources.ViewGrant(),
 		"snowflake_warehouse_grant":         resources.WarehouseGrant(),

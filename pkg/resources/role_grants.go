@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
@@ -234,7 +235,24 @@ func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	rg := snowflake.RoleGrant(role1).User(user)
 	err := snowflake.Exec(db, rg.Revoke())
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+		// handling error if a user has been deleted prior to revoking a role
+		// 002003 (02000): SQL compilation error:
+		// User 'XXX' does not exist or not authorized.
+		if driverErr.Number == 2003 {
+			users, _ := snowflake.ListUsers(user, db)
+			logins := make([]string, len(users))
+			for i, u := range users{
+				logins[i] = u.LoginName.String
+			}
+			if !snowflake.Contains(logins, user) {
+				log.Printf("[WARN] User %s does not exist. No need to revoke role %s", user, role1)
+				return nil
+			}
+		}
+	}
 	return err
+
 }
 
 func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {

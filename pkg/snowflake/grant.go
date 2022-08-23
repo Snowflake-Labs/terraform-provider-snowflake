@@ -30,6 +30,7 @@ const (
 	pipeType             grantType = "PIPE"
 	taskType             grantType = "TASK"
 	rowAccessPolicyType  grantType = "ROW ACCESS POLICY"
+	tagType              grantType = "TAG"
 )
 
 type GrantExecutable interface {
@@ -289,6 +290,15 @@ func RowAccessPolicyGrant(db, schema, rowAccessPolicy string) GrantBuilder {
 		name:          rowAccessPolicy,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, rowAccessPolicy),
 		grantType:     rowAccessPolicyType,
+	}
+}
+
+// TagGrant returns a pointer to a CurrentGrantBuilder for a tag grant
+func TagGrant(db, schema, tag string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          tag,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, tag),
+		grantType:     tagType,
 	}
 }
 

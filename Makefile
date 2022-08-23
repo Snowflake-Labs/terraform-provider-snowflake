@@ -62,7 +62,7 @@ test-acceptance: fmt deps ## runs all tests, including the acceptance tests whic
 .PHONY: test-acceptance
 
 deps:
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.19
 .PHONY: deps
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
@@ -97,7 +97,7 @@ check-docs: docs ## check that docs have been generated
 .PHONY: check-docs
 
 check-mod:
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.19
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
 
