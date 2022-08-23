@@ -1,6 +1,5 @@
 SHA=$(shell git rev-parse --short HEAD)
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.13.0
