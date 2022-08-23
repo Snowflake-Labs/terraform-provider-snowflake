@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -403,7 +404,7 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Invalid Path to private key")
 	}
 
-	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
+	privateKeyBytes, err := os.ReadFile(expandedPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read private key")
 	}

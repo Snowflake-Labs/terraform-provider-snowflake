@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +43,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future materialized view view.",
 		Default:      "SELECT",
-		ValidateFunc: validation.ValidatePrivilege(validMaterializedViewPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {

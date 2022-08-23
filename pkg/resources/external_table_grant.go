@@ -2,8 +2,8 @@ package resources
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -37,7 +37,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future external table.",
 		Default:      "SELECT",
-		ValidateFunc: validation.ValidatePrivilege(validExternalTablePrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
