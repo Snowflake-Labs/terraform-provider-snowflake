@@ -3,7 +3,7 @@ package provider_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -224,7 +224,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 				}
 				return &http.Response{
 					StatusCode: statusCODE,
-					Body:       ioutil.NopCloser(bytes.NewBufferString(tt.want)),
+					Body:       io.NopCloser(bytes.NewBufferString(tt.want)),
 					Header:     make(http.Header),
 				}
 			})
@@ -236,7 +236,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 			if err != nil {
 				t.Errorf("Body was not returned %v", err)
 			}
-			got, err := ioutil.ReadAll(body.Body)
+			got, err := os.ReadAll(body.Body)
 			if err != nil {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}
