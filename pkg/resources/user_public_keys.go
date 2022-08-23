@@ -139,7 +139,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// unset the keys we decided should be unset
-	for k,_ := range propsToUnset {
+	for k := range propsToUnset {
 		err := unsetUserPublicKeys(db, name, k)
 		if err != nil {
 			return err
