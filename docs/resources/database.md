@@ -13,26 +13,35 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_database" "test" {
+resource "snowflake_database" "simple" {
   name                        = "testing"
   comment                     = "test comment"
   data_retention_time_in_days = 3
 }
 
-resource "snowflake_database" "test2" {
+resource "snowflake_database" "with_replication" {
   name    = "testing_2"
   comment = "test comment 2"
   replication_configuration {
-    accounts             = [ "test_account1", "test_account_2"]
+    accounts             = ["test_account1", "test_account_2"]
     ignore_edition_check = true
   }
 }
 
-resource "snowflake_database" "test3" {
+resource "snowflake_database" "from_replica" {
   name                        = "testing_3"
   comment                     = "test comment"
   data_retention_time_in_days = 3
-  from_replica = "org1\".\"account1\".\"primary_db_name"
+  from_replica                = "org1\".\"account1\".\"primary_db_name"
+}
+
+resource "snowflake_database" "from_share" {
+  name    = "testing_4"
+  comment = "test comment"
+  from_share = {
+    provider = "org1\".\"account1"
+    share    = "share1"
+  }
 }
 ```
 
@@ -50,6 +59,7 @@ resource "snowflake_database" "test3" {
 - `from_database` (String) Specify a database to create a clone from.
 - `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
 - `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share.
+- `is_transient` (Boolean) Specifies a database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `replication_configuration` (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
 - `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
