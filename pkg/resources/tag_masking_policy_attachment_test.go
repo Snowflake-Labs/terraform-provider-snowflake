@@ -26,9 +26,7 @@ func TestTagMaskingPolicyAttachmentCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"tag_database":            "tag_db",
-		"tag_schema":              "tag_schema",
-		"tag_name":                "tag_name",
+		"tag_id":                  "tag_db|tag_schema|tag_name",
 		"masking_policy_database": "mp_db",
 		"masking_policy_schema":   "mp_schema",
 		"masking_policy_name":     "mp_name",
@@ -49,9 +47,7 @@ func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"tag_database":            "tag_db",
-		"tag_schema":              "tag_schema",
-		"tag_name":                "tag_name",
+		"tag_id":                  "tag_db|tag_schema|tag_name",
 		"masking_policy_database": "mp_db",
 		"masking_policy_schema":   "mp_schema",
 		"masking_policy_name":     "mp_name",
@@ -72,11 +68,9 @@ func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
 
 func TestTagMaskingPolicyAttachmentRead(t *testing.T) {
 	r := require.New(t)
-
+	//"BEN_TESTING|FOOBAR|TEST_TAG"
 	in := map[string]interface{}{
-		"tag_database":            "tag_db",
-		"tag_schema":              "tag_schema",
-		"tag_name":                "tag_name",
+		"tag_id":                  "tag_db|tag_schema|tag_name",
 		"masking_policy_database": "mp_db",
 		"masking_policy_schema":   "mp_schema",
 		"masking_policy_name":     "mp_name",
