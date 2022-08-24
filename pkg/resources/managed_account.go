@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -48,7 +49,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      SnowflakeReaderAccountType,
 		Description:  "Specifies the type of managed account.",
-		ValidateFunc: snowflakeValidation.ValidatePrivilege([]string{SnowflakeReaderAccountType}, true),
+		ValidateFunc: validation.StringInSlice([]string{SnowflakeReaderAccountType}, true),
 		ForceNew:     true,
 	},
 	"comment": {

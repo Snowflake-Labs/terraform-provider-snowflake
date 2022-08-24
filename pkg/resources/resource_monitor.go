@@ -229,9 +229,15 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("notify_triggers", nTrigs)
-
+	if err != nil {
+		return err
+	}
+	
 	// Account level
-	d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
+	err = d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
+	if err != nil {
+		return err
+	}
 
 	return err
 }
