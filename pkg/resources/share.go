@@ -90,70 +90,68 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	accs := expandStringList(d.Get("accounts").([]interface{}))
 
-	if len(accs) >= 0 {
-		// There is a race condition where error accounts cannot be added to a
-		// share until after a database is added to the share. Since a database
-		// grant is dependent on the share itself, this is a hack to get the
-		// thing working.
-		// 1. Create new temporary DB
-		tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
-		tempDB := snowflake.Database(tempName)
-		err := snowflake.Exec(db, tempDB.Create())
+	// There is a race condition where error accounts cannot be added to a
+	// share until after a database is added to the share. Since a database
+	// grant is dependent on the share itself, this is a hack to get the
+	// thing working.
+	// 1. Create new temporary DB
+	tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
+	tempDB := snowflake.Database(tempName)
+	err := snowflake.Exec(db, tempDB.Create())
+	if err != nil {
+		return errors.Wrapf(err, "error creating temporary DB %v", tempName)
+	}
+
+	// 2. Create temporary DB grant to the share
+	tempDBGrant := snowflake.DatabaseGrant(tempName)
+
+	// USAGE can only be granted to one database - granting USAGE on the temp db here
+	// conflicts (and errors) with having a database already shared (i.e. when you
+	// already have a share and are just adding or removing accounts). Instead, use
+	// REFERENCE_USAGE which is intended for multi-database sharing as per Snowflake
+	// documentation here:
+	// https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share.html#usage-notes
+	// Note however that USAGE will be granted automatically on the temp db for the
+	// case where the main db doesn't already exist, so it will need to be revoked
+	// before deleting the temp db. Where USAGE hasn't been already granted it is not
+	// an error to revoke it, so it's ok to just do the revoke every time.
+	err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false))
+	if err != nil {
+		return errors.Wrapf(err, "error creating temporary DB REFERENCE_USAGE grant %v", tempName)
+	}
+
+	// 3. Add the accounts to the share
+	if len(accs) > 0 {
+		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
+		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error creating temporary DB %v", tempName)
+			return errors.Wrapf(err, "error adding accounts to share %v", name)
 		}
-
-		// 2. Create temporary DB grant to the share
-		tempDBGrant := snowflake.DatabaseGrant(tempName)
-
-		// USAGE can only be granted to one database - granting USAGE on the temp db here
-		// conflicts (and errors) with having a database already shared (i.e. when you
-		// already have a share and are just adding or removing accounts). Instead, use
-		// REFERENCE_USAGE which is intended for multi-database sharing as per Snowflake
-		// documentation here:
-		// https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share.html#usage-notes
-		// Note however that USAGE will be granted automatically on the temp db for the
-		// case where the main db doesn't already exist, so it will need to be revoked
-		// before deleting the temp db. Where USAGE hasn't been already granted it is not
-		// an error to revoke it, so it's ok to just do the revoke every time.
-		err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false))
+	} else {
+		q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
+		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error creating temporary DB REFERENCE_USAGE grant %v", tempName)
-		}
-
-		// 3. Add the accounts to the share
-		if len(accs) > 0 {
-			q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding accounts to share %v", name)
-			}
-		} else {
-			q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting accounts to share %v", name)
-			}
-		}
-
-		// 4. Revoke temporary DB grant to the share
-		err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE"))
-		if err != nil {
-			return errors.Wrapf(err, "error revoking temporary DB REFERENCE_USAGE grant %v", tempName)
-		}
-
-		// revoke the maybe automatically granted USAGE privilege.
-		err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
-		if err != nil {
-			return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
-		}
-
-		// 5. Remove the temporary DB
-		err = snowflake.Exec(db, tempDB.Drop())
-		if err != nil {
-			return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
+			return errors.Wrapf(err, "error unsetting accounts to share %v", name)
 		}
 	}
+
+	// 4. Revoke temporary DB grant to the share
+	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE"))
+	if err != nil {
+		return errors.Wrapf(err, "error revoking temporary DB REFERENCE_USAGE grant %v", tempName)
+	}
+
+	// revoke the maybe automatically granted USAGE privilege.
+	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
+	if err != nil {
+		return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
+	}
+
+	// 5. Remove the temporary DB
+	err = snowflake.Exec(db, tempDB.Drop())
+	if err != nil {
+			return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
+		}
 
 	return nil
 }
