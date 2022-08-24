@@ -187,7 +187,6 @@ func ReadTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	//TODO update this
 	tagId := TagID{
 		DatabaseName: t.RefDb.String,
 		SchemaName:   t.RefSchema.String,
