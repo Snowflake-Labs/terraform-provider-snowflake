@@ -6,8 +6,3 @@ runner:
       - '%E%f:%l: %m'
       - '%C%.%#'
     level: warning
-  tfproviderlint:
-    cmd: ./bin/tfproviderlint ./...
-    errorformat:
-      - '%f:%l:%c: %m'
-    level: warning

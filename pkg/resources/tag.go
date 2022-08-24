@@ -55,6 +55,7 @@ var tagReferenceSchema = &schema.Schema{
 	Optional:    true,
 	MinItems:    0,
 	Description: "Definitions of a tag to associate with the resource.",
+	Deprecated: "Use the 'snowflake_tag_association' resource instead.",
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -81,7 +82,7 @@ var tagReferenceSchema = &schema.Schema{
 	},
 }
 
-type tagID struct {
+type TagID struct {
 	DatabaseName string
 	SchemaName   string
 	TagName      string
@@ -125,7 +126,7 @@ func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) er
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
 // DatabaseName|SchemaName|TagName
-func (ti *tagID) String() (string, error) {
+func (ti *TagID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = schemaIDDelimiter
@@ -140,7 +141,7 @@ func (ti *tagID) String() (string, error) {
 
 // tagIDFromString() takes in a pipe-delimited string: DatabaseName|tagName
 // and returns a tagID object
-func tagIDFromString(stringID string) (*tagID, error) {
+func tagIDFromString(stringID string) (*TagID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tagIDDelimiter
 	lines, err := reader.ReadAll()
@@ -155,7 +156,7 @@ func tagIDFromString(stringID string) (*tagID, error) {
 		return nil, fmt.Errorf("3 fields allowed")
 	}
 
-	tagResult := &tagID{
+	tagResult := &TagID{
 		DatabaseName: lines[0][0],
 		SchemaName:   lines[0][1],
 		TagName:      lines[0][2],
@@ -203,7 +204,7 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating tag %v", name)
 	}
 
-	tagID := &tagID{
+	tagID := &TagID{
 		DatabaseName: database,
 		SchemaName:   schema,
 		TagName:      name,

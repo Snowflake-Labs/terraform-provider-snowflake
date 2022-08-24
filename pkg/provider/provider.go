@@ -4,12 +4,14 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
-	"io/ioutil"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -17,11 +19,9 @@ import (
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
 // Provider is a provider
@@ -225,6 +225,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_table":                      resources.Table(),
 		"snowflake_external_table":             resources.ExternalTable(),
 		"snowflake_tag":                        resources.Tag(),
+		"snowflake_tag_association":            resources.TagAssociation(),
 		"snowflake_task":                       resources.Task(),
 		"snowflake_user":                       resources.User(),
 		"snowflake_user_ownership_grant":       resources.UserOwnershipGrant(),
@@ -403,7 +404,7 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Invalid Path to private key")
 	}
 
-	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
+	privateKeyBytes, err := os.ReadFile(expandedPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read private key")
 	}
@@ -493,7 +494,7 @@ func GetOauthAccessToken(
 		return "", errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "Response body was not able to be parsed")
 	}
