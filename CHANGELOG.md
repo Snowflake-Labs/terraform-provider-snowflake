@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.42.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.41.0...v0.42.0) (2022-08-24)
+
+
+### Features
+
+* tag association resource ([#1187](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1187)) ([123fd2f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/123fd2f88a18242dbb3b1f20920c869fd3f26651))
+* transient database ([#1165](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1165)) ([f65a0b5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f65a0b501ee7823575c73071115f96973834b07c))
+
+
+### BugFixes
+
+* Database from share comment on create and docs ([#1167](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1167)) ([fc3a8c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc3a8c289fa8466e0ad8fa9454e31c27d75de563))
+* doc of resource_monitor_grant ([#1188](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1188)) ([03a6cb3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/03a6cb3c58f6ce5860b70f62a08befa7c9905df8))
+* Fix snowflake_share resource not unsetting accounts ([#1186](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1186)) ([03a225f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/03a225f94a8e641dc2a08fdd3247cc5bd64708e1))
+
 ## [0.41.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.40.0...v0.41.0) (2022-08-10)
 
 
