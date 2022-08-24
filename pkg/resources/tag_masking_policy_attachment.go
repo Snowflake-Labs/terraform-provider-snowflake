@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
 
 const (
@@ -19,23 +20,12 @@ const (
 )
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
-	"tag_database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The database where the tag is located.",
-	},
-	"tag_schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The schema where the tag is located",
-	},
-	"tag_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The name of the tag to attach the masking policy to.",
+	"tag_id": {
+		Type:         schema.TypeString,
+		Required:     true,
+		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagID,
+		ForceNew:     true,
 	},
 	"masking_policy_database": {
 		Type:        schema.TypeString,
@@ -126,9 +116,14 @@ func TagMaskingPolicyAttachment() *schema.Resource {
 // CreateTagMaskingPolicyAttachemt implements schema.CreateFunc
 func CreateTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tagDb := d.Get("tag_database").(string)
-	tagSchema := d.Get("tag_schema").(string)
-	tagName := d.Get("tag_name").(string)
+	tagId := d.Get("tag_id").(string)
+	tagIdStruct, idErr := tagIDFromString(tagId)
+	if idErr != nil {
+		return idErr
+	}
+	tagDb := tagIdStruct.DatabaseName
+	tagSchema := tagIdStruct.SchemaName
+	tagName := tagIdStruct.TagName
 	mpDb := d.Get("masking_policy_database").(string)
 	mpSchema := d.Get("masking_policy_schema").(string)
 	mpName := d.Get("masking_policy_name").(string)
@@ -192,9 +187,18 @@ func ReadTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	d.Set("tag_database", t.RefDb.String)
-	d.Set("tag_schema", t.RefSchema.String)
-	d.Set("tag_name", t.RefEntity.String)
+	//TODO update this
+	tagId := TagID{
+		DatabaseName: t.RefDb.String,
+		SchemaName:   t.RefSchema.String,
+		TagName:      t.RefEntity.String,
+	}
+
+	tagIdString, err := tagId.String()
+	if err != nil {
+		return err
+	}
+	d.Set("tag_id", tagIdString)
 	d.Set("masking_policy_database", t.PolicyDb.String)
 	d.Set("masking_policy_schema", t.PolicySchema.String)
 	d.Set("masking_policy_name", t.PolicyName.String)
