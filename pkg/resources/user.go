@@ -6,8 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var userProperties = []string{
@@ -158,8 +159,6 @@ func User() *schema.Resource {
 		},
 	}
 }
-
-// func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
 
 func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)

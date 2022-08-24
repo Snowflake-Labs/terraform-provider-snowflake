@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -62,26 +59,6 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	return
 }
 
-// ValidatePrivilege validates the privilege is in the authorized set.
-// Will also check for the ALL privilege and hopefully provide a helpful error message.
-func ValidatePrivilege(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
-	//lintignore:V013
-	return func(i interface{}, k string) (warnings []string, errors []error) {
-		v, ok := i.(string)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-			return warnings, errors
-		}
-
-		if v == "ALL" || (ignoreCase && strings.ToUpper(v) == "ALL") {
-			errors = append(errors, fmt.Errorf("the ALL privilege is deprecated, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/318"))
-			return warnings, errors
-		}
-
-		return validation.StringInSlice(valid, ignoreCase)(i, k)
-	}
-}
-
 // ValidateIsNotAccountLocator validates that the account value is not an account locator. Account locators have the
 // following format: 8 characters where the first 3 characters are letters and the last 5 are digits. ex: ABC12345
 // The desired format should be 'organization_name.account_name' ex: testOrgName.testAccName
@@ -112,6 +89,25 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 		if isAccountLocator {
 			errors = append(errors, fmt.Errorf("account locators are not allowed - please use 'organization_name.account_name"))
 		}
+	}
+	return
+}
+
+func ValidateFullyQualifiedTagID(i interface{}, k string) (s []string, errors []error) {
+	v, _ := i.(string)
+	if strings.Contains(v, ".") {
+		tagArray := strings.Split(v, ".")
+		if len(tagArray) != 3 {
+			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using period delimiter, three parts must be specified dbName.schemaName.tagName ", v))
+		}
+	} else if strings.Contains(v, "|") {
+		tagArray := strings.Split(v, "|")
+		if len(tagArray) != 3 {
+			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using pipe delimiter, three parts must be specified dbName|schemaName|tagName ", v))
+		}
+	} else {
+		errors = append(errors, fmt.Errorf("%v, is not a valid tag id. please use one of the following formats:"+
+			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName ", v))
 	}
 	return
 }

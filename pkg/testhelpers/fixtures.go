@@ -1,7 +1,7 @@
 package testhelpers
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -15,6 +15,6 @@ func MustFixture(t *testing.T, name string) string {
 }
 
 func Fixture(name string) (string, error) {
-	b, err := ioutil.ReadFile(filepath.Join("testdata", name))
+	b, err := os.ReadFile(filepath.Join("testdata", name))
 	return string(b), err
 }

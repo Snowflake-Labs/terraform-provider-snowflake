@@ -226,6 +226,9 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	sequence, err := snowflake.ScanSequence(row)
+	if err != nil {
+		return errors.Wrap(err, "unable to scan row for SHOW SEQUENCES")
+	}
 	deleteSequenceErr := DeleteSequence(d, meta)
 	if deleteSequenceErr != nil {
 		return deleteSequenceErr

@@ -13,3 +13,11 @@ resource "snowflake_tag" "tag" {
   schema         = snowflake_schema.schema.name
   allowed_values = ["finance", "engineering"]
 }
+
+resource "snowflake_tag_association" "association" {
+  object_name     = snowflake_database.database.name
+  object_type     = "DATABASE"
+  tag_id          = snowflake_tag.tag.id
+  tag_value       = "finance"
+  skip_validation = true
+}
