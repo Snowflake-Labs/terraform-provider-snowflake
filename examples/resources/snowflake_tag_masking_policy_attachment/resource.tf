@@ -39,9 +39,7 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 }
 
 resource "snowflake_tag_masking_policy_attachment" "name" {
-  tag_database            = snowflake_database.test2.name
-  tag_schema              = snowflake_schema.test2.name
-  tag_name                = snowflake_tag.this.name
+  tag_id                  = snowflake_tag.this.id
   masking_policy_database = snowflake_database.test.name
   masking_policy_schema   = snowflake_schema.test.name
   masking_policy_name     = snowflake_masking_policy.example_masking_policy.name

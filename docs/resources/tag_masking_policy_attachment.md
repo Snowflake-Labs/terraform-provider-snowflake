@@ -54,9 +54,7 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 }
 
 resource "snowflake_tag_masking_policy_attachment" "name" {
-  tag_database            = snowflake_database.test2.name
-  tag_schema              = snowflake_schema.test2.name
-  tag_name                = snowflake_tag.this.name
+  tag_id                  = snowflake_tag.this.id
   masking_policy_database = snowflake_database.test.name
   masking_policy_schema   = snowflake_schema.test.name
   masking_policy_name     = snowflake_masking_policy.example_masking_policy.name
@@ -72,9 +70,7 @@ resource "snowflake_tag_masking_policy_attachment" "name" {
 - `masking_policy_database` (String) The database where the masking policy is located.
 - `masking_policy_name` (String) The name of the masking policy to attach.
 - `masking_policy_schema` (String) The schema where the masking policy is located
-- `tag_database` (String) The database where the tag is located.
-- `tag_name` (String) The name of the tag to attach the masking policy to.
-- `tag_schema` (String) The schema where the tag is located
+- `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 
 ### Read-Only
 
