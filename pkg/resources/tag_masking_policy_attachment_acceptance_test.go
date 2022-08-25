@@ -22,9 +22,7 @@ func TestAcc_TagMaskingPolicyAttachment(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "masking_policy_database", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "masking_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "masking_policy_schema", accName),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "tag_database", accName),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "tag_name", accName),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "tag_schema", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "tag_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
 				),
 			},
 		},
@@ -63,9 +61,7 @@ resource "snowflake_masking_policy" "test" {
 }
 
 resource "snowflake_tag_masking_policy_attachment" "test" {
-	tag_database = snowflake_database.test.name
-	tag_schema = snowflake_schema.test.name
-	tag_name = snowflake_tag.test.name
+	tag_id = snowflake_tag.test.id
 	masking_policy_database = snowflake_database.test.name
 	masking_policy_schema = snowflake_schema.test.name
 	masking_policy_name = snowflake_masking_policy.test.name
