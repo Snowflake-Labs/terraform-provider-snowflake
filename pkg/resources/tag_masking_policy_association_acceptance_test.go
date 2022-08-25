@@ -19,8 +19,8 @@ func TestAcc_TagMaskingPolicyAttachment(t *testing.T) {
 			{
 				Config: tagAttachmentConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "masking_policy_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_attachment.test", "tag_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "masking_policy_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "tag_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
 				),
 			},
 		},
