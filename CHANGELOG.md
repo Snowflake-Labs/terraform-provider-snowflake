@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.42.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.0...v0.42.1) (2022-08-24)
+
+
+### Misc
+
+* update-license ([#1190](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1190)) ([e9cfc3e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e9cfc3e7d07ee5d60f55d842c13f2d8fc20e7ba6))
+
 ## [0.42.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.41.0...v0.42.0) (2022-08-24)
 
 
