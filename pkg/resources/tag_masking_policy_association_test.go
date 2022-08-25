@@ -26,10 +26,8 @@ func TestTagMaskingPolicyAttachmentCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"tag_id":                  "tag_db|tag_schema|tag_name",
-		"masking_policy_database": "mp_db",
-		"masking_policy_schema":   "mp_schema",
-		"masking_policy_name":     "mp_name",
+		"tag_id":            "tag_db|tag_schema|tag_name",
+		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
 	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
 	r.NotNil(d)
@@ -47,10 +45,8 @@ func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"tag_id":                  "tag_db|tag_schema|tag_name",
-		"masking_policy_database": "mp_db",
-		"masking_policy_schema":   "mp_schema",
-		"masking_policy_name":     "mp_name",
+		"tag_id":            "tag_db|tag_schema|tag_name",
+		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
@@ -68,12 +64,10 @@ func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
 
 func TestTagMaskingPolicyAttachmentRead(t *testing.T) {
 	r := require.New(t)
-	//"BEN_TESTING|FOOBAR|TEST_TAG"
+
 	in := map[string]interface{}{
-		"tag_id":                  "tag_db|tag_schema|tag_name",
-		"masking_policy_database": "mp_db",
-		"masking_policy_schema":   "mp_schema",
-		"masking_policy_name":     "mp_name",
+		"tag_id":            "tag_db|tag_schema|tag_name",
+		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
