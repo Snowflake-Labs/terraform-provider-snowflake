@@ -38,10 +38,7 @@ resource "snowflake_masking_policy" "example_masking_policy" {
   return_data_type   = "string"
 }
 
-resource "snowflake_tag_masking_policy_attachment" "name" {
+resource "snowflake_tag_masking_policy_association" "name" {
   tag_id                  = snowflake_tag.this.id
-  masking_policy_database = snowflake_database.test.name
-  masking_policy_schema   = snowflake_schema.test.name
-  masking_policy_name     = snowflake_masking_policy.example_masking_policy.name
-
+  masking_policy_id       = snowflake_masking_policy.example_masking_policy.id
 }
