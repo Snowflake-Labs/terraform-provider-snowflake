@@ -88,7 +88,7 @@ func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 }
 
 // Schema returns a pointer to the resource representing a schema
-func TagMaskingPolicyAttachment() *schema.Resource {
+func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTagMaskingPolicyAttachemt,
 		Read:   ReadTagMaskingPolicyAttachemt,
