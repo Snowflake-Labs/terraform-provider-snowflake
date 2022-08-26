@@ -90,9 +90,9 @@ func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 // Schema returns a pointer to the resource representing a schema
 func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTagMaskingPolicyAttachemt,
-		Read:   ReadTagMaskingPolicyAttachemt,
-		Delete: DeleteTagMaskingPolicyAttachemt,
+		Create: CreateTagMaskingPolicyAssociation,
+		Read:   ReadTagMaskingPolicyAssociation,
+		Delete: DeleteTagMaskingPolicyAssociation,
 
 		Schema: mpAttachmentPolicySchema,
 		Importer: &schema.ResourceImporter{
@@ -101,8 +101,8 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 	}
 }
 
-// CreateTagMaskingPolicyAttachemt implements schema.CreateFunc
-func CreateTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) error {
+// CreateTagMaskingPolicyAssociation implements schema.CreateFunc
+func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagId := d.Get("tag_id").(string)
 	tagIdStruct, idErr := tagIDFromString(tagId)
@@ -147,11 +147,11 @@ func CreateTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) e
 	}
 	d.SetId(dataIDInput)
 
-	return ReadTagMaskingPolicyAttachemt(d, meta)
+	return ReadTagMaskingPolicyAssociation(d, meta)
 }
 
-// ReadTagTagMaskingPolicyAttachemt implements schema.ReadFunc
-func ReadTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) error {
+// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc
+func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())
 	if err != nil {
@@ -208,8 +208,8 @@ func ReadTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-// DeleteTagMaskingPolicyAttachemt implements schema.DeleteFunc
-func DeleteTagMaskingPolicyAttachemt(d *schema.ResourceData, meta interface{}) error {
+// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc
+func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())
 	if err != nil {
