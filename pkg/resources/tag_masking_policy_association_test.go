@@ -16,32 +16,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTagMaskingPolicyAttachment(t *testing.T) {
+func TestTagMaskingPolicyAssociation(t *testing.T) {
 	r := require.New(t)
 	err := resources.Tag().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-func TestTagMaskingPolicyAttachmentCreate(t *testing.T) {
+func TestTagMaskingPolicyAssociationCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
 		"tag_id":            "tag_db|tag_schema|tag_name",
 		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
-	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAssociation().Schema, in)
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^ALTER TAG "tag_db"."tag_schema"."tag_name" SET MASKING POLICY "mp_db"."mp_schema"."mp_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		expectReadTestTagMaskingPolicyAttachment(mock)
-		err := resources.CreateTagMaskingPolicyAttachemt(d, db)
+		expectReadTestTagMaskingPolicyAssociation(mock)
+		err := resources.CreateTagMaskingPolicyAssociation(d, db)
 		r.NoError(err)
 	})
 }
 
-func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
+func TestTagMaskingPolicyAssociationDelete(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -49,20 +49,20 @@ func TestTagMaskingPolicyAttachmentDelete(t *testing.T) {
 		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
 
-	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAssociation().Schema, in)
 	d.SetId("tag_db|tag_schema|tag_name|mp_db|mp_schema|mp_name")
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`^ALTER TAG "tag_db"."tag_schema"."tag_name" UNSET MASKING POLICY "mp_db"."mp_schema"."mp_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		err := resources.DeleteTagMaskingPolicyAttachemt(d, db)
+		err := resources.DeleteTagMaskingPolicyAssociation(d, db)
 
 		r.NoError(err)
 	})
 }
 
-func TestTagMaskingPolicyAttachmentRead(t *testing.T) {
+func TestTagMaskingPolicyAssociationRead(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -70,7 +70,7 @@ func TestTagMaskingPolicyAttachmentRead(t *testing.T) {
 		"masking_policy_id": "mp_db|mp_schema|mp_name",
 	}
 
-	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAttachment().Schema, in)
+	d := schema.TestResourceDataRaw(t, resources.TagMaskingPolicyAssociation().Schema, in)
 	d.SetId("tag_db|tag_schema|tag_name|mp_db|mp_schema|mp_name")
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
@@ -79,14 +79,14 @@ func TestTagMaskingPolicyAttachmentRead(t *testing.T) {
 		mP := snowflake.MaskingPolicy("mp_name", "mp_db", "mp_schema")
 		q := snowflake.Tag("tag_name").WithDB("tag_db").WithSchema("tag_schema").WithMaskingPolicy(mP).ShowAttachedPolicy()
 		mock.ExpectQuery(regexp.QuoteMeta(q)).WillReturnError(sql.ErrNoRows)
-		err := resources.ReadTagMaskingPolicyAttachemt(d, db)
+		err := resources.ReadTagMaskingPolicyAssociation(d, db)
 
 		r.Empty(d.State())
 		r.Nil(err)
 	})
 }
 
-func expectReadTestTagMaskingPolicyAttachment(mock sqlmock.Sqlmock) {
+func expectReadTestTagMaskingPolicyAssociation(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"POLICY_DB", "POLICY_SCHEMA", "POLICY_NAME", "POLICY_KIND", "REF_DATABASE_NAME", "REF_SCHEMA_NAME", "REF_ENTITY_NAME", "REF_ENTITY_DOMAIN"},
 	).AddRow("mp_db", "mp_schema", "mp_name", "MASKING", "tag_db", "tag_schema", "tag_name", "TAG")
