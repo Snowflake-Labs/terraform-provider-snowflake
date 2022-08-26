@@ -106,7 +106,7 @@ func ListSequences(databaseName string, schemaName string, db *sql.DB) ([]sequen
 	dbs := []sequence{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no sequences found")
+		log.Println("[DEBUG] no sequences found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

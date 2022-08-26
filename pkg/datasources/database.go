@@ -65,12 +65,12 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] database: %v", d.Get("name"))
 	dbData, err := snowflake.ListDatabase(dbx, d.Get("name").(string))
 	if err != nil {
-		log.Printf("[DEBUG] list database failed to decode")
+		log.Println("[DEBUG] list database failed to decode")
 		d.SetId("")
 		return nil
 	}
 	if dbData == nil || !dbData.DBName.Valid {
-		log.Printf("[DEBUG] database not found")
+		log.Println("[DEBUG] database not found")
 		d.SetId("")
 		return nil
 	}

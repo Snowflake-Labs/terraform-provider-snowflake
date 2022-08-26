@@ -43,7 +43,7 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	acc, err := snowflake.ReadCurrentAccount(db)
 
 	if err != nil {
-		log.Printf("[DEBUG] current_account failed to decode")
+		log.Println("[DEBUG] current_account failed to decode")
 		d.SetId("")
 		return nil
 	}
@@ -60,7 +60,7 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	url, err := acc.AccountURL()
 
 	if err != nil {
-		log.Printf("[DEBUG] generating snowflake url failed")
+		log.Println("[DEBUG] generating snowflake url failed")
 		d.SetId("")
 		return nil
 	}

@@ -225,7 +225,7 @@ func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]e
 	dbs := []externalTable{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no external tables found")
+		log.Println("[DEBUG] no external tables found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

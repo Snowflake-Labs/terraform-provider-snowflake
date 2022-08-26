@@ -57,14 +57,14 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Print("[DEBUG] system_get_privatelink_config not found")
+		log.Println("[DEBUG] system_get_privatelink_config not found")
 		d.SetId("")
 		return nil
 	}
 
 	config, err := rawConfig.GetStructuredConfig()
 	if err != nil {
-		log.Printf("[DEBUG] system_get_privatelink_config failed to decode")
+		log.Println("[DEBUG] system_get_privatelink_config failed to decode")
 		d.SetId("")
 		return nil
 	}

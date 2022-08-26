@@ -342,7 +342,7 @@ func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]functi
 	dbs := []function{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no functions found")
+		log.Println("[DEBUG] no functions found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

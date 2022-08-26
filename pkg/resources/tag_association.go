@@ -91,7 +91,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	skipValidate := d.Get("skip_validation").(bool)
 	if !skipValidate {
-		log.Printf("[DEBUG] validating tag creation")
+		log.Println("[DEBUG] validating tag creation")
 
 		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
 
@@ -135,7 +135,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	tagValue := d.Get("tag_value").(string)
 	skipValidate := d.Get("skip_validation").(bool)
 	if skipValidate {
-		log.Printf("[DEBUG] skipping read for tag association that has skip_validation enabled")
+		log.Println("[DEBUG] skipping read for tag association that has skip_validation enabled")
 		return nil
 	}
 

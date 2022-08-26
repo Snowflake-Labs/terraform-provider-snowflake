@@ -227,7 +227,7 @@ func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) (
 	dbs := []materializedView{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no materialized views found")
+		log.Println("[DEBUG] no materialized views found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
