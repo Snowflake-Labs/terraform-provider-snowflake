@@ -111,7 +111,7 @@ func UpdateResource(
 
 			}
 			if d.HasChange("tag") {
-				log.Printf("[DEBUG] updating tags")
+				log.Println("[DEBUG] updating tags")
 				v := d.Get("tag")
 				tags := getTags(v)
 				qb.SetTags(tags.toSnowflakeTagValues())
@@ -122,7 +122,7 @@ func UpdateResource(
 				return errors.Wrapf(err, "error altering %s", t)
 			}
 		}
-		log.Printf("[DEBUG] performing read")
+		log.Println("[DEBUG] performing read")
 		return read(d, meta)
 	}
 }

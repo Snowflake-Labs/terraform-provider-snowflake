@@ -225,7 +225,7 @@ func ListTags(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
 	tags := []tag{}
 	err = sqlx.StructScan(rows, &tags)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tags found")
+		log.Println("[DEBUG] no tags found")
 		return nil, nil
 	}
 	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)

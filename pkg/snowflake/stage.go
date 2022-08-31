@@ -323,7 +323,7 @@ func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, er
 	dbs := []stage{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no stages found")
+		log.Println("[DEBUG] no stages found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

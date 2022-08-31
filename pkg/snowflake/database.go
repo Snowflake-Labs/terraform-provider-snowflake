@@ -280,7 +280,7 @@ func ListDatabases(sdb *sqlx.DB) ([]database, error) {
 	dbs := []database{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no databases found")
+		log.Println("[DEBUG] no databases found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
@@ -297,7 +297,7 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
 	dbs := []database{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows || len(dbs) == 0 {
-		log.Printf("[DEBUG] no databases found")
+		log.Println("[DEBUG] no databases found")
 		return nil, nil
 	}
 	db := &database{}

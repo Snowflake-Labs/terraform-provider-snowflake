@@ -229,7 +229,7 @@ func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
 	dbs := []schema{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no schemas found")
+		log.Println("[DEBUG] no schemas found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

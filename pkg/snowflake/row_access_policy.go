@@ -63,11 +63,10 @@ func (rapb *RowAccessPolicyBuilder) WithRowAccessExpression(rowAccessExpression 
 //
 // Supported DDL operations are:
 //   - CREATE ROW ACCESS POLICY
-//	 - ALTER ROW ACCESS POLICY
+//   - ALTER ROW ACCESS POLICY
 //   - DROP ROW ACCESS POLICY
 //   - SHOW ROW ACCESS POLICIES
 //   - DESCRIBE ROW ACCESS POLICY
-//
 func RowAccessPolicy(name, db, schema string) *RowAccessPolicyBuilder {
 	return &RowAccessPolicyBuilder{
 		name:   name,
@@ -159,7 +158,7 @@ func ListRowAccessPolicies(databaseName string, schemaName string, db *sql.DB) (
 	dbs := []RowAccessPolicyStruct{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no row access policies found")
+		log.Println("[DEBUG] no row access policies found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
