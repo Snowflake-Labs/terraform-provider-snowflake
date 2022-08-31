@@ -153,7 +153,7 @@ func Provider() *schema.Provider {
 			},
 			"warehouse": {
 				Type:        schema.TypeString,
-				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE enviornment variable.",
+				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
 			},
