@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.43.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.1...v0.43.0) (2022-08-31)
+
+
+### Features
+
+* tag based masking policy ([#1143](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1143)) ([e388545](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e388545cae20da8c011e644ac7ecaf2724f1e374))
+
+
+### BugFixes
+
+* log fmt ([#1192](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1192)) ([0f2e2db](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0f2e2db2343237620aceb416eb8603b8e42e11ec))
+
 ## [0.42.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.0...v0.42.1) (2022-08-24)
 
 
