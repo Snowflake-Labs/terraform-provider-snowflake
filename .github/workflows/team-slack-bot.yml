@@ -18,7 +18,7 @@ jobs:
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: C03KS51EF3R
-          slack-text: A new ${{ github.event_name }} has been published. Please review ${{ github.event.pull_request.html_url }} ${{ github.event.issue.url }}
+          slack-text: A new ${{ github.event_name }} has been published. Please review ${{ github.event.pull_request.html_url }} ${{ github.event.issue.html_url }}
 
       - name: Result from "Send Slack Message"
         run: echo '${{ steps.send-message.outputs.slack-result }}'
