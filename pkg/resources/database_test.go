@@ -82,7 +82,7 @@ func TestDatabase_Create_WithReplicationConfig_AndFalseIgnoreEditionCheck(t *tes
 }
 
 func expectRead(mock sqlmock.Sqlmock) {
-	dbRows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
+	dbRows := sqlmock.NewRows([]string{"created_on", "name", "is_default", "is_current", "origin", "owner", "comment", "options", "retention_time"}).AddRow("created_on", "tst-terraform-good_name", "is_default", "is_current", "origin", "owner", "mock comment", "options", "1")
 	mock.ExpectQuery("SHOW DATABASES LIKE 'tst-terraform-good_name'").WillReturnRows(dbRows)
 }
 
