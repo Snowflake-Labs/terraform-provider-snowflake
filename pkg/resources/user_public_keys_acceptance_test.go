@@ -14,7 +14,7 @@ import (
 
 func TestAcc_UserPublicKeys(t *testing.T) {
 	r := require.New(t)
-	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")

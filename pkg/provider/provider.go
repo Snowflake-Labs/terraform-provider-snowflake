@@ -2,6 +2,7 @@ package provider
 
 import (
 	"crypto/rsa"
+	"database/sql"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -504,4 +505,42 @@ func GetOauthAccessToken(
 		return "", errors.Wrap(err, "Error parsing JSON from Snowflake")
 	}
 	return result.AccessToken, nil
+}
+
+func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
+	account := os.Getenv("SNOWFLAKE_ACCOUNT")
+	user := os.Getenv("SNOWFLAKE_USER")
+	password := os.Getenv("SNOWFLAKE_PASSWORD")
+	browserAuth := os.Getenv("SNOWFLAKE_BROWSER_AUTH") == "true"
+	privateKeyPath := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
+	privateKey := os.Getenv("SNOWFLAKE_PRIVATE_KEY")
+	privateKeyPassphrase := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
+	oauthAccessToken := os.Getenv("SNOWFLAKE_OAUTH_ACCESS_TOKEN")
+	region := os.Getenv("SNOWFLAKE_REGION")
+	role := os.Getenv("SNOWFLAKE_ROLE")
+	host := os.Getenv("SNOWFLAKE_HOST")
+	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
+
+	dsn, err := DSN(
+		account,
+		user,
+		password,
+		browserAuth,
+		privateKeyPath,
+		privateKey,
+		privateKeyPassphrase,
+		oauthAccessToken,
+		region,
+		role,
+		host,
+		warehouse,
+	)
+	if err != nil {
+		return nil, err
+	}
+	db, err = sql.Open("snowflake", dsn)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }

@@ -22,6 +22,10 @@ setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 .PHONY: setup
 
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test ./pkg/resources -v -timeout 10m -sweep=prod
+
 lint:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
