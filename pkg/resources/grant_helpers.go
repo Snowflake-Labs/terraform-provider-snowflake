@@ -240,7 +240,7 @@ func readGenericGrant(
 		}
 	}
 
-	// If no relevant grants, set id to blank and return (see HACK HACK comment above)
+	// If no relevant grants, set id to blank and return
 	if len(relevantGrants) == 0 {
 		d.SetId("")
 		return nil
@@ -287,6 +287,7 @@ func readGenericGrant(
 	existingRoles := d.Get("roles").(*schema.Set)
 	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
+
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
@@ -326,10 +327,7 @@ func readGenericGrant(
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] integration_name: %v", d.Get("integration_name"))
-	log.Printf("[DEBUG] privilege: %v", d.Get("privilege"))
-	log.Printf("[DEBUG] with_grant_option: %v", d.Get("with_grant_option"))
-	log.Printf("[DEBUG] enable_multiple_grants: %v", d.Get("enable_multiple_grants"))
+
 	return nil
 }
 
