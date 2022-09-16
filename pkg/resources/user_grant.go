@@ -19,9 +19,8 @@ var userGrantSchema = map[string]*schema.Schema{
 	},
 	"privilege": {
 		Type:         schema.TypeString,
-		Optional:     true,
+		Required:     true,
 		Description:  "The privilege to grant on the user.",
-		Default:      privilegeUsage.String(),
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validUserPrivileges.ToList(), true),
 	},

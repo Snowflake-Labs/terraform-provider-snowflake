@@ -55,6 +55,7 @@ resource "snowflake_role" "test" {
 resource "snowflake_user_grant" "test" {
   user_name = snowflake_user.test.name
   roles     = [snowflake_role.test.name]
+  privilege = "MONITOR"
 }
 `, n, role)
 }
