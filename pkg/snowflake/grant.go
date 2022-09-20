@@ -31,6 +31,7 @@ const (
 	taskType             grantType = "TASK"
 	rowAccessPolicyType  grantType = "ROW ACCESS POLICY"
 	tagType              grantType = "TAG"
+	userGrantType        grantType = "USER"
 )
 
 type GrantExecutable interface {
@@ -200,6 +201,15 @@ func WarehouseGrant(w string) GrantBuilder {
 		name:          w,
 		qualifiedName: fmt.Sprintf(`"%v"`, w),
 		grantType:     warehouseType,
+	}
+}
+
+// UserGrant returns a pointer to a CurrentGrantBuilder for a user
+func UserGrant(w string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          w,
+		qualifiedName: fmt.Sprintf(`"%v"`, w),
+		grantType:     userGrantType,
 	}
 }
 

@@ -188,6 +188,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_task_grant":              resources.TaskGrant(),
 		"snowflake_view_grant":              resources.ViewGrant(),
 		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
+		"snowflake_user_grant":              resources.UserGrant(),
 	}
 	return grants
 }
