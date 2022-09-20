@@ -151,7 +151,7 @@ To run all tests, including the acceptance tests, run `make test-acceptance`.
 
 ### Pull Request CI
 
-Our CI jobs run the full acceptence test suite, which involves creating and destroying resources in a live snowflake account. Github Actions is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
+Our CI jobs run the full acceptance test suite, which involves creating and destroying resources in a live snowflake account. Github Actions is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
 
 If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
 

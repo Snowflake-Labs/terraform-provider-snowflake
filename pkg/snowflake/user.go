@@ -112,7 +112,7 @@ func ListUsers(pattern string, db *sql.DB) ([]user, error) {
 	dbs := []user{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no users found")
+		log.Println("[DEBUG] no users found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

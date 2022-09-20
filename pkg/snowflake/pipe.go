@@ -68,13 +68,13 @@ func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	return pb
 }
 
-/// WithIntegration adds Integration specification to the PipeBuilder
+// / WithIntegration adds Integration specification to the PipeBuilder
 func (pb *PipeBuilder) WithIntegration(s string) *PipeBuilder {
 	pb.integration = s
 	return pb
 }
 
-/// WithErrorIntegration adds ErrorIntegration specification to the PipeBuilder
+// / WithErrorIntegration adds ErrorIntegration specification to the PipeBuilder
 func (pb *PipeBuilder) WithErrorIntegration(s string) *PipeBuilder {
 	pb.errorIntegration = s
 	return pb
@@ -190,7 +190,7 @@ func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]pipe, erro
 	dbs := []pipe{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no pipes found")
+		log.Println("[DEBUG] no pipes found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

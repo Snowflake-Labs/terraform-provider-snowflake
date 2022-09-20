@@ -1,6 +1,5 @@
 SHA=$(shell git rev-parse --short HEAD)
 export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-LDFLAGS=-ldflags "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha=${SHA} -X github.com/chanzuckerberg/go-misc/ver.Dirty=${DIRTY}"
 export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=0.13.0
@@ -21,11 +20,13 @@ setup: ## setup development dependencies
 	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
-	bash .download-tfproviderlint.sh
-	go install golang.org/x/tools/cmd/goimports@latest
 .PHONY: setup
 
-lint: fmt ## run the fast go linters
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test ./pkg/resources -v -timeout 10m -sweep=prod
+
+lint:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
 .PHONY: lint
 
@@ -33,7 +34,7 @@ lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
-lint-all: fmt ## run the fast go linters
+lint-all:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
 .PHONY: lint-all
 
@@ -53,16 +54,16 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test: fmt deps ## run the tests
+test:  ## run the tests
 	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test
 
-test-acceptance: fmt deps ## runs all tests, including the acceptance tests which create and destroys real resources
+test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
 	SKIP_MANAGED_ACCOUNT_TEST=1 TF_ACC=1 $(go_test) -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 deps:
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.19
 .PHONY: deps
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
@@ -97,10 +98,7 @@ check-docs: docs ## check that docs have been generated
 .PHONY: check-docs
 
 check-mod:
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.19
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
 
-fmt:
-	goimports -w -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./dist/*")
-.PHONY: fmt

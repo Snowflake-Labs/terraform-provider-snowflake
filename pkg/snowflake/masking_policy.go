@@ -70,7 +70,7 @@ func (mpb *MaskingPolicyBuilder) WithReturnDataType(dataType string) *MaskingPol
 //
 // Supported DDL operations are:
 //   - CREATE MASKING POLICY
-//	 - ALTER MASKING POLICY
+//   - ALTER MASKING POLICY
 //   - DROP MASKING POLICY
 //   - SHOW MASKING POLICIES
 //   - DESCRIBE MASKING POLICY
@@ -160,7 +160,7 @@ func ListMaskingPolicies(databaseName string, schemaName string, db *sql.DB) ([]
 	dbs := []MaskingPolicyStruct{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no masking policies found")
+		log.Println("[DEBUG] no masking policies found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

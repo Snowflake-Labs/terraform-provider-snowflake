@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/go-misc/sets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -115,7 +114,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 
 	propsToSet := map[string]string{}
-	propsToUnset := sets.NewStringSet()
+	propsToUnset := map[string]string{}
 
 	for _, prop := range userPublicKeyProperties {
 		// if key hasn't changed, continue
@@ -127,7 +126,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		if publicKeyOK { // if set, then we should update the value
 			propsToSet[prop] = publicKey.(string)
 		} else { // if now unset, we should unset the key from the user
-			propsToUnset.Add(publicKey.(string))
+			propsToUnset[prop]=publicKey.(string)
 		}
 	}
 
@@ -140,8 +139,8 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// unset the keys we decided should be unset
-	for _, prop := range propsToUnset.List() {
-		err := unsetUserPublicKeys(db, name, prop)
+	for k := range propsToUnset {
+		err := unsetUserPublicKeys(db, name, k)
 		if err != nil {
 			return err
 		}

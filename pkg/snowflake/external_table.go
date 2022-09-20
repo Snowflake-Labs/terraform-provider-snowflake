@@ -141,7 +141,7 @@ func (tb *ExternalTableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` PATTERN = '%v'`, EscapeString(tb.pattern)))
 	}
 
-	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, EscapeString(tb.fileFormat)))
+	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, tb.fileFormat))
 
 	if tb.awsSNSTopic != "" {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))
@@ -225,7 +225,7 @@ func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]e
 	dbs := []externalTable{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no external tables found")
+		log.Println("[DEBUG] no external tables found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

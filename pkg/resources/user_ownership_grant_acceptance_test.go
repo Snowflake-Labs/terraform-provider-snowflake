@@ -9,8 +9,8 @@ import (
 )
 
 func TestAcc_UserOwnershipGrant_defaults(t *testing.T) {
-	user := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	role := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	user := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	role := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),

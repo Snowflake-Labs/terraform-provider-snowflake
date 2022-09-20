@@ -3,7 +3,7 @@ package provider_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -21,10 +21,6 @@ func TestProvider(t *testing.T) {
 	err := provider.Provider().InternalValidate()
 	r.NoError(err)
 }
-
-// func TestConfigureProvider(t *testing.T) {
-// 	// r := require.New(t)
-// }
 
 func TestDSN(t *testing.T) {
 	type args struct {
@@ -181,7 +177,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
 
-//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+// NewTestClient returns *http.Client with Transport replaced to avoid making real calls
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFunc(fn),
@@ -224,7 +220,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 				}
 				return &http.Response{
 					StatusCode: statusCODE,
-					Body:       ioutil.NopCloser(bytes.NewBufferString(tt.want)),
+					Body:       io.NopCloser(bytes.NewBufferString(tt.want)),
 					Header:     make(http.Header),
 				}
 			})
@@ -236,7 +232,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 			if err != nil {
 				t.Errorf("Body was not returned %v", err)
 			}
-			got, err := ioutil.ReadAll(body.Body)
+			got, err := io.ReadAll(body.Body)
 			if err != nil {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}

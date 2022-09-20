@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -48,7 +49,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      SnowflakeReaderAccountType,
 		Description:  "Specifies the type of managed account.",
-		ValidateFunc: snowflakeValidation.ValidatePrivilege([]string{SnowflakeReaderAccountType}, true),
+		ValidateFunc: validation.StringInSlice([]string{SnowflakeReaderAccountType}, true),
 		ForceNew:     true,
 	},
 	"comment": {
@@ -113,7 +114,7 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // some time to appear. This is currently implemented as a sleep. @TODO actually
 // wait until the locator is generated.
 func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
+	log.Println("[INFO] sleeping to give the locator a chance to be generated")
 	//lintignore:R018
 	time.Sleep(10 * time.Second)
 	return ReadManagedAccount(d, meta)

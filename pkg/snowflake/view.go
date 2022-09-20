@@ -26,7 +26,7 @@ type ViewBuilder struct {
 // QualifiedName prepends the db and schema if set and escapes everything nicely
 func (vb *ViewBuilder) QualifiedName() (string, error) {
 	if vb.db == "" || vb.schema == "" {
-		return "", errors.New("Views must specify a database and a schema")
+		return "", errors.New("views must specify a database and a schema")
 	}
 
 	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name), nil
@@ -235,7 +235,7 @@ func ListViews(databaseName string, schemaName string, db *sql.DB) ([]view, erro
 	dbs := []view{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no views found")
+		log.Println("[DEBUG] no views found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

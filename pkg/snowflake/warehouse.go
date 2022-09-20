@@ -128,7 +128,7 @@ func ListWarehouses(db *sql.DB) ([]warehouse, error) {
 	dbs := []warehouse{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no warehouses found")
+		log.Println("[DEBUG] no warehouses found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

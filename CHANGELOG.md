@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.43.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.0...v0.43.1) (2022-09-20)
+
+
+### BugFixes
+
+* add sweepers ([#1203](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1203)) ([6c004a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6c004a31d7d5192f4136126db3b936a4be26ff2c))
+* Pass file_format values as-is in external table configuration ([#1183](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1183)) ([d3ad8a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d3ad8a8019ffff65e644e347e21b8b1512be65c4)), closes [#1046](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1046)
+* remove stage from statefile if not found ([#1220](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1220)) ([b570217](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b57021705f5b554499b00289e7219ee6dabb70a1))
+
+## [0.43.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.1...v0.43.0) (2022-08-31)
+
+
+### Features
+
+* tag based masking policy ([#1143](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1143)) ([e388545](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e388545cae20da8c011e644ac7ecaf2724f1e374))
+
+
+### BugFixes
+
+* log fmt ([#1192](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1192)) ([0f2e2db](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0f2e2db2343237620aceb416eb8603b8e42e11ec))
+
+## [0.42.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.0...v0.42.1) (2022-08-24)
+
+
+### Misc
+
+* update-license ([#1190](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1190)) ([e9cfc3e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e9cfc3e7d07ee5d60f55d842c13f2d8fc20e7ba6))
+
+## [0.42.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.41.0...v0.42.0) (2022-08-24)
+
+
+### Features
+
+* tag association resource ([#1187](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1187)) ([123fd2f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/123fd2f88a18242dbb3b1f20920c869fd3f26651))
+* transient database ([#1165](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1165)) ([f65a0b5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f65a0b501ee7823575c73071115f96973834b07c))
+
+
+### BugFixes
+
+* Database from share comment on create and docs ([#1167](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1167)) ([fc3a8c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc3a8c289fa8466e0ad8fa9454e31c27d75de563))
+* doc of resource_monitor_grant ([#1188](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1188)) ([03a6cb3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/03a6cb3c58f6ce5860b70f62a08befa7c9905df8))
+* Fix snowflake_share resource not unsetting accounts ([#1186](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1186)) ([03a225f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/03a225f94a8e641dc2a08fdd3247cc5bd64708e1))
+
+## [0.41.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.40.0...v0.41.0) (2022-08-10)
+
+
+### Features
+
+* Adding support for debugger-based debugging. ([#1145](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1145)) ([5509899](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5509899df90be7e01826261d2f626239f121437c))
+* tag grants ([#1127](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1127)) ([018e7ab](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/018e7ababa73a579c79f3939b83a9010fe0b2774))
+
+
+### BugFixes
+
+* adding in issue link to slackbot ([#1158](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1158)) ([6f8510b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6f8510b8e8b7c6b415ef6258a7c1a2f9e1b547c4))
+* Deleting a snowflake_user and their associated snowlfake_role_grant causes an error ([#1142](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1142)) ([5f6725a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5f6725a8d0df2f5924c6d6dc2f62ebeff77c8e14))
+* doc pipe ([#1171](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1171)) ([c94c2f9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c94c2f913bc47c69edfda2f6e0ef4ff34f52da63))
+* expand allowed special characters in role names ([#1162](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1162)) ([30a59e0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/30a59e0657183aee670018decf89e1c2ef876310))
+* Remove validate_utf8 parameter from file_format ([#1166](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1166)) ([6595eeb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6595eeb52ef817981bfa44602a211c5c8b8de29a))
+
 ## [0.40.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.39.0...v0.40.0) (2022-07-14)
 
 

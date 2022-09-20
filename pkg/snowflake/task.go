@@ -418,7 +418,7 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 	dbs := []task{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tasks found")
+		log.Println("[DEBUG] no tasks found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

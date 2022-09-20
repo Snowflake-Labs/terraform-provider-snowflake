@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -150,8 +151,8 @@ type externalTableID struct {
 	ExternalTableName string
 }
 
-//String() takes in a externalTableID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|ExternalTableName
+// String() takes in a externalTableID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|ExternalTableName
 func (si *externalTableID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -276,7 +277,7 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	externalTable, err := snowflake.ScanExternalTable(row)
 	if err != nil {
 		if err.Error() == snowflake.ErrNoRowInRS {
-			fmt.Println("Good !!")
+			log.Printf("[DEBUG] external table (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		} else {

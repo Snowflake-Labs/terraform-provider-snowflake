@@ -628,7 +628,7 @@ func ListFileFormats(databaseName string, schemaName string, db *sql.DB) ([]file
 	dbs := []fileFormatShow{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no file formats found")
+		log.Println("[DEBUG] no file formats found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

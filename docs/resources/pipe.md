@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_pipe pipe {
+resource "snowflake_pipe" "pipe" {
   database = "db"
   schema   = "schema"
   name     = "pipe"
@@ -25,7 +25,6 @@ resource snowflake_pipe pipe {
 
   aws_sns_topic_arn    = "..."
   notification_channel = "..."
-  owner                = "role1"
 }
 ```
 

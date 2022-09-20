@@ -12,12 +12,12 @@ resource snowflake_notification_integration integration {
   azure_tenant_id                 = "..."
 
   # AWS_SQS
-  notification_provider = "AWS_SQS"
-  aws_sqs_arn           = "..." 
-  aws_sqs_role_arn      = "..."
+  #notification_provider = "AWS_SQS"
+  #aws_sqs_arn           = "..." 
+  #aws_sqs_role_arn      = "..."
 
   # AWS_SNS
-  notification_provider = "AWS_SNS"
-  aws_sns_topic_arn     = "..." 
-  aws_sns_role_arn      = "..."
+  #notification_provider = "AWS_SNS"
+  #aws_sns_topic_arn     = "..." 
+  #aws_sns_role_arn      = "..."
 }

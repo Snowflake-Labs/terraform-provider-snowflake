@@ -13,11 +13,12 @@ import (
 
 // TagBuilder abstracts the creation of SQL queries for a Snowflake tag
 type TagBuilder struct {
-	name          string
-	db            string
-	schema        string
-	comment       string
-	allowedValues string
+	name                 string
+	db                   string
+	schema               string
+	comment              string
+	allowedValues        string
+	maskingPolicyBuilder *MaskingPolicyBuilder
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely
@@ -58,6 +59,12 @@ func (tb *TagBuilder) WithSchema(schema string) *TagBuilder {
 // WithAllowedValues adds the allowed values to the query
 func (tb *TagBuilder) WithAllowedValues(av []string) *TagBuilder {
 	tb.allowedValues = helpers.ListToSnowflakeString(av)
+	return tb
+}
+
+// WithMaskingPolicy adds a pointer to a MaskingPolicyBuilder to the TagBuilder
+func (tb *TagBuilder) WithMaskingPolicy(mpb *MaskingPolicyBuilder) *TagBuilder {
+	tb.maskingPolicyBuilder = mpb
 	return tb
 }
 
@@ -135,6 +142,16 @@ func (tb *TagBuilder) Undrop() string {
 	return fmt.Sprintf(`UNDROP TAG %v`, tb.QualifiedName())
 }
 
+// AddMaskingPolicy returns the SQL query that will add a masking policy to a tag
+func (tb *TagBuilder) AddMaskingPolicy() string {
+	return fmt.Sprintf(`ALTER TAG %v SET MASKING POLICY %v`, tb.QualifiedName(), tb.maskingPolicyBuilder.QualifiedName())
+}
+
+// ReamoveMaskingPolicy returns the SQL query that will remove a masking policy from a tag
+func (tb *TagBuilder) RemoveMaskingPolicy() string {
+	return fmt.Sprintf(`ALTER TAG %v UNSET MASKING POLICY %v`, tb.QualifiedName(), tb.maskingPolicyBuilder.QualifiedName())
+}
+
 // Show returns the SQL query that will show a tag.
 func (tb *TagBuilder) Show() string {
 	q := strings.Builder{}
@@ -150,12 +167,31 @@ func (tb *TagBuilder) Show() string {
 	return q.String()
 }
 
+// Returns sql to show a tag with a specific policy attached to it
+func (tb *TagBuilder) ShowAttachedPolicy() string {
+	q := strings.Builder{}
+	q.WriteString(fmt.Sprintf(`SELECT * from table ("%v".information_schema.policy_references(ref_entity_name => '%v', ref_entity_domain => 'TAG')) where policy_db='%v' and policy_schema='%v' and policy_name='%v'`, tb.db, tb.QualifiedName(), tb.maskingPolicyBuilder.db, tb.maskingPolicyBuilder.schema, tb.maskingPolicyBuilder.name))
+
+	return q.String()
+}
+
 type tag struct {
 	Name          sql.NullString `db:"name"`
 	DatabaseName  sql.NullString `db:"database_name"`
 	SchemaName    sql.NullString `db:"schema_name"`
 	Comment       sql.NullString `db:"comment"`
 	AllowedValues sql.NullString `db:"allowed_values"`
+}
+
+type tagPolicyAttachment struct {
+	PolicyDb        sql.NullString `db:"POLICY_DB"`
+	PolicySchema    sql.NullString `db:"POLICY_SCHEMA"`
+	PolicyName      sql.NullString `db:"POLICY_NAME"`
+	PolicyKind      sql.NullString `db:"POLICY_KIND"`
+	RefDb           sql.NullString `db:"REF_DATABASE_NAME"`
+	RefSchema       sql.NullString `db:"REF_SCHEMA_NAME"`
+	RefEntity       sql.NullString `db:"REF_ENTITY_NAME"`
+	RefEntityDomain sql.NullString `db:"REF_ENTITY_DOMAIN"`
 }
 
 type TagValue struct {
@@ -167,6 +203,12 @@ type TagValue struct {
 
 func ScanTag(row *sqlx.Row) (*tag, error) {
 	r := &tag{}
+	err := row.StructScan(r)
+	return r, err
+}
+
+func ScanTagPolicy(row *sqlx.Row) (*tagPolicyAttachment, error) {
+	r := &tagPolicyAttachment{}
 	err := row.StructScan(r)
 	return r, err
 }
@@ -183,7 +225,7 @@ func ListTags(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
 	tags := []tag{}
 	err = sqlx.StructScan(rows, &tags)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tags found")
+		log.Println("[DEBUG] no tags found")
 		return nil, nil
 	}
 	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)

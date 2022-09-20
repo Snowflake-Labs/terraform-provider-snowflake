@@ -45,7 +45,7 @@ SQL
 - `comment` (String) Specifies a comment for the view.
 - `is_secure` (Boolean) Specifies that the view is secure.
 - `or_replace` (Boolean) Overwrites the View if it exists.
-- `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 

@@ -14,10 +14,11 @@ description: |-
 
 ```terraform
 resource snowflake_external_table external_table {
-  database = "db"
-  schema   = "schema"
-  name     = "external_table"
-  comment  = "External table"
+  database    = "db"
+  schema      = "schema"
+  name        = "external_table"
+  comment     = "External table"
+  file_format = "TYPE = CSV FIELD_DELIMITER = '|'"
 
   column {
     name = "id"
@@ -52,7 +53,7 @@ resource snowflake_external_table external_table {
 - `partition_by` (List of String) Specifies any partition columns to evaluate for the external table.
 - `pattern` (String) Specifies the file names and/or paths on the external stage to match.
 - `refresh_on_create` (Boolean) Specifies weather to refresh when an external table is created.
-- `tag` (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 

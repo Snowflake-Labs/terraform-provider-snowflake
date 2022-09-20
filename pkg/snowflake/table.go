@@ -381,7 +381,7 @@ func (tb *TableBuilder) UnsetTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER TABLE %s UNSET TAG "%v"."%v"."%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
-//Function to get clustering definition
+// Function to get clustering definition
 func (tb *TableBuilder) GetClusterKeyString() string {
 
 	return JoinStringList(tb.clusterBy[:], ", ")
@@ -442,7 +442,7 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 	return q.String()
 }
 
-//function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
+// function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
 func ClusterStatementToList(clusterStatement string) []string {
 	if clusterStatement == "" {
 		return nil
@@ -758,7 +758,7 @@ func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, er
 	dbs := []table{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tables found")
+		log.Println("[DEBUG] no tables found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

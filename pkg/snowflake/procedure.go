@@ -289,7 +289,7 @@ func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]proce
 	dbs := []procedure{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no procedures found")
+		log.Println("[DEBUG] no procedures found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

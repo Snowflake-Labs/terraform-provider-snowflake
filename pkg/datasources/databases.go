@@ -89,7 +89,7 @@ func ReadDatabases(d *schema.ResourceData, meta interface{}) error {
 	dbx := sqlx.NewDb(db, "snowflake")
 	dbs, err := snowflake.ListDatabases(dbx)
 	if err != nil {
-		log.Printf("[DEBUG] list databases failed to decode")
+		log.Println("[DEBUG] list databases failed to decode")
 		d.SetId("")
 		return nil
 	}

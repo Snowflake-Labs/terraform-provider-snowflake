@@ -269,7 +269,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "returns":
 			// Format in Snowflake DB is RETURN_TYPE(<some number>) or RETURN_TYPE
-			re := regexp.MustCompile(`^([A-Z0-9_]+)(\([0-9]*\))?$`)
+			re := regexp.MustCompile(`^([A-Z0-9_]+)\s?(\([0-9]*\))?$`)
 			match := re.FindStringSubmatch(desc.Value.String)
 			if err = d.Set("return_type", match[1]); err != nil {
 				return err

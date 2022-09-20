@@ -2,14 +2,17 @@ package provider
 
 import (
 	"crypto/rsa"
+	"database/sql"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
-	"io/ioutil"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -17,11 +20,9 @@ import (
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/db"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
 // Provider is a provider
@@ -153,7 +154,7 @@ func Provider() *schema.Provider {
 			},
 			"warehouse": {
 				Type:        schema.TypeString,
-				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE enviornment variable.",
+				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
 			},
@@ -183,6 +184,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_stage_grant":             resources.StageGrant(),
 		"snowflake_stream_grant":            resources.StreamGrant(),
 		"snowflake_table_grant":             resources.TableGrant(),
+		"snowflake_tag_grant":               resources.TagGrant(),
 		"snowflake_task_grant":              resources.TaskGrant(),
 		"snowflake_view_grant":              resources.ViewGrant(),
 		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
@@ -193,43 +195,45 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
-		"snowflake_api_integration":            resources.APIIntegration(),
-		"snowflake_database":                   resources.Database(),
-		"snowflake_external_function":          resources.ExternalFunction(),
-		"snowflake_file_format":                resources.FileFormat(),
-		"snowflake_function":                   resources.Function(),
-		"snowflake_managed_account":            resources.ManagedAccount(),
-		"snowflake_masking_policy":             resources.MaskingPolicy(),
-		"snowflake_materialized_view":          resources.MaterializedView(),
-		"snowflake_network_policy_attachment":  resources.NetworkPolicyAttachment(),
-		"snowflake_network_policy":             resources.NetworkPolicy(),
-		"snowflake_oauth_integration":          resources.OAuthIntegration(),
-		"snowflake_external_oauth_integration": resources.ExternalOauthIntegration(),
-		"snowflake_pipe":                       resources.Pipe(),
-		"snowflake_procedure":                  resources.Procedure(),
-		"snowflake_resource_monitor":           resources.ResourceMonitor(),
-		"snowflake_role":                       resources.Role(),
-		"snowflake_role_grants":                resources.RoleGrants(),
-		"snowflake_role_ownership_grant":       resources.RoleOwnershipGrant(),
-		"snowflake_row_access_policy":          resources.RowAccessPolicy(),
-		"snowflake_saml_integration":           resources.SAMLIntegration(),
-		"snowflake_schema":                     resources.Schema(),
-		"snowflake_scim_integration":           resources.SCIMIntegration(),
-		"snowflake_sequence":                   resources.Sequence(),
-		"snowflake_share":                      resources.Share(),
-		"snowflake_stage":                      resources.Stage(),
-		"snowflake_storage_integration":        resources.StorageIntegration(),
-		"snowflake_notification_integration":   resources.NotificationIntegration(),
-		"snowflake_stream":                     resources.Stream(),
-		"snowflake_table":                      resources.Table(),
-		"snowflake_external_table":             resources.ExternalTable(),
-		"snowflake_tag":                        resources.Tag(),
-		"snowflake_task":                       resources.Task(),
-		"snowflake_user":                       resources.User(),
-		"snowflake_user_ownership_grant":       resources.UserOwnershipGrant(),
-		"snowflake_user_public_keys":           resources.UserPublicKeys(),
-		"snowflake_view":                       resources.View(),
-		"snowflake_warehouse":                  resources.Warehouse(),
+		"snowflake_api_integration":                resources.APIIntegration(),
+		"snowflake_database":                       resources.Database(),
+		"snowflake_external_function":              resources.ExternalFunction(),
+		"snowflake_file_format":                    resources.FileFormat(),
+		"snowflake_function":                       resources.Function(),
+		"snowflake_managed_account":                resources.ManagedAccount(),
+		"snowflake_masking_policy":                 resources.MaskingPolicy(),
+		"snowflake_materialized_view":              resources.MaterializedView(),
+		"snowflake_network_policy_attachment":      resources.NetworkPolicyAttachment(),
+		"snowflake_network_policy":                 resources.NetworkPolicy(),
+		"snowflake_oauth_integration":              resources.OAuthIntegration(),
+		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
+		"snowflake_pipe":                           resources.Pipe(),
+		"snowflake_procedure":                      resources.Procedure(),
+		"snowflake_resource_monitor":               resources.ResourceMonitor(),
+		"snowflake_role":                           resources.Role(),
+		"snowflake_role_grants":                    resources.RoleGrants(),
+		"snowflake_role_ownership_grant":           resources.RoleOwnershipGrant(),
+		"snowflake_row_access_policy":              resources.RowAccessPolicy(),
+		"snowflake_saml_integration":               resources.SAMLIntegration(),
+		"snowflake_schema":                         resources.Schema(),
+		"snowflake_scim_integration":               resources.SCIMIntegration(),
+		"snowflake_sequence":                       resources.Sequence(),
+		"snowflake_share":                          resources.Share(),
+		"snowflake_stage":                          resources.Stage(),
+		"snowflake_storage_integration":            resources.StorageIntegration(),
+		"snowflake_notification_integration":       resources.NotificationIntegration(),
+		"snowflake_stream":                         resources.Stream(),
+		"snowflake_table":                          resources.Table(),
+		"snowflake_external_table":                 resources.ExternalTable(),
+		"snowflake_tag":                            resources.Tag(),
+		"snowflake_tag_association":                resources.TagAssociation(),
+		"snowflake_tag_masking_policy_association": resources.TagMaskingPolicyAssociation(),
+		"snowflake_task":                           resources.Task(),
+		"snowflake_user":                           resources.User(),
+		"snowflake_user_ownership_grant":           resources.UserOwnershipGrant(),
+		"snowflake_user_public_keys":               resources.UserPublicKeys(),
+		"snowflake_view":                           resources.View(),
+		"snowflake_warehouse":                      resources.Warehouse(),
 	}
 
 	return mergeSchemas(
@@ -402,7 +406,7 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Invalid Path to private key")
 	}
 
-	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
+	privateKeyBytes, err := os.ReadFile(expandedPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read private key")
 	}
@@ -492,7 +496,7 @@ func GetOauthAccessToken(
 		return "", errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "Response body was not able to be parsed")
 	}
@@ -501,4 +505,42 @@ func GetOauthAccessToken(
 		return "", errors.Wrap(err, "Error parsing JSON from Snowflake")
 	}
 	return result.AccessToken, nil
+}
+
+func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
+	account := os.Getenv("SNOWFLAKE_ACCOUNT")
+	user := os.Getenv("SNOWFLAKE_USER")
+	password := os.Getenv("SNOWFLAKE_PASSWORD")
+	browserAuth := os.Getenv("SNOWFLAKE_BROWSER_AUTH") == "true"
+	privateKeyPath := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
+	privateKey := os.Getenv("SNOWFLAKE_PRIVATE_KEY")
+	privateKeyPassphrase := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
+	oauthAccessToken := os.Getenv("SNOWFLAKE_OAUTH_ACCESS_TOKEN")
+	region := os.Getenv("SNOWFLAKE_REGION")
+	role := os.Getenv("SNOWFLAKE_ROLE")
+	host := os.Getenv("SNOWFLAKE_HOST")
+	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
+
+	dsn, err := DSN(
+		account,
+		user,
+		password,
+		browserAuth,
+		privateKeyPath,
+		privateKey,
+		privateKeyPassphrase,
+		oauthAccessToken,
+		region,
+		role,
+		host,
+		warehouse,
+	)
+	if err != nil {
+		return nil, err
+	}
+	db, err = sql.Open("snowflake", dsn)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
