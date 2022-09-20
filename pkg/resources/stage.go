@@ -236,6 +236,13 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
+	if err == sql.ErrNoRows {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] stage (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
 		// 002003 (02000): SQL compilation error:
 		// 'XXX' does not exist or not authorized.
