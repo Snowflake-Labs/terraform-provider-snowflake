@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 const (
@@ -241,8 +242,15 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return err
+
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+		// 002003 (02000): SQL compilation error:
+		// 'XXX' does not exist or not authorized.
+		if driverErr.Number == 2003 {
+			log.Printf("[DEBUG] stage (%s) not found", d.Id())
+			d.SetId("")
+			return nil
+		}
 	}
 
 	sq := snowflake.Stage(stage, dbName, schema).Show()
