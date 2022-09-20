@@ -30,8 +30,9 @@ resource snowflake_user_grant grant {
 
 ### Required
 
-- `user_name` (String) The name of the user on which to grant privileges.
 - `privilege` (String) The privilege to grant on the user.
+- `user_name` (String) The name of the user on which to grant privileges.
+
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.

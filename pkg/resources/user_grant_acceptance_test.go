@@ -25,7 +25,7 @@ func TestAcc_UserGrant(t *testing.T) {
 				Config: userGrantConfig(wName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_grant.test", "user_name", wName),
-					resource.TestCheckResourceAttr("snowflake_user_grant.test", "privilege", "MONITORING"),
+					resource.TestCheckResourceAttr("snowflake_user_grant.test", "privilege", "MONITOR"),
 				),
 			},
 			// IMPORT
