@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.44.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.1...v0.44.0) (2022-09-20)
+
+
+### Features
+
+* Create a snowflake_user_grant resource. ([#1193](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1193)) ([37500ac](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/37500ac88a3980ea180d7b0992bedfbc4b8a4a1e))
+
+
+### BugFixes
+
+* function not exist and integration grant ([#1154](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1154)) ([ea01e66](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ea01e66797703e53c58e29d3bdb36557b22dbf79))
+
 ## [0.43.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.0...v0.43.1) (2022-09-20)
 
 
