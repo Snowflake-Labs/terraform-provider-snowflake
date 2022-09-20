@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.43.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.0...v0.43.1) (2022-09-20)
+
+
+### BugFixes
+
+* add sweepers ([#1203](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1203)) ([6c004a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6c004a31d7d5192f4136126db3b936a4be26ff2c))
+* Pass file_format values as-is in external table configuration ([#1183](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1183)) ([d3ad8a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d3ad8a8019ffff65e644e347e21b8b1512be65c4)), closes [#1046](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1046)
+* remove stage from statefile if not found ([#1220](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1220)) ([b570217](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b57021705f5b554499b00289e7219ee6dabb70a1))
+
 ## [0.43.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.42.1...v0.43.0) (2022-08-31)
 
 
