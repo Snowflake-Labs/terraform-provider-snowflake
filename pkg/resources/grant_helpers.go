@@ -238,6 +238,11 @@ func readGenericGrant(
 		if grant.Privilege == priv && grant.GrantOption == grantOption {
 			relevantGrants = append(relevantGrants, grant)
 		}
+		// Ignore with_grant_option in resource when privilege is OWNERSHIP
+		// Because OWNERSHIP always must have WITH GRANT OPTION
+		if grant.Privilege == priv && grant.Privilege == string(privilegeOwnership) {
+			relevantGrants = append(relevantGrants, grant)
+		}
 	}
 
 	// If no relevant grants, set id to blank and return
