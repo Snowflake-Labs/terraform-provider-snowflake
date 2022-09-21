@@ -44,7 +44,6 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -76,6 +75,7 @@ func SequenceGrant() *TerraformGrantResource {
 			Create: CreateSequenceGrant,
 			Read:   ReadSequenceGrant,
 			Delete: DeleteSequenceGrant,
+			Update: UpdateSequenceGrant,
 
 			Schema: sequenceGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -204,4 +204,48 @@ func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateSequenceGrant implements schema.UpdateFunc
+func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	sequenceName := grantID.ObjectName
+
+	// create the builder
+	builder := snowflake.SequenceGrant(dbName, schemaName, sequenceName)
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadSequenceGrant(d, meta)
 }
