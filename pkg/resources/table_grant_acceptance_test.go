@@ -35,9 +35,6 @@ func TestAccTableGrant_defaults(t *testing.T) {
 				ResourceName:      "snowflake_table_grant.g",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-				},
 			},
 		},
 	})

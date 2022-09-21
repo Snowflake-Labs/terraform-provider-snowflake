@@ -79,12 +79,6 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-	},
 }
 
 // SchemaGrant returns a pointer to the resource representing a view grant
@@ -117,7 +111,6 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !onFuture {
 		return errors.New("schema_name must be set unless on_future is true.")
@@ -140,7 +133,6 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		SchemaName:   schemaName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grantID.String()
 	if err != nil {

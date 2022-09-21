@@ -3,8 +3,8 @@ package resources
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/pkg/errors"
 )
 
 var validDatabasePrivileges = NewPrivilegeSet(
@@ -52,12 +52,6 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-	},
 }
 
 // DatabaseGrant returns a pointer to the resource representing a database grant
@@ -84,7 +78,6 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.DatabaseGrant(dbName)
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
@@ -95,7 +88,6 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		ResourceName: dbName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

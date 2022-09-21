@@ -95,13 +95,6 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-		ForceNew:    true,
-	},
 }
 
 // ProcedureGrant returns a pointer to the resource representing a procedure grant
@@ -144,7 +137,6 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	futureProcedures := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	arguments = d.Get("arguments").([]interface{})
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (procedureName == "") && !futureProcedures {
 		return errors.New("procedure_name must be set unless on_future is true.")
@@ -177,7 +169,6 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   procedureSignature,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

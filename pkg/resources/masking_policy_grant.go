@@ -52,13 +52,6 @@ var maskingPolicyGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-		ForceNew:    true,
-	},
 }
 
 // MaskingPolicyGrant returns a pointer to the resource representing a masking policy grant
@@ -88,7 +81,6 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
 
@@ -103,7 +95,6 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   maskingPolicyName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

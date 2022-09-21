@@ -95,13 +95,6 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-		ForceNew:    true,
-	},
 }
 
 // FunctionGrant returns a pointer to the resource representing a function grant
@@ -144,7 +137,6 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	futureFunctions := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	arguments = d.Get("arguments").([]interface{})
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (functionName == "") && !futureFunctions {
 		return errors.New("function_name must be set unless on_future is true.")
@@ -177,7 +169,6 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   functionSignature,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

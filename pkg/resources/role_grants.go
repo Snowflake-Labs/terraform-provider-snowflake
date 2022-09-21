@@ -6,11 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/snowflakedb/gosnowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func RoleGrants() *schema.Resource {
@@ -42,12 +41,6 @@ func RoleGrants() *schema.Resource {
 				Optional:    true,
 				Description: "Grants role to this specified user.",
 			},
-			"enable_multiple_grants": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-				Default:     false,
-			},
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -66,16 +59,6 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
-	grant := &grantID{
-		ResourceName: roleName,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	d.SetId(dataIDInput)
-
-	if err != nil {
-		return errors.Wrap(err, "error creating role grant")
-	}
 	for _, role := range roles {
 		err := grantRoleToRole(db, roleName, role)
 		if err != nil {
@@ -89,6 +72,8 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
+	d.SetId(roleName)
 
 	return ReadRoleGrants(d, meta)
 }
@@ -242,7 +227,7 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 		if driverErr.Number == 2003 {
 			users, _ := snowflake.ListUsers(user, db)
 			logins := make([]string, len(users))
-			for i, u := range users{
+			for i, u := range users {
 				logins[i] = u.LoginName.String
 			}
 			if !snowflake.Contains(logins, user) {

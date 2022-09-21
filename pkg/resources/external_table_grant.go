@@ -68,13 +68,6 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-		ForceNew:    true,
-	},
 }
 
 // ExternalTableGrant returns a pointer to the resource representing a external table grant
@@ -105,7 +98,6 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureExternalTables := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (externalTableName == "") && !futureExternalTables {
 		return errors.New("external_table_name must be set unless on_future is true.")
@@ -135,7 +127,6 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   externalTableName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

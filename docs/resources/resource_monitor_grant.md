@@ -30,7 +30,6 @@ resource "snowflake_resource_monitor_grant" "grant" {
 
 ### Optional
 
-- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - `privilege` (String) The privilege to grant on the resource monitor.
 - `roles` (Set of String) Grants privilege to these roles.
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.

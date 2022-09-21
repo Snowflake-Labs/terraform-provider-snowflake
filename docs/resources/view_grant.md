@@ -43,7 +43,6 @@ resource snowflake_view_grant grant {
 
 ### Optional
 
-- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future.
 - `privilege` (String) The privilege to grant on the current or future view.
 - `roles` (Set of String) Grants privilege to these roles.

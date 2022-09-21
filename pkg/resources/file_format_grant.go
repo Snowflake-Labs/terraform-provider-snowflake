@@ -60,13 +60,6 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-		ForceNew:    true,
-	},
 }
 
 // FileFormatGrant returns a pointer to the resource representing a file format grant
@@ -97,7 +90,6 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	futureFileFormats := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (fileFormatName == "") && !futureFileFormats {
 		return errors.New("file_format_name must be set unless on_future is true.")
@@ -124,7 +116,6 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		ObjectName:   fileFormatName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {

@@ -41,12 +41,6 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
-		Default:     false,
-	},
 }
 
 // WarehouseGrant returns a pointer to the resource representing a warehouse grant
@@ -74,7 +68,6 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 	builder := snowflake.WarehouseGrant(w)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	err := createGenericGrant(d, meta, builder)
 	if err != nil {
@@ -85,7 +78,6 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 		ResourceName: w,
 		Privilege:    priv,
 		GrantOption:  grantOption,
-		Roles:        roles,
 	}
 	dataIDInput, err := grant.String()
 	if err != nil {
