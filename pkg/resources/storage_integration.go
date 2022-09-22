@@ -50,7 +50,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"S3", "S3gov", "GCS", "AZURE"}, false),
 	},
 	"storage_aws_external_id": {
 		Type:        schema.TypeString,
