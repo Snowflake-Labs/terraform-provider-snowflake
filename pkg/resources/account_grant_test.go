@@ -13,14 +13,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
 	err := resources.AccountGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	r := require.New(t)
 
@@ -41,7 +41,7 @@ func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	})
 }
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 

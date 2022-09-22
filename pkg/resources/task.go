@@ -114,8 +114,8 @@ type taskID struct {
 	TaskName     string
 }
 
-//String() takes in a taskID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TaskName
+// String() takes in a taskID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|TaskName
 func (t *taskID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)

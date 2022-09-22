@@ -76,7 +76,7 @@ func (rapi *rowAccessPolicyID) String() (string, error) {
 	return strRowAccessPolicyID, nil
 }
 
-/// rowAccessPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|RowAccessPolicyName
+// / rowAccessPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|RowAccessPolicyName
 // and returns a rowAccessPolicyID object
 func rowAccessPolicyIDFromString(stringID string) (*rowAccessPolicyID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))

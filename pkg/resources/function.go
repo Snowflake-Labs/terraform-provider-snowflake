@@ -500,10 +500,11 @@ type functionID struct {
 // splitFunctionID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
 // the functionID struct, for example MYDB|PUBLIC|FUNC1|VARCHAR-DATE-VARCHAR
 // returns struct
-//         DatabaseName: MYDB
-//         SchemaName: PUBLIC
-//         FunctionName: FUNC1
-//         ArgTypes: [VARCHAR, DATE, VARCHAR]
+//
+//	DatabaseName: MYDB
+//	SchemaName: PUBLIC
+//	FunctionName: FUNC1
+//	ArgTypes: [VARCHAR, DATE, VARCHAR]
 func splitFunctionID(v string) (*functionID, error) {
 	arr := strings.Split(v, "|")
 	if len(arr) != 4 {

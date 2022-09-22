@@ -85,7 +85,7 @@ func (sb *StreamBuilder) WithShowInitialRows(b bool) *StreamBuilder {
 // Supported DDL operations are:
 //   - CREATE Stream
 //   - ALTER Stream
-//	 - DROP Stream
+//   - DROP Stream
 //   - SHOW Stream
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/sql/create-stream.html)

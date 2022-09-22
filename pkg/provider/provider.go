@@ -543,7 +543,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	host := os.Getenv("SNOWFLAKE_HOST")
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
 	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
-	port,err := strconv.Atoi(os.Getenv("SNOWFLAKE_PORT"))
+	port, err := strconv.Atoi(os.Getenv("SNOWFLAKE_PORT"))
 	if err != nil {
 		port = 443
 	}

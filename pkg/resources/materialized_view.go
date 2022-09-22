@@ -89,8 +89,8 @@ const (
 	materializedViewDelimiter = '|'
 )
 
-//String() takes in a materializedViewID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|ExternalTableName
+// String() takes in a materializedViewID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|ExternalTableName
 func (si *materializedViewID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)

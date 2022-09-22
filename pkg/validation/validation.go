@@ -20,7 +20,7 @@ const (
 // Must be at least 8 characters long.
 // Must contain at least 1 digit.
 // Must contain at least 1 uppercase letter and 1 lowercase letter.
-//lintignore:V011
+// lintignore:V011
 func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	pass, ok := i.(string)
 	if !ok {

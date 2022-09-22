@@ -60,4 +60,3 @@ resource "snowflake_tag_association" "test" {
 }
 `, n)
 }
-

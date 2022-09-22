@@ -69,9 +69,9 @@ func (gb *CurrentGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
 }
 
-///////////////////////////////////////////////
+// /////////////////////////////////////////////
 // START CurrentMaterializedViewGrantBuilder //
-///////////////////////////////////////////////
+// /////////////////////////////////////////////
 type CurrentMaterializedViewGrantBuilder struct {
 	name          string
 	qualifiedName string
