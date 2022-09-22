@@ -352,10 +352,11 @@ func DSN(
 	}
 
 	config := gosnowflake.Config{
-		Account: account,
-		User:    user,
-		Region:  region,
-		Role:    role,
+		Account:     account,
+		User:        user,
+		Region:      region,
+		Role:        role,
+		Application: "terraform-provider-snowflake",
 	}
 
 	// If host is set trust it and do not use the region value
