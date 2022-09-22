@@ -40,7 +40,7 @@ func TestDSN(t *testing.T) {
 		wantErr bool
 	}{
 		{"simple", args{"acct", "user", "pass", false, "region", "role", "", ""},
-			"user:pass@acct.region.snowflakecomputing.com:443? &ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
+			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
 		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", ""},
 			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
 		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", ""},
