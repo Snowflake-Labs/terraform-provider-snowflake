@@ -441,10 +441,11 @@ type procedureID struct {
 // splitProcedureID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
 // the procedureID struct, for example MYDB|PUBLIC|PROC1|VARCHAR-DATE-VARCHAR
 // returns struct
-//         DatabaseName: MYDB
-//         SchemaName: PUBLIC
-//         ProcedureName: PROC1
-//         ArgTypes: [VARCHAR, DATE, VARCHAR]
+//
+//	DatabaseName: MYDB
+//	SchemaName: PUBLIC
+//	ProcedureName: PROC1
+//	ArgTypes: [VARCHAR, DATE, VARCHAR]
 func splitProcedureID(v string) (*procedureID, error) {
 	arr := strings.Split(v, "|")
 	if len(arr) != 4 {

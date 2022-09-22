@@ -104,7 +104,7 @@ func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *Ta
 	return tb
 }
 
-/// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
+// / WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
 func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 	tb.errorIntegration = s
 	return tb

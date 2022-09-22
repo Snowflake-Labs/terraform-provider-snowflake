@@ -116,7 +116,7 @@ func getUsersSweeper(name string) *resource.Sweeper {
 				return fmt.Errorf("Error getting db handle: %w", err)
 			}
 
-			users, err := snowflake.ListUsers("*",db)
+			users, err := snowflake.ListUsers("*", db)
 			if err != nil {
 				return fmt.Errorf("Error listing users: %w", err)
 			}

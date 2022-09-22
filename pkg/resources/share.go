@@ -150,8 +150,8 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// 5. Remove the temporary DB
 	err = snowflake.Exec(db, tempDB.Drop())
 	if err != nil {
-			return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
-		}
+		return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
+	}
 
 	return nil
 }

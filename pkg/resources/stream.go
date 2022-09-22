@@ -110,8 +110,8 @@ type streamOnObjectID struct {
 	Name         string
 }
 
-//String() takes in a streamID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|StreamName
+// String() takes in a streamID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|StreamName
 func (si *streamID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)

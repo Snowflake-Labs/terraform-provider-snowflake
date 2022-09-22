@@ -232,7 +232,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Account level
 	err = d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
 	if err != nil {

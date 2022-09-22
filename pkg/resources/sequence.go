@@ -67,8 +67,8 @@ type sequenceID struct {
 	SequenceName string
 }
 
-//String() takes in a sequenceID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|SequenceName
+// String() takes in a sequenceID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|SequenceName
 func (si *sequenceID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)

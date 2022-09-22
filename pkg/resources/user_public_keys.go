@@ -126,7 +126,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		if publicKeyOK { // if set, then we should update the value
 			propsToSet[prop] = publicKey.(string)
 		} else { // if now unset, we should unset the key from the user
-			propsToUnset[prop]=publicKey.(string)
+			propsToUnset[prop] = publicKey.(string)
 		}
 	}
 

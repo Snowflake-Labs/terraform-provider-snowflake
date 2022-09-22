@@ -55,7 +55,7 @@ var tagReferenceSchema = &schema.Schema{
 	Optional:    true,
 	MinItems:    0,
 	Description: "Definitions of a tag to associate with the resource.",
-	Deprecated: "Use the 'snowflake_tag_association' resource instead.",
+	Deprecated:  "Use the 'snowflake_tag_association' resource instead.",
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {

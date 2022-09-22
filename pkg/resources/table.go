@@ -198,8 +198,8 @@ type tableID struct {
 	TableName    string
 }
 
-//String() takes in a tableID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TableName
+// String() takes in a tableID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|TableName
 func (si *tableID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)

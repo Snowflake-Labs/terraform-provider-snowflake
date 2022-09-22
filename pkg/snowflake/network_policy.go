@@ -112,12 +112,12 @@ func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
 	return `SHOW NETWORK POLICIES`
 }
 
-//ShowOnUser returns the SQL query that will SHOW network policy set on a specific User
+// ShowOnUser returns the SQL query that will SHOW network policy set on a specific User
 func (npb *NetworkPolicyBuilder) ShowOnUser(u string) string {
 	return fmt.Sprintf(`SHOW PARAMETERS LIKE 'network_policy' IN USER "%v"`, u)
 }
 
-//ShowOnAccount returns the SQL query that will SHOW network policy set on Account
+// ShowOnAccount returns the SQL query that will SHOW network policy set on Account
 func (npb *NetworkPolicyBuilder) ShowOnAccount() string {
 	return `SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`
 }

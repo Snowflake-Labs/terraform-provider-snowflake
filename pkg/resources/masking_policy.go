@@ -80,7 +80,7 @@ func (mpi *maskingPolicyID) String() (string, error) {
 	return strMaskingPolicyID, nil
 }
 
-/// maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
+// / maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
 // and returns a maskingPolicyID object
 func maskingPolicyIDFromString(stringID string) (*maskingPolicyID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))

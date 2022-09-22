@@ -112,8 +112,8 @@ type pipeID struct {
 	PipeName     string
 }
 
-//String() takes in a pipeID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|PipeName
+// String() takes in a pipeID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|PipeName
 func (si *pipeID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
