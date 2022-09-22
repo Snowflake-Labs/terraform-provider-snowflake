@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.45.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.44.0...v0.45.0) (2022-09-22)
+
+
+### Features
+
+* add connection param for snowhouse ([#1231](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1231)) ([050c0a2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/050c0a213033f6f83b5937c0f34a027347bfbb2a))
+* add port and protocol to provider config ([#1238](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1238)) ([7a6d312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7a6d312e0becbb562707face1b0d87b705692687))
+
 ## [0.44.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.1...v0.44.0) (2022-09-20)
 
 
