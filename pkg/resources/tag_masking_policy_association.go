@@ -202,8 +202,17 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	d.Set("tag_id", tagIdString)
-	d.Set("masking_policy_id", mpIdString)
+	err = d.Set("tag_id", tagIdString)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("masking_policy_id", mpIdString)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
