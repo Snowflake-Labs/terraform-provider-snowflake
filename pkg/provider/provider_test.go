@@ -40,11 +40,11 @@ func TestDSN(t *testing.T) {
 		wantErr bool
 	}{
 		{"simple", args{"acct", "user", "pass", false, "region", "role", "", ""},
-			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
+			"user:pass@acct.region.snowflakecomputing.com:443? &ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
 		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", ""},
 			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
 		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", ""},
-			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?application=terraform-provider-snowflake&account=acct3&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
+			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&application=terraform-provider-snowflake&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
 		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", ""},
 			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
 	}
@@ -78,9 +78,9 @@ func TestOAuthDSN(t *testing.T) {
 		wantErr bool
 	}{
 		{"simple_oauth", args{"acct", "user", pseudorandom_access_token, "region", "role"},
-			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
 		{"oauth_over_password", args{"acct", "user", pseudorandom_access_token, "region", "role"},
-			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
 		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role"},
 			"", true},
 	}
