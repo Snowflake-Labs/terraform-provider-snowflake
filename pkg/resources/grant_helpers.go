@@ -233,25 +233,12 @@ func readGenericGrant(
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 
-	var relevantGrants []*grant
-	for _, grant := range grants {
-		if grant.Privilege == priv && grant.GrantOption == grantOption {
-			relevantGrants = append(relevantGrants, grant)
-		}
-	}
-
-	// If no relevant grants, set id to blank and return
-	if len(relevantGrants) == 0 {
-		d.SetId("")
-		return nil
-	}
-
 	// Map of roles to privileges
 	rolePrivileges := map[string]PrivilegeSet{}
 	sharePrivileges := map[string]PrivilegeSet{}
 
 	// List of all grants for each schema_database
-	for _, grant := range relevantGrants {
+	for _, grant := range grants {
 		switch grant.GranteeType {
 		case "ROLE":
 			roleName := grant.GranteeName

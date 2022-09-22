@@ -152,6 +152,18 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
 			},
+			"port": {
+				Type:        schema.TypeInt,
+				Description: "Support custom port values to snowflake go driver for use with privatelink. Can be sourced from `SNOWFLAKE_PORT` environment variable.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PORT", 443),
+			},
+			"protocol": {
+				Type:        schema.TypeString,
+				Description: "Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", "https"),
+			},
 			"warehouse": {
 				Type:        schema.TypeString,
 				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
@@ -295,6 +307,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	oauthEndpoint := s.Get("oauth_endpoint").(string)
 	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
 	host := s.Get("host").(string)
+	protocol := s.Get("protocol").(string)
+	port := s.Get("port").(int)
 	warehouse := s.Get("warehouse").(string)
 
 	if oauthRefreshToken != "" {
@@ -317,6 +331,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		region,
 		role,
 		host,
+		protocol,
+		port,
 		warehouse,
 	)
 	if err != nil {
@@ -332,17 +348,19 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 }
 
 func DSN(
-	account,
-	user,
+	account string,
+	user string,
 	password string,
 	browserAuth bool,
-	privateKeyPath,
-	privateKey,
-	privateKeyPassphrase,
-	oauthAccessToken,
-	region,
-	role,
-	host,
+	privateKeyPath string,
+	privateKey string,
+	privateKeyPassphrase string,
+	oauthAccessToken string,
+	region string,
+	role string,
+	host string,
+	protocol string,
+	port int,
 	warehouse string) (string, error) {
 
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
@@ -357,6 +375,8 @@ func DSN(
 		Region:      region,
 		Role:        role,
 		Application: "terraform-provider-snowflake",
+		Port:        port,
+		Protocol:    protocol,
 	}
 
 	// If host is set trust it and do not use the region value
@@ -522,7 +542,11 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	role := os.Getenv("SNOWFLAKE_ROLE")
 	host := os.Getenv("SNOWFLAKE_HOST")
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
-
+	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
+	port,err := strconv.Atoi(os.Getenv("SNOWFLAKE_PORT"))
+	if err != nil {
+		port = 443
+	}
 	dsn, err := DSN(
 		account,
 		user,
@@ -535,6 +559,8 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		region,
 		role,
 		host,
+		protocol,
+		port,
 		warehouse,
 	)
 	if err != nil {

@@ -24,13 +24,15 @@ func TestProvider(t *testing.T) {
 
 func TestDSN(t *testing.T) {
 	type args struct {
-		account,
-		user,
+		account string
+		user string
 		password string
 		browserAuth bool
-		region,
-		role,
-		host,
+		region string
+		role string
+		host string
+		protocol string
+		port int
 		warehouse string
 	}
 	tests := []struct {
@@ -39,18 +41,18 @@ func TestDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple", args{"acct", "user", "pass", false, "region", "role", "", ""},
+		{"simple", args{"acct", "user", "pass", false, "region", "role", "","https",443,""},
 			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
-		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", ""},
+		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "","https",443, ""},
 			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
-		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", ""},
+		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", "https",443, ""},
 			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&application=terraform-provider-snowflake&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
-		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", ""},
-			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
+		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", "https",8443, ""},
+			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:8443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.warehouse)
+			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -64,11 +66,14 @@ func TestDSN(t *testing.T) {
 
 func TestOAuthDSN(t *testing.T) {
 	type args struct {
-		account,
-		user,
-		oauthAccessToken,
-		region,
+		account string
+		user string
+		oauthAccessToken string
+		region string
 		role string
+		host string
+		protocol string
+		port int
 	}
 	pseudorandom_access_token := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
 	tests := []struct {
@@ -77,16 +82,16 @@ func TestOAuthDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple_oauth", args{"acct", "user", pseudorandom_access_token, "region", "role"},
+		{"simple_oauth", args{"acct", "user", pseudorandom_access_token, "region", "role", "","https",443},
 			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"oauth_over_password", args{"acct", "user", pseudorandom_access_token, "region", "role"},
+		{"oauth_over_password", args{"acct", "user", pseudorandom_access_token, "region", "role", "","https",443},
 			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role"},
+		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role", "","https",443},
 			"", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, "", "")
+			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role,  tt.args.host, tt.args.protocol, tt.args.port, "")
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)
