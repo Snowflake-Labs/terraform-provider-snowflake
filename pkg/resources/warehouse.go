@@ -18,7 +18,7 @@ var warehouseProperties = []string{
 	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
 	"scaling_policy", "auto_suspend", "auto_resume",
 	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
-	"statement_timeout_in_seconds",
+	"statement_timeout_in_seconds", "enable_query_acceleration", "query_acceleration_max_scale_factor",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
@@ -121,6 +121,19 @@ var warehouseSchema = map[string]*schema.Schema{
 		Default:     8,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
+	"enable_query_acceleration": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
+	},
+	"query_acceleration_max_scale_factor": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      8,
+		ValidateFunc: validation.IntBetween(0, 100),
+		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -204,6 +217,14 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("resource_monitor", w.ResourceMonitor)
+	if err != nil {
+		return err
+	}
+	err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration)
+	if err != nil {
+		return err
+	}
+	err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor)
 	if err != nil {
 		return err
 	}
