@@ -67,6 +67,7 @@ func RowAccessPolicyGrant() *TerraformGrantResource {
 			Create: CreateRowAccessPolicyGrant,
 			Read:   ReadRowAccessPolicyGrant,
 			Delete: DeleteRowAccessPolicyGrant,
+			Update: UpdateRowAccessPolicyGrant,
 
 			Schema: rowAccessPolicyGrantSchema,
 			Importer: &schema.ResourceImporter{
