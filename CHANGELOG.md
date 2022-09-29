@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.46.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.45.0...v0.46.0) (2022-09-29)
+
+
+### Features
+
+* Added Missing Grant Updates + Removed ForceNew ([#1228](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1228)) ([1e9332d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1e9332d522beed99d80ecc2d0fc40fedc41cbd12))
+
+
+### BugFixes
+
+* Table Tags Acceptance Test ([#1245](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1245)) ([ab34763](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ab347635d2b1a1cb349a3762c0869ef71ab0bacf))
+* Update 'user_ownership_grant' schema validation ([#1242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1242)) ([061a28a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/061a28a9a88717c0b37b18a564f55f88cbed56ea))
+
 ## [0.45.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.44.0...v0.45.0) (2022-09-22)
 
 
