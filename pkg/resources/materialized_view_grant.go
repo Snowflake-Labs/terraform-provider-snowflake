@@ -51,14 +51,12 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -90,6 +88,7 @@ func MaterializedViewGrant() *TerraformGrantResource {
 			Create: CreateMaterializedViewGrant,
 			Read:   ReadMaterializedViewGrant,
 			Delete: DeleteMaterializedViewGrant,
+			Update: UpdateMaterializedViewGrant,
 
 			Schema: materializedViewGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -222,4 +221,57 @@ func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateMaterializedViewGrant implements schema.UpdateFunc
+func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
+	}
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	materializedViewName := grantID.ObjectName
+	futureMaterializedViews := (materializedViewName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futureMaterializedViews {
+		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadMaterializedViewGrant(d, meta)
 }

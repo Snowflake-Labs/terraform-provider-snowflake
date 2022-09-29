@@ -45,14 +45,12 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When this is set to true and a schema_name is provided, apply this grant on all future pipes in the given schema. When this is true and no schema_name is provided apply this grant on all future pipes in the given database. The pipe_name field must be unset in order to use on_future.",
 		Default:     false,
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -77,6 +75,7 @@ func PipeGrant() *TerraformGrantResource {
 			Create: CreatePipeGrant,
 			Read:   ReadPipeGrant,
 			Delete: DeletePipeGrant,
+			Update: UpdatePipeGrant,
 
 			Schema: pipeGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -205,4 +204,54 @@ func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdatePipeGrant implements schema.UpdateFunc
+func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	pipeName := grantID.ObjectName
+	futurePipes := (pipeName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futurePipes {
+		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadPipeGrant(d, meta)
 }

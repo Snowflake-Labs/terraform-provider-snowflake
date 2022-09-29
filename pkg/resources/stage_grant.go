@@ -47,7 +47,6 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
@@ -80,6 +79,7 @@ func StageGrant() *TerraformGrantResource {
 			Create: CreateStageGrant,
 			Read:   ReadStageGrant,
 			Delete: DeleteStageGrant,
+			Update: UpdateStageGrant,
 
 			Schema: stageGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -200,4 +200,48 @@ func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateStageGrant implements schema.UpdateFunc
+func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	stageName := grantID.ObjectName
+
+	// create the builder
+	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadStageGrant(d, meta)
 }

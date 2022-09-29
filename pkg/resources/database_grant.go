@@ -36,7 +36,6 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		ForceNew:    true,
 		Description: "Grants privilege to these roles.",
 	},
 	"shares": {
