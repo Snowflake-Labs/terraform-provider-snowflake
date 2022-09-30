@@ -336,17 +336,17 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		case "packages":
-			packagesString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if packagesString != "" { // Do nothing for Java / Python functions without packages
-				packages := strings.Split(packagesString, ", ")
+				packages := strings.Split(packagesString, ",")
 				if err = d.Set("packages", packages); err != nil {
 					return err
 				}
 			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if importsString != "" { // Do nothing for Java functions without imports
-				imports := strings.Split(importsString, ", ")
+				imports := strings.Split(importsString, ",")
 				if err = d.Set("imports", imports); err != nil {
 					return err
 				}
