@@ -144,6 +144,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		MaxItems:    1,
 		Description: "Definitions of primary key constraint to create on table",
+		Deprecated: "Use snowflake_table_constraint instead",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -548,6 +549,8 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	/*
+	deprecated as it conflicts with the new table_constraint resource
 	showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
 	if err != nil {
 		return err
@@ -556,7 +559,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
@@ -567,7 +570,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"comment":             table.Comment.String,
 		"column":              snowflake.NewColumns(tableDescription).Flatten(),
 		"cluster_by":          snowflake.ClusterStatementToList(table.ClusterBy.String),
-		"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		//"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
 		"data_retention_days": table.RetentionTime.Int32,
 		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}

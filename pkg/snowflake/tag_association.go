@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -77,18 +77,11 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAssociation(tagID string) *TagAssociationBuilder {
-	parsedString := strings.Replace(tagID, "\"", "", -1)
-
-	var s []string
-	if strings.Contains(parsedString, "|") {
-		s = strings.Split(parsedString, "|")
-	} else if strings.Contains(parsedString, ".") {
-		s = strings.Split(parsedString, ".")
-	}
+	databaseName, schemaName, tagName := validation.ParseFullyQualifiedObjectID(tagID)
 	return &TagAssociationBuilder{
-		databaseName: s[0],
-		schemaName:   s[1],
-		tagName:      s[2],
+		databaseName: databaseName,
+		schemaName:   schemaName,
+		tagName:      tagName,
 	}
 }
 
