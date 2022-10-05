@@ -61,9 +61,9 @@ var tableSchema = map[string]*schema.Schema{
 					Description: "Column type, e.g. VARIANT",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
-						varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string","NVARCHAR","NVARCHAR2","CHAR VARYING", "NCHAR VARYING"}
-						return slices.Contains(varcharType,new)&& slices.Contains(varcharType,old)
-					  },
+						varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+						return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+					},
 				},
 				"nullable": {
 					Type:        schema.TypeBool,
