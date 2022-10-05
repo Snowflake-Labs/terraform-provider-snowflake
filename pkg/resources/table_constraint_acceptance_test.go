@@ -25,12 +25,6 @@ func TestAccTableConstraint_fk(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table_constraint.fk", "comment", "hello fk"),
 				),
 			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_table_constraint.fk",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }

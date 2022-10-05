@@ -30,7 +30,7 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "value_data_type", "VARCHAR"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", "VARCHAR(16777216)"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", "VARCHAR"),
 				),
 			},
 		},
