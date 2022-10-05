@@ -53,7 +53,7 @@ resource "snowflake_table" "t" {
 	name     = "%s"
 
 	column {
-		name = "id"
+		name = "col1"
 		type = "NUMBER(38,0)"
 	}
 }
