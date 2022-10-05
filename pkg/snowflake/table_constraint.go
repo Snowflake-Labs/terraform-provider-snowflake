@@ -38,7 +38,7 @@ func TableConstraint(name string, constraintType string, tableID string) *TableC
 	}
 }
 
-//WithComment sets comment
+// WithComment sets comment
 func (b *TableConstraintBuilder) WithComment(comment string) *TableConstraintBuilder {
 	b.comment = comment
 	return b
@@ -116,7 +116,7 @@ func (b *TableConstraintBuilder) WithDelete(onDelete string) *TableConstraintBui
 	return b
 }
 
-func (b *TableConstraintBuilder) formattedReferenceColumns()[]string {
+func (b *TableConstraintBuilder) formattedReferenceColumns() []string {
 	formattedColumns := make([]string, len(b.referenceColumns))
 	for i, c := range b.referenceColumns {
 		formattedColumns[i] = fmt.Sprintf(`"%v"`, EscapeString(c))
@@ -124,14 +124,13 @@ func (b *TableConstraintBuilder) formattedReferenceColumns()[]string {
 	return formattedColumns
 }
 
-func (b *TableConstraintBuilder) formattedColumns()[]string {
+func (b *TableConstraintBuilder) formattedColumns() []string {
 	formattedColumns := make([]string, len(b.columns))
 	for i, c := range b.columns {
 		formattedColumns[i] = fmt.Sprintf(`"%v"`, EscapeString(c))
 	}
 	return formattedColumns
 }
-
 
 // Create returns the SQL query that will create a new table constraint.
 func (b *TableConstraintBuilder) Create() string {
@@ -143,7 +142,7 @@ func (b *TableConstraintBuilder) Create() string {
 
 	if b.constraintType == "FOREIGN KEY" {
 		q.WriteString(fmt.Sprintf(` REFERENCES %v (%v)`, b.referenceTableID, strings.Join(b.formattedReferenceColumns(), ", ")))
-		
+
 		if b.match != "" {
 			q.WriteString(fmt.Sprintf(` MATCH %v`, b.match))
 		}
@@ -154,7 +153,6 @@ func (b *TableConstraintBuilder) Create() string {
 			q.WriteString(fmt.Sprintf(` ON DELETE %v`, b.delete))
 		}
 	}
-
 
 	if b.enforced {
 		q.WriteString(` ENFORCED`)
@@ -179,8 +177,6 @@ func (b *TableConstraintBuilder) Create() string {
 	if !b.rely {
 		q.WriteString(` NORELY`)
 	}
-
-
 
 	if b.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT '%v'`, EscapeString(b.comment)))
@@ -225,7 +221,7 @@ type tableConstraint struct {
 }
 
 // Show returns the SQL query that will show a table constraint by ID.
-func ShowTableConstraint(name,tableDB, tableSchema, tableName string, db *sql.DB) (*tableConstraint, error) {
+func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*tableConstraint, error) {
 	stmt := fmt.Sprintf(`SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '%v' AND TABLE_SCHEMA = '%v' AND TABLE_CATALOG = '%v' AND CONSTRAINT_NAME = '%v'`, tableName, tableSchema, tableDB, name)
 	rows, err := db.Query(stmt)
 	if err != nil {

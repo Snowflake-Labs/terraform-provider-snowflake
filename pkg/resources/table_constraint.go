@@ -26,7 +26,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"UNIQUE", "PRIMARY KEY", "FOREIGN KEY", "NOT NULL"}, false),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			return strings.EqualFold(old,new)
+			return strings.EqualFold(old, new)
 		},
 		StateFunc: func(val any) string {
 			return strings.ToUpper(val.(string))
@@ -147,7 +147,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					ValidateFunc: validation.StringInSlice([]string{"NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT"}, true),
 					Description:  "Specifies the action performed when the primary/unique key for the foreign key is updated. Not applicable for primary/unique keys",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						return strings.EqualFold(old,new)
+						return strings.EqualFold(old, new)
 					},
 					StateFunc: func(val any) string {
 						return strings.ToUpper(val.(string))
@@ -161,7 +161,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					ValidateFunc: validation.StringInSlice([]string{"NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT"}, true),
 					Description:  "Specifies the action performed when the primary/unique key for the foreign key is deleted. Not applicable for primary/unique keys",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						return strings.EqualFold(old,new)
+						return strings.EqualFold(old, new)
 					},
 					StateFunc: func(val any) string {
 						return strings.ToUpper(val.(string))
@@ -170,7 +170,6 @@ var tableConstraintSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	
 }
 
 func TableConstraint() *schema.Resource {
@@ -251,7 +250,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// set foreign key specific settings
-	if v, ok := d.GetOk("foreign_key_properties");ok{
+	if v, ok := d.GetOk("foreign_key_properties"); ok {
 		foreign_key_properties := v.([]interface{})[0].(map[string]interface{})
 		builder.WithMatch(foreign_key_properties["match"].(string))
 		builder.WithUpdate(foreign_key_properties["on_update"].(string))
@@ -260,7 +259,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		fkTableID := references["table_id"].(string)
 		formattedFkTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(fkTableID)
 		builder.WithReferenceTableID(formattedFkTableID)
-		log.Printf("reference table id : %s",formattedFkTableID)
+		log.Printf("reference table id : %s", formattedFkTableID)
 		cols := references["columns"].([]interface{})
 		var fkColumns []string
 		for _, c := range cols {
@@ -275,7 +274,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return errors.Wrapf(err, "error creating table constraint %v", name)
 	}
-	log.Printf("[DEBUG] result: %v\n",result)
+	log.Printf("[DEBUG] result: %v\n", result)
 
 	tc := tableConstraintID{
 		name,

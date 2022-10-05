@@ -42,7 +42,7 @@ resource "snowflake_database" "d" {
 	name = "%s"
 }
 
-resource "snowflake_schema" s" {
+resource "snowflake_schema" "s" {
 	name = "%s"
 	database = snowflake_database.d.name
 }
@@ -87,5 +87,5 @@ resource "snowflake_table_constraint" "fk" {
 	comment = "hello fk"
 }
 
-`, n, n, n, n,n)
+`, n, n, n, n, n)
 }
