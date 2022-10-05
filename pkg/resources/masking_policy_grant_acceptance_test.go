@@ -57,7 +57,7 @@ func maskingPolicyGrantConfig(name string) string {
 		schema = snowflake_schema.test.name
 		value_data_type = "VARCHAR"
 		masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-		return_data_type = "VARCHAR(16777216)"
+		return_data_type = "VARCHAR"
 		comment = "Terraform acceptance test"
 	}
 
