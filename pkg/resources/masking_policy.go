@@ -57,6 +57,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the data type to return.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		},
 	},
 	"comment": {
 		Type:        schema.TypeString,
