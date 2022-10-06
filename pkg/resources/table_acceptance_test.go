@@ -47,7 +47,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.comment", ""),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
