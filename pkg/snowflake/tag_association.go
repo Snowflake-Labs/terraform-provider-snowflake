@@ -21,19 +21,7 @@ type TagAssociationBuilder struct {
 }
 
 type tagAssociation struct {
-	ColumnId       sql.NullString `db:"COLUMN_ID"`
-	ColumnName     sql.NullString `db:"COLUMN_NAME"`
-	Domain         sql.NullString `db:"DOMAIN"`
-	ObjectDatabase sql.NullString `db:"OBJECT_DATABASE"`
-	ObjectDeleted  sql.NullString `db:"OBJECT_DELETED"`
-	ObjectId       sql.NullString `db:"OBJECT_ID"`
-	ObjectName     sql.NullString `db:"OBJECT_NAME"`
-	ObjectSchema   sql.NullString `db:"OBJECT_SCHEMA"`
-	TagDatabase    sql.NullString `db:"TAG_DATABASE"`
-	TagId          sql.NullString `db:"TAG_ID"`
-	TagName        sql.NullString `db:"TAG_NAME"`
-	TagSchema      sql.NullString `db:"TAG_SCHEMA"`
-	TagValue       sql.NullString `db:"TAG_VALUE"`
+	TagValue sql.NullString `db:"TAG_VALUE"`
 }
 
 // WithObjectId adds the name of the schema to the TagAssociationBuilder
@@ -72,8 +60,9 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 // TagAssociation returns a pointer to a Builder that abstracts the DDL operations for a tag sssociation.
 //
 // Supported DDL operations are:
-//   - CREATE TAG
-//   - DROP TAG
+//   - ALTER <object_type> SET TAG
+//   - ALTER <object_type> UNSET TAG
+//	 - SYSTEM$GET_TAG (get current tag value)
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAssociation(tagID string) *TagAssociationBuilder {
@@ -103,7 +92,7 @@ func (tb *TagAssociationBuilder) Drop() string {
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
-	stmt := fmt.Sprintf(`SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.TAG_REFERENCES WHERE TAG_NAME = '%v' AND DOMAIN = '%v' AND TAG_VALUE = '%v'`, tb.tagName, tb.objectType, tb.tagValue)
+	stmt := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectName, tb.objectType)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
