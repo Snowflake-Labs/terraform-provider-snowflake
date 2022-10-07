@@ -56,7 +56,7 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 		}
 		column {
 			name = "column2"
-			type = "VARCHAR(16777216)"
+			type = "VARCHAR"
 		}
 	}
 	

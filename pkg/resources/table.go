@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -58,6 +59,11 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "Column type, e.g. VARIANT",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+						varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+						return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+					},
 				},
 				"nullable": {
 					Type:        schema.TypeBool,
@@ -144,6 +150,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		MaxItems:    1,
 		Description: "Definitions of primary key constraint to create on table",
+		Deprecated:  "Use snowflake_table_constraint instead",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -548,26 +555,28 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
-	if err != nil {
-		return err
-	}
+	/*
+		deprecated as it conflicts with the new table_constraint resource
+		showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
+		if err != nil {
+			return err
+		}
 
-	pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
-	if err != nil {
-		return err
-	}
+		pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
+		if err != nil {
+			return err
+		}*/
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":                table.TableName.String,
-		"owner":               table.Owner.String,
-		"database":            tableID.DatabaseName,
-		"schema":              tableID.SchemaName,
-		"comment":             table.Comment.String,
-		"column":              snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by":          snowflake.ClusterStatementToList(table.ClusterBy.String),
-		"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		"name":       table.TableName.String,
+		"owner":      table.Owner.String,
+		"database":   tableID.DatabaseName,
+		"schema":     tableID.SchemaName,
+		"comment":    table.Comment.String,
+		"column":     snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
+		//"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
 		"data_retention_days": table.RetentionTime.Int32,
 		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}
@@ -661,7 +670,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		for _, cA := range changed {
 
 			if cA.changedDataType {
-
 				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
 				err := snowflake.Exec(db, q)
 				if err != nil {

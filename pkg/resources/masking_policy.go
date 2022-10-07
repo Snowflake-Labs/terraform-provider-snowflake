@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -40,6 +41,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the data type to mask.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		},
 	},
 	"masking_expression": {
 		Type:        schema.TypeString,
@@ -51,6 +57,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the data type to return.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		},
 	},
 	"comment": {
 		Type:        schema.TypeString,

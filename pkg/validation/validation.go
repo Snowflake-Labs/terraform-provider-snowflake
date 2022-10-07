@@ -93,21 +93,58 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 	return
 }
 
-func ValidateFullyQualifiedTagID(i interface{}, k string) (s []string, errors []error) {
+func ValidateFullyQualifiedObjectID(i interface{}, k string) (s []string, errors []error) {
 	v, _ := i.(string)
 	if strings.Contains(v, ".") {
 		tagArray := strings.Split(v, ".")
 		if len(tagArray) != 3 {
-			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using period delimiter, three parts must be specified dbName.schemaName.tagName ", v))
+			errors = append(errors, fmt.Errorf("%v, is not a valid id. If using period delimiter, three parts must be specified <db_name>.<schema_name>.<object_name>", v))
 		}
 	} else if strings.Contains(v, "|") {
 		tagArray := strings.Split(v, "|")
 		if len(tagArray) != 3 {
-			errors = append(errors, fmt.Errorf("%v, is not a valid tag id. If using pipe delimiter, three parts must be specified dbName|schemaName|tagName ", v))
+			errors = append(errors, fmt.Errorf("%v, is not a valid id. If using pipe delimiter, three parts must be specified <db_name>|<schema_name>|<object_name>", v))
 		}
 	} else {
-		errors = append(errors, fmt.Errorf("%v, is not a valid tag id. please use one of the following formats:"+
-			"\n'dbName'.'schemaName'.'tagName' or dbName|schemaName|tagName ", v))
+		errors = append(errors, fmt.Errorf("%v, is not a valid id. please use one of the following formats:"+
+			"\n'<db_name>'.'<schema_name>'.'<object_name>' or <db_name>|<schema_name>|<object_name>", v))
 	}
 	return
+}
+
+func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string {
+	var n strings.Builder
+
+	if dbName != "" && schemaName != "" {
+		n.WriteString(fmt.Sprintf(`"%v"."%v".`, dbName, schemaName))
+	}
+
+	if dbName != "" && schemaName == "" {
+		n.WriteString(fmt.Sprintf(`"%v"..`, dbName))
+	}
+
+	if dbName == "" && schemaName != "" {
+		n.WriteString(fmt.Sprintf(`"%v".`, schemaName))
+	}
+
+	n.WriteString(fmt.Sprintf(`"%v"`, objectName))
+
+	return n.String()
+}
+
+func ParseAndFormatFullyQualifiedObectID(s string) string {
+	dbName, schemaName, objectName := ParseFullyQualifiedObjectID(s)
+	return FormatFullyQualifiedObjectID(dbName, schemaName, objectName)
+}
+
+func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName string) {
+	parsedString := strings.Replace(s, "\"", "", -1)
+
+	var parts []string
+	if strings.Contains(parsedString, "|") {
+		parts = strings.Split(parsedString, "|")
+	} else if strings.Contains(parsedString, ".") {
+		parts = strings.Split(parsedString, ".")
+	}
+	return parts[0], parts[1], parts[2]
 }
