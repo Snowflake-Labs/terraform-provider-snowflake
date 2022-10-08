@@ -86,7 +86,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	},
 }
 
-// ResourceMonitor returns a pointer to the resource representing a resource monitor
+// ResourceMonitor returns a pointer to the resource representing a resource monitor.
 func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateResourceMonitor,
@@ -101,7 +101,7 @@ func ResourceMonitor() *schema.Resource {
 	}
 }
 
-// CreateResourceMonitor implents schema.CreateFunc
+// CreateResourceMonitor implents schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -164,7 +164,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ReadResourceMonitor implements schema.ReadFunc
+// ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stmt := snowflake.ResourceMonitor(d.Id()).Show()
@@ -242,7 +242,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v
+// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
 func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
 	for k, v := range ns {
 		var err error
@@ -259,7 +259,7 @@ func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullStr
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailling %s) into a slice of ints
+// separated string with trailling %s) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
 	if !s.Valid {
@@ -277,7 +277,7 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	return out, nil
 }
 
-// DeleteResourceMonitor implements schema.DeleteFunc
+// DeleteResourceMonitor implements schema.DeleteFunc.
 func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 

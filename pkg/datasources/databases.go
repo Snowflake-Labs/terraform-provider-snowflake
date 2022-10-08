@@ -75,7 +75,7 @@ var databasesSchema = map[string]*schema.Schema{
 	},
 }
 
-// Databases the Snowflake current account resource
+// Databases the Snowflake current account resource.
 func Databases() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadDatabases,
@@ -83,7 +83,7 @@ func Databases() *schema.Resource {
 	}
 }
 
-// ReadDatabases read the current snowflake account information
+// ReadDatabases read the current snowflake account information.
 func ReadDatabases(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbx := sqlx.NewDb(db, "snowflake")

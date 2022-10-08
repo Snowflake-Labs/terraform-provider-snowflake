@@ -140,7 +140,7 @@ var functionSchema = map[string]*schema.Schema{
 	},
 }
 
-// Function returns a pointer to the resource representing a stored function
+// Function returns a pointer to the resource representing a stored function.
 func Function() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateFunction,
@@ -155,7 +155,7 @@ func Function() *schema.Resource {
 	}
 }
 
-// CreateFunction implements schema.CreateFunc
+// CreateFunction implements schema.CreateFunc.
 func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -252,7 +252,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunction(d, meta)
 }
 
-// ReadFunction implements schema.ReadFunc
+// ReadFunction implements schema.ReadFunc.
 func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	functionID, err := splitFunctionID(d.Id())
@@ -401,7 +401,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateFunction implements schema.UpdateFunction
+// UpdateFunction implements schema.UpdateFunction.
 func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	pID, err := splitFunctionID(d.Id())
 	if err != nil {
@@ -461,7 +461,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunction(d, meta)
 }
 
-// DeleteFunction implements schema.DeleteFunc
+// DeleteFunction implements schema.DeleteFunc.
 func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pID, err := splitFunctionID(d.Id())
@@ -519,7 +519,7 @@ func splitFunctionID(v string) (*functionID, error) {
 	}, nil
 }
 
-// the opposite of splitFunctionID
+// the opposite of splitFunctionID.
 func (pi *functionID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v",
 		pi.DatabaseName,

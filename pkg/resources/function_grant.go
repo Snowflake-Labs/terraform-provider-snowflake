@@ -102,7 +102,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// FunctionGrant returns a pointer to the resource representing a function grant
+// FunctionGrant returns a pointer to the resource representing a function grant.
 func FunctionGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -120,7 +120,7 @@ func FunctionGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateFunctionGrant implements schema.CreateFunc
+// CreateFunctionGrant implements schema.CreateFunc.
 func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		functionName      string
@@ -187,7 +187,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunctionGrant(d, meta)
 }
 
-// ReadFunctionGrant implements schema.ReadFunc
+// ReadFunctionGrant implements schema.ReadFunc.
 func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		functionName  string
@@ -260,7 +260,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, functionGrantSchema, builder, futureFunctionsEnabled, validFunctionPrivileges)
 }
 
-// DeleteFunctionGrant implements schema.DeleteFunc
+// DeleteFunctionGrant implements schema.DeleteFunc.
 func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -286,7 +286,7 @@ func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateFunctionGrant implements schema.UpdateFunc
+// UpdateFunctionGrant implements schema.UpdateFunc.
 func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

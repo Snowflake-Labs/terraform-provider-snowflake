@@ -17,7 +17,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-// TerraformGrantResource augments terraform's *schema.Resource with extra context
+// TerraformGrantResource augments terraform's *schema.Resource with extra context.
 type TerraformGrantResource struct {
 	Resource   *schema.Resource
 	ValidPrivs PrivilegeSet
@@ -39,7 +39,7 @@ const (
 
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
-// build a nice go representation of a grant
+// build a nice go representation of a grant.
 type currentGrant struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
@@ -75,7 +75,7 @@ type grant struct {
 	GrantOption bool
 }
 
-// grantID contains identifying elements that allow unique access privileges
+// grantID contains identifying elements that allow unique access privileges.
 type grantID struct {
 	ResourceName string
 	SchemaName   string
@@ -86,7 +86,7 @@ type grantID struct {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption
+// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption.
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -103,7 +103,7 @@ func (gi *grantID) String() (string, error) {
 }
 
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
-// and returns a grantID object
+// and returns a grantID object.
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = grantIDDelimiter
@@ -159,7 +159,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	return grantResult, nil
 }
 
-// createGenericGrantRolesAndShares will create generic grants for a set of roles and shares
+// createGenericGrantRolesAndShares will create generic grants for a set of roles and shares.
 func createGenericGrantRolesAndShares(
 	meta interface{},
 	builder snowflake.GrantBuilder,
@@ -388,7 +388,7 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 }
 
 // Deletes specific roles and shares from a grant
-// Does not modify TF remote state
+// Does not modify TF remote state.
 func deleteGenericGrantRolesAndShares(
 	meta interface{},
 	builder snowflake.GrantBuilder,
@@ -487,7 +487,7 @@ func formatCallableObjectName(callableName string, returnType string, arguments 
 	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
 }
 
-// changeDiff calculates roles/shares to add/revoke
+// changeDiff calculates roles/shares to add/revoke.
 func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []string) {
 	o, n := d.GetChange(key)
 	oldSet := o.(*schema.Set)

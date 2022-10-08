@@ -116,7 +116,7 @@ func DiffTypes(k, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(strings.ToUpper(old), strings.ToUpper(new))
 }
 
-// Procedure returns a pointer to the resource representing a stored procedure
+// Procedure returns a pointer to the resource representing a stored procedure.
 func Procedure() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateProcedure,
@@ -131,7 +131,7 @@ func Procedure() *schema.Resource {
 	}
 }
 
-// CreateProcedure implements schema.CreateFunc
+// CreateProcedure implements schema.CreateFunc.
 func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -200,7 +200,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	return ReadProcedure(d, meta)
 }
 
-// ReadProcedure implements schema.ReadFunc
+// ReadProcedure implements schema.ReadFunc.
 func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	procedureID, err := splitProcedureID(d.Id())
@@ -330,7 +330,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateProcedure implements schema.UpdateProcedure
+// UpdateProcedure implements schema.UpdateProcedure.
 func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	pID, err := splitProcedureID(d.Id())
 	if err != nil {
@@ -402,7 +402,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	return ReadProcedure(d, meta)
 }
 
-// DeleteProcedure implements schema.DeleteFunc
+// DeleteProcedure implements schema.DeleteFunc.
 func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pID, err := splitProcedureID(d.Id())
@@ -460,7 +460,7 @@ func splitProcedureID(v string) (*procedureID, error) {
 	}, nil
 }
 
-// the opposite of splitProcedureID
+// the opposite of splitProcedureID.
 func (pi *procedureID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v",
 		pi.DatabaseName,

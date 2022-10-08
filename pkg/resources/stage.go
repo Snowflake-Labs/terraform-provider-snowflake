@@ -99,7 +99,7 @@ type stageID struct {
 }
 
 // String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName
+// DatabaseName|SchemaName|StageName.
 func (si *stageID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -114,7 +114,7 @@ func (si *stageID) String() (string, error) {
 }
 
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
-// and returns a stageID object
+// and returns a stageID object.
 func stageIDFromString(stringID string) (*stageID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = stageIDDelimiter
@@ -138,7 +138,7 @@ func stageIDFromString(stringID string) (*stageID, error) {
 	return stageResult, nil
 }
 
-// Stage returns a pointer to the resource representing a stage
+// Stage returns a pointer to the resource representing a stage.
 func Stage() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateStage,
@@ -153,7 +153,7 @@ func Stage() *schema.Resource {
 	}
 }
 
-// CreateStage implements schema.CreateFunc
+// CreateStage implements schema.CreateFunc.
 func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -222,7 +222,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 }
 
 // ReadStage implements schema.ReadFunc
-// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE
+// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE.
 func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stageID, err := stageIDFromString(d.Id())
@@ -319,7 +319,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateStage implements schema.UpdateFunc
+// UpdateStage implements schema.UpdateFunc.
 func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	stageID, err := stageIDFromString(d.Id())
 	if err != nil {
@@ -401,7 +401,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	return ReadStage(d, meta)
 }
 
-// DeleteStage implements schema.DeleteFunc
+// DeleteStage implements schema.DeleteFunc.
 func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stageID, err := stageIDFromString(d.Id())

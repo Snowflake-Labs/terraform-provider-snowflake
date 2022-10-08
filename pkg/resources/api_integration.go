@@ -90,7 +90,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// APIIntegration returns a pointer to the resource representing an api integration
+// APIIntegration returns a pointer to the resource representing an api integration.
 func APIIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateAPIIntegration,
@@ -105,7 +105,7 @@ func APIIntegration() *schema.Resource {
 	}
 }
 
-// CreateAPIIntegration implements schema.CreateFunc
+// CreateAPIIntegration implements schema.CreateFunc.
 func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -138,7 +138,7 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadAPIIntegration(d, meta)
 }
 
-// ReadAPIIntegration implements schema.ReadFunc
+// ReadAPIIntegration implements schema.ReadFunc.
 func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -231,7 +231,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateAPIIntegration implements schema.UpdateFunc
+// UpdateAPIIntegration implements schema.UpdateFunc.
 func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -294,7 +294,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadAPIIntegration(d, meta)
 }
 
-// DeleteAPIIntegration implements schema.DeleteFunc
+// DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.ApiIntegration)(d, meta)
 }

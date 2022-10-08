@@ -288,7 +288,7 @@ func (ffi *fileFormatID) String() (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
-// FileFormat returns a pointer to the resource representing a file format
+// FileFormat returns a pointer to the resource representing a file format.
 func FileFormat() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateFileFormat,
@@ -303,7 +303,7 @@ func FileFormat() *schema.Resource {
 	}
 }
 
-// CreateFileFormat implements schema.CreateFunc
+// CreateFileFormat implements schema.CreateFunc.
 func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
@@ -522,7 +522,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	return ReadFileFormat(d, meta)
 }
 
-// ReadFileFormat implements schema.ReadFunc
+// ReadFileFormat implements schema.ReadFunc.
 func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	fileFormatID, err := fileFormatIDFromString(d.Id())
@@ -725,7 +725,7 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateFileFormat implements schema.UpdateFunc
+// UpdateFileFormat implements schema.UpdateFunc.
 func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	fileFormatID, err := fileFormatIDFromString(d.Id())
 	if err != nil {
@@ -1023,7 +1023,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	return ReadFileFormat(d, meta)
 }
 
-// DeleteFileFormat implements schema.DeleteFunc
+// DeleteFileFormat implements schema.DeleteFunc.
 func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	fileFormatID, err := fileFormatIDFromString(d.Id())

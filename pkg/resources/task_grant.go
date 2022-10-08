@@ -69,7 +69,7 @@ var taskGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// TaskGrant returns a pointer to the resource representing a task grant
+// TaskGrant returns a pointer to the resource representing a task grant.
 func TaskGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -87,7 +87,7 @@ func TaskGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateTaskGrant implements schema.CreateFunc
+// CreateTaskGrant implements schema.CreateFunc.
 func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	var taskName string
 	if name, ok := d.GetOk("task_name"); ok {
@@ -136,7 +136,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadTaskGrant(d, meta)
 }
 
-// ReadTaskGrant implements schema.ReadFunc
+// ReadTaskGrant implements schema.ReadFunc.
 func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -186,7 +186,7 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, taskGrantSchema, builder, futureTasksEnabled, validTaskPrivileges)
 }
 
-// DeleteTaskGrant implements schema.DeleteFunc
+// DeleteTaskGrant implements schema.DeleteFunc.
 func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -207,7 +207,7 @@ func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateTaskGrant implements schema.UpdateFunc
+// UpdateTaskGrant implements schema.UpdateFunc.
 func UpdateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

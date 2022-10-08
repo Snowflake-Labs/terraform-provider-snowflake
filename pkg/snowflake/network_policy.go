@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NetworkPolicyBuilder abstracts the creation of SQL queries for a Snowflake Network Policy
+// NetworkPolicyBuilder abstracts the creation of SQL queries for a Snowflake Network Policy.
 type NetworkPolicyBuilder struct {
 	name          string
 	comment       string
@@ -16,19 +16,19 @@ type NetworkPolicyBuilder struct {
 	blockedIpList string
 }
 
-// WithComment adds a comment to the NetworkPolicyBuilder
+// WithComment adds a comment to the NetworkPolicyBuilder.
 func (npb *NetworkPolicyBuilder) WithComment(c string) *NetworkPolicyBuilder {
 	npb.comment = EscapeString(c)
 	return npb
 }
 
-// WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder
+// WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder.
 func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *NetworkPolicyBuilder {
 	npb.allowedIpList = helpers.IpListToSnowflakeString(allowedIps)
 	return npb
 }
 
-// WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder
+// WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder.
 func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
 	npb.blockedIpList = helpers.IpListToSnowflakeString(blockedIps)
 	return npb
@@ -61,7 +61,7 @@ func (npb *NetworkPolicyBuilder) Create() string {
 	return createSql
 }
 
-// Describe returns the SQL query that will describe a network policy
+// Describe returns the SQL query that will describe a network policy.
 func (npb *NetworkPolicyBuilder) Describe() string {
 	return fmt.Sprintf(`DESC NETWORK POLICY "%v"`, npb.name)
 }
@@ -86,38 +86,38 @@ func (npb *NetworkPolicyBuilder) Drop() string {
 	return fmt.Sprintf(`DROP NETWORK POLICY "%v"`, npb.name)
 }
 
-// SetOnAccount returns the SQL query that will set the network policy globally on your Snowflake account
+// SetOnAccount returns the SQL query that will set the network policy globally on your Snowflake account.
 func (npb *NetworkPolicyBuilder) SetOnAccount() string {
 	return fmt.Sprintf(`ALTER ACCOUNT SET NETWORK_POLICY = "%v"`, npb.name)
 }
 
-// UnsetOnAccount returns the SQL query that will unset the network policy globally on your Snowflake account
+// UnsetOnAccount returns the SQL query that will unset the network policy globally on your Snowflake account.
 func (npb *NetworkPolicyBuilder) UnsetOnAccount() string {
 	return `ALTER ACCOUNT UNSET NETWORK_POLICY`
 }
 
-// SetOnUser returns the SQL query that will set the network policy on a given user
+// SetOnUser returns the SQL query that will set the network policy on a given user.
 func (npb *NetworkPolicyBuilder) SetOnUser(u string) string {
 	return fmt.Sprintf(`ALTER USER "%v" SET NETWORK_POLICY = "%v"`, u, npb.name)
 }
 
-// UnsetOnUser returns the SQL query that will unset the network policy of a given user
+// UnsetOnUser returns the SQL query that will unset the network policy of a given user.
 func (npb *NetworkPolicyBuilder) UnsetOnUser(u string) string {
 	return fmt.Sprintf(`ALTER USER "%v" UNSET NETWORK_POLICY`, u)
 }
 
 // ShowAllNetworkPolicies returns the SQL query that will SHOW *all* network policies in the Snowflake account
-// Snowflake's implementation of SHOW for network policies does *not* support limiting results with LIKE
+// Snowflake's implementation of SHOW for network policies does *not* support limiting results with LIKE.
 func (npb *NetworkPolicyBuilder) ShowAllNetworkPolicies() string {
 	return `SHOW NETWORK POLICIES`
 }
 
-// ShowOnUser returns the SQL query that will SHOW network policy set on a specific User
+// ShowOnUser returns the SQL query that will SHOW network policy set on a specific User.
 func (npb *NetworkPolicyBuilder) ShowOnUser(u string) string {
 	return fmt.Sprintf(`SHOW PARAMETERS LIKE 'network_policy' IN USER "%v"`, u)
 }
 
-// ShowOnAccount returns the SQL query that will SHOW network policy set on Account
+// ShowOnAccount returns the SQL query that will SHOW network policy set on Account.
 func (npb *NetworkPolicyBuilder) ShowOnAccount() string {
 	return `SHOW PARAMETERS LIKE 'network_policy' IN ACCOUNT`
 }
@@ -136,7 +136,7 @@ type NetworkPolicyAttachmentStruct struct {
 	Level sql.NullString `db:"level"`
 }
 
-// ScanNetworkPolicies takes database rows and converts them to a list of NetworkPolicyStruct pointers
+// ScanNetworkPolicies takes database rows and converts them to a list of NetworkPolicyStruct pointers.
 func ScanNetworkPolicies(rows *sqlx.Rows) ([]*NetworkPolicyStruct, error) {
 	var n []*NetworkPolicyStruct
 

@@ -102,7 +102,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// StorageIntegration returns a pointer to the resource representing a storage integration
+// StorageIntegration returns a pointer to the resource representing a storage integration.
 func StorageIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateStorageIntegration,
@@ -117,7 +117,7 @@ func StorageIntegration() *schema.Resource {
 	}
 }
 
-// CreateStorageIntegration implements schema.CreateFunc
+// CreateStorageIntegration implements schema.CreateFunc.
 func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -159,7 +159,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadStorageIntegration(d, meta)
 }
 
-// ReadStorageIntegration implements schema.ReadFunc
+// ReadStorageIntegration implements schema.ReadFunc.
 func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -276,7 +276,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateStorageIntegration implements schema.UpdateFunc
+// UpdateStorageIntegration implements schema.UpdateFunc.
 func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -364,7 +364,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadStorageIntegration(d, meta)
 }
 
-// DeleteStorageIntegration implements schema.DeleteFunc
+// DeleteStorageIntegration implements schema.DeleteFunc.
 func DeleteStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.StorageIntegration)(d, meta)
 }

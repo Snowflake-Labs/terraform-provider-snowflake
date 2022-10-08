@@ -14,20 +14,20 @@ func EscapeString(in string) string {
 	return out
 }
 
-// UnescapeString reverses EscapeString
+// UnescapeString reverses EscapeString.
 func UnescapeString(in string) string {
 	out := strings.Replace(in, `\\`, `\`, -1)
 	out = strings.Replace(out, `\'`, `'`, -1)
 	return out
 }
 
-// EscapeSnowflakeString will escape single quotes with the SQL native double single quote
+// EscapeSnowflakeString will escape single quotes with the SQL native double single quote.
 func EscapeSnowflakeString(in string) string {
 	out := strings.Replace(in, `'`, `''`, -1)
 	return fmt.Sprintf(`'%v'`, out)
 }
 
-// UnescapeSnowflakeString reverses EscapeSnowflakeString
+// UnescapeSnowflakeString reverses EscapeSnowflakeString.
 func UnescapeSnowflakeString(in string) string {
 	out := strings.TrimPrefix(in, `'`)
 	out = strings.TrimSuffix(out, `'`)
@@ -35,7 +35,7 @@ func UnescapeSnowflakeString(in string) string {
 	return out
 }
 
-// AddressEscape wraps a name inside double quotes only if required by Snowflake
+// AddressEscape wraps a name inside double quotes only if required by Snowflake.
 func AddressEscape(in ...string) string {
 	quoteCheck := regexp.MustCompile(`[^A-Z0-9_]`)
 	address := make([]string, len(in))

@@ -203,7 +203,7 @@ func (v *tableConstraintID) parse(s string) {
 	v.tableID = parts[2]
 }
 
-// CreateTableConstraint implements schema.CreateFunc
+// CreateTableConstraint implements schema.CreateFunc.
 func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -286,7 +286,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	return ReadTableConstraint(d, meta)
 }
 
-// ReadTableConstraint implements schema.ReadFunc
+// ReadTableConstraint implements schema.ReadFunc.
 func ReadTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	//commenting this out since it requires an active warehouse to be set which may not be intuitive.
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
@@ -306,7 +306,7 @@ func ReadTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateTableConstraint implements schema.UpdateFunc
+// UpdateTableConstraint implements schema.UpdateFunc.
 func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tc := tableConstraintID{}
@@ -335,7 +335,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	return ReadTableConstraint(d, meta)
 }
 
-// DeleteTableConstraint implements schema.DeleteFunc
+// DeleteTableConstraint implements schema.DeleteFunc.
 func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tc := tableConstraintID{}

@@ -113,7 +113,7 @@ type pipeID struct {
 }
 
 // String() takes in a pipeID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|PipeName
+// DatabaseName|SchemaName|PipeName.
 func (si *pipeID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -128,7 +128,7 @@ func (si *pipeID) String() (string, error) {
 }
 
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
-// and returns a pipeID object
+// and returns a pipeID object.
 func pipeIDFromString(stringID string) (*pipeID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = pipeIDDelimiter
@@ -152,7 +152,7 @@ func pipeIDFromString(stringID string) (*pipeID, error) {
 	return pipeResult, nil
 }
 
-// CreatePipe implements schema.CreateFunc
+// CreatePipe implements schema.CreateFunc.
 func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -207,7 +207,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipe(d, meta)
 }
 
-// ReadPipe implements schema.ReadFunc
+// ReadPipe implements schema.ReadFunc.
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pipeID, err := pipeIDFromString(d.Id())
@@ -290,7 +290,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdatePipe implements schema.UpdateFunc
+// UpdatePipe implements schema.UpdateFunc.
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
@@ -329,7 +329,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipe(d, meta)
 }
 
-// DeletePipe implements schema.DeleteFunc
+// DeletePipe implements schema.DeleteFunc.
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pipeID, err := pipeIDFromString(d.Id())

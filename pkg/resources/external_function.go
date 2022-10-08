@@ -171,7 +171,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 	},
 }
 
-// ExternalFunction returns a pointer to the resource representing an external function
+// ExternalFunction returns a pointer to the resource representing an external function.
 func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateExternalFunction,
@@ -227,7 +227,7 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 	}, nil
 }
 
-// CreateExternalFunction implements schema.CreateFunc
+// CreateExternalFunction implements schema.CreateFunc.
 func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -324,7 +324,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadExternalFunction(d, meta)
 }
 
-// ReadExternalFunction implements schema.ReadFunc
+// ReadExternalFunction implements schema.ReadFunc.
 func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalFunctionID, err := externalFunctionIDFromString(d.Id())
@@ -495,7 +495,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// DeleteExternalFunction implements schema.DeleteFunc
+// DeleteExternalFunction implements schema.DeleteFunc.
 func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalFunctionID, err := externalFunctionIDFromString(d.Id())

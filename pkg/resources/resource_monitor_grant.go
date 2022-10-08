@@ -48,7 +48,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant
+// ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant.
 func ResourceMonitorGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -63,7 +63,7 @@ func ResourceMonitorGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateResourceMonitorGrant implements schema.CreateFunc
+// CreateResourceMonitorGrant implements schema.CreateFunc.
 func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("monitor_name").(string)
 	priv := d.Get("privilege").(string)
@@ -91,7 +91,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 	return ReadResourceMonitorGrant(d, meta)
 }
 
-// ReadResourceMonitorGrant implements schema.ReadFunc
+// ReadResourceMonitorGrant implements schema.ReadFunc.
 func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -117,7 +117,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
 }
 
-// DeleteResourceMonitorGrant implements schema.DeleteFunc
+// DeleteResourceMonitorGrant implements schema.DeleteFunc.
 func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -130,7 +130,7 @@ func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateResourceMonitorGrant implements schema.UpdateFunc
+// UpdateResourceMonitorGrant implements schema.UpdateFunc.
 func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

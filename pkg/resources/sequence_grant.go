@@ -68,7 +68,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// SequenceGrant returns a pointer to the resource representing a sequence grant
+// SequenceGrant returns a pointer to the resource representing a sequence grant.
 func SequenceGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -86,7 +86,7 @@ func SequenceGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateSequenceGrant implements schema.CreateFunc
+// CreateSequenceGrant implements schema.CreateFunc.
 func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	var sequenceName string
 	if name, ok := d.GetOk("sequence_name"); ok {
@@ -135,7 +135,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadSequenceGrant(d, meta)
 }
 
-// ReadSequenceGrant implements schema.ReadFunc
+// ReadSequenceGrant implements schema.ReadFunc.
 func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, sequenceGrantSchema, builder, futureSequencesEnabled, validSequencePrivileges)
 }
 
-// DeleteSequenceGrant implements schema.DeleteFunc
+// DeleteSequenceGrant implements schema.DeleteFunc.
 func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateSequenceGrant implements schema.UpdateFunc
+// UpdateSequenceGrant implements schema.UpdateFunc.
 func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

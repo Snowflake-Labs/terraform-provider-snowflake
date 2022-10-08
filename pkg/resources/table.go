@@ -206,7 +206,7 @@ type tableID struct {
 }
 
 // String() takes in a tableID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TableName
+// DatabaseName|SchemaName|TableName.
 func (si *tableID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -221,7 +221,7 @@ func (si *tableID) String() (string, error) {
 }
 
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
-// and returns a tableID object
+// and returns a tableID object.
 func tableIDFromString(stringID string) (*tableID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tableIDDelimiter
@@ -465,7 +465,7 @@ func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 
 }
 
-// CreateTable implements schema.CreateFunc
+// CreateTable implements schema.CreateFunc.
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -523,7 +523,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadTable(d, meta)
 }
 
-// ReadTable implements schema.ReadFunc
+// ReadTable implements schema.ReadFunc.
 func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tableID, err := tableIDFromString(d.Id())
@@ -590,7 +590,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateTable implements schema.UpdateFunc
+// UpdateTable implements schema.UpdateFunc.
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
@@ -755,7 +755,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadTable(d, meta)
 }
 
-// DeleteTable implements schema.DeleteFunc
+// DeleteTable implements schema.DeleteFunc.
 func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tableID, err := tableIDFromString(d.Id())

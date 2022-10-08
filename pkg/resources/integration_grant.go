@@ -47,7 +47,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// IntegrationGrant returns a pointer to the resource representing a integration grant
+// IntegrationGrant returns a pointer to the resource representing a integration grant.
 func IntegrationGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -65,7 +65,7 @@ func IntegrationGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateIntegrationGrant implements schema.CreateFunc
+// CreateIntegrationGrant implements schema.CreateFunc.
 func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("integration_name").(string)
 	priv := d.Get("privilege").(string)
@@ -94,7 +94,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadIntegrationGrant(d, meta)
 }
 
-// ReadIntegrationGrant implements schema.ReadFunc
+// ReadIntegrationGrant implements schema.ReadFunc.
 func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -121,7 +121,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
 }
 
-// DeleteIntegrationGrant implements schema.DeleteFunc
+// DeleteIntegrationGrant implements schema.DeleteFunc.
 func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -134,7 +134,7 @@ func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateIntegrationGrant implements schema.UpdateFunc
+// UpdateIntegrationGrant implements schema.UpdateFunc.
 func UpdateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

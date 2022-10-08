@@ -14,12 +14,12 @@ import (
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/database-replication-config.html)
 
-// ReplicationBuilder is a basic builder that enables replication on databases
+// ReplicationBuilder is a basic builder that enables replication on databases.
 type ReplicationBuilder struct {
 	database string
 }
 
-// DatabaseFromDatabase returns a pointer to a builder that can create a database from a source database
+// DatabaseFromDatabase returns a pointer to a builder that can create a database from a source database.
 func Replication(database string) *ReplicationBuilder {
 	return &ReplicationBuilder{
 		database: database,

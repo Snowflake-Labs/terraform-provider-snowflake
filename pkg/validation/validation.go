@@ -61,7 +61,7 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 
 // ValidateIsNotAccountLocator validates that the account value is not an account locator. Account locators have the
 // following format: 8 characters where the first 3 characters are letters and the last 5 are digits. ex: ABC12345
-// The desired format should be 'organization_name.account_name' ex: testOrgName.testAccName
+// The desired format should be 'organization_name.account_name' ex: testOrgName.testAccName.
 func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []error) {
 	v, ok := i.(string)
 	if !ok {
