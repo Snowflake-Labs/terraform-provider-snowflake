@@ -7,6 +7,7 @@ import (
 )
 
 func MustFixture(t *testing.T, name string) string {
+	t.Helper()
 	b, err := Fixture(name)
 	if err != nil {
 		t.Error(err)

@@ -16,6 +16,7 @@ import (
 const functionBody string = "def add_py(i, j): return i+j"
 
 func prepDummyFunctionResource(t *testing.T) *schema.ResourceData {
+	t.Helper()
 	argument1 := map[string]interface{}{"name": "data", "type": "varchar"}
 	argument2 := map[string]interface{}{"name": "event_dt", "type": "date"}
 	in := map[string]interface{}{
