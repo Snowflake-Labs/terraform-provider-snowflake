@@ -103,7 +103,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		Optional:    true,
 		ForceNew:    true,
 		MaxItems:    1,
-		Description: "Addtional properties when type is set to foreign key. Not applicable for primary/unique keys",
+		Description: "Additional properties when type is set to foreign key. Not applicable for primary/unique keys",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"references": {

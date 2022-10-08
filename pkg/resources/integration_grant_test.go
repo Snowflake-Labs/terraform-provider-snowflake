@@ -45,9 +45,9 @@ func TestIntegrationGrantCreate(t *testing.T) {
 func TestIntegrationGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES||false", map[string]interface{}{
+	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILEGES||false", map[string]interface{}{
 		"integration_name":  "test-integration",
-		"privilege":         "IMPORTED PRIVILIGES",
+		"privilege":         "IMPORTED PRIVILEGES",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	})

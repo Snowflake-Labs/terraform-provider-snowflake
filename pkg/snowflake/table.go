@@ -689,7 +689,7 @@ func (td *tableDescription) ColumnDefault() *ColumnDefault {
 
 	if td.ColumnIdentity() != nil {
 		/*
-			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity seperate so will return nil
+			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity separate so will return nil
 			here if identity information is present. Default/identity are mutually exclusive
 		*/
 		return nil

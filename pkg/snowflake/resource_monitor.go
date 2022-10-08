@@ -163,7 +163,7 @@ func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
 	dbs := []resourceMonitor{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no resouce monitors found")
+		log.Println("[DEBUG] no resource monitors found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
