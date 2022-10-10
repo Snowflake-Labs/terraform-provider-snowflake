@@ -44,7 +44,7 @@ var procedureSchema = map[string]*schema.Schema{
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
 					},
-					Description:      "The argument name",
+					Description: "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
@@ -53,7 +53,7 @@ var procedureSchema = map[string]*schema.Schema{
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
 					},
-					Description:      "The argument type",
+					Description: "The argument type",
 				},
 			},
 		},
@@ -71,7 +71,7 @@ var procedureSchema = map[string]*schema.Schema{
 			}
 
 			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
-			if slices.Contains(varcharType, strings.ToUpper(old)) && slices.Contains(varcharType, strings.ToUpper(new)){
+			if slices.Contains(varcharType, strings.ToUpper(old)) && slices.Contains(varcharType, strings.ToUpper(new)) {
 				return true
 			}
 
@@ -82,8 +82,8 @@ var procedureSchema = map[string]*schema.Schema{
 			}
 			return false
 		},
-		Required:         true,
-		ForceNew:         true,
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
