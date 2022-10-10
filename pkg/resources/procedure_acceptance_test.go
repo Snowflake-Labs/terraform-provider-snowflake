@@ -52,7 +52,6 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
 
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "name", procName),
-					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "return_type", "NUMBER(38,0)"),
 				),
 			},
 			{
