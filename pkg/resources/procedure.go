@@ -41,14 +41,18 @@ var procedureSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
 					Description:      "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
 					Description:      "The argument type",
 				},
 			},
@@ -61,7 +65,23 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "The return type of the procedure",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.EqualFold(old, new) {
+				return true
+			}
+
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			if slices.Contains(varcharType, strings.ToUpper(old)) && slices.Contains(varcharType, strings.ToUpper(new)){
+				return true
+			}
+
+			// all these types are equivalent https://docs.snowflake.com/en/sql-reference/data-types-numeric.html#int-integer-bigint-smallint-tinyint-byteint
+			integerTypes := []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT", "NUMBER(38,0)"}
+			if slices.Contains(integerTypes, strings.ToUpper(old)) && slices.Contains(integerTypes, strings.ToUpper(new)) {
+				return true
+			}
+			return false
+		},
 		Required:         true,
 		ForceNew:         true,
 	},
@@ -77,15 +97,7 @@ var procedureSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  "SQL",
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if strings.EqualFold(old, new) {
-				return true
-			}
-			integerTypes := []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT", "NUMBER(38,0)"}
-			// all these types are equivalent https://docs.snowflake.com/en/sql-reference/data-types-numeric.html#int-integer-bigint-smallint-tinyint-byteint
-			if slices.Contains(integerTypes, strings.ToUpper(old)) && slices.Contains(integerTypes, strings.ToUpper(new)) {
-				return true
-			}
-			return false
+			return strings.EqualFold(old, new)
 		},
 		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
 		Description:  "Specifies the language of the stored procedure code.",
