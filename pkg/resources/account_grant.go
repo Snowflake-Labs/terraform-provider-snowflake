@@ -61,7 +61,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// AccountGrant returns a pointer to the resource representing an account grant
+// AccountGrant returns a pointer to the resource representing an account grant.
 func AccountGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -79,7 +79,7 @@ func AccountGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateAccountGrant implements schema.CreateFunc
+// CreateAccountGrant implements schema.CreateFunc.
 func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
@@ -107,7 +107,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadAccountGrant(d, meta)
 }
 
-// ReadAccountGrant implements schema.ReadFunc
+// ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -127,14 +127,14 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
 }
 
-// DeleteAccountGrant implements schema.DeleteFunc
+// DeleteAccountGrant implements schema.DeleteFunc.
 func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateAccountGrant implements schema.UpdateFunc
+// UpdateAccountGrant implements schema.UpdateFunc.
 func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles.
 	// if nothing changed, nothing to update and we're done.

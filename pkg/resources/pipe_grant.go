@@ -68,7 +68,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// PipeGrant returns a pointer to the resource representing a pipe grant
+// PipeGrant returns a pointer to the resource representing a pipe grant.
 func PipeGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -86,7 +86,7 @@ func PipeGrant() *TerraformGrantResource {
 	}
 }
 
-// CreatePipeGrant implements schema.CreateFunc
+// CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	var pipeName string
 	if name, ok := d.GetOk("pipe_name"); ok {
@@ -135,7 +135,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipeGrant(d, meta)
 }
 
-// ReadPipeGrant implements schema.ReadFunc
+// ReadPipeGrant implements schema.ReadFunc.
 func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, pipeGrantSchema, builder, futurePipesEnabled, validPipePrivileges)
 }
 
-// DeletePipeGrant implements schema.DeleteFunc
+// DeletePipeGrant implements schema.DeleteFunc.
 func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdatePipeGrant implements schema.UpdateFunc
+// UpdatePipeGrant implements schema.UpdateFunc.
 func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

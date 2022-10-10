@@ -70,7 +70,7 @@ var (
 		},
 	}
 
-	// Enables the Child and changes the SQL
+	// Enables the Child and changes the SQL.
 	stepOne = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
@@ -105,7 +105,7 @@ var (
 		},
 	}
 
-	// Changes Root Schedule and SQL
+	// Changes Root Schedule and SQL.
 	stepTwo = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,

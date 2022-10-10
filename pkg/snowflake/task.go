@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TaskBuilder abstracts the creation of sql queries for a snowflake task
+// TaskBuilder abstracts the creation of sql queries for a snowflake task.
 type TaskBuilder struct {
 	name                                     string
 	db                                       string
@@ -31,7 +31,7 @@ type TaskBuilder struct {
 	errorIntegration                         string
 }
 
-// GetFullName prepends db and schema to in parameter
+// GetFullName prepends db and schema to in parameter.
 func (tb *TaskBuilder) GetFullName(in string) string {
 	var n strings.Builder
 
@@ -40,71 +40,71 @@ func (tb *TaskBuilder) GetFullName(in string) string {
 	return n.String()
 }
 
-// QualifiedName prepends the db and schema and escapes everything nicely
+// QualifiedName prepends the db and schema and escapes everything nicely.
 func (tb *TaskBuilder) QualifiedName() string {
 	return tb.GetFullName(tb.name)
 }
 
-// Name returns the name of the task
+// Name returns the name of the task.
 func (tb *TaskBuilder) Name() string {
 	return tb.name
 }
 
-// WithWarehouse adds a warehouse to the TaskBuilder
+// WithWarehouse adds a warehouse to the TaskBuilder.
 func (tb *TaskBuilder) WithWarehouse(s string) *TaskBuilder {
 	tb.warehouse = s
 	return tb
 }
 
-// WithSchedule adds a schedule to the TaskBuilder
+// WithSchedule adds a schedule to the TaskBuilder.
 func (tb *TaskBuilder) WithSchedule(s string) *TaskBuilder {
 	tb.schedule = s
 	return tb
 }
 
-// WithSessionParameters adds session parameters to the TaskBuilder
+// WithSessionParameters adds session parameters to the TaskBuilder.
 func (tb *TaskBuilder) WithSessionParameters(params map[string]interface{}) *TaskBuilder {
 	tb.session_parameters = params
 	return tb
 }
 
-// WithComment adds a comment to the TaskBuilder
+// WithComment adds a comment to the TaskBuilder.
 func (tb *TaskBuilder) WithComment(c string) *TaskBuilder {
 	tb.comment = c
 	return tb
 }
 
-// WithTimeout adds a timeout to the TaskBuilder
+// WithTimeout adds a timeout to the TaskBuilder.
 func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	tb.user_task_timeout_ms = t
 	return tb
 }
 
-// WithDependency adds an after task dependency to the TaskBuilder
+// WithDependency adds an after task dependency to the TaskBuilder.
 func (tb *TaskBuilder) WithDependency(after string) *TaskBuilder {
 	tb.after = after
 	return tb
 }
 
-// WithCondition adds a when condition to the TaskBuilder
+// WithCondition adds a when condition to the TaskBuilder.
 func (tb *TaskBuilder) WithCondition(when string) *TaskBuilder {
 	tb.when = when
 	return tb
 }
 
-// WithStatement adds a sql statement to the TaskBuilder
+// WithStatement adds a sql statement to the TaskBuilder.
 func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
 	tb.sql_statement = sql
 	return tb
 }
 
-// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder
+// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder.
 func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *TaskBuilder {
 	tb.user_task_managed_initial_warehouse_size = initialWarehouseSize
 	return tb
 }
 
-// / WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
+// / WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder.
 func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 	tb.errorIntegration = s
 	return tb
@@ -128,7 +128,7 @@ func Task(name, db, schema string) *TaskBuilder {
 	}
 }
 
-// Create returns the SQL that will create a new task
+// Create returns the SQL that will create a new task.
 func (tb *TaskBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(`CREATE`)
@@ -243,7 +243,7 @@ func (tb *TaskBuilder) RemoveDependency(after string) string {
 	return fmt.Sprintf(`ALTER TASK %v REMOVE AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
 }
 
-// AddSessionParameters returns the sql that will remove the session parameters for the task
+// AddSessionParameters returns the sql that will remove the session parameters for the task.
 func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) string {
 	p := make([]string, 0)
 	sortedKeys := make([]string, 0)
@@ -259,7 +259,7 @@ func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) strin
 	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
 }
 
-// RemoveSessionParameters returns the sql that will remove the session parameters for the task
+// RemoveSessionParameters returns the sql that will remove the session parameters for the task.
 func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) string {
 	sortedKeys := make([]string, 0)
 	for k := range params {
@@ -305,18 +305,18 @@ func (tb *TaskBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN SCHEMA "%v"."%v"`, EscapeString(tb.name), EscapeString(tb.db), EscapeString(tb.schema))
 }
 
-// ShowParameters returns the query to show the session parameters for the task
+// ShowParameters returns the query to show the session parameters for the task.
 func (tb *TaskBuilder) ShowParameters() string {
 	return fmt.Sprintf(`SHOW PARAMETERS IN TASK %v`, tb.QualifiedName())
 }
 
-// SetDisabled disables the task builder
+// SetDisabled disables the task builder.
 func (tb *TaskBuilder) SetDisabled() *TaskBuilder {
 	tb.disabled = true
 	return tb
 }
 
-// IsDisabled returns if the task builder is disabled
+// IsDisabled returns if the task builder is disabled.
 func (tb *TaskBuilder) IsDisabled() bool {
 	return tb.disabled
 }
@@ -375,14 +375,14 @@ func (t *task) GetPredecessorName() string {
 	return name
 }
 
-// ScanTask turns a sql row into a task object
+// ScanTask turns a sql row into a task object.
 func ScanTask(row *sqlx.Row) (*task, error) {
 	t := &task{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-// taskParams struct to represent a row of parameters
+// taskParams struct to represent a row of parameters.
 type taskParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
@@ -391,7 +391,7 @@ type taskParams struct {
 	Description  string `db:"description"`
 }
 
-// ScanTaskParameters takes a database row and converts it to a task parameter pointer
+// ScanTaskParameters takes a database row and converts it to a task parameter pointer.
 func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 	t := []*taskParams{}
 

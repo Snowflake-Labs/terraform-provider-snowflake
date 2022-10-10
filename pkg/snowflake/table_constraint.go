@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TableConstraintBuilder abstracts the creation of SQL queries for a Snowflake table constraint
+// TableConstraintBuilder abstracts the creation of SQL queries for a Snowflake table constraint.
 type TableConstraintBuilder struct {
 	name             string
 	columns          []string
@@ -38,79 +38,79 @@ func TableConstraint(name string, constraintType string, tableID string) *TableC
 	}
 }
 
-// WithComment sets comment
+// WithComment sets comment.
 func (b *TableConstraintBuilder) WithComment(comment string) *TableConstraintBuilder {
 	b.comment = comment
 	return b
 }
 
-// WithColumns sets columns
+// WithColumns sets columns.
 func (b *TableConstraintBuilder) WithColumns(columns []string) *TableConstraintBuilder {
 	b.columns = columns
 	return b
 }
 
-// WithEnforced sets enforced
+// WithEnforced sets enforced.
 func (b *TableConstraintBuilder) WithEnforced(enforced bool) *TableConstraintBuilder {
 	b.enforced = enforced
 	return b
 }
 
-// WithDeferrable sets deferrable
+// WithDeferrable sets deferrable.
 func (b *TableConstraintBuilder) WithDeferrable(deferrable bool) *TableConstraintBuilder {
 	b.deferrable = deferrable
 	return b
 }
 
-// WithInitially sets initially
+// WithInitially sets initially.
 func (b *TableConstraintBuilder) WithInitially(initially string) *TableConstraintBuilder {
 	b.initially = initially
 	return b
 }
 
-// WithEnable sets enable
+// WithEnable sets enable.
 func (b *TableConstraintBuilder) WithEnable(enable bool) *TableConstraintBuilder {
 	b.enable = enable
 	return b
 }
 
-// WithValidated sets validated
+// WithValidated sets validated.
 func (b *TableConstraintBuilder) WithValidate(validate bool) *TableConstraintBuilder {
 	b.validate = validate
 	return b
 }
 
-// WithRely sets rely
+// WithRely sets rely.
 func (b *TableConstraintBuilder) WithRely(rely bool) *TableConstraintBuilder {
 	b.rely = rely
 	return b
 }
 
-// WithReferenceTableID sets referenceTableID
+// WithReferenceTableID sets referenceTableID.
 func (b *TableConstraintBuilder) WithReferenceTableID(referenceTableID string) *TableConstraintBuilder {
 	b.referenceTableID = referenceTableID
 	return b
 }
 
-// WithReferenceColumns sets referenceColumns
+// WithReferenceColumns sets referenceColumns.
 func (b *TableConstraintBuilder) WithReferenceColumns(referenceColumns []string) *TableConstraintBuilder {
 	b.referenceColumns = referenceColumns
 	return b
 }
 
-// WithMatch sets match
+// WithMatch sets match.
 func (b *TableConstraintBuilder) WithMatch(match string) *TableConstraintBuilder {
 	b.match = match
 	return b
 }
 
-// WithUpdate sets update
+// WithUpdate sets update.
 func (b *TableConstraintBuilder) WithUpdate(onUpdate string) *TableConstraintBuilder {
 	b.update = onUpdate
 	return b
 }
 
-// WithDelete sets delete
+// WithDelete sets delete.
 func (b *TableConstraintBuilder) WithDelete(onDelete string) *TableConstraintBuilder {
 	b.delete = onDelete
 	return b
@@ -196,7 +196,7 @@ func (b *TableConstraintBuilder) SetComment(c string) string {
 	return fmt.Sprintf(`COMMENT ON CONSTRAINT %v IS '%v'`, b.name, EscapeString(c))
 }
 
-// Drop returns the SQL query that will drop a table constraint
+// Drop returns the SQL query that will drop a table constraint.
 func (b *TableConstraintBuilder) Drop() string {
 	s := fmt.Sprintf(`ALTER TABLE %v DROP CONSTRAINT %v`, b.tableID, b.name)
 	/*if b.columns != nil {

@@ -47,7 +47,7 @@ func SystemGetPrivateLinkConfig() *schema.Resource {
 	}
 }
 
-// ReadSystemGetPrivateLinkConfig implements schema.ReadFunc
+// ReadSystemGetPrivateLinkConfig implements schema.ReadFunc.
 func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 

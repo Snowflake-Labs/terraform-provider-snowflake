@@ -45,7 +45,7 @@ type attachmentID struct {
 }
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
-// TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName
+// TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName.
 func (ti *attachmentID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -60,7 +60,7 @@ func (ti *attachmentID) String() (string, error) {
 }
 
 // attachedPolicyIDFromString() takes in a pipe-delimited string: TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName
-// and returns a attachmentID object
+// and returns a attachmentID object.
 func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tagAttachmentPolicyIDDelimiter
@@ -87,7 +87,7 @@ func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 	return attachmentResult, nil
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTagMaskingPolicyAssociation,
@@ -101,7 +101,7 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 	}
 }
 
-// CreateTagMaskingPolicyAssociation implements schema.CreateFunc
+// CreateTagMaskingPolicyAssociation implements schema.CreateFunc.
 func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagId := d.Get("tag_id").(string)
@@ -150,7 +150,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	return ReadTagMaskingPolicyAssociation(d, meta)
 }
 
-// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc
+// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc.
 func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())
@@ -217,7 +217,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc
+// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.
 func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())

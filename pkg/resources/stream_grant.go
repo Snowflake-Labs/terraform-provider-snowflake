@@ -68,7 +68,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// StreamGrant returns a pointer to the resource representing a stream grant
+// StreamGrant returns a pointer to the resource representing a stream grant.
 func StreamGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -86,7 +86,7 @@ func StreamGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateStreamGrant implements schema.CreateFunc
+// CreateStreamGrant implements schema.CreateFunc.
 func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	var streamName string
 	if name, ok := d.GetOk("stream_name"); ok {
@@ -135,7 +135,7 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadStreamGrant(d, meta)
 }
 
-// ReadStreamGrant implements schema.ReadFunc
+// ReadStreamGrant implements schema.ReadFunc.
 func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, streamGrantSchema, builder, futureStreamsEnabled, validStreamPrivileges)
 }
 
-// DeleteStreamGrant implements schema.DeleteFunc
+// DeleteStreamGrant implements schema.DeleteFunc.
 func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateStreamGrant implements schema.UpdateFunc
+// UpdateStreamGrant implements schema.UpdateFunc.
 func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

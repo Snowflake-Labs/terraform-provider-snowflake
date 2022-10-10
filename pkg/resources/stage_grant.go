@@ -72,7 +72,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// StageGrant returns a pointer to the resource representing a stage grant
+// StageGrant returns a pointer to the resource representing a stage grant.
 func StageGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -90,7 +90,7 @@ func StageGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateStageGrant implements schema.CreateFunc
+// CreateStageGrant implements schema.CreateFunc.
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	var stageName string
 	if name, ok := d.GetOk("stage_name"); ok {
@@ -130,7 +130,7 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadStageGrant(d, meta)
 }
 
-// ReadStageGrant implements schema.ReadFunc
+// ReadStageGrant implements schema.ReadFunc.
 func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -180,7 +180,7 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, stageGrantSchema, builder, futureStagesEnabled, validStagePrivileges)
 }
 
-// DeleteStageGrant implements schema.DeleteFunc
+// DeleteStageGrant implements schema.DeleteFunc.
 func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -202,7 +202,7 @@ func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateStageGrant implements schema.UpdateFunc
+// UpdateStageGrant implements schema.UpdateFunc.
 func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

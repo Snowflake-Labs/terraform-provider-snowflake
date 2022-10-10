@@ -102,7 +102,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ProcedureGrant returns a pointer to the resource representing a procedure grant
+// ProcedureGrant returns a pointer to the resource representing a procedure grant.
 func ProcedureGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -120,7 +120,7 @@ func ProcedureGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateProcedureGrant implements schema.CreateFunc
+// CreateProcedureGrant implements schema.CreateFunc.
 func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		procedureName      string
@@ -187,7 +187,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadProcedureGrant(d, meta)
 }
 
-// ReadProcedureGrant implements schema.ReadFunc
+// ReadProcedureGrant implements schema.ReadFunc.
 func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		procedureName string
@@ -260,7 +260,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, procedureGrantSchema, builder, futureProceduresEnabled, validProcedurePrivileges)
 }
 
-// DeleteProcedureGrant implements schema.DeleteFunc
+// DeleteProcedureGrant implements schema.DeleteFunc.
 func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -286,7 +286,7 @@ func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateProcedureGrant implements schema.UpdateFunc
+// UpdateProcedureGrant implements schema.UpdateFunc.
 func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

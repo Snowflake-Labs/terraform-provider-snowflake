@@ -29,7 +29,7 @@ var currentAccountSchema = map[string]*schema.Schema{
 	},
 }
 
-// CurrentAccount the Snowflake current account resource
+// CurrentAccount the Snowflake current account resource.
 func CurrentAccount() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadCurrentAccount,
@@ -37,7 +37,7 @@ func CurrentAccount() *schema.Resource {
 	}
 }
 
-// ReadCurrentAccount read the current snowflake account information
+// ReadCurrentAccount read the current snowflake account information.
 func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	acc, err := snowflake.ReadCurrentAccount(db)

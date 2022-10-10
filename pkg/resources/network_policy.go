@@ -39,7 +39,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 	},
 }
 
-// NetworkPolicy returns a pointer to the resource representing a network policy
+// NetworkPolicy returns a pointer to the resource representing a network policy.
 func NetworkPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateNetworkPolicy,
@@ -54,7 +54,7 @@ func NetworkPolicy() *schema.Resource {
 	}
 }
 
-// CreateNetworkPolicy implements schema.CreateFunc
+// CreateNetworkPolicy implements schema.CreateFunc.
 func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -83,7 +83,7 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadNetworkPolicy(d, meta)
 }
 
-// ReadNetworkPolicy implements schema.ReadFunc
+// ReadNetworkPolicy implements schema.ReadFunc.
 func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := d.Id()
@@ -165,7 +165,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateNetworkPolicy implements schema.UpdateFunc
+// UpdateNetworkPolicy implements schema.UpdateFunc.
 func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
@@ -210,7 +210,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadNetworkPolicy(d, meta)
 }
 
-// DeleteNetworkPolicy implements schema.DeleteFunc
+// DeleteNetworkPolicy implements schema.DeleteFunc.
 func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
@@ -225,7 +225,7 @@ func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ipChangeParser is a helper function to parse a given ip list change from ResourceData
+// ipChangeParser is a helper function to parse a given ip list change from ResourceData.
 func ipChangeParser(data *schema.ResourceData, key string) []string {
 	ipChangeSet := data.Get(key)
 	ipList := ipChangeSet.(*schema.Set).List()

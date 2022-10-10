@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Sequence returns a pointer to a Builder for a sequence
+// Sequence returns a pointer to a Builder for a sequence.
 func Sequence(name, db, schema string) *SequenceBuilder {
 	return &SequenceBuilder{
 		name:      name,

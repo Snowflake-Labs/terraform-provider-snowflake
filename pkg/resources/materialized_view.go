@@ -64,7 +64,7 @@ var materializedViewSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-// View returns a pointer to the resource representing a view
+// View returns a pointer to the resource representing a view.
 func MaterializedView() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateMaterializedView,
@@ -90,7 +90,7 @@ const (
 )
 
 // String() takes in a materializedViewID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|ExternalTableName
+// DatabaseName|SchemaName|ExternalTableName.
 func (si *materializedViewID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -105,7 +105,7 @@ func (si *materializedViewID) String() (string, error) {
 }
 
 // materializedViewIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaterializedViewName
-// and returns a externalTableID object
+// and returns a externalTableID object.
 func materializedViewIDFromString(stringID string) (*materializedViewID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = materializedViewDelimiter
@@ -129,7 +129,7 @@ func materializedViewIDFromString(stringID string) (*materializedViewID, error) 
 	return materializedViewResult, nil
 }
 
-// CreateMaterializedView implements schema.CreateFunc
+// CreateMaterializedView implements schema.CreateFunc.
 func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -179,7 +179,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	return ReadMaterializedView(d, meta)
 }
 
-// ReadMaterializedView implements schema.ReadFunc
+// ReadMaterializedView implements schema.ReadFunc.
 func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	materializedViewID, err := materializedViewIDFromString(d.Id())
@@ -240,7 +240,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	return d.Set("database", v.DatabaseName.String)
 }
 
-// UpdateMaterializedView implements schema.UpdateFunc
+// UpdateMaterializedView implements schema.UpdateFunc.
 func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	materializedViewID, err := materializedViewIDFromString(d.Id())
 	if err != nil {
@@ -309,7 +309,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	return ReadMaterializedView(d, meta)
 }
 
-// DeleteMaterializedView implements schema.DeleteFunc
+// DeleteMaterializedView implements schema.DeleteFunc.
 func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	materializedViewID, err := materializedViewIDFromString(d.Id())

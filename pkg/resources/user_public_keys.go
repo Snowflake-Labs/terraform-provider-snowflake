@@ -15,7 +15,7 @@ var userPublicKeyProperties = []string{
 	"rsa_public_key_2",
 }
 
-// sanitize input to supress diffs, etc
+// sanitize input to supress diffs, etc.
 func publicKeyStateFunc(v interface{}) string {
 	value := v.(string)
 	value = strings.TrimSuffix(value, "\n")

@@ -49,7 +49,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// WarehouseGrant returns a pointer to the resource representing a warehouse grant
+// WarehouseGrant returns a pointer to the resource representing a warehouse grant.
 func WarehouseGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -68,7 +68,7 @@ func WarehouseGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateWarehouseGrant implements schema.CreateFunc
+// CreateWarehouseGrant implements schema.CreateFunc.
 func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("warehouse_name").(string)
 	priv := d.Get("privilege").(string)
@@ -96,7 +96,7 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadWarehouseGrant(d, meta)
 }
 
-// ReadWarehouseGrant implements schema.ReadFunc
+// ReadWarehouseGrant implements schema.ReadFunc.
 func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -123,7 +123,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
 }
 
-// DeleteWarehouseGrant implements schema.DeleteFunc
+// DeleteWarehouseGrant implements schema.DeleteFunc.
 func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -136,7 +136,7 @@ func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateWarehouseGrant implements schema.UpdateFunc
+// UpdateWarehouseGrant implements schema.UpdateFunc.
 func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles. if nothing changed,
 	// nothing to update and we're done.

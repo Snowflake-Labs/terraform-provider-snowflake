@@ -68,7 +68,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// FileFormatGrant returns a pointer to the resource representing a file format grant
+// FileFormatGrant returns a pointer to the resource representing a file format grant.
 func FileFormatGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -86,7 +86,7 @@ func FileFormatGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateFileFormatGrant implements schema.CreateFunc
+// CreateFileFormatGrant implements schema.CreateFunc.
 func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	var fileFormatName string
 	if name, ok := d.GetOk("file_format_name"); ok {
@@ -135,7 +135,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadFileFormatGrant(d, meta)
 }
 
-// ReadFileFormatGrant implements schema.ReadFunc
+// ReadFileFormatGrant implements schema.ReadFunc.
 func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, fileFormatGrantSchema, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
 }
 
-// DeleteFileFormatGrant implements schema.DeleteFunc
+// DeleteFileFormatGrant implements schema.DeleteFunc.
 func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateFileFormatGrant implements schema.UpdateFunc
+// UpdateFileFormatGrant implements schema.UpdateFunc.
 func UpdateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

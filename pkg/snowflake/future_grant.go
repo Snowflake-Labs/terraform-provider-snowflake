@@ -28,7 +28,7 @@ const (
 	futureDatabaseTarget futureGrantTarget = "DATABASE"
 )
 
-// FutureGrantBuilder abstracts the creation of FutureGrantExecutables
+// FutureGrantBuilder abstracts the creation of FutureGrantExecutables.
 type FutureGrantBuilder struct {
 	name              string
 	qualifiedName     string
@@ -50,7 +50,7 @@ func getNameAndQualifiedName(db, schema string) (string, string, futureGrantTarg
 	return name, qualifiedName, futureTarget
 }
 
-// Name returns the object name for this FutureGrantBuilder
+// Name returns the object name for this FutureGrantBuilder.
 func (fgb *FutureGrantBuilder) Name() string {
 	return fgb.name
 }
@@ -59,7 +59,7 @@ func (fgb *FutureGrantBuilder) GrantType() string {
 	return string(fgb.futureGrantType)
 }
 
-// FutureSchemaGrant returns a pointer to a FutureGrantBuilder for a schema
+// FutureSchemaGrant returns a pointer to a FutureGrantBuilder for a schema.
 func FutureSchemaGrant(db string) GrantBuilder {
 	return &FutureGrantBuilder{
 		name:              db,
@@ -69,7 +69,7 @@ func FutureSchemaGrant(db string) GrantBuilder {
 	}
 }
 
-// FutureTableGrant returns a pointer to a FutureGrantBuilder for a table
+// FutureTableGrant returns a pointer to a FutureGrantBuilder for a table.
 func FutureTableGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -80,7 +80,7 @@ func FutureTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureViewGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureViewGrant returns a pointer to a FutureGrantBuilder for a view.
 func FutureViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -91,7 +91,7 @@ func FutureViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureMaterializedViewGrant returns a pointer to a FutureGrantBuilder for a view
+// FutureMaterializedViewGrant returns a pointer to a FutureGrantBuilder for a view.
 func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -102,7 +102,7 @@ func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureStageGrant returns a pointer to a FutureGrantBuilder for a stage
+// FutureStageGrant returns a pointer to a FutureGrantBuilder for a stage.
 func FutureStageGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -113,7 +113,7 @@ func FutureStageGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a external table
+// FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a external table.
 func FutureExternalTableGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -124,7 +124,7 @@ func FutureExternalTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureFileFormatGrant returns a pointer to a FutureGrantBuilder for a file format
+// FutureFileFormatGrant returns a pointer to a FutureGrantBuilder for a file format.
 func FutureFileFormatGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -135,7 +135,7 @@ func FutureFileFormatGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a function
+// FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a function.
 func FutureFunctionGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -146,7 +146,7 @@ func FutureFunctionGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureProcedureGrant returns a pointer to a FutureGrantBuilder for a procedure
+// FutureProcedureGrant returns a pointer to a FutureGrantBuilder for a procedure.
 func FutureProcedureGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -157,7 +157,7 @@ func FutureProcedureGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a sequence
+// FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a sequence.
 func FutureSequenceGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -168,7 +168,7 @@ func FutureSequenceGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureStreamGrant returns a pointer to a FutureGrantBuilder for a stream
+// FutureStreamGrant returns a pointer to a FutureGrantBuilder for a stream.
 func FutureStreamGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -179,7 +179,7 @@ func FutureStreamGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FuturePipeGrant returns a pointer to a FutureGrantBuilder for a pipe
+// FuturePipeGrant returns a pointer to a FutureGrantBuilder for a pipe.
 func FuturePipeGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -190,7 +190,7 @@ func FuturePipeGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// FutureTaskGrant returns a pointer to a FutureGrantBuilder for a task
+// FutureTaskGrant returns a pointer to a FutureGrantBuilder for a task.
 func FutureTaskGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
 	return &FutureGrantBuilder{
@@ -201,7 +201,7 @@ func FutureTaskGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// Show returns the SQL that will show all privileges on the grant
+// Show returns the SQL that will show all privileges on the grant.
 func (fgb *FutureGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`, fgb.futureGrantTarget, fgb.qualifiedName)
 }
@@ -215,7 +215,7 @@ type FutureGrantExecutable struct {
 	futureGrantTarget futureGrantTarget
 }
 
-// Role returns a pointer to a FutureGrantExecutable for a role
+// Role returns a pointer to a FutureGrantExecutable for a role.
 func (fgb *FutureGrantBuilder) Role(n string) GrantExecutable {
 	return &FutureGrantExecutable{
 		granteeName:       n,
@@ -230,7 +230,7 @@ func (gb *FutureGrantBuilder) Share(n string) GrantExecutable {
 	return nil
 }
 
-// Grant returns the SQL that will grant future privileges on the grant to the grantee
+// Grant returns the SQL that will grant future privileges on the grant to the grantee.
 func (fge *FutureGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if w {
@@ -242,7 +242,7 @@ func (fge *FutureGrantExecutable) Grant(p string, w bool) string {
 		p, fge.futureGrantType, fge.futureGrantTarget, fge.grantName, fge.granteeName)
 }
 
-// Revoke returns the SQL that will revoke future privileges on the grant from the grantee
+// Revoke returns the SQL that will revoke future privileges on the grant from the grantee.
 func (fge *FutureGrantExecutable) Revoke(p string) []string {
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON FUTURE %vS IN %v %v FROM ROLE "%v"`,
@@ -250,7 +250,7 @@ func (fge *FutureGrantExecutable) Revoke(p string) []string {
 	}
 }
 
-// Show returns the SQL that will show all future grants on the schema
+// Show returns the SQL that will show all future grants on the schema.
 func (fge *FutureGrantExecutable) Show() string {
 	return fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`, fge.futureGrantTarget, fge.grantName)
 }

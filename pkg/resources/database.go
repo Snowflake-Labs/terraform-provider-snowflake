@@ -82,7 +82,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-// Database returns a pointer to the resource representing a database
+// Database returns a pointer to the resource representing a database.
 func Database() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateDatabase,
@@ -112,7 +112,7 @@ func createDatabase(d *schema.ResourceData, builder *snowflake.DatabaseBuilder, 
 	return ReadDatabase(d, meta)
 }
 
-// CreateDatabase implements schema.CreateFunc
+// CreateDatabase implements schema.CreateFunc.
 func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 	// TODO: Migrate database from share and from replica to iterative approach
 	if _, ok := d.GetOk("from_share"); ok {

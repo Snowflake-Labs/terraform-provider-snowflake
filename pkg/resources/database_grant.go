@@ -59,7 +59,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// DatabaseGrant returns a pointer to the resource representing a database grant
+// DatabaseGrant returns a pointer to the resource representing a database grant.
 func DatabaseGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -77,7 +77,7 @@ func DatabaseGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateDatabaseGrant implements schema.CreateFunc
+// CreateDatabaseGrant implements schema.CreateFunc.
 func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Get("database_name").(string)
 	builder := snowflake.DatabaseGrant(dbName)
@@ -105,7 +105,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadDatabaseGrant(d, meta)
 }
 
-// ReadDatabaseGrant implements schema.ReadFunc
+// ReadDatabaseGrant implements schema.ReadFunc.
 func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -134,7 +134,7 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
 }
 
-// DeleteDatabaseGrant implements schema.DeleteFunc
+// DeleteDatabaseGrant implements schema.DeleteFunc.
 func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Get("database_name").(string)
 	builder := snowflake.DatabaseGrant(dbName)
@@ -142,7 +142,7 @@ func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateDatabaseGrant implements schema.UpdateFunc
+// UpdateDatabaseGrant implements schema.UpdateFunc.
 func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

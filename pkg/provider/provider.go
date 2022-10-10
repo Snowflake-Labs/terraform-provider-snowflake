@@ -25,7 +25,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
-// Provider is a provider
+// Provider is a provider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{

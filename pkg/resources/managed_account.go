@@ -85,7 +85,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 	},
 }
 
-// ManagedAccount returns a pointer to the resource representing a managed account
+// ManagedAccount returns a pointer to the resource representing a managed account.
 func ManagedAccount() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateManagedAccount,
@@ -99,7 +99,7 @@ func ManagedAccount() *schema.Resource {
 	}
 }
 
-// CreateManagedAccount implements schema.CreateFunc
+// CreateManagedAccount implements schema.CreateFunc.
 func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource(
 		"this does not seem to be used",
@@ -120,7 +120,7 @@ func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return ReadManagedAccount(d, meta)
 }
 
-// ReadManagedAccount implements schema.ReadFunc
+// ReadManagedAccount implements schema.ReadFunc.
 func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -182,7 +182,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// DeleteManagedAccount implements schema.DeleteFunc
+// DeleteManagedAccount implements schema.DeleteFunc.
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
 }

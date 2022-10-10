@@ -45,7 +45,7 @@ var userGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// UserGrant returns a pointer to the resource representing a user grant
+// UserGrant returns a pointer to the resource representing a user grant.
 func UserGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -64,7 +64,7 @@ func UserGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateUserGrant implements schema.CreateFunc
+// CreateUserGrant implements schema.CreateFunc.
 func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("user_name").(string)
 	priv := d.Get("privilege").(string)
@@ -92,7 +92,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadUserGrant(d, meta)
 }
 
-// ReadUserGrant implements schema.ReadFunc
+// ReadUserGrant implements schema.ReadFunc.
 func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -119,7 +119,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, userGrantSchema, builder, false, validUserPrivileges)
 }
 
-// DeleteUserGrant implements schema.DeleteFunc
+// DeleteUserGrant implements schema.DeleteFunc.
 func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -132,7 +132,7 @@ func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateUserGrant implements schema.UpdateFunc
+// UpdateUserGrant implements schema.UpdateFunc.
 func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles. if nothing changed,
 	// nothing to update and we're done.

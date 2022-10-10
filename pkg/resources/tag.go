@@ -125,7 +125,7 @@ func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) er
 }
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TagName
+// DatabaseName|SchemaName|TagName.
 func (ti *TagID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -140,7 +140,7 @@ func (ti *TagID) String() (string, error) {
 }
 
 // tagIDFromString() takes in a pipe-delimited string: DatabaseName|tagName
-// and returns a tagID object
+// and returns a tagID object.
 func tagIDFromString(stringID string) (*TagID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tagIDDelimiter
@@ -164,7 +164,7 @@ func tagIDFromString(stringID string) (*TagID, error) {
 	return tagResult, nil
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func Tag() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTag,
@@ -179,7 +179,7 @@ func Tag() *schema.Resource {
 	}
 }
 
-// CreateSchema implements schema.CreateFunc
+// CreateSchema implements schema.CreateFunc.
 func CreateTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -218,7 +218,7 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 	return ReadTag(d, meta)
 }
 
-// ReadSchema implements schema.ReadFunc
+// ReadSchema implements schema.ReadFunc.
 func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagID, err := tagIDFromString(d.Id())
@@ -278,7 +278,7 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateTag implements schema.UpdateFunc
+// UpdateTag implements schema.UpdateFunc.
 func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 	tagID, err := tagIDFromString(d.Id())
 	if err != nil {
@@ -336,7 +336,7 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 	return ReadTag(d, meta)
 }
 
-// Returns the slice of strings for inputed allowed values
+// Returns the slice of strings for inputed allowed values.
 func expandAllowedValues(avChangeSet interface{}) []string {
 	avList := avChangeSet.([]interface{})
 	newAvs := make([]string, len(avList))
@@ -347,7 +347,7 @@ func expandAllowedValues(avChangeSet interface{}) []string {
 	return newAvs
 }
 
-// DeleteTag implements schema.DeleteFunc
+// DeleteTag implements schema.DeleteFunc.
 func DeleteTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagID, err := tagIDFromString(d.Id())
