@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
@@ -76,10 +76,19 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "SQL",
-		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		ValidateFunc:     validation.StringInSlice(procedureLanguages, true),
-		Description:      "Specifies the language of the stored procedure code.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.EqualFold(old, new) {
+				return true
+			}
+			integerTypes := []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT", "NUMBER(38,0)"}
+			// all these types are equivalent https://docs.snowflake.com/en/sql-reference/data-types-numeric.html#int-integer-bigint-smallint-tinyint-byteint
+			if slices.Contains(integerTypes, strings.ToUpper(old)) && slices.Contains(integerTypes, strings.ToUpper(new)) {
+				return true
+			}
+			return false
+		},
+		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
+		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -268,10 +277,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "returns":
-			// Format in Snowflake DB is RETURN_TYPE(<some number>) or RETURN_TYPE
-			re := regexp.MustCompile(`^([A-Z0-9_]+)\s?(\([0-9]*\))?$`)
-			match := re.FindStringSubmatch(desc.Value.String)
-			if err = d.Set("return_type", match[1]); err != nil {
+			if err = d.Set("return_type", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":
