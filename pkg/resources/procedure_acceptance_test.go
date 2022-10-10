@@ -50,7 +50,7 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "arguments.1.type", "DATE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "return_behavior", "IMMUTABLE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
-				
+
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "name", procName),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "return_type", "INTEGER"),
 				),
@@ -149,6 +149,5 @@ func procedureConfig(db, schema, name string) string {
 	  end;
 	  EOT
 	  }
-	`, db, schema, name, name, name,name)
+	`, db, schema, name, name, name, name)
 }
-
