@@ -59,17 +59,17 @@ func (db *DatabaseBuilder) WithTags(tags []TagValue) *DatabaseBuilder {
 
 // AddTag returns the SQL query that will add a new tag to the database.
 func (db *DatabaseBuilder) AddTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER DATABASE %s SET TAG "%v" = "%v"`, db.QualifiedName(), tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER DATABASE %s SET TAG "%v"."%v"."%v" = "%v"`, db.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
 // ChangeTag returns the SQL query that will alter a tag on the database.
 func (db *DatabaseBuilder) ChangeTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER DATABASE %s SET TAG "%v" = "%v"`, db.QualifiedName(), tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER DATABASE %s SET TAG "%v"."%v"."%v" = "%v"`, db.QualifiedName(), tag.Database, tag.Schema, tag.Name, tag.Value)
 }
 
 // UnsetTag returns the SQL query that will unset a tag on the database.
 func (db *DatabaseBuilder) UnsetTag(tag TagValue) string {
-	return fmt.Sprintf(`ALTER DATABASE %s UNSET TAG "%v" = "%v"`, db.QualifiedName(), tag.Name, tag.Value)
+	return fmt.Sprintf(`ALTER DATABASE %s UNSET TAG "%v"."%v"."%v"`, db.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
 // Database returns a pointer to a Builder that abstracts the DDL operations for a database.
