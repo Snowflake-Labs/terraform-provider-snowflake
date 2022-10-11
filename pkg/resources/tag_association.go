@@ -113,28 +113,56 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	tagID := d.Get("tag_id").(string)
 	objectName := d.Get("object_name").(string)
 	objectType := d.Get("object_type").(string)
-	tagValue := d.Get("tag_value").(string)
 
-	builder := snowflake.TagAssociation(tagID).WithObjectName(objectName).WithObjectType(objectType).WithTagValue(tagValue)
-	_, err := snowflake.ListTagAssociations(builder, db)
+	q := snowflake.TagAssociation(tagID).WithObjectName(objectName).WithObjectType(objectType).Show()
+	row := snowflake.QueryRow(db, q)
+
+	ta, err := snowflake.ScanTagAssociation(row)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] tag associations (%s) not found", d.Id())
+		log.Printf("[DEBUG] tag association (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		//return err
-		return errors.Wrapf(err, "error listing tags, error is x")
+		return errors.Wrap(err, "error listing tag associations")
+	}
+
+	err = d.Set("tag_value", ta.TagValue.String)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+
+	tagID := d.Get("tag_id").(string)
+	objectName := d.Get("object_name").(string)
+	objectType := d.Get("object_type").(string)
+
+	builder := snowflake.TagAssociation(tagID).WithObjectName(objectName).WithObjectType(objectType)
+
 	if d.HasChange("skip_validation") {
 		old, new := d.GetChange("skip_validation")
 		log.Printf("[DEBUG] skip_validation changed from %v to %v", old, new)
+	}
+
+	if d.HasChange("tag_value") {
+		tagValue, ok := d.GetOk("tag_value")
+		var q string
+		if ok {
+			q = builder.WithTagValue(tagValue.(string)).Create()
+		} else {
+			q = builder.WithTagValue("").Create()
+		}
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating tag association value for object [%v]", objectName)
+		}
 	}
 
 	return ReadTagAssociation(d, meta)
@@ -144,11 +172,11 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	tagName := d.Get("tag_id").(string)
+	tagID := d.Get("tag_id").(string)
 	objectName := d.Get("object_name").(string)
 	objectType := d.Get("object_type").(string)
 
-	q := snowflake.TagAssociation(tagName).WithObjectName(objectName).WithObjectType(objectType).Drop()
+	q := snowflake.TagAssociation(tagID).WithObjectName(objectName).WithObjectType(objectType).Drop()
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
