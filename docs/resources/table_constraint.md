@@ -100,7 +100,7 @@ resource "snowflake_table_constraint" "foreign_key" {
 - `deferrable` (Boolean) Whether the constraint is deferrable
 - `enable` (Boolean) Specifies whether the constraint is enabled or disabled. These properties are provided for compatibility with Oracle.
 - `enforced` (Boolean) Whether the constraint is enforced
-- `foreign_key_properties` (Block List, Max: 1) Addtional properties when type is set to foreign key. Not applicable for primary/unique keys (see [below for nested schema](#nestedblock--foreign_key_properties))
+- `foreign_key_properties` (Block List, Max: 1) Additional properties when type is set to foreign key. Not applicable for primary/unique keys (see [below for nested schema](#nestedblock--foreign_key_properties))
 - `initially` (String) Whether the constraint is initially deferred or immediate
 - `rely` (Boolean) Specifies whether a constraint in NOVALIDATE mode is taken into account during query rewrite.
 - `validate` (Boolean) Specifies whether to validate existing data on the table when a constraint is created. Only used in conjunction with the ENABLE property.
