@@ -36,6 +36,7 @@ func TestAcc_SequenceFutureGrant(t *testing.T) {
 }
 
 func sequenceGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

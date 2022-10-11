@@ -107,6 +107,7 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 }
 
 func stageGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

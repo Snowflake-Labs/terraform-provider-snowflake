@@ -9,6 +9,7 @@ import (
 )
 
 func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
+	t.Helper()
 	r := require.New(t)
 	db, mock, err := sqlmock.New()
 	r.NoError(err)

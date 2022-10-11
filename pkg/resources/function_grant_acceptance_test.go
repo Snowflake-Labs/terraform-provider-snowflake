@@ -37,6 +37,7 @@ func TestAcc_FunctionFutureGrant(t *testing.T) {
 }
 
 func functionGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

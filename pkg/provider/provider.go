@@ -315,7 +315,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
 		if err != nil {
-			return nil, errors.Wrap(err, "could not retreive access token from refresh token")
+			return nil, errors.Wrap(err, "could not retrieve access token from refresh token")
 		}
 		oauthAccessToken = accessToken
 	}

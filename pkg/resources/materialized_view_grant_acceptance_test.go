@@ -36,6 +36,7 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 }
 
 func materializedViewGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

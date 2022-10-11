@@ -214,7 +214,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 		procedureID.ArgTypes,
 	)
 
-	// some atributes can be retrieved only by Describe and some only by Show
+	// some attributes can be retrieved only by Describe and some only by Show
 	stmt, err := proc.Describe()
 	if err != nil {
 		return err

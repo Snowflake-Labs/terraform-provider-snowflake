@@ -93,6 +93,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 }
 
 func viewGrantConfigShares(t *testing.T, databaseName, viewName, role, shareName string) string {
+	t.Helper()
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
@@ -158,6 +159,7 @@ resource "snowflake_view_grant" "test" {
 }
 
 func viewGrantConfigFuture(t *testing.T, databaseName, viewName string, role string, future bool) string {
+	t.Helper()
 	r := require.New(t)
 
 	viewNameConfig := "view_name = snowflake_view.test.name"

@@ -36,6 +36,7 @@ func TestAcc_ExternalTableFutureGrant(t *testing.T) {
 }
 
 func externalTableGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
