@@ -266,7 +266,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 		functionID.ArgTypes,
 	)
 
-	// some atributes can be retrieved only by Describe and some only by Show
+	// some attributes can be retrieved only by Describe and some only by Show
 	stmt, err := funct.Describe()
 	if err != nil {
 		return err

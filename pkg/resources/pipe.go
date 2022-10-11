@@ -98,7 +98,7 @@ func Pipe() *schema.Resource {
 }
 
 func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	// standardise line endings
+	// standardize line endings
 	old = strings.ReplaceAll(old, "\r\n", "\n")
 	new = strings.ReplaceAll(new, "\r\n", "\n")
 
