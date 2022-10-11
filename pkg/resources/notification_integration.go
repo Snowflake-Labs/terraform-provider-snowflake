@@ -201,12 +201,12 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 
 	s, err := snowflake.ScanNotificationIntegration(row)
 	if err != nil {
-		return fmt.Errorf("Could not show notification integration: %w", err)
+		return fmt.Errorf("could not show notification integration: %w", err)
 	}
 
 	// Note: category must be NOTIFICATION or something is broken
 	if c := s.Category.String; c != "NOTIFICATION" {
-		return fmt.Errorf("Expected %v to be a NOTIFICATION integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
@@ -236,7 +236,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	stmt = snowflake.NotificationIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe notification integration: %w", err)
+		return fmt.Errorf("could not describe notification integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {

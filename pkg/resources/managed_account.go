@@ -163,7 +163,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("url", a.Url.String)
+	err = d.Set("url", a.URL.String)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("Unable to determine the account type")
+		return fmt.Errorf("unable to determine the account type")
 	}
 
 	err = d.Set("comment", a.Comment.String)

@@ -251,11 +251,11 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 	// set foreign key specific settings
 	if v, ok := d.GetOk("foreign_key_properties"); ok {
-		foreign_key_properties := v.([]interface{})[0].(map[string]interface{})
-		builder.WithMatch(foreign_key_properties["match"].(string))
-		builder.WithUpdate(foreign_key_properties["on_update"].(string))
-		builder.WithDelete(foreign_key_properties["on_delete"].(string))
-		references := foreign_key_properties["references"].([]interface{})[0].(map[string]interface{})
+		foreignKeyProperties := v.([]interface{})[0].(map[string]interface{})
+		builder.WithMatch(foreignKeyProperties["match"].(string))
+		builder.WithUpdate(foreignKeyProperties["on_update"].(string))
+		builder.WithDelete(foreignKeyProperties["on_delete"].(string))
+		references := foreignKeyProperties["references"].([]interface{})[0].(map[string]interface{})
 		fkTableID := references["table_id"].(string)
 		formattedFkTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(fkTableID)
 		builder.WithReferenceTableID(formattedFkTableID)

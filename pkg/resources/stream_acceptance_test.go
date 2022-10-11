@@ -95,10 +95,10 @@ func TestAcc_Stream(t *testing.T) {
 	})
 }
 
-func streamConfig(name string, append_only bool) string {
-	append_only_config := ""
-	if append_only {
-		append_only_config = "append_only = true"
+func streamConfig(name string, appendOnly bool) string {
+	appendOnlyConfig := ""
+	if appendOnly {
+		appendOnlyConfig = "append_only = true"
 	}
 
 	s := `
@@ -139,15 +139,15 @@ resource "snowflake_stream" "test_stream" {
 	%s
 }
 `
-	return fmt.Sprintf(s, name, name, name, append_only_config)
+	return fmt.Sprintf(s, name, name, name, appendOnlyConfig)
 }
 
-func externalTableStreamConfig(name string, insert_only bool) string {
+func externalTableStreamConfig(name string, insertOnly bool) string {
 	// Refer to external_table_acceptance_test.go for the original source on
 	// external table resources and dependents (modified slightly here).
-	insert_only_config := ""
-	if insert_only {
-		insert_only_config = "insert_only = true"
+	insertOnlyConfig := ""
+	if insertOnly {
+		insertOnlyConfig = "insert_only = true"
 	}
 
 	locations := []string{"s3://com.example.bucket/prefix"}
@@ -203,13 +203,13 @@ resource "snowflake_stream" "test_external_table_stream" {
 }
 `
 
-	return fmt.Sprintf(s, name, name, name, name, locations, name, insert_only_config)
+	return fmt.Sprintf(s, name, name, name, name, locations, name, insertOnlyConfig)
 }
 
-func viewStreamConfig(name string, append_only bool) string {
-	append_only_config := ""
-	if append_only {
-		append_only_config = "append_only = true"
+func viewStreamConfig(name string, appendOnly bool) string {
+	appendOnlyConfig := ""
+	if appendOnly {
+		appendOnlyConfig = "append_only = true"
 	}
 
 	s := `
@@ -258,5 +258,5 @@ resource "snowflake_stream" "test_stream" {
 	%s
 }
 `
-	return fmt.Sprintf(s, name, name, name, append_only_config)
+	return fmt.Sprintf(s, name, name, name, appendOnlyConfig)
 }

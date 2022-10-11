@@ -66,11 +66,11 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("allowed_ip_list"); ok {
-		builder.WithAllowedIpList(expandStringList(v.(*schema.Set).List()))
+		builder.WithAllowedIPList(expandStringList(v.(*schema.Set).List()))
 	}
 
 	if v, ok := d.GetOk("blocked_ip_list"); ok {
-		builder.WithBlockedIpList(expandStringList(v.(*schema.Set).List()))
+		builder.WithBlockedIPList(expandStringList(v.(*schema.Set).List()))
 	}
 
 	stmt := builder.Create()
@@ -91,9 +91,9 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NetworkPolicy(policyName)
 
 	// There is no way to SHOW a single Network Policy, so we have to read *all* network policies and filter in memory
-	showSql := builder.ShowAllNetworkPolicies()
+	showSQL := builder.ShowAllNetworkPolicies()
 
-	rows, err := snowflake.Query(db, showSql)
+	rows, err := snowflake.Query(db, showSQL)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
@@ -123,8 +123,8 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	descSql := builder.Describe()
-	rows, err = snowflake.Query(db, descSql)
+	descSQL := builder.Describe()
+	rows, err = snowflake.Query(db, descSQL)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("allowed_ip_list") {
 		newIps := ipChangeParser(d, "allowed_ip_list")
-		q := builder.ChangeIpList("ALLOWED", newIps)
+		q := builder.ChangeIPList("ALLOWED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating ALLOWED_IP_LIST for network policy %v", name)
@@ -200,7 +200,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("blocked_ip_list") {
 		newIps := ipChangeParser(d, "blocked_ip_list")
-		q := builder.ChangeIpList("BLOCKED", newIps)
+		q := builder.ChangeIPList("BLOCKED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating BLOCKED_IP_LIST for network policy %v", name)
@@ -215,8 +215,8 @@ func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
 
-	dropSql := snowflake.NetworkPolicy(name).Drop()
-	err := snowflake.Exec(db, dropSql)
+	dropSQL := snowflake.NetworkPolicy(name).Drop()
+	err := snowflake.Exec(db, dropSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting network policy %v", name)
 	}

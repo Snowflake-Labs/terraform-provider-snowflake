@@ -229,7 +229,7 @@ func taskIDFromString(stringID string) (*taskID, error) {
 	reader.Comma = pipeIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -678,7 +678,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("sql_statement") {
 		new := d.Get("sql_statement")
-		q := builder.ChangeSqlStatement(new.(string))
+		q := builder.ChangeSQLStatement(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating sql statement on task %v", d.Id())

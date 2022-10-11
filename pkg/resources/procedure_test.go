@@ -96,14 +96,14 @@ func TestProcedureRead(t *testing.T) {
 
 		args := d.Get("arguments").([]interface{})
 		r.Len(args, 2)
-		test_proc_arg1 := args[0].(map[string]interface{})
-		test_proc_arg2 := args[1].(map[string]interface{})
-		r.Len(test_proc_arg1, 2)
-		r.Len(test_proc_arg2, 2)
-		r.Equal("data", test_proc_arg1["name"].(string))
-		r.Equal("VARCHAR", test_proc_arg1["type"].(string))
-		r.Equal("event_dt", test_proc_arg2["name"].(string))
-		r.Equal("DATE", test_proc_arg2["type"].(string))
+		testProcArg1 := args[0].(map[string]interface{})
+		testProcArg2 := args[1].(map[string]interface{})
+		r.Len(testProcArg1, 2)
+		r.Len(testProcArg2, 2)
+		r.Equal("data", testProcArg1["name"].(string))
+		r.Equal("VARCHAR", testProcArg1["type"].(string))
+		r.Equal("event_dt", testProcArg2["name"].(string))
+		r.Equal("DATE", testProcArg2["type"].(string))
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

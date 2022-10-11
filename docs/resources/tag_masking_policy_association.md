@@ -64,7 +64,7 @@ resource "snowflake_tag_masking_policy_association" "name" {
 
 ### Required
 
-- `masking_policy_id` (String) The the resource id of the masking policy
+- `masking_policy_id` (String) The resource id of the masking policy
 - `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 
 ### Read-Only

@@ -28,7 +28,7 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	}
 
 	if len(pass) < 8 {
-		errs = append(errs, fmt.Errorf("Password must be at least 8 characters long"))
+		errs = append(errs, fmt.Errorf("password must be at least 8 characters long"))
 	}
 
 	var digit, uppercase, lowercase bool
@@ -45,15 +45,15 @@ func ValidatePassword(i interface{}, k string) (s []string, errs []error) {
 	}
 
 	if !uppercase {
-		errs = append(errs, fmt.Errorf("Password must contain an uppercase character"))
+		errs = append(errs, fmt.Errorf("password must contain an uppercase character"))
 	}
 
 	if !lowercase {
-		errs = append(errs, fmt.Errorf("Password must contain a lowercase character"))
+		errs = append(errs, fmt.Errorf("password must contain a lowercase character"))
 	}
 
 	if !digit {
-		errs = append(errs, fmt.Errorf("Password must contain a digit"))
+		errs = append(errs, fmt.Errorf("password must contain a digit"))
 	}
 
 	return

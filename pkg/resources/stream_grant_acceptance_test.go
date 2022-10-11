@@ -61,7 +61,7 @@ func TestAcc_StreamGrant_future(t *testing.T) {
 	})
 }
 
-func streamGrantConfigExisting(t *testing.T, database_name, schema_name, role, stream_name, table_name string) string {
+func streamGrantConfigExisting(t *testing.T, databaseName, schemaName, role, streamName, tableName string) string {
 	t.Helper()
 	r := require.New(t)
 
@@ -115,18 +115,18 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
-		"stream_name":   stream_name,
-		"table_name":    table_name,
+		"stream_name":   streamName,
+		"table_name":    tableName,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
 
-func streamGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func streamGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
 	t.Helper()
 	r := require.New(t)
 
@@ -157,8 +157,8 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

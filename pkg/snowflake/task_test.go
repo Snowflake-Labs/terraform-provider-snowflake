@@ -125,7 +125,7 @@ func TestChangeCondition(t *testing.T) {
 func TestChangeSqlStatement(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.ChangeSqlStatement("SELECT * FROM table"), `ALTER TASK "test_db"."test_schema"."test_task" MODIFY AS SELECT * FROM table`)
+	r.Equal(st.ChangeSQLStatement("SELECT * FROM table"), `ALTER TASK "test_db"."test_schema"."test_task" MODIFY AS SELECT * FROM table`)
 }
 
 func TestSuspend(t *testing.T) {

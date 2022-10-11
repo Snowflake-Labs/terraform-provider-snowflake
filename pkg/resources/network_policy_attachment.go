@@ -215,9 +215,9 @@ func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := d.Get("network_policy_name").(string)
 
-	acctSql := snowflake.NetworkPolicy(policyName).SetOnAccount()
+	acctSQL := snowflake.NetworkPolicy(policyName).SetOnAccount()
 
-	err := snowflake.Exec(db, acctSql)
+	err := snowflake.Exec(db, acctSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error setting network policy %v on account", policyName)
 	}
@@ -230,9 +230,9 @@ func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := d.Get("network_policy_name").(string)
 
-	acctSql := snowflake.NetworkPolicy(policyName).UnsetOnAccount()
+	acctSQL := snowflake.NetworkPolicy(policyName).UnsetOnAccount()
 
-	err := snowflake.Exec(db, acctSql)
+	err := snowflake.Exec(db, acctSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error unsetting network policy %v on account", policyName)
 	}
@@ -257,8 +257,8 @@ func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) err
 func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := data.Get("network_policy_name").(string)
-	userSql := snowflake.NetworkPolicy(policyName).SetOnUser(user)
-	err := snowflake.Exec(db, userSql)
+	userSQL := snowflake.NetworkPolicy(policyName).SetOnUser(user)
+	err := snowflake.Exec(db, userSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error setting network policy %v on user %v", policyName, user)
 	}
@@ -283,8 +283,8 @@ func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) e
 func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := data.Get("network_policy_name").(string)
-	userSql := snowflake.NetworkPolicy(policyName).UnsetOnUser(user)
-	err := snowflake.Exec(db, userSql)
+	userSQL := snowflake.NetworkPolicy(policyName).UnsetOnUser(user)
+	err := snowflake.Exec(db, userSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error unsetting network policy %v on user %v", policyName, user)
 	}
@@ -296,8 +296,8 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 func ensureUserAlterPrivileges(users []string, meta interface{}) error {
 	db := meta.(*sql.DB)
 	for _, user := range users {
-		userDescSql := snowflake.User(user).Describe()
-		err := snowflake.Exec(db, userDescSql)
+		userDescSQL := snowflake.User(user).Describe()
+		err := snowflake.Exec(db, userDescSQL)
 		if err != nil {
 			return errors.Wrapf(err, "error altering network policy of user %v", user)
 		}

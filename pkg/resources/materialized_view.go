@@ -111,7 +111,7 @@ func materializedViewIDFromString(stringID string) (*materializedViewID, error) 
 	reader.Comma = materializedViewDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {

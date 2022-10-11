@@ -21,16 +21,16 @@ type TagAssociationBuilder struct {
 }
 
 type tagAssociation struct {
-	ColumnId       sql.NullString `db:"COLUMN_ID"`
+	ColumnID       sql.NullString `db:"COLUMN_ID"`
 	ColumnName     sql.NullString `db:"COLUMN_NAME"`
 	Domain         sql.NullString `db:"DOMAIN"`
 	ObjectDatabase sql.NullString `db:"OBJECT_DATABASE"`
 	ObjectDeleted  sql.NullString `db:"OBJECT_DELETED"`
-	ObjectId       sql.NullString `db:"OBJECT_ID"`
+	ObjectID       sql.NullString `db:"OBJECT_ID"`
 	ObjectName     sql.NullString `db:"OBJECT_NAME"`
 	ObjectSchema   sql.NullString `db:"OBJECT_SCHEMA"`
 	TagDatabase    sql.NullString `db:"TAG_DATABASE"`
-	TagId          sql.NullString `db:"TAG_ID"`
+	TagID          sql.NullString `db:"TAG_ID"`
 	TagName        sql.NullString `db:"TAG_NAME"`
 	TagSchema      sql.NullString `db:"TAG_SCHEMA"`
 	TagValue       sql.NullString `db:"TAG_VALUE"`

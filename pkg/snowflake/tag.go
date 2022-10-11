@@ -184,11 +184,11 @@ type tag struct {
 }
 
 type tagPolicyAttachment struct {
-	PolicyDb        sql.NullString `db:"POLICY_DB"`
+	PolicyDB        sql.NullString `db:"POLICY_DB"`
 	PolicySchema    sql.NullString `db:"POLICY_SCHEMA"`
 	PolicyName      sql.NullString `db:"POLICY_NAME"`
 	PolicyKind      sql.NullString `db:"POLICY_KIND"`
-	RefDb           sql.NullString `db:"REF_DATABASE_NAME"`
+	RefDB           sql.NullString `db:"REF_DATABASE_NAME"`
 	RefSchema       sql.NullString `db:"REF_SCHEMA_NAME"`
 	RefEntity       sql.NullString `db:"REF_ENTITY_NAME"`
 	RefEntityDomain sql.NullString `db:"REF_ENTITY_DOMAIN"`

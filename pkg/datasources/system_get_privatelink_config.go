@@ -74,26 +74,26 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 	if accNameErr != nil {
 		return accNameErr
 	}
-	accUrlErr := d.Set("account_url", config.AccountURL)
-	if accUrlErr != nil {
-		return accUrlErr
+	accURLErr := d.Set("account_url", config.AccountURL)
+	if accURLErr != nil {
+		return accURLErr
 	}
-	ocspUrlErr := d.Set("ocsp_url", config.OCSPURL)
-	if ocspUrlErr != nil {
-		return ocspUrlErr
+	ocspURLErr := d.Set("ocsp_url", config.OCSPURL)
+	if ocspURLErr != nil {
+		return ocspURLErr
 	}
 
 	if config.AwsVpceID != "" {
-		awsVpceIdErr := d.Set("aws_vpce_id", config.AwsVpceID)
-		if awsVpceIdErr != nil {
-			return awsVpceIdErr
+		awsVpceIDErr := d.Set("aws_vpce_id", config.AwsVpceID)
+		if awsVpceIDErr != nil {
+			return awsVpceIDErr
 		}
 	}
 
 	if config.AzurePrivateLinkServiceID != "" {
-		azurePlsIdErr := d.Set("azure_pls_id", config.AzurePrivateLinkServiceID)
-		if azurePlsIdErr != nil {
-			return azurePlsIdErr
+		azurePlsIDErr := d.Set("azure_pls_id", config.AzurePrivateLinkServiceID)
+		if azurePlsIDErr != nil {
+			return azurePlsIDErr
 		}
 	}
 

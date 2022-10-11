@@ -1052,7 +1052,7 @@ func fileFormatIDFromString(stringID string) (*fileFormatID, error) {
 	reader.Comma = fileFormatIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {

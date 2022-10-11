@@ -109,7 +109,7 @@ func grantIDFromString(stringID string) (*grantID, error) {
 	reader.Comma = grantIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {

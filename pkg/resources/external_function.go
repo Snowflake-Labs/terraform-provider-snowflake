@@ -209,7 +209,7 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 	reader.Comma = externalFunctionIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -352,7 +352,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 
 	// Note: 'language' must be EXTERNAL and 'is_external_function' set to Y
 	if externalFunction.Language.String != "EXTERNAL" || externalFunction.IsExternalFunction.String != "Y" {
-		return fmt.Errorf("Expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
+		return fmt.Errorf("expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
 	}
 
 	if err := d.Set("name", externalFunction.ExternalFunctionName.String); err != nil {

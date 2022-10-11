@@ -75,16 +75,16 @@ func TestOAuthDSN(t *testing.T) {
 		protocol         string
 		port             int
 	}
-	pseudorandom_access_token := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
+	pseudorandomAccessToken := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
 	tests := []struct {
 		name    string
 		args    args
 		want    string
 		wantErr bool
 	}{
-		{"simple_oauth", args{"acct", "user", pseudorandom_access_token, "region", "role", "", "https", 443},
+		{"simple_oauth", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
 			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"oauth_over_password", args{"acct", "user", pseudorandom_access_token, "region", "role", "", "https", 443},
+		{"oauth_over_password", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
 			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
 		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role", "", "https", 443},
 			"", true},
@@ -106,27 +106,27 @@ func TestOAuthDSN(t *testing.T) {
 
 func TestGetOauthDATA(t *testing.T) {
 	type param struct {
-		refresh_token,
-		redirect_url string
+		refreshToken,
+		redirectURL string
 	}
-	refresh_token := "ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW+0cE7KJx2yoUV0ysWu3HKwhJ1v/iEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX/JUM3/wzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY="
-	redirect_url := "https://localhost.com"
+	refreshToken := "ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW+0cE7KJx2yoUV0ysWu3HKwhJ1v/iEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX/JUM3/wzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY="
+	redirectURL := "https://localhost.com"
 	cases := []struct {
 		name    string
 		param   param
 		want    string
 		wantErr bool
 	}{
-		{"simpleData", param{refresh_token, redirect_url},
+		{"simpleData", param{refreshToken, redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D",
 			false},
-		{"errorData", param{"no_refresh_token", redirect_url},
+		{"errorData", param{"no_refresh_token", redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=no_refresh_token",
 			false},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := provider.GetOauthData(tt.param.refresh_token, tt.param.redirect_url)
+			got := provider.GetOauthData(tt.param.refreshToken, tt.param.redirectURL)
 			want, err := url.ParseQuery(tt.want)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetData() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)
@@ -229,11 +229,11 @@ func TestGetOauthAccessToken(t *testing.T) {
 					Header:     make(http.Header),
 				}
 			})
-			req_got, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientsecret)
+			reqGot, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientsecret)
 			if err != nil {
 				t.Errorf("GetOauthRequest() %v", err)
 			}
-			body, err := client.Do(req_got)
+			body, err := client.Do(reqGot)
 			if err != nil {
 				t.Errorf("Body was not returned %v", err)
 			}

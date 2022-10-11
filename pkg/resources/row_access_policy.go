@@ -83,7 +83,7 @@ func rowAccessPolicyIDFromString(stringID string) (*rowAccessPolicyID, error) {
 	reader.Comma = rowAccessPolicyIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {

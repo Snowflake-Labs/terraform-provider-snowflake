@@ -35,7 +35,7 @@ func TestAcc_ExternalTableFutureGrant(t *testing.T) {
 	})
 }
 
-func externalTableGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func externalTableGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
 	t.Helper()
 	r := require.New(t)
 
@@ -65,8 +65,8 @@ resource "snowflake_external_table_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

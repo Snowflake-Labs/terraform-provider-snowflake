@@ -10,7 +10,7 @@ import (
 type EntityType string
 
 const (
-	ApiIntegrationType          EntityType = "API INTEGRATION"
+	APIIntegrationType          EntityType = "API INTEGRATION"
 	DatabaseType                EntityType = "DATABASE"
 	ManagedAccountType          EntityType = "MANAGED ACCOUNT"
 	ResourceMonitorType         EntityType = "RESOURCE MONITOR"

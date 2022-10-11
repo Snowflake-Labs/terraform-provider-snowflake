@@ -177,12 +177,12 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Could not show storage integration: %w", err)
+		return fmt.Errorf("could not show storage integration: %w", err)
 	}
 
 	// Note: category must be STORAGE or something is broken
 	if c := s.Category.String; c != "STORAGE" {
-		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be a STORAGE integration, got %v", id, c)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
@@ -208,7 +208,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.StorageIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe storage integration: %w", err)
+		return fmt.Errorf("could not describe storage integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -377,19 +377,19 @@ func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.Settin
 	case "S3", "S3GOV":
 		v, ok := data.GetOk("storage_aws_role_arn")
 		if !ok {
-			return fmt.Errorf("If you use the S3 storage provider you must specify a storage_aws_role_arn")
+			return fmt.Errorf("if you use the S3 storage provider you must specify a storage_aws_role_arn")
 		}
 		stmt.SetString(`STORAGE_AWS_ROLE_ARN`, v.(string))
 	case "AZURE":
 		v, ok := data.GetOk("azure_tenant_id")
 		if !ok {
-			return fmt.Errorf("If you use the Azure storage provider you must specify an azure_tenant_id")
+			return fmt.Errorf("if you use the Azure storage provider you must specify an azure_tenant_id")
 		}
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
 	case "GCS":
 		// nothing to set here
 	default:
-		return fmt.Errorf("Unexpected provider %v", storageProvider)
+		return fmt.Errorf("unexpected provider %v", storageProvider)
 	}
 
 	return nil
