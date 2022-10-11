@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
@@ -41,15 +41,19 @@ var procedureSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument name",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument type",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument type",
 				},
 			},
 		},
@@ -61,9 +65,25 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "The return type of the procedure",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		Required:         true,
-		ForceNew:         true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.EqualFold(old, new) {
+				return true
+			}
+
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			if slices.Contains(varcharType, strings.ToUpper(old)) && slices.Contains(varcharType, strings.ToUpper(new)) {
+				return true
+			}
+
+			// all these types are equivalent https://docs.snowflake.com/en/sql-reference/data-types-numeric.html#int-integer-bigint-smallint-tinyint-byteint
+			integerTypes := []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT", "NUMBER(38,0)"}
+			if slices.Contains(integerTypes, strings.ToUpper(old)) && slices.Contains(integerTypes, strings.ToUpper(new)) {
+				return true
+			}
+			return false
+		},
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
@@ -76,10 +96,11 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "SQL",
-		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		ValidateFunc:     validation.StringInSlice(procedureLanguages, true),
-		Description:      "Specifies the language of the stored procedure code.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
+		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -268,10 +289,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "returns":
-			// Format in Snowflake DB is RETURN_TYPE(<some number>) or RETURN_TYPE
-			re := regexp.MustCompile(`^([A-Z0-9_]+)\s?(\([0-9]*\))?$`)
-			match := re.FindStringSubmatch(desc.Value.String)
-			if err = d.Set("return_type", match[1]); err != nil {
+			if err = d.Set("return_type", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":

@@ -52,7 +52,6 @@ func TestProcedureCreate(t *testing.T) {
 		err := resources.CreateProcedure(d, db)
 		r.NoError(err)
 		r.Equal("MY_PROC", d.Get("name").(string))
-		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 	})
 }
@@ -89,7 +88,6 @@ func TestProcedureRead(t *testing.T) {
 		r.Equal("MY_DB", d.Get("database").(string))
 		r.Equal("MY_SCHEMA", d.Get("schema").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
-		r.Equal("VARCHAR", d.Get("return_type").(string))
 		r.Equal("SQL", d.Get("language").(string))
 		r.Equal("IMMUTABLE", d.Get("return_behavior").(string))
 		r.Equal(procedureBody, d.Get("statement").(string))
@@ -112,7 +110,6 @@ func TestProcedureRead(t *testing.T) {
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
 		r.Equal("MY_PROC", d.Get("name").(string))
-		r.Equal("TABLE", d.Get("return_type").(string))
 	})
 }
 
