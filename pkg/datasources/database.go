@@ -50,7 +50,7 @@ var databaseSchema = map[string]*schema.Schema{
 	},
 }
 
-// Database the Snowflake Database resource
+// Database the Snowflake Database resource.
 func Database() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadDatabase,
@@ -58,7 +58,7 @@ func Database() *schema.Resource {
 	}
 }
 
-// ReadDatabase read the database meta-data information
+// ReadDatabase read the database meta-data information.
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbx := sqlx.NewDb(db, "snowflake")

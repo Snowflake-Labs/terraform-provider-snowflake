@@ -6,7 +6,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// TODO write a test for a candidate that's not castable to a string
+// TODO write a test for a candidate that's not castable to a string.
 func TestValidateIdentifier(t *testing.T) {
 	cases := []struct {
 		candidate string

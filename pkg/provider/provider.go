@@ -25,7 +25,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
-// Provider is a provider
+// Provider is a provider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -237,6 +237,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_notification_integration":       resources.NotificationIntegration(),
 		"snowflake_stream":                         resources.Stream(),
 		"snowflake_table":                          resources.Table(),
+		"snowflake_table_constraint":               resources.TableConstraint(),
 		"snowflake_external_table":                 resources.ExternalTable(),
 		"snowflake_tag":                            resources.Tag(),
 		"snowflake_tag_association":                resources.TagAssociation(),
@@ -314,7 +315,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
 		if err != nil {
-			return nil, errors.Wrap(err, "could not retreive access token from refresh token")
+			return nil, errors.Wrap(err, "could not retrieve access token from refresh token")
 		}
 		oauthAccessToken = accessToken
 	}
@@ -443,12 +444,12 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {
-		return nil, fmt.Errorf("Could not parse private key, key is not in PEM format")
+		return nil, fmt.Errorf("could not parse private key, key is not in PEM format")
 	}
 
 	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
 		if len(passhrase) == 0 {
-			return nil, fmt.Errorf("Private key requires a passphrase, but private_key_passphrase was not supplied")
+			return nil, fmt.Errorf("private key requires a passphrase, but private_key_passphrase was not supplied")
 		}
 		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
 		if err != nil {
@@ -478,32 +479,32 @@ type Result struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-func GetOauthData(refreshToken, redirectUrl string) url.Values {
+func GetOauthData(refreshToken, redirectURL string) url.Values {
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
-	data.Set("redirect_uri", redirectUrl)
+	data.Set("redirect_uri", redirectURL)
 	return data
 }
 
-func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret string) (*http.Request, error) {
+func GetOauthRequest(dataContent io.Reader, endPoint, clientID, clientSecret string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", endPoint, dataContent)
 	if err != nil {
 		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
 	}
-	request.SetBasicAuth(clientId, clientSecret)
+	request.SetBasicAuth(clientID, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	return request, nil
 }
 
 func GetOauthAccessToken(
 	endPoint,
-	client_id,
-	client_secret string,
+	clientID,
+	clientSecret string,
 	data url.Values) (string, error) {
 
 	client := &http.Client{}
-	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {
 		return "", errors.Wrap(err, "Oauth request returned an error:")
 	}

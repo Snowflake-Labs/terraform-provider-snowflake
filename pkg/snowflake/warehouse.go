@@ -38,7 +38,7 @@ func (wb *WarehouseBuilder) Create() *CreateBuilder {
 	return wb.Builder.Create()
 }
 
-// ShowParameters returns the query to show the parameters for the warehouse
+// ShowParameters returns the query to show the parameters for the warehouse.
 func (wb *WarehouseBuilder) ShowParameters() string {
 	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %q", wb.Builder.name)
 }
@@ -53,7 +53,7 @@ func Warehouse(name string) *WarehouseBuilder {
 }
 
 // warehouse is a go representation of a grant that can be used in conjunction
-// with github.com/jmoiron/sqlx
+// with github.com/jmoiron/sqlx.
 type warehouse struct {
 	Name            string        `db:"name"`
 	State           string        `db:"state"`
@@ -86,7 +86,7 @@ type warehouse struct {
 	ScalingPolicy   string        `db:"scaling_policy"`
 }
 
-// warehouseParams struct to represent a row of parameters
+// warehouseParams struct to represent a row of parameters.
 type warehouseParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
@@ -102,7 +102,7 @@ func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
 	return w, err
 }
 
-// ScanWarehouseParameters takes a database row and converts it to a warehouse parameter pointer
+// ScanWarehouseParameters takes a database row and converts it to a warehouse parameter pointer.
 func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
 	params := []*warehouseParams{}
 

@@ -44,7 +44,7 @@ var shareSchema = map[string]*schema.Schema{
 	},
 }
 
-// Share returns a pointer to the resource representing a share
+// Share returns a pointer to the resource representing a share.
 func Share() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateShare,
@@ -59,7 +59,7 @@ func Share() *schema.Resource {
 	}
 }
 
-// CreateShare implements schema.CreateFunc
+// CreateShare implements schema.CreateFunc.
 func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -156,7 +156,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ReadShare implements schema.ReadFunc
+// ReadShare implements schema.ReadFunc.
 func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -190,7 +190,7 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateShare implements schema.UpdateFunc
+// UpdateShare implements schema.UpdateFunc.
 func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	// Change the accounts first - this is a special case and won't work using the generic method
 	if d.HasChange("accounts") {
@@ -203,13 +203,13 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(d, meta)
 }
 
-// DeleteShare implements schema.DeleteFunc
+// DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
 }
 
 // StripAccountFromName removes the account prefix from a resource (e.g. a share)
-// that returns it (e.g. yt12345.my_share or org.acc.my_share should just be my_share)
+// that returns it (e.g. yt12345.my_share or org.acc.my_share should just be my_share).
 func StripAccountFromName(s string) string {
 	return s[strings.LastIndex(s, ".")+1:]
 }

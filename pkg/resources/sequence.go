@@ -68,7 +68,7 @@ type sequenceID struct {
 }
 
 // String() takes in a sequenceID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|SequenceName
+// DatabaseName|SchemaName|SequenceName.
 func (si *sequenceID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -82,7 +82,7 @@ func (si *sequenceID) String() (string, error) {
 	return strSequenceID, nil
 }
 
-// Sequence returns a pointer to the resource representing a sequence
+// Sequence returns a pointer to the resource representing a sequence.
 func Sequence() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSequence,
@@ -97,7 +97,7 @@ func Sequence() *schema.Resource {
 	}
 }
 
-// CreateSequence implements schema.CreateFunc
+// CreateSequence implements schema.CreateFunc.
 func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -134,7 +134,7 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 	return ReadSequence(d, meta)
 }
 
-// ReadSequence implements schema.ReadFunc
+// ReadSequence implements schema.ReadFunc.
 func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	sequenceID, err := sequenceIDFromString(d.Id())
@@ -285,13 +285,13 @@ func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
 }
 
 // sequenceIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
-// and returns a sequenceID object
+// and returns a sequenceID object.
 func sequenceIDFromString(stringID string) (*sequenceID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = sequenceIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {

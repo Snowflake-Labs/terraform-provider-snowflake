@@ -60,7 +60,7 @@ var tagGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// TagGrant returns a pointer to the resource representing a tag grant
+// TagGrant returns a pointer to the resource representing a tag grant.
 func TagGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -78,7 +78,7 @@ func TagGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateTagGrant implements schema.CreateFunc
+// CreateTagGrant implements schema.CreateFunc.
 func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	tagName := d.Get("tag_name").(string)
 	dbName := d.Get("database_name").(string)
@@ -111,7 +111,7 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadTagGrant(d, meta)
 }
 
-// ReadTagGrant implements schema.ReadFunc
+// ReadTagGrant implements schema.ReadFunc.
 func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -148,7 +148,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, tagGrantSchema, builder, false, validTagPrivileges)
 }
 
-// UpdateTagGrant implements schema.UpdateFunc
+// UpdateTagGrant implements schema.UpdateFunc.
 func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles. if nothing changed,
 	// nothing to update and we're done.
@@ -196,7 +196,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-// DeleteTagGrant implements schema.DeleteFunc
+// DeleteTagGrant implements schema.DeleteFunc.
 func DeleteTagGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {

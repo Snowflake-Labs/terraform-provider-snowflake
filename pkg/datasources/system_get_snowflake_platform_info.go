@@ -32,7 +32,7 @@ func SystemGetSnowflakePlatformInfo() *schema.Resource {
 	}
 }
 
-// ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc
+// ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc.
 func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	sel := snowflake.SystemGetSnowflakePlatformInfoQuery()

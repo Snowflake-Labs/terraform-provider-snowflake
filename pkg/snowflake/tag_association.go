@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
-// TagAssociationBuilder abstracts the creation of SQL queries for a Snowflake tag
+// TagAssociationBuilder abstracts the creation of SQL queries for a Snowflake tag.
 type TagAssociationBuilder struct {
 	databaseName string
 	objectName   string
@@ -24,35 +24,35 @@ type tagAssociation struct {
 	TagValue sql.NullString `db:"TAG_VALUE"`
 }
 
-// WithObjectId adds the name of the schema to the TagAssociationBuilder
+// WithObjectId adds the name of the schema to the TagAssociationBuilder.
 func (tb *TagAssociationBuilder) WithObjectName(objectName string) *TagAssociationBuilder {
 	tb.objectName = objectName
 	return tb
 }
 
-// WithObjectType adds the object type of the resource to add tag attachement to the TagAssociationBuilder
+// WithObjectType adds the object type of the resource to add tag attachement to the TagAssociationBuilder.
 func (tb *TagAssociationBuilder) WithObjectType(objectType string) *TagAssociationBuilder {
 	tb.objectType = objectType
 	return tb
 }
 
-// WithTagValue adds the name of the tag value to the TagAssociationBuilder
+// WithTagValue adds the name of the tag value to the TagAssociationBuilder.
 func (tb *TagAssociationBuilder) WithTagValue(tagValue string) *TagAssociationBuilder {
 	tb.tagValue = tagValue
 	return tb
 }
 
-// GetTagDatabase returns the value of the tag database of TagAssociationBuilder
+// GetTagDatabase returns the value of the tag database of TagAssociationBuilder.
 func (tb *TagAssociationBuilder) GetTagDatabase() string {
 	return tb.databaseName
 }
 
-// GetTagName returns the value of the tag name of TagAssociationBuilder
+// GetTagName returns the value of the tag name of TagAssociationBuilder.
 func (tb *TagAssociationBuilder) GetTagName() string {
 	return tb.schemaName
 }
 
-// GetTagSchema returns the value of the tag schema of TagAssociationBuilder
+// GetTagSchema returns the value of the tag schema of TagAssociationBuilder.
 func (tb *TagAssociationBuilder) GetTagSchema() string {
 	return tb.schemaName
 }
@@ -66,18 +66,11 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAssociation(tagID string) *TagAssociationBuilder {
-	parsedString := strings.Replace(tagID, "\"", "", -1)
-
-	var s []string
-	if strings.Contains(parsedString, "|") {
-		s = strings.Split(parsedString, "|")
-	} else if strings.Contains(parsedString, ".") {
-		s = strings.Split(parsedString, ".")
-	}
+	databaseName, schemaName, tagName := validation.ParseFullyQualifiedObjectID(tagID)
 	return &TagAssociationBuilder{
-		databaseName: s[0],
-		schemaName:   s[1],
-		tagName:      s[2],
+		databaseName: databaseName,
+		schemaName:   schemaName,
+		tagName:      tagName,
 	}
 }
 

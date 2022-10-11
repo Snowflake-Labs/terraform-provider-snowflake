@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// FileFormatBuilder abstracts the creation of SQL queries for a Snowflake file format
+// FileFormatBuilder abstracts the creation of SQL queries for a Snowflake file format.
 type FileFormatBuilder struct {
 	name                       string
 	db                         string
@@ -51,7 +51,7 @@ type FileFormatBuilder struct {
 	comment                    string
 }
 
-// QualifiedName prepends the db and schema and escapes everything nicely
+// QualifiedName prepends the db and schema and escapes everything nicely.
 func (ffb *FileFormatBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -60,199 +60,199 @@ func (ffb *FileFormatBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithFormatType adds a comment to the FileFormatBuilder
+// WithFormatType adds a comment to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithFormatType(f string) *FileFormatBuilder {
 	ffb.formatType = f
 	return ffb
 }
 
-// WithCompression adds compression to the FileFormatBuilder
+// WithCompression adds compression to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithCompression(c string) *FileFormatBuilder {
 	ffb.compression = c
 	return ffb
 }
 
-// WithRecordDelimiter adds a record delimiter to the FileFormatBuilder
+// WithRecordDelimiter adds a record delimiter to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithRecordDelimiter(r string) *FileFormatBuilder {
 	ffb.recordDelimiter = r
 	return ffb
 }
 
-// WithFieldDelimiter adds a field delimiter to the FileFormatBuilder
+// WithFieldDelimiter adds a field delimiter to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithFieldDelimiter(f string) *FileFormatBuilder {
 	ffb.fieldDelimiter = f
 	return ffb
 }
 
-// WithFileExtension adds a file extension to the FileFormatBuilder
+// WithFileExtension adds a file extension to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithFileExtension(f string) *FileFormatBuilder {
 	ffb.fileExtension = f
 	return ffb
 }
 
-// WithSkipHeader adds skip header to the FileFormatBuilder
+// WithSkipHeader adds skip header to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithSkipHeader(n int) *FileFormatBuilder {
 	ffb.skipHeader = n
 	return ffb
 }
 
-// WithSkipBlankLines adds skip blank lines to the FileFormatBuilder
+// WithSkipBlankLines adds skip blank lines to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithSkipBlankLines(n bool) *FileFormatBuilder {
 	ffb.skipBlankLines = n
 	return ffb
 }
 
-// WithDateFormat adds date format to the FileFormatBuilder
+// WithDateFormat adds date format to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithDateFormat(s string) *FileFormatBuilder {
 	ffb.dateFormat = s
 	return ffb
 }
 
-// WithTimeFormat adds time format to the FileFormatBuilder
+// WithTimeFormat adds time format to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithTimeFormat(s string) *FileFormatBuilder {
 	ffb.timeFormat = s
 	return ffb
 }
 
-// WithTimestampFormat adds timestamp format to the FileFormatBuilder
+// WithTimestampFormat adds timestamp format to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithTimestampFormat(s string) *FileFormatBuilder {
 	ffb.timestampFormat = s
 	return ffb
 }
 
-// WithBinaryFormat adds binary format to the FileFormatBuilder
+// WithBinaryFormat adds binary format to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithBinaryFormat(s string) *FileFormatBuilder {
 	ffb.binaryFormat = s
 	return ffb
 }
 
-// WithEscape adds escape to the FileFormatBuilder
+// WithEscape adds escape to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithEscape(s string) *FileFormatBuilder {
 	ffb.escape = s
 	return ffb
 }
 
-// WithEscapeUnenclosedField adds escape unenclosed field to the FileFormatBuilder
+// WithEscapeUnenclosedField adds escape unenclosed field to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithEscapeUnenclosedField(s string) *FileFormatBuilder {
 	ffb.escapeUnenclosedField = s
 	return ffb
 }
 
-// WithTrimSpace adds trim space to the FileFormatBuilder
+// WithTrimSpace adds trim space to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithTrimSpace(n bool) *FileFormatBuilder {
 	ffb.trimSpace = n
 	return ffb
 }
 
-// WithFieldOptionallyEnclosedBy adds field optionally enclosed by to the FileFormatBuilder
+// WithFieldOptionallyEnclosedBy adds field optionally enclosed by to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithFieldOptionallyEnclosedBy(s string) *FileFormatBuilder {
 	ffb.fieldOptionallyEnclosedBy = s
 	return ffb
 }
 
-// WithNullIf adds null if to the FileFormatBuilder
+// WithNullIf adds null if to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithNullIf(s []string) *FileFormatBuilder {
 	ffb.nullIf = s
 	return ffb
 }
 
-// WithErrorOnColumnCountMismatch adds error on column count mistmatch to the FileFormatBuilder
+// WithErrorOnColumnCountMismatch adds error on column count mistmatch to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithErrorOnColumnCountMismatch(n bool) *FileFormatBuilder {
 	ffb.errorOnColumnCountMismatch = n
 	return ffb
 }
 
-// WithReplaceInvalidCharacters adds replace invalid characters to the FileFormatBuilder
+// WithReplaceInvalidCharacters adds replace invalid characters to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithReplaceInvalidCharacters(n bool) *FileFormatBuilder {
 	ffb.replaceInvalidCharacters = n
 	return ffb
 }
 
-// WithValidateUTF8 adds validate utf8 to the FileFormatBuilder
+// WithValidateUTF8 adds validate utf8 to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithValidateUTF8(n bool) *FileFormatBuilder {
 	ffb.validateUTF8 = n
 	return ffb
 }
 
-// WithEmptyFieldAsNull adds empty field as null to the FileFormatBuilder
+// WithEmptyFieldAsNull adds empty field as null to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithEmptyFieldAsNull(n bool) *FileFormatBuilder {
 	ffb.emptyFieldAsNull = n
 	return ffb
 }
 
-// WithSkipByteOrderMark adds skip byte order mark to the FileFormatBuilder
+// WithSkipByteOrderMark adds skip byte order mark to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithSkipByteOrderMark(n bool) *FileFormatBuilder {
 	ffb.skipByteOrderMark = n
 	return ffb
 }
 
-// WithEnableOctal adds enable octal to the FileFormatBuilder
+// WithEnableOctal adds enable octal to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithEnableOctal(n bool) *FileFormatBuilder {
 	ffb.enableOctal = n
 	return ffb
 }
 
-// WithAllowDuplicate adds allow duplicate to the FileFormatBuilder
+// WithAllowDuplicate adds allow duplicate to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithAllowDuplicate(n bool) *FileFormatBuilder {
 	ffb.allowDuplicate = n
 	return ffb
 }
 
-// WithStripOuterArray adds strip outer array to the FileFormatBuilder
+// WithStripOuterArray adds strip outer array to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithStripOuterArray(n bool) *FileFormatBuilder {
 	ffb.stripOuterArray = n
 	return ffb
 }
 
-// WithStripNullValues adds strip null values to the FileFormatBuilder
+// WithStripNullValues adds strip null values to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithStripNullValues(n bool) *FileFormatBuilder {
 	ffb.stripNullValues = n
 	return ffb
 }
 
-// WithIgnoreUTF8Errors adds ignore UTF8 errors to the FileFormatBuilder
+// WithIgnoreUTF8Errors adds ignore UTF8 errors to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithIgnoreUTF8Errors(n bool) *FileFormatBuilder {
 	ffb.ignoreUTF8Errors = n
 	return ffb
 }
 
-// WithBinaryAsText adds binary as text to the FileFormatBuilder
+// WithBinaryAsText adds binary as text to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithBinaryAsText(n bool) *FileFormatBuilder {
 	ffb.binaryAsText = n
 	return ffb
 }
 
-// WithPreserveSpace adds preserve space to the FileFormatBuilder
+// WithPreserveSpace adds preserve space to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithPreserveSpace(n bool) *FileFormatBuilder {
 	ffb.preserveSpace = n
 	return ffb
 }
 
-// WithStripOuterElement adds strip outer element to the FileFormatBuilder
+// WithStripOuterElement adds strip outer element to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithStripOuterElement(n bool) *FileFormatBuilder {
 	ffb.stripOuterElement = n
 	return ffb
 }
 
-// WithDisableSnowflakeData adds disable Snowflake data to the FileFormatBuilder
+// WithDisableSnowflakeData adds disable Snowflake data to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithDisableSnowflakeData(n bool) *FileFormatBuilder {
 	ffb.disableSnowflakeData = n
 	return ffb
 }
 
-// WithDisableAutoConvert adds disbale auto convert to the FileFormatBuilder
+// WithDisableAutoConvert adds disbale auto convert to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithDisableAutoConvert(n bool) *FileFormatBuilder {
 	ffb.disableAutoConvert = n
 	return ffb
 }
 
-// WithEncoding adds encoding to the FileFormatBuilder
+// WithEncoding adds encoding to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithEncoding(e string) *FileFormatBuilder {
 	ffb.encoding = e
 	return ffb
 }
 
-// WithComment adds a comment to the FileFormatBuilder
+// WithComment adds a comment to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithComment(c string) *FileFormatBuilder {
 	ffb.comment = c
 	return ffb

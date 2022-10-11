@@ -80,7 +80,7 @@ func TestAcc_SchemaFutureGrants(t *testing.T) {
 	})
 }
 
-func futureTableAndViewGrantConfig(n, role_table, role_view string) string {
+func futureTableAndViewGrantConfig(n, roleTable, roleView string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
   name = "%v"
@@ -118,15 +118,15 @@ resource "snowflake_view_grant" "select_on_future_views" {
   depends_on    = [snowflake_schema.test, snowflake_role.view_reader]
 }
 
-`, n, n, role_table, role_view)
+`, n, n, roleTable, roleView)
 }
 
 func schemaGrantConfig(n, role, share string, future bool) string {
-	schema_name_config := `schema_name   = snowflake_schema.test.name
+	schemaNameConfig := `schema_name   = snowflake_schema.test.name
   shares        = [snowflake_share.test.name]`
 
 	if future {
-		schema_name_config = "on_future     = true"
+		schemaNameConfig = "on_future     = true"
 	}
 
 	return fmt.Sprintf(`
@@ -160,5 +160,5 @@ resource "snowflake_schema_grant" "test" {
 
   depends_on = [snowflake_database_grant.test]
 }
-`, n, n, role, share, schema_name_config)
+`, n, n, role, share, schemaNameConfig)
 }

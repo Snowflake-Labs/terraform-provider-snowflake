@@ -70,7 +70,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// OAuthIntegration returns a pointer to the resource representing an OAuth integration
+// OAuthIntegration returns a pointer to the resource representing an OAuth integration.
 func OAuthIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateOAuthIntegration,
@@ -85,7 +85,7 @@ func OAuthIntegration() *schema.Resource {
 	}
 }
 
-// CreateOAuthIntegration implements schema.CreateFunc
+// CreateOAuthIntegration implements schema.CreateFunc.
 func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -126,7 +126,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadOAuthIntegration(d, meta)
 }
 
-// ReadOAuthIntegration implements schema.ReadFunc
+// ReadOAuthIntegration implements schema.ReadFunc.
 func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -243,7 +243,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateOAuthIntegration implements schema.UpdateFunc
+// UpdateOAuthIntegration implements schema.UpdateFunc.
 func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -296,7 +296,7 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadOAuthIntegration(d, meta)
 }
 
-// DeleteOAuthIntegration implements schema.DeleteFunc
+// DeleteOAuthIntegration implements schema.DeleteFunc.
 func DeleteOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.OAuthIntegration)(d, meta)
 }

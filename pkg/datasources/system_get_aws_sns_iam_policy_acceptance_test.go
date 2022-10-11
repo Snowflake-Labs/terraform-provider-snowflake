@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// FIXME refactor to testhelpers
+// FIXME refactor to testhelpers.
 func providers() map[string]*schema.Provider {
 	p := provider.Provider()
 	return map[string]*schema.Provider{

@@ -80,7 +80,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// TableGrant returns a pointer to the resource representing a Table grant
+// TableGrant returns a pointer to the resource representing a Table grant.
 func TableGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -98,7 +98,7 @@ func TableGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateTableGrant implements schema.CreateFunc
+// CreateTableGrant implements schema.CreateFunc.
 func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		tableName  string
@@ -160,7 +160,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadTableGrant(d, meta)
 }
 
-// ReadTableGrant implements schema.ReadFunc
+// ReadTableGrant implements schema.ReadFunc.
 func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -211,7 +211,7 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, tableGrantSchema, builder, onFuture, validTablePrivileges)
 }
 
-// DeleteTableGrant implements schema.DeleteFunc
+// DeleteTableGrant implements schema.DeleteFunc.
 func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -235,7 +235,7 @@ func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateTableGrant implements schema.UpdateFunc
+// UpdateTableGrant implements schema.UpdateFunc.
 func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

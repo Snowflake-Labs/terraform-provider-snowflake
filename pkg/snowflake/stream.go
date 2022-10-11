@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// StreamBuilder abstracts the creation of SQL queries for a Snowflake stream
+// StreamBuilder abstracts the creation of SQL queries for a Snowflake stream.
 type StreamBuilder struct {
 	name            string
 	db              string
@@ -24,7 +24,7 @@ type StreamBuilder struct {
 	comment         string
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (sb *StreamBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -97,7 +97,7 @@ func Stream(name, db, schema string) *StreamBuilder {
 	}
 }
 
-// Create returns the SQL statement required to create a stream
+// Create returns the SQL statement required to create a stream.
 func (sb *StreamBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE STREAM %v`, sb.QualifiedName()))

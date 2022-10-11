@@ -39,7 +39,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagID,
+		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
 		ForceNew:     true,
 	},
 	"tag_value": {
@@ -56,7 +56,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 	},
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func TagAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTagAssociation,
@@ -74,7 +74,7 @@ func TagAssociation() *schema.Resource {
 	}
 }
 
-// CreateSchema implements schema.CreateFunc
+// CreateSchema implements schema.CreateFunc.
 func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagID := d.Get("tag_id").(string)
@@ -125,7 +125,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-// ReadSchema implements schema.ReadFunc
+// ReadSchema implements schema.ReadFunc.
 func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
@@ -164,7 +164,7 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	return ReadTagAssociation(d, meta)
 }
 
-// DeleteSchema implements schema.DeleteFunc
+// DeleteSchema implements schema.DeleteFunc.
 func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 

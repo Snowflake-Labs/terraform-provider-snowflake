@@ -75,7 +75,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ExternalTableGrant returns a pointer to the resource representing a external table grant
+// ExternalTableGrant returns a pointer to the resource representing a external table grant.
 func ExternalTableGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -93,7 +93,7 @@ func ExternalTableGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateExternalTableGrant implements schema.CreateFunc
+// CreateExternalTableGrant implements schema.CreateFunc.
 func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	var externalTableName string
 	if name, ok := d.GetOk("external_table_name"); ok {
@@ -145,7 +145,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadExternalTableGrant(d, meta)
 }
 
-// ReadExternalTableGrant implements schema.ReadFunc
+// ReadExternalTableGrant implements schema.ReadFunc.
 func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -195,7 +195,7 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, externalTableGrantSchema, builder, futureExternalTablesEnabled, validExternalTablePrivileges)
 }
 
-// DeleteExternalTableGrant implements schema.DeleteFunc
+// DeleteExternalTableGrant implements schema.DeleteFunc.
 func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -216,7 +216,7 @@ func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateExternalTableGrant implements schema.UpdateFunc
+// UpdateExternalTableGrant implements schema.UpdateFunc.
 func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

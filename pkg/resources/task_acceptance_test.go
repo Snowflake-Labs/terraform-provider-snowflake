@@ -70,7 +70,7 @@ var (
 		},
 	}
 
-	// Enables the Child and changes the SQL
+	// Enables the Child and changes the SQL.
 	stepOne = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
@@ -105,7 +105,7 @@ var (
 		},
 	}
 
-	// Changes Root Schedule and SQL
+	// Changes Root Schedule and SQL.
 	stepTwo = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
@@ -275,7 +275,7 @@ func TestAcc_Task(t *testing.T) {
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
-					// Terraform SDK is not able to differenciate if the
+					// Terraform SDK is not able to differentiate if the
 					// attribute has deleted or set to zero value.
 					// ResourceData.GetChange returns the zero value of defined
 					// type in schema as new the value. Provider handles 0 for

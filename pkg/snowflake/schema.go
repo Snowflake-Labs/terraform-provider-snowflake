@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
+// SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema.
 type SchemaBuilder struct {
 	name                 string
 	db                   string
@@ -22,7 +22,7 @@ type SchemaBuilder struct {
 	tags                 []TagValue
 }
 
-// QualifiedName prepends the db if set and escapes everything nicely
+// QualifiedName prepends the db if set and escapes everything nicely.
 func (sb *SchemaBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -35,39 +35,39 @@ func (sb *SchemaBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// Managed adds the WITH MANAGED ACCESS flag to the SchemaBuilder
+// Managed adds the WITH MANAGED ACCESS flag to the SchemaBuilder.
 func (sb *SchemaBuilder) Managed() *SchemaBuilder {
 	sb.managedAccess = true
 	return sb
 }
 
-// Transient adds the TRANSIENT flag to the SchemaBuilder
+// Transient adds the TRANSIENT flag to the SchemaBuilder.
 func (sb *SchemaBuilder) Transient() *SchemaBuilder {
 	sb.transient = true
 	return sb
 }
 
-// WithComment adds a comment to the SchemaBuilder
+// WithComment adds a comment to the SchemaBuilder.
 func (sb *SchemaBuilder) WithComment(c string) *SchemaBuilder {
 	sb.comment = c
 	return sb
 }
 
 // WithDataRetentionDays adds the days to retain data to the SchemaBuilder (must
-// be 0-1 for standard edition, 0-90 for enterprise edition)
+// be 0-1 for standard edition, 0-90 for enterprise edition).
 func (sb *SchemaBuilder) WithDataRetentionDays(d int) *SchemaBuilder {
 	sb.setDataRetentionDays = true
 	sb.dataRetentionDays = d
 	return sb
 }
 
-// WithDB adds the name of the database to the SchemaBuilder
+// WithDB adds the name of the database to the SchemaBuilder.
 func (sb *SchemaBuilder) WithDB(db string) *SchemaBuilder {
 	sb.db = db
 	return sb
 }
 
-// WithTags sets the tags on the SchemaBuilder
+// WithTags sets the tags on the SchemaBuilder.
 func (sb *SchemaBuilder) WithTags(tags []TagValue) *SchemaBuilder {
 	sb.tags = tags
 	return sb

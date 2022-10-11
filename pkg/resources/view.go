@@ -71,13 +71,13 @@ func normalizeQuery(str string) string {
 // semantically significant.
 //
 // If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
-// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldn't
+// queries and either comparing ASTs or emitting a canonical serialization for comparison. I couldn't
 // find such a library.
 func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
 }
 
-// View returns a pointer to the resource representing a view
+// View returns a pointer to the resource representing a view.
 func View() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateView,
@@ -92,7 +92,7 @@ func View() *schema.Resource {
 	}
 }
 
-// CreateView implements schema.CreateFunc
+// CreateView implements schema.CreateFunc.
 func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -134,7 +134,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	return ReadView(d, meta)
 }
 
-// ReadView implements schema.ReadFunc
+// ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbName, schema, view, err := splitViewID(d.Id())
@@ -191,7 +191,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	return d.Set("database", v.DatabaseName.String)
 }
 
-// UpdateView implements schema.UpdateFunc
+// UpdateView implements schema.UpdateFunc.
 func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	dbName, schema, view, err := splitViewID(d.Id())
 	if err != nil {
@@ -296,7 +296,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	return ReadView(d, meta)
 }
 
-// DeleteView implements schema.DeleteFunc
+// DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbName, schema, view, err := splitViewID(d.Id())

@@ -11,7 +11,7 @@ import (
 	pe "github.com/pkg/errors"
 )
 
-// FunctionBuilder abstracts the creation of Function
+// FunctionBuilder abstracts the creation of Function.
 type FunctionBuilder struct {
 	name              string
 	schema            string
@@ -31,28 +31,28 @@ type FunctionBuilder struct {
 	runtimeVersion    string // for Python runtime version
 }
 
-// QualifiedName prepends the db and schema and appends argument types
+// QualifiedName prepends the db and schema and appends argument types.
 func (pb *FunctionBuilder) QualifiedName() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Functions must specify a database a schema and a name")
+		return "", errors.New("functions must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, pb.db, pb.schema, pb.name, strings.Join(pb.argumentTypes, ", ")), nil
 }
 
-// QualifiedNameWithoutArguments prepends the db and schema if set
+// QualifiedNameWithoutArguments prepends the db and schema if set.
 func (pb *FunctionBuilder) QualifiedNameWithoutArguments() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Functions must specify a database a schema and a name")
+		return "", errors.New("functions must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"`, pb.db, pb.schema, pb.name), nil
 }
 
-// Returns the arguments signature of the function in a form <function>(<type>, <type>, ..) RETURN <type>
+// Returns the arguments signature of the function in a form <function>(<type>, <type>, ..) RETURN <type>.
 func (pb *FunctionBuilder) ArgumentsSignature() (string, error) {
 	return fmt.Sprintf(`%v(%v) RETURN %v`, pb.name, strings.Join(pb.argumentTypes, ", "), pb.returnType), nil
 }
 
-// WithArgs sets the args and argumentTypes on the FunctionBuilder
+// WithArgs sets the args and argumentTypes on the FunctionBuilder.
 func (pb *FunctionBuilder) WithArgs(args []map[string]string) *FunctionBuilder {
 	pb.args = []map[string]string{}
 	for _, arg := range args {
@@ -64,73 +64,73 @@ func (pb *FunctionBuilder) WithArgs(args []map[string]string) *FunctionBuilder {
 	return pb
 }
 
-// WithRuntimeVersion
+// WithRuntimeVersion.
 func (pb *FunctionBuilder) WithRuntimeVersion(r string) *FunctionBuilder {
 	pb.runtimeVersion = r
 	return pb
 }
 
-// WithReturnBehavior
+// WithReturnBehavior.
 func (pb *FunctionBuilder) WithReturnBehavior(s string) *FunctionBuilder {
 	pb.returnBehavior = s
 	return pb
 }
 
-// WithNullInputBehavior
+// WithNullInputBehavior.
 func (pb *FunctionBuilder) WithNullInputBehavior(s string) *FunctionBuilder {
 	pb.nullInputBehavior = s
 	return pb
 }
 
-// WithReturnType adds the data type of the return type to the FunctionBuilder
+// WithReturnType adds the data type of the return type to the FunctionBuilder.
 func (pb *FunctionBuilder) WithReturnType(s string) *FunctionBuilder {
 	pb.returnType = strings.ToUpper(s)
 	return pb
 }
 
-// WithLanguage sets the language to SQL, JAVA or JAVASCRIPT
+// WithLanguage sets the language to SQL, JAVA or JAVASCRIPT.
 func (pb *FunctionBuilder) WithLanguage(s string) *FunctionBuilder {
 	pb.language = s
 	return pb
 }
 
-// WithPackages
+// WithPackages.
 func (pb *FunctionBuilder) WithPackages(s []string) *FunctionBuilder {
 	pb.packages = s
 	return pb
 }
 
-// WithImports adds jar files to import for Java function or Python file for Python function
+// WithImports adds jar files to import for Java function or Python file for Python function.
 func (pb *FunctionBuilder) WithImports(s []string) *FunctionBuilder {
 	pb.imports = s
 	return pb
 }
 
-// WithHandler sets the handler method for Java / Python function
+// WithHandler sets the handler method for Java / Python function.
 func (pb *FunctionBuilder) WithHandler(s string) *FunctionBuilder {
 	pb.handler = s
 	return pb
 }
 
-// WithTargetPath sets the target path for compiled jar file for Java function or Python file for Python function
+// WithTargetPath sets the target path for compiled jar file for Java function or Python file for Python function.
 func (pb *FunctionBuilder) WithTargetPath(s string) *FunctionBuilder {
 	pb.targetPath = s
 	return pb
 }
 
-// WithComment adds a comment to the FunctionBuilder
+// WithComment adds a comment to the FunctionBuilder.
 func (pb *FunctionBuilder) WithComment(c string) *FunctionBuilder {
 	pb.comment = c
 	return pb
 }
 
-// WithStatement adds the SQL/JAVASCRIPT/JAVA statement to be used for the function
+// WithStatement adds the SQL/JAVASCRIPT/JAVA statement to be used for the function.
 func (pb *FunctionBuilder) WithStatement(s string) *FunctionBuilder {
 	pb.statement = s
 	return pb
 }
 
-// Returns the argument types
+// Returns the argument types.
 func (pb *FunctionBuilder) ArgTypes() []string {
 	return pb.argumentTypes
 }
@@ -262,13 +262,13 @@ func (vb *FunctionBuilder) RemoveComment() (string, error) {
 }
 
 // Show returns the SQL query that will show the row representing this function.
-// This show statement returns all functions with the given name (overloaded ones)
+// This show statement returns all functions with the given name (overloaded ones).
 func (pb *FunctionBuilder) Show() string {
 	return fmt.Sprintf(`SHOW USER FUNCTIONS LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
 }
 
 // To describe the function the name must be specified as fully qualified name
-// including argument types
+// including argument types.
 func (pb *FunctionBuilder) Describe() (string, error) {
 	qn, err := pb.QualifiedName()
 	if err != nil {
@@ -302,7 +302,7 @@ type functionDescription struct {
 }
 
 // ScanFunctionDescription reads through the rows with property and value columns
-// and returns a slice of functionDescription structs
+// and returns a slice of functionDescription structs.
 func ScanFunctionDescription(rows *sqlx.Rows) ([]functionDescription, error) {
 	pdsl := []functionDescription{}
 	for rows.Next() {

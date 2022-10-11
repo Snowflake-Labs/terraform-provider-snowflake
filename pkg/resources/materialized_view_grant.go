@@ -18,7 +18,7 @@ var validMaterializedViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
 )
 
-// The schema holds the resource variables that can be provided in the Terraform
+// The schema holds the resource variables that can be provided in the Terraform.
 var materializedViewGrantSchema = map[string]*schema.Schema{
 	"materialized_view_name": {
 		Type:        schema.TypeString,
@@ -81,7 +81,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
+// ViewGrant returns a pointer to the resource representing a view grant.
 func MaterializedViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -99,7 +99,7 @@ func MaterializedViewGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateViewGrant implements schema.CreateFunc
+// CreateViewGrant implements schema.CreateFunc.
 func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var materializedViewName string
 	if name, ok := d.GetOk("materialized_view_name"); ok {
@@ -152,7 +152,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	return ReadMaterializedViewGrant(d, meta)
 }
 
-// ReadViewGrant implements schema.ReadFunc
+// ReadViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -202,7 +202,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
 }
 
-// DeleteViewGrant implements schema.DeleteFunc
+// DeleteViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -223,7 +223,7 @@ func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateMaterializedViewGrant implements schema.UpdateFunc
+// UpdateMaterializedViewGrant implements schema.UpdateFunc.
 func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done
