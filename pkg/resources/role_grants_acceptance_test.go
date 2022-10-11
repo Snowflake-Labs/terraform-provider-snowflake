@@ -15,6 +15,7 @@ import (
 )
 
 func MustParseInt(t *testing.T, input string) int64 {
+	t.Helper()
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
 		t.Error(err)
@@ -56,6 +57,7 @@ func listSetEqual(a, b []string) bool {
 }
 
 func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) func(state *terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {

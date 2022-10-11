@@ -16,6 +16,7 @@ import (
 const procedureBody string = "hi"
 
 func prepDummyProcedureResource(t *testing.T) *schema.ResourceData {
+	t.Helper()
 	argument1 := map[string]interface{}{"name": "data", "type": "varchar"}
 	argument2 := map[string]interface{}{"name": "event_dt", "type": "date"}
 	in := map[string]interface{}{
@@ -34,12 +35,14 @@ func prepDummyProcedureResource(t *testing.T) *schema.ResourceData {
 }
 
 func TestProcedure(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 	err := resources.Procedure().InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
 func TestProcedureCreate(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 	d := prepDummyProcedureResource(t)
 
@@ -72,6 +75,7 @@ func expectProcedureRead(mock sqlmock.Sqlmock, returnType string) {
 }
 
 func TestProcedureRead(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 
 	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", map[string]interface{}{})
@@ -113,6 +117,7 @@ func TestProcedureRead(t *testing.T) {
 }
 
 func TestProcedureDelete(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 
 	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", map[string]interface{}{})

@@ -8,6 +8,7 @@ import (
 )
 
 func ExternalTestTableIDFromString(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 	// Vanilla
 	id := "database_name|schema_name|table"
@@ -40,6 +41,7 @@ func ExternalTestTableIDFromString(t *testing.T) {
 }
 
 func ExternalTestTableStruct(t *testing.T) {
+	t.Helper()
 	r := require.New(t)
 
 	// Vanilla

@@ -62,6 +62,7 @@ func TestAcc_StreamGrant_future(t *testing.T) {
 }
 
 func streamGrantConfigExisting(t *testing.T, database_name, schema_name, role, stream_name, table_name string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -126,6 +127,7 @@ resource "snowflake_stream_grant" "test" {
 }
 
 func streamGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

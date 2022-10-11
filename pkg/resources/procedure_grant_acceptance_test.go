@@ -37,6 +37,7 @@ func TestAcc_ProcedureFutureGrant(t *testing.T) {
 }
 
 func procedureGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `

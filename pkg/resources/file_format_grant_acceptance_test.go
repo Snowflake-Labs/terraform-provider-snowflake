@@ -36,6 +36,7 @@ func TestAcc_FileFormatGrantFutureGrant(t *testing.T) {
 }
 
 func fileFormatGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
