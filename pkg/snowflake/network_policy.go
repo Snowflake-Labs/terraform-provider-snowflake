@@ -12,8 +12,8 @@ import (
 type NetworkPolicyBuilder struct {
 	name          string
 	comment       string
-	allowedIpList string
-	blockedIpList string
+	allowedIPList string
+	blockedIPList string
 }
 
 // WithComment adds a comment to the NetworkPolicyBuilder.
@@ -22,15 +22,15 @@ func (npb *NetworkPolicyBuilder) WithComment(c string) *NetworkPolicyBuilder {
 	return npb
 }
 
-// WithAllowedIpList adds an allowedIpList to the NetworkPolicyBuilder.
-func (npb *NetworkPolicyBuilder) WithAllowedIpList(allowedIps []string) *NetworkPolicyBuilder {
-	npb.allowedIpList = helpers.IpListToSnowflakeString(allowedIps)
+// WithAllowedIPList adds an allowedIpList to the NetworkPolicyBuilder.
+func (npb *NetworkPolicyBuilder) WithAllowedIPList(allowedIps []string) *NetworkPolicyBuilder {
+	npb.allowedIPList = helpers.IPListToSnowflakeString(allowedIps)
 	return npb
 }
 
-// WithBlockedIpList adds a blockedIpList to the NetworkPolicyBuilder.
-func (npb *NetworkPolicyBuilder) WithBlockedIpList(blockedIps []string) *NetworkPolicyBuilder {
-	npb.blockedIpList = helpers.IpListToSnowflakeString(blockedIps)
+// WithBlockedIPList adds a blockedIpList to the NetworkPolicyBuilder.
+func (npb *NetworkPolicyBuilder) WithBlockedIPList(blockedIps []string) *NetworkPolicyBuilder {
+	npb.blockedIPList = helpers.IPListToSnowflakeString(blockedIps)
 	return npb
 }
 
@@ -50,15 +50,15 @@ func NetworkPolicy(name string) *NetworkPolicyBuilder {
 
 // Create returns the SQL query that will create a network policy.
 func (npb *NetworkPolicyBuilder) Create() string {
-	createSql := fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v`, npb.name, npb.allowedIpList)
-	if npb.blockedIpList != "" {
-		createSql = createSql + fmt.Sprintf(" BLOCKED_IP_LIST=%v", npb.blockedIpList)
+	createSQL := fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v`, npb.name, npb.allowedIPList)
+	if npb.blockedIPList != "" {
+		createSQL = createSQL + fmt.Sprintf(" BLOCKED_IP_LIST=%v", npb.blockedIPList)
 	}
 	if npb.comment != "" {
-		createSql = createSql + fmt.Sprintf(` COMMENT="%v"`, npb.comment)
+		createSQL = createSQL + fmt.Sprintf(` COMMENT="%v"`, npb.comment)
 	}
 
-	return createSql
+	return createSQL
 }
 
 // Describe returns the SQL query that will describe a network policy.
@@ -77,8 +77,8 @@ func (npb *NetworkPolicyBuilder) RemoveComment() string {
 }
 
 // ChangeIpList returns the SQL query that will update the ip list (of the specified listType) on the network policy.
-func (npb *NetworkPolicyBuilder) ChangeIpList(listType string, ips []string) string {
-	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, helpers.IpListToSnowflakeString(ips))
+func (npb *NetworkPolicyBuilder) ChangeIPList(listType string, ips []string) string {
+	return fmt.Sprintf(`ALTER NETWORK POLICY "%v" SET %v_IP_LIST = %v`, npb.name, listType, helpers.IPListToSnowflakeString(ips))
 }
 
 // Drop returns the SQL query that will drop a network policy.
@@ -126,8 +126,8 @@ type NetworkPolicyStruct struct {
 	CreatedOn              sql.NullString `db:"created_on"`
 	Name                   sql.NullString `db:"name"`
 	Comment                sql.NullString `db:"comment"`
-	EntriesInAllowedIpList sql.NullString `db:"entries_in_allowed_ip_list"`
-	EntriesInBlockedIpList sql.NullString `db:"entries_in_blocked_ip_list"`
+	EntriesInAllowedIPList sql.NullString `db:"entries_in_allowed_ip_list"`
+	EntriesInBlockedIPList sql.NullString `db:"entries_in_blocked_ip_list"`
 }
 
 type NetworkPolicyAttachmentStruct struct {

@@ -34,7 +34,7 @@ type FunctionBuilder struct {
 // QualifiedName prepends the db and schema and appends argument types.
 func (pb *FunctionBuilder) QualifiedName() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Functions must specify a database a schema and a name")
+		return "", errors.New("functions must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, pb.db, pb.schema, pb.name, strings.Join(pb.argumentTypes, ", ")), nil
 }
@@ -42,7 +42,7 @@ func (pb *FunctionBuilder) QualifiedName() (string, error) {
 // QualifiedNameWithoutArguments prepends the db and schema if set.
 func (pb *FunctionBuilder) QualifiedNameWithoutArguments() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Functions must specify a database a schema and a name")
+		return "", errors.New("functions must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"`, pb.db, pb.schema, pb.name), nil
 }

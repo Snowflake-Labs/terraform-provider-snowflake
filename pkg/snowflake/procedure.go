@@ -30,7 +30,7 @@ type ProcedureBuilder struct {
 // QualifiedName prepends the db and schema and appends argument types.
 func (pb *ProcedureBuilder) QualifiedName() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Procedures must specify a database a schema and a name")
+		return "", errors.New("procedures must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, pb.db, pb.schema, pb.name, strings.Join(pb.argumentTypes, ", ")), nil
 }
@@ -38,7 +38,7 @@ func (pb *ProcedureBuilder) QualifiedName() (string, error) {
 // QualifiedNameWithoutArguments prepends the db and schema if set.
 func (pb *ProcedureBuilder) QualifiedNameWithoutArguments() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Procedures must specify a database a schema and a name")
+		return "", errors.New("procedures must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"`, pb.db, pb.schema, pb.name), nil
 }

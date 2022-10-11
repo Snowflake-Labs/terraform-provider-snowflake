@@ -120,7 +120,7 @@ func stageIDFromString(stringID string) (*stageID, error) {
 	reader.Comma = stageIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -276,7 +276,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("url", stageDesc.Url)
+	err = d.Set("url", stageDesc.URL)
 	if err != nil {
 		return err
 	}

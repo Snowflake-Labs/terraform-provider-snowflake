@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestApiIntegration(t *testing.T) {
+func TestAPIIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.ApiIntegration("aws_api")
+	builder := snowflake.APIIntegration("aws_api")
 	r.NotNil(builder)
 
 	q := builder.Show()

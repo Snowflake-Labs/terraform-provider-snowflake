@@ -18,7 +18,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: masking_policies(databaseName, schemaName, maskingPolicyName),
+				Config: maskingPolicies(databaseName, schemaName, maskingPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.t", "database", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.t", "schema", schemaName),
@@ -31,7 +31,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 	})
 }
 
-func masking_policies(databaseName string, schemaName string, maskingPolicyName string) string {
+func maskingPolicies(databaseName string, schemaName string, maskingPolicyName string) string {
 	return fmt.Sprintf(`
 
 	resource snowflake_database "test" {

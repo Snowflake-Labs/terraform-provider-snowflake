@@ -49,10 +49,10 @@ func TestAccStorageIntegration_aws(t *testing.T) {
 	})
 }
 
-func storageIntegrationConfig(name string, locations []string, aws_object_acl bool) string {
-	aws_object_acl_config := ""
-	if aws_object_acl {
-		aws_object_acl_config = "storage_aws_object_acl = \"bucket-owner-full-control\""
+func storageIntegrationConfig(name string, locations []string, awsObjectACL bool) string {
+	awsObjectACLConfig := ""
+	if awsObjectACL {
+		awsObjectACLConfig = "storage_aws_object_acl = \"bucket-owner-full-control\""
 	}
 	return fmt.Sprintf(`
 resource snowflake_storage_integration i {
@@ -63,5 +63,5 @@ resource snowflake_storage_integration i {
 	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 	%s
 }
-`, name, locations, aws_object_acl_config)
+`, name, locations, awsObjectACLConfig)
 }

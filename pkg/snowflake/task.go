@@ -15,20 +15,20 @@ import (
 
 // TaskBuilder abstracts the creation of sql queries for a snowflake task.
 type TaskBuilder struct {
-	name                                     string
-	db                                       string
-	schema                                   string
-	warehouse                                string
-	schedule                                 string
-	session_parameters                       map[string]interface{}
-	user_task_timeout_ms                     int
-	comment                                  string
-	after                                    string
-	when                                     string
-	sql_statement                            string
-	disabled                                 bool
-	user_task_managed_initial_warehouse_size string
-	errorIntegration                         string
+	name                                string
+	db                                  string
+	schema                              string
+	warehouse                           string
+	schedule                            string
+	sessionParameters                   map[string]interface{}
+	userTaskTimeoutMS                   int
+	comment                             string
+	after                               string
+	when                                string
+	SQLStatement                        string
+	disabled                            bool
+	userTaskManagedInitialWarehouseSize string
+	errorIntegration                    string
 }
 
 // GetFullName prepends db and schema to in parameter.
@@ -64,7 +64,7 @@ func (tb *TaskBuilder) WithSchedule(s string) *TaskBuilder {
 
 // WithSessionParameters adds session parameters to the TaskBuilder.
 func (tb *TaskBuilder) WithSessionParameters(params map[string]interface{}) *TaskBuilder {
-	tb.session_parameters = params
+	tb.sessionParameters = params
 	return tb
 }
 
@@ -76,7 +76,7 @@ func (tb *TaskBuilder) WithComment(c string) *TaskBuilder {
 
 // WithTimeout adds a timeout to the TaskBuilder.
 func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
-	tb.user_task_timeout_ms = t
+	tb.userTaskTimeoutMS = t
 	return tb
 }
 
@@ -94,13 +94,13 @@ func (tb *TaskBuilder) WithCondition(when string) *TaskBuilder {
 
 // WithStatement adds a sql statement to the TaskBuilder.
 func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
-	tb.sql_statement = sql
+	tb.SQLStatement = sql
 	return tb
 }
 
 // WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder.
 func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *TaskBuilder {
-	tb.user_task_managed_initial_warehouse_size = initialWarehouseSize
+	tb.userTaskManagedInitialWarehouseSize = initialWarehouseSize
 	return tb
 }
 
@@ -138,8 +138,8 @@ func (tb *TaskBuilder) Create() string {
 	if tb.warehouse != "" {
 		q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
 	} else {
-		if tb.user_task_managed_initial_warehouse_size != "" {
-			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.user_task_managed_initial_warehouse_size)))
+		if tb.userTaskManagedInitialWarehouseSize != "" {
+			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.userTaskManagedInitialWarehouseSize)))
 		}
 	}
 
@@ -147,16 +147,16 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, EscapeString(tb.schedule)))
 	}
 
-	if len(tb.session_parameters) > 0 {
+	if len(tb.sessionParameters) > 0 {
 		sp := make([]string, 0)
 		sortedKeys := make([]string, 0)
-		for k := range tb.session_parameters {
+		for k := range tb.sessionParameters {
 			sortedKeys = append(sortedKeys, k)
 		}
 		sort.Strings(sortedKeys)
 
 		for _, k := range sortedKeys {
-			sp = append(sp, EscapeString(fmt.Sprintf(`%v = "%v"`, k, tb.session_parameters[k])))
+			sp = append(sp, EscapeString(fmt.Sprintf(`%v = "%v"`, k, tb.sessionParameters[k])))
 		}
 		q.WriteString(fmt.Sprintf(` %v`, strings.Join(sp, ", ")))
 	}
@@ -169,8 +169,8 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(tb.errorIntegration)))
 	}
 
-	if tb.user_task_timeout_ms > 0 {
-		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.user_task_timeout_ms))
+	if tb.userTaskTimeoutMS > 0 {
+		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.userTaskTimeoutMS))
 	}
 
 	if tb.after != "" {
@@ -181,8 +181,8 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` WHEN %v`, tb.when))
 	}
 
-	if tb.sql_statement != "" {
-		q.WriteString(fmt.Sprintf(` AS %v`, UnescapeString(tb.sql_statement)))
+	if tb.SQLStatement != "" {
+		q.WriteString(fmt.Sprintf(` AS %v`, UnescapeString(tb.SQLStatement)))
 	}
 
 	return q.String()
@@ -275,8 +275,8 @@ func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
 	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), newCondition)
 }
 
-// ChangeSqlStatement returns the sql that will update the sql the task executes.
-func (tb *TaskBuilder) ChangeSqlStatement(newStatement string) string {
+// ChangeSQLStatement returns the sql that will update the sql the task executes.
+func (tb *TaskBuilder) ChangeSQLStatement(newStatement string) string {
 	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), UnescapeString(newStatement))
 }
 
@@ -332,7 +332,7 @@ func (tb *TaskBuilder) RemoveErrorIntegration() string {
 }
 
 type task struct {
-	Id               string         `db:"id"`
+	ID               string         `db:"id"`
 	CreatedOn        string         `db:"created_on"`
 	Name             string         `db:"name"`
 	DatabaseName     string         `db:"database_name"`

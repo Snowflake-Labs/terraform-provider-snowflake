@@ -28,7 +28,7 @@ type managedAccount struct {
 	Region    sql.NullString `db:"region"`
 	Locator   sql.NullString `db:"locator"`
 	CreatedOn sql.NullString `db:"created_on"`
-	Url       sql.NullString `db:"url"`
+	URL       sql.NullString `db:"url"`
 	Comment   sql.NullString `db:"comment"`
 	IsReader  bool           `db:"is_reader"`
 }

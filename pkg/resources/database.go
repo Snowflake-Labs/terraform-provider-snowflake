@@ -168,10 +168,10 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 
 func enableReplication(d *schema.ResourceData, meta interface{}, replicationConfig map[string]interface{}) error {
 	db := meta.(*sql.DB)
-	primaryDbName := d.Get("name").(string)
+	primaryDBName := d.Get("name").(string)
 	accounts := replicationConfig["accounts"].([]interface{})
 	accountsToEnableReplication := strings.Join(expandStringList(accounts), ", ")
-	enableReplicationStmt := fmt.Sprintf(`ALTER DATABASE "%s" ENABLE REPLICATION TO ACCOUNTS %s`, primaryDbName, accountsToEnableReplication)
+	enableReplicationStmt := fmt.Sprintf(`ALTER DATABASE "%s" ENABLE REPLICATION TO ACCOUNTS %s`, primaryDBName, accountsToEnableReplication)
 	return snowflake.Exec(db, enableReplicationStmt)
 }
 
@@ -203,15 +203,15 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 }
 
 func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
-	sourceDb := d.Get("from_replica").(string)
+	sourceDB := d.Get("from_replica").(string)
 
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
-	builder := snowflake.DatabaseFromReplica(name, sourceDb)
+	builder := snowflake.DatabaseFromReplica(name, sourceDB)
 
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDb)
+		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDB)
 	}
 
 	d.SetId(name)

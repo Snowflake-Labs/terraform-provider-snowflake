@@ -15,7 +15,7 @@ func TestAcc_NotificationAzureIntegration(t *testing.T) {
 		t.Skip("Skipping TestAcc_NotificationAzureIntegration")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	storageUri := "azure://great-bucket/great-path/"
+	storageURI := "azure://great-bucket/great-path/"
 	tenant := "some-guid"
 
 	resource.Test(t, resource.TestCase{
@@ -23,11 +23,11 @@ func TestAcc_NotificationAzureIntegration(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: azureNotificationIntegrationConfig(accName, storageUri, tenant),
+				Config: azureNotificationIntegrationConfig(accName, storageURI, tenant),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AZURE_STORAGE_QUEUE"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", storageUri),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", storageURI),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_tenant_id", tenant),
 				),
 			},
@@ -60,7 +60,7 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 	})
 }
 
-func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
+func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryURI string, azureTenantID string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
   name                            = "%s"
@@ -69,7 +69,7 @@ resource "snowflake_notification_integration" "test" {
   azure_tenant_id                 = "%s"
 }
 `
-	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
+	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryURI, azureTenantID)
 }
 
 func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string, gcpNotificationDirection string) string {

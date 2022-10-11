@@ -24,7 +24,7 @@ func TestAcc_ScimIntegration(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: scimIntegrationConfig_azure(scimIntName, scimProvisionerRole, scimNetworkPolicy),
+				Config: scimIntegrationConfigAzure(scimIntName, scimProvisionerRole, scimNetworkPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", scimIntName),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "AZURE"),
@@ -42,7 +42,7 @@ func TestAcc_ScimIntegration(t *testing.T) {
 	})
 }
 
-func scimIntegrationConfig_azure(name string, role string, policy string) string {
+func scimIntegrationConfigAzure(name string, role string, policy string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_role" "azure" {
 		name = "%s"

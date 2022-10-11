@@ -248,7 +248,7 @@ func ScanStageShow(row *sqlx.Row) (*stage, error) {
 }
 
 type descStageResult struct {
-	Url              string
+	URL              string
 	AwsExternalID    string
 	SnowflakeIamUser string
 	FileFormat       string
@@ -283,7 +283,7 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 
 		switch row.Property {
 		case "URL":
-			r.Url = strings.Trim(row.PropertyValue, "[\"]")
+			r.URL = strings.Trim(row.PropertyValue, "[\"]")
 		case "AWS_EXTERNAL_ID":
 			r.AwsExternalID = row.PropertyValue
 		case "SNOWFLAKE_IAM_USER":

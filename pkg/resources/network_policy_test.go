@@ -83,7 +83,7 @@ func TestIpListToString(t *testing.T) {
 	r := require.New(t)
 
 	in := []string{"192.168.0.100/24", "29.254.123.20"}
-	out := helpers.IpListToSnowflakeString(in)
+	out := helpers.IPListToSnowflakeString(in)
 
 	r.Equal("('192.168.0.100/24', '29.254.123.20')", out)
 }
