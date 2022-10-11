@@ -106,7 +106,6 @@ func TestProcedureRead(t *testing.T) {
 		err := resources.ReadProcedure(d, db)
 		r.NoError(err)
 		r.Equal("MY_PROC", d.Get("name").(string))
-		r.Equal("TABLE", d.Get("return_type").(string))
 	})
 }
 
