@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.47.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.46.0...v0.47.0) (2022-10-11)
+
+
+### Features
+
+* add new table constraint resource ([#1252](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1252)) ([fb1f145](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb1f145900dc27479e3769042b5b303d1dcef047))
+* integer return type for procedure ([#1266](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1266)) ([c1cf881](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c1cf881c0faa8634a375de80a8aa921fdfe090bf))
+
+
+### Misc
+
+* add godot to golangci ([#1263](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1263)) ([3323470](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3323470a7be1988d0d3d11deef3191078872c06c))
+
+
+### BugFixes
+
+* Database tags UNSET ([#1256](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1256)) ([#1257](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1257)) ([3d5dcac](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3d5dcac99c7fa859a811c72ce3dcd1f217c4f7d7))
+* missing t.Helper for thelper function ([#1264](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1264)) ([17bd501](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/17bd5014282201023572348a5ab51a3bf849ce86))
+* misspelling ([#1262](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1262)) ([e9595f2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e9595f27d0f181a32e77116c950cf141708221f5))
+
 ## [0.46.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.45.0...v0.46.0) (2022-09-29)
 
 
