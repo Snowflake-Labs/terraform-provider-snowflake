@@ -62,7 +62,7 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 // Supported DDL operations are:
 //   - ALTER <object_type> SET TAG
 //   - ALTER <object_type> UNSET TAG
-//	 - SYSTEM$GET_TAG (get current tag value)
+//   - SYSTEM$GET_TAG (get current tag value)
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
 func TagAssociation(tagID string) *TagAssociationBuilder {
