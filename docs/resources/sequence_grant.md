@@ -13,16 +13,13 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_sequence_grant grant {
-  database_name = "db"
+resource "snowflake_sequence_grant" "grant" {
+  database_name = "database"
   schema_name   = "schema"
   sequence_name = "sequence"
 
-  privilege = "select"
-  roles = [
-    "role1",
-    "role2",
-  ]
+  privilege = "SELECT"
+  roles = ["role1", "role2"]
 
   on_future         = false
   with_grant_option = false
