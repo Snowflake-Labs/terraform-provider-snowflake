@@ -16,7 +16,6 @@ provider "snowflake" {
   // required
   username = "..."
   account  = "..."
-  region   = "..."
 
   // optional, at exactly one must be set
   password               = "..."
@@ -34,6 +33,7 @@ provider "snowflake" {
   role = "..."
   host = "..."
   warehouse = "..."
+  region   = "..."
 }
 ```
 
