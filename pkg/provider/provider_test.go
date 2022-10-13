@@ -51,6 +51,7 @@ func TestDSN(t *testing.T) {
 			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:8443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "")
 			if (err != nil) != tt.wantErr {
@@ -90,6 +91,7 @@ func TestOAuthDSN(t *testing.T) {
 			"", true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "")
 
@@ -125,6 +127,7 @@ func TestGetOauthDATA(t *testing.T) {
 			false},
 	}
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := provider.GetOauthData(tt.param.refreshToken, tt.param.redirectURL)
 			want, err := url.ParseQuery(tt.want)
@@ -135,7 +138,6 @@ func TestGetOauthDATA(t *testing.T) {
 			if !reflect.DeepEqual(got, want) {
 				t.Errorf("GetData() = %v, want %v", got, tt.want)
 			}
-
 		})
 	}
 }
@@ -162,6 +164,7 @@ func TestGetOauthResponse(t *testing.T) {
 			false},
 	}
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientscret)
 			if err != nil {
@@ -216,6 +219,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 			"404", "", false},
 	}
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			client := NewTestClient(func(req *http.Request) *http.Response {
 				// Test request parameters

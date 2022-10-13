@@ -22,5 +22,4 @@ func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
-
 }

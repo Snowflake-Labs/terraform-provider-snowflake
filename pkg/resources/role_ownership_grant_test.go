@@ -76,7 +76,6 @@ func TestRoleOwnershipGrantDelete(t *testing.T) {
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-
 		mock.ExpectExec(`GRANT OWNERSHIP ON ROLE "good_name" TO ROLE "ACCOUNTADMIN" COPY CURRENT GRANTS`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := resources.DeleteRoleOwnershipGrant(d, db)
 		r.NoError(err)

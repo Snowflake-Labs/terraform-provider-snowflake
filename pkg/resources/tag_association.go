@@ -94,7 +94,6 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		log.Println("[DEBUG] validating tag creation")
 
 		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-
 			resp, err := snowflake.ListTagAssociations(builder, db)
 
 			if err != nil {
@@ -122,7 +121,6 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(dataIDInput)
 	return ReadTagAssociation(d, meta)
-
 }
 
 // ReadSchema implements schema.ReadFunc.

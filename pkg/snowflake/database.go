@@ -302,6 +302,7 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
 	}
 	db := &database{}
 	for _, d := range dbs {
+		d := d
 		if d.DBName.String == databaseName {
 			db = &d
 			break

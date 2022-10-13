@@ -119,6 +119,7 @@ func TestDiffSuppressStatement(t *testing.T) {
 		{"view 2", args{"", testhelpers.MustFixture(t, "view_2a.sql"), testhelpers.MustFixture(t, "view_2b.sql"), nil}, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := resources.DiffSuppressStatement(tt.args.k, tt.args.old, tt.args.new, tt.args.d); got != tt.want {
 				t.Errorf("DiffSuppressStatement() = %v, want %v", got, tt.want)

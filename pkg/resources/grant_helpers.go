@@ -206,7 +206,8 @@ func readGenericGrant(
 	grantSchema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
-	validPrivileges PrivilegeSet) error {
+	validPrivileges PrivilegeSet,
+) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error

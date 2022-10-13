@@ -37,7 +37,6 @@ func ValidateIdentifier(val interface{}, exclusions []string) (warns []string, e
 		}
 	}
 	return
-
 }
 
 func isIdentifierRune(r rune, excludedCharacters map[string]bool) bool {

@@ -49,7 +49,6 @@ func TestAcc_SchemaGrant(t *testing.T) {
 }
 
 func TestAcc_SchemaFutureGrants(t *testing.T) {
-
 	sName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleNameView := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

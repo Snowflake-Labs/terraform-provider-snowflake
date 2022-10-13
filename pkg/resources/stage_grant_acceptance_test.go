@@ -28,7 +28,7 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
-					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}, []string{}),
+					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}),
 				),
 			},
 			// IMPORT

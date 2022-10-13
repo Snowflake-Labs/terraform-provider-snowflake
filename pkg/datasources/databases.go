@@ -117,7 +117,6 @@ func ReadDatabases(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		databases = append(databases, dbR)
-
 	}
 	databasesErr := d.Set("databases", databases)
 	if databasesErr != nil {

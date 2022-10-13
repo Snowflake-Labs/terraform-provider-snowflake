@@ -400,7 +400,6 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -408,7 +407,6 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 
 // CreateTask implements schema.CreateFunc.
 func CreateTask(d *schema.ResourceData, meta interface{}) error {
-
 	var err error
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -536,7 +534,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
 			}
 		}
-
 	}
 
 	if d.HasChange("error_integration") {

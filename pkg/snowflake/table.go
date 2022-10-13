@@ -51,7 +51,6 @@ type ColumnIdentity struct {
 func (id *ColumnIdentity) WithStartNum(start int) *ColumnIdentity {
 	id.startNum = start
 	return id
-
 }
 
 func (id *ColumnIdentity) WithStep(step int) *ColumnIdentity {
@@ -153,7 +152,6 @@ func (c *Column) WithIdentity(id *ColumnIdentity) *Column {
 }
 
 func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment bool) string {
-
 	if c == nil {
 		return ""
 	}
@@ -179,7 +177,6 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 	}
 
 	return colDef.String()
-
 }
 
 func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
@@ -212,14 +209,12 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 		}
 
 		keys = append(keys, pk.ColumnName.String)
-
 	}
 
 	flat["name"] = name
 	flat["keys"] = keys
 	flattened = append(flattened, flat)
 	return flattened
-
 }
 
 type Columns []Column
@@ -383,7 +378,6 @@ func (tb *TableBuilder) UnsetTag(tag TagValue) string {
 
 // Function to get clustering definition.
 func (tb *TableBuilder) GetClusterKeyString() string {
-
 	return JoinStringList(tb.clusterBy[:], ", ")
 }
 
@@ -403,9 +397,7 @@ func (tb *TableBuilder) GetTagValueString() string {
 }
 
 func JoinStringList(instrings []string, delimiter string) string {
-
 	return fmt.Sprint(strings.Join(instrings[:], delimiter))
-
 }
 
 func quoteStringList(instrings []string) []string {
@@ -413,10 +405,8 @@ func quoteStringList(instrings []string) []string {
 	for _, word := range instrings {
 		quoted := fmt.Sprintf(`"%s"`, word)
 		clean = append(clean, quoted)
-
 	}
 	return clean
-
 }
 
 func (tb *TableBuilder) getCreateStatementBody() string {
@@ -429,7 +419,6 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 		q.WriteString(colDef)
 		if tb.primaryKey.name != "" {
 			q.WriteString(fmt.Sprintf(` ,CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
-
 		} else {
 			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
 		}
@@ -458,7 +447,6 @@ func ClusterStatementToList(clusterStatement string) []string {
 	}
 
 	return clean
-
 }
 
 // Table returns a pointer to a Builder that abstracts the DDL operations for a table.
@@ -505,7 +493,6 @@ func (tb *TableBuilder) Create() string {
 	if tb.clusterBy != nil {
 		//add optional clustering statement
 		q.WriteString(fmt.Sprintf(` CLUSTER BY LINEAR(%v)`, tb.GetClusterKeyString()))
-
 	}
 
 	q.WriteString(fmt.Sprintf(` DATA_RETENTION_TIME_IN_DAYS = %d`, tb.dataRetentionTimeInDays))
@@ -704,13 +691,11 @@ func (td *tableDescription) ColumnIdentity() *ColumnIdentity {
 		return nil
 	}
 	if strings.Contains(td.Default.String, "IDENTITY") {
-
 		split := strings.Split(td.Default.String, " ")
 		start, _ := strconv.Atoi(split[2])
 		step, _ := strconv.Atoi(split[4])
 
 		return &ColumnIdentity{start, step}
-
 	}
 	return nil
 }

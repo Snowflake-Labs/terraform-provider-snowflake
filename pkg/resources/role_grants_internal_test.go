@@ -50,9 +50,7 @@ func Test_revokeRoleFromRole(t *testing.T) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM ROLE "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := revokeRoleFromRole(db, "foo", "bar")
 		r.NoError(err)
-
 	})
-
 }
 func Test_revokeRoleFromUser(t *testing.T) {
 	r := require.New(t)
@@ -60,7 +58,5 @@ func Test_revokeRoleFromUser(t *testing.T) {
 		mock.ExpectExec(`REVOKE ROLE "foo" FROM USER "bar"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		err := revokeRoleFromUser(db, "foo", "bar")
 		r.NoError(err)
-
 	})
-
 }
