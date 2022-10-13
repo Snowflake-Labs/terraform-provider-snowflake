@@ -1,0 +1,32 @@
+name: jira-issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  jira-action:
+    runs-on: ubuntu-latest
+    name: Jira create issue
+    steps:
+    - name: Login
+      uses: atlassian/gajira-login@master
+      env:
+        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+    - name: Create
+      id: create
+      uses: atlassian/gajira-create@master
+      with:
+        project: ${{ secrets.JIRA_PROJECT }}
+        issuetype: Story
+        summary: |
+          terraform-provider-snowflake issue ${{ github.event.issue.number }}
+        description: |
+          ${{ github.event.issue.url }}
+        fields: '"components": ["${{ secrets.JIRA_COMPONENT }}"], "labels": ["${{ secrets.JIRA_LABEL }}"], "customfield_11401": "${{ secrets.JIRA_AREA }}", "customfield_10008": "${{ secrets.JIRA_EPIC }}"'
+
+    - name: Log created issue
+      run: echo "Issue ${{ steps.create.outputs.issue }} was created"
