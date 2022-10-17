@@ -12,13 +12,6 @@ jobs:
     name: Notify Team in Slack
 
     steps:
-      - name: Send Slack Message
-        uses: archive/github-actions-slack@master
-        id: send-message
-        with:
-          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          slack-channel: C03BMSV27Q9
-          slack-text: A new ${{ github.event_name }} has been published. Please review ${{ github.event.pull_request.html_url }} ${{ github.event.issue.html_url }}
-
-      - name: Result from "Send Slack Message"
-        run: echo '${{ steps.send-message.outputs.slack-result }}'
+      - name: Curl to webhook
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"A new ${{ github.event_name }} has been published. Please review ${{ github.event.pull_request.html_url }}${{ github.event.issue.html_url }}"}' ${{ secrets.SLACK_WEBHOOK }}
