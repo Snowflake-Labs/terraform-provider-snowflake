@@ -144,6 +144,7 @@ type resourceMonitor struct {
 	CreatedOn            sql.NullString `db:"created_on"`
 	Owner                sql.NullString `db:"owner"`
 	Comment              sql.NullString `db:"comment"`
+	NotifyUsers          sql.NullString `db:"notify_users"`
 }
 
 func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {
