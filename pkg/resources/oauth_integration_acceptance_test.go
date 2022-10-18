@@ -29,6 +29,18 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 				),
 			},
 			{
+				Config: oauthIntegrationCustomConfig(oauthIntName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", oauthIntName),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", "CUSTOM"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_redirect_uri", "https://www.example.com/oauth2/callback"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_issue_refresh_tokens", "true"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_refresh_token_validity", "3600"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.0", "SYSADMIN"),
+				),
+			},
+			{
 				ResourceName:      "snowflake_oauth_integration.test",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -48,4 +60,18 @@ func oauthIntegrationConfig(name string, integrationType string) string {
   		blocked_roles_list           = ["SYSADMIN"]
 	}
 	`, name, integrationType)
+}
+
+func oauthIntegrationCustomConfig(name string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_oauth_integration" "test" {
+		name                         = "%s"
+		oauth_client                 = "CUSTOM"
+		oauth_redirect_uri           = "https://www.example.com/oauth2/callback"
+		enabled                      = true
+  		oauth_issue_refresh_tokens   = true
+  		oauth_refresh_token_validity = 3600
+  		blocked_roles_list           = ["SYSADMIN"]
+	}
+	`, name)
 }
