@@ -9,24 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     name: Jira create issue
     steps:
-    - name: Login
-      uses: atlassian/gajira-login@v2.0.0
-      env:
-        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-        JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-
-    - name: Create
-      id: create
-      uses: atlassian/gajira-create@v2.0.1
-      with:
-        project: ${{ secrets.JIRA_PROJECT }}
-        issuetype: Story
-        summary: |
-          terraform-provider-snowflake issue ${{ github.event.issue.number }}
-        description: |
-          ${{ github.event.issue.url }}
-        fields: '"components": ["${{ secrets.JIRA_COMPONENT }}"], "labels": ["${{ secrets.JIRA_LABEL }}"], "customfield_11401": "${{ secrets.JIRA_AREA }}", "customfield_10008": "${{ secrets.JIRA_EPIC }}"'
-
-    - name: Log created issue
-      run: echo "Issue ${{ steps.create.outputs.issue }} was created"
+      - name: Curl to webhook
+        run: |
+          curl --location --request POST '${{ secrets.JIRA_BASE_URL }}/rest/api/2/issue' \
+          --header 'Authorization: Basic ${{ secrets.JIRA_API_TOKEN }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw '{
+              "fields": {
+                "project":
+                {
+                    "key": "${{ secrets.JIRA_PROJECT }}"
+                },
+                "summary": "terraform-provider-snowflake issue ${{ github.event.issue.number }}",
+                "description": "${{ github.event.issue.url }}",
+                "issuetype": {
+                    "name": "Story"
+                },       
+                "components": [{
+                "id": ""${{ secrets.JIRA_COMPONENT }}""
+              }],
+                "labels": ["${{ secrets.JIRA_LABEL }}"],
+                "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}""},
+                "customfield_10008": "${{ secrets.JIRA_EPIC }}",
+                "assignee": {"name": null}
+            }
+          }'
