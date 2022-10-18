@@ -25,7 +25,7 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the OAuth client type.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"TABLEAU_DESKTOP", "TABLEAU_SERVER", "LOOKER","CUSTOM",
+			"TABLEAU_DESKTOP", "TABLEAU_SERVER", "LOOKER", "CUSTOM",
 		}, false),
 	},
 	"oauth_redirect_uri": {
@@ -269,7 +269,7 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		runSetStatement = true
 		stmt.SetString(`OAUTH_REDIRECT_URI`, d.Get("oauth_redirect_uri").(string))
 	}
-	
+
 	if d.HasChange("oauth_issue_refresh_tokens") {
 		runSetStatement = true
 		stmt.SetBool(`OAUTH_ISSUE_REFRESH_TOKENS`, d.Get("oauth_issue_refresh_tokens").(bool))
