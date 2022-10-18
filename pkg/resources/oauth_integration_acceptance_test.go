@@ -31,7 +31,7 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 			{
 				Config: oauthIntegrationCustomConfig(oauthIntName + "custom"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", oauthIntName),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", oauthIntName + "custom"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", "CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_redirect_uri", "https://www.example.com/oauth2/callback"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_issue_refresh_tokens", "true"),
