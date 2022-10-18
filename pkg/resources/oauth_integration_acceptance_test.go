@@ -29,7 +29,7 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 				),
 			},
 			{
-				Config: oauthIntegrationCustomConfig(oauthIntName),
+				Config: oauthIntegrationCustomConfig(oauthIntName+"custom"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", oauthIntName),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", "CUSTOM"),
