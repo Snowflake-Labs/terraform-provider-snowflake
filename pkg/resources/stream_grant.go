@@ -230,8 +230,14 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	streamName := grantID.ObjectName
 
-	// create the builder
-	builder := snowflake.StreamGrant(dbName, schemaName, streamName)
+	futureStreams := (streamName == "")
+
+	var builder snowflake.GrantBuilder
+	if futureStreams {
+		builder = snowflake.FutureStreamGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
+	}
 
 	// first revoke
 	err = deleteGenericGrantRolesAndShares(
