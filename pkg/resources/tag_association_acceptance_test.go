@@ -53,6 +53,10 @@ resource "snowflake_tag" "test" {
 
 resource "snowflake_tag_association" "test" {
 	object_name = snowflake_database.test.name
+	object_identifier {
+		name = snowflake_database.test.name
+		schema = snowflake_schema.test.name
+	  }
 	object_type = "DATABASE"
 	tag_id = snowflake_tag.test.id
 	tag_value = "finance"

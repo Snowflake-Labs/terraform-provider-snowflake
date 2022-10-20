@@ -43,19 +43,33 @@ resource "snowflake_tag_association" "association" {
 
 ### Required
 
-- `object_name` (String) Specifies the object identifier for the tag association.
+- `object_identifier` (Block List, Min: 1) Specifies the object identifier for the tag association. (see [below for nested schema](#nestedblock--object_identifier))
 - `object_type` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
 - `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 - `tag_value` (String) Specifies the value of the tag, (e.g. 'finance' or 'engineering')
 
 ### Optional
 
+- `object_name` (String, Deprecated) Specifies the object identifier for the tag association.
 - `skip_validation` (Boolean, Deprecated) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--object_identifier"></a>
+### Nested Schema for `object_identifier`
+
+Required:
+
+- `name` (String) Name of the object to associate the tag with.
+
+Optional:
+
+- `database` (String) Name of the database that the object was created in.
+- `schema` (String) Name of the schema that the object was created in.
+
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
