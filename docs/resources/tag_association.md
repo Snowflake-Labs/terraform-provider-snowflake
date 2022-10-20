@@ -50,7 +50,7 @@ resource "snowflake_tag_association" "association" {
 
 ### Optional
 
-- `skip_validation` (Boolean) If true, skips validation of the tag association. It can take up to an hour for the SNOWFLAKE.TAG_REFERENCES table to update, and also requires ACCOUNT_ADMIN role to read from. https://docs.snowflake.com/en/sql-reference/account-usage/tag_references.html
+- `skip_validation` (Boolean, Deprecated) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
