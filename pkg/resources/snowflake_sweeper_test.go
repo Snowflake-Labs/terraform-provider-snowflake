@@ -150,9 +150,9 @@ func getIntegrationsSweeper(name string) *resource.Sweeper {
 				return fmt.Errorf("Error listing integrations: %w", err)
 			}
 			for _, integration := range integrations {
-				err := snowflake.DropIntegration(db, integration)
+				err := snowflake.DropIntegration(db, integration.Name.String)
 				if err != nil {
-					return fmt.Errorf("Error deleting integration %q %w", integration, err)
+					return fmt.Errorf("Error deleting integration %q %w", integration.Name.String, err)
 				}
 			}
 			return nil
