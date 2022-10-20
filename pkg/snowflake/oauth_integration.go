@@ -37,3 +37,25 @@ func ScanOAuthIntegration(row *sqlx.Row) (*oauthIntegration, error) {
 	r := &oauthIntegration{}
 	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
 }
+
+func ListIntegrations(db *sql.DB) ([]string, error) {
+	rows, err := db.Query("SHOW INTEGRATIONS")
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for rows.Next() {
+		var integration oauthIntegration
+		err := rows.Scan(&integration)
+		if err != nil {
+			return nil, err
+		}
+		names = append(names, integration.Name.String)
+	}
+	return names, nil
+}
+
+func DropIntegration(db *sql.DB, name string) error {
+	stmt := OAuthIntegration(name).Drop()
+	return Exec(db, stmt)
+}
