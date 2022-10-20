@@ -29,6 +29,7 @@ type TaskBuilder struct {
 	disabled                            bool
 	userTaskManagedInitialWarehouseSize string
 	errorIntegration                    string
+	allowOverlappingExecution           bool
 }
 
 // GetFullName prepends db and schema to in parameter.
@@ -74,6 +75,12 @@ func (tb *TaskBuilder) WithComment(c string) *TaskBuilder {
 	return tb
 }
 
+// WithAllowOverlappingExecution set the ALLOW_OVERLAPPING_EXECUTION on the TaskBuilder.
+func (tb *TaskBuilder) WithAllowOverlappingExecution(flag bool) *TaskBuilder {
+	tb.allowOverlappingExecution = flag
+	return tb
+}
+
 // WithTimeout adds a timeout to the TaskBuilder.
 func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	tb.userTaskTimeoutMS = t
@@ -86,7 +93,7 @@ func (tb *TaskBuilder) WithDependency(after string) *TaskBuilder {
 	return tb
 }
 
-// WithCondition adds a when condition to the TaskBuilder.
+// WithCondition adds a WHEN condition to the TaskBuilder.
 func (tb *TaskBuilder) WithCondition(when string) *TaskBuilder {
 	tb.when = when
 	return tb
@@ -104,7 +111,7 @@ func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *Ta
 	return tb
 }
 
-// / WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder.
+// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder.
 func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 	tb.errorIntegration = s
 	return tb
@@ -124,7 +131,7 @@ func Task(name, db, schema string) *TaskBuilder {
 		name:     name,
 		db:       db,
 		schema:   schema,
-		disabled: false, // helper for when started root or standalone task gets supspended
+		disabled: false, // helper for when started root or standalone task gets suspended
 	}
 }
 
@@ -163,6 +170,10 @@ func (tb *TaskBuilder) Create() string {
 
 	if tb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
+	}
+
+	if tb.allowOverlappingExecution {
+		q.WriteString(` ALLOW_OVERLAPPING_EXECUTION = TRUE`)
 	}
 
 	if tb.errorIntegration != "" {
@@ -233,6 +244,16 @@ func (tb *TaskBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET COMMENT`, tb.QualifiedName())
 }
 
+// ChangeAllowOverlappingExecution returns the sql that will change the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) ChangeAllowOverlappingExecution(flag bool) string {
+	return fmt.Sprintf(`ALTER TASK %v SET ALLOW_OVERLAPPING_EXECUTION = %v`, tb.QualifiedName(), flag)
+}
+
+// UnsetAllowOverlappingExecution returns the sql that will unset the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) UnsetAllowOverlappingExecution() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET ALLOW_OVERLAPPING_EXECUTION`, tb.QualifiedName())
+}
+
 // AddDependency returns the sql that will add the after dependency for the task.
 func (tb *TaskBuilder) AddDependency(after string) string {
 	return fmt.Sprintf(`ALTER TASK %v ADD AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
@@ -270,7 +291,7 @@ func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) st
 	return fmt.Sprintf(`ALTER TASK %v UNSET %v`, tb.QualifiedName(), strings.Join(sortedKeys, ", "))
 }
 
-// ChangeCondition returns the sql that will update the when condition for the task.
+// ChangeCondition returns the sql that will update the WHEN condition for the task.
 func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
 	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), newCondition)
 }
@@ -331,21 +352,31 @@ func (tb *TaskBuilder) RemoveErrorIntegration() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET ERROR_INTEGRATION`, tb.QualifiedName())
 }
 
+func (tb *TaskBuilder) SetAllowOverlappingExecution() *TaskBuilder {
+	tb.allowOverlappingExecution = true
+	return tb
+}
+
+func (tb *TaskBuilder) IsAllowOverlappingExecution() bool {
+	return tb.allowOverlappingExecution
+}
+
 type task struct {
-	ID               string         `db:"id"`
-	CreatedOn        string         `db:"created_on"`
-	Name             string         `db:"name"`
-	DatabaseName     string         `db:"database_name"`
-	SchemaName       string         `db:"schema_name"`
-	Owner            string         `db:"owner"`
-	Comment          *string        `db:"comment"`
-	Warehouse        *string        `db:"warehouse"`
-	Schedule         *string        `db:"schedule"`
-	Predecessors     *string        `db:"predecessors"`
-	State            string         `db:"state"`
-	Definition       string         `db:"definition"`
-	Condition        *string        `db:"condition"`
-	ErrorIntegration sql.NullString `db:"error_integration"`
+	ID                        string         `db:"id"`
+	CreatedOn                 string         `db:"created_on"`
+	Name                      string         `db:"name"`
+	DatabaseName              string         `db:"database_name"`
+	SchemaName                string         `db:"schema_name"`
+	Owner                     string         `db:"owner"`
+	Comment                   *string        `db:"comment"`
+	Warehouse                 *string        `db:"warehouse"`
+	Schedule                  *string        `db:"schedule"`
+	Predecessors              *string        `db:"predecessors"`
+	State                     string         `db:"state"`
+	Definition                string         `db:"definition"`
+	Condition                 *string        `db:"condition"`
+	ErrorIntegration          sql.NullString `db:"error_integration"`
+	AllowOverlappingExecution *bool          `db:"allow_overlapping_execution"`
 }
 
 func (t *task) IsEnabled() bool {
