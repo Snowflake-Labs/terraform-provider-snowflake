@@ -229,9 +229,14 @@ func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	sequenceName := grantID.ObjectName
+	futureSequences := (sequenceName == "")
 
-	// create the builder
-	builder := snowflake.SequenceGrant(dbName, schemaName, sequenceName)
+	var builder snowflake.GrantBuilder
+	if futureSequences {
+		builder = snowflake.FutureSequenceGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
+	}
 
 	// first revoke
 	err = deleteGenericGrantRolesAndShares(
