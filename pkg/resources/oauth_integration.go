@@ -229,9 +229,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set blocked roles list for security integration")
 			}
 		case "OAUTH_CLIENT_TYPE":
-			if err = d.Set("oauth_client_type", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set OAuth client type for security integration")
-			}
+			// Only used for custom OAuth clients (not supported yet)
 		case "OAUTH_REDIRECT_URI":
 			if err = d.Set("oauth_redirect_uri", v.(string)); err != nil {
 				return errors.Wrap(err, "unable to set OAuth redirect URI for security integration")
