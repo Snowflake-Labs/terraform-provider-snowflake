@@ -87,12 +87,12 @@ func TagAssociation(tagID string) *TagAssociationBuilder {
 
 // Create returns the SQL query that will set the tag on an object.
 func (tb *TagAssociationBuilder) Create() string {
-	return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, validation.ParseAndFormatFullyQualifiedObectID(tb.objectName), tb.databaseName, tb.schemaName, tb.tagName, tb.tagValue)
+	return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, validation.ParseAndFormatFullyQualifiedObectID(tb.objectName), tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 }
 
 // Drop returns the SQL query that will remove a tag from an object.
 func (tb *TagAssociationBuilder) Drop() string {
-	return fmt.Sprintf(`ALTER %v "%v" UNSET TAG "%v"."%v"."%v"`, tb.objectType, validation.ParseAndFormatFullyQualifiedObectID(tb.objectName), tb.databaseName, tb.schemaName, tb.tagName)
+	return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, validation.ParseAndFormatFullyQualifiedObectID(tb.objectName), tb.databaseName, tb.schemaName, tb.tagName)
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
