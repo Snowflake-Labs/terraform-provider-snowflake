@@ -19,7 +19,7 @@ The version of Terraform you were using when the bug was encountered.
 
 A clear and concise description of what the bug is.
 
-**Expected behavior**
+**Expected behaviour**
 
 A clear and concise description of what you expected to happen.
 
