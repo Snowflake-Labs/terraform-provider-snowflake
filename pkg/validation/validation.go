@@ -147,7 +147,7 @@ func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName strin
 		parts = strings.Split(parsedString, ".")
 	}
 	for len(parts) < 3 {
-		parts = append([]string{""}, parts...)
+		parts = append(parts, "")
 	}
 	return parts[0], parts[1], parts[2]
 }
