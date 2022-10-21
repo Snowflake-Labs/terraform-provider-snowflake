@@ -10,7 +10,7 @@ import (
 )
 
 func TestAcc_TagAssociation(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
