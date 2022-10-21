@@ -637,16 +637,16 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange(AllowOverlappingExecution) {
 		var q string
-		n := d.Get(AllowOverlappingExecution)
-		flag := n.(bool)
-		if flag == false {
-			q = builder.UnsetAllowOverlappingExecution()
+		_, new := d.GetChange(AllowOverlappingExecution)
+		flag := new.(bool)
+		if flag {
+			q = builder.SetAllowOverlappingExecutionParameter()
 		} else {
-			q = builder.ChangeAllowOverlappingExecution(flag)
+			q = builder.UnsetAllowOverlappingExecutionParameter()
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating allow_overlapping_execution on task %v", d.Id())
+			return errors.Wrapf(err, "error updating %s on task %v", AllowOverlappingExecution, d.Id())
 		}
 	}
 

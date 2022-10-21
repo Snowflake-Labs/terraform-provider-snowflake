@@ -167,8 +167,8 @@ func TestShow(t *testing.T) {
 	r.Equal(st.Show(), `SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"`)
 }
 
-func TestChangeAllowOverlappingExecution(t *testing.T) {
+func TestSetAllowOverlappingExecution(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.ChangeAllowOverlappingExecution(true), `ALTER TASK "test_db"."test_schema"."test_task" SET ALLOW_OVERLAPPING_EXECUTION = TRUE`)
+	r.Equal(st.SetAllowOverlappingExecutionParameter(), `ALTER TASK "test_db"."test_schema"."test_task" SET ALLOW_OVERLAPPING_EXECUTION = TRUE`)
 }

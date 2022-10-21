@@ -244,13 +244,13 @@ func (tb *TaskBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET COMMENT`, tb.QualifiedName())
 }
 
-// ChangeAllowOverlappingExecution returns the sql that will change the ALLOW_OVERLAPPING_EXECUTION for the task.
-func (tb *TaskBuilder) ChangeAllowOverlappingExecution(flag bool) string {
-	return fmt.Sprintf(`ALTER TASK %v SET ALLOW_OVERLAPPING_EXECUTION = %v`, tb.QualifiedName(), flag)
+// SetAllowOverlappingExecutionParameter returns the sql that will change the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) SetAllowOverlappingExecutionParameter() string {
+	return fmt.Sprintf(`ALTER TASK %v SET ALLOW_OVERLAPPING_EXECUTION = TRUE`, tb.QualifiedName())
 }
 
-// UnsetAllowOverlappingExecution returns the sql that will unset the ALLOW_OVERLAPPING_EXECUTION for the task.
-func (tb *TaskBuilder) UnsetAllowOverlappingExecution() string {
+// UnsetAllowOverlappingExecutionParameter returns the sql that will unset the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) UnsetAllowOverlappingExecutionParameter() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET ALLOW_OVERLAPPING_EXECUTION`, tb.QualifiedName())
 }
 
