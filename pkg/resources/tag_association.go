@@ -78,8 +78,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "If true, skips validation of the tag association.",
-		Deprecated:  "Tag associations are now always validated without latency using the SYSTEM$GET_TAG function.",
-		Default:     false,
+		Default:     true,
 	},
 }
 
@@ -107,7 +106,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
 	tagValue := d.Get("tag_value").(string)
-	objectIdentifier := d.Get("object_identifier").(map[string]interface{})
+	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
 	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier)
 	builder := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).WithTagValue(tagValue)
 
@@ -142,7 +141,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").(map[string]interface{})
+	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
 	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier)
 	q := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).Show()
 	row := snowflake.QueryRow(db, q)
@@ -172,7 +171,7 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").(map[string]interface{})
+	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
 	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier)
 	builder := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType)
 
@@ -204,7 +203,7 @@ func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").(map[string]interface{})
+	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
 	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier)
 	q := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).Drop()
 
