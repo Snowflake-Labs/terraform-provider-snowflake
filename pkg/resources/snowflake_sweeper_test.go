@@ -137,6 +137,32 @@ func getUsersSweeper(name string) *resource.Sweeper {
 	}
 }
 
+func getIntegrationsSweeper(name string) *resource.Sweeper {
+	return &resource.Sweeper{
+		Name: name,
+		F: func(ununsed string) error {
+			db, err := provider.GetDatabaseHandleFromEnv()
+			if err != nil {
+				return fmt.Errorf("Error getting db handle: %w", err)
+			}
+			integrations, err := snowflake.ListIntegrations(db)
+			if err != nil {
+				return fmt.Errorf("Error listing integrations: %w", err)
+			}
+			for _, integration := range integrations {
+				// can only drop security integrations
+				if integration.IntegrationType.String == "SECURITY" {
+					err := snowflake.DropIntegration(db, integration.Name.String)
+					if err != nil {
+						return fmt.Errorf("Error deleting integration %q %w", integration.Name.String, err)
+					}
+				}
+			}
+			return nil
+		},
+	}
+}
+
 // Sweepers usually go along with the tests. In TF[CE]'s case everything depends on the organization,
 // which means that if we delete it then all the other entities will  be deleted automatically.
 func init() {
@@ -144,4 +170,5 @@ func init() {
 	resource.AddTestSweepers("db_sweeper", getDatabaseSweepers("db_sweeper"))
 	resource.AddTestSweepers("role_sweeper", getRolesSweeper("role_sweeper"))
 	resource.AddTestSweepers("user_sweeper", getUsersSweeper("user_sweeper"))
+	resource.AddTestSweepers("integration_sweeper", getIntegrationsSweeper("integration_sweeper"))
 }
