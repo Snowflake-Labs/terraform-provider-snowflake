@@ -37,6 +37,7 @@ resource "snowflake_oauth_integration" "tableau_desktop" {
 - `comment` (String) Specifies a comment for the OAuth integration.
 - `enabled` (Boolean) Specifies whether this OAuth integration is enabled or disabled.
 - `oauth_issue_refresh_tokens` (Boolean) Specifies whether to allow the client to exchange a refresh token for an access token when the current access token has expired.
+- `oauth_redirect_uri` (String) Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI.
 - `oauth_refresh_token_validity` (Number) Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.
 - `oauth_use_secondary_roles` (String) Specifies whether default secondary roles set in the user properties are activated by default in the session being opened.
 

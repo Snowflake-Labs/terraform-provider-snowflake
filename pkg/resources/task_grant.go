@@ -230,9 +230,14 @@ func UpdateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	taskName := grantID.ObjectName
+	futureTasks := (taskName == "")
 
-	// create the builder
-	builder := snowflake.TaskGrant(dbName, schemaName, taskName)
+	var builder snowflake.GrantBuilder
+	if futureTasks {
+		builder = snowflake.FutureTaskGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.TaskGrant(dbName, schemaName, taskName)
+	}
 
 	// first revoke
 	err = deleteGenericGrantRolesAndShares(

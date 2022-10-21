@@ -225,9 +225,14 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
+	futureStages := (stageName == "")
 
-	// create the builder
-	builder := snowflake.StageGrant(dbName, schemaName, stageName)
+	var builder snowflake.GrantBuilder
+	if futureStages {
+		builder = snowflake.FutureStageGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.StageGrant(dbName, schemaName, stageName)
+	}
 
 	// first revoke
 	err = deleteGenericGrantRolesAndShares(
