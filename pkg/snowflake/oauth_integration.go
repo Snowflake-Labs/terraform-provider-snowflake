@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -36,4 +37,26 @@ type oauthIntegration struct {
 func ScanOAuthIntegration(row *sqlx.Row) (*oauthIntegration, error) {
 	r := &oauthIntegration{}
 	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
+}
+
+func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
+	rows, err := db.Query("SHOW INTEGRATIONS")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	r := []oauthIntegration{}
+	err = sqlx.StructScan(rows, &r)
+	if err == sql.ErrNoRows {
+		log.Println("[DEBUG] no integrations found")
+		return nil, nil
+	}
+	return r, nil
+}
+
+func DropIntegration(db *sql.DB, name string) error {
+	stmt := OAuthIntegration(name).Drop()
+	return Exec(db, stmt)
 }

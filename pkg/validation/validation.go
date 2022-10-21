@@ -146,5 +146,8 @@ func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName strin
 	} else if strings.Contains(parsedString, ".") {
 		parts = strings.Split(parsedString, ".")
 	}
+	for len(parts) < 3 {
+		parts = append(parts, "")
+	}
 	return parts[0], parts[1], parts[2]
 }

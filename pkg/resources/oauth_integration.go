@@ -25,8 +25,13 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the OAuth client type.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"TABLEAU_DESKTOP", "TABLEAU_SERVER", "LOOKER",
+			"TABLEAU_DESKTOP", "TABLEAU_SERVER", "LOOKER", "CUSTOM",
 		}, false),
+	},
+	"oauth_redirect_uri": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI.",
 	},
 	"oauth_issue_refresh_tokens": {
 		Type:        schema.TypeBool,
@@ -95,8 +100,11 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Set required fields
 	stmt.SetRaw(`TYPE=OAUTH`)
 	stmt.SetString(`OAUTH_CLIENT`, d.Get("oauth_client").(string))
-
 	// Set optional fields
+	if _, ok := d.GetOk("oauth_redirect_uri"); ok {
+		stmt.SetString(`OAUTH_REDIRECT_URI`, d.Get("oauth_redirect_uri").(string))
+	}
+
 	if _, ok := d.GetOk("oauth_issue_refresh_tokens"); ok {
 		stmt.SetBool(`OAUTH_ISSUE_REFRESH_TOKENS`, d.Get("oauth_issue_refresh_tokens").(bool))
 	}
@@ -220,6 +228,10 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err = d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
 				return errors.Wrap(err, "unable to set blocked roles list for security integration")
 			}
+		case "OAUTH_REDIRECT_URI":
+			if err = d.Set("oauth_redirect_uri", v.(string)); err != nil {
+				return errors.Wrap(err, "unable to set OAuth redirect URI for security integration")
+			}
 		case "OAUTH_CLIENT_TYPE":
 			// Only used for custom OAuth clients (not supported yet)
 		case "OAUTH_ENFORCE_PKCE":
@@ -255,6 +267,11 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("oauth_client") {
 		runSetStatement = true
 		stmt.SetString(`OAUTH_CLIENT`, d.Get("oauth_client").(string))
+	}
+
+	if d.HasChange("oauth_redirect_uri") {
+		runSetStatement = true
+		stmt.SetString(`OAUTH_REDIRECT_URI`, d.Get("oauth_redirect_uri").(string))
 	}
 
 	if d.HasChange("oauth_issue_refresh_tokens") {
