@@ -12,21 +12,21 @@ import (
 
 // TagAssociationBuilder abstracts the creation of SQL queries for a Snowflake tag.
 type TagAssociationBuilder struct {
-	databaseName string
-	objectName   string
-	objectType   string
-	schemaName   string
-	tagName      string
-	tagValue     string
+	databaseName     string
+	objectIdentifier string
+	objectType       string
+	schemaName       string
+	tagName          string
+	tagValue         string
 }
 
 type tagAssociation struct {
 	TagValue sql.NullString `db:"TAG_VALUE"`
 }
 
-// WithObjectId adds the name of the schema to the TagAssociationBuilder.
-func (tb *TagAssociationBuilder) WithObjectName(objectName string) *TagAssociationBuilder {
-	tb.objectName = objectName
+// WithObjectIdentifier adds the name of the schema to the TagAssociationBuilder.
+func (tb *TagAssociationBuilder) WithObjectIdentifier(objectIdentifier string) *TagAssociationBuilder {
+	tb.objectIdentifier = objectIdentifier
 	return tb
 }
 
@@ -76,17 +76,17 @@ func TagAssociation(tagID string) *TagAssociationBuilder {
 
 // Create returns the SQL query that will set the tag on an object.
 func (tb *TagAssociationBuilder) Create() string {
-	return fmt.Sprintf(`ALTER %v "%v" SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
+	return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 }
 
 // Drop returns the SQL query that will remove a tag from an object.
 func (tb *TagAssociationBuilder) Drop() string {
-	return fmt.Sprintf(`ALTER %v "%v" UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectName, tb.databaseName, tb.schemaName, tb.tagName)
+	return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName)
 }
 
 // Show returns the SQL query that will show the current tag value on an object.
 func (tb *TagAssociationBuilder) Show() string {
-	return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectName, tb.objectType)
+	return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 }
 
 func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
@@ -96,7 +96,7 @@ func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
-	stmt := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectName, tb.objectType)
+	stmt := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
