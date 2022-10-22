@@ -26,10 +26,10 @@ jobs:
                     "name": "Story"
                 },       
                 "components": [{
-                "id": ""${{ secrets.JIRA_COMPONENT }}""
+                "id": "${{ secrets.JIRA_COMPONENT }}"
               }],
                 "labels": ["${{ secrets.JIRA_LABEL }}"],
-                "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}""},
+                "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}"},
                 "customfield_10008": "${{ secrets.JIRA_EPIC }}",
                 "assignee": {"name": null}
             }
