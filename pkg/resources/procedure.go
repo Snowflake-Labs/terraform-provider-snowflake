@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
@@ -41,15 +41,19 @@ var procedureSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument name",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument type",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument type",
 				},
 			},
 		},
@@ -61,9 +65,25 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "The return type of the procedure",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		Required:         true,
-		ForceNew:         true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if strings.EqualFold(old, new) {
+				return true
+			}
+
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			if slices.Contains(varcharType, strings.ToUpper(old)) && slices.Contains(varcharType, strings.ToUpper(new)) {
+				return true
+			}
+
+			// all these types are equivalent https://docs.snowflake.com/en/sql-reference/data-types-numeric.html#int-integer-bigint-smallint-tinyint-byteint
+			integerTypes := []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT", "NUMBER(38,0)"}
+			if slices.Contains(integerTypes, strings.ToUpper(old)) && slices.Contains(integerTypes, strings.ToUpper(new)) {
+				return true
+			}
+			return false
+		},
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
@@ -76,10 +96,11 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "SQL",
-		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		ValidateFunc:     validation.StringInSlice(procedureLanguages, true),
-		Description:      "Specifies the language of the stored procedure code.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
+		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
 		Type:        schema.TypeString,
@@ -116,7 +137,7 @@ func DiffTypes(k, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(strings.ToUpper(old), strings.ToUpper(new))
 }
 
-// Procedure returns a pointer to the resource representing a stored procedure
+// Procedure returns a pointer to the resource representing a stored procedure.
 func Procedure() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateProcedure,
@@ -131,7 +152,7 @@ func Procedure() *schema.Resource {
 	}
 }
 
-// CreateProcedure implements schema.CreateFunc
+// CreateProcedure implements schema.CreateFunc.
 func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -200,7 +221,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	return ReadProcedure(d, meta)
 }
 
-// ReadProcedure implements schema.ReadFunc
+// ReadProcedure implements schema.ReadFunc.
 func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	procedureID, err := splitProcedureID(d.Id())
@@ -214,7 +235,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 		procedureID.ArgTypes,
 	)
 
-	// some atributes can be retrieved only by Describe and some only by Show
+	// some attributes can be retrieved only by Describe and some only by Show
 	stmt, err := proc.Describe()
 	if err != nil {
 		return err
@@ -268,10 +289,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "returns":
-			// Format in Snowflake DB is RETURN_TYPE(<some number>) or RETURN_TYPE
-			re := regexp.MustCompile(`^([A-Z0-9_]+)\s?(\([0-9]*\))?$`)
-			match := re.FindStringSubmatch(desc.Value.String)
-			if err = d.Set("return_type", match[1]); err != nil {
+			if err = d.Set("return_type", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":
@@ -330,7 +348,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateProcedure implements schema.UpdateProcedure
+// UpdateProcedure implements schema.UpdateProcedure.
 func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	pID, err := splitProcedureID(d.Id())
 	if err != nil {
@@ -402,7 +420,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	return ReadProcedure(d, meta)
 }
 
-// DeleteProcedure implements schema.DeleteFunc
+// DeleteProcedure implements schema.DeleteFunc.
 func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pID, err := splitProcedureID(d.Id())
@@ -441,10 +459,11 @@ type procedureID struct {
 // splitProcedureID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
 // the procedureID struct, for example MYDB|PUBLIC|PROC1|VARCHAR-DATE-VARCHAR
 // returns struct
-//         DatabaseName: MYDB
-//         SchemaName: PUBLIC
-//         ProcedureName: PROC1
-//         ArgTypes: [VARCHAR, DATE, VARCHAR]
+//
+//	DatabaseName: MYDB
+//	SchemaName: PUBLIC
+//	ProcedureName: PROC1
+//	ArgTypes: [VARCHAR, DATE, VARCHAR]
 func splitProcedureID(v string) (*procedureID, error) {
 	arr := strings.Split(v, "|")
 	if len(arr) != 4 {
@@ -459,7 +478,7 @@ func splitProcedureID(v string) (*procedureID, error) {
 	}, nil
 }
 
-// the opposite of splitProcedureID
+// the opposite of splitProcedureID.
 func (pi *procedureID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v",
 		pi.DatabaseName,

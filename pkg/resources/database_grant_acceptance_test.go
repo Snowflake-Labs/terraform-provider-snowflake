@@ -11,6 +11,7 @@ import (
 )
 
 func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(*terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 

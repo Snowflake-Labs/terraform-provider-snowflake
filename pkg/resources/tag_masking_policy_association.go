@@ -24,14 +24,14 @@ var mpAttachmentPolicySchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedTagID,
+		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
 		ForceNew:     true,
 	},
 	"masking_policy_id": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The the resource id of the masking policy",
+		Description: "The resource id of the masking policy",
 	},
 }
 
@@ -45,7 +45,7 @@ type attachmentID struct {
 }
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
-// TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName
+// TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName.
 func (ti *attachmentID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -60,7 +60,7 @@ func (ti *attachmentID) String() (string, error) {
 }
 
 // attachedPolicyIDFromString() takes in a pipe-delimited string: TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName
-// and returns a attachmentID object
+// and returns a attachmentID object.
 func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tagAttachmentPolicyIDDelimiter
@@ -87,7 +87,7 @@ func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
 	return attachmentResult, nil
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTagMaskingPolicyAssociation,
@@ -101,29 +101,29 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 	}
 }
 
-// CreateTagMaskingPolicyAssociation implements schema.CreateFunc
+// CreateTagMaskingPolicyAssociation implements schema.CreateFunc.
 func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tagId := d.Get("tag_id").(string)
-	tagIdStruct, idErr := tagIDFromString(tagId)
+	tagID := d.Get("tag_id").(string)
+	tagIDStruct, idErr := tagIDFromString(tagID)
 	if idErr != nil {
 		return idErr
 	}
-	tagDb := tagIdStruct.DatabaseName
-	tagSchema := tagIdStruct.SchemaName
-	tagName := tagIdStruct.TagName
+	tagDB := tagIDStruct.DatabaseName
+	tagSchema := tagIDStruct.SchemaName
+	tagName := tagIDStruct.TagName
 
-	mpId := d.Get("masking_policy_id").(string)
-	mpIdStruct, mpIdErr := maskingPolicyIDFromString(mpId)
-	if mpIdErr != nil {
-		return mpIdErr
+	mpID := d.Get("masking_policy_id").(string)
+	mpIDStruct, mpIDErr := maskingPolicyIDFromString(mpID)
+	if mpIDErr != nil {
+		return mpIDErr
 	}
-	mpDb := mpIdStruct.DatabaseName
-	mpSchema := mpIdStruct.SchemaName
-	mpName := mpIdStruct.MaskingPolicyName
+	mpDB := mpIDStruct.DatabaseName
+	mpSchema := mpIDStruct.SchemaName
+	mpName := mpIDStruct.MaskingPolicyName
 
-	mP := snowflake.MaskingPolicy(mpName, mpDb, mpSchema)
-	builder := snowflake.Tag(tagName).WithDB(tagDb).WithSchema(tagSchema).WithMaskingPolicy(mP)
+	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
+	builder := snowflake.Tag(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
 
 	q := builder.AddMaskingPolicy()
 
@@ -133,15 +133,15 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 		return errors.Wrapf(err, "error attaching masking policy %v to tag %v", mpName, tagName)
 	}
 
-	mpID := &attachmentID{
-		TagDatabaseName:           tagDb,
+	mpAttachmentID := &attachmentID{
+		TagDatabaseName:           tagDB,
 		TagSchemaName:             tagSchema,
 		TagName:                   tagName,
-		MaskingPolicyDatabaseName: mpDb,
+		MaskingPolicyDatabaseName: mpDB,
 		MaskingPolicySchemaName:   mpSchema,
 		MaskingPolicyName:         mpName,
 	}
-	dataIDInput, err := mpID.String()
+	dataIDInput, err := mpAttachmentID.String()
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	return ReadTagMaskingPolicyAssociation(d, meta)
 }
 
-// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc
+// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc.
 func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())
@@ -158,15 +158,15 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	tagDbName := attachementID.TagDatabaseName
+	tagDBName := attachementID.TagDatabaseName
 	tagSchemaName := attachementID.TagSchemaName
 	tagName := attachementID.TagName
-	mpDbName := attachementID.MaskingPolicyDatabaseName
+	mpDBName := attachementID.MaskingPolicyDatabaseName
 	mpSchameName := attachementID.MaskingPolicySchemaName
 	mpName := attachementID.MaskingPolicyName
 
-	mP := snowflake.MaskingPolicy(mpName, mpDbName, mpSchameName)
-	builder := snowflake.Tag(tagName).WithDB(tagDbName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
+	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
@@ -181,34 +181,43 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	tagId := TagID{
-		DatabaseName: t.RefDb.String,
+	tagID := TagID{
+		DatabaseName: t.RefDB.String,
 		SchemaName:   t.RefSchema.String,
 		TagName:      t.RefEntity.String,
 	}
 
-	tagIdString, err := tagId.String()
+	tagIDString, err := tagID.String()
 	if err != nil {
 		return err
 	}
 
-	mpId := maskingPolicyID{
-		DatabaseName:      t.PolicyDb.String,
+	mpID := maskingPolicyID{
+		DatabaseName:      t.PolicyDB.String,
 		SchemaName:        t.PolicySchema.String,
 		MaskingPolicyName: t.PolicyName.String,
 	}
 
-	mpIdString, err := mpId.String()
+	mpIDString, err := mpID.String()
 	if err != nil {
 		return err
 	}
-	d.Set("tag_id", tagIdString)
-	d.Set("masking_policy_id", mpIdString)
+	err = d.Set("tag_id", tagIDString)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("masking_policy_id", mpIDString)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc
+// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.
 func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	attachementID, err := attachedPolicyIDFromString(d.Id())
@@ -216,16 +225,16 @@ func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	tagDbName := attachementID.TagDatabaseName
+	tagDBName := attachementID.TagDatabaseName
 	tagSchemaName := attachementID.TagSchemaName
 	tagName := attachementID.TagName
-	mpDbName := attachementID.MaskingPolicyDatabaseName
+	mpDBName := attachementID.MaskingPolicyDatabaseName
 	mpSchameName := attachementID.MaskingPolicySchemaName
 	mpName := attachementID.MaskingPolicyName
 
-	mP := snowflake.MaskingPolicy(mpName, mpDbName, mpSchameName)
+	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 
-	builder := snowflake.Tag(tagName).WithDB(tagDbName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	err = snowflake.Exec(db, builder.RemoveMaskingPolicy())
 	if err != nil {

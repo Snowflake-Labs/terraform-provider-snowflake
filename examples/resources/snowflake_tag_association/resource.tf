@@ -14,10 +14,37 @@ resource "snowflake_tag" "tag" {
   allowed_values = ["finance", "engineering"]
 }
 
-resource "snowflake_tag_association" "association" {
-  object_name     = snowflake_database.database.name
+resource "snowflake_tag_association" "db_association" {
+  object_identifier {
+    name = snowflake_database.database.name
+  }
   object_type     = "DATABASE"
   tag_id          = snowflake_tag.tag.id
   tag_value       = "finance"
-  skip_validation = true
+}
+
+resource "snowflake_table" "test" {
+	database = snowflake_database.test.name
+	schema   = snowflake_schema.test.name
+	name     = "TABLE_NAME"
+	comment  = "Terraform example table"
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(16)"
+	}
+}
+
+resource "snowflake_tag_association" "table_association" {
+  object_identifier {
+    name     = snowflake_table.test.name
+    database = snowflake_database.test.name
+    schema   = snowflake_schema.test.name
+  }
+  object_type     = "TABLE"
+  tag_id          = snowflake_tag.test.id
+  tag_value       = "engineering"
 }

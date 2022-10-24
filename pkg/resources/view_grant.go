@@ -75,7 +75,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
+// ViewGrant returns a pointer to the resource representing a view grant.
 func ViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -93,7 +93,7 @@ func ViewGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateViewGrant implements schema.CreateFunc
+// CreateViewGrant implements schema.CreateFunc.
 func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		viewName   string
@@ -155,7 +155,7 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadViewGrant(d, meta)
 }
 
-// ReadViewGrant implements schema.ReadFunc
+// ReadViewGrant implements schema.ReadFunc.
 func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -205,7 +205,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
 }
 
-// DeleteViewGrant implements schema.DeleteFunc
+// DeleteViewGrant implements schema.DeleteFunc.
 func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -226,7 +226,7 @@ func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateViewGrant implements schema.UpdateFunc
+// UpdateViewGrant implements schema.UpdateFunc.
 func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

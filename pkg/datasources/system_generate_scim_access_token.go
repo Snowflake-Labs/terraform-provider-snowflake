@@ -28,7 +28,7 @@ func SystemGenerateSCIMAccessToken() *schema.Resource {
 	}
 }
 
-// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc
+// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc.
 func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	integrationName := d.Get("integration_name").(string)

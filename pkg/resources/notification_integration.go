@@ -118,7 +118,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// NotificationIntegration returns a pointer to the resource representing a notification integration
+// NotificationIntegration returns a pointer to the resource representing a notification integration.
 func NotificationIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateNotificationIntegration,
@@ -133,7 +133,7 @@ func NotificationIntegration() *schema.Resource {
 	}
 }
 
-// CreateNotificationIntegration implements schema.CreateFunc
+// CreateNotificationIntegration implements schema.CreateFunc.
 func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -189,7 +189,7 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	return ReadNotificationIntegration(d, meta)
 }
 
-// ReadNotificationIntegration implements schema.ReadFunc
+// ReadNotificationIntegration implements schema.ReadFunc.
 func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -201,12 +201,12 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 
 	s, err := snowflake.ScanNotificationIntegration(row)
 	if err != nil {
-		return fmt.Errorf("Could not show notification integration: %w", err)
+		return fmt.Errorf("could not show notification integration: %w", err)
 	}
 
 	// Note: category must be NOTIFICATION or something is broken
 	if c := s.Category.String; c != "NOTIFICATION" {
-		return fmt.Errorf("Expected %v to be a NOTIFICATION integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
@@ -236,7 +236,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	stmt = snowflake.NotificationIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe notification integration: %w", err)
+		return fmt.Errorf("could not describe notification integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -310,7 +310,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	return err
 }
 
-// UpdateNotificationIntegration implements schema.UpdateFunc
+// UpdateNotificationIntegration implements schema.UpdateFunc.
 func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -390,7 +390,7 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	return ReadNotificationIntegration(d, meta)
 }
 
-// DeleteNotificationIntegration implements schema.DeleteFunc
+// DeleteNotificationIntegration implements schema.DeleteFunc.
 func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
 }

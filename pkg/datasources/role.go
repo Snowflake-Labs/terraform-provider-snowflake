@@ -22,7 +22,7 @@ var roleSchema = map[string]*schema.Schema{
 	},
 }
 
-// Role Snowflake Role resource
+// Role Snowflake Role resource.
 func Role() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadRole,
@@ -33,7 +33,7 @@ func Role() *schema.Resource {
 	}
 }
 
-// ReadRole Reads the database metadata information
+// ReadRole Reads the database metadata information.
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	roleName := d.Get("name").(string)

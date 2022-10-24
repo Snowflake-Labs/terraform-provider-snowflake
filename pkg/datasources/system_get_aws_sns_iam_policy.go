@@ -29,7 +29,7 @@ func SystemGetAWSSNSIAMPolicy() *schema.Resource {
 	}
 }
 
-// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc
+// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc.
 func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)

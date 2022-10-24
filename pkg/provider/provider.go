@@ -25,7 +25,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
-// Provider is a provider
+// Provider is a provider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -152,6 +152,18 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
 			},
+			"port": {
+				Type:        schema.TypeInt,
+				Description: "Support custom port values to snowflake go driver for use with privatelink. Can be sourced from `SNOWFLAKE_PORT` environment variable.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PORT", 443),
+			},
+			"protocol": {
+				Type:        schema.TypeString,
+				Description: "Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", "https"),
+			},
 			"warehouse": {
 				Type:        schema.TypeString,
 				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
@@ -225,6 +237,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_notification_integration":       resources.NotificationIntegration(),
 		"snowflake_stream":                         resources.Stream(),
 		"snowflake_table":                          resources.Table(),
+		"snowflake_table_constraint":               resources.TableConstraint(),
 		"snowflake_external_table":                 resources.ExternalTable(),
 		"snowflake_tag":                            resources.Tag(),
 		"snowflake_tag_association":                resources.TagAssociation(),
@@ -295,12 +308,14 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	oauthEndpoint := s.Get("oauth_endpoint").(string)
 	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
 	host := s.Get("host").(string)
+	protocol := s.Get("protocol").(string)
+	port := s.Get("port").(int)
 	warehouse := s.Get("warehouse").(string)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
 		if err != nil {
-			return nil, errors.Wrap(err, "could not retreive access token from refresh token")
+			return nil, errors.Wrap(err, "could not retrieve access token from refresh token")
 		}
 		oauthAccessToken = accessToken
 	}
@@ -317,6 +332,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		region,
 		role,
 		host,
+		protocol,
+		port,
 		warehouse,
 	)
 	if err != nil {
@@ -332,17 +349,19 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 }
 
 func DSN(
-	account,
-	user,
+	account string,
+	user string,
 	password string,
 	browserAuth bool,
-	privateKeyPath,
-	privateKey,
-	privateKeyPassphrase,
-	oauthAccessToken,
-	region,
-	role,
-	host,
+	privateKeyPath string,
+	privateKey string,
+	privateKeyPassphrase string,
+	oauthAccessToken string,
+	region string,
+	role string,
+	host string,
+	protocol string,
+	port int,
 	warehouse string) (string, error) {
 
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
@@ -352,10 +371,13 @@ func DSN(
 	}
 
 	config := gosnowflake.Config{
-		Account: account,
-		User:    user,
-		Region:  region,
-		Role:    role,
+		Account:     account,
+		User:        user,
+		Region:      region,
+		Role:        role,
+		Application: "terraform-provider-snowflake",
+		Port:        port,
+		Protocol:    protocol,
 	}
 
 	// If host is set trust it and do not use the region value
@@ -422,12 +444,12 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {
-		return nil, fmt.Errorf("Could not parse private key, key is not in PEM format")
+		return nil, fmt.Errorf("could not parse private key, key is not in PEM format")
 	}
 
 	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
 		if len(passhrase) == 0 {
-			return nil, fmt.Errorf("Private key requires a passphrase, but private_key_passphrase was not supplied")
+			return nil, fmt.Errorf("private key requires a passphrase, but private_key_passphrase was not supplied")
 		}
 		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
 		if err != nil {
@@ -457,32 +479,32 @@ type Result struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-func GetOauthData(refreshToken, redirectUrl string) url.Values {
+func GetOauthData(refreshToken, redirectURL string) url.Values {
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
-	data.Set("redirect_uri", redirectUrl)
+	data.Set("redirect_uri", redirectURL)
 	return data
 }
 
-func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret string) (*http.Request, error) {
+func GetOauthRequest(dataContent io.Reader, endPoint, clientID, clientSecret string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", endPoint, dataContent)
 	if err != nil {
 		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
 	}
-	request.SetBasicAuth(clientId, clientSecret)
+	request.SetBasicAuth(clientID, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	return request, nil
 }
 
 func GetOauthAccessToken(
 	endPoint,
-	client_id,
-	client_secret string,
+	clientID,
+	clientSecret string,
 	data url.Values) (string, error) {
 
 	client := &http.Client{}
-	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {
 		return "", errors.Wrap(err, "Oauth request returned an error:")
 	}
@@ -521,7 +543,11 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	role := os.Getenv("SNOWFLAKE_ROLE")
 	host := os.Getenv("SNOWFLAKE_HOST")
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
-
+	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
+	port, err := strconv.Atoi(os.Getenv("SNOWFLAKE_PORT"))
+	if err != nil {
+		port = 443
+	}
 	dsn, err := DSN(
 		account,
 		user,
@@ -534,6 +560,8 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		region,
 		role,
 		host,
+		protocol,
+		port,
 		warehouse,
 	)
 	if err != nil {

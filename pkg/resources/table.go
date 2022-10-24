@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -58,6 +59,11 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "Column type, e.g. VARIANT",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+						varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+						return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+					},
 				},
 				"nullable": {
 					Type:        schema.TypeBool,
@@ -144,6 +150,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		MaxItems:    1,
 		Description: "Definitions of primary key constraint to create on table",
+		Deprecated:  "Use snowflake_table_constraint instead",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -198,8 +205,8 @@ type tableID struct {
 	TableName    string
 }
 
-//String() takes in a tableID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|TableName
+// String() takes in a tableID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|TableName.
 func (si *tableID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -214,13 +221,13 @@ func (si *tableID) String() (string, error) {
 }
 
 // tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
-// and returns a tableID object
+// and returns a tableID object.
 func tableIDFromString(stringID string) (*tableID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tableIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -458,7 +465,7 @@ func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 
 }
 
-// CreateTable implements schema.CreateFunc
+// CreateTable implements schema.CreateFunc.
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -516,7 +523,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadTable(d, meta)
 }
 
-// ReadTable implements schema.ReadFunc
+// ReadTable implements schema.ReadFunc.
 func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tableID, err := tableIDFromString(d.Id())
@@ -548,26 +555,28 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
-	if err != nil {
-		return err
-	}
+	/*
+		deprecated as it conflicts with the new table_constraint resource
+		showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
+		if err != nil {
+			return err
+		}
 
-	pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
-	if err != nil {
-		return err
-	}
+		pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
+		if err != nil {
+			return err
+		}*/
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":                table.TableName.String,
-		"owner":               table.Owner.String,
-		"database":            tableID.DatabaseName,
-		"schema":              tableID.SchemaName,
-		"comment":             table.Comment.String,
-		"column":              snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by":          snowflake.ClusterStatementToList(table.ClusterBy.String),
-		"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		"name":       table.TableName.String,
+		"owner":      table.Owner.String,
+		"database":   tableID.DatabaseName,
+		"schema":     tableID.SchemaName,
+		"comment":    table.Comment.String,
+		"column":     snowflake.NewColumns(tableDescription).Flatten(),
+		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
+		//"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
 		"data_retention_days": table.RetentionTime.Int32,
 		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}
@@ -581,7 +590,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateTable implements schema.UpdateFunc
+// UpdateTable implements schema.UpdateFunc.
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	tableID, err := tableIDFromString(d.Id())
 	if err != nil {
@@ -647,7 +656,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment)
 			} else {
 				if cA._default._type() != "constant" {
-					return fmt.Errorf("Failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
+					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment)
@@ -661,7 +670,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		for _, cA := range changed {
 
 			if cA.changedDataType {
-
 				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
 				err := snowflake.Exec(db, q)
 				if err != nil {
@@ -747,7 +755,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadTable(d, meta)
 }
 
-// DeleteTable implements schema.DeleteFunc
+// DeleteTable implements schema.DeleteFunc.
 func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tableID, err := tableIDFromString(d.Id())

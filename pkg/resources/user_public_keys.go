@@ -15,7 +15,7 @@ var userPublicKeyProperties = []string{
 	"rsa_public_key_2",
 }
 
-// sanitize input to supress diffs, etc
+// sanitize input to supress diffs, etc.
 func publicKeyStateFunc(v interface{}) string {
 	value := v.(string)
 	value = strings.TrimSuffix(value, "\n")
@@ -126,7 +126,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		if publicKeyOK { // if set, then we should update the value
 			propsToSet[prop] = publicKey.(string)
 		} else { // if now unset, we should unset the key from the user
-			propsToUnset[prop]=publicKey.(string)
+			propsToUnset[prop] = publicKey.(string)
 		}
 	}
 

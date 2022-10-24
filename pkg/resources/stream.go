@@ -110,8 +110,8 @@ type streamOnObjectID struct {
 	Name         string
 }
 
-//String() takes in a streamID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|StreamName
+// String() takes in a streamID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|StreamName.
 func (si *streamID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -126,13 +126,13 @@ func (si *streamID) String() (string, error) {
 }
 
 // streamIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StreamName
-// and returns a streamID object
+// and returns a streamID object.
 func streamIDFromString(stringID string) (*streamID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = streamIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -151,13 +151,13 @@ func streamIDFromString(stringID string) (*streamID, error) {
 }
 
 // streamOnObjectIDFromString() takes in a dot-delimited string: DatabaseName.SchemaName.TableName
-// and returns a streamOnObjectID object
+// and returns a streamOnObjectID object.
 func streamOnObjectIDFromString(stringID string) (*streamOnObjectID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = streamOnObjectIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -176,7 +176,7 @@ func streamOnObjectIDFromString(stringID string) (*streamOnObjectID, error) {
 	return streamOnTableResult, nil
 }
 
-// CreateStream implements schema.CreateFunc
+// CreateStream implements schema.CreateFunc.
 func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -255,7 +255,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	return ReadStream(d, meta)
 }
 
-// ReadStream implements schema.ReadFunc
+// ReadStream implements schema.ReadFunc.
 func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	streamID, err := streamIDFromString(d.Id())
@@ -333,7 +333,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// DeleteStream implements schema.DeleteFunc
+// DeleteStream implements schema.DeleteFunc.
 func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	streamID, err := streamIDFromString(d.Id())
@@ -357,7 +357,7 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateStream implements schema.UpdateFunc
+// UpdateStream implements schema.UpdateFunc.
 func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 	streamID, err := streamIDFromString(d.Id())
 	if err != nil {

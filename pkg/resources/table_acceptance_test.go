@@ -47,7 +47,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.comment", ""),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
@@ -67,7 +66,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "col2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.0", "COL1"),
@@ -85,7 +83,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "col2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.1", "\"col2\""),
@@ -102,7 +99,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "col2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "cluster_by.0", "\"col2\""),
@@ -119,7 +115,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
@@ -139,7 +134,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
@@ -160,7 +154,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "FLOAT"),
@@ -182,7 +175,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.comment", ""),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "COL2"),
@@ -204,7 +196,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.comment", "other comment"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "COL2"),
@@ -226,7 +217,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.type", "VARCHAR(16777216)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.comment", "other comment"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.1.name", "COL2"),
@@ -254,7 +244,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by.0"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
@@ -272,7 +261,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by.0"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
@@ -290,7 +278,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "cluster_by.0"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table3", "primary_key.0"),
 				),
@@ -308,7 +295,6 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "VARCHAR(16)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "cluster_by.0"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
@@ -1017,7 +1003,7 @@ resource "snowflake_tag" "test_tag" {
 	name     = "%[2]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
-	allowed_values = ["alv1", "alv2"]
+	allowed_values = ["%[1]s"]
 	comment  = "Terraform acceptance test"
 }
 
@@ -1025,7 +1011,7 @@ resource "snowflake_tag" "test2_tag" {
 	name     = "%[3]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
-	allowed_values = ["alv1", "alv2"]
+	allowed_values = ["%[1]s"]
 	comment  = "Terraform acceptance test"
 }
 

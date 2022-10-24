@@ -15,10 +15,10 @@ func TestNetworkPolicyCreate(t *testing.T) {
 	s.WithComment("This is a test comment")
 
 	allowedIps := []string{"192.168.0.100/24", "192.168.0.200/18"}
-	s.WithAllowedIpList(allowedIps)
+	s.WithAllowedIPList(allowedIps)
 
 	blockedIps := []string{"29.254.123.20"}
-	s.WithBlockedIpList(blockedIps)
+	s.WithBlockedIPList(blockedIps)
 
 	q := s.Create()
 	r.Equal(`CREATE NETWORK POLICY "test_network_policy" ALLOWED_IP_LIST=('192.168.0.100/24', '192.168.0.200/18') BLOCKED_IP_LIST=('29.254.123.20') COMMENT="This is a test comment"`, q)
@@ -30,7 +30,7 @@ func TestNetworkPolicyCreateNoOptionals(t *testing.T) {
 	r.NotNil(s)
 
 	allowedIps := []string{"192.168.0.100/24", "192.168.0.200/18"}
-	s.WithAllowedIpList(allowedIps)
+	s.WithAllowedIPList(allowedIps)
 
 	q := s.Create()
 	r.Equal(`CREATE NETWORK POLICY "test_network_policy" ALLOWED_IP_LIST=('192.168.0.100/24', '192.168.0.200/18')`, q)
@@ -78,11 +78,11 @@ func TestNetworkPolicyChangeIpList(t *testing.T) {
 	r.NotNil(s)
 
 	newAllowedIps := []string{"192.168.0.100/24", "29.254.123.20"}
-	q := s.ChangeIpList("ALLOWED", newAllowedIps)
+	q := s.ChangeIPList("ALLOWED", newAllowedIps)
 	r.Equal(`ALTER NETWORK POLICY "test_network_policy" SET ALLOWED_IP_LIST = ('192.168.0.100/24', '29.254.123.20')`, q)
 
 	var newBlockedIps []string
-	q = s.ChangeIpList("BLOCKED", newBlockedIps)
+	q = s.ChangeIPList("BLOCKED", newBlockedIps)
 	r.Equal(`ALTER NETWORK POLICY "test_network_policy" SET BLOCKED_IP_LIST = ()`, q)
 }
 

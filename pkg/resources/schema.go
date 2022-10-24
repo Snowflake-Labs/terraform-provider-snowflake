@@ -66,7 +66,7 @@ type schemaID struct {
 }
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|schemaName
+// DatabaseName|schemaName.
 func (si *schemaID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -81,13 +81,13 @@ func (si *schemaID) String() (string, error) {
 }
 
 // schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
-// and returns a schemaID object
+// and returns a schemaID object.
 func schemaIDFromString(stringID string) (*schemaID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = schemaIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -104,7 +104,7 @@ func schemaIDFromString(stringID string) (*schemaID, error) {
 	return schemaResult, nil
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSchema,
@@ -119,7 +119,7 @@ func Schema() *schema.Resource {
 	}
 }
 
-// CreateSchema implements schema.CreateFunc
+// CreateSchema implements schema.CreateFunc.
 func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -169,7 +169,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchema(d, meta)
 }
 
-// ReadSchema implements schema.ReadFunc
+// ReadSchema implements schema.ReadFunc.
 func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	schemaID, err := schemaIDFromString(d.Id())
@@ -258,7 +258,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateSchema implements schema.UpdateFunc
+// UpdateSchema implements schema.UpdateFunc.
 func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	schemaID, err := schemaIDFromString(d.Id())
 	if err != nil {
@@ -323,7 +323,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchema(d, meta)
 }
 
-// DeleteSchema implements schema.DeleteFunc
+// DeleteSchema implements schema.DeleteFunc.
 func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	schemaID, err := schemaIDFromString(d.Id())

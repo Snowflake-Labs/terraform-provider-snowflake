@@ -152,7 +152,7 @@ type externalTableID struct {
 }
 
 // String() takes in a externalTableID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|ExternalTableName
+// DatabaseName|SchemaName|ExternalTableName.
 func (si *externalTableID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -167,13 +167,13 @@ func (si *externalTableID) String() (string, error) {
 }
 
 // externalTableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|ExternalTableName
-// and returns a externalTableID object
+// and returns a externalTableID object.
 func externalTableIDFromString(stringID string) (*externalTableID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = externalTableIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -191,7 +191,7 @@ func externalTableIDFromString(stringID string) (*externalTableID, error) {
 	return externalTableResult, nil
 }
 
-// CreateExternalTable implements schema.CreateFunc
+// CreateExternalTable implements schema.CreateFunc.
 func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -260,7 +260,7 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadExternalTable(d, meta)
 }
 
-// ReadExternalTable implements schema.ReadFunc
+// ReadExternalTable implements schema.ReadFunc.
 func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalTableID, err := externalTableIDFromString(d.Id())
@@ -298,7 +298,7 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateExternalTable implements schema.UpdateFunc
+// UpdateExternalTable implements schema.UpdateFunc.
 func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -333,7 +333,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	return ReadExternalTable(d, meta)
 }
 
-// DeleteExternalTable implements schema.DeleteFunc
+// DeleteExternalTable implements schema.DeleteFunc.
 func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalTableID, err := externalTableIDFromString(d.Id())

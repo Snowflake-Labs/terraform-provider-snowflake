@@ -59,8 +59,8 @@ type userOwnershipGrant struct {
 	DefaultRole           sql.NullString `db:"default_role"`
 	DefaultSecondaryRoles sql.NullString `db:"default_secondary_roles"`
 	ExtAuthnDuo           sql.NullString `db:"ext_authn_duo"`
-	ExtAuthnUid           sql.NullString `db:"ext_authn_uid"`
-	MinsToBypass_mfa      sql.NullString `db:"mins_to_bypass_mfa"`
+	ExtAuthnUID           sql.NullString `db:"ext_authn_uid"`
+	MinsToBypassMFA       sql.NullString `db:"mins_to_bypass_mfa"`
 	Owner                 sql.NullString `db:"owner"`
 	LastSuccessLogin      sql.NullString `db:"last_success_login"`
 	ExpiresAtTime         sql.NullString `db:"expires_at_time"`

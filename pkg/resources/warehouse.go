@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// warehouseCreateProperties are only available via the CREATE statement
+// warehouseCreateProperties are only available via the CREATE statement.
 var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
 
 var warehouseProperties = []string{
@@ -137,7 +137,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-// Warehouse returns a pointer to the resource representing a warehouse
+// Warehouse returns a pointer to the resource representing a warehouse.
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateWarehouse,
@@ -152,7 +152,7 @@ func Warehouse() *schema.Resource {
 	}
 }
 
-// CreateWarehouse implements schema.CreateFunc
+// CreateWarehouse implements schema.CreateFunc.
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	props := append(warehouseProperties, warehouseCreateProperties...)
 	return CreateResource(
@@ -166,7 +166,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	)(d, meta)
 }
 
-// ReadWarehouse implements schema.ReadFunc
+// ReadWarehouse implements schema.ReadFunc.
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	warehouseBuilder := snowflake.Warehouse(d.Id())
@@ -265,7 +265,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateWarehouse implements schema.UpdateFunc
+// UpdateWarehouse implements schema.UpdateFunc.
 func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return UpdateResource(
 		"warehouse",
@@ -278,7 +278,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	)(d, meta)
 }
 
-// DeleteWarehouse implements schema.DeleteFunc
+// DeleteWarehouse implements schema.DeleteFunc.
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource(
 		"warehouse", func(name string) *snowflake.Builder {

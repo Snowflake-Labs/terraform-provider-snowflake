@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Generic Errors
+// Generic Errors.
 var (
 	ErrNoRowInRS = "sql: no rows in result set"
 )

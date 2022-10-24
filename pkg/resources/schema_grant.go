@@ -87,7 +87,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// SchemaGrant returns a pointer to the resource representing a view grant
+// SchemaGrant returns a pointer to the resource representing a view grant.
 func SchemaGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -105,7 +105,7 @@ func SchemaGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateSchemaGrant implements schema.CreateFunc
+// CreateSchemaGrant implements schema.CreateFunc.
 func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
@@ -151,7 +151,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchemaGrant(d, meta)
 }
 
-// UpdateSchemaGrant implements schema.UpdateFunc
+// UpdateSchemaGrant implements schema.UpdateFunc.
 func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done
@@ -214,7 +214,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchemaGrant(d, meta)
 }
 
-// ReadSchemaGrant implements schema.ReadFunc
+// ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -257,7 +257,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
 }
 
-// DeleteSchemaGrant implements schema.DeleteFunc
+// DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {

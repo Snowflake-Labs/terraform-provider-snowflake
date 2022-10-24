@@ -141,7 +141,7 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 		userMap["default_namespace"] = user.DefaultNamespace.String
 		userMap["default_role"] = user.DefaultRole.String
 		userMap["default_secondary_roles"] = strings.Split(
-		helpers.ListContentToString(user.DefaultSecondaryRoles.String), ",")
+			helpers.ListContentToString(user.DefaultSecondaryRoles.String), ",")
 		userMap["has_rsa_public_key"] = user.HasRsaPublicKey
 		userMap["email"] = user.Email.String
 		userMap["display_name"] = user.DisplayName.String

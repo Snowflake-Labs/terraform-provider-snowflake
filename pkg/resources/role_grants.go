@@ -6,11 +6,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/snowflakedb/gosnowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func RoleGrants() *schema.Resource {
@@ -242,7 +242,7 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 		if driverErr.Number == 2003 {
 			users, _ := snowflake.ListUsers(user, db)
 			logins := make([]string, len(users))
-			for i, u := range users{
+			for i, u := range users {
 				logins[i] = u.LoginName.String
 			}
 			if !snowflake.Contains(logins, user) {

@@ -10,7 +10,7 @@ import (
 )
 
 func TestAcc_TagAssociation(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
@@ -19,11 +19,9 @@ func TestAcc_TagAssociation(t *testing.T) {
 			{
 				Config: tagAssociationConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_id", fmt.Sprintf("%s|%s|%s", accName, accName, accName)),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_value", "finance"),
-					resource.TestCheckResourceAttr("snowflake_tag_association.test", "skip_validation", "true"),
 				),
 			},
 		},
@@ -52,12 +50,12 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "test" {
-	object_name = snowflake_database.test.name
+	object_identifier {
+		name = snowflake_database.test.name
+	  }
 	object_type = "DATABASE"
 	tag_id = snowflake_tag.test.id
 	tag_value = "finance"
-	skip_validation = true
 }
 `, n)
 }
-

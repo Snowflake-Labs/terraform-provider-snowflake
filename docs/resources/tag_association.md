@@ -29,12 +29,39 @@ resource "snowflake_tag" "tag" {
   allowed_values = ["finance", "engineering"]
 }
 
-resource "snowflake_tag_association" "association" {
-  object_name     = snowflake_database.database.name
+resource "snowflake_tag_association" "db_association" {
+  object_identifier {
+    name = snowflake_database.database.name
+  }
   object_type     = "DATABASE"
   tag_id          = snowflake_tag.tag.id
   tag_value       = "finance"
-  skip_validation = true
+}
+
+resource "snowflake_table" "test" {
+	database = snowflake_database.test.name
+	schema   = snowflake_schema.test.name
+	name     = "TABLE_NAME"
+	comment  = "Terraform example table"
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(16)"
+	}
+}
+
+resource "snowflake_tag_association" "table_association" {
+  object_identifier {
+    name     = snowflake_table.test.name
+    database = snowflake_database.test.name
+    schema   = snowflake_schema.test.name
+  }
+  object_type     = "TABLE"
+  tag_id          = snowflake_tag.test.id
+  tag_value       = "engineering"
 }
 ```
 
@@ -43,19 +70,33 @@ resource "snowflake_tag_association" "association" {
 
 ### Required
 
-- `object_name` (String) Specifies the object identifier for the tag association.
+- `object_identifier` (Block List, Min: 1) Specifies the object identifier for the tag association. (see [below for nested schema](#nestedblock--object_identifier))
 - `object_type` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
 - `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 - `tag_value` (String) Specifies the value of the tag, (e.g. 'finance' or 'engineering')
 
 ### Optional
 
-- `skip_validation` (Boolean) If true, skips validation of the tag association. It can take up to an hour for the SNOWFLAKE.TAG_REFERENCES table to update, and also requires ACCOUNT_ADMIN role to read from. https://docs.snowflake.com/en/sql-reference/account-usage/tag_references.html
+- `object_name` (String, Deprecated) Specifies the object identifier for the tag association.
+- `skip_validation` (Boolean) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--object_identifier"></a>
+### Nested Schema for `object_identifier`
+
+Required:
+
+- `name` (String) Name of the object to associate the tag with.
+
+Optional:
+
+- `database` (String) Name of the database that the object was created in.
+- `schema` (String) Name of the schema that the object was created in.
+
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

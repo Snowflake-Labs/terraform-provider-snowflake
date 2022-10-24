@@ -45,7 +45,6 @@ var taskGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -70,13 +69,14 @@ var taskGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// TaskGrant returns a pointer to the resource representing a task grant
+// TaskGrant returns a pointer to the resource representing a task grant.
 func TaskGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateTaskGrant,
 			Read:   ReadTaskGrant,
 			Delete: DeleteTaskGrant,
+			Update: UpdateTaskGrant,
 
 			Schema: taskGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -87,7 +87,7 @@ func TaskGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateTaskGrant implements schema.CreateFunc
+// CreateTaskGrant implements schema.CreateFunc.
 func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	var taskName string
 	if name, ok := d.GetOk("task_name"); ok {
@@ -136,7 +136,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadTaskGrant(d, meta)
 }
 
-// ReadTaskGrant implements schema.ReadFunc
+// ReadTaskGrant implements schema.ReadFunc.
 func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -186,7 +186,7 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, taskGrantSchema, builder, futureTasksEnabled, validTaskPrivileges)
 }
 
-// DeleteTaskGrant implements schema.DeleteFunc
+// DeleteTaskGrant implements schema.DeleteFunc.
 func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -205,4 +205,53 @@ func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.TaskGrant(dbName, schemaName, taskName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateTaskGrant implements schema.UpdateFunc.
+func UpdateTaskGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	taskName := grantID.ObjectName
+	futureTasks := (taskName == "")
+
+	var builder snowflake.GrantBuilder
+	if futureTasks {
+		builder = snowflake.FutureTaskGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.TaskGrant(dbName, schemaName, taskName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadTaskGrant(d, meta)
 }

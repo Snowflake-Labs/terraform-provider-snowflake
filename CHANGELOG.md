@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.47.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.46.0...v0.47.0) (2022-10-11)
+
+
+### Features
+
+* add new table constraint resource ([#1252](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1252)) ([fb1f145](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb1f145900dc27479e3769042b5b303d1dcef047))
+* integer return type for procedure ([#1266](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1266)) ([c1cf881](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c1cf881c0faa8634a375de80a8aa921fdfe090bf))
+
+
+### Misc
+
+* add godot to golangci ([#1263](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1263)) ([3323470](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3323470a7be1988d0d3d11deef3191078872c06c))
+
+
+### BugFixes
+
+* Database tags UNSET ([#1256](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1256)) ([#1257](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1257)) ([3d5dcac](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3d5dcac99c7fa859a811c72ce3dcd1f217c4f7d7))
+* missing t.Helper for thelper function ([#1264](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1264)) ([17bd501](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/17bd5014282201023572348a5ab51a3bf849ce86))
+* misspelling ([#1262](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1262)) ([e9595f2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e9595f27d0f181a32e77116c950cf141708221f5))
+
+## [0.46.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.45.0...v0.46.0) (2022-09-29)
+
+
+### Features
+
+* Added Missing Grant Updates + Removed ForceNew ([#1228](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1228)) ([1e9332d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1e9332d522beed99d80ecc2d0fc40fedc41cbd12))
+
+
+### BugFixes
+
+* Table Tags Acceptance Test ([#1245](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1245)) ([ab34763](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ab347635d2b1a1cb349a3762c0869ef71ab0bacf))
+* Update 'user_ownership_grant' schema validation ([#1242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1242)) ([061a28a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/061a28a9a88717c0b37b18a564f55f88cbed56ea))
+
+## [0.45.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.44.0...v0.45.0) (2022-09-22)
+
+
+### Features
+
+* add connection param for snowhouse ([#1231](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1231)) ([050c0a2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/050c0a213033f6f83b5937c0f34a027347bfbb2a))
+* add port and protocol to provider config ([#1238](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1238)) ([7a6d312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7a6d312e0becbb562707face1b0d87b705692687))
+
 ## [0.44.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.43.1...v0.44.0) (2022-09-20)
 
 

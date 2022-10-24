@@ -99,11 +99,6 @@ func expectTableRead(mock sqlmock.Sqlmock) {
 		AddRow("column4", "VARCHAR", "COLUMN", "N", "'hello'", nil)
 
 	mock.ExpectQuery(`DESC TABLE "database_name"."schema_name"."good_name"`).WillReturnRows(describeRows)
-
-	pkRows := sqlmock.NewRows([]string{"column_name", "key_sequence", "constraint_name"}).AddRow("column1", "1", "MY_PK")
-
-	mock.ExpectQuery(`SHOW PRIMARY KEYS IN TABLE "database_name"."schema_name"."good_name"`).WillReturnRows(pkRows)
-
 }
 
 func TestTableRead(t *testing.T) {
