@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.48.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.47.0...v0.48.0) (2022-10-24)
+
+
+### Features
+
+* add custom oauth int ([#1286](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1286)) ([d6397f9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d6397f9d331e2e4f658e62f17892630c7993606f))
+
+
+### BugFixes
+
+* clean up tag association read ([#1261](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1261)) ([de5dc85](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/de5dc852dff2d3b9cfb2cf6d20dea2867f1e605a))
+* Fixed Grants Resource Update With Futures ([#1289](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1289)) ([132373c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/132373cbe944899e0b5b0043bfdcb85e8913704b))
+* Pin Jira actions versions ([#1283](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1283)) ([ca25f25](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ca25f256e52cd70248d0fcb33e60a7741041a268))
+* tag association name convention ([#1294](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1294)) ([472f712](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/472f712f1db1c4fabd70b4f98188b157d8fb00f5))
+
 ## [0.47.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.46.0...v0.47.0) (2022-10-11)
 
 
