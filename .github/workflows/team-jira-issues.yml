@@ -21,7 +21,7 @@ jobs:
                     "key": "${{ secrets.JIRA_PROJECT }}"
                 },
                 "summary": "terraform-provider-snowflake issue ${{ github.event.issue.number }}",
-                "description": "${{ github.event.issue.url }}",
+                "description": "${{ github.event.issue.html_url }}",
                 "issuetype": {
                     "name": "Story"
                 },       
