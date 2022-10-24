@@ -32,10 +32,12 @@ resource snowflake_warehouse w {
 - `auto_resume` (Boolean) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
 - `auto_suspend` (Number) Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.
 - `comment` (String)
+- `enable_query_acceleration` (Boolean) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.
 - `initially_suspended` (Boolean) Specifies whether the warehouse is created initially in the ‘Suspended’ state.
 - `max_cluster_count` (Number) Specifies the maximum number of server clusters for the warehouse.
 - `max_concurrency_level` (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
 - `min_cluster_count` (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
+- `query_acceleration_max_scale_factor` (Number) Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.
 - `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
 - `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
