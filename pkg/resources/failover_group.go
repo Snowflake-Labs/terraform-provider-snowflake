@@ -265,6 +265,9 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	row := db.QueryRow(stmt)
 	var accountLocator string
 	err := row.Scan(&accountLocator)
+	if err != nil {
+		return errors.Wrapf(err, "error getting current account")
+	}
 
 	failoverGroups, err := snowflake.ListFailoverGroups(db, accountLocator)
 	if err != nil {
@@ -276,8 +279,10 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 		if fg.Name.String == name && fg.AccountLocator.String == accountLocator {
 			found = true
-			d.Set("name", fg.Name.String)
-
+			err = d.Set("name", fg.Name.String)
+			if err != nil {
+				return err
+			}
 			// if the failover group is created from a replica, then we do not want to get the other values
 			if _, ok := d.GetOk("from_replica"); ok {
 				log.Printf("[DEBUG] failover group %v is created from a replica, rest of values are computed\n", name)
@@ -299,13 +304,19 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			currentObjectTypeList := d.Get("object_types").(*schema.Set).List()
 			if len(currentObjectTypeList) != len(objectTypes) {
 				log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)
-				d.Set("object_types", objectTypes)
+				err = d.Set("object_types", objectTypes)
+				if err != nil {
+					return err
+				}
 			}
 
 			for _, v := range currentObjectTypeList {
 				if !slices.Contains(objectTypes, v.(string)) {
 					log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)
-					d.Set("object_types", objectTypes)
+					err = d.Set("object_types", objectTypes)
+					if err != nil {
+						return err
+					}
 					break
 				}
 			}
@@ -325,7 +336,10 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 					allowedIntegrationTypes = append(allowedIntegrationTypes, allowedIntegrationType)
 				}
 				allowedIntegrationTypesSet := schema.NewSet(schema.HashString, allowedIntegrationTypes)
-				d.Set("allowed_integration_types", allowedIntegrationTypesSet)
+				err = d.Set("allowed_integration_types", allowedIntegrationTypesSet)
+				if err != nil {
+					return err
+				}
 			}
 
 			allowedAccounts := fg.AllowedAccounts.String
@@ -340,7 +354,10 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 					allowedAccounts = append(allowedAccounts, allowedAccount)
 				}
 				allowedAccountsSet := schema.NewSet(schema.HashString, allowedAccounts)
-				d.Set("allowed_accounts", allowedAccountsSet)
+				err = d.Set("allowed_accounts", allowedAccountsSet)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -361,9 +378,15 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			allowedDatabasesInterface[i] = v
 		}
 		allowedDatabasesSet := schema.NewSet(schema.HashString, allowedDatabasesInterface)
-		d.Set("allowed_databases", allowedDatabasesSet)
+		err = d.Set("allowed_databases", allowedDatabasesSet)
+		if err != nil {
+			return err
+		}
 	} else {
-		d.Set("allowed_databases", nil)
+		err = d.Set("allowed_databases", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	shares, err := snowflake.ShowSharesInFailoverGroup(name, db)
@@ -376,9 +399,15 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			sharesInterface[i] = v
 		}
 		sharesSet := schema.NewSet(schema.HashString, sharesInterface)
-		d.Set("allowed_shares", sharesSet)
+		err = d.Set("allowed_shares", sharesSet)
+		if err != nil {
+			return err 
+		}
 	} else {
-		d.Set("allowed_shares", nil)
+		err = d.Set("allowed_shares", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
