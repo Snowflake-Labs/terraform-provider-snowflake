@@ -117,6 +117,9 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	cb := snowflake.ResourceMonitor(name).Create()
 	// Set optionals
+	if v, ok := d.GetOk("notify_users"); ok {
+		cb.SetStringList("notify_users", expandStringList(v.([]interface{})))
+	}
 	if v, ok := d.GetOk("credit_quota"); ok {
 		cb.SetInt("credit_quota", v.(int))
 	}
