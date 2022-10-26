@@ -21,6 +21,15 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "Identifier for the resource monitor; must be unique for your account.",
 		ForceNew:    true,
 	},
+	"notify_users": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the list of users to receive email notifications on resource monitors.",
+	},
 	"credit_quota": {
 		Type:        schema.TypeInt,
 		Optional:    true,
