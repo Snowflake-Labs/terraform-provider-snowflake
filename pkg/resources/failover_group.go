@@ -401,7 +401,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		sharesSet := schema.NewSet(schema.HashString, sharesInterface)
 		err = d.Set("allowed_shares", sharesSet)
 		if err != nil {
-			return err 
+			return err
 		}
 	} else {
 		err = d.Set("allowed_shares", nil)
