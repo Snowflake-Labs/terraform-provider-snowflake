@@ -77,7 +77,7 @@ type warehouse struct {
 	UpdatedOn                       time.Time     `db:"updated_on"`
 	Owner                           string        `db:"owner"`
 	Comment                         string        `db:"comment"`
-	EnableQueryAcceleration         sql.Bool      `db:"enable_query_acceleration"`
+	EnableQueryAcceleration         bool          `db:"enable_query_acceleration"`
 	QueryAccelerationMaxScaleFactor sql.NullInt64 `db:"query_acceleration_max_scale_factor"`
 	ResourceMonitor                 string        `db:"resource_monitor"`
 	Actives                         int64         `db:"actives"`
