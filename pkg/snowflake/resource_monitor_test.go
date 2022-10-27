@@ -36,8 +36,9 @@ func TestResourceMonitor(t *testing.T) {
 	cb.SetString("frequency", "YEARLY")
 
 	cb.SetInt("credit_quota", 666)
+	cb.SetStringList("notify_users", []string{"Snowflake User 1", "Snowflake User 2"})
 	q = cb.Statement()
-	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
+	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 NOTIFY_USERS=('Snowflake User 1', 'Snowflake User 2') TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
 }
 
 func TestResourceMonitorSetOnAccount(t *testing.T) {
