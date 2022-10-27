@@ -68,6 +68,7 @@ func (rb *ResourceMonitorBuilder) Create() *ResourceMonitorCreateBuilder {
 			boolProperties:   make(map[string]bool),
 			intProperties:    make(map[string]int),
 			floatProperties:  make(map[string]float64),
+			stringListProperties: make(map[string][]string),
 		},
 		make([]trigger, 0),
 	}
@@ -106,6 +107,10 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 
 	for k, v := range rcb.floatProperties {
 		sb.WriteString(fmt.Sprintf(` %v=%.2f`, strings.ToUpper(k), v))
+	}
+
+	for k, v := range rcb.stringListProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
 	}
 
 	if len(rcb.triggers) > 0 {
