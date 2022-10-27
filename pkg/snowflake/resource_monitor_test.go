@@ -26,6 +26,11 @@ func TestResourceMonitor(t *testing.T) {
 	q = ab.Statement()
 	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET CREDIT_QUOTA=66`, q)
 
+	ab = rm.Alter()
+	ab.SetStringList("notify_users", []string{"Snowflake User 1", "Snowflake User 2"})
+	q = ab.Statement()
+	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET NOTIFY_USERS=('Snowflake User 1', 'Snowflake User 2')`, q)
+
 	cb := snowflake.ResourceMonitor("resource_monitor").Create()
 	cb.NotifyAt(80).NotifyAt(90).SuspendAt(95).SuspendImmediatelyAt(100)
 	cb.SetString("frequency", "YEARLY")
