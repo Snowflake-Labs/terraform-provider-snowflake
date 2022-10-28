@@ -17,7 +17,6 @@ import (
 
 const (
 	taskIDDelimiter           = '|'
-	AllowOverlappingExecution = "allow_overlapping_execution"
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -473,7 +472,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := d.GetOk(AllowOverlappingExecution); ok {
+	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
 		builder.WithAllowOverlappingExecution(v.(bool))
 	}
 
@@ -651,9 +650,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange(AllowOverlappingExecution) {
+	if d.HasChange("allow_overlapping_execution") {
 		var q string
-		_, new := d.GetChange(AllowOverlappingExecution)
+		_, new := d.GetChange("allow_overlapping_execution")
 		flag := new.(bool)
 		if flag {
 			q = builder.SetAllowOverlappingExecutionParameter()
@@ -662,7 +661,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating %s on task %v", AllowOverlappingExecution, d.Id())
+			return errors.Wrapf(err, "error updating task %v", d.Id())
 		}
 	}
 
