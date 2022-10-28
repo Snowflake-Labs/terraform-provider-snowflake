@@ -16,6 +16,7 @@ provider "snowflake" {
   // required
   username = "..."
   account  = "..."
+  region   = "..."
 
   // optional, at exactly one must be set
   password               = "..."
@@ -30,9 +31,8 @@ provider "snowflake" {
   oauth_redirect_url     = "..."
 
   // optional
-  region    = "..."
-  role      = "..."
-  host      = "..."
+  role = "..."
+  host = "..."
   warehouse = "..."
 }
 ```
