@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	taskIDDelimiter = '|'
+	taskIDDelimiter           = '|'
+	AllowOverlappingExecution = "allow_overlapping_execution"
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -106,6 +107,12 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the name of the notification integration used for error notifications.",
 	},
+	AllowOverlappingExecution: {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap.",
+	},
 }
 
 type taskID struct {
@@ -129,7 +136,7 @@ func (t *taskID) String() (string, error) {
 	return strTaskID, nil
 }
 
-// difference find keys in a but not in b.
+// difference find keys in 'a' but not in 'b'.
 func difference(a, b map[string]interface{}) map[string]interface{} {
 	diff := make(map[string]interface{})
 	for k := range a {
@@ -279,7 +286,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
 	if err == sql.ErrNoRows {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] task (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -319,6 +326,11 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("comment", t.Comment)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set(AllowOverlappingExecution, t.AllowOverlappingExecution)
 	if err != nil {
 		return err
 	}
@@ -445,8 +457,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk(AllowOverlappingExecution); ok {
+		builder.WithAllowOverlappingExecution(v.(bool))
+	}
+
 	if v, ok := d.GetOk("error_integration"); ok {
-		builder.WithErrorIntegration((v.(string)))
+		builder.WithErrorIntegration(v.(string))
 	}
 
 	if v, ok := d.GetOk("after"); ok {
@@ -619,6 +635,21 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange(AllowOverlappingExecution) {
+		var q string
+		_, new := d.GetChange(AllowOverlappingExecution)
+		flag := new.(bool)
+		if flag {
+			q = builder.SetAllowOverlappingExecutionParameter()
+		} else {
+			q = builder.UnsetAllowOverlappingExecutionParameter()
+		}
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating %s on task %v", AllowOverlappingExecution, d.Id())
+		}
+	}
+
 	if d.HasChange("after") {
 		var (
 			q string
@@ -695,7 +726,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.Suspend()
 			// make sure defer doesn't enable task again
-			// when standalone or root task and status is supsended
+			// when standalone or root task and status is suspended
 			needResumeCurrentTask = false
 			if root != nil && builder.QualifiedName() == root.QualifiedName() {
 				root = root.SetDisabled() //nolint
