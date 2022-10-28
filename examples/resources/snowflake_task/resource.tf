@@ -52,3 +52,17 @@ resource snowflake_task test_task {
   allow_overlapping_execution = true
   enabled                     = true
 }
+
+resource snowflake_task test_task_replace {
+  comment = "task with allow_overlapping_execution"
+
+  database = "db"
+  schema   = "schema"
+
+  name          = "test_task"
+  sql_statement = "select 1 as c;"
+
+  allow_overlapping_execution = true
+  enabled                     = true
+  or_replace                  = true
+}

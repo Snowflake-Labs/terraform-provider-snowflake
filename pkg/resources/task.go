@@ -18,6 +18,7 @@ import (
 const (
 	taskIDDelimiter           = '|'
 	AllowOverlappingExecution = "allow_overlapping_execution"
+	OrReplace                 = "or_replace"
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -113,6 +114,12 @@ var taskSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap.",
 	},
+	OrReplace: {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Indicates if the existing task should be replaced.",
+	},
 }
 
 type taskID struct {
@@ -168,7 +175,7 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 	}
 
 	for {
-		builder := snowflake.Task(name, database, dbSchema)
+		builder := snowflake.Task(name, database, dbSchema, false)
 		q := builder.Show()
 		row := snowflake.QueryRow(db, q)
 		task, err := snowflake.ScanTask(row)
@@ -182,7 +189,7 @@ func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.
 			log.Printf("[DEBUG] found root task: %v", name)
 			// we only want to deal with suspending the root task when its enabled (started)
 			if task.IsEnabled() {
-				return snowflake.Task(name, database, dbSchema), nil
+				return snowflake.Task(name, database, dbSchema, false), nil
 			}
 			return nil, nil
 		}
@@ -281,7 +288,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.Task(name, database, schema, false)
 	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
@@ -429,7 +436,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
-	builder := snowflake.Task(name, database, dbSchema)
+	builder := snowflake.Task(name, database, dbSchema, false)
 	builder.WithStatement(sql)
 
 	// Set optionals
@@ -459,6 +466,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk(AllowOverlappingExecution); ok {
 		builder.WithAllowOverlappingExecution(v.(bool))
+	}
+
+	if v, ok := d.GetOk(OrReplace); ok && v.(bool) {
+		builder.WithReplace()
 	}
 
 	if v, ok := d.GetOk("error_integration"); ok {
@@ -519,7 +530,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	database := taskID.DatabaseName
 	dbSchema := taskID.SchemaName
 	name := taskID.TaskName
-	builder := snowflake.Task(name, database, dbSchema)
+	builder := snowflake.Task(name, database, dbSchema, false)
 	root, err := getActiveRootTaskAndSuspend(d, meta)
 	if err != nil {
 		return err
@@ -769,7 +780,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		defer resumeTask(root, meta)
 	}
 
-	q := snowflake.Task(name, database, schema).Drop()
+	q := snowflake.Task(name, database, schema, false).Drop()
 	err = snowflake.Exec(db, q)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting task %v", d.Id())

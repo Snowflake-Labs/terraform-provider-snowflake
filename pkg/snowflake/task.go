@@ -30,6 +30,7 @@ type TaskBuilder struct {
 	userTaskManagedInitialWarehouseSize string
 	errorIntegration                    string
 	allowOverlappingExecution           bool
+	replace                             bool
 }
 
 // GetFullName prepends db and schema to in parameter.
@@ -81,6 +82,12 @@ func (tb *TaskBuilder) WithAllowOverlappingExecution(flag bool) *TaskBuilder {
 	return tb
 }
 
+// WithReplace adds OR REPLACE to the TaskBuilder.
+func (tb *TaskBuilder) WithReplace() *TaskBuilder {
+	tb.replace = true
+	return tb
+}
+
 // WithTimeout adds a timeout to the TaskBuilder.
 func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	tb.userTaskTimeoutMS = t
@@ -126,12 +133,13 @@ func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 //   - DESCRIBE TASK
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/tasks-intro.html#task-ddl)
-func Task(name, db, schema string) *TaskBuilder {
+func Task(name, db, schema string, replace bool) *TaskBuilder {
 	return &TaskBuilder{
 		name:     name,
 		db:       db,
 		schema:   schema,
 		disabled: false, // helper for when started root or standalone task gets suspended
+		replace:  replace,
 	}
 }
 
@@ -139,6 +147,10 @@ func Task(name, db, schema string) *TaskBuilder {
 func (tb *TaskBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(`CREATE`)
+
+	if tb.replace {
+		q.WriteString(" OR REPLACE")
+	}
 
 	q.WriteString(fmt.Sprintf(` TASK %v`, tb.QualifiedName()))
 
