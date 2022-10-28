@@ -335,7 +335,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if allowOverlappingExecutionValue != "null" {
+	if allowOverlappingExecutionValue != nil {
 		allowOverlappingExecution, err := strconv.ParseBool(allowOverlappingExecutionValue.(string))
 		if err != nil {
 			return err
