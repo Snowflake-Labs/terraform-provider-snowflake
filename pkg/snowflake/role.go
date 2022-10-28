@@ -17,6 +17,7 @@ func Role(name string) *Builder {
 type role struct {
 	Name    sql.NullString `db:"name"`
 	Comment sql.NullString `db:"comment"`
+	Owner   sql.NullString `db:"owner"`
 }
 
 func ScanRole(row *sqlx.Row) (*role, error) {
