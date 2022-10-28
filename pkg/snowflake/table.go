@@ -110,12 +110,13 @@ func (d *ColumnDefault) UnescapeConstantSnowflakeString(columnType string) strin
 
 // Column structure that represents a table column.
 type Column struct {
-	name     string
-	_type    string // type is reserved
-	nullable bool
-	_default *ColumnDefault // default is reserved
-	identity *ColumnIdentity
-	comment  string // pointer as value is nullable
+	name           string
+	_type          string // type is reserved
+	nullable       bool
+	_default       *ColumnDefault // default is reserved
+	identity       *ColumnIdentity
+	comment        string // pointer as value is nullable
+	masking_policy string
 }
 
 // WithName set the column name.
@@ -147,6 +148,11 @@ func (c *Column) WithComment(comment string) *Column {
 	return c
 }
 
+func (c *Column) WithMaskingPolicy(maskingPolicy string) *Column {
+	c.masking_policy = maskingPolicy
+	return c
+}
+
 func (c *Column) WithIdentity(id *ColumnIdentity) *Column {
 	c.identity = id
 	return c
@@ -172,6 +178,10 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 
 	if c.identity != nil {
 		colDef.WriteString(fmt.Sprintf(` IDENTITY(%v, %v)`, c.identity.startNum, c.identity.stepNum))
+	}
+
+	if strings.TrimSpace(c.masking_policy) != "" {
+		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.masking_policy)))
 	}
 
 	if withComment {
@@ -233,12 +243,13 @@ func NewColumns(tds []tableDescription) Columns {
 		}
 
 		cs = append(cs, Column{
-			name:     td.Name.String,
-			_type:    td.Type.String,
-			nullable: td.IsNullable(),
-			_default: td.ColumnDefault(),
-			identity: td.ColumnIdentity(),
-			comment:  td.Comment.String,
+			name:           td.Name.String,
+			_type:          td.Type.String,
+			nullable:       td.IsNullable(),
+			_default:       td.ColumnDefault(),
+			identity:       td.ColumnIdentity(),
+			comment:        td.Comment.String,
+			masking_policy: td.MaskingPolicy.String,
 		})
 	}
 	return Columns(cs)
@@ -252,6 +263,7 @@ func (c Columns) Flatten() []interface{} {
 		flat["type"] = col._type
 		flat["nullable"] = col.nullable
 		flat["comment"] = col.comment
+		flat["masking_policy"] = col.masking_policy
 
 		if col._default != nil {
 			def := map[string]interface{}{}
@@ -539,14 +551,15 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 }
 
 // AddColumn returns the SQL query that will add a new column to the table.
-func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string) string {
+func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string, maskingPolicy string) string {
 	col := Column{
-		name:     name,
-		_type:    dataType,
-		nullable: nullable,
-		_default: _default,
-		identity: identity,
-		comment:  comment,
+		name:           name,
+		_type:          dataType,
+		nullable:       nullable,
+		_default:       _default,
+		identity:       identity,
+		comment:        comment,
+		masking_policy: maskingPolicy,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
 }
@@ -568,6 +581,13 @@ func (tb *TableBuilder) ChangeColumnType(name string, dataType string) string {
 
 func (tb *TableBuilder) ChangeColumnComment(name string, comment string) string {
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" COMMENT '%v'`, tb.QualifiedName(), EscapeString(name), EscapeString(comment))
+}
+
+func (tb *TableBuilder) ChangeColumnMaskingPolicy(name string, maskingPolicy string) string {
+	if strings.TrimSpace(maskingPolicy) == "" {
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET MASKING POLICY`, tb.QualifiedName(), EscapeString(name))
+	}
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
 }
 
 func (tb *TableBuilder) DropColumnDefault(name string) string {
@@ -654,12 +674,13 @@ func ScanTable(row *sqlx.Row) (*table, error) {
 }
 
 type tableDescription struct {
-	Name     sql.NullString `db:"name"`
-	Type     sql.NullString `db:"type"`
-	Kind     sql.NullString `db:"kind"`
-	Nullable sql.NullString `db:"null?"`
-	Default  sql.NullString `db:"default"`
-	Comment  sql.NullString `db:"comment"`
+	Name          sql.NullString `db:"name"`
+	Type          sql.NullString `db:"type"`
+	Kind          sql.NullString `db:"kind"`
+	Nullable      sql.NullString `db:"null?"`
+	Default       sql.NullString `db:"default"`
+	Comment       sql.NullString `db:"comment"`
+	MaskingPolicy sql.NullString `db:"policy name"`
 }
 
 func (td *tableDescription) IsNullable() bool {
