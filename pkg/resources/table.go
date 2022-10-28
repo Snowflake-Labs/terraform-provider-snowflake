@@ -17,6 +17,7 @@ import (
 
 const (
 	tableIDDelimiter = '|'
+	unique           = "unique"
 )
 
 var tableSchema = map[string]*schema.Schema{
@@ -101,7 +102,7 @@ var tableSchema = map[string]*schema.Schema{
 					},
 				},
 				/*Note: Identity and default are mutually exclusive. From what I can tell we can't enforce this here
-				the snowflake query will error so we can defer enforcement to there.
+				the snowflake query will error, so we can defer enforcement to there.
 				*/
 				"identity": {
 					Type:        schema.TypeList,
@@ -137,6 +138,12 @@ var tableSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Default:     "",
 					Description: "Masking policy to apply on column",
+				},
+				unique: {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Indicates if the unique constraint is created on a column.",
 				},
 			},
 		},
@@ -308,6 +315,7 @@ type column struct {
 	identity      *columnIdentity
 	comment       string
 	maskingPolicy string
+	unique        bool
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
@@ -344,7 +352,7 @@ type changedColumn struct {
 	newColumn             column //our new column
 	changedDataType       bool
 	changedNullConstraint bool
-	dropedDefault         bool
+	droppedDefault        bool
 	changedComment        bool
 	changedMaskingPolicy  bool
 }
@@ -361,7 +369,7 @@ func (old columns) getChangedColumnProperties(new columns) (changed changedColum
 				changeColumn.changedNullConstraint = true
 			}
 			if cO.name == cN.name && cO._default != nil && cN._default == nil {
-				changeColumn.dropedDefault = true
+				changeColumn.droppedDefault = true
 			}
 
 			if cO.name == cN.name && cO.comment != cN.comment {
@@ -444,6 +452,7 @@ func getColumn(from interface{}) (to column) {
 		identity:      id,
 		comment:       c["comment"].(string),
 		maskingPolicy: c["masking_policy"].(string),
+		unique:        c[unique].(bool),
 	}
 }
 
@@ -456,14 +465,14 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
-type primarykey struct {
+type primaryKey struct {
 	name string
 	keys []string
 }
 
-func getPrimaryKey(from interface{}) (to primarykey) {
+func getPrimaryKey(from interface{}) (to primaryKey) {
 	pk := from.([]interface{})
-	to = primarykey{}
+	to = primaryKey{}
 	if len(pk) > 0 {
 		pkDetails := pk[0].(map[string]interface{})
 		to.name = pkDetails["name"].(string)
@@ -473,7 +482,7 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 	return to
 }
 
-func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
+func (pk primaryKey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 	snowPk := snowflake.PrimaryKey{}
 	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
 
@@ -665,15 +674,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			var q string
 
 			if cA.identity == nil && cA._default == nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy, cA.unique)
 			} else if cA.identity != nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy, cA.unique)
 			} else {
 				if cA._default._type() != "constant" {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy, cA.unique)
 			}
 
 			err := snowflake.Exec(db, q)
@@ -700,7 +709,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 				}
 			}
-			if cA.dropedDefault {
+			if cA.droppedDefault {
 				q := builder.DropColumnDefault(cA.newColumn.name)
 				err := snowflake.Exec(db, q)
 				if err != nil {

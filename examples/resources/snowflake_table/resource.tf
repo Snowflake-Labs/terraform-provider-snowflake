@@ -61,4 +61,10 @@ resource "snowflake_table" "table" {
     name = "my_key"
     keys = ["data"]
   }
+
+  column {
+    name    = "id"
+    type    = "INT"
+    unique  = true
+  }
 }

@@ -299,6 +299,18 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
+			{
+				Config: tableConfig16CreateTableWithColumnWithUnique(accName, accName, table2Name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.unique", "true"),
+				),
+			},
 		},
 	})
 }
@@ -797,6 +809,34 @@ resource "snowflake_table" "test_table" {
 }
 `
 	return fmt.Sprintf(s, name, name, name)
+}
+
+func tableConfig16CreateTableWithColumnWithUnique(dbName string, schemaName string, tableName string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_table" "test_table2" {
+	database            = snowflake_database.test_database.name
+	schema              = snowflake_schema.test_schema.name
+	name                = "%s"
+	comment             = "Terraform acceptance test"
+	column {
+		name    = "COL1"
+		type    = "INT"
+		unique  = true
+	}
+}
+`
+	return fmt.Sprintf(s, dbName, schemaName, tableName)
 }
 
 func TestAcc_TableDefaults(t *testing.T) {
