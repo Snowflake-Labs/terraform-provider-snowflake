@@ -712,7 +712,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 		}

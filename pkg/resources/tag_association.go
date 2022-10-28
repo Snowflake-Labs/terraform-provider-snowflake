@@ -25,7 +25,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Deprecated:  "Use `object_identifier` instead",
 		ForceNew:    true,
 	},
-	"object_identifier": &schema.Schema{
+	"object_identifier": {
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
