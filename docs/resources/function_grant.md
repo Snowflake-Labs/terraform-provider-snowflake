@@ -13,8 +13,8 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_function_grant grant {
-  database_name   = "db"
+resource "snowflake_function_grant" "grant" {
+  database_name   = "database"
   schema_name     = "schema"
   function_name  = "function"
 
@@ -29,15 +29,9 @@ resource snowflake_function_grant grant {
   return_type = "string"
 
   privilege = "USAGE"
-  roles = [
-    "role1",
-    "role2",
-  ]
+  roles = ["role1", "role2"]
 
-  shares = [
-    "share1",
-    "share2",
-  ]
+  shares = ["share1", "share2"]
 
   on_future         = false
   with_grant_option = false
