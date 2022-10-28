@@ -330,13 +330,17 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	allowOverlappingExecution, err := t.AllowOverlappingExecution.Value()
+	allowOverlappingExecutionValue, err := t.AllowOverlappingExecution.Value()
 	if err != nil {
 		return err
 	}
 
-	if allowOverlappingExecution != nil {
-		err = d.Set("allow_overlapping_execution", allowOverlappingExecution.(bool))
+	if allowOverlappingExecutionValue != "null" {
+		allowOverlappingExecution, err := strconv.ParseBool(allowOverlappingExecutionValue.(string))
+		if err != nil {
+			return err
+		}
+		err = d.Set("allow_overlapping_execution", allowOverlappingExecution)
 		if err != nil {
 			return err
 		}

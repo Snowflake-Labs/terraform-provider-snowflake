@@ -376,7 +376,7 @@ type task struct {
 	Definition                string         `db:"definition"`
 	Condition                 *string        `db:"condition"`
 	ErrorIntegration          sql.NullString `db:"error_integration"`
-	AllowOverlappingExecution sql.NullBool   `db:"allow_overlapping_execution"`
+	AllowOverlappingExecution sql.NullString `db:"allow_overlapping_execution"`
 }
 
 func (t *task) IsEnabled() bool {
