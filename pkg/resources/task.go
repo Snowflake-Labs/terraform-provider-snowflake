@@ -107,7 +107,7 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the name of the notification integration used for error notifications.",
 	},
-	AllowOverlappingExecution: {
+	"allow_overlapping_execution": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
