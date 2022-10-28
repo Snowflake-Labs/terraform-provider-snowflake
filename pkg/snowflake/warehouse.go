@@ -78,7 +78,7 @@ type warehouse struct {
 	Owner                           string        `db:"owner"`
 	Comment                         string        `db:"comment"`
 	EnableQueryAcceleration         bool          `db:"enable_query_acceleration"`
-	QueryAccelerationMaxScaleFactor sql.NullInt64 `db:"query_acceleration_max_scale_factor"`
+	QueryAccelerationMaxScaleFactor int           `db:"query_acceleration_max_scale_factor"`
 	ResourceMonitor                 string        `db:"resource_monitor"`
 	Actives                         int64         `db:"actives"`
 	Pendings                        int64         `db:"pendings"`
