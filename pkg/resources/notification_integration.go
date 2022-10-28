@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -118,65 +118,64 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// NotificationIntegration returns a pointer to the resource representing a notification integration
+// NotificationIntegration returns a pointer to the resource representing a notification integration.
 func NotificationIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateNotificationIntegration,
 		Read:   ReadNotificationIntegration,
 		Update: UpdateNotificationIntegration,
 		Delete: DeleteNotificationIntegration,
-		Exists: NotificationIntegrationExists,
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-// CreateNotificationIntegration implements schema.CreateFunc
-func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) error {
+// CreateNotificationIntegration implements schema.CreateFunc.
+func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
+	name := d.Get("name").(string)
 
 	stmt := snowflake.NotificationIntegration(name).Create()
 
 	// Set required fields
-	stmt.SetString(`TYPE`, data.Get("type").(string))
-	stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
+	stmt.SetString(`TYPE`, d.Get("type").(string))
+	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 
 	// Set optional fields
-	if v, ok := data.GetOk("comment"); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		stmt.SetString(`COMMENT`, v.(string))
 	}
-	if v, ok := data.GetOk("direction"); ok {
+	if v, ok := d.GetOk("direction"); ok {
 		stmt.SetString(`DIRECTION`, v.(string))
 	}
-	if v, ok := data.GetOk("azure_tenant_id"); ok {
+	if v, ok := d.GetOk("azure_tenant_id"); ok {
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
 	}
-	if v, ok := data.GetOk("notification_provider"); ok {
+	if v, ok := d.GetOk("notification_provider"); ok {
 		stmt.SetString(`NOTIFICATION_PROVIDER`, v.(string))
 	}
-	if v, ok := data.GetOk("azure_storage_queue_primary_uri"); ok {
+	if v, ok := d.GetOk("azure_storage_queue_primary_uri"); ok {
 		stmt.SetString(`AZURE_STORAGE_QUEUE_PRIMARY_URI`, v.(string))
 	}
-	if v, ok := data.GetOk("azure_tenant_id"); ok {
+	if v, ok := d.GetOk("azure_tenant_id"); ok {
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
 	}
-	if v, ok := data.GetOk("aws_sqs_arn"); ok {
+	if v, ok := d.GetOk("aws_sqs_arn"); ok {
 		stmt.SetString(`AWS_SQS_ARN`, v.(string))
 	}
-	if v, ok := data.GetOk("aws_sqs_role_arn"); ok {
+	if v, ok := d.GetOk("aws_sqs_role_arn"); ok {
 		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
 	}
-	if v, ok := data.GetOk("aws_sns_topic_arn"); ok {
+	if v, ok := d.GetOk("aws_sns_topic_arn"); ok {
 		stmt.SetString(`AWS_SNS_TOPIC_ARN`, v.(string))
 	}
-	if v, ok := data.GetOk("aws_sns_role_arn"); ok {
+	if v, ok := d.GetOk("aws_sns_role_arn"); ok {
 		stmt.SetString(`AWS_SNS_ROLE_ARN`, v.(string))
 	}
-	if v, ok := data.GetOk("gcp_pubsub_subscription_name"); ok {
+	if v, ok := d.GetOk("gcp_pubsub_subscription_name"); ok {
 		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
 	}
 
@@ -185,32 +184,32 @@ func CreateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating notification integration: %w", err)
 	}
 
-	data.SetId(name)
+	d.SetId(name)
 
-	return ReadNotificationIntegration(data, meta)
+	return ReadNotificationIntegration(d, meta)
 }
 
-// ReadNotificationIntegration implements schema.ReadFunc
-func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) error {
+// ReadNotificationIntegration implements schema.ReadFunc.
+func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
-	stmt := snowflake.NotificationIntegration(data.Id()).Show()
+	stmt := snowflake.NotificationIntegration(d.Id()).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
 
 	s, err := snowflake.ScanNotificationIntegration(row)
 	if err != nil {
-		return fmt.Errorf("Could not show notification integration: %w", err)
+		return fmt.Errorf("could not show notification integration: %w", err)
 	}
 
 	// Note: category must be NOTIFICATION or something is broken
 	if c := s.Category.String; c != "NOTIFICATION" {
-		return fmt.Errorf("Expected %v to be a NOTIFICATION integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
 
-	if err := data.Set("name", s.Name.String); err != nil {
+	if err := d.Set("name", s.Name.String); err != nil {
 		return err
 	}
 
@@ -218,89 +217,89 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 	// so it needs to be parsed in order to not show a diff in Terraform
 	typeParts := strings.Split(s.Type.String, "-")
 	parsedType := strings.TrimSpace(typeParts[0])
-	if err = data.Set("type", parsedType); err != nil {
+	if err = d.Set("type", parsedType); err != nil {
 		return err
 	}
 
-	if err := data.Set("created_on", s.CreatedOn.String); err != nil {
+	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
 		return err
 	}
 
-	if err := data.Set("enabled", s.Enabled.Bool); err != nil {
+	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
 		return err
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	// We need to grab them in a loop
 	var k, pType string
-	var v, d interface{}
-	stmt = snowflake.NotificationIntegration(data.Id()).Describe()
+	var v, n interface{}
+	stmt = snowflake.NotificationIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe notification integration: %w", err)
+		return fmt.Errorf("could not describe notification integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &d); err != nil {
+		if err := rows.Scan(&k, &pType, &v, &n); err != nil {
 			return err
 		}
 		switch k {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "DIRECTION":
-			if err = data.Set("direction", v.(string)); err != nil {
+			if err = d.Set("direction", v.(string)); err != nil {
 				return err
 			}
 		case "NOTIFICATION_PROVIDER":
-			if err = data.Set("notification_provider", v.(string)); err != nil {
+			if err = d.Set("notification_provider", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_STORAGE_QUEUE_PRIMARY_URI":
-			if err = data.Set("azure_storage_queue_primary_uri", v.(string)); err != nil {
+			if err = d.Set("azure_storage_queue_primary_uri", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_TENANT_ID":
-			if err = data.Set("azure_tenant_id", v.(string)); err != nil {
+			if err = d.Set("azure_tenant_id", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_ARN":
-			if err = data.Set("aws_sqs_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sqs_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_ROLE_ARN":
-			if err = data.Set("aws_sqs_role_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sqs_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_EXTERNAL_ID":
-			if err = data.Set("aws_sqs_external_id", v.(string)); err != nil {
+			if err = d.Set("aws_sqs_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_IAM_USER_ARN":
-			if err = data.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SNS_TOPIC_ARN":
-			if err = data.Set("aws_sns_topic_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sns_topic_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SNS_ROLE_ARN":
-			if err = data.Set("aws_sns_role_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sns_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "SF_AWS_EXTERNAL_ID":
-			if err = data.Set("aws_sns_external_id", v.(string)); err != nil {
+			if err = d.Set("aws_sns_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "SF_AWS_IAM_USER_ARN":
-			if err = data.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
+			if err = d.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
-			if err = data.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+			if err = d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
-			if err = data.Set("gcp_pubsub_service_account", v.(string)); err != nil {
+			if err = d.Set("gcp_pubsub_service_account", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -311,10 +310,10 @@ func ReadNotificationIntegration(data *schema.ResourceData, meta interface{}) er
 	return err
 }
 
-// UpdateNotificationIntegration implements schema.UpdateFunc
-func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) error {
+// UpdateNotificationIntegration implements schema.UpdateFunc.
+func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := data.Id()
+	id := d.Id()
 
 	stmt := snowflake.NotificationIntegration(id).Alter()
 
@@ -322,64 +321,64 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 	// Not sure if there is a more elegant way of determining this
 	var runSetStatement bool
 
-	if data.HasChange("comment") {
+	if d.HasChange("comment") {
 		runSetStatement = true
-		stmt.SetString("COMMENT", data.Get("comment").(string))
+		stmt.SetString("COMMENT", d.Get("comment").(string))
 	}
 
-	if data.HasChange("type") {
+	if d.HasChange("type") {
 		runSetStatement = true
-		stmt.SetString("TYPE", data.Get("type").(string))
+		stmt.SetString("TYPE", d.Get("type").(string))
 	}
 
-	if data.HasChange("enabled") {
+	if d.HasChange("enabled") {
 		runSetStatement = true
-		stmt.SetBool(`ENABLED`, data.Get("enabled").(bool))
+		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
 	}
 
-	if data.HasChange("direction") {
+	if d.HasChange("direction") {
 		runSetStatement = true
-		stmt.SetString("DIRECTION", data.Get("direction").(string))
+		stmt.SetString("DIRECTION", d.Get("direction").(string))
 	}
 
-	if data.HasChange("notification_provider") {
+	if d.HasChange("notification_provider") {
 		runSetStatement = true
-		stmt.SetString("NOTIFICATION_PROVIDER", data.Get("notification_provider").(string))
+		stmt.SetString("NOTIFICATION_PROVIDER", d.Get("notification_provider").(string))
 	}
 
-	if data.HasChange("azure_storage_queue_primary_uri") {
+	if d.HasChange("azure_storage_queue_primary_uri") {
 		runSetStatement = true
-		stmt.SetString("AZURE_STORAGE_QUEUE_PRIMARY_URI", data.Get("azure_storage_queue_primary_uri").(string))
+		stmt.SetString("AZURE_STORAGE_QUEUE_PRIMARY_URI", d.Get("azure_storage_queue_primary_uri").(string))
 	}
 
-	if data.HasChange("azure_tenant_id") {
+	if d.HasChange("azure_tenant_id") {
 		runSetStatement = true
-		stmt.SetString("AZURE_TENANT_ID", data.Get("azure_tenant_id").(string))
+		stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
 	}
 
-	if data.HasChange("aws_sqs_arn") {
+	if d.HasChange("aws_sqs_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SQS_ARN", data.Get("aws_sqs_arn").(string))
+		stmt.SetString("AWS_SQS_ARN", d.Get("aws_sqs_arn").(string))
 	}
 
-	if data.HasChange("aws_sqs_role_arn") {
+	if d.HasChange("aws_sqs_role_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SQS_ROLE_ARN", data.Get("aws_sqs_role_arn").(string))
+		stmt.SetString("AWS_SQS_ROLE_ARN", d.Get("aws_sqs_role_arn").(string))
 	}
 
-	if data.HasChange("aws_sns_topic_arn") {
+	if d.HasChange("aws_sns_topic_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SNS_TOPIC_ARN", data.Get("aws_sns_topic_arn").(string))
+		stmt.SetString("AWS_SNS_TOPIC_ARN", d.Get("aws_sns_topic_arn").(string))
 	}
 
-	if data.HasChange("aws_sns_role_arn") {
+	if d.HasChange("aws_sns_role_arn") {
 		runSetStatement = true
-		stmt.SetString("AWS_SNS_ROLE_ARN", data.Get("aws_sns_role_arn").(string))
+		stmt.SetString("AWS_SNS_ROLE_ARN", d.Get("aws_sns_role_arn").(string))
 	}
 
-	if data.HasChange("gcp_pubsub_subscription_name") {
+	if d.HasChange("gcp_pubsub_subscription_name") {
 		runSetStatement = true
-		stmt.SetString("GCP_PUBSUB_SUBSCRIPTION_NAME", data.Get("gcp_pubsub_subscription_name").(string))
+		stmt.SetString("GCP_PUBSUB_SUBSCRIPTION_NAME", d.Get("gcp_pubsub_subscription_name").(string))
 	}
 
 	if runSetStatement {
@@ -388,28 +387,10 @@ func UpdateNotificationIntegration(data *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return ReadNotificationIntegration(data, meta)
+	return ReadNotificationIntegration(d, meta)
 }
 
-// DeleteNotificationIntegration implements schema.DeleteFunc
-func DeleteNotificationIntegration(data *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NotificationIntegration)(data, meta)
-}
-
-// NotificationIntegrationExists implements schema.ExistsFunc
-func NotificationIntegrationExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := data.Id()
-
-	stmt := snowflake.NotificationIntegration(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
+// DeleteNotificationIntegration implements schema.DeleteFunc.
+func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
 }

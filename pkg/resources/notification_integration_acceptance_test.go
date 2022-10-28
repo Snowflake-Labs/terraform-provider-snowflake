@@ -10,46 +10,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAcc_NotificationIntegration(t *testing.T) {
+func TestAcc_NotificationAzureIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccNotificationIntegration")
+		t.Skip("Skipping TestAcc_NotificationAzureIntegration")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	storageUri := "azure://great-bucket/great-path/"
+	storageURI := "azure://great-bucket/great-path/"
 	tenant := "some-guid"
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: azureNotificationIntegrationConfig(accName, storageUri, tenant),
+				Config: azureNotificationIntegrationConfig(accName, storageURI, tenant),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AZURE_STORAGE_QUEUE"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", storageUri),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", storageURI),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_tenant_id", tenant),
-				),
-			},
-		},
-	})
-
-	pubsubName := "projects/project-1234/subscriptions/sub2"
-	resource.Test(t, resource.TestCase{
-		Providers: providers(),
-		Steps: []resource.TestStep{
-			{
-				Config: gcpNotificationIntegrationConfig(accName, pubsubName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", pubsubName),
 				),
 			},
 		},
 	})
 }
 
-func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
+func TestAcc_NotificationGCPIntegration(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_NotificationGCPIntegration")
+	}
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	gcpNotificationDirection := "INBOUND"
+
+	pubsubName := "projects/project-1234/subscriptions/sub2"
+	resource.Test(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: gcpNotificationIntegrationConfig(accName, pubsubName, gcpNotificationDirection),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", pubsubName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", gcpNotificationDirection),
+				),
+			},
+		},
+	})
+}
+
+func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryURI string, azureTenantID string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
   name                            = "%s"
@@ -58,16 +69,17 @@ resource "snowflake_notification_integration" "test" {
   azure_tenant_id                 = "%s"
 }
 `
-	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
+	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryURI, azureTenantID)
 }
 
-func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string) string {
+func gcpNotificationIntegrationConfig(name string, gcpPubsubSubscriptionName string, gcpNotificationDirection string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
   name                            = "%s"
   notification_provider           = "%s"
   gcp_pubsub_subscription_name    = "%s"
+  direction                       = "%s"
 }
 `
-	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName, gcpNotificationDirection)
 }

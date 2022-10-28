@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +18,7 @@ var validMaterializedViewPrivileges = NewPrivilegeSet(
 	privilegeSelect,
 )
 
-// The schema holds the resource variables that can be provided in the Terraform
+// The schema holds the resource variables that can be provided in the Terraform.
 var materializedViewGrantSchema = map[string]*schema.Schema{
 	"materialized_view_name": {
 		Type:        schema.TypeString,
@@ -43,7 +43,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future materialized view view.",
 		Default:      "SELECT",
-		ValidateFunc: validation.ValidatePrivilege(validMaterializedViewPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -51,14 +51,12 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -74,15 +72,23 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
+// ViewGrant returns a pointer to the resource representing a view grant.
 func MaterializedViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateMaterializedViewGrant,
 			Read:   ReadMaterializedViewGrant,
 			Delete: DeleteMaterializedViewGrant,
+			Update: UpdateMaterializedViewGrant,
 
 			Schema: materializedViewGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -93,7 +99,7 @@ func MaterializedViewGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateViewGrant implements schema.CreateFunc
+// CreateViewGrant implements schema.CreateFunc.
 func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var materializedViewName string
 	if name, ok := d.GetOk("materialized_view_name"); ok {
@@ -146,7 +152,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	return ReadMaterializedViewGrant(d, meta)
 }
 
-// ReadViewGrant implements schema.ReadFunc
+// ReadViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -196,7 +202,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
 }
 
-// DeleteViewGrant implements schema.DeleteFunc
+// DeleteViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -215,4 +221,57 @@ func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateMaterializedViewGrant implements schema.UpdateFunc.
+func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
+	}
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	materializedViewName := grantID.ObjectName
+	futureMaterializedViews := (materializedViewName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futureMaterializedViews {
+		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadMaterializedViewGrant(d, meta)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PipeBuilder abstracts the creation of SQL queries for a Snowflake schema
+// PipeBuilder abstracts the creation of SQL queries for a Snowflake schema.
 type PipeBuilder struct {
 	name             string
 	db               string
@@ -23,7 +23,7 @@ type PipeBuilder struct {
 	errorIntegration string
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (pb *PipeBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -44,37 +44,37 @@ func (pb *PipeBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithAutoIngest adds the auto_ingest flag to the PipeBuilder
+// WithAutoIngest adds the auto_ingest flag to the PipeBuilder.
 func (pb *PipeBuilder) WithAutoIngest() *PipeBuilder {
 	pb.autoIngest = true
 	return pb
 }
 
-// WithAwsSnsTopicArn adds the aws_sns_topic to the PipeBuilder
+// WithAwsSnsTopicArn adds the aws_sns_topic to the PipeBuilder.
 func (pb *PipeBuilder) WithAwsSnsTopicArn(s string) *PipeBuilder {
 	pb.awsSnsTopicArn = s
 	return pb
 }
 
-// WithComment adds a comment to the PipeBuilder
+// WithComment adds a comment to the PipeBuilder.
 func (pb *PipeBuilder) WithComment(c string) *PipeBuilder {
 	pb.comment = c
 	return pb
 }
 
-// WithCopyStatement adds a URL to the PipeBuilder
+// WithCopyStatement adds a URL to the PipeBuilder.
 func (pb *PipeBuilder) WithCopyStatement(s string) *PipeBuilder {
 	pb.copyStatement = s
 	return pb
 }
 
-/// WithIntegration adds Integration specification to the PipeBuilder
+// / WithIntegration adds Integration specification to the PipeBuilder.
 func (pb *PipeBuilder) WithIntegration(s string) *PipeBuilder {
 	pb.integration = s
 	return pb
 }
 
-/// WithErrorIntegration adds ErrorIntegration specification to the PipeBuilder
+// / WithErrorIntegration adds ErrorIntegration specification to the PipeBuilder.
 func (pb *PipeBuilder) WithErrorIntegration(s string) *PipeBuilder {
 	pb.errorIntegration = s
 	return pb
@@ -97,7 +97,7 @@ func Pipe(name, db, schema string) *PipeBuilder {
 	}
 }
 
-// Create returns the SQL statement required to create a pipe
+// Create returns the SQL statement required to create a pipe.
 func (pb *PipeBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(`CREATE`)
@@ -190,7 +190,7 @@ func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]pipe, erro
 	dbs := []pipe{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no pipes found")
+		log.Println("[DEBUG] no pipes found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

@@ -39,3 +39,16 @@ resource snowflake_task serverless_task {
   when                                     = "foo AND bar"
   enabled                                  = true
 }
+
+resource snowflake_task test_task {
+  comment = "task with allow_overlapping_execution"
+
+  database = "db"
+  schema   = "schema"
+
+  name          = "test_task"
+  sql_statement = "select 1 as c;"
+
+  allow_overlapping_execution = true
+  enabled                     = true
+}

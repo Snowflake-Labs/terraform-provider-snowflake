@@ -15,8 +15,6 @@ builds:
     - arm64
   flags:
     - -trimpath
-  ldflags:
-    - "-w -s -X github.com/chanzuckerberg/go-misc/ver.GitSha={{.Commit}} -X github.com/chanzuckerberg/go-misc/ver.Version={{.Version}} -X github.com/chanzuckerberg/go-misc/ver.Dirty=false"
   ignore:
     - goos: darwin
       goarch: '386'
@@ -31,5 +29,27 @@ archives:
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 
 checksum:
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+
+release:
+  github:
+    owner: Snowflake-Labs
+    name: terraform-provider-snowflake
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'

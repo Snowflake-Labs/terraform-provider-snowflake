@@ -51,7 +51,7 @@ func ListStorageIntegrations(db *sql.DB) ([]storageIntegration, error) {
 	dbs := []storageIntegration{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no resouce monitors found")
+		log.Println("[DEBUG] no resource monitors found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

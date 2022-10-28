@@ -31,8 +31,8 @@ jobs:
 
       - name: Import GPG key
         id: import_gpg
-        uses: hashicorp/ghaction-import-gpg@v2.1.0
-        env:
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
           # These secrets will need to be configured for the repository:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
@@ -55,7 +55,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.19
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser

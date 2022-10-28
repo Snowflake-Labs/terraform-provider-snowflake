@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
-// TerraformGrantResource augments terraform's *schema.Resource with extra context
+// TerraformGrantResource augments terraform's *schema.Resource with extra context.
 type TerraformGrantResource struct {
 	Resource   *schema.Resource
 	ValidPrivs PrivilegeSet
@@ -39,7 +39,7 @@ const (
 
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
-// build a nice go representation of a grant
+// build a nice go representation of a grant.
 type currentGrant struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
@@ -75,7 +75,7 @@ type grant struct {
 	GrantOption bool
 }
 
-// grantID contains identifying elements that allow unique access privileges
+// grantID contains identifying elements that allow unique access privileges.
 type grantID struct {
 	ResourceName string
 	SchemaName   string
@@ -86,7 +86,7 @@ type grantID struct {
 }
 
 // String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption
+// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption.
 func (gi *grantID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -103,39 +103,63 @@ func (gi *grantID) String() (string, error) {
 }
 
 // grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
-// and returns a grantID object
+// and returns a grantID object.
 func grantIDFromString(stringID string) (*grantID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = grantIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("1 line per grant")
 	}
-	if len(lines[0]) != 5 && len(lines[0]) != 6 {
-		return nil, fmt.Errorf("5 or 6 fields allowed")
+
+	// Len 1 is allowing for legacy IDs where role names are not included
+	if len(lines[0]) < 1 || len(lines[0]) > 6 {
+		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
 	}
 
+	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
+	// Checking for true/false to eliminate scenarios where it would pick up the grant option.
+	// Roles will be empty list if legacy IDs are used, roles from grants are not
+	// used in Read functions, just for uniqueness in IDs of resources
+	roles := []string{}
+	if len(lines[0]) > 4 && lines[0][4] != "true" && lines[0][4] != "false" {
+		roles = strings.Split(lines[0][4], ",")
+	}
+
+	// Allowing legacy IDs to check grant option
 	grantOption := false
 	if len(lines[0]) == 6 && lines[0][5] == "true" {
 		grantOption = true
+	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
+		grantOption = true
+	}
+
+	schemaName := ""
+	objectName := ""
+	privilege := ""
+
+	if len(lines[0]) > 3 {
+		schemaName = lines[0][1]
+		objectName = lines[0][2]
+		privilege = lines[0][3]
 	}
 
 	grantResult := &grantID{
 		ResourceName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ObjectName:   lines[0][2],
-		Privilege:    lines[0][3],
-		Roles:        strings.Split(lines[0][4], ","),
+		SchemaName:   schemaName,
+		ObjectName:   objectName,
+		Privilege:    privilege,
+		Roles:        roles,
 		GrantOption:  grantOption,
 	}
 	return grantResult, nil
 }
 
-// createGenericGrantRolesAndShares will create generic grants for a set of roles and shares
+// createGenericGrantRolesAndShares will create generic grants for a set of roles and shares.
 func createGenericGrantRolesAndShares(
 	meta interface{},
 	builder snowflake.GrantBuilder,
@@ -205,6 +229,7 @@ func readGenericGrant(
 		}
 		return err
 	}
+
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 
@@ -247,12 +272,16 @@ func readGenericGrant(
 	}
 
 	existingRoles := d.Get("roles").(*schema.Set)
+	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
+
 	// Now see which roles have our privilege
 	for roleName, privileges := range rolePrivileges {
 		// Where priv is not all so it should match exactly
 		// Match to currently assigned roles or let everything through if no specific role grants
-		if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) {
+		if privileges.hasString(priv) && !multipleGrantFeatureFlag {
+			roles = append(roles, roleName)
+		} else if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) && multipleGrantFeatureFlag {
 			roles = append(roles, roleName)
 		}
 	}
@@ -285,6 +314,7 @@ func readGenericGrant(
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -358,7 +388,7 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 }
 
 // Deletes specific roles and shares from a grant
-// Does not modify TF remote state
+// Does not modify TF remote state.
 func deleteGenericGrantRolesAndShares(
 	meta interface{},
 	builder snowflake.GrantBuilder,
@@ -457,7 +487,7 @@ func formatCallableObjectName(callableName string, returnType string, arguments 
 	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
 }
 
-// changeDiff calculates roles/shares to add/revoke
+// changeDiff calculates roles/shares to add/revoke.
 func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []string) {
 	o, n := d.GetChange(key)
 	oldSet := o.(*schema.Set)

@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	snowflakeValidation "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -48,7 +49,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      SnowflakeReaderAccountType,
 		Description:  "Specifies the type of managed account.",
-		ValidateFunc: snowflakeValidation.ValidatePrivilege([]string{SnowflakeReaderAccountType}, true),
+		ValidateFunc: validation.StringInSlice([]string{SnowflakeReaderAccountType}, true),
 		ForceNew:     true,
 	},
 	"comment": {
@@ -84,7 +85,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 	},
 }
 
-// ManagedAccount returns a pointer to the resource representing a managed account
+// ManagedAccount returns a pointer to the resource representing a managed account.
 func ManagedAccount() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateManagedAccount,
@@ -98,7 +99,7 @@ func ManagedAccount() *schema.Resource {
 	}
 }
 
-// CreateManagedAccount implements schema.CreateFunc
+// CreateManagedAccount implements schema.CreateFunc.
 func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource(
 		"this does not seem to be used",
@@ -113,12 +114,13 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // some time to appear. This is currently implemented as a sleep. @TODO actually
 // wait until the locator is generated.
 func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] sleeping to give the locator a chance to be generated")
+	log.Println("[INFO] sleeping to give the locator a chance to be generated")
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 	return ReadManagedAccount(d, meta)
 }
 
-// ReadManagedAccount implements schema.ReadFunc
+// ReadManagedAccount implements schema.ReadFunc.
 func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -161,7 +163,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("url", a.Url.String)
+	err = d.Set("url", a.URL.String)
 	if err != nil {
 		return err
 	}
@@ -172,7 +174,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("Unable to determine the account type")
+		return fmt.Errorf("unable to determine the account type")
 	}
 
 	err = d.Set("comment", a.Comment.String)
@@ -180,25 +182,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// DeleteManagedAccount implements schema.DeleteFunc
+// DeleteManagedAccount implements schema.DeleteFunc.
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
-}
-
-// ManagedAccountExists implements schema.ExistsFunc
-func ManagedAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.ManagedAccount(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }

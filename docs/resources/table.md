@@ -84,48 +84,48 @@ resource "snowflake_table" "table" {
 
 ### Required
 
-- **column** (Block List, Min: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--column))
-- **database** (String) The database in which to create the table.
-- **name** (String) Specifies the identifier for the table; must be unique for the database and schema in which the table is created.
-- **schema** (String) The schema in which to create the table.
+- `column` (Block List, Min: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--column))
+- `database` (String) The database in which to create the table.
+- `name` (String) Specifies the identifier for the table; must be unique for the database and schema in which the table is created.
+- `schema` (String) The schema in which to create the table.
 
 ### Optional
 
-- **change_tracking** (Boolean) Specifies whether to enable change tracking on the table. Default false.
-- **cluster_by** (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
-- **comment** (String) Specifies a comment for the table.
-- **data_retention_days** (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
-- **id** (String) The ID of this resource.
-- **primary_key** (Block List, Max: 1) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `change_tracking` (Boolean) Specifies whether to enable change tracking on the table. Default false.
+- `cluster_by` (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
+- `comment` (String) Specifies a comment for the table.
+- `data_retention_days` (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
+- `primary_key` (Block List, Max: 1, Deprecated) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
-- **owner** (String) Name of the role that owns the table.
+- `id` (String) The ID of this resource.
+- `owner` (String) Name of the role that owns the table.
 
 <a id="nestedblock--column"></a>
 ### Nested Schema for `column`
 
 Required:
 
-- **name** (String) Column name
-- **type** (String) Column type, e.g. VARIANT
+- `name` (String) Column name
+- `type` (String) Column type, e.g. VARIANT
 
 Optional:
 
-- **comment** (String) Column comment
-- **default** (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
-- **identity** (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
-- **nullable** (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
+- `comment` (String) Column comment
+- `default` (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
+- `identity` (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
+- `nullable` (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
 <a id="nestedblock--column--default"></a>
 ### Nested Schema for `column.default`
 
 Optional:
 
-- **constant** (String) The default constant value for the column
-- **expression** (String) The default expression value for the column
-- **sequence** (String) The default sequence to use for the column
+- `constant` (String) The default constant value for the column
+- `expression` (String) The default expression value for the column
+- `sequence` (String) The default sequence to use for the column
 
 
 <a id="nestedblock--column--identity"></a>
@@ -133,8 +133,8 @@ Optional:
 
 Optional:
 
-- **start_num** (Number) The number to start incrementing at.
-- **step_num** (Number) Step size to increment by.
+- `start_num` (Number) The number to start incrementing at.
+- `step_num` (Number) Step size to increment by.
 
 
 
@@ -143,11 +143,11 @@ Optional:
 
 Required:
 
-- **keys** (List of String) Columns to use in primary key
+- `keys` (List of String) Columns to use in primary key
 
 Optional:
 
-- **name** (String) Name of constraint
+- `name` (String) Name of constraint
 
 
 <a id="nestedblock--tag"></a>
@@ -155,13 +155,13 @@ Optional:
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

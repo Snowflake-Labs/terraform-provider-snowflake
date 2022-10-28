@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +36,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future file format.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validFileFormatPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -44,7 +44,6 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -60,15 +59,23 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// FileFormatGrant returns a pointer to the resource representing a file format grant
+// FileFormatGrant returns a pointer to the resource representing a file format grant.
 func FileFormatGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateFileFormatGrant,
 			Read:   ReadFileFormatGrant,
 			Delete: DeleteFileFormatGrant,
+			Update: UpdateFileFormat,
 
 			Schema: fileFormatGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -79,7 +86,7 @@ func FileFormatGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateFileFormatGrant implements schema.CreateFunc
+// CreateFileFormatGrant implements schema.CreateFunc.
 func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	var fileFormatName string
 	if name, ok := d.GetOk("file_format_name"); ok {
@@ -128,7 +135,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadFileFormatGrant(d, meta)
 }
 
-// ReadFileFormatGrant implements schema.ReadFunc
+// ReadFileFormatGrant implements schema.ReadFunc.
 func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -178,7 +185,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, fileFormatGrantSchema, builder, futureFileFormatsEnabled, validFileFormatPrivileges)
 }
 
-// DeleteFileFormatGrant implements schema.DeleteFunc
+// DeleteFileFormatGrant implements schema.DeleteFunc.
 func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -197,4 +204,54 @@ func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateFileFormatGrant implements schema.UpdateFunc.
+func UpdateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	fileFormatName := grantID.ObjectName
+	futureFileFormats := (fileFormatName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futureFileFormats {
+		builder = snowflake.FutureFileFormatGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadFileFormatGrant(d, meta)
 }

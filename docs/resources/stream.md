@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_stream stream {
+resource "snowflake_stream" "stream" {
   comment = "A stream."
 
   database = "db"
@@ -33,22 +33,23 @@ resource snowflake_stream stream {
 
 ### Required
 
-- **database** (String) The database in which to create the stream.
-- **name** (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created.
-- **schema** (String) The schema in which to create the stream.
+- `database` (String) The database in which to create the stream.
+- `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created.
+- `schema` (String) The schema in which to create the stream.
 
 ### Optional
 
-- **append_only** (Boolean) Type of the stream that will be created.
-- **comment** (String) Specifies a comment for the stream.
-- **id** (String) The ID of this resource.
-- **insert_only** (Boolean) Create an insert only stream type.
-- **on_table** (String) Name of the table the stream will monitor.
-- **show_initial_rows** (Boolean) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.
+- `append_only` (Boolean) Type of the stream that will be created.
+- `comment` (String) Specifies a comment for the stream.
+- `insert_only` (Boolean) Create an insert only stream type.
+- `on_table` (String) Name of the table the stream will monitor.
+- `on_view` (String) Name of the view the stream will monitor.
+- `show_initial_rows` (Boolean) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.
 
 ### Read-Only
 
-- **owner** (String) Name of the role that owns the stream.
+- `id` (String) The ID of this resource.
+- `owner` (String) Name of the role that owns the stream.
 
 ## Import
 

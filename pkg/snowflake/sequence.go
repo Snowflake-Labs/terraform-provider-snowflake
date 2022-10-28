@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Sequence returns a pointer to a Builder for a sequence
+// Sequence returns a pointer to a Builder for a sequence.
 func Sequence(name, db, schema string) *SequenceBuilder {
 	return &SequenceBuilder{
 		name:      name,
@@ -46,7 +46,7 @@ func (sb *SequenceBuilder) Drop() string {
 	return fmt.Sprintf(`DROP SEQUENCE %v`, sb.QualifiedName())
 }
 
-// Drop returns the SQL query that will drop a sequence.
+// Show returns the SQL query that will show a sequence.
 func (sb *SequenceBuilder) Show() string {
 	return fmt.Sprintf(`SHOW SEQUENCES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
@@ -106,7 +106,7 @@ func ListSequences(databaseName string, schemaName string, db *sql.DB) ([]sequen
 	dbs := []sequence{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no sequences found")
+		log.Println("[DEBUG] no sequences found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ResourceMonitorBuilder extends the generic builder to provide support for triggers
+// ResourceMonitorBuilder extends the generic builder to provide support for triggers.
 type ResourceMonitorBuilder struct {
 	Builder
 }
@@ -35,7 +35,7 @@ func ResourceMonitor(name string) *ResourceMonitorBuilder {
 
 // @TODO support for a ResourceMonitorAlterBuilder so that we can alter triggers
 
-// ResourceMonitorCreateBuilder extends the generic create builder to provide support for triggers
+// ResourceMonitorCreateBuilder extends the generic create builder to provide support for triggers.
 type ResourceMonitorCreateBuilder struct {
 	CreateBuilder
 
@@ -58,7 +58,7 @@ const (
 	NotifyTrigger = "NOTIFY"
 )
 
-// Create returns a pointer to a ResourceMonitorCreateBuilder
+// Create returns a pointer to a ResourceMonitorCreateBuilder.
 func (rb *ResourceMonitorBuilder) Create() *ResourceMonitorCreateBuilder {
 	return &ResourceMonitorCreateBuilder{
 		CreateBuilder{
@@ -73,25 +73,25 @@ func (rb *ResourceMonitorBuilder) Create() *ResourceMonitorCreateBuilder {
 	}
 }
 
-// NotifyAt adds a notify trigger at the specified percentage threshold
+// NotifyAt adds a notify trigger at the specified percentage threshold.
 func (rcb *ResourceMonitorCreateBuilder) NotifyAt(pct int) *ResourceMonitorCreateBuilder {
 	rcb.triggers = append(rcb.triggers, trigger{NotifyTrigger, pct})
 	return rcb
 }
 
-// SuspendAt adds a suspend trigger at the specified percentage threshold
+// SuspendAt adds a suspend trigger at the specified percentage threshold.
 func (rcb *ResourceMonitorCreateBuilder) SuspendAt(pct int) *ResourceMonitorCreateBuilder {
 	rcb.triggers = append(rcb.triggers, trigger{SuspendTrigger, pct})
 	return rcb
 }
 
-// SuspendImmediatelyAt adds a suspend immediately trigger at the specified percentage threshold
+// SuspendImmediatelyAt adds a suspend immediately trigger at the specified percentage threshold.
 func (rcb *ResourceMonitorCreateBuilder) SuspendImmediatelyAt(pct int) *ResourceMonitorCreateBuilder {
 	rcb.triggers = append(rcb.triggers, trigger{SuspendImmediatelyTrigger, pct})
 	return rcb
 }
 
-// Statement returns the SQL statement needed to actually create the resource
+// Statement returns the SQL statement needed to actually create the resource.
 func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`CREATE %v "%v"`, rcb.entityType, rcb.name))
@@ -119,12 +119,12 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 	return sb.String()
 }
 
-// SetOnAccount returns the SQL query that will set the resource monitor globally on your Snowflake account
+// SetOnAccount returns the SQL query that will set the resource monitor globally on your Snowflake account.
 func (rcb *ResourceMonitorCreateBuilder) SetOnAccount() string {
 	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = "%v"`, rcb.name)
 }
 
-// SetOnWarehouse returns the SQL query that will set the resource monitor on the specified warehouse
+// SetOnWarehouse returns the SQL query that will set the resource monitor on the specified warehouse.
 func (rcb *ResourceMonitorCreateBuilder) SetOnWarehouse(warehouse string) string {
 	return fmt.Sprintf(`ALTER WAREHOUSE "%v" SET RESOURCE_MONITOR = "%v"`, warehouse, rcb.name)
 }
@@ -163,7 +163,7 @@ func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
 	dbs := []resourceMonitor{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no resouce monitors found")
+		log.Println("[DEBUG] no resource monitors found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -21,7 +21,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	"api_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"aws_api_gateway", "aws_private_api_gateway", "azure_api_management"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"aws_api_gateway", "aws_private_api_gateway", "azure_api_management", "aws_gov_api_gateway", "aws_gov_private_api_gateway"}, false),
 		Description:  "Specifies the HTTPS proxy service type.",
 	},
 	"api_aws_role_arn": {
@@ -90,7 +90,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// APIIntegration returns a pointer to the resource representing an api integration
+// APIIntegration returns a pointer to the resource representing an api integration.
 func APIIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateAPIIntegration,
@@ -105,12 +105,12 @@ func APIIntegration() *schema.Resource {
 	}
 }
 
-// CreateAPIIntegration implements schema.CreateFunc
+// CreateAPIIntegration implements schema.CreateFunc.
 func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.ApiIntegration(name).Create()
+	stmt := snowflake.APIIntegration(name).Create()
 
 	// Set required fields
 	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
@@ -138,24 +138,30 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadAPIIntegration(d, meta)
 }
 
-// ReadAPIIntegration implements schema.ReadFunc
+// ReadAPIIntegration implements schema.ReadFunc.
 func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ApiIntegration(id).Show()
+	stmt := snowflake.APIIntegration(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
 
-	s, err := snowflake.ScanApiIntegration(row)
+	s, err := snowflake.ScanAPIIntegration(row)
 	if err != nil {
-		return fmt.Errorf("Could not show api integration: %w", err)
+		// If no such resource exists, it is not an error but rather not exist
+		if err.Error() == snowflake.ErrNoRowInRS {
+			d.SetId("")
+			return nil
+		} else {
+			return fmt.Errorf("could not show api integration: %w", err)
+		}
 	}
 
 	// Note: category must be API or something is broken
 	if c := s.Category.String; c != "API" {
-		return fmt.Errorf("Expected %v to be an api integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be an api integration, got %v", id, c)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
@@ -174,10 +180,10 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.ApiIntegration(id).Describe()
+	stmt = snowflake.APIIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe api integration: %w", err)
+		return fmt.Errorf("could not describe api integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -225,12 +231,12 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateAPIIntegration implements schema.UpdateFunc
+// UpdateAPIIntegration implements schema.UpdateFunc.
 func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ApiIntegration(id).Alter()
+	stmt := snowflake.APIIntegration(id).Alter()
 
 	var runSetStatement bool
 
@@ -288,9 +294,9 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadAPIIntegration(d, meta)
 }
 
-// DeleteAPIIntegration implements schema.DeleteFunc
+// DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.ApiIntegration)(d, meta)
+	return DeleteResource("", snowflake.APIIntegration)(d, meta)
 }
 
 func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {
@@ -298,26 +304,26 @@ func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBui
 	stmt.SetRaw("API_PROVIDER=" + apiProvider)
 
 	switch apiProvider {
-	case "aws_api_gateway", "aws_private_api_gateway":
+	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
 		v, ok := data.GetOk("api_aws_role_arn")
 		if !ok {
-			return fmt.Errorf("If you use AWS api provider you must specify an api_aws_role_arn")
+			return fmt.Errorf("if you use AWS api provider you must specify an api_aws_role_arn")
 		}
 		stmt.SetString(`API_AWS_ROLE_ARN`, v.(string))
 	case "azure_api_management":
 		v, ok := data.GetOk("azure_tenant_id")
 		if !ok {
-			return fmt.Errorf("If you use the Azure api provider you must specify an azure_tenant_id")
+			return fmt.Errorf("if you use the Azure api provider you must specify an azure_tenant_id")
 		}
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
 
 		v, ok = data.GetOk("azure_ad_application_id")
 		if !ok {
-			return fmt.Errorf("If you use the Azure api provider you must specify an azure_ad_application_id")
+			return fmt.Errorf("if you use the Azure api provider you must specify an azure_ad_application_id")
 		}
 		stmt.SetString(`AZURE_AD_APPLICATION_ID`, v.(string))
 	default:
-		return fmt.Errorf("Unexpected provider %v", apiProvider)
+		return fmt.Errorf("unexpected provider %v", apiProvider)
 	}
 
 	return nil

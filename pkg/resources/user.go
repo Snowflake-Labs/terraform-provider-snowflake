@@ -5,8 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var userProperties = []string{
@@ -16,6 +17,7 @@ var userProperties = []string{
 	"disabled",
 	"default_namespace",
 	"default_role",
+	"default_secondary_roles",
 	"default_warehouse",
 	"rsa_public_key",
 	"rsa_public_key_2",
@@ -76,6 +78,12 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "Specifies the role that is active by default for the user’s session upon login.",
+	},
+	"default_secondary_roles": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "Specifies the set of secondary roles that are active for the user’s session upon login.",
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
@@ -146,27 +154,8 @@ func User() *schema.Resource {
 	}
 }
 
-// func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*schema.ResourceData, interface{}) error {
-
 func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
-}
-
-func UserExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := data.Id()
-
-	stmt := snowflake.User(id).Describe()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 func ReadUser(d *schema.ResourceData, meta interface{}) error {
@@ -177,9 +166,10 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	// requires the "MANAGE GRANTS" global privilege
 	stmt := snowflake.User(id).Describe()
 	rows, err := snowflake.Query(db, stmt)
-	if err == sql.ErrNoRows {
+
+	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] user (%s) not found", d.Id())
+		log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 		d.SetId("")
 		return nil
 	}
@@ -213,6 +203,15 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = d.Set("default_role", u.DefaultRole.String)
+	if err != nil {
+		return err
+	}
+
+	var defaultSecondaryRoles []string
+	if len(u.DefaultSecondaryRoles.String) > 0 {
+		defaultSecondaryRoles = strings.Split(u.DefaultSecondaryRoles.String, ",")
+	}
+	err = d.Set("default_secondary_roles", defaultSecondaryRoles)
 	if err != nil {
 		return err
 	}

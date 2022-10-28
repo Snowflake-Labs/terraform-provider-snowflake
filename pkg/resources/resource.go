@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -35,6 +35,10 @@ func CreateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := expandStringList(val.(*schema.Set).List())
+					qb.SetStringList(field, valList)
+
 				}
 			}
 		}
@@ -100,10 +104,14 @@ func UpdateResource(
 				case schema.TypeInt:
 					valInt := val.(int)
 					qb.SetInt(field, valInt)
+				case schema.TypeSet:
+					valList := expandStringList(val.(*schema.Set).List())
+					qb.SetStringList(field, valList)
 				}
+
 			}
 			if d.HasChange("tag") {
-				log.Printf("[DEBUG] updating tags")
+				log.Println("[DEBUG] updating tags")
 				v := d.Get("tag")
 				tags := getTags(v)
 				qb.SetTags(tags.toSnowflakeTagValues())
@@ -114,7 +122,7 @@ func UpdateResource(
 				return errors.Wrapf(err, "error altering %s", t)
 			}
 		}
-		log.Printf("[DEBUG] performing read")
+		log.Println("[DEBUG] performing read")
 		return read(d, meta)
 	}
 }

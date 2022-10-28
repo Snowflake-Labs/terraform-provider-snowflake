@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +43,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Description:  "The privilege to grant on the current or future table.",
 		Default:      privilegeSelect.String(),
 		ForceNew:     true,
-		ValidateFunc: validation.ValidatePrivilege(validTablePrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -72,9 +72,15 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// TableGrant returns a pointer to the resource representing a Table grant
+// TableGrant returns a pointer to the resource representing a Table grant.
 func TableGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -92,7 +98,7 @@ func TableGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateTableGrant implements schema.CreateFunc
+// CreateTableGrant implements schema.CreateFunc.
 func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		tableName  string
@@ -154,7 +160,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadTableGrant(d, meta)
 }
 
-// ReadTableGrant implements schema.ReadFunc
+// ReadTableGrant implements schema.ReadFunc.
 func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -205,7 +211,7 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, tableGrantSchema, builder, onFuture, validTablePrivileges)
 }
 
-// DeleteTableGrant implements schema.DeleteFunc
+// DeleteTableGrant implements schema.DeleteFunc.
 func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -229,7 +235,7 @@ func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateTableGrant implements schema.UpdateFunc
+// UpdateTableGrant implements schema.UpdateFunc.
 func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

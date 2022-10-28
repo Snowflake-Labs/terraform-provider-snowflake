@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -86,7 +86,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	},
 }
 
-// ResourceMonitor returns a pointer to the resource representing a resource monitor
+// ResourceMonitor returns a pointer to the resource representing a resource monitor.
 func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateResourceMonitor,
@@ -101,7 +101,7 @@ func ResourceMonitor() *schema.Resource {
 	}
 }
 
-// CreateResourceMonitor implents schema.CreateFunc
+// CreateResourceMonitor implents schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -164,7 +164,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ReadResourceMonitor implements schema.ReadFunc
+// ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stmt := snowflake.ResourceMonitor(d.Id()).Show()
@@ -229,14 +229,20 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("notify_triggers", nTrigs)
+	if err != nil {
+		return err
+	}
 
 	// Account level
-	d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
+	err = d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
+	if err != nil {
+		return err
+	}
 
 	return err
 }
 
-// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v
+// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
 func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
 	for k, v := range ns {
 		var err error
@@ -253,7 +259,7 @@ func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullStr
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailling %s) into a slice of ints
+// separated string with trailling %s) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
 	if !s.Valid {
@@ -271,7 +277,7 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	return out, nil
 }
 
-// DeleteResourceMonitor implements schema.DeleteFunc
+// DeleteResourceMonitor implements schema.DeleteFunc.
 func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
@@ -284,23 +290,4 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 	return nil
-}
-
-// ResourceMonitorExists implements schema.ExistsFunc
-func ResourceMonitorExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-
-	q := snowflake.ResourceMonitor(data.Id()).Show()
-
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

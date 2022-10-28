@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -71,13 +71,13 @@ func normalizeQuery(str string) string {
 // semantically significant.
 //
 // If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
-// queries and either comparing ASTs or emiting a canonical serialization for comparison. I couldn't
+// queries and either comparing ASTs or emitting a canonical serialization for comparison. I couldn't
 // find such a library.
 func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
 }
 
-// View returns a pointer to the resource representing a view
+// View returns a pointer to the resource representing a view.
 func View() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateView,
@@ -92,7 +92,7 @@ func View() *schema.Resource {
 	}
 }
 
-// CreateView implements schema.CreateFunc
+// CreateView implements schema.CreateFunc.
 func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -134,7 +134,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	return ReadView(d, meta)
 }
 
-// ReadView implements schema.ReadFunc
+// ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbName, schema, view, err := splitViewID(d.Id())
@@ -191,7 +191,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	return d.Set("database", v.DatabaseName.String)
 }
 
-// UpdateView implements schema.UpdateFunc
+// UpdateView implements schema.UpdateFunc.
 func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	dbName, schema, view, err := splitViewID(d.Id())
 	if err != nil {
@@ -262,7 +262,10 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 	if d.HasChange("tag") {
 		old, new := d.GetChange("tag")
 		removed, added, changed := getTags(old).diffs(getTags(new))
@@ -293,7 +296,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	return ReadView(d, meta)
 }
 
-// DeleteView implements schema.DeleteFunc
+// DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbName, schema, view, err := splitViewID(d.Id())
@@ -314,28 +317,6 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// ViewExists implements schema.ExistsFunc
-func ViewExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 // splitViewID takes the <database_name>|<schema_name>|<view_name> ID and returns the database

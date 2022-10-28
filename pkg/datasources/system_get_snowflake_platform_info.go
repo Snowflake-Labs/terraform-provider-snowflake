@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -32,7 +32,7 @@ func SystemGetSnowflakePlatformInfo() *schema.Resource {
 	}
 }
 
-// ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc
+// ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc.
 func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	sel := snowflake.SystemGetSnowflakePlatformInfoQuery()
@@ -42,7 +42,7 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		d.SetId("")
-		log.Printf("[DEBUG] current_account failed to decode")
+		log.Println("[DEBUG] current_account failed to decode")
 		return errors.Wrap(err, "error current_account")
 	}
 
@@ -51,13 +51,13 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 	rawInfo, err := snowflake.ScanSnowflakePlatformInfo(row)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Print("[DEBUG] system_get_snowflake_platform_info not found")
+		log.Println("[DEBUG] system_get_snowflake_platform_info not found")
 		return errors.Wrap(err, "error system_get_snowflake_platform_info")
 	}
 
 	info, err := rawInfo.GetStructuredConfig()
 	if err != nil {
-		log.Printf("[DEBUG] system_get_snowflake_platform_info failed to decode")
+		log.Println("[DEBUG] system_get_snowflake_platform_info failed to decode")
 		d.SetId("")
 		return errors.Wrap(err, "error system_get_snowflake_platform_info")
 	}

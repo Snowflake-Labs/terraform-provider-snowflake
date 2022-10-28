@@ -3,13 +3,15 @@ package resources_test
 import (
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Database().Schema, params)
 	r.NotNil(d)
@@ -18,6 +20,7 @@ func database(t *testing.T, id string, params map[string]interface{}) *schema.Re
 }
 
 func databaseGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.DatabaseGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -26,6 +29,7 @@ func databaseGrant(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func schemaGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.SchemaGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -34,6 +38,7 @@ func schemaGrant(t *testing.T, id string, params map[string]interface{}) *schema
 }
 
 func stageGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StageGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -42,6 +47,7 @@ func stageGrant(t *testing.T, id string, params map[string]interface{}) *schema.
 }
 
 func tableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.TableGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -50,6 +56,7 @@ func tableGrant(t *testing.T, id string, params map[string]interface{}) *schema.
 }
 
 func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ViewGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -58,6 +65,7 @@ func viewGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 }
 
 func materializedViewGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.MaterializedViewGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -66,6 +74,7 @@ func materializedViewGrant(t *testing.T, id string, params map[string]interface{
 }
 
 func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitorGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -74,6 +83,7 @@ func resourceMonitorGrant(t *testing.T, id string, params map[string]interface{}
 }
 
 func integrationGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.IntegrationGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -82,6 +92,7 @@ func integrationGrant(t *testing.T, id string, params map[string]interface{}) *s
 }
 
 func accountGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.AccountGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -90,6 +101,7 @@ func accountGrant(t *testing.T, id string, params map[string]interface{}) *schem
 }
 
 func managedAccount(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ManagedAccount().Schema, params)
 	r.NotNil(d)
@@ -98,6 +110,7 @@ func managedAccount(t *testing.T, id string, params map[string]interface{}) *sch
 }
 
 func maskingPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.MaskingPolicy().Schema, params)
 	r.NotNil(d)
@@ -106,6 +119,7 @@ func maskingPolicy(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func networkPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.NetworkPolicy().Schema, params)
 	r.NotNil(d)
@@ -114,6 +128,7 @@ func networkPolicy(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func pipe(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Pipe().Schema, params)
 	r.NotNil(d)
@@ -122,6 +137,7 @@ func pipe(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 }
 
 func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, params)
 	r.NotNil(d)
@@ -130,6 +146,7 @@ func resourceMonitor(t *testing.T, id string, params map[string]interface{}) *sc
 }
 
 func sequence(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Sequence().Schema, params)
 	r.NotNil(d)
@@ -138,6 +155,7 @@ func sequence(t *testing.T, id string, params map[string]interface{}) *schema.Re
 }
 
 func share(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Share().Schema, params)
 	r.NotNil(d)
@@ -146,6 +164,7 @@ func share(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 }
 
 func stage(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Stage().Schema, params)
 	r.NotNil(d)
@@ -154,6 +173,7 @@ func stage(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 }
 
 func stream(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Stream().Schema, params)
 	r.NotNil(d)
@@ -162,6 +182,7 @@ func stream(t *testing.T, id string, params map[string]interface{}) *schema.Reso
 }
 
 func tag(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Tag().Schema, params)
 	r.NotNil(d)
@@ -177,6 +198,7 @@ func providers() map[string]*schema.Provider {
 }
 
 func role(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Role().Schema, params)
 	r.NotNil(d)
@@ -185,6 +207,7 @@ func role(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 }
 
 func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.RoleGrants().Schema, params)
 	r.NotNil(d)
@@ -192,7 +215,26 @@ func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.
 	return d
 }
 
+func userOwnershipGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.UserOwnershipGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func roleOwnershipGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.RoleOwnershipGrant().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
 func apiIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.APIIntegration().Schema, params)
 	r.NotNil(d)
@@ -201,6 +243,7 @@ func apiIntegration(t *testing.T, id string, params map[string]interface{}) *sch
 }
 
 func samlIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.SAMLIntegration().Schema, params)
 	r.NotNil(d)
@@ -209,6 +252,7 @@ func samlIntegration(t *testing.T, id string, params map[string]interface{}) *sc
 }
 
 func scimIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.SCIMIntegration().Schema, params)
 	r.NotNil(d)
@@ -217,6 +261,7 @@ func scimIntegration(t *testing.T, id string, params map[string]interface{}) *sc
 }
 
 func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.OAuthIntegration().Schema, params)
 	r.NotNil(d)
@@ -225,6 +270,7 @@ func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *s
 }
 
 func externalOauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalOauthIntegration().Schema, params)
 	r.NotNil(d)
@@ -233,6 +279,7 @@ func externalOauthIntegration(t *testing.T, id string, params map[string]interfa
 }
 
 func externalFunction(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalFunction().Schema, params)
 	r.NotNil(d)
@@ -241,6 +288,7 @@ func externalFunction(t *testing.T, id string, params map[string]interface{}) *s
 }
 
 func procedure(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Procedure().Schema, params)
 	r.NotNil(d)
@@ -249,13 +297,16 @@ func procedure(t *testing.T, id string, params map[string]interface{}) *schema.R
 }
 
 func storageIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StorageIntegration().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d
 }
+
 func notificationIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, params)
 	r.NotNil(d)
@@ -264,6 +315,7 @@ func notificationIntegration(t *testing.T, id string, params map[string]interfac
 }
 
 func table(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Table().Schema, params)
 	r.NotNil(d)
@@ -272,6 +324,7 @@ func table(t *testing.T, id string, params map[string]interface{}) *schema.Resou
 }
 
 func externalTable(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalTable().Schema, params)
 	r.NotNil(d)
@@ -280,6 +333,7 @@ func externalTable(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func task(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Task().Schema, params)
 	r.NotNil(d)
@@ -288,6 +342,7 @@ func task(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 }
 
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.User().Schema, params)
 	r.NotNil(d)
@@ -296,6 +351,7 @@ func user(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 }
 
 func view(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, params)
 	r.NotNil(d)
@@ -304,6 +360,7 @@ func view(t *testing.T, id string, params map[string]interface{}) *schema.Resour
 }
 
 func materializedView(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.MaterializedView().Schema, params)
 	r.NotNil(d)
@@ -312,6 +369,7 @@ func materializedView(t *testing.T, id string, params map[string]interface{}) *s
 }
 
 func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Warehouse().Schema, params)
 	r.NotNil(d)
@@ -320,6 +378,7 @@ func warehouse(t *testing.T, id string, params map[string]interface{}) *schema.R
 }
 
 func externalTableGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -328,6 +387,7 @@ func externalTableGrant(t *testing.T, id string, params map[string]interface{}) 
 }
 
 func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.FileFormatGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -336,6 +396,7 @@ func fileFormatGrant(t *testing.T, id string, params map[string]interface{}) *sc
 }
 
 func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.SequenceGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -344,6 +405,7 @@ func sequenceGrant(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -352,6 +414,7 @@ func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema
 }
 
 func functionGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -360,6 +423,7 @@ func functionGrant(t *testing.T, id string, params map[string]interface{}) *sche
 }
 
 func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -368,6 +432,7 @@ func procedureGrant(t *testing.T, id string, params map[string]interface{}) *sch
 }
 
 func maskingPolicyGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.MaskingPolicyGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -376,6 +441,7 @@ func maskingPolicyGrant(t *testing.T, id string, params map[string]interface{}) 
 }
 
 func pipeGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.PipeGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -384,6 +450,7 @@ func pipeGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 }
 
 func taskGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.TaskGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -392,6 +459,7 @@ func taskGrant(t *testing.T, id string, params map[string]interface{}) *schema.R
 }
 
 func rowAccessPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.RowAccessPolicy().Schema, params)
 	r.NotNil(d)
@@ -400,6 +468,7 @@ func rowAccessPolicy(t *testing.T, id string, params map[string]interface{}) *sc
 }
 
 func rowAccessPolicyGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.RowAccessPolicyGrant().Resource.Schema, params)
 	r.NotNil(d)
@@ -408,8 +477,18 @@ func rowAccessPolicyGrant(t *testing.T, id string, params map[string]interface{}
 }
 
 func function(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.Function().Schema, params)
+	r.NotNil(d)
+	d.SetId(id)
+	return d
+}
+
+func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+	r := require.New(t)
+	d := schema.TestResourceDataRaw(t, resources.TagGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

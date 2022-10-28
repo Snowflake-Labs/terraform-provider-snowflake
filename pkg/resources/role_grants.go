@@ -6,10 +6,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func RoleGrants() *schema.Resource {
@@ -22,11 +23,11 @@ func RoleGrants() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"role_name": {
 				Type:        schema.TypeString,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					return snowflake.ValidateIdentifier(val)
+					additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 				},
 			},
 			"roles": {
@@ -40,6 +41,12 @@ func RoleGrants() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Grants role to this specified user.",
+			},
+			"enable_multiple_grants": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+				Default:     false,
 			},
 		},
 
@@ -228,7 +235,24 @@ func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	rg := snowflake.RoleGrant(role1).User(user)
 	err := snowflake.Exec(db, rg.Revoke())
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+		// handling error if a user has been deleted prior to revoking a role
+		// 002003 (02000): SQL compilation error:
+		// User 'XXX' does not exist or not authorized.
+		if driverErr.Number == 2003 {
+			users, _ := snowflake.ListUsers(user, db)
+			logins := make([]string, len(users))
+			for i, u := range users {
+				logins[i] = u.LoginName.String
+			}
+			if !snowflake.Contains(logins, user) {
+				log.Printf("[WARN] User %s does not exist. No need to revoke role %s", user, role1)
+				return nil
+			}
+		}
+	}
 	return err
+
 }
 
 func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {

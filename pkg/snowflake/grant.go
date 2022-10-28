@@ -30,6 +30,8 @@ const (
 	pipeType             grantType = "PIPE"
 	taskType             grantType = "TASK"
 	rowAccessPolicyType  grantType = "ROW ACCESS POLICY"
+	tagType              grantType = "TAG"
+	userGrantType        grantType = "USER"
 )
 
 type GrantExecutable interface {
@@ -46,14 +48,14 @@ type GrantBuilder interface {
 	Show() string
 }
 
-// CurrentGrantBuilder abstracts the creation of GrantExecutables
+// CurrentGrantBuilder abstracts the creation of GrantExecutables.
 type CurrentGrantBuilder struct {
 	name          string
 	qualifiedName string
 	grantType     grantType
 }
 
-// Name returns the object name for this CurrentGrantBuilder
+// Name returns the object name for this CurrentGrantBuilder.
 func (gb *CurrentGrantBuilder) Name() string {
 	return gb.name
 }
@@ -62,21 +64,21 @@ func (gb *CurrentGrantBuilder) GrantType() string {
 	return string(gb.grantType)
 }
 
-// Show returns the SQL that will show all privileges on the grant
+// Show returns the SQL that will show all privileges on the grant.
 func (gb *CurrentGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
 }
 
-///////////////////////////////////////////////
+// /////////////////////////////////////////////
 // START CurrentMaterializedViewGrantBuilder //
-///////////////////////////////////////////////
+// /////////////////////////////////////////////.
 type CurrentMaterializedViewGrantBuilder struct {
 	name          string
 	qualifiedName string
 	grantType     grantType
 }
 
-// Name returns the object name for this CurrentGrantBuilder
+// Name returns the object name for this CurrentGrantBuilder.
 func (gb *CurrentMaterializedViewGrantBuilder) Name() string {
 	return gb.name
 }
@@ -85,12 +87,12 @@ func (gb *CurrentMaterializedViewGrantBuilder) GrantType() string {
 	return string(gb.grantType)
 }
 
-// Show returns the SQL that will show all privileges on the grant
+// Show returns the SQL that will show all privileges on the grant.
 func (gb *CurrentMaterializedViewGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, gb.grantType, gb.qualifiedName)
 }
 
-// Role returns a pointer to a CurrentGrantExecutable for a role
+// Role returns a pointer to a CurrentGrantExecutable for a role.
 func (gb *CurrentMaterializedViewGrantBuilder) Role(n string) GrantExecutable {
 	return &CurrentGrantExecutable{
 		grantName:   gb.qualifiedName,
@@ -100,7 +102,7 @@ func (gb *CurrentMaterializedViewGrantBuilder) Role(n string) GrantExecutable {
 	}
 }
 
-// Share returns a pointer to a CurrentGrantExecutable for a share
+// Share returns a pointer to a CurrentGrantExecutable for a share.
 func (gb *CurrentMaterializedViewGrantBuilder) Share(n string) GrantExecutable {
 	return &CurrentGrantExecutable{
 		grantName:   gb.qualifiedName,
@@ -114,14 +116,14 @@ func (gb *CurrentMaterializedViewGrantBuilder) Share(n string) GrantExecutable {
 /// END CurrentMaterializedViewGrantBuilder ///
 ///////////////////////////////////////////////
 
-// AccountGrant returns a pointer to a CurrentGrantBuilder for an account
+// AccountGrant returns a pointer to a CurrentGrantBuilder for an account.
 func AccountGrant() GrantBuilder {
 	return &CurrentGrantBuilder{
 		grantType: accountType,
 	}
 }
 
-// DatabaseGrant returns a pointer to a CurrentGrantBuilder for a database
+// DatabaseGrant returns a pointer to a CurrentGrantBuilder for a database.
 func DatabaseGrant(name string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          name,
@@ -130,7 +132,7 @@ func DatabaseGrant(name string) GrantBuilder {
 	}
 }
 
-// SchemaGrant returns a pointer to a CurrentGrantBuilder for a schema
+// SchemaGrant returns a pointer to a CurrentGrantBuilder for a schema.
 func SchemaGrant(db, schema string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          schema,
@@ -139,7 +141,7 @@ func SchemaGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// StageGrant returns a pointer to a CurrentGrantBuilder for a stage
+// StageGrant returns a pointer to a CurrentGrantBuilder for a stage.
 func StageGrant(db, schema, stage string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          stage,
@@ -148,7 +150,7 @@ func StageGrant(db, schema, stage string) GrantBuilder {
 	}
 }
 
-// ViewGrant returns a pointer to a CurrentGrantBuilder for a view
+// ViewGrant returns a pointer to a CurrentGrantBuilder for a view.
 func ViewGrant(db, schema, view string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          view,
@@ -157,7 +159,7 @@ func ViewGrant(db, schema, view string) GrantBuilder {
 	}
 }
 
-// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a materialized view
+// MaterializedViewGrant returns a pointer to a CurrentGrantBuilder for a materialized view.
 func MaterializedViewGrant(db, schema, view string) GrantBuilder {
 	return &CurrentMaterializedViewGrantBuilder{
 		name:          view,
@@ -166,7 +168,7 @@ func MaterializedViewGrant(db, schema, view string) GrantBuilder {
 	}
 }
 
-// TableGrant returns a pointer to a CurrentGrantBuilder for a table
+// TableGrant returns a pointer to a CurrentGrantBuilder for a table.
 func TableGrant(db, schema, table string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          table,
@@ -175,7 +177,7 @@ func TableGrant(db, schema, table string) GrantBuilder {
 	}
 }
 
-// ResourceMonitorGrant returns a pointer to a CurrentGrantBuilder for a resource monitor
+// ResourceMonitorGrant returns a pointer to a CurrentGrantBuilder for a resource monitor.
 func ResourceMonitorGrant(w string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          w,
@@ -184,7 +186,7 @@ func ResourceMonitorGrant(w string) GrantBuilder {
 	}
 }
 
-// IntegrationGrant returns a pointer to a CurrentGrantBuilder for an integration
+// IntegrationGrant returns a pointer to a CurrentGrantBuilder for an integration.
 func IntegrationGrant(w string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          w,
@@ -193,7 +195,7 @@ func IntegrationGrant(w string) GrantBuilder {
 	}
 }
 
-// WarehouseGrant returns a pointer to a CurrentGrantBuilder for a warehouse
+// WarehouseGrant returns a pointer to a CurrentGrantBuilder for a warehouse.
 func WarehouseGrant(w string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          w,
@@ -202,7 +204,16 @@ func WarehouseGrant(w string) GrantBuilder {
 	}
 }
 
-// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for an external table
+// UserGrant returns a pointer to a CurrentGrantBuilder for a user.
+func UserGrant(w string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          w,
+		qualifiedName: fmt.Sprintf(`"%v"`, w),
+		grantType:     userGrantType,
+	}
+}
+
+// ExternalTableGrant returns a pointer to a CurrentGrantBuilder for an external table.
 func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          externalTable,
@@ -211,7 +222,7 @@ func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
 	}
 }
 
-// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a file format
+// FileFormatGrant returns a pointer to a CurrentGrantBuilder for a file format.
 func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          fileFormat,
@@ -220,7 +231,7 @@ func FileFormatGrant(db, schema, fileFormat string) GrantBuilder {
 	}
 }
 
-// FunctionGrant returns a pointer to a CurrentGrantBuilder for a view
+// FunctionGrant returns a pointer to a CurrentGrantBuilder for a view.
 func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          function,
@@ -229,7 +240,7 @@ func FunctionGrant(db, schema, function string, argumentTypes []string) GrantBui
 	}
 }
 
-// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a procedure
+// ProcedureGrant returns a pointer to a CurrentGrantBuilder for a procedure.
 func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          procedure,
@@ -238,7 +249,7 @@ func ProcedureGrant(db, schema, procedure string, argumentTypes []string) GrantB
 	}
 }
 
-// SequenceGrant returns a pointer to a CurrentGrantBuilder for a sequence
+// SequenceGrant returns a pointer to a CurrentGrantBuilder for a sequence.
 func SequenceGrant(db, schema, sequence string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          sequence,
@@ -247,7 +258,7 @@ func SequenceGrant(db, schema, sequence string) GrantBuilder {
 	}
 }
 
-// StreamGrant returns a pointer to a CurrentGrantBuilder for a stream
+// StreamGrant returns a pointer to a CurrentGrantBuilder for a stream.
 func StreamGrant(db, schema, stream string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          stream,
@@ -256,7 +267,7 @@ func StreamGrant(db, schema, stream string) GrantBuilder {
 	}
 }
 
-// MaskingPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy
+// MaskingPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy.
 func MaskingPolicyGrant(db, schema, maskingPolicy string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          maskingPolicy,
@@ -265,7 +276,7 @@ func MaskingPolicyGrant(db, schema, maskingPolicy string) GrantBuilder {
 	}
 }
 
-// PipeGrant returns a pointer to a CurrentGrantBuilder for a pipe
+// PipeGrant returns a pointer to a CurrentGrantBuilder for a pipe.
 func PipeGrant(db, schema, pipe string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          pipe,
@@ -274,7 +285,7 @@ func PipeGrant(db, schema, pipe string) GrantBuilder {
 	}
 }
 
-// TaskGrant returns a pointer to a CurrentGrantBuilder for a task
+// TaskGrant returns a pointer to a CurrentGrantBuilder for a task.
 func TaskGrant(db, schema, task string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          task,
@@ -283,12 +294,21 @@ func TaskGrant(db, schema, task string) GrantBuilder {
 	}
 }
 
-// RowAccessPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy
+// RowAccessPolicyGrant returns a pointer to a CurrentGrantBuilder for a masking policy.
 func RowAccessPolicyGrant(db, schema, rowAccessPolicy string) GrantBuilder {
 	return &CurrentGrantBuilder{
 		name:          rowAccessPolicy,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, rowAccessPolicy),
 		grantType:     rowAccessPolicyType,
+	}
+}
+
+// TagGrant returns a pointer to a CurrentGrantBuilder for a tag grant.
+func TagGrant(db, schema, tag string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          tag,
+		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, tag),
+		grantType:     tagType,
 	}
 }
 
@@ -301,7 +321,7 @@ const (
 )
 
 // CurrentGrantExecutable abstracts the creation of SQL queries to build grants for
-// different resources
+// different resources.
 type CurrentGrantExecutable struct {
 	grantName   string
 	grantType   grantType
@@ -309,7 +329,7 @@ type CurrentGrantExecutable struct {
 	granteeType granteeType
 }
 
-// Role returns a pointer to a CurrentGrantExecutable for a role
+// Role returns a pointer to a CurrentGrantExecutable for a role.
 func (gb *CurrentGrantBuilder) Role(n string) GrantExecutable {
 	return &CurrentGrantExecutable{
 		grantName:   gb.qualifiedName,
@@ -319,7 +339,7 @@ func (gb *CurrentGrantBuilder) Role(n string) GrantExecutable {
 	}
 }
 
-// Share returns a pointer to a CurrentGrantExecutable for a share
+// Share returns a pointer to a CurrentGrantExecutable for a share.
 func (gb *CurrentGrantBuilder) Share(n string) GrantExecutable {
 	return &CurrentGrantExecutable{
 		grantName:   gb.qualifiedName,
@@ -329,7 +349,7 @@ func (gb *CurrentGrantBuilder) Share(n string) GrantExecutable {
 	}
 }
 
-// Grant returns the SQL that will grant privileges on the grant to the grantee
+// Grant returns the SQL that will grant privileges on the grant to the grantee.
 func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if p == `OWNERSHIP` {
@@ -343,7 +363,7 @@ func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 		p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName)
 }
 
-// Revoke returns the SQL that will revoke privileges on the grant from the grantee
+// Revoke returns the SQL that will revoke privileges on the grant from the grantee.
 func (ge *CurrentGrantExecutable) Revoke(p string) []string {
 	// Since 10/2020 Snowflake dropped support for REVOKE OWNERSHIP.
 	// It's only possible to transfer it to another role now, so we grant it to Terraform's role.
@@ -359,7 +379,7 @@ func (ge *CurrentGrantExecutable) Revoke(p string) []string {
 	}
 }
 
-// Show returns the SQL that will show all grants of the grantee
+// Show returns the SQL that will show all grants of the grantee.
 func (ge *CurrentGrantExecutable) Show() string {
 	return fmt.Sprintf(`SHOW GRANTS OF %v "%v"`, ge.granteeType, ge.granteeName)
 }

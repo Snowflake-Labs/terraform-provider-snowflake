@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -40,6 +41,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the data type to mask.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		},
 	},
 	"masking_expression": {
 		Type:        schema.TypeString,
@@ -51,6 +57,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the data type to return.",
 		ForceNew:    true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
+			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
+			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		},
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -66,7 +77,7 @@ type maskingPolicyID struct {
 }
 
 // String() takes in a maskingPolicyID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|MaskingPolicyName
+// DatabaseName|SchemaName|MaskingPolicyName.
 func (mpi *maskingPolicyID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -80,14 +91,14 @@ func (mpi *maskingPolicyID) String() (string, error) {
 	return strMaskingPolicyID, nil
 }
 
-/// maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
-// and returns a maskingPolicyID object
+// / maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
+// and returns a maskingPolicyID object.
 func maskingPolicyIDFromString(stringID string) (*maskingPolicyID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = maskingPolicyIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -105,7 +116,7 @@ func maskingPolicyIDFromString(stringID string) (*maskingPolicyID, error) {
 	return maskingPolicyResult, nil
 }
 
-// MaskingPolicy returns a pointer to the resource representing a masking policy
+// MaskingPolicy returns a pointer to the resource representing a masking policy.
 func MaskingPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateMaskingPolicy,
@@ -120,7 +131,7 @@ func MaskingPolicy() *schema.Resource {
 	}
 }
 
-// CreateMaskingPolicy implements schema.CreateFunc
+// CreateMaskingPolicy implements schema.CreateFunc.
 func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -161,7 +172,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadMaskingPolicy(d, meta)
 }
 
-// ReadMaskingPolicy implements schema.ReadFunc
+// ReadMaskingPolicy implements schema.ReadFunc.
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
@@ -243,7 +254,7 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateMaskingPolicy implements schema.UpdateFunc
+// UpdateMaskingPolicy implements schema.UpdateFunc.
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
@@ -287,7 +298,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadMaskingPolicy(d, meta)
 }
 
-// DeleteMaskingPolicy implements schema.DeleteFunc
+// DeleteMaskingPolicy implements schema.DeleteFunc.
 func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())

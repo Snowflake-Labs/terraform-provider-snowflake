@@ -6,21 +6,21 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
 	err := resources.AccountGrant().Resource.InternalValidate(provider.Provider().Schema, true)
 	r.NoError(err)
 }
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	r := require.New(t)
 
@@ -41,7 +41,7 @@ func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
 	})
 }
 
-//lintignore:AT003
+// lintignore:AT003
 func TestAccountGrantRead(t *testing.T) {
 	r := require.New(t)
 
@@ -123,15 +123,4 @@ func TestApplyMaskingPolicy(t *testing.T) {
 		err := resources.ReadAccountGrant(d, db)
 		r.NoError(err)
 	})
-}
-
-func expectApplyMaskingPolicy(mock sqlmock.Sqlmock) {
-	rows := sqlmock.NewRows([]string{
-		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",
-	}).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "APPLY MASKING POLICY", "ACCOUNT", "", "ROLE", "test-role-1", false, "bob",
-	).AddRow(
-		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "APPLY MASKING POLICY", "ACCOUNT", "", "ROLE", "test-role-2", false, "bob",
-	)
-	mock.ExpectQuery(`^SHOW GRANTS ON ACCOUNT$`).WillReturnRows(rows)
 }

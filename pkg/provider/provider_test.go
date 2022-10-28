@@ -3,7 +3,7 @@ package provider_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	_ "github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
@@ -22,18 +22,18 @@ func TestProvider(t *testing.T) {
 	r.NoError(err)
 }
 
-// func TestConfigureProvider(t *testing.T) {
-// 	// r := require.New(t)
-// }
-
 func TestDSN(t *testing.T) {
 	type args struct {
-		account,
-		user,
-		password string
+		account     string
+		user        string
+		password    string
 		browserAuth bool
-		region,
-		role string
+		region      string
+		role        string
+		host        string
+		protocol    string
+		port        int
+		warehouse   string
 	}
 	tests := []struct {
 		name    string
@@ -41,14 +41,18 @@ func TestDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple", args{"acct", "user", "pass", false, "region", "role"},
-			"user:pass@acct.region.snowflakecomputing.com:443?ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
-		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2"},
-			"user2:pass2@acct2.snowflakecomputing.com:443?ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
+		{"simple", args{"acct", "user", "pass", false, "region", "role", "", "https", 443, ""},
+			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
+		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", "https", 443, ""},
+			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
+		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", "https", 443, ""},
+			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&application=terraform-provider-snowflake&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
+		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", "https", 8443, ""},
+			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:8443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role)
+			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -62,29 +66,32 @@ func TestDSN(t *testing.T) {
 
 func TestOAuthDSN(t *testing.T) {
 	type args struct {
-		account,
-		user,
-		oauthAccessToken,
-		region,
-		role string
+		account          string
+		user             string
+		oauthAccessToken string
+		region           string
+		role             string
+		host             string
+		protocol         string
+		port             int
 	}
-	pseudorandom_access_token := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
+	pseudorandomAccessToken := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
 	tests := []struct {
 		name    string
 		args    args
 		want    string
 		wantErr bool
 	}{
-		{"simple_oauth", args{"acct", "user", pseudorandom_access_token, "region", "role"},
-			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"oauth_over_password", args{"acct", "user", pseudorandom_access_token, "region", "role"},
-			"user:@acct.region.snowflakecomputing.com:443?authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role"},
+		{"simple_oauth", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+		{"oauth_over_password", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
+		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role", "", "https", 443},
 			"", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role)
+			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "")
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)
@@ -99,27 +106,27 @@ func TestOAuthDSN(t *testing.T) {
 
 func TestGetOauthDATA(t *testing.T) {
 	type param struct {
-		refresh_token,
-		redirect_url string
+		refreshToken,
+		redirectURL string
 	}
-	refresh_token := "ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW+0cE7KJx2yoUV0ysWu3HKwhJ1v/iEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX/JUM3/wzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY="
-	redirect_url := "https://localhost.com"
+	refreshToken := "ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW+0cE7KJx2yoUV0ysWu3HKwhJ1v/iEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX/JUM3/wzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY="
+	redirectURL := "https://localhost.com"
 	cases := []struct {
 		name    string
 		param   param
 		want    string
 		wantErr bool
 	}{
-		{"simpleData", param{refresh_token, redirect_url},
+		{"simpleData", param{refreshToken, redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D",
 			false},
-		{"errorData", param{"no_refresh_token", redirect_url},
+		{"errorData", param{"no_refresh_token", redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=no_refresh_token",
 			false},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := provider.GetOauthData(tt.param.refresh_token, tt.param.redirect_url)
+			got := provider.GetOauthData(tt.param.refreshToken, tt.param.redirectURL)
 			want, err := url.ParseQuery(tt.want)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetData() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)
@@ -175,7 +182,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
 
-//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+// NewTestClient returns *http.Client with Transport replaced to avoid making real calls.
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFunc(fn),
@@ -218,24 +225,27 @@ func TestGetOauthAccessToken(t *testing.T) {
 				}
 				return &http.Response{
 					StatusCode: statusCODE,
-					Body:       ioutil.NopCloser(bytes.NewBufferString(tt.want)),
+					Body:       io.NopCloser(bytes.NewBufferString(tt.want)),
 					Header:     make(http.Header),
 				}
 			})
-			req_got, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientsecret)
+			reqGot, err := provider.GetOauthRequest(strings.NewReader(tt.param.dataStuff), tt.param.endpoint, tt.param.clientid, tt.param.clientsecret)
 			if err != nil {
 				t.Errorf("GetOauthRequest() %v", err)
 			}
-			body, err := client.Do(req_got)
+			body, err := client.Do(reqGot)
 			if err != nil {
 				t.Errorf("Body was not returned %v", err)
 			}
-			got, err := ioutil.ReadAll(body.Body)
+			got, err := io.ReadAll(body.Body)
 			if err != nil {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}
 			var result provider.Result
-			json.Unmarshal([]byte(got), &result)
+			unmarshalErr := json.Unmarshal([]byte(got), &result)
+			if unmarshalErr != nil {
+				return
+			}
 			if result.AccessToken != tt.wantTok {
 				t.Errorf("TestGetAccessToken() = %v, want %v", result.AccessToken, tt.want)
 			}

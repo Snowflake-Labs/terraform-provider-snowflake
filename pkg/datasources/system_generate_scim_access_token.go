@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -28,7 +28,7 @@ func SystemGenerateSCIMAccessToken() *schema.Resource {
 	}
 }
 
-// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc
+// ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc.
 func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	integrationName := d.Get("integration_name").(string)

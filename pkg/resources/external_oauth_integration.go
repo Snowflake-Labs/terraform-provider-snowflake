@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -104,7 +104,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Default:     "DISABLE",
 		Description: "Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"DISABLE ", "ENABLE ", "ENABLE_FOR_PRIVILEGE",
+			"DISABLE", "ENABLE", "ENABLE_FOR_PRIVILEGE",
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -130,7 +130,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// ExternalOauthIntegration returns a pointer to the resource representing a network policy
+// ExternalOauthIntegration returns a pointer to the resource representing a network policy.
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateExternalOauthIntegration,
@@ -145,7 +145,7 @@ func ExternalOauthIntegration() *schema.Resource {
 	}
 }
 
-// CreateExternalOauthIntegration implements schema.CreateFunc
+// CreateExternalOauthIntegration implements schema.CreateFunc.
 func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -199,7 +199,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	return ReadExternalOauthIntegration(d, meta)
 }
 
-// ReadExternalOauthIntegration implements schema.ReadFunc
+// ReadExternalOauthIntegration implements schema.ReadFunc.
 func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -336,7 +336,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	return err
 }
 
-// UpdateExternalOauthIntegration implements schema.UpdateFunc
+// UpdateExternalOauthIntegration implements schema.UpdateFunc.
 func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -411,7 +411,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	return ReadExternalOauthIntegration(d, meta)
 }
 
-// DeleteExternalOauthIntegration implements schema.DeleteFunc
+// DeleteExternalOauthIntegration implements schema.DeleteFunc.
 func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.ExternalOauthIntegration)(d, meta)
 }

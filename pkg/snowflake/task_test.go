@@ -34,6 +34,9 @@ func TestTaskCreate(t *testing.T) {
 
 	st.WithStatement("SELECT * FROM table WHERE column = 'name'")
 	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24" COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT * FROM table WHERE column = 'name'`)
+
+	st.WithAllowOverlappingExecution(true)
+	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24" COMMENT = 'test comment' ALLOW_OVERLAPPING_EXECUTION = TRUE USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task" WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT * FROM table WHERE column = 'name'`)
 }
 
 func TestChangeWarehouse(t *testing.T) {
@@ -125,7 +128,7 @@ func TestChangeCondition(t *testing.T) {
 func TestChangeSqlStatement(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.ChangeSqlStatement("SELECT * FROM table"), `ALTER TASK "test_db"."test_schema"."test_task" MODIFY AS SELECT * FROM table`)
+	r.Equal(st.ChangeSQLStatement("SELECT * FROM table"), `ALTER TASK "test_db"."test_schema"."test_task" MODIFY AS SELECT * FROM table`)
 }
 
 func TestSuspend(t *testing.T) {
@@ -162,4 +165,10 @@ func TestShow(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
 	r.Equal(st.Show(), `SHOW TASKS LIKE 'test_task' IN SCHEMA "test_db"."test_schema"`)
+}
+
+func TestSetAllowOverlappingExecution(t *testing.T) {
+	r := require.New(t)
+	st := Task("test_task", "test_db", "test_schema")
+	r.Equal(st.SetAllowOverlappingExecutionParameter(), `ALTER TASK "test_db"."test_schema"."test_task" SET ALLOW_OVERLAPPING_EXECUTION = TRUE`)
 }

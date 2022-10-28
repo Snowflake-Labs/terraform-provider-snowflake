@@ -34,19 +34,26 @@ resource "snowflake_sequence" "test_sequence" {
 
 ### Required
 
-- **database** (String) The database in which to create the sequence. Don't use the | character.
-- **name** (String) Specifies the name for the sequence.
-- **schema** (String) The schema in which to create the sequence. Don't use the | character.
+- `database` (String) The database in which to create the sequence. Don't use the | character.
+- `name` (String) Specifies the name for the sequence.
+- `schema` (String) The schema in which to create the sequence. Don't use the | character.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the sequence.
-- **id** (String) The ID of this resource.
-- **increment** (Number) The amount the sequence will increase by each time it is used
+- `comment` (String) Specifies a comment for the sequence.
+- `increment` (Number) The amount the sequence will increase by each time it is used
 
 ### Read-Only
 
-- **fully_qualified_name** (String) The fully qualified name of the sequence.
-- **next_value** (Number) The next value the sequence will provide.
+- `fully_qualified_name` (String) The fully qualified name of the sequence.
+- `id` (String) The ID of this resource.
+- `next_value` (Number) The next value the sequence will provide.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# format is database name | schema name | sequence name
+terraform import snowflake_sequence.example 'dbName|schemaName|sequenceName'
+```

@@ -25,6 +25,7 @@ resource snowflake_user user {
   last_name    = "User"
 
   default_warehouse = "warehouse"
+  default_secondary_roles = ["ALL"]
   default_role      = "role1"
 
   rsa_public_key   = "..."
@@ -39,43 +40,44 @@ resource snowflake_user user {
 
 ### Required
 
-- **name** (String) Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)
+- `name` (String) Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)
 
 ### Optional
 
-- **comment** (String)
-- **default_namespace** (String) Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.
-- **default_role** (String) Specifies the role that is active by default for the user’s session upon login.
-- **default_warehouse** (String) Specifies the virtual warehouse that is active by default for the user’s session upon login.
-- **disabled** (Boolean)
-- **display_name** (String) Name displayed for the user in the Snowflake web interface.
-- **email** (String) Email address for the user.
-- **first_name** (String) First name of the user.
-- **id** (String) The ID of this resource.
-- **last_name** (String) Last name of the user.
-- **login_name** (String) The name users use to log in. If not supplied, snowflake will use name instead.
-- **must_change_password** (Boolean) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.
-- **password** (String, Sensitive) **WARNING:** this will put the password in the terraform state file. Use carefully.
-- **rsa_public_key** (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
-- **rsa_public_key_2** (String) Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `comment` (String)
+- `default_namespace` (String) Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.
+- `default_role` (String) Specifies the role that is active by default for the user’s session upon login.
+- `default_secondary_roles` (Set of String) Specifies the set of secondary roles that are active for the user’s session upon login.
+- `default_warehouse` (String) Specifies the virtual warehouse that is active by default for the user’s session upon login.
+- `disabled` (Boolean)
+- `display_name` (String) Name displayed for the user in the Snowflake web interface.
+- `email` (String) Email address for the user.
+- `first_name` (String) First name of the user.
+- `last_name` (String) Last name of the user.
+- `login_name` (String) The name users use to log in. If not supplied, snowflake will use name instead.
+- `must_change_password` (Boolean) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.
+- `password` (String, Sensitive) **WARNING:** this will put the password in the terraform state file. Use carefully.
+- `rsa_public_key` (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
+- `rsa_public_key_2` (String) Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
-- **has_rsa_public_key** (Boolean) Will be true if user as an RSA key set.
+- `has_rsa_public_key` (Boolean) Will be true if user as an RSA key set.
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--tag"></a>
 ### Nested Schema for `tag`
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

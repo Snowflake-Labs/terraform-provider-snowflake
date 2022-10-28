@@ -10,7 +10,7 @@ import (
 	pe "github.com/pkg/errors"
 )
 
-// MaterializedViewBuilder abstracts the creation of SQL queries for a Snowflake Materialized View
+// MaterializedViewBuilder abstracts the creation of SQL queries for a Snowflake Materialized View.
 type MaterializedViewBuilder struct {
 	name      string
 	db        string
@@ -23,7 +23,7 @@ type MaterializedViewBuilder struct {
 	tags      []TagValue
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (vb *MaterializedViewBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -44,31 +44,31 @@ func (vb *MaterializedViewBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithComment adds a comment to the MaterializedViewBuilder
+// WithComment adds a comment to the MaterializedViewBuilder.
 func (vb *MaterializedViewBuilder) WithComment(c string) *MaterializedViewBuilder {
 	vb.comment = c
 	return vb
 }
 
-// WithDB adds the name of the database to the MaterializedViewBuilder
+// WithDB adds the name of the database to the MaterializedViewBuilder.
 func (vb *MaterializedViewBuilder) WithDB(db string) *MaterializedViewBuilder {
 	vb.db = db
 	return vb
 }
 
-// WithReplace adds the "OR REPLACE" option to the MaterializedViewBuilder
+// WithReplace adds the "OR REPLACE" option to the MaterializedViewBuilder.
 func (vb *MaterializedViewBuilder) WithReplace() *MaterializedViewBuilder {
 	vb.replace = true
 	return vb
 }
 
-// WithSchema adds the name of the schema to the MaterializedViewBuilder
+// WithSchema adds the name of the schema to the MaterializedViewBuilder.
 func (vb *MaterializedViewBuilder) WithSchema(s string) *MaterializedViewBuilder {
 	vb.schema = s
 	return vb
 }
 
-// WithWarehouse adds the name of the warehouse to the MaterializedViewBuilder
+// WithWarehouse adds the name of the warehouse to the MaterializedViewBuilder.
 func (vb *MaterializedViewBuilder) WithWarehouse(s string) *MaterializedViewBuilder {
 	vb.warehouse = s
 	return vb
@@ -81,13 +81,13 @@ func (vb *MaterializedViewBuilder) WithSecure() *MaterializedViewBuilder {
 	return vb
 }
 
-// WithStatement adds the SQL statement to be used for the view
+// WithStatement adds the SQL statement to be used for the view.
 func (vb *MaterializedViewBuilder) WithStatement(s string) *MaterializedViewBuilder {
 	vb.statement = s
 	return vb
 }
 
-// WithTags sets the tags on the ExternalTableBuilder
+// WithTags sets the tags on the ExternalTableBuilder.
 func (vb *MaterializedViewBuilder) WithTags(tags []TagValue) *MaterializedViewBuilder {
 	vb.tags = tags
 	return vb
@@ -227,7 +227,7 @@ func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) (
 	dbs := []materializedView{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no materialized views found")
+		log.Println("[DEBUG] no materialized views found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

@@ -8,9 +8,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 const (
@@ -98,7 +99,7 @@ type stageID struct {
 }
 
 // String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName
+// DatabaseName|SchemaName|StageName.
 func (si *stageID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -113,13 +114,13 @@ func (si *stageID) String() (string, error) {
 }
 
 // stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
-// and returns a stageID object
+// and returns a stageID object.
 func stageIDFromString(stringID string) (*stageID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = stageIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -137,7 +138,7 @@ func stageIDFromString(stringID string) (*stageID, error) {
 	return stageResult, nil
 }
 
-// Stage returns a pointer to the resource representing a stage
+// Stage returns a pointer to the resource representing a stage.
 func Stage() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateStage,
@@ -152,7 +153,7 @@ func Stage() *schema.Resource {
 	}
 }
 
-// CreateStage implements schema.CreateFunc
+// CreateStage implements schema.CreateFunc.
 func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -221,7 +222,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 }
 
 // ReadStage implements schema.ReadFunc
-// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE
+// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE.
 func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stageID, err := stageIDFromString(d.Id())
@@ -241,8 +242,15 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return err
+
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+		// 002003 (02000): SQL compilation error:
+		// 'XXX' does not exist or not authorized.
+		if driverErr.Number == 2003 {
+			log.Printf("[DEBUG] stage (%s) not found", d.Id())
+			d.SetId("")
+			return nil
+		}
 	}
 
 	sq := snowflake.Stage(stage, dbName, schema).Show()
@@ -268,7 +276,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("url", stageDesc.Url)
+	err = d.Set("url", stageDesc.URL)
 	if err != nil {
 		return err
 	}
@@ -311,7 +319,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateStage implements schema.UpdateFunc
+// UpdateStage implements schema.UpdateFunc.
 func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	stageID, err := stageIDFromString(d.Id())
 	if err != nil {
@@ -385,12 +393,15 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	handleTagChanges(db, d, builder)
+	tagChangeErr := handleTagChanges(db, d, builder)
+	if tagChangeErr != nil {
+		return tagChangeErr
+	}
 
 	return ReadStage(d, meta)
 }
 
-// DeleteStage implements schema.DeleteFunc
+// DeleteStage implements schema.DeleteFunc.
 func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	stageID, err := stageIDFromString(d.Id())
@@ -412,30 +423,4 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// StageExists implements schema.ExistsFunc
-func StageExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
-
-	q := snowflake.Stage(stage, dbName, schema).Describe()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

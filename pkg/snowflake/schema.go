@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema
+// SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema.
 type SchemaBuilder struct {
 	name                 string
 	db                   string
@@ -22,7 +22,7 @@ type SchemaBuilder struct {
 	tags                 []TagValue
 }
 
-// QualifiedName prepends the db if set and escapes everything nicely
+// QualifiedName prepends the db if set and escapes everything nicely.
 func (sb *SchemaBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -35,39 +35,39 @@ func (sb *SchemaBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// Managed adds the WITH MANAGED ACCESS flag to the SchemaBuilder
+// Managed adds the WITH MANAGED ACCESS flag to the SchemaBuilder.
 func (sb *SchemaBuilder) Managed() *SchemaBuilder {
 	sb.managedAccess = true
 	return sb
 }
 
-// Transient adds the TRANSIENT flag to the SchemaBuilder
+// Transient adds the TRANSIENT flag to the SchemaBuilder.
 func (sb *SchemaBuilder) Transient() *SchemaBuilder {
 	sb.transient = true
 	return sb
 }
 
-// WithComment adds a comment to the SchemaBuilder
+// WithComment adds a comment to the SchemaBuilder.
 func (sb *SchemaBuilder) WithComment(c string) *SchemaBuilder {
 	sb.comment = c
 	return sb
 }
 
 // WithDataRetentionDays adds the days to retain data to the SchemaBuilder (must
-// be 0-1 for standard edition, 0-90 for enterprise edition)
+// be 0-1 for standard edition, 0-90 for enterprise edition).
 func (sb *SchemaBuilder) WithDataRetentionDays(d int) *SchemaBuilder {
 	sb.setDataRetentionDays = true
 	sb.dataRetentionDays = d
 	return sb
 }
 
-// WithDB adds the name of the database to the SchemaBuilder
+// WithDB adds the name of the database to the SchemaBuilder.
 func (sb *SchemaBuilder) WithDB(db string) *SchemaBuilder {
 	sb.db = db
 	return sb
 }
 
-// WithTags sets the tags on the SchemaBuilder
+// WithTags sets the tags on the SchemaBuilder.
 func (sb *SchemaBuilder) WithTags(tags []TagValue) *SchemaBuilder {
 	sb.tags = tags
 	return sb
@@ -133,13 +133,17 @@ func (sb *SchemaBuilder) Create() string {
 
 // Rename returns the SQL query that will rename the schema.
 func (sb *SchemaBuilder) Rename(newName string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO "%v"`, sb.QualifiedName(), newName)
+	oldName := sb.QualifiedName()
+	sb.name = newName
+	return fmt.Sprintf(`ALTER SCHEMA %v RENAME TO %v`, oldName, sb.QualifiedName())
 }
 
 // Swap returns the SQL query that Swaps all objects (tables, views, etc.) and
 // metadata, including identifiers, between the two specified schemas.
 func (sb *SchemaBuilder) Swap(targetSchema string) string {
-	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH "%v"`, sb.QualifiedName(), targetSchema)
+	sourceSchema := sb.QualifiedName()
+	sb.name = targetSchema
+	return fmt.Sprintf(`ALTER SCHEMA %v SWAP WITH %v`, sourceSchema, sb.QualifiedName())
 }
 
 // ChangeComment returns the SQL query that will update the comment on the schema.
@@ -225,7 +229,7 @@ func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
 	dbs := []schema{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no schemas found")
+		log.Println("[DEBUG] no schemas found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

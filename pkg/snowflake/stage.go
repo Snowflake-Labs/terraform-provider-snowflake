@@ -14,7 +14,7 @@ func fixFileFormat(inputFileFormat string) string {
 	return strings.Replace(inputFileFormat, "NULL_IF = []", "NULL_IF = ()", 1)
 }
 
-// StageBuilder abstracts the creation of SQL queries for a Snowflake stage
+// StageBuilder abstracts the creation of SQL queries for a Snowflake stage.
 type StageBuilder struct {
 	name               string
 	db                 string
@@ -30,7 +30,7 @@ type StageBuilder struct {
 	tags               []TagValue
 }
 
-// QualifiedName prepends the db and schema and escapes everything nicely
+// QualifiedName prepends the db and schema and escapes everything nicely.
 func (sb *StageBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -39,55 +39,55 @@ func (sb *StageBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithURL adds a URL to the StageBuilder
+// WithURL adds a URL to the StageBuilder.
 func (sb *StageBuilder) WithURL(u string) *StageBuilder {
 	sb.url = u
 	return sb
 }
 
-// WithCredentials adds credentials to the StageBuilder
+// WithCredentials adds credentials to the StageBuilder.
 func (sb *StageBuilder) WithCredentials(c string) *StageBuilder {
 	sb.credentials = c
 	return sb
 }
 
-// WithStorageIntegration adds a storage integration to the StageBuilder
+// WithStorageIntegration adds a storage integration to the StageBuilder.
 func (sb *StageBuilder) WithStorageIntegration(s string) *StageBuilder {
 	sb.storageIntegration = s
 	return sb
 }
 
-// WithEncryption adds encryption to the StageBuilder
+// WithEncryption adds encryption to the StageBuilder.
 func (sb *StageBuilder) WithEncryption(e string) *StageBuilder {
 	sb.encryption = e
 	return sb
 }
 
-// WithFileFormat adds a file format to the StageBuilder
+// WithFileFormat adds a file format to the StageBuilder.
 func (sb *StageBuilder) WithFileFormat(f string) *StageBuilder {
 	sb.fileFormat = f
 	return sb
 }
 
-// WithCopyOptions adds copy options to the StageBuilder
+// WithCopyOptions adds copy options to the StageBuilder.
 func (sb *StageBuilder) WithCopyOptions(c string) *StageBuilder {
 	sb.copyOptions = c
 	return sb
 }
 
-// WithDirectory adds directory option to the StageBuilder
+// WithDirectory adds directory option to the StageBuilder.
 func (sb *StageBuilder) WithDirectory(d string) *StageBuilder {
 	sb.directory = d
 	return sb
 }
 
-// WithComment adds a comment to the StageBuilder
+// WithComment adds a comment to the StageBuilder.
 func (sb *StageBuilder) WithComment(c string) *StageBuilder {
 	sb.comment = c
 	return sb
 }
 
-// WithTags sets the tags on the ExternalTableBuilder
+// WithTags sets the tags on the ExternalTableBuilder.
 func (sb *StageBuilder) WithTags(tags []TagValue) *StageBuilder {
 	sb.tags = tags
 	return sb
@@ -142,7 +142,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.storageIntegration != "" {
-		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = %v`, sb.storageIntegration))
+		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = "%v"`, sb.storageIntegration))
 	}
 
 	if sb.encryption != "" {
@@ -195,7 +195,7 @@ func (sb *StageBuilder) ChangeCredentials(c string) string {
 
 // ChangeStorageIntegration returns the SQL query that will update the storage integration on the stage.
 func (sb *StageBuilder) ChangeStorageIntegration(s string) string {
-	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = %v`, sb.QualifiedName(), s)
+	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = "%v"`, sb.QualifiedName(), s)
 }
 
 // ChangeEncryption returns the SQL query that will update the encryption on the stage.
@@ -248,7 +248,7 @@ func ScanStageShow(row *sqlx.Row) (*stage, error) {
 }
 
 type descStageResult struct {
-	Url              string
+	URL              string
 	AwsExternalID    string
 	SnowflakeIamUser string
 	FileFormat       string
@@ -283,7 +283,7 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 
 		switch row.Property {
 		case "URL":
-			r.Url = strings.Trim(row.PropertyValue, "[\"]")
+			r.URL = strings.Trim(row.PropertyValue, "[\"]")
 		case "AWS_EXTERNAL_ID":
 			r.AwsExternalID = row.PropertyValue
 		case "SNOWFLAKE_IAM_USER":
@@ -323,7 +323,7 @@ func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, er
 	dbs := []stage{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no stages found")
+		log.Println("[DEBUG] no stages found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validAccountPrivileges = NewPrivilegeSet(
@@ -27,6 +27,9 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegeMonitorExecution,
 	privilegeOverrideShareRestrictions,
 	privilegeExecuteManagedTask,
+	privilegeOrganizationSupportCases,
+	privilegeAccountSupportCases,
+	privilegeUserSupportCases,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
@@ -35,7 +38,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the account.",
 		Default:      privilegeMonitorUsage,
-		ValidateFunc: validation.ValidatePrivilege(validAccountPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -50,9 +53,15 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// AccountGrant returns a pointer to the resource representing an account grant
+// AccountGrant returns a pointer to the resource representing an account grant.
 func AccountGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -70,7 +79,7 @@ func AccountGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateAccountGrant implements schema.CreateFunc
+// CreateAccountGrant implements schema.CreateFunc.
 func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
@@ -98,7 +107,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadAccountGrant(d, meta)
 }
 
-// ReadAccountGrant implements schema.ReadFunc
+// ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -118,14 +127,14 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
 }
 
-// DeleteAccountGrant implements schema.DeleteFunc
+// DeleteAccountGrant implements schema.DeleteFunc.
 func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateAccountGrant implements schema.UpdateFunc
+// UpdateAccountGrant implements schema.UpdateFunc.
 func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles.
 	// if nothing changed, nothing to update and we're done.

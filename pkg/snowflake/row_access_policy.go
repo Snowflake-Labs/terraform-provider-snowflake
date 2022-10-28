@@ -10,7 +10,7 @@ import (
 	pe "github.com/pkg/errors"
 )
 
-// RowAccessPolicyBuilder abstracts the creation of SQL queries for a Snowflake Row Access Policy
+// RowAccessPolicyBuilder abstracts the creation of SQL queries for a Snowflake Row Access Policy.
 type RowAccessPolicyBuilder struct {
 	name                string
 	db                  string
@@ -20,7 +20,7 @@ type RowAccessPolicyBuilder struct {
 	rowAccessExpression string
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (rapb *RowAccessPolicyBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -41,19 +41,19 @@ func (rapb *RowAccessPolicyBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithComment adds a comment to the RowAccessPolicyBuilder
+// WithComment adds a comment to the RowAccessPolicyBuilder.
 func (rapb *RowAccessPolicyBuilder) WithComment(c string) *RowAccessPolicyBuilder {
 	rapb.comment = EscapeString(c)
 	return rapb
 }
 
-// WithSignature adds signature to the RowAccessPolicyBuilder
+// WithSignature adds signature to the RowAccessPolicyBuilder.
 func (rapb *RowAccessPolicyBuilder) WithSignature(signature map[string]interface{}) *RowAccessPolicyBuilder {
 	rapb.signature = signature
 	return rapb
 }
 
-// WithRowAccessExpression adds rowAccessExpression to the RowAccessPolicyBuilder
+// WithRowAccessExpression adds rowAccessExpression to the RowAccessPolicyBuilder.
 func (rapb *RowAccessPolicyBuilder) WithRowAccessExpression(rowAccessExpression string) *RowAccessPolicyBuilder {
 	rapb.rowAccessExpression = rowAccessExpression
 	return rapb
@@ -63,11 +63,10 @@ func (rapb *RowAccessPolicyBuilder) WithRowAccessExpression(rowAccessExpression 
 //
 // Supported DDL operations are:
 //   - CREATE ROW ACCESS POLICY
-//	 - ALTER ROW ACCESS POLICY
+//   - ALTER ROW ACCESS POLICY
 //   - DROP ROW ACCESS POLICY
 //   - SHOW ROW ACCESS POLICIES
 //   - DESCRIBE ROW ACCESS POLICY
-//
 func RowAccessPolicy(name, db, schema string) *RowAccessPolicyBuilder {
 	return &RowAccessPolicyBuilder{
 		name:   name,
@@ -97,7 +96,7 @@ func (rapb *RowAccessPolicyBuilder) Create() string {
 	return q.String()
 }
 
-// Describe returns the SQL query that will describe a row access policy
+// Describe returns the SQL query that will describe a row access policy.
 func (rapb *RowAccessPolicyBuilder) Describe() string {
 	return fmt.Sprintf(`DESCRIBE ROW ACCESS POLICY %v`, rapb.QualifiedName())
 }
@@ -159,7 +158,7 @@ func ListRowAccessPolicies(databaseName string, schemaName string, db *sql.DB) (
 	dbs := []RowAccessPolicyStruct{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no row access policies found")
+		log.Println("[DEBUG] no row access policies found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

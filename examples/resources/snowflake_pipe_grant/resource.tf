@@ -1,13 +1,10 @@
-resource snowflake_pipe_grant grant {
-  database_name = "db"
+resource "snowflake_pipe_grant" "grant" {
+  database_name = "database"
   schema_name   = "schema"
-  sequence_name = "sequence"
+  pipe_name     = "pipe"
 
-  privilege = "operate"
-  roles = [
-    "role1",
-    "role2",
-  ]
+  privilege = "OPERATE"
+  roles = ["role1", "role2"]
 
   on_future         = false
   with_grant_option = false

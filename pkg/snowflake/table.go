@@ -12,19 +12,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PrimaryKey structure that represents a tables primary key
+// PrimaryKey structure that represents a tables primary key.
 type PrimaryKey struct {
 	name string
 	keys []string
 }
 
-// WithName set the primary key name
+// WithName set the primary key name.
 func (pk *PrimaryKey) WithName(name string) *PrimaryKey {
 	pk.name = name
 	return pk
 }
 
-// WithKeys set the primary key keys
+// WithKeys set the primary key keys.
 func (pk *PrimaryKey) WithKeys(keys []string) *PrimaryKey {
 	pk.keys = keys
 	return pk
@@ -108,7 +108,7 @@ func (d *ColumnDefault) UnescapeConstantSnowflakeString(columnType string) strin
 	return d.expression
 }
 
-// Column structure that represents a table column
+// Column structure that represents a table column.
 type Column struct {
 	name     string
 	_type    string // type is reserved
@@ -118,19 +118,19 @@ type Column struct {
 	comment  string // pointer as value is nullable
 }
 
-// WithName set the column name
+// WithName set the column name.
 func (c *Column) WithName(name string) *Column {
 	c.name = name
 	return c
 }
 
-// WithType set the column type
+// WithType set the column type.
 func (c *Column) WithType(t string) *Column {
 	c._type = t
 	return c
 }
 
-// WithNullable set if the column is nullable
+// WithNullable set if the column is nullable.
 func (c *Column) WithNullable(nullable bool) *Column {
 	c.nullable = nullable
 	return c
@@ -141,7 +141,7 @@ func (c *Column) WithDefault(cd *ColumnDefault) *Column {
 	return c
 }
 
-// WithComment set the column comment
+// WithComment set the column comment.
 func (c *Column) WithComment(comment string) *Column {
 	c.comment = comment
 	return c
@@ -224,7 +224,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 
 type Columns []Column
 
-// NewColumns generates columns from a table description
+// NewColumns generates columns from a table description.
 func NewColumns(tds []tableDescription) Columns {
 	cs := []Column{}
 	for _, td := range tds {
@@ -289,7 +289,7 @@ func (c Columns) getColumnDefinitions(withInlineConstraints bool, withComments b
 	return fmt.Sprintf(" (%s)", strings.Join(columnDefinitions, ", "))
 }
 
-// TableBuilder abstracts the creation of SQL queries for a Snowflake schema
+// TableBuilder abstracts the creation of SQL queries for a Snowflake schema.
 type TableBuilder struct {
 	name                    string
 	db                      string
@@ -300,11 +300,10 @@ type TableBuilder struct {
 	primaryKey              PrimaryKey
 	dataRetentionTimeInDays int
 	changeTracking          bool
-	defaultDDLCollation     string
 	tags                    []TagValue
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (tb *TableBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -325,43 +324,43 @@ func (tb *TableBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithComment adds a comment to the TableBuilder
+// WithComment adds a comment to the TableBuilder.
 func (tb *TableBuilder) WithComment(c string) *TableBuilder {
 	tb.comment = c
 	return tb
 }
 
-// WithColumns sets the column definitions on the TableBuilder
+// WithColumns sets the column definitions on the TableBuilder.
 func (tb *TableBuilder) WithColumns(c Columns) *TableBuilder {
 	tb.columns = c
 	return tb
 }
 
-// WithClustering adds cluster keys/expressions to TableBuilder
+// WithClustering adds cluster keys/expressions to TableBuilder.
 func (tb *TableBuilder) WithClustering(c []string) *TableBuilder {
 	tb.clusterBy = c
 	return tb
 }
 
-// WithPrimaryKey sets the primary key on the TableBuilder
+// WithPrimaryKey sets the primary key on the TableBuilder.
 func (tb *TableBuilder) WithPrimaryKey(pk PrimaryKey) *TableBuilder {
 	tb.primaryKey = pk
 	return tb
 }
 
-// WithDataRetentionTimeInDays sets the data retention time on the TableBuilder
+// WithDataRetentionTimeInDays sets the data retention time on the TableBuilder.
 func (tb *TableBuilder) WithDataRetentionTimeInDays(days int) *TableBuilder {
 	tb.dataRetentionTimeInDays = days
 	return tb
 }
 
-// WithChangeTracking sets the change tracking on the TableBuilder
+// WithChangeTracking sets the change tracking on the TableBuilder.
 func (tb *TableBuilder) WithChangeTracking(changeTracking bool) *TableBuilder {
 	tb.changeTracking = changeTracking
 	return tb
 }
 
-// WithTags sets the tags on the TableBuilder
+// WithTags sets the tags on the TableBuilder.
 func (tb *TableBuilder) WithTags(tags []TagValue) *TableBuilder {
 	tb.tags = tags
 	return tb
@@ -382,7 +381,7 @@ func (tb *TableBuilder) UnsetTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER TABLE %s UNSET TAG "%v"."%v"."%v"`, tb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
-//Function to get clustering definition
+// Function to get clustering definition.
 func (tb *TableBuilder) GetClusterKeyString() string {
 
 	return JoinStringList(tb.clusterBy[:], ", ")
@@ -443,7 +442,7 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 	return q.String()
 }
 
-//function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
+// function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
 func ClusterStatementToList(clusterStatement string) []string {
 	if clusterStatement == "" {
 		return nil
@@ -493,7 +492,7 @@ func TableWithColumnDefinitions(name, db, schema string, columns Columns) *Table
 	}
 }
 
-// Create returns the SQL statement required to create a table
+// Create returns the SQL statement required to create a table.
 func (tb *TableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE TABLE %v`, tb.QualifiedName()))
@@ -519,7 +518,7 @@ func (tb *TableBuilder) Create() string {
 	return q.String()
 }
 
-// ChangeClusterBy returns the SQL query to change cluastering on table
+// ChangeClusterBy returns the SQL query to change cluastering on table.
 func (tb *TableBuilder) ChangeClusterBy(cb string) string {
 	return fmt.Sprintf(`ALTER TABLE %v CLUSTER BY LINEAR(%v)`, tb.QualifiedName(), cb)
 }
@@ -529,12 +528,12 @@ func (tb *TableBuilder) ChangeComment(c string) string {
 	return fmt.Sprintf(`ALTER TABLE %v SET COMMENT = '%v'`, tb.QualifiedName(), EscapeString(c))
 }
 
-// ChangeDataRetention returns the SQL query that will update the DATA_RETENTION_TIME_IN_DAYS on the table
+// ChangeDataRetention returns the SQL query that will update the DATA_RETENTION_TIME_IN_DAYS on the table.
 func (tb *TableBuilder) ChangeDataRetention(days int) string {
 	return fmt.Sprintf(`ALTER TABLE %v SET DATA_RETENTION_TIME_IN_DAYS = %d`, tb.QualifiedName(), days)
 }
 
-// ChangeChangeTracking returns the SQL query that will update the CHANGE_TRACKING on the table
+// ChangeChangeTracking returns the SQL query that will update the CHANGE_TRACKING on the table.
 func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 	return fmt.Sprintf(`ALTER TABLE %v SET CHANGE_TRACKING = %t`, tb.QualifiedName(), changeTracking)
 }
@@ -580,7 +579,7 @@ func (tb *TableBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TABLE %v UNSET COMMENT`, tb.QualifiedName())
 }
 
-// Return sql to set/unset null constraint on column
+// Return sql to set/unset null constraint on column.
 func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string {
 	if nullable {
 		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" DROP NOT NULL`, tb.QualifiedName(), name)
@@ -602,7 +601,7 @@ func (tb *TableBuilder) DropPrimaryKey() string {
 	return fmt.Sprintf(`ALTER TABLE %s DROP PRIMARY KEY`, tb.QualifiedName())
 }
 
-// RemoveClustering returns the SQL query that will remove data clustering from the table
+// RemoveClustering returns the SQL query that will remove data clustering from the table.
 func (tb *TableBuilder) DropClustering() string {
 	return fmt.Sprintf(`ALTER TABLE %v DROP CLUSTERING KEY`, tb.QualifiedName())
 }
@@ -623,6 +622,12 @@ func (tb *TableBuilder) ShowColumns() string {
 
 func (tb *TableBuilder) ShowPrimaryKeys() string {
 	return fmt.Sprintf(`SHOW PRIMARY KEYS IN TABLE %s`, tb.QualifiedName())
+}
+
+func (tb *TableBuilder) Rename(newName string) string {
+	oldName := tb.QualifiedName()
+	tb.name = newName
+	return fmt.Sprintf(`ALTER TABLE %s RENAME TO %s`, oldName, tb.QualifiedName())
 }
 
 type table struct {
@@ -684,7 +689,7 @@ func (td *tableDescription) ColumnDefault() *ColumnDefault {
 
 	if td.ColumnIdentity() != nil {
 		/*
-			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity seperate so will return nil
+			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity separate so will return nil
 			here if identity information is present. Default/identity are mutually exclusive
 		*/
 		return nil
@@ -753,7 +758,7 @@ func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, er
 	dbs := []table{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tables found")
+		log.Println("[DEBUG] no tables found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

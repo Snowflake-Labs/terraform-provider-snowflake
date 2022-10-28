@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_schema" "db" {
+resource "snowflake_database" "db" {
   name                = "MYDB"
   data_retention_days = 1
 }
@@ -28,6 +28,7 @@ resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
   database = snowflake_database.db.name
   schema   = snowflake_schema.schema.name
+  language = "JAVASCRIPT"
   arguments {
     name = "arg1"
     type = "varchar"
@@ -53,28 +54,32 @@ EOT
 
 ### Required
 
-- **database** (String) The database in which to create the procedure. Don't use the | character.
-- **name** (String) Specifies the identifier for the procedure; does not have to be unique for the schema in which the procedure is created. Don't use the | character.
-- **return_type** (String) The return type of the procedure
-- **schema** (String) The schema in which to create the procedure. Don't use the | character.
-- **statement** (String) Specifies the javascript code used to create the procedure.
+- `database` (String) The database in which to create the procedure. Don't use the | character.
+- `name` (String) Specifies the identifier for the procedure; does not have to be unique for the schema in which the procedure is created. Don't use the | character.
+- `return_type` (String) The return type of the procedure
+- `schema` (String) The schema in which to create the procedure. Don't use the | character.
+- `statement` (String) Specifies the javascript code used to create the procedure.
 
 ### Optional
 
-- **arguments** (Block List) List of the arguments for the procedure (see [below for nested schema](#nestedblock--arguments))
-- **comment** (String) Specifies a comment for the procedure.
-- **execute_as** (String) Sets execute context - see caller's rights and owner's rights
-- **id** (String) The ID of this resource.
-- **null_input_behavior** (String) Specifies the behavior of the procedure when called with null inputs.
-- **return_behavior** (String) Specifies the behavior of the function when returning results
+- `arguments` (Block List) List of the arguments for the procedure (see [below for nested schema](#nestedblock--arguments))
+- `comment` (String) Specifies a comment for the procedure.
+- `execute_as` (String) Sets execute context - see caller's rights and owner's rights
+- `language` (String) Specifies the language of the stored procedure code.
+- `null_input_behavior` (String) Specifies the behavior of the procedure when called with null inputs.
+- `return_behavior` (String) Specifies the behavior of the function when returning results
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--arguments"></a>
 ### Nested Schema for `arguments`
 
 Required:
 
-- **name** (String) The argument name
-- **type** (String) The argument type
+- `name` (String) The argument name
+- `type` (String) The argument type
 
 ## Import
 

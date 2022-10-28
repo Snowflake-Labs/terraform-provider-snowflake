@@ -27,14 +27,14 @@ resource snowflake_notification_integration integration {
   azure_tenant_id                 = "..."
 
   # AWS_SQS
-  notification_provider = "AWS_SQS"
-  aws_sqs_arn           = "..." 
-  aws_sqs_role_arn      = "..."
+  #notification_provider = "AWS_SQS"
+  #aws_sqs_arn           = "..." 
+  #aws_sqs_role_arn      = "..."
 
   # AWS_SNS
-  notification_provider = "AWS_SNS"
-  aws_sns_topic_arn     = "..." 
-  aws_sns_role_arn      = "..."
+  #notification_provider = "AWS_SNS"
+  #aws_sns_topic_arn     = "..." 
+  #aws_sns_role_arn      = "..."
 }
 ```
 
@@ -43,32 +43,32 @@ resource snowflake_notification_integration integration {
 
 ### Required
 
-- **name** (String)
+- `name` (String)
 
 ### Optional
 
-- **aws_sns_role_arn** (String) AWS IAM role ARN for notification integration to assume
-- **aws_sns_topic_arn** (String) AWS SNS Topic ARN for notification integration to connect to
-- **aws_sqs_arn** (String) AWS SQS queue ARN for notification integration to connect to
-- **aws_sqs_role_arn** (String) AWS IAM role ARN for notification integration to assume
-- **azure_storage_queue_primary_uri** (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
-- **azure_tenant_id** (String) The ID of the Azure Active Directory tenant used for identity management
-- **comment** (String) A comment for the integration
-- **direction** (String) Direction of the cloud messaging with respect to Snowflake (required only for error notifications)
-- **enabled** (Boolean)
-- **gcp_pubsub_subscription_name** (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
-- **id** (String) The ID of this resource.
-- **notification_provider** (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)
-- **type** (String) A type of integration
+- `aws_sns_role_arn` (String) AWS IAM role ARN for notification integration to assume
+- `aws_sns_topic_arn` (String) AWS SNS Topic ARN for notification integration to connect to
+- `aws_sqs_arn` (String) AWS SQS queue ARN for notification integration to connect to
+- `aws_sqs_role_arn` (String) AWS IAM role ARN for notification integration to assume
+- `azure_storage_queue_primary_uri` (String) The queue ID for the Azure Queue Storage queue created for Event Grid notifications
+- `azure_tenant_id` (String) The ID of the Azure Active Directory tenant used for identity management
+- `comment` (String) A comment for the integration
+- `direction` (String) Direction of the cloud messaging with respect to Snowflake (required only for error notifications)
+- `enabled` (Boolean)
+- `gcp_pubsub_subscription_name` (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
+- `notification_provider` (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)
+- `type` (String) A type of integration
 
 ### Read-Only
 
-- **aws_sns_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
-- **aws_sns_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
-- **aws_sqs_external_id** (String) The external ID that Snowflake will use when assuming the AWS role
-- **aws_sqs_iam_user_arn** (String) The Snowflake user that will attempt to assume the AWS role.
-- **created_on** (String) Date and time when the notification integration was created.
-- **gcp_pubsub_service_account** (String) The GCP service account identifier that Snowflake will use when assuming the GCP role
+- `aws_sns_external_id` (String) The external ID that Snowflake will use when assuming the AWS role
+- `aws_sns_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.
+- `aws_sqs_external_id` (String) The external ID that Snowflake will use when assuming the AWS role
+- `aws_sqs_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.
+- `created_on` (String) Date and time when the notification integration was created.
+- `gcp_pubsub_service_account` (String) The GCP service account identifier that Snowflake will use when assuming the GCP role
+- `id` (String) The ID of this resource.
 
 ## Import
 

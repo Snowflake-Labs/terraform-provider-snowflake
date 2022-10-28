@@ -17,14 +17,11 @@ description: |-
 
 ### Required
 
-- **aws_sns_topic_arn** (String) Amazon Resource Name (ARN) of the SNS topic for your S3 bucket
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `aws_sns_topic_arn` (String) Amazon Resource Name (ARN) of the SNS topic for your S3 bucket
 
 ### Read-Only
 
-- **aws_sns_topic_policy_json** (String) IAM policy for Snowflake’s SQS queue to subscribe to this topic
+- `aws_sns_topic_policy_json` (String) IAM policy for Snowflake’s SQS queue to subscribe to this topic
+- `id` (String) The ID of this resource.
 
 

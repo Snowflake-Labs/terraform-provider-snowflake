@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -59,7 +59,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// SCIMIntegration returns a pointer to the resource representing a network policy
+// SCIMIntegration returns a pointer to the resource representing a network policy.
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSCIMIntegration,
@@ -74,7 +74,7 @@ func SCIMIntegration() *schema.Resource {
 	}
 }
 
-// CreateSCIMIntegration implements schema.CreateFunc
+// CreateSCIMIntegration implements schema.CreateFunc.
 func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -101,7 +101,7 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadSCIMIntegration(d, meta)
 }
 
-// ReadSCIMIntegration implements schema.ReadFunc
+// ReadSCIMIntegration implements schema.ReadFunc.
 func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -164,7 +164,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateSCIMIntegration implements schema.UpdateFunc
+// UpdateSCIMIntegration implements schema.UpdateFunc.
 func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -206,7 +206,7 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadSCIMIntegration(d, meta)
 }
 
-// DeleteSCIMIntegration implements schema.DeleteFunc
+// DeleteSCIMIntegration implements schema.DeleteFunc.
 func DeleteSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.ScimIntegration)(d, meta)
 }

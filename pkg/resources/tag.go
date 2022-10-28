@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 const (
@@ -42,14 +42,20 @@ var tagSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the tag.",
 	},
+	"allowed_values": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "List of allowed values for the tag.",
+	},
 }
 
 var tagReferenceSchema = &schema.Schema{
 	Type:        schema.TypeList,
-	Required:    false,
 	Optional:    true,
 	MinItems:    0,
 	Description: "Definitions of a tag to associate with the resource.",
+	Deprecated:  "Use the 'snowflake_tag_association' resource instead.",
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -64,13 +70,11 @@ var tagReferenceSchema = &schema.Schema{
 			},
 			"database": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of the database that the tag was created in.",
 			},
 			"schema": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of the schema that the tag was created in.",
 			},
@@ -78,7 +82,7 @@ var tagReferenceSchema = &schema.Schema{
 	},
 }
 
-type tagID struct {
+type TagID struct {
 	DatabaseName string
 	SchemaName   string
 	TagName      string
@@ -121,8 +125,8 @@ func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) er
 }
 
 // String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TagName
-func (ti *tagID) String() (string, error) {
+// DatabaseName|SchemaName|TagName.
+func (ti *TagID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = schemaIDDelimiter
@@ -136,8 +140,8 @@ func (ti *tagID) String() (string, error) {
 }
 
 // tagIDFromString() takes in a pipe-delimited string: DatabaseName|tagName
-// and returns a tagID object
-func tagIDFromString(stringID string) (*tagID, error) {
+// and returns a tagID object.
+func tagIDFromString(stringID string) (*TagID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = tagIDDelimiter
 	lines, err := reader.ReadAll()
@@ -152,7 +156,7 @@ func tagIDFromString(stringID string) (*tagID, error) {
 		return nil, fmt.Errorf("3 fields allowed")
 	}
 
-	tagResult := &tagID{
+	tagResult := &TagID{
 		DatabaseName: lines[0][0],
 		SchemaName:   lines[0][1],
 		TagName:      lines[0][2],
@@ -160,7 +164,7 @@ func tagIDFromString(stringID string) (*tagID, error) {
 	return tagResult, nil
 }
 
-// Schema returns a pointer to the resource representing a schema
+// Schema returns a pointer to the resource representing a schema.
 func Tag() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateTag,
@@ -175,7 +179,7 @@ func Tag() *schema.Resource {
 	}
 }
 
-// CreateSchema implements schema.CreateFunc
+// CreateSchema implements schema.CreateFunc.
 func CreateTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -189,6 +193,10 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("allowed_values"); ok {
+		builder.WithAllowedValues(expandStringList(v.([]interface{})))
+	}
+
 	q := builder.Create()
 
 	err := snowflake.Exec(db, q)
@@ -196,7 +204,7 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating tag %v", name)
 	}
 
-	tagID := &tagID{
+	tagID := &TagID{
 		DatabaseName: database,
 		SchemaName:   schema,
 		TagName:      name,
@@ -210,7 +218,7 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 	return ReadTag(d, meta)
 }
 
-// ReadSchema implements schema.ReadFunc
+// ReadSchema implements schema.ReadFunc.
 func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagID, err := tagIDFromString(d.Id())
@@ -256,10 +264,21 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
+	av = strings.TrimPrefix(av, "[")
+	av = strings.TrimSuffix(av, "]")
+
+	split := strings.Split(av, ",")
+
+	err = d.Set("allowed_values", split)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// UpdateTag implements schema.UpdateFunc
+// UpdateTag implements schema.UpdateFunc.
 func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 	tagID, err := tagIDFromString(d.Id())
 	if err != nil {
@@ -287,10 +306,48 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// If there is change in allowed_values field
+	if d.HasChange("allowed_values") {
+		if _, ok := d.GetOk("allowed_values"); ok {
+			v := d.Get("allowed_values")
+
+			ns := expandAllowedValues(v)
+
+			q := builder.RemoveAllowedValues()
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+			}
+
+			addQuery := builder.AddAllowedValues(ns)
+			err = snowflake.Exec(db, addQuery)
+			if err != nil {
+				return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
+			}
+		} else {
+			q := builder.RemoveAllowedValues()
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+			}
+		}
+	}
+
 	return ReadTag(d, meta)
 }
 
-// DeleteTag implements schema.DeleteFunc
+// Returns the slice of strings for inputed allowed values.
+func expandAllowedValues(avChangeSet interface{}) []string {
+	avList := avChangeSet.([]interface{})
+	newAvs := make([]string, len(avList))
+	for idx, value := range avList {
+		newAvs[idx] = fmt.Sprintf("%v", value)
+	}
+
+	return newAvs
+}
+
+// DeleteTag implements schema.DeleteFunc.
 func DeleteTag(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	tagID, err := tagIDFromString(d.Id())
@@ -312,32 +369,6 @@ func DeleteTag(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// SchemaExists implements schema.ExistsFunc
-func TagExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	tagID, err := tagIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := tagID.DatabaseName
-	schemaName := tagID.SchemaName
-	tag := tagID.TagName
-
-	q := snowflake.Tag(tag).WithDB(dbName).WithSchema(schemaName).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 type tags []tag

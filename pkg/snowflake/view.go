@@ -11,7 +11,7 @@ import (
 	pe "github.com/pkg/errors"
 )
 
-// ViewBuilder abstracts the creation of SQL queries for a Snowflake View
+// ViewBuilder abstracts the creation of SQL queries for a Snowflake View.
 type ViewBuilder struct {
 	name      string
 	db        string
@@ -23,34 +23,34 @@ type ViewBuilder struct {
 	tags      []TagValue
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (vb *ViewBuilder) QualifiedName() (string, error) {
 	if vb.db == "" || vb.schema == "" {
-		return "", errors.New("Views must specify a database and a schema")
+		return "", errors.New("views must specify a database and a schema")
 	}
 
 	return fmt.Sprintf(`"%v"."%v"."%v"`, vb.db, vb.schema, vb.name), nil
 }
 
-// WithComment adds a comment to the ViewBuilder
+// WithComment adds a comment to the ViewBuilder.
 func (vb *ViewBuilder) WithComment(c string) *ViewBuilder {
 	vb.comment = c
 	return vb
 }
 
-// WithDB adds the name of the database to the ViewBuilder
+// WithDB adds the name of the database to the ViewBuilder.
 func (vb *ViewBuilder) WithDB(db string) *ViewBuilder {
 	vb.db = db
 	return vb
 }
 
-// WithReplace adds the "OR REPLACE" option to the ViewBuilder
+// WithReplace adds the "OR REPLACE" option to the ViewBuilder.
 func (vb *ViewBuilder) WithReplace() *ViewBuilder {
 	vb.replace = true
 	return vb
 }
 
-// WithSchema adds the name of the schema to the ViewBuilder
+// WithSchema adds the name of the schema to the ViewBuilder.
 func (vb *ViewBuilder) WithSchema(s string) *ViewBuilder {
 	vb.schema = s
 	return vb
@@ -63,13 +63,13 @@ func (vb *ViewBuilder) WithSecure() *ViewBuilder {
 	return vb
 }
 
-// WithStatement adds the SQL statement to be used for the view
+// WithStatement adds the SQL statement to be used for the view.
 func (vb *ViewBuilder) WithStatement(s string) *ViewBuilder {
 	vb.statement = s
 	return vb
 }
 
-// WithTags sets the tags on the ViewBuilder
+// WithTags sets the tags on the ViewBuilder.
 func (vb *ViewBuilder) WithTags(tags []TagValue) *ViewBuilder {
 	vb.tags = tags
 	return vb
@@ -235,7 +235,7 @@ func ListViews(databaseName string, schemaName string, db *sql.DB) ([]view, erro
 	dbs := []view{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no views found")
+		log.Println("[DEBUG] no views found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

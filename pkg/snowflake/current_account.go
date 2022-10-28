@@ -56,13 +56,12 @@ func ReadCurrentAccount(db *sql.DB) (*account, error) {
 }
 
 func (acc *account) AccountURL() (string, error) {
-	if region_id, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
-		account_id := acc.Account
-		if len(region_id) > 0 {
-			account_id = fmt.Sprintf("%s.%s", account_id, region_id)
+	if regionID, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
+		accountID := acc.Account
+		if len(regionID) > 0 {
+			accountID = fmt.Sprintf("%s.%s", accountID, regionID)
 		}
-		return fmt.Sprintf("https://%s.snowflakecomputing.com", account_id), nil
+		return fmt.Sprintf("https://%s.snowflakecomputing.com", accountID), nil
 	}
-
-	return "", fmt.Errorf("Failed to map Snowflake account region %s to a region_id", acc.Region)
+	return "", fmt.Errorf("failed to map Snowflake account region %s to a region_id", acc.Region)
 }

@@ -33,7 +33,7 @@ func ExecMulti(db *sql.DB, queries []string) error {
 
 // QueryRow will run stmt against the db and return the row. We use
 // [DB.Unsafe](https://godoc.org/github.com/jmoiron/sqlx#DB.Unsafe) so that we can scan to structs
-// without worrying about newly introduced columns
+// without worrying about newly introduced columns.
 func QueryRow(db *sql.DB, stmt string) *sqlx.Row {
 	log.Print("[DEBUG] query stmt ", stmt)
 	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
@@ -42,7 +42,7 @@ func QueryRow(db *sql.DB, stmt string) *sqlx.Row {
 
 // Query will run stmt against the db and return the rows. We use
 // [DB.Unsafe](https://godoc.org/github.com/jmoiron/sqlx#DB.Unsafe) so that we can scan to structs
-// without worrying about newly introduced columns
+// without worrying about newly introduced columns.
 func Query(db *sql.DB, stmt string) (*sqlx.Rows, error) {
 	log.Print("[DEBUG] query stmt ", stmt)
 	sdb := sqlx.NewDb(db, "snowflake").Unsafe()

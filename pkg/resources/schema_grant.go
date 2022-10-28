@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -49,7 +49,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validSchemaPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -79,9 +79,15 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// SchemaGrant returns a pointer to the resource representing a view grant
+// SchemaGrant returns a pointer to the resource representing a view grant.
 func SchemaGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -99,7 +105,7 @@ func SchemaGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateSchemaGrant implements schema.CreateFunc
+// CreateSchemaGrant implements schema.CreateFunc.
 func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
@@ -145,7 +151,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchemaGrant(d, meta)
 }
 
-// UpdateSchemaGrant implements schema.UpdateFunc
+// UpdateSchemaGrant implements schema.UpdateFunc.
 func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done
@@ -208,7 +214,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadSchemaGrant(d, meta)
 }
 
-// ReadSchemaGrant implements schema.ReadFunc
+// ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -251,7 +257,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
 }
 
-// DeleteSchemaGrant implements schema.DeleteFunc
+// DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {

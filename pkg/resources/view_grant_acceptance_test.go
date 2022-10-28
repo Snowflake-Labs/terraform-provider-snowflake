@@ -17,7 +17,8 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),
@@ -38,7 +39,8 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigShares(t, databaseName, viewName, roleName, shareName),
@@ -57,7 +59,8 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),
@@ -81,12 +84,16 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 				ResourceName:      "snowflake_view_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
 }
 
-func viewGrantConfigShares(t *testing.T, database_name, view_name, role, share_name string) string {
+func viewGrantConfigShares(t *testing.T, databaseName, viewName, role, shareName string) string {
+	t.Helper()
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
@@ -140,23 +147,24 @@ resource "snowflake_view_grant" "test" {
 
 	out := bytes.NewBuffer(nil)
 	err := tmpl.Execute(out, map[string]string{
-		"share_name":    share_name,
-		"database_name": database_name,
-		"schema_name":   database_name,
+		"share_name":    shareName,
+		"database_name": databaseName,
+		"schema_name":   databaseName,
 		"role_name":     role,
-		"view_name":     view_name,
+		"view_name":     viewName,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
 
-func viewGrantConfigFuture(t *testing.T, database_name, view_name string, role string, future bool) string {
+func viewGrantConfigFuture(t *testing.T, databaseName, viewName string, role string, future bool) string {
+	t.Helper()
 	r := require.New(t)
 
-	view_name_config := "view_name = snowflake_view.test.name"
+	viewNameConfig := "view_name = snowflake_view.test.name"
 	if future {
-		view_name_config = "on_future = true"
+		viewNameConfig = "on_future = true"
 	}
 
 	config := `
@@ -194,11 +202,11 @@ resource "snowflake_view_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name":    database_name,
-		"schema_name":      database_name,
-		"view_name":        view_name,
+		"database_name":    databaseName,
+		"schema_name":      databaseName,
+		"view_name":        viewName,
 		"role_name":        role,
-		"view_name_config": view_name_config,
+		"view_name_config": viewNameConfig,
 	})
 	r.NoError(err)
 

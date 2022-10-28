@@ -35,37 +35,40 @@ resource "snowflake_stage_grant" "grant_example_stage" {
 
 ### Required
 
-- **database** (String) The database in which to create the stage.
-- **name** (String) Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created.
-- **schema** (String) The schema in which to create the stage.
+- `database` (String) The database in which to create the stage.
+- `name` (String) Specifies the identifier for the stage; must be unique for the database and schema in which the stage is created.
+- `schema` (String) The schema in which to create the stage.
 
 ### Optional
 
-- **aws_external_id** (String)
-- **comment** (String) Specifies a comment for the stage.
-- **copy_options** (String) Specifies the copy options for the stage.
-- **credentials** (String, Sensitive) Specifies the credentials for the stage.
-- **directory** (String) Specifies the directory settings for the stage.
-- **encryption** (String) Specifies the encryption settings for the stage.
-- **file_format** (String) Specifies the file format for the stage.
-- **id** (String) The ID of this resource.
-- **snowflake_iam_user** (String)
-- **storage_integration** (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
-- **url** (String) Specifies the URL for the stage.
+- `aws_external_id` (String)
+- `comment` (String) Specifies a comment for the stage.
+- `copy_options` (String) Specifies the copy options for the stage.
+- `credentials` (String, Sensitive) Specifies the credentials for the stage.
+- `directory` (String) Specifies the directory settings for the stage.
+- `encryption` (String) Specifies the encryption settings for the stage.
+- `file_format` (String) Specifies the file format for the stage.
+- `snowflake_iam_user` (String)
+- `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `url` (String) Specifies the URL for the stage.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--tag"></a>
 ### Nested Schema for `tag`
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

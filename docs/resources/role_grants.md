@@ -51,13 +51,17 @@ resource "snowflake_role_grants" "grants" {
 
 ### Required
 
-- **role_name** (String) The name of the role we are granting.
+- `role_name` (String) The name of the role we are granting.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **roles** (Set of String) Grants role to this specified role.
-- **users** (Set of String) Grants role to this specified user.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `roles` (Set of String) Grants role to this specified role.
+- `users` (Set of String) Grants role to this specified user.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 
