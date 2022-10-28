@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// MaskingPolicyBuilder abstracts the creation of SQL queries for a Snowflake Masking Policy
+// MaskingPolicyBuilder abstracts the creation of SQL queries for a Snowflake Masking Policy.
 type MaskingPolicyBuilder struct {
 	name              string
 	db                string
@@ -21,7 +21,7 @@ type MaskingPolicyBuilder struct {
 	returnDataType    string
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (mpb *MaskingPolicyBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -42,25 +42,25 @@ func (mpb *MaskingPolicyBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithComment adds a comment to the MaskingPolicyBuilder
+// WithComment adds a comment to the MaskingPolicyBuilder.
 func (mpb *MaskingPolicyBuilder) WithComment(c string) *MaskingPolicyBuilder {
 	mpb.comment = EscapeString(c)
 	return mpb
 }
 
-// WithValueDataType adds valueDataType to the MaskingPolicyBuilder
+// WithValueDataType adds valueDataType to the MaskingPolicyBuilder.
 func (mpb *MaskingPolicyBuilder) WithValueDataType(dataType string) *MaskingPolicyBuilder {
 	mpb.valueDataType = dataType
 	return mpb
 }
 
-// WithMaskingExpression adds maskingExpression to the MaskingPolicyBuilder
+// WithMaskingExpression adds maskingExpression to the MaskingPolicyBuilder.
 func (mpb *MaskingPolicyBuilder) WithMaskingExpression(maskingExpression string) *MaskingPolicyBuilder {
 	mpb.maskingExpression = maskingExpression
 	return mpb
 }
 
-// WithReturnDataType adds returnDataType to the MaskingPolicyBuilder
+// WithReturnDataType adds returnDataType to the MaskingPolicyBuilder.
 func (mpb *MaskingPolicyBuilder) WithReturnDataType(dataType string) *MaskingPolicyBuilder {
 	mpb.returnDataType = dataType
 	return mpb
@@ -70,7 +70,7 @@ func (mpb *MaskingPolicyBuilder) WithReturnDataType(dataType string) *MaskingPol
 //
 // Supported DDL operations are:
 //   - CREATE MASKING POLICY
-//	 - ALTER MASKING POLICY
+//   - ALTER MASKING POLICY
 //   - DROP MASKING POLICY
 //   - SHOW MASKING POLICIES
 //   - DESCRIBE MASKING POLICY
@@ -98,7 +98,7 @@ func (mpb *MaskingPolicyBuilder) Create() string {
 	return q.String()
 }
 
-// Describe returns the SQL query that will describe a masking policy
+// Describe returns the SQL query that will describe a masking policy.
 func (mpb *MaskingPolicyBuilder) Describe() string {
 	return fmt.Sprintf(`DESCRIBE MASKING POLICY %v`, mpb.QualifiedName())
 }
@@ -160,7 +160,7 @@ func ListMaskingPolicies(databaseName string, schemaName string, db *sql.DB) ([]
 	dbs := []MaskingPolicyStruct{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no masking policies found")
+		log.Println("[DEBUG] no masking policies found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

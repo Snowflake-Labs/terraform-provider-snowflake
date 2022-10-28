@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validIntegrationPrivileges = NewPrivilegeSet(
@@ -22,7 +22,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the integration.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validIntegrationPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -30,7 +30,6 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -39,15 +38,23 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// IntegrationGrant returns a pointer to the resource representing a integration grant
+// IntegrationGrant returns a pointer to the resource representing a integration grant.
 func IntegrationGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateIntegrationGrant,
 			Read:   ReadIntegrationGrant,
 			Delete: DeleteIntegrationGrant,
+			Update: UpdateIntegrationGrant,
 
 			Schema: integrationGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -58,7 +65,7 @@ func IntegrationGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateIntegrationGrant implements schema.CreateFunc
+// CreateIntegrationGrant implements schema.CreateFunc.
 func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("integration_name").(string)
 	priv := d.Get("privilege").(string)
@@ -87,7 +94,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadIntegrationGrant(d, meta)
 }
 
-// ReadIntegrationGrant implements schema.ReadFunc
+// ReadIntegrationGrant implements schema.ReadFunc.
 func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -114,7 +121,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
 }
 
-// DeleteIntegrationGrant implements schema.DeleteFunc
+// DeleteIntegrationGrant implements schema.DeleteFunc.
 func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -125,4 +132,46 @@ func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.IntegrationGrant(w)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateIntegrationGrant implements schema.UpdateFunc.
+func UpdateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	w := grantID.ResourceName
+
+	// create the builder
+	builder := snowflake.IntegrationGrant(w)
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadIntegrationGrant(d, meta)
 }

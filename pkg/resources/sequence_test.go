@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -67,7 +67,7 @@ func TestSequenceRead(t *testing.T) {
 		"database": "database",
 	}
 
-	d := sequence(t, "good_name", in)
+	d := sequence(t, "database|schema|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		rows := sqlmock.NewRows([]string{
@@ -97,7 +97,6 @@ func TestSequenceRead(t *testing.T) {
 		r.Equal("database", d.Get("database").(string))
 		r.Equal("mock comment", d.Get("comment").(string))
 		r.Equal(25, d.Get("increment").(int))
-		r.Equal(5, d.Get("next_value").(int))
 		r.Equal("database|schema|good_name", d.Id())
 		r.Equal(`"database"."schema"."good_name"`, d.Get("fully_qualified_name").(string))
 	})
@@ -111,7 +110,7 @@ func TestSequenceDelete(t *testing.T) {
 		"database": "database",
 	}
 
-	d := sequence(t, "drop_it", in)
+	d := sequence(t, "database|schema|drop_it", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SEQUENCE "database"."schema"."drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))

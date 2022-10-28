@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -95,23 +95,23 @@ func TestExternalFunctionRead(t *testing.T) {
 
 		args := d.Get("arg").([]interface{})
 		r.Len(args, 1)
-		test_func_args := args[0].(map[string]interface{})
-		r.Len(test_func_args, 2)
-		r.Equal("data", test_func_args["name"].(string))
-		r.Equal("varchar", test_func_args["type"].(string))
+		testFuncArgs := args[0].(map[string]interface{})
+		r.Len(testFuncArgs, 2)
+		r.Equal("data", testFuncArgs["name"].(string))
+		r.Equal("varchar", testFuncArgs["type"].(string))
 
 		headers := d.Get("header").(*schema.Set).List()
 		r.Len(headers, 1)
-		test_func_headers := headers[0].(map[string]interface{})
-		r.Len(test_func_headers, 2)
-		r.Equal("x-custom-header", test_func_headers["name"].(string))
-		r.Equal("snowflake", test_func_headers["value"].(string))
+		testFuncHeaders := headers[0].(map[string]interface{})
+		r.Len(testFuncHeaders, 2)
+		r.Equal("x-custom-header", testFuncHeaders["name"].(string))
+		r.Equal("snowflake", testFuncHeaders["value"].(string))
 
-		context_headers := d.Get("context_headers").([]interface{})
-		r.Len(context_headers, 1)
-		test_func_context_headers := expandStringList(context_headers)
-		r.Len(test_func_context_headers, 1)
-		r.Equal("CURRENT_TIMESTAMP", test_func_context_headers[0])
+		contextHeaders := d.Get("context_headers").([]interface{})
+		r.Len(contextHeaders, 1)
+		testFuncContextHeaders := expandStringList(contextHeaders)
+		r.Len(testFuncContextHeaders, 1)
+		r.Equal("CURRENT_TIMESTAMP", testFuncContextHeaders[0])
 	})
 }
 func TestExternalFunctionReadReturnTypeVariant(t *testing.T) {
@@ -130,23 +130,23 @@ func TestExternalFunctionReadReturnTypeVariant(t *testing.T) {
 
 		args := d.Get("arg").([]interface{})
 		r.Len(args, 1)
-		test_func_args := args[0].(map[string]interface{})
-		r.Len(test_func_args, 2)
-		r.Equal("data", test_func_args["name"].(string))
-		r.Equal("varchar", test_func_args["type"].(string))
+		testFuncArgs := args[0].(map[string]interface{})
+		r.Len(testFuncArgs, 2)
+		r.Equal("data", testFuncArgs["name"].(string))
+		r.Equal("varchar", testFuncArgs["type"].(string))
 
 		headers := d.Get("header").(*schema.Set).List()
 		r.Len(headers, 1)
-		test_func_headers := headers[0].(map[string]interface{})
-		r.Len(test_func_headers, 2)
-		r.Equal("x-custom-header", test_func_headers["name"].(string))
-		r.Equal("snowflake", test_func_headers["value"].(string))
+		testFuncHeaders := headers[0].(map[string]interface{})
+		r.Len(testFuncHeaders, 2)
+		r.Equal("x-custom-header", testFuncHeaders["name"].(string))
+		r.Equal("snowflake", testFuncHeaders["value"].(string))
 
-		context_headers := d.Get("context_headers").([]interface{})
-		r.Len(context_headers, 1)
-		test_func_context_headers := expandStringList(context_headers)
-		r.Len(test_func_context_headers, 1)
-		r.Equal("CURRENT_TIMESTAMP", test_func_context_headers[0])
+		contextHeaders := d.Get("context_headers").([]interface{})
+		r.Len(contextHeaders, 1)
+		testFuncContextHeaders := expandStringList(contextHeaders)
+		r.Len(testFuncContextHeaders, 1)
+		r.Equal("CURRENT_TIMESTAMP", testFuncContextHeaders[0])
 	})
 }
 

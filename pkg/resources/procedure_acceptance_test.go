@@ -18,12 +18,13 @@ func TestAcc_Procedure(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	procName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	expBody1 := "return \"Hi\""
-	expBody2 := "var X=3\nreturn X"
+	expBody1 := "return \"Hi\"\n"
+	expBody2 := "var X=3\nreturn X\n"
 	expBody3 := "var X=1\nreturn X\n"
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: procedureConfig(dbName, schemaName, procName),
@@ -49,6 +50,8 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "arguments.1.type", "DATE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "return_behavior", "IMMUTABLE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
+
+					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "name", procName+"_sql"),
 				),
 			},
 			{
@@ -78,7 +81,10 @@ func procedureConfig(db, schema, name string) string {
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
 		return_type = "varchar"
-		statement = "return \"Hi\""
+		language = "javascript"
+		statement = <<-EOF
+			return "Hi"
+		EOF
 	}
 
 	resource "snowflake_procedure" "test_proc" {
@@ -90,8 +96,12 @@ func procedureConfig(db, schema, name string) string {
 			type = "varchar"
 		}
 		comment = "Terraform acceptance test"
+		language = "javascript"
 		return_type = "varchar"
-		statement = "var X=3\nreturn X"
+		statement = <<-EOF
+			var X=3
+			return X
+		EOF
 	}
 
 	resource "snowflake_procedure" "test_proc_complex" {
@@ -111,10 +121,32 @@ func procedureConfig(db, schema, name string) string {
 		execute_as = "CALLER"
 		return_behavior = "IMMUTABLE"
 		null_input_behavior = "RETURNS NULL ON NULL INPUT"
-		statement = <<EOT
-var X=1
-return X
-EOT
+		language = "javascript"
+		statement = <<-EOF
+			var X=1
+			return X
+		EOF
 	}
-	`, db, schema, name, name, name)
+
+	resource "snowflake_procedure" "test_proc_sql" {
+		name = "%s_sql"
+		database = snowflake_database.test_database.name
+		schema   = snowflake_schema.test_schema.name
+		language = "SQL"
+		return_type         = "INTEGER"
+		execute_as          = "CALLER"
+		return_behavior     = "IMMUTABLE"
+		null_input_behavior = "RETURNS NULL ON NULL INPUT"
+		statement           = <<EOT
+	  declare
+		x integer;
+		y integer;
+	  begin
+		x := 3;
+		y := x * x;
+		return y;
+	  end;
+	  EOT
+	  }
+	`, db, schema, name, name, name, name)
 }

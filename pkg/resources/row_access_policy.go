@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -62,7 +62,7 @@ type rowAccessPolicyID struct {
 }
 
 // String() takes in a rowAccessPolicyID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|RowAccessPolicyName
+// DatabaseName|SchemaName|RowAccessPolicyName.
 func (rapi *rowAccessPolicyID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -76,14 +76,14 @@ func (rapi *rowAccessPolicyID) String() (string, error) {
 	return strRowAccessPolicyID, nil
 }
 
-/// rowAccessPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|RowAccessPolicyName
-// and returns a rowAccessPolicyID object
+// / rowAccessPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|RowAccessPolicyName
+// and returns a rowAccessPolicyID object.
 func rowAccessPolicyIDFromString(stringID string) (*rowAccessPolicyID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = rowAccessPolicyIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -101,7 +101,7 @@ func rowAccessPolicyIDFromString(stringID string) (*rowAccessPolicyID, error) {
 	return rowAccessPolicyResult, nil
 }
 
-// RowAccessPolicy returns a pointer to the resource representing a row access policy
+// RowAccessPolicy returns a pointer to the resource representing a row access policy.
 func RowAccessPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateRowAccessPolicy,
@@ -116,7 +116,7 @@ func RowAccessPolicy() *schema.Resource {
 	}
 }
 
-// CreateRowAccessPolicy implements schema.CreateFunc
+// CreateRowAccessPolicy implements schema.CreateFunc.
 func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -155,7 +155,7 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadRowAccessPolicy(d, meta)
 }
 
-// ReadRowAccessPolicy implements schema.ReadFunc
+// ReadRowAccessPolicy implements schema.ReadFunc.
 func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	rowAccessPolicyID, err := rowAccessPolicyIDFromString(d.Id())
@@ -230,7 +230,7 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateRowAccessPolicy implements schema.UpdateFunc
+// UpdateRowAccessPolicy implements schema.UpdateFunc.
 func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
@@ -274,7 +274,7 @@ func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadRowAccessPolicy(d, meta)
 }
 
-// DeleteRowAccessPolicy implements schema.DeleteFunc
+// DeleteRowAccessPolicy implements schema.DeleteFunc.
 func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	rowAccessPolicyID, err := rowAccessPolicyIDFromString(d.Id())

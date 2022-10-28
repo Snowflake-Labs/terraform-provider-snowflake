@@ -19,10 +19,11 @@ func TestAcc_ApiIntegration(t *testing.T) {
 	apiIntName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: apiIntegrationConfig_aws(apiIntName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}),
+				Config: apiIntegrationConfigAWS(apiIntName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", apiIntName),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_api_gateway"),
@@ -32,7 +33,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 				),
 			},
 			{
-				Config: apiIntegrationConfig_azure(apiIntName2, []string{"https://apim-hello-world.azure-api.net/"}),
+				Config: apiIntegrationConfigAzure(apiIntName2, []string{"https://apim-hello-world.azure-api.net/"}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", apiIntName2),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_provider", "azure_api_management"),
@@ -45,7 +46,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 	})
 }
 
-func apiIntegrationConfig_aws(name string, prefixes []string) string {
+func apiIntegrationConfigAWS(name string, prefixes []string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_api_integration" "test_aws_int" {
 		name = "%s"
@@ -57,7 +58,7 @@ func apiIntegrationConfig_aws(name string, prefixes []string) string {
 	`, name, prefixes)
 }
 
-func apiIntegrationConfig_azure(name string, prefixes []string) string {
+func apiIntegrationConfigAzure(name string, prefixes []string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_api_integration" "test_azure_int" {
 		name = "%s"

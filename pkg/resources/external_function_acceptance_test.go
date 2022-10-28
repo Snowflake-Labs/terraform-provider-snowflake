@@ -18,7 +18,8 @@ func TestAcc_ExternalFunction(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: externalFunctionConfig(accName, []string{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"}, "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
@@ -66,7 +67,7 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 			type = "varchar"
 		}
 		comment = "Terraform acceptance test"
-		return_type = "varchar"
+		return_type = "variant"
 		return_behavior = "IMMUTABLE"
 		api_integration = snowflake_api_integration.test_api_int.name
 		url_of_proxy_and_resource = "%s"
@@ -77,7 +78,7 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name
 		comment = "Terraform acceptance test"
-		return_type = "varchar"
+		return_type = "variant"
 		return_behavior = "IMMUTABLE"
 		api_integration = snowflake_api_integration.test_api_int.name
 		header {

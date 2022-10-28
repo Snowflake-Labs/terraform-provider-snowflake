@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -29,7 +29,7 @@ var currentAccountSchema = map[string]*schema.Schema{
 	},
 }
 
-// CurrentAccount the Snowflake current account resource
+// CurrentAccount the Snowflake current account resource.
 func CurrentAccount() *schema.Resource {
 	return &schema.Resource{
 		Read:   ReadCurrentAccount,
@@ -37,28 +37,37 @@ func CurrentAccount() *schema.Resource {
 	}
 }
 
-// ReadCurrentAccount read the current snowflake account information
+// ReadCurrentAccount read the current snowflake account information.
 func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	acc, err := snowflake.ReadCurrentAccount(db)
 
 	if err != nil {
-		log.Printf("[DEBUG] current_account failed to decode")
+		log.Println("[DEBUG] current_account failed to decode")
 		d.SetId("")
 		return nil
 	}
 
 	d.SetId(fmt.Sprintf("%s.%s", acc.Account, acc.Region))
-	d.Set("account", acc.Account)
-	d.Set("region", acc.Region)
+	accountErr := d.Set("account", acc.Account)
+	if accountErr != nil {
+		return accountErr
+	}
+	regionErr := d.Set("region", acc.Region)
+	if regionErr != nil {
+		return regionErr
+	}
 	url, err := acc.AccountURL()
 
 	if err != nil {
-		log.Printf("[DEBUG] generating snowflake url failed")
+		log.Println("[DEBUG] generating snowflake url failed")
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("url", url)
+	urlErr := d.Set("url", url)
+	if urlErr != nil {
+		return urlErr
+	}
 	return nil
 }

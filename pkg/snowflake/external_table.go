@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// externalTableBuilder abstracts the creation of SQL queries for a Snowflake schema
+// externalTableBuilder abstracts the creation of SQL queries for a Snowflake schema.
 type ExternalTableBuilder struct {
 	name            string
 	db              string
@@ -28,7 +28,7 @@ type ExternalTableBuilder struct {
 	tags            []TagValue
 }
 
-// QualifiedName prepends the db and schema if set and escapes everything nicely
+// QualifiedName prepends the db and schema if set and escapes everything nicely.
 func (tb *ExternalTableBuilder) QualifiedName() string {
 	var n strings.Builder
 
@@ -49,13 +49,13 @@ func (tb *ExternalTableBuilder) QualifiedName() string {
 	return n.String()
 }
 
-// WithComment adds a comment to the ExternalTableBuilder
+// WithComment adds a comment to the ExternalTableBuilder.
 func (tb *ExternalTableBuilder) WithComment(c string) *ExternalTableBuilder {
 	tb.comment = c
 	return tb
 }
 
-// WithColumns sets the column definitions on the ExternalTableBuilder
+// WithColumns sets the column definitions on the ExternalTableBuilder.
 func (tb *ExternalTableBuilder) WithColumns(c []map[string]string) *ExternalTableBuilder {
 	tb.columns = c
 	return tb
@@ -93,7 +93,7 @@ func (tb *ExternalTableBuilder) WithAwsSNSTopic(c string) *ExternalTableBuilder 
 	return tb
 }
 
-// WithTags sets the tags on the ExternalTableBuilder
+// WithTags sets the tags on the ExternalTableBuilder.
 func (tb *ExternalTableBuilder) WithTags(tags []TagValue) *ExternalTableBuilder {
 	tb.tags = tags
 	return tb
@@ -114,18 +114,18 @@ func ExternalTable(name, db, schema string) *ExternalTableBuilder {
 	}
 }
 
-// Create returns the SQL statement required to create a externalTable
+// Create returns the SQL statement required to create a externalTable.
 func (tb *ExternalTableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE EXTERNAL TABLE %v`, tb.QualifiedName()))
 
-	q.WriteString(fmt.Sprintf(` (`))
+	q.WriteString(` (`)
 	columnDefinitions := []string{}
 	for _, columnDefinition := range tb.columns {
 		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
 	}
 	q.WriteString(strings.Join(columnDefinitions, ", "))
-	q.WriteString(fmt.Sprintf(`)`))
+	q.WriteString(`)`)
 
 	if len(tb.partitionBys) > 0 {
 		q.WriteString(` PARTITION BY ( `)
@@ -141,7 +141,7 @@ func (tb *ExternalTableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` PATTERN = '%v'`, EscapeString(tb.pattern)))
 	}
 
-	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, EscapeString(tb.fileFormat)))
+	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, tb.fileFormat))
 
 	if tb.awsSNSTopic != "" {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))
@@ -162,7 +162,7 @@ func (tb *ExternalTableBuilder) Create() string {
 	return q.String()
 }
 
-// Update returns the SQL statement required to update an externalTable
+// Update returns the SQL statement required to update an externalTable.
 func (tb *ExternalTableBuilder) Update() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`ALTER EXTERNAL TABLE %v`, tb.QualifiedName()))
@@ -225,7 +225,7 @@ func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]e
 	dbs := []externalTable{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no external tables found")
+		log.Println("[DEBUG] no external tables found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

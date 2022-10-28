@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sort"
@@ -12,25 +13,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TaskBuilder abstracts the creation of sql queries for a snowflake task
+// TaskBuilder abstracts the creation of sql queries for a snowflake task.
 type TaskBuilder struct {
-	name                                     string
-	db                                       string
-	schema                                   string
-	warehouse                                string
-	schedule                                 string
-	session_parameters                       map[string]interface{}
-	user_task_timeout_ms                     int
-	comment                                  string
-	after                                    string
-	when                                     string
-	sql_statement                            string
-	disabled                                 bool
-	user_task_managed_initial_warehouse_size string
-	errorIntegration                         string
+	name                                string
+	db                                  string
+	schema                              string
+	warehouse                           string
+	schedule                            string
+	sessionParameters                   map[string]interface{}
+	userTaskTimeoutMS                   int
+	comment                             string
+	after                               string
+	when                                string
+	SQLStatement                        string
+	disabled                            bool
+	userTaskManagedInitialWarehouseSize string
+	errorIntegration                    string
+	allowOverlappingExecution           bool
 }
 
-// GetFullName prepends db and schema to in parameter
+// GetFullName prepends db and schema to in parameter.
 func (tb *TaskBuilder) GetFullName(in string) string {
 	var n strings.Builder
 
@@ -39,71 +41,77 @@ func (tb *TaskBuilder) GetFullName(in string) string {
 	return n.String()
 }
 
-// QualifiedName prepends the db and schema and escapes everything nicely
+// QualifiedName prepends the db and schema and escapes everything nicely.
 func (tb *TaskBuilder) QualifiedName() string {
 	return tb.GetFullName(tb.name)
 }
 
-// Name returns the name of the task
+// Name returns the name of the task.
 func (tb *TaskBuilder) Name() string {
 	return tb.name
 }
 
-// WithWarehouse adds a warehouse to the TaskBuilder
+// WithWarehouse adds a warehouse to the TaskBuilder.
 func (tb *TaskBuilder) WithWarehouse(s string) *TaskBuilder {
 	tb.warehouse = s
 	return tb
 }
 
-// WithSchedule adds a schedule to the TaskBuilder
+// WithSchedule adds a schedule to the TaskBuilder.
 func (tb *TaskBuilder) WithSchedule(s string) *TaskBuilder {
 	tb.schedule = s
 	return tb
 }
 
-// WithSessionParameters adds session parameters to the TaskBuilder
+// WithSessionParameters adds session parameters to the TaskBuilder.
 func (tb *TaskBuilder) WithSessionParameters(params map[string]interface{}) *TaskBuilder {
-	tb.session_parameters = params
+	tb.sessionParameters = params
 	return tb
 }
 
-// WithComment adds a comment to the TaskBuilder
+// WithComment adds a comment to the TaskBuilder.
 func (tb *TaskBuilder) WithComment(c string) *TaskBuilder {
 	tb.comment = c
 	return tb
 }
 
-// WithTimeout adds a timeout to the TaskBuilder
-func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
-	tb.user_task_timeout_ms = t
+// WithAllowOverlappingExecution set the ALLOW_OVERLAPPING_EXECUTION on the TaskBuilder.
+func (tb *TaskBuilder) WithAllowOverlappingExecution(flag bool) *TaskBuilder {
+	tb.allowOverlappingExecution = flag
 	return tb
 }
 
-// WithDependency adds an after task dependency to the TaskBuilder
+// WithTimeout adds a timeout to the TaskBuilder.
+func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
+	tb.userTaskTimeoutMS = t
+	return tb
+}
+
+// WithDependency adds an after task dependency to the TaskBuilder.
 func (tb *TaskBuilder) WithDependency(after string) *TaskBuilder {
 	tb.after = after
 	return tb
 }
 
-// WithCondition adds a when condition to the TaskBuilder
+// WithCondition adds a WHEN condition to the TaskBuilder.
 func (tb *TaskBuilder) WithCondition(when string) *TaskBuilder {
 	tb.when = when
 	return tb
 }
 
-// WithStatement adds a sql statement to the TaskBuilder
+// WithStatement adds a sql statement to the TaskBuilder.
 func (tb *TaskBuilder) WithStatement(sql string) *TaskBuilder {
-	tb.sql_statement = sql
+	tb.SQLStatement = sql
 	return tb
 }
 
-// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder
+// WithInitialWarehouseSize adds an initial warehouse size to the TaskBuilder.
 func (tb *TaskBuilder) WithInitialWarehouseSize(initialWarehouseSize string) *TaskBuilder {
-	tb.user_task_managed_initial_warehouse_size = initialWarehouseSize
+	tb.userTaskManagedInitialWarehouseSize = initialWarehouseSize
 	return tb
 }
 
-/// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder
+// WithErrorIntegration adds ErrorIntegration specification to the TaskBuilder.
 func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 	tb.errorIntegration = s
 	return tb
@@ -123,11 +131,11 @@ func Task(name, db, schema string) *TaskBuilder {
 		name:     name,
 		db:       db,
 		schema:   schema,
-		disabled: false, // helper for when started root or standalone task gets supspended
+		disabled: false, // helper for when started root or standalone task gets suspended
 	}
 }
 
-// Create returns the SQL that will create a new task
+// Create returns the SQL that will create a new task.
 func (tb *TaskBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(`CREATE`)
@@ -137,8 +145,8 @@ func (tb *TaskBuilder) Create() string {
 	if tb.warehouse != "" {
 		q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
 	} else {
-		if tb.user_task_managed_initial_warehouse_size != "" {
-			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.user_task_managed_initial_warehouse_size)))
+		if tb.userTaskManagedInitialWarehouseSize != "" {
+			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.userTaskManagedInitialWarehouseSize)))
 		}
 	}
 
@@ -146,16 +154,16 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` SCHEDULE = '%v'`, EscapeString(tb.schedule)))
 	}
 
-	if len(tb.session_parameters) > 0 {
+	if len(tb.sessionParameters) > 0 {
 		sp := make([]string, 0)
 		sortedKeys := make([]string, 0)
-		for k := range tb.session_parameters {
+		for k := range tb.sessionParameters {
 			sortedKeys = append(sortedKeys, k)
 		}
 		sort.Strings(sortedKeys)
 
 		for _, k := range sortedKeys {
-			sp = append(sp, EscapeString(fmt.Sprintf(`%v = "%v"`, k, tb.session_parameters[k])))
+			sp = append(sp, EscapeString(fmt.Sprintf(`%v = "%v"`, k, tb.sessionParameters[k])))
 		}
 		q.WriteString(fmt.Sprintf(` %v`, strings.Join(sp, ", ")))
 	}
@@ -164,12 +172,16 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(tb.comment)))
 	}
 
+	if tb.allowOverlappingExecution {
+		q.WriteString(` ALLOW_OVERLAPPING_EXECUTION = TRUE`)
+	}
+
 	if tb.errorIntegration != "" {
 		q.WriteString(fmt.Sprintf(` ERROR_INTEGRATION = '%v'`, EscapeString(tb.errorIntegration)))
 	}
 
-	if tb.user_task_timeout_ms > 0 {
-		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.user_task_timeout_ms))
+	if tb.userTaskTimeoutMS > 0 {
+		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.userTaskTimeoutMS))
 	}
 
 	if tb.after != "" {
@@ -180,8 +192,8 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` WHEN %v`, tb.when))
 	}
 
-	if tb.sql_statement != "" {
-		q.WriteString(fmt.Sprintf(` AS %v`, UnescapeString(tb.sql_statement)))
+	if tb.SQLStatement != "" {
+		q.WriteString(fmt.Sprintf(` AS %v`, UnescapeString(tb.SQLStatement)))
 	}
 
 	return q.String()
@@ -232,6 +244,16 @@ func (tb *TaskBuilder) RemoveComment() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET COMMENT`, tb.QualifiedName())
 }
 
+// SetAllowOverlappingExecutionParameter returns the sql that will change the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) SetAllowOverlappingExecutionParameter() string {
+	return fmt.Sprintf(`ALTER TASK %v SET ALLOW_OVERLAPPING_EXECUTION = TRUE`, tb.QualifiedName())
+}
+
+// UnsetAllowOverlappingExecutionParameter returns the sql that will unset the ALLOW_OVERLAPPING_EXECUTION for the task.
+func (tb *TaskBuilder) UnsetAllowOverlappingExecutionParameter() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET ALLOW_OVERLAPPING_EXECUTION`, tb.QualifiedName())
+}
+
 // AddDependency returns the sql that will add the after dependency for the task.
 func (tb *TaskBuilder) AddDependency(after string) string {
 	return fmt.Sprintf(`ALTER TASK %v ADD AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
@@ -242,7 +264,7 @@ func (tb *TaskBuilder) RemoveDependency(after string) string {
 	return fmt.Sprintf(`ALTER TASK %v REMOVE AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
 }
 
-// AddSessionParameters returns the sql that will remove the session parameters for the task
+// AddSessionParameters returns the sql that will remove the session parameters for the task.
 func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) string {
 	p := make([]string, 0)
 	sortedKeys := make([]string, 0)
@@ -258,7 +280,7 @@ func (tb *TaskBuilder) AddSessionParameters(params map[string]interface{}) strin
 	return fmt.Sprintf(`ALTER TASK %v SET %v`, tb.QualifiedName(), strings.Join(p, ", "))
 }
 
-// RemoveSessionParameters returns the sql that will remove the session parameters for the task
+// RemoveSessionParameters returns the sql that will remove the session parameters for the task.
 func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) string {
 	sortedKeys := make([]string, 0)
 	for k := range params {
@@ -269,13 +291,13 @@ func (tb *TaskBuilder) RemoveSessionParameters(params map[string]interface{}) st
 	return fmt.Sprintf(`ALTER TASK %v UNSET %v`, tb.QualifiedName(), strings.Join(sortedKeys, ", "))
 }
 
-// ChangeCondition returns the sql that will update the when condition for the task.
+// ChangeCondition returns the sql that will update the WHEN condition for the task.
 func (tb *TaskBuilder) ChangeCondition(newCondition string) string {
 	return fmt.Sprintf(`ALTER TASK %v MODIFY WHEN %v`, tb.QualifiedName(), newCondition)
 }
 
-// ChangeSqlStatement returns the sql that will update the sql the task executes.
-func (tb *TaskBuilder) ChangeSqlStatement(newStatement string) string {
+// ChangeSQLStatement returns the sql that will update the sql the task executes.
+func (tb *TaskBuilder) ChangeSQLStatement(newStatement string) string {
 	return fmt.Sprintf(`ALTER TASK %v MODIFY AS %v`, tb.QualifiedName(), UnescapeString(newStatement))
 }
 
@@ -304,18 +326,18 @@ func (tb *TaskBuilder) Show() string {
 	return fmt.Sprintf(`SHOW TASKS LIKE '%v' IN SCHEMA "%v"."%v"`, EscapeString(tb.name), EscapeString(tb.db), EscapeString(tb.schema))
 }
 
-// ShowParameters returns the query to show the session parameters for the task
+// ShowParameters returns the query to show the session parameters for the task.
 func (tb *TaskBuilder) ShowParameters() string {
 	return fmt.Sprintf(`SHOW PARAMETERS IN TASK %v`, tb.QualifiedName())
 }
 
-// SetDisabled disables the task builder
+// SetDisabled disables the task builder.
 func (tb *TaskBuilder) SetDisabled() *TaskBuilder {
 	tb.disabled = true
 	return tb
 }
 
-// IsDisabled returns if the task builder is disabled
+// IsDisabled returns if the task builder is disabled.
 func (tb *TaskBuilder) IsDisabled() bool {
 	return tb.disabled
 }
@@ -330,21 +352,31 @@ func (tb *TaskBuilder) RemoveErrorIntegration() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET ERROR_INTEGRATION`, tb.QualifiedName())
 }
 
+func (tb *TaskBuilder) SetAllowOverlappingExecution() *TaskBuilder {
+	tb.allowOverlappingExecution = true
+	return tb
+}
+
+func (tb *TaskBuilder) IsAllowOverlappingExecution() bool {
+	return tb.allowOverlappingExecution
+}
+
 type task struct {
-	Id               string         `db:"id"`
-	CreatedOn        string         `db:"created_on"`
-	Name             string         `db:"name"`
-	DatabaseName     string         `db:"database_name"`
-	SchemaName       string         `db:"schema_name"`
-	Owner            string         `db:"owner"`
-	Comment          *string        `db:"comment"`
-	Warehouse        *string        `db:"warehouse"`
-	Schedule         *string        `db:"schedule"`
-	Predecessors     *string        `db:"predecessors"`
-	State            string         `db:"state"`
-	Definition       string         `db:"definition"`
-	Condition        *string        `db:"condition"`
-	ErrorIntegration sql.NullString `db:"error_integration"`
+	ID                        string         `db:"id"`
+	CreatedOn                 string         `db:"created_on"`
+	Name                      string         `db:"name"`
+	DatabaseName              string         `db:"database_name"`
+	SchemaName                string         `db:"schema_name"`
+	Owner                     string         `db:"owner"`
+	Comment                   *string        `db:"comment"`
+	Warehouse                 *string        `db:"warehouse"`
+	Schedule                  *string        `db:"schedule"`
+	Predecessors              *string        `db:"predecessors"`
+	State                     string         `db:"state"`
+	Definition                string         `db:"definition"`
+	Condition                 *string        `db:"condition"`
+	ErrorIntegration          sql.NullString `db:"error_integration"`
+	AllowOverlappingExecution *bool          `db:"allow_overlapping_execution"`
 }
 
 func (t *task) IsEnabled() bool {
@@ -356,6 +388,16 @@ func (t *task) GetPredecessorName() string {
 		return ""
 	}
 
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
+	var fullNames []string
+	if err := json.Unmarshal([]byte(*t.Predecessors), &fullNames); err == nil {
+		for _, fullName := range fullNames {
+			name := fullName[strings.LastIndex(fullName, ".")+1:]
+			return strings.Trim(name, "\\\"")
+		}
+		return ""
+	}
+
 	pre := strings.Split(*t.Predecessors, ".")
 	name, err := strconv.Unquote(pre[len(pre)-1])
 	if err != nil {
@@ -364,14 +406,14 @@ func (t *task) GetPredecessorName() string {
 	return name
 }
 
-// ScanTask turns a sql row into a task object
+// ScanTask turns a sql row into a task object.
 func ScanTask(row *sqlx.Row) (*task, error) {
 	t := &task{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-// taskParams struct to represent a row of parameters
+// taskParams struct to represent a row of parameters.
 type taskParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
@@ -380,7 +422,7 @@ type taskParams struct {
 	Description  string `db:"description"`
 }
 
-// ScanTaskParameters takes a database row and converts it to a task parameter pointer
+// ScanTaskParameters takes a database row and converts it to a task parameter pointer.
 func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 	t := []*taskParams{}
 
@@ -407,7 +449,7 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 	dbs := []task{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tasks found")
+		log.Println("[DEBUG] no tasks found")
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)

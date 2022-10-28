@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -52,7 +52,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"S3", "GCS", "AZURE"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"S3", "S3gov", "GCS", "AZURE", "S3GOV"}, false),
 	},
 	"storage_aws_external_id": {
 		Type:        schema.TypeString,
@@ -102,7 +102,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// StorageIntegration returns a pointer to the resource representing a storage integration
+// StorageIntegration returns a pointer to the resource representing a storage integration.
 func StorageIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateStorageIntegration,
@@ -117,7 +117,7 @@ func StorageIntegration() *schema.Resource {
 	}
 }
 
-// CreateStorageIntegration implements schema.CreateFunc
+// CreateStorageIntegration implements schema.CreateFunc.
 func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -159,7 +159,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadStorageIntegration(d, meta)
 }
 
-// ReadStorageIntegration implements schema.ReadFunc
+// ReadStorageIntegration implements schema.ReadFunc.
 func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -177,12 +177,12 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Could not show storage integration: %w", err)
+		return fmt.Errorf("could not show storage integration: %w", err)
 	}
 
 	// Note: category must be STORAGE or something is broken
 	if c := s.Category.String; c != "STORAGE" {
-		return fmt.Errorf("Expected %v to be a STORAGE integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be a STORAGE integration, got %v", id, c)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
@@ -208,7 +208,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.StorageIntegration(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("Could not describe storage integration: %w", err)
+		return fmt.Errorf("could not describe storage integration: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -276,7 +276,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateStorageIntegration implements schema.UpdateFunc
+// UpdateStorageIntegration implements schema.UpdateFunc.
 func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -364,27 +364,9 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadStorageIntegration(d, meta)
 }
 
-// DeleteStorageIntegration implements schema.DeleteFunc
+// DeleteStorageIntegration implements schema.DeleteFunc.
 func DeleteStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.StorageIntegration)(d, meta)
-}
-
-// StorageIntegrationExists implements schema.ExistsFunc
-func StorageIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.StorageIntegration(id).Show()
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {
@@ -392,22 +374,22 @@ func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.Settin
 	stmt.SetString("STORAGE_PROVIDER", storageProvider)
 
 	switch storageProvider {
-	case "S3":
+	case "S3", "S3GOV":
 		v, ok := data.GetOk("storage_aws_role_arn")
 		if !ok {
-			return fmt.Errorf("If you use the S3 storage provider you must specify a storage_aws_role_arn")
+			return fmt.Errorf("if you use the S3 storage provider you must specify a storage_aws_role_arn")
 		}
 		stmt.SetString(`STORAGE_AWS_ROLE_ARN`, v.(string))
 	case "AZURE":
 		v, ok := data.GetOk("azure_tenant_id")
 		if !ok {
-			return fmt.Errorf("If you use the Azure storage provider you must specify an azure_tenant_id")
+			return fmt.Errorf("if you use the Azure storage provider you must specify an azure_tenant_id")
 		}
 		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
 	case "GCS":
 		// nothing to set here
 	default:
-		return fmt.Errorf("Unexpected provider %v", storageProvider)
+		return fmt.Errorf("unexpected provider %v", storageProvider)
 	}
 
 	return nil

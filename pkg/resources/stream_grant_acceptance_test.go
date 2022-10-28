@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccStreamGrant_basic(t *testing.T) {
+func TestAcc_StreamGrant_basic(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -19,7 +19,8 @@ func TestAccStreamGrant_basic(t *testing.T) {
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: streamGrantConfigExisting(t, databaseName, schemaName, roleName, streamName, tableName),
@@ -36,13 +37,14 @@ func TestAccStreamGrant_basic(t *testing.T) {
 	})
 }
 
-func TestAccStreamGrante_future(t *testing.T) {
+func TestAcc_StreamGrant_future(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: streamGrantConfigFuture(t, databaseName, schemaName, roleName),
@@ -59,7 +61,8 @@ func TestAccStreamGrante_future(t *testing.T) {
 	})
 }
 
-func streamGrantConfigExisting(t *testing.T, database_name, schema_name, role, stream_name, table_name string) string {
+func streamGrantConfigExisting(t *testing.T, databaseName, schemaName, role, streamName, tableName string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -112,18 +115,19 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
-		"stream_name":   stream_name,
-		"table_name":    table_name,
+		"stream_name":   streamName,
+		"table_name":    tableName,
 	})
 	r.NoError(err)
 
 	return out.String()
 }
 
-func streamGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func streamGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -153,8 +157,8 @@ resource "snowflake_stream_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

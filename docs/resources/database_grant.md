@@ -13,8 +13,8 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_database_grant grant {
-  database_name = "db"
+resource "snowflake_database_grant" "grant" {
+  database_name = "database"
 
   privilege = "USAGE"
   roles     = ["role1", "role2"]
@@ -29,15 +29,19 @@ resource snowflake_database_grant grant {
 
 ### Required
 
-- **database_name** (String) The name of the database on which to grant privileges.
+- `database_name` (String) The name of the database on which to grant privileges.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **privilege** (String) The privilege to grant on the database.
-- **roles** (Set of String) Grants privilege to these roles.
-- **shares** (Set of String) Grants privilege to these shares.
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `privilege` (String) The privilege to grant on the database.
+- `roles` (Set of String) Grants privilege to these roles.
+- `shares` (Set of String) Grants privilege to these shares.
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

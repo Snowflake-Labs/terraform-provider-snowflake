@@ -13,8 +13,8 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_schema_grant grant {
-  database_name = "db"
+resource "snowflake_schema_grant" "grant" {
+  database_name = "database"
   schema_name   = "schema"
 
   privilege = "USAGE"
@@ -31,17 +31,21 @@ resource snowflake_schema_grant grant {
 
 ### Required
 
-- **database_name** (String) The name of the database containing the schema on which to grant privileges.
+- `database_name` (String) The name of the database containing the schema on which to grant privileges.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **on_future** (Boolean) When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.
-- **privilege** (String) The privilege to grant on the current or future schema. Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.
-- **roles** (Set of String) Grants privilege to these roles.
-- **schema_name** (String) The name of the schema on which to grant privileges.
-- **shares** (Set of String) Grants privilege to these shares (only valid if on_future is unset).
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `on_future` (Boolean) When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.
+- `privilege` (String) The privilege to grant on the current or future schema. Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.
+- `roles` (Set of String) Grants privilege to these roles.
+- `schema_name` (String) The name of the schema on which to grant privileges.
+- `shares` (Set of String) Grants privilege to these shares (only valid if on_future is unset).
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

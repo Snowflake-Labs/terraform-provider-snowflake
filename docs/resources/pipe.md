@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_pipe pipe {
+resource "snowflake_pipe" "pipe" {
   database = "db"
   schema   = "schema"
   name     = "pipe"
@@ -25,7 +25,6 @@ resource snowflake_pipe pipe {
 
   aws_sns_topic_arn    = "..."
   notification_channel = "..."
-  owner                = "role1"
 }
 ```
 
@@ -34,24 +33,24 @@ resource snowflake_pipe pipe {
 
 ### Required
 
-- **copy_statement** (String) Specifies the copy statement for the pipe.
-- **database** (String) The database in which to create the pipe.
-- **name** (String) Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created.
-- **schema** (String) The schema in which to create the pipe.
+- `copy_statement` (String) Specifies the copy statement for the pipe.
+- `database` (String) The database in which to create the pipe.
+- `name` (String) Specifies the identifier for the pipe; must be unique for the database and schema in which the pipe is created.
+- `schema` (String) The schema in which to create the pipe.
 
 ### Optional
 
-- **auto_ingest** (Boolean) Specifies a auto_ingest param for the pipe.
-- **aws_sns_topic_arn** (String) Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.
-- **comment** (String) Specifies a comment for the pipe.
-- **error_integration** (String) Specifies the name of the notification integration used for error notifications.
-- **id** (String) The ID of this resource.
-- **integration** (String) Specifies an integration for the pipe.
+- `auto_ingest` (Boolean) Specifies a auto_ingest param for the pipe.
+- `aws_sns_topic_arn` (String) Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.
+- `comment` (String) Specifies a comment for the pipe.
+- `error_integration` (String) Specifies the name of the notification integration used for error notifications.
+- `integration` (String) Specifies an integration for the pipe.
 
 ### Read-Only
 
-- **notification_channel** (String) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
-- **owner** (String) Name of the role that owns the pipe.
+- `id` (String) The ID of this resource.
+- `notification_channel` (String) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
+- `owner` (String) Name of the role that owns the pipe.
 
 ## Import
 

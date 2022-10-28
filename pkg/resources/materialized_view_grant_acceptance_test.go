@@ -17,7 +17,8 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: materializedViewGrantConfigFuture(t, databaseName, schemaName, roleName),
@@ -34,7 +35,8 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 	})
 }
 
-func materializedViewGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func materializedViewGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -63,8 +65,8 @@ resource "snowflake_materialized_view_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

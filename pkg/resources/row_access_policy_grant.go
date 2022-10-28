@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validRowAccessPoilcyPrivileges = NewPrivilegeSet(
@@ -29,7 +29,7 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the row access policy.",
 		Default:      "APPLY",
-		ValidateFunc: validation.ValidatePrivilege(validRowAccessPoilcyPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validRowAccessPoilcyPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -37,7 +37,6 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
@@ -52,15 +51,23 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// RowAccessPolicyGrant returns a pointer to the resource representing a row access policy grant
+// RowAccessPolicyGrant returns a pointer to the resource representing a row access policy grant.
 func RowAccessPolicyGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateRowAccessPolicyGrant,
 			Read:   ReadRowAccessPolicyGrant,
 			Delete: DeleteRowAccessPolicyGrant,
+			Update: UpdateRowAccessPolicyGrant,
 
 			Schema: rowAccessPolicyGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -71,7 +78,7 @@ func RowAccessPolicyGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateRowAccessPolicyGrant implements schema.CreateFunc
+// CreateRowAccessPolicyGrant implements schema.CreateFunc.
 func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	var rowAccessPolicyName string
 	if name, ok := d.GetOk("row_access_policy_name"); ok {
@@ -107,7 +114,7 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 	return ReadRowAccessPolicyGrant(d, meta)
 }
 
-// ReadRowAccessPolicyGrant implements schema.ReadFunc
+// ReadRowAccessPolicyGrant implements schema.ReadFunc.
 func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -144,7 +151,7 @@ func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, rowAccessPolicyGrantSchema, builder, false, validRowAccessPoilcyPrivileges)
 }
 
-// DeleteRowAccessPolicyGrant implements schema.DeleteFunc
+// DeleteRowAccessPolicyGrant implements schema.DeleteFunc.
 func DeleteRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -157,4 +164,48 @@ func DeleteRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 	builder := snowflake.RowAccessPolicyGrant(dbName, schemaName, rowAccessPolicyName)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateRowAccessPolicyGrant implements schema.UpdateFunc.
+func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	rowAccessPolicyName := grantID.ObjectName
+
+	// create the builder
+	builder := snowflake.RowAccessPolicyGrant(dbName, schemaName, rowAccessPolicyName)
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadRowAccessPolicyGrant(d, meta)
 }

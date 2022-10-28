@@ -17,7 +17,8 @@ func TestAcc_FunctionFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: functionGrantConfigFuture(t, databaseName, schemaName, roleName),
@@ -35,7 +36,8 @@ func TestAcc_FunctionFutureGrant(t *testing.T) {
 	})
 }
 
-func functionGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func functionGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -53,7 +55,7 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_function_grant" "test" {
-    database_name = snowflake_database.test.name	
+    database_name = snowflake_database.test.name
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	on_future = true
@@ -64,8 +66,8 @@ resource "snowflake_function_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

@@ -3,9 +3,9 @@ package resources
 import (
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -62,9 +62,9 @@ var functionGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future function.",
+		Description:  "The privilege to grant on the current or future function. Must be one of `USAGE` or `OWNERSHIP`.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validFunctionPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -72,14 +72,12 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is false).",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
@@ -95,15 +93,23 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// FunctionGrant returns a pointer to the resource representing a function grant
+// FunctionGrant returns a pointer to the resource representing a function grant.
 func FunctionGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateFunctionGrant,
 			Read:   ReadFunctionGrant,
 			Delete: DeleteFunctionGrant,
+			Update: UpdateFunctionGrant,
 
 			Schema: functionGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -114,7 +120,7 @@ func FunctionGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateFunctionGrant implements schema.CreateFunc
+// CreateFunctionGrant implements schema.CreateFunc.
 func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		functionName      string
@@ -181,7 +187,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunctionGrant(d, meta)
 }
 
-// ReadFunctionGrant implements schema.ReadFunc
+// ReadFunctionGrant implements schema.ReadFunc.
 func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		functionName  string
@@ -254,7 +260,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, functionGrantSchema, builder, futureFunctionsEnabled, validFunctionPrivileges)
 }
 
-// DeleteFunctionGrant implements schema.DeleteFunc
+// DeleteFunctionGrant implements schema.DeleteFunc.
 func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -278,4 +284,63 @@ func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateFunctionGrant implements schema.UpdateFunc.
+func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles", "shares") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+	sharesToAdd := []string{}
+	sharesToRevoke := []string{}
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+	if d.HasChange("shares") {
+		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
+	}
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	functionName := grantID.ObjectName
+	futureFunctions := (functionName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futureFunctions {
+		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
+	} else {
+		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
+		if err != nil {
+			return err
+		}
+		functionName := functionSignatureMap["callableName"].(string)
+		argumentTypes := functionSignatureMap["argumentTypes"].([]string)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadFunctionGrant(d, meta)
 }

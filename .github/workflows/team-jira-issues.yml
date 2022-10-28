@@ -1,0 +1,36 @@
+name: jira-issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  jira-action:
+    runs-on: ubuntu-latest
+    name: Jira create issue
+    steps:
+      - name: Curl to webhook
+        run: |
+          curl --location --request POST '${{ secrets.JIRA_BASE_URL }}/rest/api/2/issue' \
+          --header 'Authorization: Basic ${{ secrets.JIRA_API_TOKEN }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw '{
+              "fields": {
+                "project":
+                {
+                    "key": "${{ secrets.JIRA_PROJECT }}"
+                },
+                "summary": "terraform-provider-snowflake issue ${{ github.event.issue.number }}",
+                "description": "${{ github.event.issue.html_url }}",
+                "issuetype": {
+                    "name": "Story"
+                },       
+                "components": [{
+                "id": "${{ secrets.JIRA_COMPONENT }}"
+              }],
+                "labels": ["${{ secrets.JIRA_LABEL }}"],
+                "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}"},
+                "customfield_10008": "${{ secrets.JIRA_EPIC }}",
+                "assignee": {"name": null}
+            }
+          }'

@@ -18,7 +18,8 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: warehouseGrantConfig(wName, roleName),
@@ -32,6 +33,9 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 				ResourceName:      "snowflake_warehouse_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

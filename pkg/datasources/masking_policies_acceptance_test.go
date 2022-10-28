@@ -9,15 +9,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccMaskingPolicies(t *testing.T) {
+func TestAcc_MaskingPolicies(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	maskingPolicyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: masking_policies(databaseName, schemaName, maskingPolicyName),
+				Config: maskingPolicies(databaseName, schemaName, maskingPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.t", "database", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.t", "schema", schemaName),
@@ -30,7 +31,7 @@ func TestAccMaskingPolicies(t *testing.T) {
 	})
 }
 
-func masking_policies(databaseName string, schemaName string, maskingPolicyName string) string {
+func maskingPolicies(databaseName string, schemaName string, maskingPolicyName string) string {
 	return fmt.Sprintf(`
 
 	resource snowflake_database "test" {

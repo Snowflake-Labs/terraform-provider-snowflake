@@ -11,7 +11,7 @@ import (
 	pe "github.com/pkg/errors"
 )
 
-// ProcedureBuilder abstracts the creation of Stored Procedure
+// ProcedureBuilder abstracts the creation of Stored Procedure.
 type ProcedureBuilder struct {
 	name              string
 	schema            string
@@ -20,24 +20,25 @@ type ProcedureBuilder struct {
 	args              []map[string]string
 	returnBehavior    string // VOLATILE, IMMUTABLE
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
+	language          string // SQL, JAVASCRIPT, JAVA, SCALA
 	returnType        string
 	executeAs         string
 	comment           string
 	statement         string
 }
 
-// QualifiedName prepends the db and schema and appends argument types
+// QualifiedName prepends the db and schema and appends argument types.
 func (pb *ProcedureBuilder) QualifiedName() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Procedures must specify a database a schema and a name")
+		return "", errors.New("procedures must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, pb.db, pb.schema, pb.name, strings.Join(pb.argumentTypes, ", ")), nil
 }
 
-// QualifiedNameWithoutArguments prepends the db and schema if set
+// QualifiedNameWithoutArguments prepends the db and schema if set.
 func (pb *ProcedureBuilder) QualifiedNameWithoutArguments() (string, error) {
 	if pb.db == "" || pb.schema == "" || pb.name == "" {
-		return "", errors.New("Procedures must specify a database a schema and a name")
+		return "", errors.New("procedures must specify a database a schema and a name")
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"`, pb.db, pb.schema, pb.name), nil
 }
@@ -47,7 +48,7 @@ func (pb *ProcedureBuilder) ArgumentsSignature() (string, error) {
 	return fmt.Sprintf(`%v(%v)`, strings.ToUpper(pb.name), strings.ToUpper(strings.Join(pb.argumentTypes, ", "))), nil
 }
 
-// WithArgs sets the args and argumentTypes on the ProcedureBuilder
+// WithArgs sets the args and argumentTypes on the ProcedureBuilder.
 func (pb *ProcedureBuilder) WithArgs(args []map[string]string) *ProcedureBuilder {
 	pb.args = []map[string]string{}
 	for _, arg := range args {
@@ -59,43 +60,49 @@ func (pb *ProcedureBuilder) WithArgs(args []map[string]string) *ProcedureBuilder
 	return pb
 }
 
-// WithReturnBehavior
+// WithReturnBehavior.
 func (pb *ProcedureBuilder) WithReturnBehavior(s string) *ProcedureBuilder {
 	pb.returnBehavior = s
 	return pb
 }
 
-// WithNullInputBehavior
+// WithNullInputBehavior.
 func (pb *ProcedureBuilder) WithNullInputBehavior(s string) *ProcedureBuilder {
 	pb.nullInputBehavior = s
 	return pb
 }
 
-// WithReturnType adds the data type of the return type to the ProcedureBuilder
+// WithReturnType adds the data type of the return type to the ProcedureBuilder.
 func (pb *ProcedureBuilder) WithReturnType(s string) *ProcedureBuilder {
 	pb.returnType = strings.ToUpper(s)
 	return pb
 }
 
-// WithExecuteAs sets the execute to OWNER or CALLER
+// WithExecuteAs sets the execute to OWNER or CALLER.
 func (pb *ProcedureBuilder) WithExecuteAs(s string) *ProcedureBuilder {
 	pb.executeAs = s
 	return pb
 }
 
-// WithComment adds a comment to the ProcedureBuilder
+// WithLanguage sets the language to SQL, JAVA, SCALA or JAVASCRIPT.
+func (pb *ProcedureBuilder) WithLanguage(s string) *ProcedureBuilder {
+	pb.language = s
+	return pb
+}
+
+// WithComment adds a comment to the ProcedureBuilder.
 func (pb *ProcedureBuilder) WithComment(c string) *ProcedureBuilder {
 	pb.comment = c
 	return pb
 }
 
-// WithStatement adds the SQL statement to be used for the procedure
+// WithStatement adds the SQL statement to be used for the procedure.
 func (pb *ProcedureBuilder) WithStatement(s string) *ProcedureBuilder {
 	pb.statement = s
 	return pb
 }
 
-// Returns the argument types
+// Returns the argument types.
 func (pb *ProcedureBuilder) ArgTypes() []string {
 	return pb.argumentTypes
 }
@@ -141,7 +148,9 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 	q.WriteString(`)`)
 
 	q.WriteString(fmt.Sprintf(" RETURNS %v", pb.returnType))
-	q.WriteString(" LANGUAGE javascript")
+	if pb.language != "" {
+		q.WriteString(fmt.Sprintf(" LANGUAGE %v", EscapeString(pb.language)))
+	}
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
@@ -200,13 +209,13 @@ func (vb *ProcedureBuilder) ChangeExecuteAs(c string) (string, error) {
 }
 
 // Show returns the SQL query that will show the row representing this procedure.
-// This show statement returns all procedures with the given name (overloaded ones)
+// This show statement returns all procedures with the given name (overloaded ones).
 func (pb *ProcedureBuilder) Show() string {
 	return fmt.Sprintf(`SHOW PROCEDURES LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
 }
 
 // To describe the procedure the name must be specified as fully qualified name
-// including argument types
+// including argument types.
 func (pb *ProcedureBuilder) Describe() (string, error) {
 	qn, err := pb.QualifiedName()
 	if err != nil {
@@ -240,7 +249,7 @@ type procedureDescription struct {
 }
 
 // ScanProcedureDescription reads through the rows with property and value columns
-// and returns a slice of procedureDescription structs
+// and returns a slice of procedureDescription structs.
 func ScanProcedureDescription(rows *sqlx.Rows) ([]procedureDescription, error) {
 	pdsl := []procedureDescription{}
 	for rows.Next() {
@@ -280,7 +289,7 @@ func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]proce
 	dbs := []procedure{}
 	err = sqlx.StructScan(rows, &dbs)
 	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no procedures found")
+		log.Println("[DEBUG] no procedures found")
 		return nil, nil
 	}
 	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)

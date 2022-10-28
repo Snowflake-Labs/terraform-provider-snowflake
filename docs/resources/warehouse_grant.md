@@ -13,13 +13,11 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_warehouse_grant grant {
-  warehouse_name = "wh"
+resource "snowflake_warehouse_grant" "grant" {
+  warehouse_name = "warehouse"
   privilege      = "MODIFY"
 
-  roles = [
-    "role1",
-  ]
+  roles = ["role1", "role2"]
 
   with_grant_option = false
 }
@@ -30,14 +28,18 @@ resource snowflake_warehouse_grant grant {
 
 ### Required
 
-- **warehouse_name** (String) The name of the warehouse on which to grant privileges.
+- `warehouse_name` (String) The name of the warehouse on which to grant privileges.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **privilege** (String) The privilege to grant on the warehouse.
-- **roles** (Set of String) Grants privilege to these roles.
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `privilege` (String) The privilege to grant on the warehouse.
+- `roles` (Set of String) Grants privilege to these roles.
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

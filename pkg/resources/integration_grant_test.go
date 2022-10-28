@@ -10,9 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func TestIntegrationGrant(t *testing.T) {
@@ -45,9 +45,9 @@ func TestIntegrationGrantCreate(t *testing.T) {
 func TestIntegrationGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILIGES||false", map[string]interface{}{
+	d := integrationGrant(t, "test-integration|||IMPORTED PRIVILEGES||false", map[string]interface{}{
 		"integration_name":  "test-integration",
-		"privilege":         "IMPORTED PRIVILIGES",
+		"privilege":         "IMPORTED PRIVILEGES",
 		"roles":             []interface{}{"test-role-1", "test-role-2"},
 		"with_grant_option": false,
 	})

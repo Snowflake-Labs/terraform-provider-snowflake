@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validWarehousePrivileges = NewPrivilegeSet(
@@ -26,7 +26,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Description:  "The privilege to grant on the warehouse.",
 		Default:      privilegeUsage.String(),
 		ForceNew:     true,
-		ValidateFunc: validation.ValidatePrivilege(validWarehousePrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -41,9 +41,15 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// WarehouseGrant returns a pointer to the resource representing a warehouse grant
+// WarehouseGrant returns a pointer to the resource representing a warehouse grant.
 func WarehouseGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -62,7 +68,7 @@ func WarehouseGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateWarehouseGrant implements schema.CreateFunc
+// CreateWarehouseGrant implements schema.CreateFunc.
 func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("warehouse_name").(string)
 	priv := d.Get("privilege").(string)
@@ -90,7 +96,7 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadWarehouseGrant(d, meta)
 }
 
-// ReadWarehouseGrant implements schema.ReadFunc
+// ReadWarehouseGrant implements schema.ReadFunc.
 func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -117,7 +123,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
 }
 
-// DeleteWarehouseGrant implements schema.DeleteFunc
+// DeleteWarehouseGrant implements schema.DeleteFunc.
 func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -130,7 +136,7 @@ func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateWarehouseGrant implements schema.UpdateFunc
+// UpdateWarehouseGrant implements schema.UpdateFunc.
 func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update is roles. if nothing changed,
 	// nothing to update and we're done.

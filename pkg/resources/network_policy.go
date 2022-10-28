@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -39,7 +39,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 	},
 }
 
-// NetworkPolicy returns a pointer to the resource representing a network policy
+// NetworkPolicy returns a pointer to the resource representing a network policy.
 func NetworkPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateNetworkPolicy,
@@ -54,7 +54,7 @@ func NetworkPolicy() *schema.Resource {
 	}
 }
 
-// CreateNetworkPolicy implements schema.CreateFunc
+// CreateNetworkPolicy implements schema.CreateFunc.
 func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -66,11 +66,11 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("allowed_ip_list"); ok {
-		builder.WithAllowedIpList(expandStringList(v.(*schema.Set).List()))
+		builder.WithAllowedIPList(expandStringList(v.(*schema.Set).List()))
 	}
 
 	if v, ok := d.GetOk("blocked_ip_list"); ok {
-		builder.WithBlockedIpList(expandStringList(v.(*schema.Set).List()))
+		builder.WithBlockedIPList(expandStringList(v.(*schema.Set).List()))
 	}
 
 	stmt := builder.Create()
@@ -83,7 +83,7 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadNetworkPolicy(d, meta)
 }
 
-// ReadNetworkPolicy implements schema.ReadFunc
+// ReadNetworkPolicy implements schema.ReadFunc.
 func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	policyName := d.Id()
@@ -91,9 +91,9 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NetworkPolicy(policyName)
 
 	// There is no way to SHOW a single Network Policy, so we have to read *all* network policies and filter in memory
-	showSql := builder.ShowAllNetworkPolicies()
+	showSQL := builder.ShowAllNetworkPolicies()
 
-	rows, err := snowflake.Query(db, showSql)
+	rows, err := snowflake.Query(db, showSQL)
 	if err == sql.ErrNoRows {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
@@ -123,8 +123,8 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	descSql := builder.Describe()
-	rows, err = snowflake.Query(db, descSql)
+	descSQL := builder.Describe()
+	rows, err = snowflake.Query(db, descSQL)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateNetworkPolicy implements schema.UpdateFunc
+// UpdateNetworkPolicy implements schema.UpdateFunc.
 func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
@@ -191,7 +191,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("allowed_ip_list") {
 		newIps := ipChangeParser(d, "allowed_ip_list")
-		q := builder.ChangeIpList("ALLOWED", newIps)
+		q := builder.ChangeIPList("ALLOWED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating ALLOWED_IP_LIST for network policy %v", name)
@@ -200,7 +200,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("blocked_ip_list") {
 		newIps := ipChangeParser(d, "blocked_ip_list")
-		q := builder.ChangeIpList("BLOCKED", newIps)
+		q := builder.ChangeIPList("BLOCKED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating BLOCKED_IP_LIST for network policy %v", name)
@@ -210,13 +210,13 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return ReadNetworkPolicy(d, meta)
 }
 
-// DeleteNetworkPolicy implements schema.DeleteFunc
+// DeleteNetworkPolicy implements schema.DeleteFunc.
 func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
 
-	dropSql := snowflake.NetworkPolicy(name).Drop()
-	err := snowflake.Exec(db, dropSql)
+	dropSQL := snowflake.NetworkPolicy(name).Drop()
+	err := snowflake.Exec(db, dropSQL)
 	if err != nil {
 		return errors.Wrapf(err, "error deleting network policy %v", name)
 	}
@@ -225,7 +225,7 @@ func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// ipChangeParser is a helper function to parse a given ip list change from ResourceData
+// ipChangeParser is a helper function to parse a given ip list change from ResourceData.
 func ipChangeParser(data *schema.ResourceData, key string) []string {
 	ipChangeSet := data.Get(key)
 	ipList := ipChangeSet.(*schema.Set).List()

@@ -17,7 +17,8 @@ func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: generateAccessTokenConfig(scimIntName),

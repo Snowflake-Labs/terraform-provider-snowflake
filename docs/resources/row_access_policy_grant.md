@@ -14,15 +14,12 @@ description: |-
 
 ```terraform
 resource "snowflake_row_access_policy_grant" "grant" {
-  database_name          = "db"
+  database_name          = "database"
   schema_name            = "schema"
   row_access_policy_name = "row_access_policy"
 
   privilege = "APPLY"
-  roles = [
-    "role1",
-    "role2",
-  ]
+  roles = ["role1", "role2"]
 
   with_grant_option = false
 }
@@ -33,16 +30,20 @@ resource "snowflake_row_access_policy_grant" "grant" {
 
 ### Required
 
-- **database_name** (String) The name of the database containing the row access policy on which to grant privileges.
-- **row_access_policy_name** (String) The name of the row access policy on which to grant privileges immediately.
-- **schema_name** (String) The name of the schema containing the row access policy on which to grant privileges.
+- `database_name` (String) The name of the database containing the row access policy on which to grant privileges.
+- `row_access_policy_name` (String) The name of the row access policy on which to grant privileges immediately.
+- `schema_name` (String) The name of the schema containing the row access policy on which to grant privileges.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **privilege** (String) The privilege to grant on the row access policy.
-- **roles** (Set of String) Grants privilege to these roles.
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `privilege` (String) The privilege to grant on the row access policy.
+- `roles` (Set of String) Grants privilege to these roles.
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -171,7 +171,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 	},
 }
 
-// ExternalFunction returns a pointer to the resource representing an external function
+// ExternalFunction returns a pointer to the resource representing an external function.
 func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateExternalFunction,
@@ -209,7 +209,7 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 	reader.Comma = externalFunctionIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -227,7 +227,7 @@ func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) 
 	}, nil
 }
 
-// CreateExternalFunction implements schema.CreateFunc
+// CreateExternalFunction implements schema.CreateFunc.
 func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -324,7 +324,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadExternalFunction(d, meta)
 }
 
-// ReadExternalFunction implements schema.ReadFunc
+// ReadExternalFunction implements schema.ReadFunc.
 func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalFunctionID, err := externalFunctionIDFromString(d.Id())
@@ -342,12 +342,17 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	externalFunction, err := snowflake.ScanExternalFunction(row)
 	if err != nil {
-		return err
+		if err.Error() == snowflake.ErrNoRowInRS {
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	// Note: 'language' must be EXTERNAL and 'is_external_function' set to Y
 	if externalFunction.Language.String != "EXTERNAL" || externalFunction.IsExternalFunction.String != "Y" {
-		return fmt.Errorf("Expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
+		return fmt.Errorf("expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
 	}
 
 	if err := d.Set("name", externalFunction.ExternalFunctionName.String); err != nil {
@@ -490,7 +495,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// DeleteExternalFunction implements schema.DeleteFunc
+// DeleteExternalFunction implements schema.DeleteFunc.
 func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	externalFunctionID, err := externalFunctionIDFromString(d.Id())

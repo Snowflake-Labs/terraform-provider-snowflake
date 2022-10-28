@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -38,7 +38,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Description:  "The privilege to grant on the current or future view.",
 		Default:      privilegeSelect.String(),
 		ForceNew:     true,
-		ValidateFunc: validation.ValidatePrivilege(validViewPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validViewPrivileges.ToList(), true),
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -67,9 +67,15 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant
+// ViewGrant returns a pointer to the resource representing a view grant.
 func ViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -87,7 +93,7 @@ func ViewGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateViewGrant implements schema.CreateFunc
+// CreateViewGrant implements schema.CreateFunc.
 func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		viewName   string
@@ -149,7 +155,7 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadViewGrant(d, meta)
 }
 
-// ReadViewGrant implements schema.ReadFunc
+// ReadViewGrant implements schema.ReadFunc.
 func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -199,7 +205,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
 }
 
-// DeleteViewGrant implements schema.DeleteFunc
+// DeleteViewGrant implements schema.DeleteFunc.
 func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -220,7 +226,7 @@ func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 	return deleteGenericGrant(d, meta, builder)
 }
 
-// UpdateViewGrant implements schema.UpdateFunc
+// UpdateViewGrant implements schema.UpdateFunc.
 func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
 	// if nothing changed, nothing to update and we're done

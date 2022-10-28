@@ -14,10 +14,11 @@ description: |-
 
 ```terraform
 resource snowflake_external_table external_table {
-  database = "db"
-  schema   = "schema"
-  name     = "external_table"
-  comment  = "External table"
+  database    = "db"
+  schema      = "schema"
+  name        = "external_table"
+  comment     = "External table"
+  file_format = "TYPE = CSV FIELD_DELIMITER = '|'"
 
   column {
     name = "id"
@@ -36,37 +37,37 @@ resource snowflake_external_table external_table {
 
 ### Required
 
-- **column** (Block List, Min: 1) Definitions of a column to create in the external table. Minimum one required. (see [below for nested schema](#nestedblock--column))
-- **database** (String) The database in which to create the external table.
-- **file_format** (String) Specifies the file format for the external table.
-- **location** (String) Specifies a location for the external table.
-- **name** (String) Specifies the identifier for the external table; must be unique for the database and schema in which the externalTable is created.
-- **schema** (String) The schema in which to create the external table.
+- `column` (Block List, Min: 1) Definitions of a column to create in the external table. Minimum one required. (see [below for nested schema](#nestedblock--column))
+- `database` (String) The database in which to create the external table.
+- `file_format` (String) Specifies the file format for the external table.
+- `location` (String) Specifies a location for the external table.
+- `name` (String) Specifies the identifier for the external table; must be unique for the database and schema in which the externalTable is created.
+- `schema` (String) The schema in which to create the external table.
 
 ### Optional
 
-- **auto_refresh** (Boolean) Specifies whether to automatically refresh the external table metadata once, immediately after the external table is created.
-- **aws_sns_topic** (String) Specifies the aws sns topic for the external table.
-- **comment** (String) Specifies a comment for the external table.
-- **copy_grants** (Boolean) Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant
-- **id** (String) The ID of this resource.
-- **partition_by** (List of String) Specifies any partition columns to evaluate for the external table.
-- **pattern** (String) Specifies the file names and/or paths on the external stage to match.
-- **refresh_on_create** (Boolean) Specifies weather to refresh when an external table is created.
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `auto_refresh` (Boolean) Specifies whether to automatically refresh the external table metadata once, immediately after the external table is created.
+- `aws_sns_topic` (String) Specifies the aws sns topic for the external table.
+- `comment` (String) Specifies a comment for the external table.
+- `copy_grants` (Boolean) Specifies to retain the access permissions from the original table when an external table is recreated using the CREATE OR REPLACE TABLE variant
+- `partition_by` (List of String) Specifies any partition columns to evaluate for the external table.
+- `pattern` (String) Specifies the file names and/or paths on the external stage to match.
+- `refresh_on_create` (Boolean) Specifies weather to refresh when an external table is created.
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
-- **owner** (String) Name of the role that owns the external table.
+- `id` (String) The ID of this resource.
+- `owner` (String) Name of the role that owns the external table.
 
 <a id="nestedblock--column"></a>
 ### Nested Schema for `column`
 
 Required:
 
-- **as** (String) String that specifies the expression for the column. When queried, the column returns results derived from this expression.
-- **name** (String) Column name
-- **type** (String) Column type, e.g. VARIANT
+- `as` (String) String that specifies the expression for the column. When queried, the column returns results derived from this expression.
+- `name` (String) Column name
+- `type` (String) Column type, e.g. VARIANT
 
 
 <a id="nestedblock--tag"></a>
@@ -74,13 +75,13 @@ Required:
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

@@ -12,7 +12,8 @@ func TestAccTableGrant_defaults(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: tableGrantConfig(name),
@@ -34,6 +35,9 @@ func TestAccTableGrant_defaults(t *testing.T) {
 				ResourceName:      "snowflake_table_grant.g",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

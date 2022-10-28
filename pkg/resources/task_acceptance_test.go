@@ -70,7 +70,7 @@ var (
 		},
 	}
 
-	// Enables the Child and changes the SQL
+	// Enables the Child and changes the SQL.
 	stepOne = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
@@ -105,7 +105,7 @@ var (
 		},
 	}
 
-	// Changes Root Schedule and SQL
+	// Changes Root Schedule and SQL.
 	stepTwo = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
 		DatabaseName:  databasename,
@@ -174,7 +174,8 @@ var (
 
 func TestAcc_Task(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfig(initialState),
@@ -274,7 +275,7 @@ func TestAcc_Task(t *testing.T) {
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
-					// Terraform SDK is not able to differenciate if the
+					// Terraform SDK is not able to differentiate if the
 					// attribute has deleted or set to zero value.
 					// ResourceData.GetChange returns the zero value of defined
 					// type in schema as new the value. Provider handles 0 for
@@ -376,7 +377,8 @@ func TestAcc_Task_Managed(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfigManaged1(accName),
@@ -531,7 +533,8 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfigManagedScheduled(accName, taskRootName),

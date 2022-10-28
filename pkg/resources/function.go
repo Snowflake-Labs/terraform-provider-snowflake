@@ -7,13 +7,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
-var languages = []string{"javascript", "java"}
+var languages = []string{"javascript", "java", "sql", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
@@ -68,7 +68,7 @@ var functionSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript / java / sql code used to create the function.",
+		Description:      "Specifies the javascript / java / sql / python code used to create the function.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
@@ -102,6 +102,21 @@ var functionSchema = map[string]*schema.Schema{
 		Default:     "user-defined function",
 		Description: "Specifies a comment for the function.",
 	},
+	"runtime_version": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Required for Python functions. Specifies Python runtime version.",
+	},
+	"packages": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
+	},
 	"imports": {
 		Type: schema.TypeList,
 		Elem: &schema.Schema{
@@ -109,23 +124,23 @@ var functionSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "jar files to import for Java function.",
+		Description: "Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.",
 	},
 	"handler": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the handler method for Java function.",
+		Description: "The handler method for Java / Python function.",
 	},
 	"target_path": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "the target path for compiled jar file for Java function.",
+		Description: "The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.",
 	},
 }
 
-// Function returns a pointer to the resource representing a stored function
+// Function returns a pointer to the resource representing a stored function.
 func Function() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateFunction,
@@ -140,7 +155,7 @@ func Function() *schema.Resource {
 	}
 }
 
-// CreateFunction implements schema.CreateFunc
+// CreateFunction implements schema.CreateFunc.
 func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -179,11 +194,25 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithLanguage(v.(string))
 	}
 
+	// Set optionals, runtime version for Python
+	if v, ok := d.GetOk("runtime_version"); ok {
+		builder.WithRuntimeVersion(v.(string))
+	}
+
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	// Set optionals, imports for Java
+	// Set optionals, packages for Java / Python
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []string{}
+		for _, pack := range d.Get("packages").([]interface{}) {
+			packages = append(packages, pack.(string))
+		}
+		builder.WithPackages(packages)
+	}
+
+	// Set optionals, imports for Java / Python
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []string{}
 		for _, imp := range d.Get("imports").([]interface{}) {
@@ -192,12 +221,12 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 		builder.WithImports(imports)
 	}
 
-	// handler for Java
+	// handler for Java / Python
 	if v, ok := d.GetOk("handler"); ok {
 		builder.WithHandler(v.(string))
 	}
 
-	// target path for Java
+	// target path for Java / Python
 	if v, ok := d.GetOk("target_path"); ok {
 		builder.WithTargetPath(v.(string))
 	}
@@ -223,7 +252,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunction(d, meta)
 }
 
-// ReadFunction implements schema.ReadFunc
+// ReadFunction implements schema.ReadFunc.
 func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	functionID, err := splitFunctionID(d.Id())
@@ -237,14 +266,17 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 		functionID.ArgTypes,
 	)
 
-	// some atributes can be retrieved only by Describe and some only by Show
+	// some attributes can be retrieved only by Describe and some only by Show
 	stmt, err := funct.Describe()
 	if err != nil {
 		return err
 	}
 	rows, err := snowflake.Query(db, stmt)
-	if err != nil {
-		return err
+	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "Function") {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] function (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
+		d.SetId("")
+		return nil
 	}
 	defer rows.Close()
 	descPropValues, err := snowflake.ScanFunctionDescription(rows)
@@ -303,10 +335,18 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			}
+		case "packages":
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
+			if packagesString != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(packagesString, ",")
+				if err = d.Set("packages", packages); err != nil {
+					return err
+				}
+			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", "")
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if importsString != "" { // Do nothing for Java functions without imports
-				imports := strings.Split(importsString, ", ")
+				imports := strings.Split(importsString, ",")
 				if err = d.Set("imports", imports); err != nil {
 					return err
 				}
@@ -320,7 +360,9 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		case "runtime_version":
-			// runtime version for Java function. currently not used.
+			if err = d.Set("runtime_version", desc.Value.String); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected function property %v returned from Snowflake", desc.Property.String)
 		}
@@ -359,7 +401,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateFunction implements schema.UpdateFunction
+// UpdateFunction implements schema.UpdateFunction.
 func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	pID, err := splitFunctionID(d.Id())
 	if err != nil {
@@ -419,7 +461,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	return ReadFunction(d, meta)
 }
 
-// DeleteFunction implements schema.DeleteFunc
+// DeleteFunction implements schema.DeleteFunc.
 func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pID, err := splitFunctionID(d.Id())
@@ -448,32 +490,6 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// FunctionExists implements schema.ExistsFunc
-func FunctionExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pID, err := splitFunctionID(d.Id())
-	if err != nil {
-		return false, err
-	}
-	builder := snowflake.Function(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.FunctionName,
-		pID.ArgTypes,
-	)
-
-	q := builder.Show()
-	showRows, err := snowflake.Query(db, q)
-	if err != nil {
-		return false, err
-	}
-	defer showRows.Close()
-	if showRows.Next() {
-		return true, nil
-	}
-	return false, nil
-}
-
 type functionID struct {
 	DatabaseName string
 	SchemaName   string
@@ -484,10 +500,11 @@ type functionID struct {
 // splitFunctionID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
 // the functionID struct, for example MYDB|PUBLIC|FUNC1|VARCHAR-DATE-VARCHAR
 // returns struct
-//         DatabaseName: MYDB
-//         SchemaName: PUBLIC
-//         FunctionName: FUNC1
-//         ArgTypes: [VARCHAR, DATE, VARCHAR]
+//
+//	DatabaseName: MYDB
+//	SchemaName: PUBLIC
+//	FunctionName: FUNC1
+//	ArgTypes: [VARCHAR, DATE, VARCHAR]
 func splitFunctionID(v string) (*functionID, error) {
 	arr := strings.Split(v, "|")
 	if len(arr) != 4 {
@@ -502,7 +519,7 @@ func splitFunctionID(v string) (*functionID, error) {
 	}, nil
 }
 
-// the opposite of splitFunctionID
+// the opposite of splitFunctionID.
 func (pi *functionID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v",
 		pi.DatabaseName,

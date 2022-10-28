@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var validResourceMonitorPrivileges = NewPrivilegeSet(
@@ -23,7 +23,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the resource monitor.",
 		Default:      "MONITOR",
-		ValidateFunc: validation.ValidatePrivilege(validResourceMonitorPrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -31,7 +31,6 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -40,15 +39,23 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant
+// ResourceMonitorGrant returns a pointer to the resource representing a resource monitor grant.
 func ResourceMonitorGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreateResourceMonitorGrant,
 			Read:   ReadResourceMonitorGrant,
 			Delete: DeleteResourceMonitorGrant,
+			Update: UpdateResourceMonitorGrant,
 
 			Schema: resourceMonitorGrantSchema,
 		},
@@ -56,7 +63,7 @@ func ResourceMonitorGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateResourceMonitorGrant implements schema.CreateFunc
+// CreateResourceMonitorGrant implements schema.CreateFunc.
 func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	w := d.Get("monitor_name").(string)
 	priv := d.Get("privilege").(string)
@@ -84,7 +91,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 	return ReadResourceMonitorGrant(d, meta)
 }
 
-// ReadResourceMonitorGrant implements schema.ReadFunc
+// ReadResourceMonitorGrant implements schema.ReadFunc.
 func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -110,7 +117,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
 }
 
-// DeleteResourceMonitorGrant implements schema.DeleteFunc
+// DeleteResourceMonitorGrant implements schema.DeleteFunc.
 func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -121,4 +128,46 @@ func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 	builder := snowflake.ResourceMonitorGrant(w)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdateResourceMonitorGrant implements schema.UpdateFunc.
+func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	w := grantID.ResourceName
+
+	// create the builder
+	builder := snowflake.ResourceMonitorGrant(w)
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadResourceMonitorGrant(d, meta)
 }

@@ -10,14 +10,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccExternalTable(t *testing.T) {
+func TestAcc_ExternalTable(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
 		t.Skip("Skipping TestAccExternalTable")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: externalTableConfig(accName, []string{"s3://com.example.bucket/prefix"}),
@@ -69,12 +70,12 @@ resource "snowflake_external_table" "test_table" {
 	column {
 		name = "column1"
 		type = "STRING"
-    as = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
+		as   = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
 	}
 	column {
 		name = "column2"
 		type = "TIMESTAMP_NTZ(9)"
-    as = "($1:'CreatedDate'::timestamp)"
+		as   = "($1:\"CreatedDate\"::timestamp)"
 	}
   file_format = "TYPE = CSV"
   location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"

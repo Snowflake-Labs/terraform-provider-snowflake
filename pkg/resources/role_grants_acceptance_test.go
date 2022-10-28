@@ -15,6 +15,7 @@ import (
 )
 
 func MustParseInt(t *testing.T, input string) int64 {
+	t.Helper()
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
 		t.Error(err)
@@ -56,6 +57,7 @@ func listSetEqual(a, b []string) bool {
 }
 
 func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) func(state *terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
@@ -88,11 +90,11 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 }
 
 func TestAcc_GrantRole(t *testing.T) {
-	role1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	role2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	role3 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role3 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	basicChecks := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
@@ -110,7 +112,8 @@ func TestAcc_GrantRole(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// test settup + removing a role
 			baselineStep,
@@ -153,7 +156,7 @@ func TestAcc_GrantRole(t *testing.T) {
 				ResourceName:            "snowflake_role_grants.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"roles", "users"},
+				ImportStateVerifyIgnore: []string{"roles", "users", "enable_multiple_grants"},
 			},
 		},
 	})

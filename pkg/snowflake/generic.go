@@ -10,7 +10,7 @@ import (
 type EntityType string
 
 const (
-	ApiIntegrationType          EntityType = "API INTEGRATION"
+	APIIntegrationType          EntityType = "API INTEGRATION"
 	DatabaseType                EntityType = "DATABASE"
 	ManagedAccountType          EntityType = "MANAGED ACCOUNT"
 	ResourceMonitorType         EntityType = "RESOURCE MONITOR"
@@ -45,7 +45,7 @@ func (b *Builder) Rename(newName string) string {
 	return fmt.Sprintf(`ALTER %s "%s" RENAME TO "%s"`, b.entityType, b.name, newName)
 }
 
-// SettingBuilder is an interface for a builder that allows you to set key value pairs
+// SettingBuilder is an interface for a builder that allows you to set key value pairs.
 type SettingBuilder interface {
 	SetString(string, string)
 	SetStringList(string, []string)

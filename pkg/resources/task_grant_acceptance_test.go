@@ -13,7 +13,8 @@ func TestAcc_TaskGrant(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: taskGrantConfig(accName, 8),
@@ -45,6 +46,9 @@ func TestAcc_TaskGrant(t *testing.T) {
 				ResourceName:      "snowflake_task_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

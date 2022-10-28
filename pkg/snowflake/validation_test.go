@@ -3,10 +3,10 @@ package snowflake_test
 import (
 	"testing"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
-// TODO write a test for a candidate that's not castable to a string
+// TODO write a test for a candidate that's not castable to a string.
 func TestValidateIdentifier(t *testing.T) {
 	cases := []struct {
 		candidate string
@@ -16,6 +16,7 @@ func TestValidateIdentifier(t *testing.T) {
 		{"_1", true},
 		{"Aword", true},
 		{"azAZ09_$", true},
+		{"-30-Ab-", true},
 		{"invalidcharacter!", false},
 		{"1startwithnumber", false},
 		{"$startwithdollar", false},
@@ -23,7 +24,7 @@ func TestValidateIdentifier(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.candidate, func(t *testing.T) {
-			_, errs := snowflake.ValidateIdentifier(tc.candidate)
+			_, errs := snowflake.ValidateIdentifier(tc.candidate, []string{})
 			actual := len(errs) == 0
 
 			if actual == tc.valid {

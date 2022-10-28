@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/validation"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
 )
 
@@ -37,7 +37,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future pipe.",
 		Default:      "USAGE",
-		ValidateFunc: validation.ValidatePrivilege(validPipePrivileges.ToList(), true),
+		ValidateFunc: validation.StringInSlice(validPipePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
 	"roles": {
@@ -45,14 +45,12 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
 		Description: "Grants privilege to these roles.",
-		ForceNew:    true,
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When this is set to true and a schema_name is provided, apply this grant on all future pipes in the given schema. When this is true and no schema_name is provided apply this grant on all future pipes in the given database. The pipe_name field must be unset in order to use on_future.",
 		Default:     false,
-		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -61,15 +59,23 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 }
 
-// PipeGrant returns a pointer to the resource representing a pipe grant
+// PipeGrant returns a pointer to the resource representing a pipe grant.
 func PipeGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
 			Create: CreatePipeGrant,
 			Read:   ReadPipeGrant,
 			Delete: DeletePipeGrant,
+			Update: UpdatePipeGrant,
 
 			Schema: pipeGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -80,7 +86,7 @@ func PipeGrant() *TerraformGrantResource {
 	}
 }
 
-// CreatePipeGrant implements schema.CreateFunc
+// CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	var pipeName string
 	if name, ok := d.GetOk("pipe_name"); ok {
@@ -129,7 +135,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipeGrant(d, meta)
 }
 
-// ReadPipeGrant implements schema.ReadFunc
+// ReadPipeGrant implements schema.ReadFunc.
 func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -179,7 +185,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	return readGenericGrant(d, meta, pipeGrantSchema, builder, futurePipesEnabled, validPipePrivileges)
 }
 
-// DeletePipeGrant implements schema.DeleteFunc
+// DeletePipeGrant implements schema.DeleteFunc.
 func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
@@ -198,4 +204,54 @@ func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
 	}
 	return deleteGenericGrant(d, meta, builder)
+}
+
+// UpdatePipeGrant implements schema.UpdateFunc.
+func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
+	// for now the only thing we can update are roles or shares
+	// if nothing changed, nothing to update and we're done
+	if !d.HasChanges("roles") {
+		return nil
+	}
+
+	rolesToAdd := []string{}
+	rolesToRevoke := []string{}
+
+	if d.HasChange("roles") {
+		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
+	}
+
+	grantID, err := grantIDFromString(d.Id())
+	if err != nil {
+		return err
+	}
+
+	dbName := grantID.ResourceName
+	schemaName := grantID.SchemaName
+	pipeName := grantID.ObjectName
+	futurePipes := (pipeName == "")
+
+	// create the builder
+	var builder snowflake.GrantBuilder
+	if futurePipes {
+		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+	} else {
+		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+	}
+
+	// first revoke
+	err = deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
+	if err != nil {
+		return err
+	}
+	// then add
+	err = createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
+	if err != nil {
+		return err
+	}
+
+	// Done, refresh state
+	return ReadPipeGrant(d, meta)
 }

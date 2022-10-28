@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccFileFormats(t *testing.T) {
+func TestAcc_FileFormats(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	fileFormatName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormats(databaseName, schemaName, fileFormatName),
@@ -64,7 +65,6 @@ func fileFormats(databaseName string, schemaName string, fileFormatName string) 
 		null_if = ["NULL"]
 		error_on_column_count_mismatch = true
 		replace_invalid_characters = true
-		validate_utf8 = false
 		empty_field_as_null = false 
 		skip_byte_order_mark = false
 		encoding = "UTF-16"

@@ -24,26 +24,29 @@ resource snowflake_role role {
 
 ### Required
 
-- **name** (String)
+- `name` (String)
 
 ### Optional
 
-- **comment** (String)
-- **id** (String) The ID of this resource.
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `comment` (String)
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--tag"></a>
 ### Nested Schema for `tag`
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

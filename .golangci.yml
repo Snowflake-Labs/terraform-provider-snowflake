@@ -5,3 +5,4 @@ run:
       - whitespace
       - unparam
       - scopelint
+      - godot

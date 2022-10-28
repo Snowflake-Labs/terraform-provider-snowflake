@@ -1,4 +1,4 @@
-resource "snowflake_schema" "db" {
+resource "snowflake_database" "db" {
   name                = "MYDB"
   data_retention_days = 1
 }
@@ -13,6 +13,7 @@ resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
   database = snowflake_database.db.name
   schema   = snowflake_schema.schema.name
+  language = "JAVASCRIPT"
   arguments {
     name = "arg1"
     type = "varchar"

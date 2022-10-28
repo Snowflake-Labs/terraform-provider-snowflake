@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
@@ -138,7 +138,7 @@ var samlIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// SAMLIntegration returns a pointer to the resource representing a SAML2 security integration
+// SAMLIntegration returns a pointer to the resource representing a SAML2 security integration.
 func SAMLIntegration() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateSAMLIntegration,
@@ -153,7 +153,7 @@ func SAMLIntegration() *schema.Resource {
 	}
 }
 
-// CreateSAMLIntegration implements schema.CreateFunc
+// CreateSAMLIntegration implements schema.CreateFunc.
 func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -218,7 +218,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadSAMLIntegration(d, meta)
 }
 
-// ReadSAMLIntegration implements schema.ReadFunc
+// ReadSAMLIntegration implements schema.ReadFunc.
 func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -382,7 +382,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// UpdateSAMLIntegration implements schema.UpdateFunc
+// UpdateSAMLIntegration implements schema.UpdateFunc.
 func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
@@ -470,7 +470,7 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	return ReadSAMLIntegration(d, meta)
 }
 
-// DeleteSAMLIntegration implements schema.DeleteFunc
+// DeleteSAMLIntegration implements schema.DeleteFunc.
 func DeleteSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource("", snowflake.SamlIntegration)(d, meta)
 }

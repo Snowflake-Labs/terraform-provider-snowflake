@@ -6,9 +6,9 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/resources"
-	. "github.com/chanzuckerberg/terraform-provider-snowflake/pkg/testhelpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -140,6 +140,22 @@ func TestFutureExternalTableGrantCreate(t *testing.T) {
 		expectReadFutureExternalTableDatabaseGrant(mock)
 		err := resources.CreateExternalTableGrant(d, db)
 		b.NoError(err)
+	})
+
+	c := require.New(t)
+
+	in = map[string]interface{}{
+		"database_name":       "test-db",
+		"external_table_name": "test-table",
+		"privilege":           "SELECT",
+		"roles":               []interface{}{"test-role-1", "test-role-2"},
+		"with_grant_option":   false,
+	}
+	d = schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, in)
+	c.NotNil(d)
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		err := resources.CreateExternalTableGrant(d, db)
+		c.Error(err)
 	})
 }
 

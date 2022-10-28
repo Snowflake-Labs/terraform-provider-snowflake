@@ -29,30 +29,33 @@ resource snowflake_schema schema {
 
 ### Required
 
-- **database** (String) The database in which to create the schema.
-- **name** (String) Specifies the identifier for the schema; must be unique for the database in which the schema is created.
+- `database` (String) The database in which to create the schema.
+- `name` (String) Specifies the identifier for the schema; must be unique for the database in which the schema is created.
 
 ### Optional
 
-- **comment** (String) Specifies a comment for the schema.
-- **data_retention_days** (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.
-- **id** (String) The ID of this resource.
-- **is_managed** (Boolean) Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.
-- **is_transient** (Boolean) Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
-- **tag** (Block List) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `comment` (String) Specifies a comment for the schema.
+- `data_retention_days` (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.
+- `is_managed` (Boolean) Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.
+- `is_transient` (Boolean) Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--tag"></a>
 ### Nested Schema for `tag`
 
 Required:
 
-- **name** (String) Tag name, e.g. department.
-- **value** (String) Tag value, e.g. marketing_info.
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
 
 Optional:
 
-- **database** (String) Name of the database that the tag was created in.
-- **schema** (String) Name of the schema that the tag was created in.
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 

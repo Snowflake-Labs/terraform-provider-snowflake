@@ -13,21 +13,15 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_external_table_grant grant {
-  database_name       = "db"
+resource "snowflake_external_table_grant" "grant" {
+  database_name       = "database"
   schema_name         = "schema"
   external_table_name = "external_table"
 
-  privilege = "select"
-  roles = [
-    "role1",
-    "role2",
-  ]
+  privilege = "SELECT"
+  roles = ["role1", "role2"]
 
-  shares = [
-    "share1",
-    "share2",
-  ]
+  shares = ["share1", "share2"]
 
   on_future         = false
   with_grant_option = false
@@ -39,18 +33,22 @@ resource snowflake_external_table_grant grant {
 
 ### Required
 
-- **database_name** (String) The name of the database containing the current or future external tables on which to grant privileges.
-- **schema_name** (String) The name of the schema containing the current or future external tables on which to grant privileges.
+- `database_name` (String) The name of the database containing the current or future external tables on which to grant privileges.
 
 ### Optional
 
-- **external_table_name** (String) The name of the external table on which to grant privileges immediately (only valid if on_future is false).
-- **id** (String) The ID of this resource.
-- **on_future** (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.
-- **privilege** (String) The privilege to grant on the current or future external table.
-- **roles** (Set of String) Grants privilege to these roles.
-- **shares** (Set of String) Grants privilege to these shares (only valid if on_future is false).
-- **with_grant_option** (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `external_table_name` (String) The name of the external table on which to grant privileges immediately (only valid if on_future is false).
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.
+- `privilege` (String) The privilege to grant on the current or future external table.
+- `roles` (Set of String) Grants privilege to these roles.
+- `schema_name` (String) The name of the schema containing the current or future external tables on which to grant privileges.
+- `shares` (Set of String) Grants privilege to these shares (only valid if on_future is false).
+- `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

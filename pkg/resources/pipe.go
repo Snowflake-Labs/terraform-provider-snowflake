@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -98,7 +98,7 @@ func Pipe() *schema.Resource {
 }
 
 func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	// standardise line endings
+	// standardize line endings
 	old = strings.ReplaceAll(old, "\r\n", "\n")
 	new = strings.ReplaceAll(new, "\r\n", "\n")
 
@@ -112,8 +112,8 @@ type pipeID struct {
 	PipeName     string
 }
 
-//String() takes in a pipeID object and returns a pipe-delimited string:
-//DatabaseName|SchemaName|PipeName
+// String() takes in a pipeID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|PipeName.
 func (si *pipeID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
@@ -128,13 +128,13 @@ func (si *pipeID) String() (string, error) {
 }
 
 // pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
-// and returns a pipeID object
+// and returns a pipeID object.
 func pipeIDFromString(stringID string) (*pipeID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = pipeIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Not CSV compatible")
+		return nil, fmt.Errorf("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
@@ -152,7 +152,7 @@ func pipeIDFromString(stringID string) (*pipeID, error) {
 	return pipeResult, nil
 }
 
-// CreatePipe implements schema.CreateFunc
+// CreatePipe implements schema.CreateFunc.
 func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -207,7 +207,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipe(d, meta)
 }
 
-// ReadPipe implements schema.ReadFunc
+// ReadPipe implements schema.ReadFunc.
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pipeID, err := pipeIDFromString(d.Id())
@@ -290,7 +290,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdatePipe implements schema.UpdateFunc
+// UpdatePipe implements schema.UpdateFunc.
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	pipeID, err := pipeIDFromString(d.Id())
 	if err != nil {
@@ -329,7 +329,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	return ReadPipe(d, meta)
 }
 
-// DeletePipe implements schema.DeleteFunc
+// DeletePipe implements schema.DeleteFunc.
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	pipeID, err := pipeIDFromString(d.Id())
@@ -351,30 +351,4 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// PipeExists implements schema.ExistsFunc
-func PipeExists(data *schema.ResourceData, meta interface{}) (bool, error) {
-	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(data.Id())
-	if err != nil {
-		return false, err
-	}
-
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
-
-	q := snowflake.Pipe(pipe, dbName, schema).Show()
-	rows, err := db.Query(q)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		return true, nil
-	}
-
-	return false, nil
 }

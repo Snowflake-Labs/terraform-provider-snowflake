@@ -24,27 +24,24 @@ data "snowflake_functions" "current" {
 
 ### Required
 
-- **database** (String) The database from which to return the schemas from.
-- **schema** (String) The schema from which to return the functions from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `database` (String) The database from which to return the schemas from.
+- `schema` (String) The schema from which to return the functions from.
 
 ### Read-Only
 
-- **functions** (List of Object) The functions in the schema (see [below for nested schema](#nestedatt--functions))
+- `functions` (List of Object) The functions in the schema (see [below for nested schema](#nestedatt--functions))
+- `id` (String) The ID of this resource.
 
 <a id="nestedatt--functions"></a>
 ### Nested Schema for `functions`
 
 Read-Only:
 
-- **argument_types** (List of String)
-- **comment** (String)
-- **database** (String)
-- **name** (String)
-- **return_type** (String)
-- **schema** (String)
+- `argument_types` (List of String)
+- `comment` (String)
+- `database` (String)
+- `name` (String)
+- `return_type` (String)
+- `schema` (String)
 
 

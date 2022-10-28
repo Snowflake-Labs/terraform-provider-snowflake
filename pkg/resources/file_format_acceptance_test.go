@@ -12,7 +12,8 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigCSV(accName),
@@ -39,7 +40,6 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "null_if.0", "NULL"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "error_on_column_count_mismatch", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_file_format.test", "validate_utf8", "false"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "empty_field_as_null", "false"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "skip_byte_order_mark", "false"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "encoding", "UTF-16"),
@@ -54,7 +54,8 @@ func TestAcc_FileFormatJSON(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigJSON(accName),
@@ -89,7 +90,8 @@ func TestAcc_FileFormatAvro(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigAvro(accName),
@@ -113,7 +115,8 @@ func TestAcc_FileFormatORC(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigORC(accName),
@@ -136,7 +139,8 @@ func TestAcc_FileFormatParquet(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigParquet(accName),
@@ -161,7 +165,8 @@ func TestAcc_FileFormatXML(t *testing.T) {
 	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigXML(accName),
@@ -217,7 +222,6 @@ resource "snowflake_file_format" "test" {
 	null_if = ["NULL"]
 	error_on_column_count_mismatch = true
 	replace_invalid_characters = true
-	validate_utf8 = false
 	empty_field_as_null = false 
 	skip_byte_order_mark = false
 	encoding = "UTF-16"

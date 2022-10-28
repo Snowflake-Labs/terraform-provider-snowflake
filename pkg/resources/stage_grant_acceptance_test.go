@@ -12,11 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccStageGrant_defaults(t *testing.T) {
+func TestAcc_StageGrant_defaults(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: stageGrantConfig(name),
@@ -35,6 +36,9 @@ func TestAccStageGrant_defaults(t *testing.T) {
 				ResourceName:      "snowflake_stage_grant.g",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
@@ -84,7 +88,8 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: stageGrantConfigFuture(t, databaseName, schemaName, roleName),
@@ -101,7 +106,8 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 	})
 }
 
-func stageGrantConfigFuture(t *testing.T, database_name, schema_name, role string) string {
+func stageGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
+	t.Helper()
 	r := require.New(t)
 
 	config := `
@@ -131,8 +137,8 @@ resource "snowflake_stage_grant" "test" {
 	out := bytes.NewBuffer(nil)
 	tmpl := template.Must(template.New("view)").Parse(config))
 	err := tmpl.Execute(out, map[string]string{
-		"database_name": database_name,
-		"schema_name":   schema_name,
+		"database_name": databaseName,
+		"schema_name":   schemaName,
 		"role_name":     role,
 	})
 	r.NoError(err)

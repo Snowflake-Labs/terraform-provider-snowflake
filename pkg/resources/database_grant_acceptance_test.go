@@ -11,6 +11,7 @@ import (
 )
 
 func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(*terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 
@@ -31,13 +32,14 @@ func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(
 	}
 }
 
-func TestAccDatabaseGrant_basic(t *testing.T) {
+func TestAcc_DatabaseGrant(t *testing.T) {
 	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: providers(),
+		Providers:    providers(),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: databaseGrantConfig(dbName, roleName, shareName),
@@ -56,6 +58,9 @@ func TestAccDatabaseGrant_basic(t *testing.T) {
 				ResourceName:      "snowflake_database_grant.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
