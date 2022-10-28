@@ -330,9 +330,25 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set(AllowOverlappingExecution, t.AllowOverlappingExecution)
+	allowOverlappingExecutionValue, err := t.AllowOverlappingExecution.Value()
 	if err != nil {
 		return err
+	}
+
+	if allowOverlappingExecutionValue != nil && allowOverlappingExecutionValue.(string) != "null" {
+		allowOverlappingExecution, err := strconv.ParseBool(allowOverlappingExecutionValue.(string))
+		if err != nil {
+			return err
+		}
+		err = d.Set("allow_overlapping_execution", allowOverlappingExecution)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = d.Set("allow_overlapping_execution", false)
+		if err != nil {
+			return err
+		}
 	}
 
 	// The "DESCRIBE TASK ..." command returns the string "null" for error_integration

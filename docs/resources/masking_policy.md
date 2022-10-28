@@ -42,10 +42,7 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-### Read-Only
-
-- **qualified_name** (String) Specifies the qualified identifier for the masking policy.
+- `qualified_name` (String) Specifies the qualified identifier for the masking policy.
 
 ## Import
 
