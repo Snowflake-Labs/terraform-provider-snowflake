@@ -23,6 +23,7 @@ func TestValidateIdentifier(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.candidate, func(t *testing.T) {
 			_, errs := snowflake.ValidateIdentifier(tc.candidate, []string{})
 			actual := len(errs) == 0

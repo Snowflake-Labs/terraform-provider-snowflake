@@ -276,7 +276,6 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	found := false
 	for _, fg := range failoverGroups {
-
 		if fg.Name.String == name && fg.AccountLocator.String == accountLocator {
 			found = true
 			err = d.Set("name", fg.Name.String)
@@ -300,7 +299,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// this is basically a hack to get around the fact that the API returns the object types in a different order than what is set
-			// this logic could also be put in the diff supress function, but I think it is better to do it here
+			// this logic could also be put in the diff suppress function, but I think it is better to do it here.
 			currentObjectTypeList := d.Get("object_types").(*schema.Set).List()
 			if len(currentObjectTypeList) != len(objectTypes) {
 				log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)

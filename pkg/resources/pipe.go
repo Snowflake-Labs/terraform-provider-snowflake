@@ -61,12 +61,12 @@ var pipeSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.",
 	},
-	"integration": &schema.Schema{
+	"integration": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies an integration for the pipe.",
 	},
-	"notification_channel": &schema.Schema{
+	"notification_channel": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.",
@@ -76,7 +76,7 @@ var pipeSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the pipe.",
 	},
-	"error_integration": &schema.Schema{
+	"error_integration": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the name of the notification integration used for error notifications.",

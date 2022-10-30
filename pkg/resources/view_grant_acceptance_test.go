@@ -32,7 +32,6 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 }
 
 func TestAcc_ViewGrantShares(t *testing.T) {
-
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

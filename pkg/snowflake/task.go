@@ -433,7 +433,6 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 			return nil, err
 		}
 		t = append(t, r)
-
 	}
 	return t, nil
 }

@@ -24,6 +24,7 @@ func TestStageGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	for _, testPriv := range []string{"USAGE", "READ"} {
+		testPriv := testPriv
 		in := map[string]interface{}{
 			"stage_name":        "test-stage",
 			"schema_name":       "test-schema",

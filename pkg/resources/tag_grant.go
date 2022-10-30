@@ -193,7 +193,6 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return ReadTagGrant(d, meta)
-
 }
 
 // DeleteTagGrant implements schema.DeleteFunc.

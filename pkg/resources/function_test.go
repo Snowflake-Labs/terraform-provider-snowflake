@@ -20,18 +20,18 @@ func prepDummyFunctionResource(t *testing.T) *schema.ResourceData {
 	argument1 := map[string]interface{}{"name": "data", "type": "varchar"}
 	argument2 := map[string]interface{}{"name": "event_dt", "type": "date"}
 	in := map[string]interface{}{
-		"name":                 "my_funct",
-		"database":             "my_db",
-		"schema":               "my_schema",
-		"arguments":            []interface{}{argument1, argument2},
-		"language":             "PYTHON",
-		"null_input_behaviour": "CALLED ON NULL INPUT",
-		"return_behavior":      "VOLATILE",
-		"runtime_version":      "3.8",
-		"packages":             []interface{}{"numpy", "pandas"},
-		"handler":              "add_py",
-		"return_type":          "varchar",
-		"statement":            functionBody, //var message = DATA + DATA;return message
+		"name":                "my_funct",
+		"database":            "my_db",
+		"schema":              "my_schema",
+		"arguments":           []interface{}{argument1, argument2},
+		"language":            "PYTHON",
+		"null_input_behavior": "CALLED ON NULL INPUT",
+		"return_behavior":     "VOLATILE",
+		"runtime_version":     "3.8",
+		"packages":            []interface{}{"numpy", "pandas"},
+		"handler":             "add_py",
+		"return_type":         "varchar",
+		"statement":           functionBody, //var message = DATA + DATA;return message
 	}
 	d := function(t, "my_db|my_schema|my_funct|VARCHAR-DATE", in)
 	return d

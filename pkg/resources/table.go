@@ -297,7 +297,6 @@ type columnIdentity struct {
 func (identity *columnIdentity) toSnowflakeColumnIdentity() *snowflake.ColumnIdentity {
 	snowIdentity := snowflake.ColumnIdentity{}
 	return snowIdentity.WithStartNum(identity.startNum).WithStep(identity.stepNum)
-
 }
 
 type column struct {
@@ -412,7 +411,6 @@ func getColumnDefault(def map[string]interface{}) *columnDefault {
 
 func getColumnIdentity(identity map[string]interface{}) *columnIdentity {
 	if len(identity) > 0 {
-
 		startNum := identity["start_num"].(int)
 		stepNum := identity["step_num"].(int)
 		return &columnIdentity{startNum, stepNum}
@@ -476,7 +474,6 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 	snowPk := snowflake.PrimaryKey{}
 	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
-
 }
 
 // CreateTable implements schema.CreateFunc.
@@ -682,22 +679,18 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		for _, cA := range changed {
-
 			if cA.changedDataType {
 				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 			if cA.changedNullConstraint {
-
 				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 			if cA.dropedDefault {
@@ -705,7 +698,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 			if cA.changedComment {
@@ -713,7 +705,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 			if cA.changedMaskingPolicy {
@@ -721,7 +712,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				err := snowflake.Exec(db, q)
 				if err != nil {
 					return errors.Wrapf(err, "error changing property on %v", d.Id())
-
 				}
 			}
 		}

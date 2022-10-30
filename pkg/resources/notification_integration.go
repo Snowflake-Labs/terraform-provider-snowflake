@@ -13,17 +13,17 @@ import (
 
 var notificationIntegrationSchema = map[string]*schema.Schema{
 	// The first part of the schema is shared between all integration vendors
-	"name": &schema.Schema{
+	"name": {
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
 	},
-	"enabled": &schema.Schema{
+	"enabled": {
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
 	},
-	"type": &schema.Schema{
+	"type": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      "QUEUE",
@@ -31,7 +31,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Description:  "A type of integration",
 		ForceNew:     true,
 	},
-	"direction": &schema.Schema{
+	"direction": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
@@ -39,24 +39,24 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
-	"notification_provider": &schema.Schema{
+	"notification_provider": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)",
 		ForceNew:     true,
 	},
-	"azure_storage_queue_primary_uri": &schema.Schema{
+	"azure_storage_queue_primary_uri": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The queue ID for the Azure Queue Storage queue created for Event Grid notifications",
 	},
-	"azure_tenant_id": &schema.Schema{
+	"azure_tenant_id": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The ID of the Azure Active Directory tenant used for identity management",
 	},
-	"aws_sqs_external_id": &schema.Schema{
+	"aws_sqs_external_id": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role",
@@ -66,17 +66,17 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
-	"aws_sqs_arn": &schema.Schema{
+	"aws_sqs_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS SQS queue ARN for notification integration to connect to",
 	},
-	"aws_sqs_role_arn": &schema.Schema{
+	"aws_sqs_role_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS IAM role ARN for notification integration to assume",
 	},
-	"aws_sns_external_id": &schema.Schema{
+	"aws_sns_external_id": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role",
@@ -86,32 +86,32 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
 	},
-	"aws_sns_topic_arn": &schema.Schema{
+	"aws_sns_topic_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS SNS Topic ARN for notification integration to connect to",
 	},
-	"aws_sns_role_arn": &schema.Schema{
+	"aws_sns_role_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS IAM role ARN for notification integration to assume",
 	},
-	"comment": &schema.Schema{
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "A comment for the integration",
 	},
-	"created_on": &schema.Schema{
+	"created_on": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Date and time when the notification integration was created.",
 	},
-	"gcp_pubsub_subscription_name": &schema.Schema{
+	"gcp_pubsub_subscription_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
 	},
-	"gcp_pubsub_service_account": &schema.Schema{
+	"gcp_pubsub_service_account": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The GCP service account identifier that Snowflake will use when assuming the GCP role",

@@ -55,6 +55,7 @@ from bar;`
 		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := NewViewSelectStatementExtractor(tt.args.input)
 			got, err := e.Extract()
@@ -119,6 +120,7 @@ from bar;`
 		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := NewViewSelectStatementExtractor(tt.args.input)
 			got, err := e.ExtractMaterializedView()
@@ -152,6 +154,7 @@ func TestViewSelectStatementExtractor_consumeToken(t *testing.T) {
 		{"basic - not found", fields{[]rune("fob"), 0}, args{"foo"}, 0},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := &ViewSelectStatementExtractor{
 				input: tt.fields.input,
@@ -181,6 +184,7 @@ func TestViewSelectStatementExtractor_consumeSpace(t *testing.T) {
 		{"middle", fields{[]rune("foo \t\n bar"), 3}, 7},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			fmt.Println(tt.name)
 			e := &ViewSelectStatementExtractor{
@@ -210,6 +214,7 @@ func TestViewSelectStatementExtractor_consumeComment(t *testing.T) {
 		{"escaped", fields{[]rune(`comment='fo\'o'`), 0}, 15},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := &ViewSelectStatementExtractor{
 				input: tt.fields.input,
@@ -239,6 +244,7 @@ func TestViewSelectStatementExtractor_consumeClusterBy(t *testing.T) {
 		{"double", fields{[]rune("(c1, c2)"), 0}, 8},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := &ViewSelectStatementExtractor{
 				input: tt.fields.input,
