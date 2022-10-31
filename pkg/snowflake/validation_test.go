@@ -20,7 +20,7 @@ func TestValidateIdentifier(t *testing.T) {
 		{"invalidcharacter!", false},
 		{"1startwithnumber", false},
 		{"$startwithdollar", false},
-		{"[]includingBraket", true},
+		{"[]includingBracket", true},
 	}
 
 	for _, tc := range cases {
