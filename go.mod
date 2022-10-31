@@ -109,6 +109,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-exclude github.co/mattn/go-ieproxy v0.0.3
+exclude github.co/mattn/go-ieproxy v0.0.9
 
 exclude github.co/mattn/go-ieproxy v0.0.2
