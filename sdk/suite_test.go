@@ -17,11 +17,7 @@ type testSuite struct {
 }
 
 func (ts *testSuite) SetupSuite() {
-	client, err := NewClient(&Config{
-		Account:  "YXA30390",
-		User:     "WU_LONG",
-		Password: "Test1234567890",
-	})
+	client, err := NewClient(nil)
 	if err != nil {
 		ts.T().Fatalf("new client: %v", err)
 	}

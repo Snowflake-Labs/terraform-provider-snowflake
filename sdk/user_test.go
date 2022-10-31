@@ -6,8 +6,8 @@ import (
 
 func (ts *testSuite) createUser() (*User, error) {
 	options := UserCreateOptions{
-		Name:     "SNOWFLAKE_TEST",
-		Password: String("Test1234567890"),
+		Name:     "USER_TEST",
+		Password: String("Test123456"),
 		UserProperties: &UserProperties{
 			FirstName:             String("John"),
 			LastName:              String("Hi"),
@@ -20,9 +20,14 @@ func (ts *testSuite) createUser() (*User, error) {
 }
 
 func (ts *testSuite) TestListUser() {
-	users, err := ts.client.Users.List(context.Background(), UserListOptions{Pattern: "ALON%"})
+	user, err := ts.createUser()
+	ts.NoError(err)
+
+	users, err := ts.client.Users.List(context.Background(), UserListOptions{Pattern: "USER%"})
 	ts.NoError(err)
 	ts.Equal(1, len(users))
+
+	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
 }
 
 func (ts *testSuite) TestReadUser() {

@@ -100,23 +100,6 @@ func (o UserListOptions) validate() error {
 	return nil
 }
 
-// UserCreateOptions represents the options for creating an user.
-type UserCreateOptions struct {
-	*UserProperties
-
-	// Required: Identifier for the user; must be unique for your account.
-	Name string
-	// Optional: The password for the user must be enclosed in single or double quotes
-	Password *string
-}
-
-func (o UserCreateOptions) validate() error {
-	if o.Name == "" {
-		return errors.New("name must not be empty")
-	}
-	return nil
-}
-
 type UserProperties struct {
 	// Optional: Name that the user enters to log into the system.
 	// Login names for users must be unique across your entire account.
@@ -153,6 +136,23 @@ type UserProperties struct {
 
 	// Optional: Specifies a comment for the user.
 	Comment *string
+}
+
+// UserCreateOptions represents the options for creating an user.
+type UserCreateOptions struct {
+	*UserProperties
+
+	// Required: Identifier for the user; must be unique for your account.
+	Name string
+	// Optional: The password for the user must be enclosed in single or double quotes
+	Password *string
+}
+
+func (o UserCreateOptions) validate() error {
+	if o.Name == "" {
+		return errors.New("name must not be empty")
+	}
+	return nil
 }
 
 // UserUpdateOptions represents the options for updating an user.

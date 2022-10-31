@@ -26,6 +26,7 @@ func DefaultConfig() *Config {
 	config := &Config{
 		Account:   os.Getenv("SNOWFLAKE_ACCOUNT"),
 		User:      os.Getenv("SNOWFLAKE_USER"),
+		Password:  os.Getenv("SNOWFLAKE_PASSWORD"),
 		Region:    os.Getenv("SNOWFLAKE_REGION"),
 		Role:      os.Getenv("SNOWFLAKE_ROLE"),
 		Host:      os.Getenv("SNOWFLAKE_HOST"),
@@ -43,6 +44,7 @@ type Client struct {
 	conn *sql.DB
 
 	Users Users
+	Roles Roles
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -105,6 +107,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	}
 
 	client.Users = &users{client: client}
+	client.Roles = &roles{client: client}
 
 	return client, nil
 }
@@ -120,5 +123,5 @@ func (c *Client) Exec(ctx context.Context, query string) (sql.Result, error) {
 }
 
 func (c *Client) Query(ctx context.Context, query string) (*sqlx.Rows, error) {
-	return sqlx.NewDb(c.conn, "snowflake").Unsafe().QueryxContext(ctx, query)
+	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, query)
 }
