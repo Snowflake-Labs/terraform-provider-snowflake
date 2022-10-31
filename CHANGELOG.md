@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.0...v0.49.1) (2022-10-31)
+
+
+### BugFixes
+
+* ie-proxy for go build ([#1318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1318)) ([c55c101](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c55c10178520a9d668ee7b64145a4855a40d9db5))
+
 ## [0.49.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.48.0...v0.49.0) (2022-10-31)
 
 
