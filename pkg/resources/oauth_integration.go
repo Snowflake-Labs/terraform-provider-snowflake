@@ -33,6 +33,14 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI.",
 	},
+	"oauth_client_type": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the type of client being registered. Snowflake supports both confidential and public clients.",
+		ValidateFunc: validation.StringInSlice([]string{
+			"CONFIDENTIAL", "PUBLIC",
+		}, false),
+	},
 	"oauth_issue_refresh_tokens": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -104,7 +112,9 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("oauth_redirect_uri"); ok {
 		stmt.SetString(`OAUTH_REDIRECT_URI`, d.Get("oauth_redirect_uri").(string))
 	}
-
+	if _, ok := d.GetOk("oauth_client_type"); ok {
+		stmt.SetString(`OAUTH_CLIENT_TYPE`, d.Get("oauth_client_type").(string))
+	}
 	if _, ok := d.GetOk("oauth_issue_refresh_tokens"); ok {
 		stmt.SetBool(`OAUTH_ISSUE_REFRESH_TOKENS`, d.Get("oauth_issue_refresh_tokens").(bool))
 	}
@@ -233,7 +243,9 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrap(err, "unable to set OAuth redirect URI for security integration")
 			}
 		case "OAUTH_CLIENT_TYPE":
-			// Only used for custom OAuth clients (not supported yet)
+			if err = d.Set("oauth_client_type", v.(string)); err != nil {
+				return errors.Wrap(err, "unable to set OAuth client type for security integration")
+			}
 		case "OAUTH_ENFORCE_PKCE":
 			// Only used for custom OAuth clients (not supported yet)
 		case "OAUTH_AUTHORIZATION_ENDPOINT":
@@ -272,6 +284,11 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("oauth_redirect_uri") {
 		runSetStatement = true
 		stmt.SetString(`OAUTH_REDIRECT_URI`, d.Get("oauth_redirect_uri").(string))
+	}
+
+	if d.HasChange("oauth_client_type") {
+		runSetStatement = true
+		stmt.SetString(`OAUTH_CLIENT_TYPE`, d.Get("oauth_client_type").(string))
 	}
 
 	if d.HasChange("oauth_issue_refresh_tokens") {
