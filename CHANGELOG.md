@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.49.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.48.0...v0.49.0) (2022-10-31)
+
+
+### Features
+
+* add column masking policy specification ([#796](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/796)) ([c1e763c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c1e763c953ba52292a0473341cdc0c03b6ff83ed))
+* add failover groups ([#1302](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1302)) ([687742c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/687742cc3bd81f1d94de3c28f272becf893e365e))
+* Added Query Acceleration for Warehouses ([#1239](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1239)) ([ad4ce91](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ad4ce919b81a8f4e93835244be0a98cb3e20204b))
+* task with allow_overlapping_execution option ([#1291](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1291)) ([8393763](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/839376316478ab7903e9e4352e3f17665b84cf60))
+
+
+### Misc
+
+* **deps:** bump github.com/hashicorp/terraform-plugin-sdk/v2 ([#1280](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1280)) ([657a180](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/657a1800f9394c5d03cc356cf92ed13d36e9f25b))
+* **deps:** bump github.com/snowflakedb/gosnowflake ([#1304](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1304)) ([fb61921](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb61921f0f28b0745279063402feb5ff95d8cca4))
+* **deps:** bump github.com/stretchr/testify from 1.8.0 to 1.8.1 ([#1300](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1300)) ([2f3c612](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2f3c61237d21bc3affadf1f0e08234f5c404dde6))
+* **deps:** bump golang.org/x/tools from 0.1.12 to 0.2.0 ([#1295](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1295)) ([5de7a51](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5de7a5188089e7bf55b6af679ebff43f98474f78))
+* update docs ([#1297](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1297)) ([495558c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/495558c57ed2158fd5f1ea26edd111de902fd607))
+
+
+### BugFixes
+
+* golangci.yml to keep quality of codes ([#1296](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1296)) ([792665f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/792665f7fea6cbe3c5df4906ba298efd2f6727a1))
+* run check docs ([#1306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1306)) ([53698c9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53698c9e7d020f1711e42d024139132ecee1c09f))
+* update doc ([#1305](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1305)) ([4a82c67](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4a82c67baf7ef95129e76042ff46d8870081f6d1))
+* weird formatting ([526b852](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/526b852cf3b2d40a71f0f8fad359b21970c2946e))
+
 ## [0.48.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.47.0...v0.48.0) (2022-10-24)
 
 
