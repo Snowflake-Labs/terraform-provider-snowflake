@@ -158,7 +158,6 @@ func (r resourceUser) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 func (r resourceUser) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
 }
 
-
 // UserResource -
 type UserResource struct {
 	ID                    types.String `tfsdk:"id"`

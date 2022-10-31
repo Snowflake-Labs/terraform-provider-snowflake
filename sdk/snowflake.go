@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -28,6 +26,7 @@ func DefaultConfig() *Config {
 	config := &Config{
 		Account:   os.Getenv("SNOWFLAKE_ACCOUNT"),
 		User:      os.Getenv("SNOWFLAKE_USER"),
+		Password:  os.Getenv("SNOWFLAKE_PASSWORD"),
 		Region:    os.Getenv("SNOWFLAKE_REGION"),
 		Role:      os.Getenv("SNOWFLAKE_ROLE"),
 		Host:      os.Getenv("SNOWFLAKE_HOST"),
@@ -45,6 +44,7 @@ type Client struct {
 	conn *sql.DB
 
 	Users Users
+	Roles Roles
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -67,10 +67,10 @@ func NewClient(cfg *Config) (*Client, error) {
 		if cfg.Role != "" {
 			config.Role = cfg.Role
 		}
-		// If host is set trust it and do not use the region value
 		if cfg.Host != "" {
-			config.Region = ""
 			config.Host = cfg.Host
+			// if host is set trust it and do not use the region
+			config.Region = ""
 		}
 		if cfg.Warehouse != "" {
 			config.Warehouse = cfg.Warehouse
@@ -86,59 +86,42 @@ func NewClient(cfg *Config) (*Client, error) {
 		Warehouse: config.Warehouse,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
+		return nil, fmt.Errorf("build dsn for snowflake connection: %w", err)
 	}
 
-	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
-		s := fmt.Sprintf("[DEBUG] %s %v\n", msg, keyvals)
-		re := regexp.MustCompile(`\r?\n`)
-		log.Println(re.ReplaceAllString(s, " "))
+	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, fn string, kv ...interface{}) {
+		switch fn {
+		case "sql-conn-query", "sql-conn-exec":
+			log.Printf("[DEBUG] %s: %v", fn, kv)
+		default:
+			return
+		}
 	})
-
 	sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(&gosnowflake.SnowflakeDriver{}, instrumentedsql.WithLogger(logger)))
-
 	conn, err := sql.Open("snowflake-instrumented", dsn)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not open snowflake database.")
+		return nil, fmt.Errorf("open snowflake connection: %w", err)
 	}
-
 	client := &Client{
 		conn: conn,
 	}
+
 	client.Users = &users{client: client}
+	client.Roles = &roles{client: client}
+
 	return client, nil
-
-}
-func (c *Client) Exec(query string, args ...interface{}) (sql.Result, error) {
-	log.Print("[DEBUG] exec stmt ", query)
-	return c.conn.Exec(query, args...)
 }
 
-func (c *Client) ExecMulti(queries []string) error {
-	log.Print("[DEBUG] exec stmts ", queries)
-
-	tx, err := c.conn.Begin()
-	if err != nil {
-		return err
+func (c *Client) Close() {
+	if c.conn != nil {
+		c.conn.Close()
 	}
-
-	for _, query := range queries {
-		_, err = tx.Exec(query)
-		if err != nil {
-			return tx.Rollback()
-		}
-	}
-	return tx.Commit()
 }
 
-func (c *Client) QueryRow(stmt string) *sqlx.Row {
-	log.Print("[DEBUG] query stmt ", stmt)
-	sdb := sqlx.NewDb(c.conn, "snowflake").Unsafe()
-	return sdb.QueryRowx(stmt)
+func (c *Client) Exec(ctx context.Context, query string) (sql.Result, error) {
+	return c.conn.ExecContext(ctx, query)
 }
 
-func (c *Client) Query(stmt string) (*sqlx.Rows, error) {
-	log.Print("[DEBUG] query stmt ", stmt)
-	sdb := sqlx.NewDb(c.conn, "snowflake").Unsafe()
-	return sdb.Queryx(stmt)
+func (c *Client) Query(ctx context.Context, query string) (*sqlx.Rows, error) {
+	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, query)
 }
