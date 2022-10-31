@@ -22,7 +22,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"notify_users": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -118,7 +118,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	cb := snowflake.ResourceMonitor(name).Create()
 	// Set optionals
 	if v, ok := d.GetOk("notify_users"); ok {
-		cb.SetStringList("notify_users", expandStringList(v.([]interface{})))
+		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
 	}
 	if v, ok := d.GetOk("credit_quota"); ok {
 		cb.SetInt("credit_quota", v.(int))
