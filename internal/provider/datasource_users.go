@@ -111,23 +111,23 @@ type dsUsers struct {
 }
 
 type dsUsersData struct {
-	Pattern string `tfsdk:"pattern"`
-	Users []dsUserData `tfsdk:"users"`
+	Pattern string       `tfsdk:"pattern"`
+	Users   []dsUserData `tfsdk:"users"`
 }
 type dsUserData struct {
-	Name string `tfsdk:"name"`
-	LoginName string `tfsdk:"login_name"`
-	Comment string `tfsdk:"comment"`
-	Disabled bool `tfsdk:"disabled"`
-	DefaultWarehouse string `tfsdk:"default_warehouse"`
-	DefaultNamespace string `tfsdk:"default_namespace"`
-	DefaultRole string `tfsdk:"default_role"`
+	Name                  string   `tfsdk:"name"`
+	LoginName             string   `tfsdk:"login_name"`
+	Comment               string   `tfsdk:"comment"`
+	Disabled              bool     `tfsdk:"disabled"`
+	DefaultWarehouse      string   `tfsdk:"default_warehouse"`
+	DefaultNamespace      string   `tfsdk:"default_namespace"`
+	DefaultRole           string   `tfsdk:"default_role"`
 	DefaultSecondaryRoles []string `tfsdk:"default_secondary_roles"`
-	HasRsaPublicKey bool `tfsdk:"has_rsa_public_key"`
-	Email string `tfsdk:"email"`
-	DisplayName string `tfsdk:"display_name"`
-	FirstName string `tfsdk:"first_name"`
-	LastName string `tfsdk:"last_name"`
+	HasRsaPublicKey       bool     `tfsdk:"has_rsa_public_key"`
+	Email                 string   `tfsdk:"email"`
+	DisplayName           string   `tfsdk:"display_name"`
+	FirstName             string   `tfsdk:"first_name"`
+	LastName              string   `tfsdk:"last_name"`
 }
 
 func (d dsUsers) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
@@ -137,7 +137,7 @@ func (d dsUsers) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp
 		return
 	}
 
-	userList, err := d.p.client.Users.List(ctx, &sdk.UserListOptions {
+	userList, err := d.p.client.Users.List(ctx, sdk.UserListOptions{
 		Pattern: data.Pattern,
 	})
 	if err != nil {
@@ -146,19 +146,19 @@ func (d dsUsers) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp
 	}
 	for _, u := range userList {
 		data.Users = append(data.Users, dsUserData{
-			Name: u.Name,
-			LoginName: u.LoginName,
-			Comment: u.Comment,
-			Disabled: u.Disabled,
-			DefaultWarehouse: u.DefaultWarehouse,
-			DefaultNamespace: u.DefaultNamespace,
-			DefaultRole: u.DefaultRole,
+			Name:                  u.Name,
+			LoginName:             u.LoginName,
+			Comment:               u.Comment,
+			Disabled:              u.Disabled,
+			DefaultWarehouse:      u.DefaultWarehouse,
+			DefaultNamespace:      u.DefaultNamespace,
+			DefaultRole:           u.DefaultRole,
 			DefaultSecondaryRoles: u.DefaultSecondaryRoles,
-			HasRsaPublicKey: u.HasRsaPublicKey,
-			Email: u.Email,
-			DisplayName: u.DisplayName,
-			FirstName: u.FirstName,
-			LastName: u.LastName,
+			HasRsaPublicKey:       u.HasRsaPublicKey,
+			Email:                 u.Email,
+			DisplayName:           u.DisplayName,
+			FirstName:             u.FirstName,
+			LastName:              u.LastName,
 		})
 	}
 	resp.Diagnostics = resp.State.Set(ctx, &data)
