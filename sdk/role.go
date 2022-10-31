@@ -89,13 +89,6 @@ func (o RoleListOptions) validate() error {
 type RoleProperties struct {
 	// Optional: Specifies a comment for the role.
 	Comment *string
-
-	IsDefault       *string
-	IsCurrent       *string
-	IsInherited     *string
-	AssignedToUsers *int32
-	GrantedToRoles  *int32
-	GrantedRoles    *int32
 }
 
 // RoleCreateOptions represents the options for creating a role.
@@ -161,27 +154,8 @@ func (r *roles) Read(ctx context.Context, role string) (*Role, error) {
 
 func (r *roles) formatRoleProperties(properties *RoleProperties) string {
 	var s string
-
 	if properties.Comment != nil {
 		s = s + " comment='" + *properties.Comment + "'"
-	}
-	if properties.IsDefault != nil {
-		s = s + " is_default='" + *properties.IsDefault + "'"
-	}
-	if properties.IsCurrent != nil {
-		s = s + " is_current='" + *properties.IsCurrent + "'"
-	}
-	if properties.IsInherited != nil {
-		s = s + " is_inherited='" + *properties.IsInherited + "'"
-	}
-	if properties.AssignedToUsers != nil {
-		s = s + fmt.Sprintf(" assigned_to_users=%d", *properties.AssignedToUsers)
-	}
-	if properties.GrantedToRoles != nil {
-		s = s + fmt.Sprintf(" granted_to_roles=%d", *properties.GrantedToRoles)
-	}
-	if properties.GrantedRoles != nil {
-		s = s + fmt.Sprintf(" granted_roles=%d", *properties.GrantedRoles)
 	}
 	return s
 }

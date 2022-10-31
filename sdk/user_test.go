@@ -44,7 +44,6 @@ func (ts *testSuite) TestReadUser() {
 func (ts *testSuite) TestCreateUser() {
 	user, err := ts.createUser()
 	ts.NoError(err)
-	ts.T().Logf("secondary roles: %v", user.DefaultSecondaryRoles)
 	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
 }
 

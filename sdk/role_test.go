@@ -22,3 +22,36 @@ func (ts *testSuite) TestListRole() {
 
 	ts.NoError(ts.client.Roles.Delete(context.Background(), role.Name))
 }
+
+func (ts *testSuite) TestReadRole() {
+	role, err := ts.createRole()
+	ts.NoError(err)
+
+	entity, err := ts.client.Roles.Read(context.Background(), role.Name)
+	ts.NoError(err)
+	ts.Equal(entity.Name, role.Name)
+
+	ts.NoError(ts.client.Roles.Delete(context.Background(), role.Name))
+}
+
+func (ts *testSuite) TestCreateRole() {
+	role, err := ts.createRole()
+	ts.NoError(err)
+	ts.NoError(ts.client.Roles.Delete(context.Background(), role.Name))
+}
+
+func (ts *testSuite) TestUpdateRole() {
+	role, err := ts.createRole()
+	ts.NoError(err)
+
+	options := RoleUpdateOptions{
+		RoleProperties: &RoleProperties{
+			Comment: String("updated comment"),
+		},
+	}
+	afterUpdate, err := ts.client.Roles.Update(context.Background(), role.Name, options)
+	ts.NoError(err)
+	ts.Equal(*options.RoleProperties.Comment, afterUpdate.Comment)
+
+	ts.NoError(ts.client.Roles.Delete(context.Background(), role.Name))
+}
