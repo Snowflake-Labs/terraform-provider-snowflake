@@ -28,6 +28,23 @@ func TestAcc_TagAssociation(t *testing.T) {
 	})
 }
 
+func TestAcc_TagAssociationSchema(t *testing.T) {
+	accName := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: tagAssociationConfigSchema(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_tag_association.schema", "object_type", "SCHEMA"),
+				),
+			},
+		},
+	})
+}
+
 func tagAssociationConfig(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
@@ -56,6 +73,39 @@ resource "snowflake_tag_association" "test" {
 	object_type = "DATABASE"
 	tag_id = snowflake_tag.test.id
 	tag_value = "finance"
+}
+`, n)
+}
+
+func tagAssociationConfigSchema(n string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "db" {
+	name = "test_db"
+}
+
+resource "snowflake_schema" "sch" {
+	database = snowflake_database.db.name
+	name = "test_sch"
+	comment = "%v"
+}
+
+resource "snowflake_tag" "tag1" {
+ database = snowflake_database.db.name
+ name     = "EXAMPLE_TAG"
+ schema   = "PUBLIC"
+
+ allowed_values = [""]
+}
+
+resource "snowflake_tag_association" "schema" {
+  object_identifier {
+    database = snowflake_database.db.name
+    name     = snowflake_schema.sch.name
+  }
+
+  object_type = "SCHEMA"
+  tag_id      = snowflake_tag.tag1.id
+  tag_value   = "TAG_VALUE"
 }
 `, n)
 }
