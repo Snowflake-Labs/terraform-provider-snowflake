@@ -8,8 +8,6 @@ description: |-
 
 # snowflake_oauth_integration (Resource)
 
-
-
 ## Example Usage
 
 ```terraform
