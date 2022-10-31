@@ -5,7 +5,7 @@
 #     runs-on: ubuntu-latest
 #     continue-on-error: true # this workflow fails because it is not updated recently and uses old packages
 #     steps:
-#     - uses: actions/checkout@v2.0.0
+#     - uses: actions/checkout@v3
 #     - uses: bflad/tfproviderlint-github-action@master
 #       with:
 #         args: ./...
