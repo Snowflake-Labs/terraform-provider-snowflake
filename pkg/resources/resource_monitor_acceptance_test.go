@@ -23,7 +23,8 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_users", "USERONE, USERTWO"),
+					resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", "USERONE"),
+					resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", "USERTWO"),
 				),
 			},
 			// IMPORT
