@@ -111,6 +111,7 @@ type RoleUpdateOptions struct {
 	*RoleProperties
 }
 
+// List all the roles by pattern.
 func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, error) {
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate list options: %w", err)
@@ -134,6 +135,7 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 	return entities, nil
 }
 
+// Read an role by its name.
 func (r *roles) Read(ctx context.Context, role string) (*Role, error) {
 	query := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, role)
 	rows, err := r.client.Query(ctx, query)
@@ -160,6 +162,7 @@ func (r *roles) formatRoleProperties(properties *RoleProperties) string {
 	return s
 }
 
+// Update attributes of an existing role.
 func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions) (*Role, error) {
 	if role == "" {
 		return nil, errors.New("name must not be empty")
@@ -174,6 +177,7 @@ func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions)
 	return r.Read(ctx, role)
 }
 
+// Create a new role with the given options.
 func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, error) {
 	if err := opts.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
@@ -188,6 +192,7 @@ func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, erro
 	return r.Read(ctx, opts.Name)
 }
 
+// Delete an role by its name.
 func (r *roles) Delete(ctx context.Context, role string) error {
 	query := fmt.Sprintf(`DROP ROLE %s`, role)
 	if _, err := r.client.Exec(ctx, query); err != nil {

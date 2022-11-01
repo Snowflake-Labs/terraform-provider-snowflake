@@ -36,7 +36,7 @@ func (ts *testSuite) TestReadUser() {
 
 	entity, err := ts.client.Users.Read(context.Background(), user.Name)
 	ts.NoError(err)
-	ts.Equal(entity.Name, user.Name)
+	ts.Equal(user.Name, entity.Name)
 
 	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
 }

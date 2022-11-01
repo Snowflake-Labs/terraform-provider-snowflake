@@ -43,8 +43,9 @@ func DefaultConfig() *Config {
 type Client struct {
 	conn *sql.DB
 
-	Users Users
-	Roles Roles
+	Users      Users
+	Roles      Roles
+	Warehouses Warehouses
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -108,6 +109,7 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	client.Users = &users{client: client}
 	client.Roles = &roles{client: client}
+	client.Warehouses = &warehouses{client: client}
 
 	return client, nil
 }
