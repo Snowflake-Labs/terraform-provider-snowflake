@@ -77,7 +77,7 @@ terraform init -upgrade
 
 You can use [Explicit Provider Source Locations](https://www.terraform.io/upgrade-guides/0-13.html#explicit-provider-source-locations).
 
-The following maybe work well.
+The following should be used for provider locking:
 
 ```terraform
 terraform {
