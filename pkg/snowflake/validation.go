@@ -1,6 +1,8 @@
 package snowflake
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // ValidateIdentifier implements a strict definition of valid identifiers from
 // https://docs.snowflake.net/manuals/sql-reference/identifiers-syntax.html
@@ -46,6 +48,8 @@ func isIdentifierRune(r rune, excludedCharacters map[string]bool) bool {
 func isInitialIdentifierRune(r rune) bool {
 	return (r == '_' ||
 		r == '-' ||
+		r == '[' ||
+		r == ']' ||
 		(r >= 'A' && r <= 'Z') ||
 		(r >= 'a' && r <= 'z'))
 }
