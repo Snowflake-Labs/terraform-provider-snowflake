@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.1...v0.49.2) (2022-11-01)
+
+
+### BugFixes
+
+* validate identifier ([#1312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1312)) ([295bc0f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/295bc0fd852ff417c740d19fab4c7705537321d5))
+
 ## [0.49.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.0...v0.49.1) (2022-10-31)
 
 
