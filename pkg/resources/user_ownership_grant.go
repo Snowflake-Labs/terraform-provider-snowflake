@@ -36,6 +36,16 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 			"REVOKE",
 		}, true),
 	},
+	"revert_ownership_to": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy.",
+		Default:     "ACCOUNTADMIN",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 func UserOwnershipGrant() *schema.Resource {
@@ -135,9 +145,10 @@ func DeleteUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	user := d.Get("on_user_name").(string)
 	currentGrants := d.Get("current_grants").(string)
+	reversionRole := d.Get("revert_ownership_to").(string)
 
 	g := snowflake.UserOwnershipGrant(user, currentGrants)
-	err := snowflake.Exec(db, g.Role("ACCOUNTADMIN").Revoke())
+	err := snowflake.Exec(db, g.Role(reversionRole).Revoke())
 	if err != nil {
 		return err
 	}
