@@ -27,18 +27,18 @@ func TestResourceMonitor(t *testing.T) {
 	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET CREDIT_QUOTA=66`, q)
 
 	ab = rm.Alter()
-	ab.SetStringList("notify_users", []string{"Snowflake User 1", "Snowflake User 2"})
+	ab.SetStringList("notify_users", []string{"USERONE", "USERTWO"})
 	q = ab.Statement()
-	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET NOTIFY_USERS=('Snowflake User 1', 'Snowflake User 2')`, q)
+	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET NOTIFY_USERS=('USERONE', 'USERTWO')`, q)
 
 	cb := snowflake.ResourceMonitor("resource_monitor").Create()
 	cb.NotifyAt(80).NotifyAt(90).SuspendAt(95).SuspendImmediatelyAt(100)
 	cb.SetString("frequency", "YEARLY")
 
 	cb.SetInt("credit_quota", 666)
-	cb.SetStringList("notify_users", []string{"Snowflake User 1", "Snowflake User 2"})
+	cb.SetStringList("notify_users", []string{"USERONE", "USERTWO"})
 	q = cb.Statement()
-	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 NOTIFY_USERS=('Snowflake User 1', 'Snowflake User 2') TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
+	r.Equal(`CREATE RESOURCE MONITOR "resource_monitor" FREQUENCY='YEARLY' CREDIT_QUOTA=666 NOTIFY_USERS=('USERONE', 'USERTWO') TRIGGERS ON 80 PERCENT DO NOTIFY ON 90 PERCENT DO NOTIFY ON 95 PERCENT DO SUSPEND ON 100 PERCENT DO SUSPEND_IMMEDIATE`, q)
 }
 
 func TestResourceMonitorSetOnAccount(t *testing.T) {
