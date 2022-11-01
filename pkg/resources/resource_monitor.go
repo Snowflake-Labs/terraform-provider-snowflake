@@ -206,6 +206,13 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if len(rm.NotifyUsers.String) > 0 {
+		err = d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", "))
+		if err != nil {
+			return err
+		}
+	}
+
 	// Snowflake returns credit_quota as a float, but only accepts input as an int
 	if rm.CreditQuota.Valid {
 		cqf, err := strconv.ParseFloat(rm.CreditQuota.String, 64)
