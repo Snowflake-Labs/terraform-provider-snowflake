@@ -25,7 +25,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	in := map[string]interface{}{
 		"name":                       "good_name",
-		"notify_users":               []interface{}{"Snowflake User 1", "Snowflake User 2"},
+		"notify_users":               []interface{}{"USERONE", "USERTWO"},
 		"credit_quota":               100,
 		"notify_triggers":            []interface{}{75, 88},
 		"suspend_triggers":           []interface{}{99},
@@ -38,7 +38,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 NOTIFY_USERS=\('Snowflake User 2', 'Snowflake User 1'\) TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
+			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 NOTIFY_USERS=\('USERTWO', 'USERONE'\) TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^ALTER ACCOUNT SET RESOURCE_MONITOR = "good_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
