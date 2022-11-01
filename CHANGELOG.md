@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.2...v0.49.3) (2022-11-01)
+
+
+### BugFixes
+
+* doc ([#1326](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1326)) ([d7d5e08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d7d5e08159b2e199e344048c4ab40f3d756e670a))
+
 ## [0.49.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.1...v0.49.2) (2022-11-01)
 
 
