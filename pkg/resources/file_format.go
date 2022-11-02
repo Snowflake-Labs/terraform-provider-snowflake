@@ -774,7 +774,6 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating file format file extension on %v", d.Id())
 		}
-
 	}
 
 	if d.HasChange("skip_header") {

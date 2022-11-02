@@ -376,7 +376,7 @@ type task struct {
 	Definition                string         `db:"definition"`
 	Condition                 *string        `db:"condition"`
 	ErrorIntegration          sql.NullString `db:"error_integration"`
-	AllowOverlappingExecution *bool          `db:"allow_overlapping_execution"`
+	AllowOverlappingExecution sql.NullString `db:"allow_overlapping_execution"`
 }
 
 func (t *task) IsEnabled() bool {
@@ -433,7 +433,6 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 			return nil, err
 		}
 		t = append(t, r)
-
 	}
 	return t, nil
 }

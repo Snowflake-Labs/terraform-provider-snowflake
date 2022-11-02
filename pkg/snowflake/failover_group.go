@@ -216,7 +216,7 @@ func (b *FailoverGroupBuilder) Drop() string {
 	return fmt.Sprintf(`DROP FAILOVER GROUP %v`, b.name)
 }
 
-// Show returns the SQL query that will show a failover group
+// Show returns the SQL query that will show a failover group.
 func (b *FailoverGroupBuilder) Show() string {
 	return "SHOW FAILOVER GROUPS"
 }

@@ -132,7 +132,6 @@ func TestGrantLegacyID(t *testing.T) {
 	r.Equal("priv", grant.Privilege)
 	r.Equal([]string{}, grant.Roles)
 	r.Equal(false, grant.GrantOption)
-
 }
 
 func TestGrantIDFromStringRoleGrant(t *testing.T) {

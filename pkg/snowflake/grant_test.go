@@ -242,7 +242,6 @@ func TestWarehouseGrant(t *testing.T) {
 
 	revoke = wg.Role("bob").Revoke("OWNERSHIP")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
-
 }
 
 // lintignore:AT003

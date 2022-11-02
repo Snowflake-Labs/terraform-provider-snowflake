@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	taskIDDelimiter           = '|'
-	AllowOverlappingExecution = "allow_overlapping_execution"
+	taskIDDelimiter = '|'
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -107,7 +106,7 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the name of the notification integration used for error notifications.",
 	},
-	AllowOverlappingExecution: {
+	"allow_overlapping_execution": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
@@ -330,9 +329,25 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set(AllowOverlappingExecution, t.AllowOverlappingExecution)
+	allowOverlappingExecutionValue, err := t.AllowOverlappingExecution.Value()
 	if err != nil {
 		return err
+	}
+
+	if allowOverlappingExecutionValue != nil && allowOverlappingExecutionValue.(string) != "null" {
+		allowOverlappingExecution, err := strconv.ParseBool(allowOverlappingExecutionValue.(string))
+		if err != nil {
+			return err
+		}
+		err = d.Set("allow_overlapping_execution", allowOverlappingExecution)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = d.Set("allow_overlapping_execution", false)
+		if err != nil {
+			return err
+		}
 	}
 
 	// The "DESCRIBE TASK ..." command returns the string "null" for error_integration
@@ -412,7 +427,6 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -420,7 +434,6 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 
 // CreateTask implements schema.CreateFunc.
 func CreateTask(d *schema.ResourceData, meta interface{}) error {
-
 	var err error
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
@@ -457,7 +470,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
-	if v, ok := d.GetOk(AllowOverlappingExecution); ok {
+	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
 		builder.WithAllowOverlappingExecution(v.(bool))
 	}
 
@@ -552,7 +565,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
 			}
 		}
-
 	}
 
 	if d.HasChange("error_integration") {
@@ -635,9 +647,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange(AllowOverlappingExecution) {
+	if d.HasChange("allow_overlapping_execution") {
 		var q string
-		_, new := d.GetChange(AllowOverlappingExecution)
+		_, new := d.GetChange("allow_overlapping_execution")
 		flag := new.(bool)
 		if flag {
 			q = builder.SetAllowOverlappingExecutionParameter()
@@ -646,7 +658,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating %s on task %v", AllowOverlappingExecution, d.Id())
+			return errors.Wrapf(err, "error updating task %v", d.Id())
 		}
 	}
 
