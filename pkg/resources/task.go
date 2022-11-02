@@ -16,9 +16,7 @@ import (
 )
 
 const (
-	taskIDDelimiter           = '|'
-	AllowOverlappingExecution = "allow_overlapping_execution"
-	OrReplace                 = "or_replace"
+	taskIDDelimiter = '|'
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -114,7 +112,7 @@ var taskSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap.",
 	},
-	OrReplace: {
+	"or_replace": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
@@ -482,7 +480,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		builder.WithAllowOverlappingExecution(v.(bool))
 	}
 
-	if v, ok := d.GetOk(OrReplace); ok && v.(bool) {
+	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		builder.WithReplace()
 	}
 
