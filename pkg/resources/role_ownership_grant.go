@@ -149,7 +149,7 @@ func DeleteRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	onRoleName := d.Get("on_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
-	reversionRole := d.Get("revert_ownership_to").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 
 	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
 	err := snowflake.Exec(db, g.Role(reversionRole).Revoke())
