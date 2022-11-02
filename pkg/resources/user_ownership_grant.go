@@ -36,7 +36,7 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 			"REVOKE",
 		}, true),
 	},
-	"revert_ownership_to": {
+	"revert_ownership_to_role_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the role to revert ownership to on destroy.",
