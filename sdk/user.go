@@ -167,8 +167,8 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	query := fmt.Sprintf(`SHOW USERS LIKE '%s'`, options.Pattern)
-	rows, err := u.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, options.Pattern)
+	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -187,8 +187,8 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 
 // Read an user by its name.
 func (u *users) Read(ctx context.Context, user string) (*User, error) {
-	query := fmt.Sprintf(`SHOW USERS LIKE '%s'`, user)
-	rows, err := u.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, user)
+	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -257,11 +257,11 @@ func (u *users) Update(ctx context.Context, user string, options UserUpdateOptio
 	if user == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	query := fmt.Sprintf("ALTER USER %s SET", user)
+	sql := fmt.Sprintf("ALTER USER %s SET", user)
 	if options.UserProperties != nil {
-		query = query + u.formatUserProperties(options.UserProperties)
+		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return u.Read(ctx, user)
@@ -272,11 +272,11 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	query := fmt.Sprintf("CREATE USER %s", options.Name)
+	sql := fmt.Sprintf("CREATE USER %s", options.Name)
 	if options.UserProperties != nil {
-		query = query + u.formatUserProperties(options.UserProperties)
+		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return u.Read(ctx, options.Name)
@@ -284,8 +284,8 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 
 // Delete an user by its name.
 func (u *users) Delete(ctx context.Context, user string) error {
-	query := fmt.Sprintf(`DROP USER %s`, user)
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	sql := fmt.Sprintf(`DROP USER %s`, user)
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}
 	return nil

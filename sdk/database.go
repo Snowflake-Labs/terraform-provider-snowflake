@@ -110,8 +110,8 @@ func (d *databases) List(ctx context.Context, options DatabaseListOptions) ([]*D
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	query := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, options.Pattern)
-	rows, err := d.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, options.Pattern)
+	rows, err := d.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -130,8 +130,8 @@ func (d *databases) List(ctx context.Context, options DatabaseListOptions) ([]*D
 
 // Read a database by its name.
 func (d *databases) Read(ctx context.Context, databases string) (*Database, error) {
-	query := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, databases)
-	rows, err := d.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, databases)
+	rows, err := d.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -160,11 +160,11 @@ func (d *databases) Update(ctx context.Context, database string, options Databas
 	if database == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	query := fmt.Sprintf("ALTER DATABASE %s SET", database)
+	sql := fmt.Sprintf("ALTER DATABASE %s SET", database)
 	if options.DatabaseProperties != nil {
-		query = query + d.formatDatabaseProperties(options.DatabaseProperties)
+		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
 	}
-	if _, err := d.client.Exec(ctx, query); err != nil {
+	if _, err := d.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return d.Read(ctx, database)
@@ -175,11 +175,11 @@ func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	query := fmt.Sprintf("CREATE DATABASE %s", options.Name)
+	sql := fmt.Sprintf("CREATE DATABASE %s", options.Name)
 	if options.DatabaseProperties != nil {
-		query = query + d.formatDatabaseProperties(options.DatabaseProperties)
+		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
 	}
-	if _, err := d.client.Exec(ctx, query); err != nil {
+	if _, err := d.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return d.Read(ctx, options.Name)
@@ -187,8 +187,8 @@ func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (
 
 // Delete a database by its name.
 func (d *databases) Delete(ctx context.Context, database string) error {
-	query := fmt.Sprintf(`DROP DATABASE %s`, database)
-	if _, err := d.client.Exec(ctx, query); err != nil {
+	sql := fmt.Sprintf(`DROP DATABASE %s`, database)
+	if _, err := d.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}
 	return nil

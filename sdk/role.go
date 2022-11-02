@@ -117,8 +117,8 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	query := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, options.Pattern)
-	rows, err := r.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, options.Pattern)
+	rows, err := r.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -137,8 +137,8 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 
 // Read an role by its name.
 func (r *roles) Read(ctx context.Context, role string) (*Role, error) {
-	query := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, role)
-	rows, err := r.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, role)
+	rows, err := r.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -167,11 +167,11 @@ func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions)
 	if role == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	query := fmt.Sprintf("ALTER ROLE %s SET", role)
+	sql := fmt.Sprintf("ALTER ROLE %s SET", role)
 	if opts.RoleProperties != nil {
-		query = query + r.formatRoleProperties(opts.RoleProperties)
+		sql = sql + r.formatRoleProperties(opts.RoleProperties)
 	}
-	if _, err := r.client.Exec(ctx, query); err != nil {
+	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return r.Read(ctx, role)
@@ -182,11 +182,11 @@ func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, erro
 	if err := opts.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	query := fmt.Sprintf("CREATE ROLE %s", opts.Name)
+	sql := fmt.Sprintf("CREATE ROLE %s", opts.Name)
 	if opts.RoleProperties != nil {
-		query = query + r.formatRoleProperties(opts.RoleProperties)
+		sql = sql + r.formatRoleProperties(opts.RoleProperties)
 	}
-	if _, err := r.client.Exec(ctx, query); err != nil {
+	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return r.Read(ctx, opts.Name)
@@ -194,8 +194,8 @@ func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, erro
 
 // Delete an role by its name.
 func (r *roles) Delete(ctx context.Context, role string) error {
-	query := fmt.Sprintf(`DROP ROLE %s`, role)
-	if _, err := r.client.Exec(ctx, query); err != nil {
+	sql := fmt.Sprintf(`DROP ROLE %s`, role)
+	if _, err := r.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}
 	return nil

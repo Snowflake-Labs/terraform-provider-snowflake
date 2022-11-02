@@ -197,8 +197,8 @@ func (w *warehouses) List(ctx context.Context, options WarehouseListOptions) ([]
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	query := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, options.Pattern)
-	rows, err := w.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, options.Pattern)
+	rows, err := w.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -246,11 +246,11 @@ func (w *warehouses) Create(ctx context.Context, options WarehouseCreateOptions)
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	query := fmt.Sprintf("CREATE WAREHOUSE %s", options.Name)
+	sql := fmt.Sprintf("CREATE WAREHOUSE %s", options.Name)
 	if options.WarehouseProperties != nil {
-		query = query + w.formatWarehouseProperties(options.WarehouseProperties)
+		sql = sql + w.formatWarehouseProperties(options.WarehouseProperties)
 	}
-	if _, err := w.client.Exec(ctx, query); err != nil {
+	if _, err := w.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return w.Read(ctx, options.Name)
@@ -258,8 +258,8 @@ func (w *warehouses) Create(ctx context.Context, options WarehouseCreateOptions)
 
 // Read an warehouse by its name.
 func (w *warehouses) Read(ctx context.Context, warehouse string) (*Warehouse, error) {
-	query := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, warehouse)
-	rows, err := w.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, warehouse)
+	rows, err := w.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -280,11 +280,11 @@ func (w *warehouses) Update(ctx context.Context, warehouse string, options Wareh
 	if warehouse == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	query := fmt.Sprintf("ALTER WAREHOUSE %s SET", warehouse)
+	sql := fmt.Sprintf("ALTER WAREHOUSE %s SET", warehouse)
 	if options.WarehouseProperties != nil {
-		query = query + w.formatWarehouseProperties(options.WarehouseProperties)
+		sql = sql + w.formatWarehouseProperties(options.WarehouseProperties)
 	}
-	if _, err := w.client.Exec(ctx, query); err != nil {
+	if _, err := w.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return w.Read(ctx, warehouse)
@@ -292,8 +292,8 @@ func (w *warehouses) Update(ctx context.Context, warehouse string, options Wareh
 
 // Delete an warehouse by its name.
 func (w *warehouses) Delete(ctx context.Context, warehouse string) error {
-	query := fmt.Sprintf(`DROP WAREHOUSE %s`, warehouse)
-	if _, err := w.client.Exec(ctx, query); err != nil {
+	sql := fmt.Sprintf(`DROP WAREHOUSE %s`, warehouse)
+	if _, err := w.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}
 	return nil
