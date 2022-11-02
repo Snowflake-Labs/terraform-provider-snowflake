@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	taskIDDelimiter           = '|'
+	taskIDDelimiter = '|'
 )
 
 var taskSchema = map[string]*schema.Schema{
