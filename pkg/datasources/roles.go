@@ -7,17 +7,26 @@ import (
 	"log"
 )
 
+const (
+	pattern = "pattern"
+)
+
 var rolesSchema = map[string]*schema.Schema{
+	pattern: {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Filters the command output by object name.",
+	},
 	"roles": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "All roles in the account, including built in roles",
+		Description: "List of all the roles which you can view across your entire account, including the system-defined roles and any custom roles that exist.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
 					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Name of the role.",
+					Computed:    true,
+					Description: "Identifier for the role.",
 				},
 				"comment": {
 					Type:        schema.TypeString,
@@ -46,8 +55,9 @@ func Roles() *schema.Resource {
 func ReadRoles(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	d.SetId("roles_read")
+	rolePattern := d.Get(pattern).(string)
 
-	listRoles, err := snowflake.ListRoles(db)
+	listRoles, err := snowflake.ListRoles(db, rolePattern)
 	if err == sql.ErrNoRows {
 		log.Printf("[DEBUG] no roles found in account (%s)", d.Id())
 		d.SetId("")

@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+const (
+	accountAdmin = "ACCOUNTADMIN"
+)
+
 func TestAcc_Roles(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -23,7 +27,16 @@ func TestAcc_Roles(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.0.name"),
 					//resource.TestCheckTypeSetElemAttr("data.snowflake_roles.r", "roles.*", "name"),
-					//TODO show roles also includes built in role such as ACCOUNTADMIN, SYSADMIN, etc.
+					//TODO SHOW ROLES output also includes built in roles, i.e. ACCOUNTADMIN, SYSADMIN, etc.
+				),
+			},
+			{
+				Config: rolesPattern(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.#"),
+					//resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.0.name"),
+					resource.TestCheckResourceAttr("data.snowflake_roles.r", "roles.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_roles.r", "roles.0.name", accountAdmin),
 				),
 			},
 		},
@@ -47,4 +60,12 @@ func roles(roleName, roleName2, comment string) string {
 			]
 		}
 	`, roleName, comment, roleName2, comment)
+}
+
+func rolesPattern() string {
+	return fmt.Sprintf(`
+		data snowflake_roles "r" {
+			pattern = "%v"
+		}
+	`, accountAdmin)
 }
