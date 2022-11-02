@@ -44,5 +44,4 @@ func TestTaskIDFromString(t *testing.T) {
 		database|schema|task`
 	_, err = taskIDFromString(id)
 	r.Equal(fmt.Errorf("1 line per task"), err)
-
 }

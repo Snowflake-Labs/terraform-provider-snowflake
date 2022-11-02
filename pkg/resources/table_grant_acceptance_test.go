@@ -27,7 +27,7 @@ func TestAccTableGrant_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "table_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
-					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}, []string{}),
+					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
 				),
 			},
 			// IMPORT

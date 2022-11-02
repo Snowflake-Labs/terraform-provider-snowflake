@@ -22,5 +22,4 @@ func TestRoleGrant(t *testing.T) {
 
 	r2 := rg.Role("role2").Revoke()
 	r.Equal(`REVOKE ROLE "role1" FROM ROLE "role2"`, r2)
-
 }

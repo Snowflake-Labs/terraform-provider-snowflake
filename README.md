@@ -77,14 +77,14 @@ terraform init -upgrade
 
 You can use [Explicit Provider Source Locations](https://www.terraform.io/upgrade-guides/0-13.html#explicit-provider-source-locations).
 
-The following maybe work well.
+The following should be used for provider locking:
 
 ```terraform
 terraform {
   required_providers {
     snowflake = {
       source = "Snowflake-Labs/snowflake"
-      version = "0.36.0"
+      version = "0.49.0"
     }
   }
 }
@@ -164,16 +164,6 @@ If you are making a PR from a forked repo, you can create a new Snowflake Enterp
 You will also need to generate a Github API token and add the secret:
 
 * `REVIEWDOG_GITHUB_API_TOKEN` - A token for reviewdog to use to access your github account with privileges to read/write discussion.
-
-## Roadmap
-
-| Task                                                                                                                              | Estimated Time Required | In Progress? | Finished? | Date Completed |
-|-----------------------------------------------------------------------------------------------------------------------------------|-------------------------|--------------|-----------|----------------|
-| Database Sharing                                                                                                                  | August 1st              | no           | - [ ]     | n/a            |
-| Tag Reference for Database Replication                                                                                            | August 1st              | no           | - [ ]     | n/a            |
-| Session parameter support in provider [configuration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1036) | TBD                     | no           | - [ ]     | n/a            |
-| Columns on Table Column Rename should not Drop Column                                                                             | TBD                     | no           | - [ ]     | n/a            |    
-| Snowflake remote backend for Terraform using a hybrid table and internal stage                                                    | TBD                     | no           | - [ ]     | n/a            |    
 
 ## Releasing
 

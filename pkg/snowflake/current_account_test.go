@@ -49,7 +49,8 @@ func TestCurrentAccountRead(t *testing.T) {
 		},
 	}
 
-	for name, testCase := range testCases {
+	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			r := require.New(t)
 			mockDB, mock, err := sqlmock.New()
@@ -57,16 +58,16 @@ func TestCurrentAccountRead(t *testing.T) {
 			defer mockDB.Close()
 			sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
 
-			rows := sqlmock.NewRows([]string{"account", "region"}).AddRow(testCase.account, testCase.region)
+			rows := sqlmock.NewRows([]string{"account", "region"}).AddRow(tc.account, tc.region)
 			mock.ExpectQuery(`SELECT CURRENT_ACCOUNT\(\) AS "account", CURRENT_REGION\(\) AS "region";`).WillReturnRows(rows)
 
 			acc, err := snowflake.ReadCurrentAccount(sqlxDB.DB)
 			r.NoError(err)
-			r.Equal(testCase.account, acc.Account)
-			r.Equal(testCase.region, acc.Region)
+			r.Equal(tc.account, acc.Account)
+			r.Equal(tc.region, acc.Region)
 			url, err := acc.AccountURL()
 			r.NoError(err)
-			r.Equal(testCase.url, url)
+			r.Equal(tc.url, url)
 		})
 	}
 }

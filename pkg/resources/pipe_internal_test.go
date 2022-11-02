@@ -159,10 +159,11 @@ func TestPipeCopyStatementDiffSuppress(t *testing.T) {
 		},
 	}
 
-	for name, testCase := range testCases {
+	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			r := require.New(t)
-			r.Equal(testCase.expected, pipeCopyStatementDiffSuppress("", testCase.declared, testCase.showPipes, nil))
+			r.Equal(tc.expected, pipeCopyStatementDiffSuppress("", tc.declared, tc.showPipes, nil))
 		})
 	}
 }

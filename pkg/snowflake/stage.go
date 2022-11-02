@@ -275,7 +275,6 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-
 		row := &descStageRow{}
 		if err := rows.StructScan(row); err != nil {
 			return r, err

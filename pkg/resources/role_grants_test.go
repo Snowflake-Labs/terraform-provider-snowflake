@@ -81,7 +81,6 @@ func TestRoleGrantsDelete(t *testing.T) {
 	})
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM ROLE "role1"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM ROLE "role2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM USER "user1"`).WillReturnResult(sqlmock.NewResult(1, 1))

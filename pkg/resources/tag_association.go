@@ -1,10 +1,13 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -22,7 +25,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Deprecated:  "Use `object_identifier` instead",
 		ForceNew:    true,
 	},
-	"object_identifier": &schema.Schema{
+	"object_identifier": {
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
@@ -116,9 +119,26 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error associating tag to object: [%v] with command: [%v], tag_id [%v]", objectIdentifier, q, tagID)
 	}
 
-	_, err = snowflake.ListTagAssociations(builder, db)
-	if err != nil {
-		return errors.Wrap(err, "error validating tag association")
+	skipValidate := d.Get("skip_validation").(bool)
+	if !skipValidate {
+		log.Println("[DEBUG] validating tag creation")
+
+		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+			resp, err := snowflake.ListTagAssociations(builder, db)
+
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("error: %s", err))
+			}
+
+			// if length of response is zero, tag association was not found. retry for up to 70 minutes
+			if len(resp) == 0 {
+				return resource.RetryableError(fmt.Errorf("expected tag association to be created but not yet created"))
+			}
+			return nil
+		})
+		if err != nil {
+			return errors.Wrap(err, "error validating tag association")
+		}
 	}
 
 	t := &TagID{
@@ -131,7 +151,6 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrap(err, "error creating tag id")
 	}
 	d.SetId(dataIDInput)
-
 	return ReadTagAssociation(d, meta)
 }
 

@@ -38,7 +38,6 @@ func CreateResource(
 				case schema.TypeSet:
 					valList := expandStringList(val.(*schema.Set).List())
 					qb.SetStringList(field, valList)
-
 				}
 			}
 		}
@@ -108,7 +107,6 @@ func UpdateResource(
 					valList := expandStringList(val.(*schema.Set).List())
 					qb.SetStringList(field, valList)
 				}
-
 			}
 			if d.HasChange("tag") {
 				log.Println("[DEBUG] updating tags")

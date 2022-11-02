@@ -70,14 +70,15 @@ func TestNotificationIntegrationCreate(t *testing.T) {
 			expectSQL: `^CREATE NOTIFICATION INTEGRATION "test_notification_integration" COMMENT='great comment' GCP_PUBSUB_SUBSCRIPTION_NAME='some-gcp-sub-name' NOTIFICATION_PROVIDER='GCP_PUBSUB' TYPE='QUEUE' ENABLED=true$`,
 		},
 	}
-	for _, testCase := range testCases {
+	for _, tc := range testCases {
+		tc := tc
 		r := require.New(t)
-		d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, testCase.raw)
+		d := schema.TestResourceDataRaw(t, resources.NotificationIntegration().Schema, tc.raw)
 		r.NotNil(d)
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-			mock.ExpectExec(testCase.expectSQL).WillReturnResult(sqlmock.NewResult(1, 1))
-			expectReadNotificationIntegration(mock, testCase.notificationProvider)
+			mock.ExpectExec(tc.expectSQL).WillReturnResult(sqlmock.NewResult(1, 1))
+			expectReadNotificationIntegration(mock, tc.notificationProvider)
 
 			err := resources.CreateNotificationIntegration(d, db)
 			r.NoError(err)
@@ -102,13 +103,14 @@ func TestNotificationIntegrationRead(t *testing.T) {
 			notificationProvider: "GCP_PUBSUB",
 		},
 	}
-	for _, testCase := range testCases {
+	for _, tc := range testCases {
+		tc := tc
 		r := require.New(t)
 
 		d := notificationIntegration(t, "test_notification_integration", map[string]interface{}{"name": "test_notification_integration"})
 
 		WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-			expectReadNotificationIntegration(mock, testCase.notificationProvider)
+			expectReadNotificationIntegration(mock, tc.notificationProvider)
 
 			err := resources.ReadNotificationIntegration(d, db)
 			r.NoError(err)
