@@ -89,7 +89,7 @@ func resourceMonitorNotifyUsersConfig(accName string, accNotifyUsers []string) (
 	}
 	config := fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {
-  name            = "%v"
+	name            = "%v"
 	set_for_account = false
 	notify_users    = %v
 }
