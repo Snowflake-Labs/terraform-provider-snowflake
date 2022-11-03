@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"encoding/json"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -43,4 +45,19 @@ resource "snowflake_resource_monitor" "test" {
 	set_for_account = false
 }
 `, accName)
+}
+
+func resourceMonitorNotifyUsersConfig(accName string, accNotifyUsers []string) (string, error) {
+	notifyUsers, err := json.Marshal(accNotifyUsers)
+	if err != nil {
+		return "", err
+	}
+	config := fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+  name            = "%v"
+	set_for_account = false
+	notify_users    = %v
+}
+`, accName, string(notifyUsers))
+	return config, nil
 }
