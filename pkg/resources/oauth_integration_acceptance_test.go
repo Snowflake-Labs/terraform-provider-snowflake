@@ -42,6 +42,7 @@ func oauthIntegrationConfig(name string, integrationType string) string {
 	resource "snowflake_oauth_integration" "test" {
 		name                         = "%s"
 		oauth_client                 = "%s"
+		oauth_client_type            = "PUBLIC"
 		enabled                      = true
   		oauth_issue_refresh_tokens   = true
   		oauth_refresh_token_validity = 3600
