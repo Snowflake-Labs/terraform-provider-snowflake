@@ -144,6 +144,7 @@ type UserCreateOptions struct {
 
 	// Required: Identifier for the user; must be unique for your account.
 	Name string
+
 	// Optional: The password for the user must be enclosed in single or double quotes
 	Password *string
 }
@@ -160,13 +161,14 @@ type UserUpdateOptions struct {
 	*UserProperties
 }
 
+// List all the users by pattern.
 func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, error) {
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	query := fmt.Sprintf(`SHOW USERS LIKE '%s'`, options.Pattern)
-	rows, err := u.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, options.Pattern)
+	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -183,9 +185,10 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 	return entities, nil
 }
 
+// Read an user by its name.
 func (u *users) Read(ctx context.Context, user string) (*User, error) {
-	query := fmt.Sprintf(`SHOW USERS LIKE '%s'`, user)
-	rows, err := u.client.Query(ctx, query)
+	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, user)
+	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
 	}
@@ -249,37 +252,40 @@ func (u *users) formatUserProperties(properties *UserProperties) string {
 	return s
 }
 
-func (u *users) Update(ctx context.Context, user string, opts UserUpdateOptions) (*User, error) {
+// Update attributes of an existing user.
+func (u *users) Update(ctx context.Context, user string, options UserUpdateOptions) (*User, error) {
 	if user == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	query := fmt.Sprintf("ALTER USER %s SET", user)
-	if opts.UserProperties != nil {
-		query = query + u.formatUserProperties(opts.UserProperties)
+	sql := fmt.Sprintf("ALTER USER %s SET", user)
+	if options.UserProperties != nil {
+		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 	return u.Read(ctx, user)
 }
 
-func (u *users) Create(ctx context.Context, opts UserCreateOptions) (*User, error) {
-	if err := opts.validate(); err != nil {
+// Create a new user with the given options.
+func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, error) {
+	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	query := fmt.Sprintf("CREATE USER %s", opts.Name)
-	if opts.UserProperties != nil {
-		query = query + u.formatUserProperties(opts.UserProperties)
+	sql := fmt.Sprintf("CREATE USER %s", options.Name)
+	if options.UserProperties != nil {
+		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return u.Read(ctx, opts.Name)
+	return u.Read(ctx, options.Name)
 }
 
+// Delete an user by its name.
 func (u *users) Delete(ctx context.Context, user string) error {
-	query := fmt.Sprintf(`DROP USER %s`, user)
-	if _, err := u.client.Exec(ctx, query); err != nil {
+	sql := fmt.Sprintf(`DROP USER %s`, user)
+	if _, err := u.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}
 	return nil

@@ -43,8 +43,10 @@ func DefaultConfig() *Config {
 type Client struct {
 	conn *sql.DB
 
-	Users Users
-	Roles Roles
+	Users      Users
+	Roles      Roles
+	Warehouses Warehouses
+	Databases  Databases
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -108,6 +110,8 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	client.Users = &users{client: client}
 	client.Roles = &roles{client: client}
+	client.Warehouses = &warehouses{client: client}
+	client.Databases = &databases{client: client}
 
 	return client, nil
 }
@@ -118,10 +122,10 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) Exec(ctx context.Context, query string) (sql.Result, error) {
-	return c.conn.ExecContext(ctx, query)
+func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
+	return c.conn.ExecContext(ctx, sql)
 }
 
-func (c *Client) Query(ctx context.Context, query string) (*sqlx.Rows, error) {
-	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, query)
+func (c *Client) query(ctx context.Context, sql string) (*sqlx.Rows, error) {
+	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, sql)
 }

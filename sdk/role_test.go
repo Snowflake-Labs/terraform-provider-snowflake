@@ -29,7 +29,7 @@ func (ts *testSuite) TestReadRole() {
 
 	entity, err := ts.client.Roles.Read(context.Background(), role.Name)
 	ts.NoError(err)
-	ts.Equal(entity.Name, role.Name)
+	ts.Equal(role.Name, entity.Name)
 
 	ts.NoError(ts.client.Roles.Delete(context.Background(), role.Name))
 }
