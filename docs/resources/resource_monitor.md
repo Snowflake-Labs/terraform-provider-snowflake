@@ -24,6 +24,8 @@ resource snowflake_resource_monitor monitor {
   notify_triggers            = [40]
   suspend_triggers           = [50]
   suspend_immediate_triggers = [90]
+
+  notify_users = ["USERONE", "USERTWO"]
 }
 ```
 
@@ -45,6 +47,7 @@ resource snowflake_resource_monitor monitor {
 - `suspend_immediate_triggers` (Set of Number) A list of percentage thresholds at which to immediately suspend all warehouses.
 - `suspend_triggers` (Set of Number) A list of percentage thresholds at which to suspend all warehouses.
 - `warehouses` (Set of String) A list of warehouses to apply the resource monitor to.
+- `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors. The user identifier is the value of the `name` column from the output of `snowflake_user`. Each user listed must have a verified email address.
 
 ### Read-Only
 
