@@ -23,12 +23,12 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	},
 	"notify_users": {
 		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{
-			Type: schema.TypeString,
-		},
 		Optional:    true,
 		ForceNew:    true,
 		Description: "Specifies the list of users to receive email notifications on resource monitors.",
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
 	},
 	"credit_quota": {
 		Type:        schema.TypeInt,

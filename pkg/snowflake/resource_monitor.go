@@ -62,12 +62,12 @@ const (
 func (rb *ResourceMonitorBuilder) Create() *ResourceMonitorCreateBuilder {
 	return &ResourceMonitorCreateBuilder{
 		CreateBuilder{
-			name:             rb.name,
-			entityType:       rb.entityType,
-			stringProperties: make(map[string]string),
-			boolProperties:   make(map[string]bool),
-			intProperties:    make(map[string]int),
-			floatProperties:  make(map[string]float64),
+			name:                 rb.name,
+			entityType:           rb.entityType,
+			stringProperties:     make(map[string]string),
+			boolProperties:       make(map[string]bool),
+			intProperties:        make(map[string]int),
+			floatProperties:      make(map[string]float64),
 			stringListProperties: make(map[string][]string),
 		},
 		make([]trigger, 0),

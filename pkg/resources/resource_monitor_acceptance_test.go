@@ -1,11 +1,11 @@
 package resources_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
-	"encoding/json"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -59,8 +59,8 @@ func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
 		t.Error(err)
 	}
 	checks := []resource.TestCheckFunc{
-	  resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-	  resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 	}
 	for _, s := range users {
 		checks = append(checks, resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", s))
@@ -71,7 +71,7 @@ func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: resource.ComposeTestCheckFunc(checks...),
+				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
 			{
 				ResourceName:      "snowflake_resource_monitor.test",
