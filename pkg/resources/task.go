@@ -461,7 +461,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.Resume()
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				log.Printf("[WARN] failed to resume task %s", name)
+				return errors.Wrapf(err, "error resuming task %v", name)
 			}
 
 			builder := snowflake.Task(name, database, dbSchema)
@@ -774,15 +774,27 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if needResumeCurrentTask {
-		q := builder.Resume()
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error resuming task %v", d.Id())
-		}
-		// wait for task to resume
-		q = builder.Show()
+		// try to resume the task, and verify that it was resumed.
+		// if its not resumed then try again up until a maximum of 3 times
+		for i := 0; i < 3; i++ {
+			q := builder.Resume()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error resuming task %v", name)
+			}
 
-		time.Sleep(10 * time.Second)
+			builder := snowflake.Task(name, database, dbSchema)
+			q = builder.Show()
+			row := snowflake.QueryRow(db, q)
+			t, err := snowflake.ScanTask(row)
+			if err != nil {
+				return err
+			}
+			if t.IsEnabled() {
+				break
+			}
+			time.Sleep(5 * time.Second)
+		}
 	}
 
 	return ReadTask(d, meta)

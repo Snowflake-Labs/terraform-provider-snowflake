@@ -457,7 +457,7 @@ resource "snowflake_task" "managed_task" {
     user_task_managed_initial_warehouse_size = "XSMALL"
 }
 resource "snowflake_task" "managed_task_no_init" {
-	name     	  = "%s"
+	name     	  = "%s_no_init"
 	database  	  = snowflake_database.test_database.name
 	schema    	  = snowflake_schema.test_schema.name
 	sql_statement = "SELECT 1"
