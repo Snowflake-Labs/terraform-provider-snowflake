@@ -455,13 +455,17 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if enabled {
-		q = builder.Resume()
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error starting task %v", name)
-		}
-		// wait a few seconds for task to resume
-		time.Sleep(5 * time.Second)
+		go func() {
+			// wait a few seconds for root tasks to resume
+			time.Sleep(5 * time.Second)
+			q = builder.Resume()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				log.Printf("[WARN] failed to resume task %s", name)
+			}
+			// wait a few seconds for task to resume
+			time.Sleep(5 * time.Second)
+		}()
 	}
 
 	return ReadTask(d, meta)
@@ -549,23 +553,16 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("schedule") {
-		var q string
-		old, new := d.GetChange("schedule")
-		if old != "" && new == "" {
-			q = builder.RemoveSchedule()
-		} else {
-			q = builder.ChangeSchedule(new.(string))
-		}
+	if d.HasChange("after") {
+		// preemitvely removing schedule because a task cannot have both after and schedule
+		q := builder.RemoveSchedule()
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
 		}
-	}
 
-	if d.HasChange("after") {
 		// making changes to after require suspending the current task
-		q := builder.Suspend()
+		q = builder.Suspend()
 		err = snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error suspending task %v", d.Id())
@@ -632,13 +629,26 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 						}
 					}
 				}
-
 			}
 			q := builder.AddAfter(toAdd)
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error adding after dependencies to task %v", d.Id())
 			}
+		}
+	}
+
+	if d.HasChange("schedule") {
+		var q string
+		old, new := d.GetChange("schedule")
+		if old != "" && new == "" {
+			q = builder.RemoveSchedule()
+		} else {
+			q = builder.ChangeSchedule(new.(string))
+		}
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
 		}
 	}
 
