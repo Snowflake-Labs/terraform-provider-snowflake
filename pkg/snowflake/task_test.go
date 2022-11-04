@@ -26,7 +26,7 @@ func TestTaskCreate(t *testing.T) {
 	st.WithTimeout(12)
 	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24" COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12`)
 
-	st.WithDependency("other_task")
+	st.WithAfter([]string{"other_task"})
 	r.Equal(st.Create(), `CREATE TASK "test_db"."test_schema"."test_task" WAREHOUSE = "test_wh" SCHEDULE = 'USING CRON 0 9-17 * * SUN America/Los_Angeles' TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24" COMMENT = 'test comment' USER_TASK_TIMEOUT_MS = 12 AFTER "test_db"."test_schema"."other_task"`)
 
 	st.WithCondition("SYSTEM$STREAM_HAS_DATA('MYSTREAM')")
@@ -93,16 +93,16 @@ func TestRemoveComment(t *testing.T) {
 	r.Equal(st.RemoveComment(), `ALTER TASK "test_db"."test_schema"."test_task" UNSET COMMENT`)
 }
 
-func TestAddDependency(t *testing.T) {
+func TestAddAfter(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.AddDependency("other_task"), `ALTER TASK "test_db"."test_schema"."test_task" ADD AFTER "test_db"."test_schema"."other_task"`)
+	r.Equal(st.AddAfter([]string{"other_task"}), `ALTER TASK "test_db"."test_schema"."test_task" ADD AFTER "test_db"."test_schema"."other_task"`)
 }
 
-func TestRemoveDependency(t *testing.T) {
+func TestRemoveAfter(t *testing.T) {
 	r := require.New(t)
 	st := Task("test_task", "test_db", "test_schema")
-	r.Equal(st.RemoveDependency("first_me_task"), `ALTER TASK "test_db"."test_schema"."test_task" REMOVE AFTER "test_db"."test_schema"."first_me_task"`)
+	r.Equal(st.RemoveAfter([]string{"first_me_task"}), `ALTER TASK "test_db"."test_schema"."test_task" REMOVE AFTER "test_db"."test_schema"."first_me_task"`)
 }
 
 func TestAddSessionParameters(t *testing.T) {

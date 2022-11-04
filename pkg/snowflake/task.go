@@ -23,7 +23,7 @@ type TaskBuilder struct {
 	sessionParameters                   map[string]interface{}
 	userTaskTimeoutMS                   int
 	comment                             string
-	after                               string
+	after                               []string
 	when                                string
 	SQLStatement                        string
 	disabled                            bool
@@ -33,10 +33,10 @@ type TaskBuilder struct {
 }
 
 // GetFullName prepends db and schema to in parameter.
-func (tb *TaskBuilder) GetFullName(in string) string {
+func (tb *TaskBuilder) GetFullName(name string) string {
 	var n strings.Builder
 
-	n.WriteString(fmt.Sprintf(`"%v"."%v"."%v"`, tb.db, tb.schema, in))
+	n.WriteString(fmt.Sprintf(`"%v"."%v"."%v"`, tb.db, tb.schema, name))
 
 	return n.String()
 }
@@ -87,8 +87,8 @@ func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	return tb
 }
 
-// WithDependency adds an after task dependency to the TaskBuilder.
-func (tb *TaskBuilder) WithDependency(after string) *TaskBuilder {
+// WithAfter adds after task dependencies to the TaskBuilder.
+func (tb *TaskBuilder) WithAfter(after []string) *TaskBuilder {
 	tb.after = after
 	return tb
 }
@@ -184,8 +184,12 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.userTaskTimeoutMS))
 	}
 
-	if tb.after != "" {
-		q.WriteString(fmt.Sprintf(` AFTER %v`, tb.GetFullName(tb.after)))
+	if len(tb.after) > 0 {
+		after := make([]string, 0)
+		for _, a := range tb.after {
+			after = append(after, tb.GetFullName(a))
+		}
+		q.WriteString(fmt.Sprintf(` AFTER %v`, strings.Join(after, ", ")))
 	}
 
 	if tb.when != "" {
@@ -254,14 +258,22 @@ func (tb *TaskBuilder) UnsetAllowOverlappingExecutionParameter() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET ALLOW_OVERLAPPING_EXECUTION`, tb.QualifiedName())
 }
 
-// AddDependency returns the sql that will add the after dependency for the task.
-func (tb *TaskBuilder) AddDependency(after string) string {
-	return fmt.Sprintf(`ALTER TASK %v ADD AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
+// AddAfter returns the sql that will add the after dependency for the task.
+func (tb *TaskBuilder) AddAfter(after []string) string {
+	afterTasks := make([]string, 0)
+	for _, a := range after {
+		afterTasks = append(afterTasks, tb.GetFullName(a))
+	}
+	return fmt.Sprintf(`ALTER TASK %v ADD AFTER %v`, tb.QualifiedName(), strings.Join(afterTasks, ", "))
 }
 
-// RemoveDependency returns the sql that will remove the after dependency for the task.
-func (tb *TaskBuilder) RemoveDependency(after string) string {
-	return fmt.Sprintf(`ALTER TASK %v REMOVE AFTER %v`, tb.QualifiedName(), tb.GetFullName(after))
+// RemoveAfter returns the sql that will remove the after dependency for the task.
+func (tb *TaskBuilder) RemoveAfter(after []string) string {
+	afterTasks := make([]string, 0)
+	for _, a := range after {
+		afterTasks = append(afterTasks, tb.GetFullName(a))
+	}
+	return fmt.Sprintf(`ALTER TASK %v REMOVE AFTER %v`, tb.QualifiedName(), strings.Join(afterTasks, ", "))
 }
 
 // AddSessionParameters returns the sql that will remove the session parameters for the task.
@@ -379,31 +391,47 @@ type task struct {
 	AllowOverlappingExecution sql.NullString `db:"allow_overlapping_execution"`
 }
 
+func (t *task) QualifiedName() string {
+	return fmt.Sprintf(`"%v"."%v"."%v"`, EscapeString(t.DatabaseName), EscapeString(t.SchemaName), EscapeString(t.Name))
+}
+
+func (t *task) Suspend() string {
+	return fmt.Sprintf(`ALTER TASK %v SUSPEND`, t.QualifiedName())
+}
+
+func (t *task) Resume() string {
+	return fmt.Sprintf(`ALTER TASK %v RESUME`, t.QualifiedName())
+}
+
 func (t *task) IsEnabled() bool {
 	return strings.ToLower(t.State) == "started"
 }
 
-func (t *task) GetPredecessorName() string {
+func (t *task) GetPredecessors() ([]string, error) {
 	if t.Predecessors == nil {
-		return ""
+		return []string{}, nil
 	}
 
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
-	var fullNames []string
-	if err := json.Unmarshal([]byte(*t.Predecessors), &fullNames); err == nil {
-		for _, fullName := range fullNames {
-			name := fullName[strings.LastIndex(fullName, ".")+1:]
-			return strings.Trim(name, "\\\"")
+	var predecessorNames []string
+	if err := json.Unmarshal([]byte(*t.Predecessors), &predecessorNames); err == nil {
+		for i, predecessorName := range predecessorNames {
+			formattedName := predecessorName[strings.LastIndex(predecessorName, ".")+1:]
+			formattedName = strings.Trim(formattedName, "\\\"")
+			predecessorNames[i] = formattedName
 		}
-		return ""
+		return predecessorNames, nil
 	}
 
 	pre := strings.Split(*t.Predecessors, ".")
-	name, err := strconv.Unquote(pre[len(pre)-1])
-	if err != nil {
-		return pre[len(pre)-1]
+	for _, p := range pre {
+		predecessorName, err := strconv.Unquote(p)
+		if err != nil {
+			return nil, err
+		}
+		predecessorNames = append(predecessorNames, predecessorName)
 	}
-	return name
+	return predecessorNames, nil
 }
 
 // ScanTask turns a sql row into a task object.
@@ -452,4 +480,49 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 		return nil, nil
 	}
 	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+}
+
+// GetRootTasks tries to retrieve the root of current task or returns the current (standalone) task.
+func GetRootTasks(name string, databaseName string, schemaName string, db *sql.DB) ([]*task, error) {
+	builder := Task(name, databaseName, schemaName)
+	log.Printf("[DEBUG] retrieving predecessors for task %s\n", builder.QualifiedName())
+	
+	q := builder.Show()
+	row := QueryRow(db, q)
+	t, err := ScanTask(row)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to scan row for task %s", builder.QualifiedName())
+	}
+
+	predecessors, err := t.GetPredecessors()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get predecessors for task %s", builder.QualifiedName())
+	}
+
+	// no predecessors mean this is a root task
+	if len(predecessors) == 0 {
+		return []*task{t}, nil
+	}
+
+	var tasks []*task
+	// get the root tasks for each predecessor and append them all together
+	for _, predecessor := range predecessors {
+		predecessorTasks, err := GetRootTasks(predecessor, databaseName, schemaName, db)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to get predecessors for task %s", builder.QualifiedName())
+		}
+		tasks = append(tasks, predecessorTasks...)
+	}
+
+	// remove duplicate root tasks
+	uniqueTasks := make(map[string]*task)
+	for _, task := range tasks {
+		uniqueTasks[task.QualifiedName()] = task
+	}
+	tasks = []*task{}
+	for _, task := range uniqueTasks {
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
 }
