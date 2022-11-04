@@ -454,12 +454,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if enabled {
-		defer func() {
-			err := snowflake.WaitResumeTask(db, name, database, schema)
-			if err != nil {
-				log.Printf("[WARN] failed to resume task %s", name)
-			}
-		}()
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			log.Printf("[WARN] failed to resume task %s", name)
+		}
 	}
 
 	return ReadTask(d, meta)
@@ -740,12 +738,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	enabled := d.Get("enabled").(bool)
 	if enabled {
-		defer func() {
-			err := snowflake.WaitResumeTask(db, name, database, schema)
-			if err != nil {
-				log.Printf("[WARN] failed to resume task %s", name)
-			}
-		}()
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			log.Printf("[WARN] failed to resume task %s", name)
+		}
 	} else {
 		q := builder.Suspend()
 		err := snowflake.Exec(db, q)
