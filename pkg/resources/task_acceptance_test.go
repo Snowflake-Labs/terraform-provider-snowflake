@@ -180,8 +180,6 @@ func TestAcc_Task(t *testing.T) {
 			{
 				Config: taskConfig(initialState),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", databasename),
@@ -403,7 +401,6 @@ func TestAcc_Task_Managed(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", ""),
-					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", accName),
 				),
 			},
 			{
