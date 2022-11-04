@@ -181,7 +181,7 @@ func TestAcc_Task(t *testing.T) {
 				Config: taskConfig(initialState),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", true),
+					checkBool("snowflake_task.child_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", databasename),
