@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -459,6 +460,8 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error starting task %v", name)
 		}
+		// wait a few seconds for task to resume
+		time.Sleep(5 * time.Second)
 	}
 
 	return ReadTask(d, meta)
@@ -546,6 +549,20 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("schedule") {
+		var q string
+		old, new := d.GetChange("schedule")
+		if old != "" && new == "" {
+			q = builder.RemoveSchedule()
+		} else {
+			q = builder.ChangeSchedule(new.(string))
+		}
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+		}
+	}
+
 	if d.HasChange("after") {
 		// making changes to after require suspending the current task
 		q := builder.Suspend()
@@ -622,20 +639,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return errors.Wrapf(err, "error adding after dependencies to task %v", d.Id())
 			}
-		}
-	}
-
-	if d.HasChange("schedule") {
-		var q string
-		old, new := d.GetChange("schedule")
-		if old != "" && new == "" {
-			q = builder.RemoveSchedule()
-		} else {
-			q = builder.ChangeSchedule(new.(string))
-		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
 		}
 	}
 
