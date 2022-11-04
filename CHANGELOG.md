@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.0...v0.50.0) (2022-11-04)
+
+
+### Features
+
+* task after dag support ([#1342](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1342)) ([a117802](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a117802016c7e47ef539522c7308966c9f1c613a))
+
 ## [0.49.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.2...v0.49.3) (2022-11-01)
 
 
