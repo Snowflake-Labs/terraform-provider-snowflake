@@ -39,7 +39,7 @@ var (
 	childname     = "child_task"
 	soloname      = "standalone_task"
 	warehousename = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databasename  = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databasename  = "tst-terraform-"+ strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
@@ -374,7 +374,7 @@ resource "snowflake_task" "solo_task" {
 }
 
 func TestAcc_Task_Managed(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform-"+strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
@@ -529,7 +529,7 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform-"+strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -544,7 +544,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
-					resource.TestCheckNoResourceAttr("snowflake_task.test_task", "after"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "after.#", "0"),
 				),
 			},
 			{
@@ -587,7 +587,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 func taskConfigManagedScheduled(name string, taskRootName string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-	name    = "tst-terraform-%s"
+	name    = "%s"
 	comment = "Terraform acceptance test"
 }
 
@@ -621,7 +621,7 @@ resource "snowflake_task" "test_task" {
 func taskConfigManagedScheduled2(name string, taskRootName string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-	name    = "tst-terraform-%s"
+	name    = "%s"
 	comment = "Terraform acceptance test"
 }
 
@@ -655,7 +655,7 @@ resource "snowflake_task" "test_task" {
 func taskConfigManagedScheduled3(name string, taskRootName string) string {
 	s := `
 resource "snowflake_database" "test_database" {
-	name    = "tst-terraform-%s"
+	name    = "%s"
 	comment = "Terraform acceptance test"
 }
 
