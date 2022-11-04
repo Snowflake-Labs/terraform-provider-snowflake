@@ -375,7 +375,7 @@ resource "snowflake_task" "solo_task" {
 
 func TestAcc_Task_Managed(t *testing.T) {
 	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
+	whName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
@@ -395,7 +395,7 @@ func TestAcc_Task_Managed(t *testing.T) {
 				),
 			},
 			{
-				Config: taskConfigManaged2(accName),
+				Config: taskConfigManaged2(accName, whName),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.managed_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", accName),
@@ -472,7 +472,7 @@ resource "snowflake_task" "managed_task_no_init" {
 	return fmt.Sprintf(s, name, name, name, name)
 }
 
-func taskConfigManaged2(name string) string {
+func taskConfigManaged2(name, whName string) string {
 	s := `
 resource "snowflake_database" "test_database" {
 	name    = "%s"
@@ -480,7 +480,7 @@ resource "snowflake_database" "test_database" {
 }
 
 resource "snowflake_warehouse" "test_wh" {
-	name = "KTYXYQANVK"
+	name = "%s"
 }
 
 resource "snowflake_schema" "test_schema" {
@@ -499,7 +499,7 @@ resource "snowflake_task" "managed_task" {
 	warehouse     = snowflake_warehouse.test_wh.name
 }
 `
-	return fmt.Sprintf(s, name, name, name, name)
+	return fmt.Sprintf(s, name, whName, name, name)
 }
 
 func taskConfigManaged3(name string) string {

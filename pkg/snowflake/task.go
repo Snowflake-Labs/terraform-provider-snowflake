@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -524,4 +525,30 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 	}
 
 	return tasks, nil
+}
+
+func WaitResumeTask(db *sql.DB, name string, database string, schema string) error {
+	builder := Task(name, database, schema)
+
+	// try to resume the task, and verify that it was resumed.
+	// if its not resumed then try again up until a maximum of 3 times
+	for i := 0; i < 3; i++ {
+		q := builder.Resume()
+		err := Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error resuming task %v", name)
+		}
+
+		q = builder.Show()
+		row := QueryRow(db, q)
+		t, err := ScanTask(row)
+		if err != nil {
+			return err
+		}
+		if t.IsEnabled() {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+	return nil
 }

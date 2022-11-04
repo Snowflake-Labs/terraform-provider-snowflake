@@ -8,7 +8,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -359,12 +358,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
-	dbSchema := d.Get("schema").(string)
+	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
-	builder := snowflake.Task(name, database, dbSchema)
+	builder := snowflake.Task(name, database, schema)
 	builder.WithStatement(sql)
 
 	// Set optionals
@@ -403,7 +402,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("after"); ok {
 		after := expandStringList(v.([]interface{}))
 		for _, dep := range after {
-			rootTasks, err := snowflake.GetRootTasks(dep, database, dbSchema, db)
+			rootTasks, err := snowflake.GetRootTasks(dep, database, schema, db)
 			if err != nil {
 				return err
 			}
@@ -445,7 +444,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskID := &taskID{
 		DatabaseName: database,
-		SchemaName:   dbSchema,
+		SchemaName:   schema,
 		TaskName:     name,
 	}
 	dataIDInput, err := taskID.String()
@@ -455,27 +454,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if enabled {
-		// try to resume the task, and verify that it was resumed.
-		// if its not resumed then try again up until a maximum of 3 times
-		for i := 0; i < 3; i++ {
-			q = builder.Resume()
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error resuming task %v", name)
-			}
-
-			builder := snowflake.Task(name, database, dbSchema)
-			q := builder.Show()
-			row := snowflake.QueryRow(db, q)
-			t, err := snowflake.ScanTask(row)
-			if err != nil {
-				return err
-			}
-			if t.IsEnabled() {
-				break
-			}
-			time.Sleep(5 * time.Second)
-		}
+		snowflake.WaitResumeTask(db, name, database, schema)
 	}
 
 	return ReadTask(d, meta)
@@ -491,11 +470,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	db := meta.(*sql.DB)
 	database := taskID.DatabaseName
-	dbSchema := taskID.SchemaName
+	schema := taskID.SchemaName
 	name := taskID.TaskName
-	builder := snowflake.Task(name, database, dbSchema)
+	builder := snowflake.Task(name, database, schema)
 
-	rootTasks, err := snowflake.GetRootTasks(name, database, dbSchema, db)
+	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
 		return err
 	}
@@ -615,7 +594,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if len(toAdd) > 0 {
 			// need to suspend any new root tasks from dependencies before adding them
 			for _, dep := range toAdd {
-				rootTasks, err := snowflake.GetRootTasks(dep, database, dbSchema, db)
+				rootTasks, err := snowflake.GetRootTasks(dep, database, schema, db)
 				if err != nil {
 					return err
 				}
@@ -758,10 +737,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enabled") {
 		var q string
-		n := d.Get("enabled")
-		enable := n.(bool)
+		enabled := d.Get("enabled").(bool)
 
-		if enable {
+		if enabled {
 			q = builder.Resume()
 		} else {
 			q = builder.Suspend()
@@ -771,32 +749,12 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
+
 	}
 
 	if needResumeCurrentTask {
-		// try to resume the task, and verify that it was resumed.
-		// if its not resumed then try again up until a maximum of 3 times
-		for i := 0; i < 3; i++ {
-			q := builder.Resume()
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error resuming task %v", name)
-			}
-
-			builder := snowflake.Task(name, database, dbSchema)
-			q = builder.Show()
-			row := snowflake.QueryRow(db, q)
-			t, err := snowflake.ScanTask(row)
-			if err != nil {
-				return err
-			}
-			if t.IsEnabled() {
-				break
-			}
-			time.Sleep(5 * time.Second)
-		}
+		snowflake.WaitResumeTask(db, name, database, schema)
 	}
-
 	return ReadTask(d, meta)
 }
 
