@@ -463,7 +463,6 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
-	var needResumeCurrentTask = false
 	if err != nil {
 		return err
 	}
@@ -556,7 +555,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error suspending task %v", d.Id())
 		}
-		needResumeCurrentTask = d.Get("enabled").(bool)
 
 		old, new := d.GetChange("after")
 		var oldAfter []string
@@ -735,24 +733,15 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("enabled") {
-		var q string
-		enabled := d.Get("enabled").(bool)
-
-		if enabled {
-			needResumeCurrentTask = true
-		} else {
-			q = builder.Suspend()
-		}
-
+	enabled := d.Get("enabled").(bool)
+	if enabled {
+		snowflake.WaitResumeTask(db, name, database, schema)
+	} else {
+		q := builder.Suspend()
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
-	}
-
-	if needResumeCurrentTask {
-		snowflake.WaitResumeTask(db, name, database, schema)
 	}
 	return ReadTask(d, meta)
 }
