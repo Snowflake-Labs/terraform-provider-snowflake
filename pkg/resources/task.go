@@ -589,6 +589,34 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if len(toAdd) > 0 {
+			// need to suspend any new root tasks from dependencies before adding them
+			for _, dep := range toAdd {
+				rootTasks, err := snowflake.GetRootTasks(dep, database, dbSchema, db)
+				if err != nil {
+					return err
+				}
+				for _, rootTask := range rootTasks {
+					if rootTask.IsEnabled() {
+						q := rootTask.Suspend()
+						err = snowflake.Exec(db, q)
+						if err != nil {
+							return err
+						}
+
+						if !(rootTask.Name == name) {
+							// resume the task after modifications are complete, as long as it is not a standalone task
+							defer func() {
+								q = rootTask.Resume()
+								err = snowflake.Exec(db, q)
+								if err != nil {
+									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+								}
+							}()
+						}
+					}
+				}
+
+			}
 			q := builder.AddAfter(toAdd)
 			err := snowflake.Exec(db, q)
 			if err != nil {
