@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_task task {
+resource "snowflake_task" "task" {
   comment = "my task"
 
   database  = "db"
@@ -34,7 +34,7 @@ resource snowflake_task task {
   enabled              = true
 }
 
-resource snowflake_task serverless_task {
+resource "snowflake_task" "serverless_task" {
   comment = "my serverless task"
 
   database = "db"
@@ -50,12 +50,12 @@ resource snowflake_task serverless_task {
 
   user_task_timeout_ms                     = 10000
   user_task_managed_initial_warehouse_size = "XSMALL"
-  after                                    = "preceding_task"
+  after                                    = [snowflake_task.task.name]
   when                                     = "foo AND bar"
   enabled                                  = true
 }
 
-resource snowflake_task test_task {
+resource "snowflake_task" "test_task" {
   comment = "task with allow_overlapping_execution"
 
   database = "db"
@@ -81,7 +81,7 @@ resource snowflake_task test_task {
 
 ### Optional
 
-- `after` (String) Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)
+- `after` (List of String) Specifies one or more predecessor tasks for the current task. Use this option to create a DAG of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies.
 - `allow_overlapping_execution` (Boolean) By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap.
 - `comment` (String) Specifies a comment for the task.
 - `enabled` (Boolean) Specifies if the task should be started (enabled) after creation or should remain suspended (default).

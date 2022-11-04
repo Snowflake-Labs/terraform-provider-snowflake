@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -75,9 +76,10 @@ var taskSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the task.",
 	},
 	"after": {
-		Type:          schema.TypeString,
+		Type:          schema.TypeList,
+		Elem:          &schema.Schema{Type: schema.TypeString},
 		Optional:      true,
-		Description:   "Specifies the predecessor task in the same database and schema of the current task. When a run of the predecessor task finishes successfully, it triggers this task (after a brief lag). (Conflict with schedule)",
+		Description:   "Specifies one or more predecessor tasks for the current task. Use this option to create a DAG of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies.",
 		ConflictsWith: []string{"schedule"},
 	},
 	"when": {
@@ -144,88 +146,6 @@ func difference(a, b map[string]interface{}) map[string]interface{} {
 		}
 	}
 	return diff
-}
-
-// getActiveRootTask tries to retrieve the root of current task or returns the current (standalone) task.
-func getActiveRootTask(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
-	log.Println("[DEBUG] retrieving root task")
-
-	db := meta.(*sql.DB)
-	database := data.Get("database").(string)
-	dbSchema := data.Get("schema").(string)
-	name := data.Get("name").(string)
-	after := data.Get("after").(string)
-
-	if name == "" {
-		return nil, nil
-	}
-
-	// always start from first predecessor
-	// or the current task when standalone
-	if after != "" {
-		name = after
-	}
-
-	for {
-		builder := snowflake.Task(name, database, dbSchema)
-		q := builder.Show()
-		row := snowflake.QueryRow(db, q)
-		task, err := snowflake.ScanTask(row)
-
-		if err != nil && name != data.Get("name").(string) {
-			return nil, errors.Wrapf(err, "failed to locate the root node of: %v", name)
-		}
-
-		currentName := task.GetPredecessorName()
-		if currentName == "" {
-			log.Printf("[DEBUG] found root task: %v", name)
-			// we only want to deal with suspending the root task when its enabled (started)
-			if task.IsEnabled() {
-				return snowflake.Task(name, database, dbSchema), nil
-			}
-			return nil, nil
-		}
-
-		name = currentName
-	}
-}
-
-// getActiveRootTaskAndSuspend retrieves the root task and suspends it.
-func getActiveRootTaskAndSuspend(data *schema.ResourceData, meta interface{}) (*snowflake.TaskBuilder, error) {
-	db := meta.(*sql.DB)
-	name := data.Get("name").(string)
-
-	root, err := getActiveRootTask(data, meta)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error retrieving root task %v", name)
-	}
-
-	if root != nil {
-		qr := root.Suspend()
-		err = snowflake.Exec(db, qr)
-		if err != nil {
-			return nil, errors.Wrapf(err, "error suspending root task %v", name)
-		}
-	}
-
-	return root, nil
-}
-
-func resumeTask(root *snowflake.TaskBuilder, meta interface{}) {
-	if root == nil {
-		return
-	}
-
-	if root.IsDisabled() {
-		return
-	}
-
-	db := meta.(*sql.DB)
-	qr := root.Resume()
-	err := snowflake.Exec(db, qr)
-	if err != nil {
-		log.Fatal(errors.Wrapf(err, "error resuming root task %v", root.QualifiedName()))
-	}
 }
 
 // taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
@@ -360,12 +280,13 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	predecessorName := t.GetPredecessorName()
-	if predecessorName != "" {
-		err = d.Set("after", predecessorName)
-		if err != nil {
-			return err
-		}
+	predecessors, err := t.GetPredecessors()
+	if err != nil {
+		return err
+	}
+	err = d.Set("after", predecessors)
+	if err != nil {
+		return err
 	}
 
 	err = d.Set("when", t.Condition)
@@ -437,12 +358,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	db := meta.(*sql.DB)
 	database := d.Get("database").(string)
-	dbSchema := d.Get("schema").(string)
+	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
-	builder := snowflake.Task(name, database, dbSchema)
+	builder := snowflake.Task(name, database, schema)
 	builder.WithStatement(sql)
 
 	// Set optionals
@@ -479,13 +400,36 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("after"); ok {
-		root, err := getActiveRootTaskAndSuspend(d, meta)
-		if err != nil {
-			return err
-		}
-		defer resumeTask(root, meta)
+		after := expandStringList(v.([]interface{}))
+		for _, dep := range after {
+			rootTasks, err := snowflake.GetRootTasks(dep, database, schema, db)
+			if err != nil {
+				return err
+			}
+			for _, rootTask := range rootTasks {
+				// if a root task is enabled, then it needs to be suspended before the child tasks can be created
+				if rootTask.IsEnabled() {
+					q := rootTask.Suspend()
+					err = snowflake.Exec(db, q)
+					if err != nil {
+						return err
+					}
 
-		builder.WithDependency(v.(string))
+					// resume the task after modifications are complete as long as it is not a standalone task
+					if !(rootTask.Name == name) {
+						defer func() {
+							q = rootTask.Resume()
+							err = snowflake.Exec(db, q)
+							if err != nil {
+								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+							}
+						}()
+					}
+				}
+			}
+
+			builder.WithAfter(after)
+		}
 	}
 
 	if v, ok := d.GetOk("when"); ok {
@@ -498,17 +442,9 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating task %v", name)
 	}
 
-	if enabled {
-		q = builder.Resume()
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error starting task %v", name)
-		}
-	}
-
 	taskID := &taskID{
 		DatabaseName: database,
-		SchemaName:   dbSchema,
+		SchemaName:   schema,
 		TaskName:     name,
 	}
 	dataIDInput, err := taskID.String()
@@ -517,25 +453,53 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(dataIDInput)
 
+	if enabled {
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			log.Printf("[WARN] failed to resume task %s", name)
+		}
+	}
+
 	return ReadTask(d, meta)
 }
 
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
-	var needResumeCurrentTask = false
 	if err != nil {
 		return err
 	}
 
 	db := meta.(*sql.DB)
 	database := taskID.DatabaseName
-	dbSchema := taskID.SchemaName
+	schema := taskID.SchemaName
 	name := taskID.TaskName
-	builder := snowflake.Task(name, database, dbSchema)
-	root, err := getActiveRootTaskAndSuspend(d, meta)
+	builder := snowflake.Task(name, database, schema)
+
+	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
 		return err
+	}
+	for _, rootTask := range rootTasks {
+		// if a root task is enabled, then it needs to be suspended before the child tasks can be created
+		if rootTask.IsEnabled() {
+			q := rootTask.Suspend()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return err
+			}
+
+			if !(rootTask.Name == name) {
+				// resume the task after modifications are complete, as long as it is not a standalone task
+				defer func() {
+					q = rootTask.Resume()
+					err = snowflake.Exec(db, q)
+					if err != nil {
+						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+					}
+				}()
+			}
+		}
 	}
 
 	if d.HasChange("warehouse") {
@@ -580,27 +544,86 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// Need to remove dependency before adding schedule if needed
 	if d.HasChange("after") {
-		var (
-			q   string
-			err error
-		)
+		// preemitvely removing schedule because a task cannot have both after and schedule
+		q := builder.RemoveSchedule()
+		err := snowflake.Exec(db, q)
+		if err != nil {
+			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+		}
 
-		old, _ := d.GetChange("after")
-
+		// making changes to after require suspending the current task
 		q = builder.Suspend()
 		err = snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error suspending task %v", d.Id())
 		}
-		needResumeCurrentTask = d.Get("enabled").(bool)
 
-		if old != "" {
-			q = builder.RemoveDependency(old.(string))
-			err = snowflake.Exec(db, q)
+		old, new := d.GetChange("after")
+		var oldAfter []string
+		if len(old.([]interface{})) > 0 {
+			oldAfter = expandStringList(old.([]interface{}))
+		}
+
+		var newAfter []string
+		if len(new.([]interface{})) > 0 {
+			newAfter = expandStringList(new.([]interface{}))
+		}
+
+		// Remove old dependencies that are not in new dependencies
+		var toRemove []string
+		for _, dep := range oldAfter {
+			if !slices.Contains(newAfter, dep) {
+				toRemove = append(toRemove, dep)
+			}
+		}
+		if len(toRemove) > 0 {
+			q := builder.RemoveAfter(toRemove)
+			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing old after dependency from task %v", d.Id())
+				return errors.Wrapf(err, "error removing after dependencies from task %v", d.Id())
+			}
+		}
+
+		// Add new dependencies that are not in old dependencies
+		var toAdd []string
+		for _, dep := range newAfter {
+			if !slices.Contains(oldAfter, dep) {
+				toAdd = append(toAdd, dep)
+			}
+		}
+		if len(toAdd) > 0 {
+			// need to suspend any new root tasks from dependencies before adding them
+			for _, dep := range toAdd {
+				rootTasks, err := snowflake.GetRootTasks(dep, database, schema, db)
+				if err != nil {
+					return err
+				}
+				for _, rootTask := range rootTasks {
+					if rootTask.IsEnabled() {
+						q := rootTask.Suspend()
+						err = snowflake.Exec(db, q)
+						if err != nil {
+							return err
+						}
+
+						if !(rootTask.Name == name) {
+							// resume the task after modifications are complete, as long as it is not a standalone task
+							defer func() {
+								q = rootTask.Resume()
+								err = snowflake.Exec(db, q)
+								if err != nil {
+									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+								}
+							}()
+						}
+					}
+				}
+			}
+			q := builder.AddAfter(toAdd)
+			err := snowflake.Exec(db, q)
+			if err != nil {
+				return errors.Wrapf(err, "error adding after dependencies to task %v", d.Id())
 			}
 		}
 	}
@@ -662,21 +685,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("after") {
-		var (
-			q string
-		)
-		new := d.Get("after")
-
-		if new != "" {
-			q = builder.AddDependency(new.(string))
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding after dependency on task %v", d.Id())
-			}
-		}
-	}
-
 	if d.HasChange("session_parameters") {
 		var q string
 		o, n := d.GetChange("session_parameters")
@@ -728,34 +736,19 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("enabled") {
-		var q string
-		n := d.Get("enabled")
-		enable := n.(bool)
-
-		if enable {
-			q = builder.Resume()
-		} else {
-			q = builder.Suspend()
-			// make sure defer doesn't enable task again
-			// when standalone or root task and status is suspended
-			needResumeCurrentTask = false
-			if root != nil && builder.QualifiedName() == root.QualifiedName() {
-				root = root.SetDisabled() //nolint
-			}
+	enabled := d.Get("enabled").(bool)
+	if enabled {
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			log.Printf("[WARN] failed to resume task %s", name)
 		}
-
+	} else {
+		q := builder.Suspend()
 		err := snowflake.Exec(db, q)
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
 	}
-
-	if needResumeCurrentTask {
-		resumeTask(builder, meta)
-	}
-
-	resumeTask(root, meta)
 	return ReadTask(d, meta)
 }
 
@@ -771,14 +764,30 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	root, err := getActiveRootTaskAndSuspend(d, meta)
+	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
 		return err
 	}
+	for _, rootTask := range rootTasks {
+		// if a root task is enabled, then it needs to be suspended before the child tasks can be deleted
+		if rootTask.IsEnabled() {
+			q := rootTask.Suspend()
+			err = snowflake.Exec(db, q)
+			if err != nil {
+				return err
+			}
 
-	// only resume the root when not a standalone task
-	if root != nil && name != root.Name() {
-		defer resumeTask(root, meta)
+			if !(rootTask.Name == name) {
+				// resume the task after modifications are complete, as long as it is not a standalone task
+				defer func() {
+					q = rootTask.Resume()
+					err = snowflake.Exec(db, q)
+					if err != nil {
+						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+					}
+				}()
+			}
+		}
 	}
 
 	q := snowflake.Task(name, database, schema).Drop()
