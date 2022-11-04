@@ -740,7 +740,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		enabled := d.Get("enabled").(bool)
 
 		if enabled {
-			q = builder.Resume()
+			needResumeCurrentTask = true
 		} else {
 			q = builder.Suspend()
 		}
@@ -749,7 +749,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating task state %v", d.Id())
 		}
-
 	}
 
 	if needResumeCurrentTask {
