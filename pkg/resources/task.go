@@ -284,7 +284,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("predecessors", predecessors)
+	err = d.Set("after", predecessors)
 	if err != nil {
 		return err
 	}
@@ -400,33 +400,31 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("after"); ok {
-		a := v.([]interface{})
-		after := make([]string, len(a))
-		for i, v := range a {
-			after[i] = v.(string)
-		}
-		rootTasks, err := snowflake.GetRootTasks(name, database, dbSchema, db)
-		if err != nil {
-			return err
-		}
-		for _, rootTask := range rootTasks {
-			// if a root task is enabled, then it needs to be suspended before the child tasks can be created
-			if rootTask.IsEnabled() {
-				q := rootTask.Suspend()
-				err = snowflake.Exec(db, q)
-				if err != nil {
-					return err
-				}
+		after := expandStringList(v.([]interface{}))
+		for _, dep := range after {
+			rootTasks, err := snowflake.GetRootTasks(dep, database, dbSchema, db)
+			if err != nil {
+				return err
+			}
+			for _, rootTask := range rootTasks {
+				// if a root task is enabled, then it needs to be suspended before the child tasks can be created
+				if rootTask.IsEnabled() {
+					q := rootTask.Suspend()
+					err = snowflake.Exec(db, q)
+					if err != nil {
+						return err
+					}
 
-				// resume the task after modifications are complete as long as it is not a standalone task
-				if !(rootTask.Name == name){
-					defer func() {
-						q = rootTask.Resume()
-						err = snowflake.Exec(db, q)
-						if err != nil {
-							log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-						}
-					}()
+					// resume the task after modifications are complete as long as it is not a standalone task
+					if !(rootTask.Name == name) {
+						defer func() {
+							q = rootTask.Resume()
+							err = snowflake.Exec(db, q)
+							if err != nil {
+								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+							}
+						}()
+					}
 				}
 			}
 
@@ -752,7 +750,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	for _, rootTask := range rootTasks {
-		// if a root task is enabled, then it needs to be suspended before the child tasks can be created
+		// if a root task is enabled, then it needs to be suspended before the child tasks can be deleted
 		if rootTask.IsEnabled() {
 			q := rootTask.Suspend()
 			err = snowflake.Exec(db, q)

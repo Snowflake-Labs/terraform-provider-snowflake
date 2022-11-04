@@ -486,12 +486,11 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 func GetRootTasks(name string, databaseName string, schemaName string, db *sql.DB) ([]*task, error) {
 	builder := Task(name, databaseName, schemaName)
 	log.Printf("[DEBUG] retrieving predecessors for task %s\n", builder.QualifiedName())
-	
 	q := builder.Show()
 	row := QueryRow(db, q)
 	t, err := ScanTask(row)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to scan row for task %s", builder.QualifiedName())
+		return nil, err
 	}
 
 	predecessors, err := t.GetPredecessors()
