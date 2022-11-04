@@ -454,7 +454,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if enabled {
-		snowflake.WaitResumeTask(db, name, database, schema)
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			return err
+		}
 	}
 
 	return ReadTask(d, meta)
@@ -735,7 +738,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	enabled := d.Get("enabled").(bool)
 	if enabled {
-		snowflake.WaitResumeTask(db, name, database, schema)
+		err := snowflake.WaitResumeTask(db, name, database, schema)
+		if err != nil {
+			return err
+		}
 	} else {
 		q := builder.Suspend()
 		err := snowflake.Exec(db, q)

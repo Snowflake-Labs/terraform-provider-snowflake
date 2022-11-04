@@ -532,7 +532,7 @@ func WaitResumeTask(db *sql.DB, name string, database string, schema string) err
 
 	// try to resume the task, and verify that it was resumed.
 	// if its not resumed then try again up until a maximum of 3 times
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		q := builder.Resume()
 		err := Exec(db, q)
 		if err != nil {
@@ -548,7 +548,7 @@ func WaitResumeTask(db *sql.DB, name string, database string, schema string) err
 		if t.IsEnabled() {
 			break
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
-	return nil
+	return errors.Errorf("unable to resume task %v", name)
 }

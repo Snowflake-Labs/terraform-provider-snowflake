@@ -403,7 +403,7 @@ func TestAcc_Task_Managed(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
 					resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", ""),
-					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", accName),
+					resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", whName),
 				),
 			},
 			{
