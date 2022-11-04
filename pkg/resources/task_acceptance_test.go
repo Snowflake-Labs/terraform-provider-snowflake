@@ -39,7 +39,7 @@ var (
 	childname     = "child_task"
 	soloname      = "standalone_task"
 	warehousename = strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databasename  = "tst-terraform-"+ strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databasename  = "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: warehousename,
@@ -374,7 +374,7 @@ resource "snowflake_task" "solo_task" {
 }
 
 func TestAcc_Task_Managed(t *testing.T) {
-	accName := "tst-terraform-"+strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
@@ -529,7 +529,7 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := "tst-terraform-"+strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
