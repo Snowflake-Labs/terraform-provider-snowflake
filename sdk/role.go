@@ -154,7 +154,7 @@ func (r *roles) Read(ctx context.Context, role string) (*Role, error) {
 	return entity.toRole(), nil
 }
 
-func (r *roles) formatRoleProperties(properties *RoleProperties) string {
+func (*roles) formatRoleProperties(properties *RoleProperties) string {
 	var s string
 	if properties.Comment != nil {
 		s = s + " comment='" + *properties.Comment + "'"
@@ -165,7 +165,7 @@ func (r *roles) formatRoleProperties(properties *RoleProperties) string {
 // Update attributes of an existing role.
 func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions) (*Role, error) {
 	if role == "" {
-		return nil, errors.New("name must not be empty")
+		return nil, errors.New("role name must not be empty")
 	}
 	sql := fmt.Sprintf("ALTER ROLE %s SET", role)
 	if opts.RoleProperties != nil {

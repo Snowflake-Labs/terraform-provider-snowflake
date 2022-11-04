@@ -16,12 +16,14 @@ type Databases interface {
 	List(ctx context.Context, options DatabaseListOptions) ([]*Database, error)
 	// Create a new database with the given options.
 	Create(ctx context.Context, options DatabaseCreateOptions) (*Database, error)
-	// Read an database by its name.
+	// Read a database by its name.
 	Read(ctx context.Context, database string) (*Database, error)
 	// Update attributes of an existing database.
 	Update(ctx context.Context, database string, options DatabaseUpdateOptions) (*Database, error)
-	// Delete an database by its name.
+	// Delete a database by its name.
 	Delete(ctx context.Context, database string) error
+	// Rename a database name.
+	Rename(ctx context.Context, oldName string, newName string) error
 }
 
 // databases implements Databases
@@ -81,6 +83,9 @@ func (o DatabaseListOptions) validate() error {
 }
 
 type DatabaseProperties struct {
+	// Optional: Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database
+	DataRetentionTimeInDays *int32
+
 	// Optional: Specifies a comment for the database.
 	Comment *string
 }
@@ -94,7 +99,7 @@ type DatabaseCreateOptions struct {
 
 func (o DatabaseCreateOptions) validate() error {
 	if o.Name == "" {
-		return errors.New("name must not be empty")
+		return errors.New("database name must not be empty")
 	}
 	return nil
 }
@@ -128,9 +133,24 @@ func (d *databases) List(ctx context.Context, options DatabaseListOptions) ([]*D
 	return entities, nil
 }
 
+// Create a new database with the given options.
+func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (*Database, error) {
+	if err := options.validate(); err != nil {
+		return nil, fmt.Errorf("validate create options: %w", err)
+	}
+	sql := fmt.Sprintf("CREATE DATABASE %s", options.Name)
+	if options.DatabaseProperties != nil {
+		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
+	}
+	if _, err := d.client.exec(ctx, sql); err != nil {
+		return nil, fmt.Errorf("db exec: %w", err)
+	}
+	return d.Read(ctx, options.Name)
+}
+
 // Read a database by its name.
-func (d *databases) Read(ctx context.Context, databases string) (*Database, error) {
-	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, databases)
+func (d *databases) Read(ctx context.Context, database string) (*Database, error) {
+	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, database)
 	rows, err := d.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -147,10 +167,13 @@ func (d *databases) Read(ctx context.Context, databases string) (*Database, erro
 	return entity.toDatabase(), nil
 }
 
-func (d *databases) formatDatabaseProperties(properties *DatabaseProperties) string {
+func (*databases) formatDatabaseProperties(properties *DatabaseProperties) string {
 	var s string
 	if properties.Comment != nil {
 		s = s + " comment='" + *properties.Comment + "'"
+	}
+	if properties.DataRetentionTimeInDays != nil {
+		s = s + fmt.Sprintf(" data_retention_time_in_days=%d", *properties.DataRetentionTimeInDays)
 	}
 	return s
 }
@@ -170,24 +193,18 @@ func (d *databases) Update(ctx context.Context, database string, options Databas
 	return d.Read(ctx, database)
 }
 
-// Create a new database with the given options.
-func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (*Database, error) {
-	if err := options.validate(); err != nil {
-		return nil, fmt.Errorf("validate create options: %w", err)
-	}
-	sql := fmt.Sprintf("CREATE DATABASE %s", options.Name)
-	if options.DatabaseProperties != nil {
-		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
-	}
-	if _, err := d.client.exec(ctx, sql); err != nil {
-		return nil, fmt.Errorf("db exec: %w", err)
-	}
-	return d.Read(ctx, options.Name)
-}
-
 // Delete a database by its name.
 func (d *databases) Delete(ctx context.Context, database string) error {
 	sql := fmt.Sprintf(`DROP DATABASE %s`, database)
+	if _, err := d.client.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// Rename a database name.
+func (d *databases) Rename(ctx context.Context, oldName string, newName string) error {
+	sql := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", oldName, newName)
 	if _, err := d.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}

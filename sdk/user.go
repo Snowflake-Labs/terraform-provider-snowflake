@@ -151,7 +151,7 @@ type UserCreateOptions struct {
 
 func (o UserCreateOptions) validate() error {
 	if o.Name == "" {
-		return errors.New("name must not be empty")
+		return errors.New("user name must not be empty")
 	}
 	return nil
 }
@@ -204,7 +204,7 @@ func (u *users) Read(ctx context.Context, user string) (*User, error) {
 	return entity.toUser(), nil
 }
 
-func (u *users) formatUserProperties(properties *UserProperties) string {
+func (*users) formatUserProperties(properties *UserProperties) string {
 	var s string
 	if properties.LoginName != nil {
 		s = s + " login_name='" + *properties.LoginName + "'"

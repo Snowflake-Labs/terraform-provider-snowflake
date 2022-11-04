@@ -181,7 +181,7 @@ type WarehouseCreateOptions struct {
 
 func (o WarehouseCreateOptions) validate() error {
 	if o.Name == "" {
-		return errors.New("name must not be empty")
+		return errors.New("warehouse name must not be empty")
 	}
 	return nil
 }
@@ -215,7 +215,7 @@ func (w *warehouses) List(ctx context.Context, options WarehouseListOptions) ([]
 	return entities, nil
 }
 
-func (w *warehouses) formatWarehouseProperties(properties *WarehouseProperties) string {
+func (*warehouses) formatWarehouseProperties(properties *WarehouseProperties) string {
 	var s string
 	if properties.WarehouseSize != nil {
 		s = s + " warehouse_size='" + *properties.WarehouseSize + "'"

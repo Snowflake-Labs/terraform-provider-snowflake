@@ -47,6 +47,7 @@ type Client struct {
 	Roles      Roles
 	Warehouses Warehouses
 	Databases  Databases
+	Schemas    Schemas
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -112,6 +113,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	client.Roles = &roles{client: client}
 	client.Warehouses = &warehouses{client: client}
 	client.Databases = &databases{client: client}
+	client.Schemas = &schemas{client: client}
 
 	return client, nil
 }
