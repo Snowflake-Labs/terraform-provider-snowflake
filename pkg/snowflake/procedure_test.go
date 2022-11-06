@@ -14,7 +14,8 @@ func getProcedure(withArgs bool) *ProcedureBuilder {
 	if withArgs {
 		s.WithArgs([]map[string]string{
 			{"name": "user", "type": "varchar"},
-			{"name": "eventdt", "type": "date"}})
+			{"name": "eventdt", "type": "date"},
+		})
 	}
 	return s
 }

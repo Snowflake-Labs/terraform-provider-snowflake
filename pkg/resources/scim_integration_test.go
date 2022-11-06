@@ -68,7 +68,8 @@ func TestSCIMIntegrationDelete(t *testing.T) {
 
 func expectReadSCIMIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "created_on"},
+		"name", "type", "category", "created_on",
+	},
 	).AddRow("test_scim_integration", "SCIM - AZURE", "SECURITY", "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_scim_integration'$`).WillReturnRows(showRows)
 

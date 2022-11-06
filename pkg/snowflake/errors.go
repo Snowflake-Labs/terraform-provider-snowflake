@@ -13,6 +13,6 @@ var (
 
 func IsResourceNotExistOrNotAuthorized(errorString string, resourceType string) bool {
 	regexStr := fmt.Sprintf("SQL compilation error:%s '.*' does not exist or not authorized.", resourceType)
-	var userNotExistOrNotAuthorizedRegEx, _ = regexp.Compile(regexStr)
+	userNotExistOrNotAuthorizedRegEx, _ := regexp.Compile(regexStr)
 	return userNotExistOrNotAuthorizedRegEx.MatchString(strings.ReplaceAll(errorString, "\n", ""))
 }

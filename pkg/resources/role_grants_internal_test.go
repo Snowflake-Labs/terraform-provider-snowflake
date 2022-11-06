@@ -52,6 +52,7 @@ func Test_revokeRoleFromRole(t *testing.T) {
 		r.NoError(err)
 	})
 }
+
 func Test_revokeRoleFromUser(t *testing.T) {
 	r := require.New(t)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {

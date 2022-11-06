@@ -502,7 +502,8 @@ func GetOauthAccessToken(
 	endPoint,
 	clientID,
 	clientSecret string,
-	data url.Values) (string, error) {
+	data url.Values,
+) (string, error) {
 	client := &http.Client{}
 	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {

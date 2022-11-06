@@ -103,7 +103,8 @@ func TestStorageIntegrationUpdate(t *testing.T) {
 	d := storageIntegration(t, "test_storage_integration_acl", in)
 
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_storage_integration_acl", "EXTERNAL_STAGE", "STORAGE", true, "now")
 
 	descRows := sqlmock.NewRows([]string{
@@ -136,12 +137,14 @@ func TestStorageIntegrationDelete(t *testing.T) {
 
 func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_storage_integration", "EXTERNAL_STAGE", "STORAGE", true, "now")
 	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
-		"property", "property_type", "property_value", "property_default"}).
+		"property", "property_type", "property_value", "property_default",
+	}).
 		AddRow("ENABLED", "Boolean", true, false).
 		AddRow("STORAGE_PROVIDER", "String", "S3", nil).
 		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
@@ -156,12 +159,14 @@ func expectReadStorageIntegration(mock sqlmock.Sqlmock) {
 
 func expectReadStorageIntegrationWithS3GOV(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_storage_integration_with_s3gov", "EXTERNAL_STAGE", "STORAGE", true, "now")
 	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS LIKE 'test_storage_integration_with_s3gov'$`).WillReturnRows(showRows)
 
 	descRows := sqlmock.NewRows([]string{
-		"property", "property_type", "property_value", "property_default"}).
+		"property", "property_type", "property_value", "property_default",
+	}).
 		AddRow("ENABLED", "Boolean", true, false).
 		AddRow("STORAGE_PROVIDER", "String", "S3GOV", nil).
 		AddRow("STORAGE_ALLOWED_LOCATIONS", "List", "s3://bucket-a/path-a/,s3://bucket-b/", nil).
@@ -176,7 +181,8 @@ func expectReadStorageIntegrationWithS3GOV(mock sqlmock.Sqlmock) {
 
 func expectReadStorageIntegrationEmpty(mock sqlmock.Sqlmock) {
 	noRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	)
 	mock.ExpectQuery(`^SHOW STORAGE INTEGRATIONS.*`).WillReturnRows(noRows)
 }

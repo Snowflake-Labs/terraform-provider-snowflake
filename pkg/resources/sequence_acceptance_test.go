@@ -79,6 +79,7 @@ resource "snowflake_sequence" "test_sequence" {
 `
 	return fmt.Sprintf(s, name, name, sequenceName)
 }
+
 func sequenceConfig(name, sequenceName string) string {
 	s := `
 resource "snowflake_database" "test_database" {

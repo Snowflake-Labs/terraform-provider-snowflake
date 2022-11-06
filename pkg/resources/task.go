@@ -342,7 +342,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for key, value := range fieldParameters {
-			//lintignore:R001
+			// lintignore:R001
 			err = d.Set(key, value)
 			if err != nil {
 				return err
@@ -523,7 +523,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		warehouse := d.Get("warehouse")
 
 		if warehouse == "" && newSize != "" {
-			var q = builder.SwitchManagedWithInitialSize(newSize.(string))
+			q := builder.SwitchManagedWithInitialSize(newSize.(string))
 			err := snowflake.Exec(db, q)
 			if err != nil {
 				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())

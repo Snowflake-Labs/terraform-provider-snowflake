@@ -168,6 +168,7 @@ func updateUserPublicKeys(db *sql.DB, name string, prop string, value string) er
 	stmt := fmt.Sprintf(`ALTER USER "%s" SET %s = '%s'`, name, prop, value)
 	return snowflake.Exec(db, stmt)
 }
+
 func unsetUserPublicKeys(db *sql.DB, name string, prop string) error {
 	stmt := fmt.Sprintf(`ALTER USER "%s" UNSET %s`, name, prop)
 	return snowflake.Exec(db, stmt)

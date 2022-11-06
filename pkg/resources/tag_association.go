@@ -125,7 +125,6 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
 			resp, err := snowflake.ListTagAssociations(builder, db)
-
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("error: %s", err))
 			}

@@ -13,7 +13,8 @@ func getJavaScriptFuction(withArgs bool) *FunctionBuilder {
 	if withArgs {
 		s.WithArgs([]map[string]string{
 			{"name": "user", "type": "varchar"},
-			{"name": "eventdt", "type": "date"}})
+			{"name": "eventdt", "type": "date"},
+		})
 	}
 	return s
 }
@@ -31,7 +32,8 @@ func getJavaFuction(withArgs bool) *FunctionBuilder {
 	if withArgs {
 		s.WithArgs([]map[string]string{
 			{"name": "user", "type": "varchar"},
-			{"name": "count", "type": "number"}})
+			{"name": "count", "type": "number"},
+		})
 	}
 	return s
 }
@@ -45,7 +47,8 @@ func getPythonFunction(withArgs bool) *FunctionBuilder {
 	s.WithStatement(pythonfunc)
 	if withArgs {
 		s.WithArgs([]map[string]string{
-			{"name": "arg", "type": "int"}})
+			{"name": "arg", "type": "int"},
+		})
 	}
 	return s
 }

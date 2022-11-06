@@ -13,6 +13,7 @@ var validWarehousePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
 )
+
 var warehouseGrantSchema = map[string]*schema.Schema{
 	"warehouse_name": {
 		Type:        schema.TypeString,

@@ -116,7 +116,8 @@ func TestTagRead(t *testing.T) {
 
 func expectReadTag(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "owner", "comment", "allowed_values"},
+		"created_on", "name", "database_name", "schema_name", "owner", "comment", "allowed_values",
+	},
 	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "test_db", "test_schema", "admin", "great comment", "'al1','al2'")
 	mock.ExpectQuery(`^SHOW TAGS LIKE 'good_name' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }

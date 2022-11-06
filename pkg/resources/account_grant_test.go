@@ -21,7 +21,7 @@ func TestAccountGrant(t *testing.T) {
 }
 
 // lintignore:AT003
-func TestAccountGrantCreate(t *testing.T) { //lintignore:AT003
+func TestAccountGrantCreate(t *testing.T) { // lintignore:AT003
 	r := require.New(t)
 
 	in := map[string]interface{}{

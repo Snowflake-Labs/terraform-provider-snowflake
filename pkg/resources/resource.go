@@ -46,7 +46,6 @@ func CreateResource(
 			qb.SetTags(tags.toSnowflakeTagValues())
 		}
 		err := snowflake.Exec(db, qb.Statement())
-
 		if err != nil {
 			return errors.Wrapf(err, "error creating %s", t)
 		}
