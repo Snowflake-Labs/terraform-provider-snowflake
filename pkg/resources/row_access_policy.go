@@ -41,7 +41,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		ForceNew:    true,
 		Description: "Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.",
-		//Implement DiffSuppressFunc after https://github.com/hashicorp/terraform-plugin-sdk/issues/477 is solved
+		// Implement DiffSuppressFunc after https://github.com/hashicorp/terraform-plugin-sdk/issues/477 is solved
 	},
 	"row_access_expression": {
 		Type:        schema.TypeString,

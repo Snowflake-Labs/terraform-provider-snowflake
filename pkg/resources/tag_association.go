@@ -173,7 +173,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		//return err
+		// return err
 		return errors.Wrap(err, "error listing tag associations")
 	}
 

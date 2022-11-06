@@ -28,7 +28,7 @@ func prepDummyProcedureResource(t *testing.T) *schema.ResourceData {
 		"language":        "SCALA",
 		"comment":         "mock comment",
 		"return_behavior": "IMMUTABLE",
-		"statement":       procedureBody, //var message = DATA + DATA;return message
+		"statement":       procedureBody, // var message = DATA + DATA;return message
 	}
 	d := procedure(t, "my_db|my_schema|my_proc|VARCHAR-DATE", in)
 	return d

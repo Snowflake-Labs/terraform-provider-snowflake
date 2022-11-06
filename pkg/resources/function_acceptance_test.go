@@ -57,12 +57,12 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
 
 					// TODO: temporarily remove unit tests to allow for urgent release
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "2"),
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
-					//resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "2"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
 				),
 			},
 		},
