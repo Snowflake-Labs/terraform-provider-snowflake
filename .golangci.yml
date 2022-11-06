@@ -15,5 +15,5 @@ linters:
     # - unparam
     - exportloopref
     - godot
-    # - gocritic
+    - gocritic
     - misspell
