@@ -52,10 +52,10 @@ func NetworkPolicy(name string) *NetworkPolicyBuilder {
 func (npb *NetworkPolicyBuilder) Create() string {
 	createSQL := fmt.Sprintf(`CREATE NETWORK POLICY "%v" ALLOWED_IP_LIST=%v`, npb.name, npb.allowedIPList)
 	if npb.blockedIPList != "" {
-		createSQL = createSQL + fmt.Sprintf(" BLOCKED_IP_LIST=%v", npb.blockedIPList)
+		createSQL += fmt.Sprintf(" BLOCKED_IP_LIST=%v", npb.blockedIPList)
 	}
 	if npb.comment != "" {
-		createSQL = createSQL + fmt.Sprintf(` COMMENT="%v"`, npb.comment)
+		createSQL += fmt.Sprintf(` COMMENT="%v"`, npb.comment)
 	}
 
 	return createSQL

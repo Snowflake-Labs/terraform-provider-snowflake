@@ -154,7 +154,7 @@ func Warehouse() *schema.Resource {
 
 // CreateWarehouse implements schema.CreateFunc.
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	props := append(warehouseProperties, warehouseCreateProperties...)
+	props := append(warehouseProperties, warehouseCreateProperties...) //nolint:gocritic // todo: please fix this to pass gocritic
 	return CreateResource(
 		"warehouse",
 		props,

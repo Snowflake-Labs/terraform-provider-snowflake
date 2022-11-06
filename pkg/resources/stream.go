@@ -191,7 +191,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	onTable, onTableSet := d.GetOk("on_table")
 	onView, onViewSet := d.GetOk("on_view")
 
-	if (onTableSet && onViewSet) || !(onTableSet || onViewSet) {
+	if (onTableSet && onViewSet) || !(onTableSet || onViewSet) { //nolint:gocritic // todo: please fix this to pass gocritic
 		return fmt.Errorf("exactly one of 'on_table' or 'on_view' expected")
 	} else if onTableSet {
 		id, err := streamOnObjectIDFromString(onTable.(string))

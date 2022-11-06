@@ -260,8 +260,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if opts := database.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
-			switch opt {
-			case "TRANSIENT":
+			if opt == "TRANSIENT" {
 				err = d.Set("is_transient", true)
 				if err != nil {
 					return err

@@ -95,7 +95,7 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 
 func ValidateFullyQualifiedObjectID(i interface{}, k string) (s []string, errors []error) {
 	v, _ := i.(string)
-	if strings.Contains(v, ".") {
+	if strings.Contains(v, ".") { //nolint:gocritic // todo: please fix this
 		tagArray := strings.Split(v, ".")
 		if len(tagArray) != 3 {
 			errors = append(errors, fmt.Errorf("%v, is not a valid id. If using period delimiter, three parts must be specified <db_name>.<schema_name>.<object_name>", v))

@@ -344,14 +344,15 @@ func (ffb *FileFormatBuilder) Create() string {
 	}
 
 	// set boolean values
-	if ffb.formatType == "CSV" {
+	switch ffb.formatType {
+	case "CSV":
 		q.WriteString(fmt.Sprintf(` SKIP_BLANK_LINES = %v`, ffb.skipBlankLines))
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 		q.WriteString(fmt.Sprintf(` ERROR_ON_COLUMN_COUNT_MISMATCH = %v`, ffb.errorOnColumnCountMismatch))
 		q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, ffb.replaceInvalidCharacters))
 		q.WriteString(fmt.Sprintf(` EMPTY_FIELD_AS_NULL = %v`, ffb.emptyFieldAsNull))
 		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
-	} else if ffb.formatType == "JSON" {
+	case "JSON":
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
 		q.WriteString(fmt.Sprintf(` ENABLE_OCTAL = %v`, ffb.enableOctal))
 		q.WriteString(fmt.Sprintf(` ALLOW_DUPLICATE = %v`, ffb.allowDuplicate))
@@ -360,12 +361,12 @@ func (ffb *FileFormatBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` REPLACE_INVALID_CHARACTERS = %v`, ffb.replaceInvalidCharacters))
 		q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, ffb.ignoreUTF8Errors))
 		q.WriteString(fmt.Sprintf(` SKIP_BYTE_ORDER_MARK = %v`, ffb.skipByteOrderMark))
-	} else if ffb.formatType == "AVRO" || ffb.formatType == "ORC" {
+	case "AVRO", "ORC":
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
-	} else if ffb.formatType == "PARQUET" {
+	case "PARQUET":
 		q.WriteString(fmt.Sprintf(` BINARY_AS_TEXT = %v`, ffb.binaryAsText))
 		q.WriteString(fmt.Sprintf(` TRIM_SPACE = %v`, ffb.trimSpace))
-	} else if ffb.formatType == "XML" {
+	case "XML":
 		q.WriteString(fmt.Sprintf(` IGNORE_UTF8_ERRORS = %v`, ffb.ignoreUTF8Errors))
 		q.WriteString(fmt.Sprintf(` PRESERVE_SPACE = %v`, ffb.preserveSpace))
 		q.WriteString(fmt.Sprintf(` STRIP_OUTER_ELEMENT = %v`, ffb.stripOuterElement))

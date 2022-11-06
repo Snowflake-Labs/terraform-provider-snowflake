@@ -42,7 +42,7 @@ func AddressEscape(in ...string) string {
 
 	for i, n := range in {
 		if quoteCheck.MatchString(n) {
-			address[i] = fmt.Sprintf(`"%s"`, strings.Replace(n, `"`, `\"`, -1))
+			address[i] = fmt.Sprintf(`"%s"`, strings.ReplaceAll(n, `"`, `\"`))
 		} else {
 			address[i] = n
 		}

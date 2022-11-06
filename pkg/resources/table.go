@@ -661,7 +661,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		for _, cA := range added {
 			var q string
 
-			if cA.identity == nil && cA._default == nil {
+			if cA.identity == nil && cA._default == nil { //nolint:gocritic  // todo: please fix this to pass gocritic
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
 			} else if cA.identity != nil {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)

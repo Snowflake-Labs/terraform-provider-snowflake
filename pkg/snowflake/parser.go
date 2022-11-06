@@ -156,7 +156,7 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 			break
 		}
 
-		if escaped {
+		if escaped { //nolint:gocritic // todo: please fix this to pass gocritic
 			escaped = false
 		} else if e.input[e.pos+found] == '\\' {
 			escaped = true
