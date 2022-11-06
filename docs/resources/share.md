@@ -13,10 +13,10 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_share test {
-	name           = "share_name"
-	comment        = "cool comment"
-	accounts       = ["organizationName.accountName"]
+resource "snowflake_share" "test" {
+  name     = "share_name"
+  comment  = "cool comment"
+  accounts = ["organizationName.accountName"]
 }
 ```
 

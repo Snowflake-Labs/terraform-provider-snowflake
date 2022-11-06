@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_integration_grant grant {
+resource "snowflake_integration_grant" "grant" {
   integration_name = "integration"
 
   privilege = "USAGE"
