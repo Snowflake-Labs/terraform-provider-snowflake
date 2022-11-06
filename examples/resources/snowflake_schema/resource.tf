@@ -1,5 +1,5 @@
-resource snowflake_schema schema {
-  database = "db"
+resource "snowflake_schema" "schema" {
+  database = "database"
   name     = "schema"
   comment  = "A schema."
 

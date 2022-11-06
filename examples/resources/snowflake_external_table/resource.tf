@@ -1,4 +1,4 @@
-resource snowflake_external_table external_table {
+resource "snowflake_external_table" "external_table" {
   database    = "db"
   schema      = "schema"
   name        = "external_table"

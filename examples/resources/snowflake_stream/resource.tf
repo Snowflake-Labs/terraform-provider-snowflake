@@ -1,7 +1,7 @@
 resource "snowflake_stream" "stream" {
   comment = "A stream."
 
-  database = "db"
+  database = "database"
   schema   = "schema"
   name     = "stream"
 
