@@ -138,7 +138,7 @@ func ParseAndFormatFullyQualifiedObectID(s string) string {
 }
 
 func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName string) {
-	parsedString := strings.Replace(s, "\"", "", -1)
+	parsedString := strings.ReplaceAll(s, "\"", "")
 
 	var parts []string
 	if strings.Contains(parsedString, "|") {
