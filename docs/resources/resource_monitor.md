@@ -42,12 +42,12 @@ resource snowflake_resource_monitor monitor {
 - `end_timestamp` (String) The date and time when the resource monitor suspends the assigned warehouses.
 - `frequency` (String) The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.
 - `notify_triggers` (Set of Number) A list of percentage thresholds at which to send an alert to subscribed users.
+- `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors.
 - `set_for_account` (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account.
 - `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
 - `suspend_immediate_triggers` (Set of Number) A list of percentage thresholds at which to immediately suspend all warehouses.
 - `suspend_triggers` (Set of Number) A list of percentage thresholds at which to suspend all warehouses.
 - `warehouses` (Set of String) A list of warehouses to apply the resource monitor to.
-- `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors. The user identifier is the value of the `name` column from the output of `snowflake_user`. Each user listed must have a verified email address.
 
 ### Read-Only
 
