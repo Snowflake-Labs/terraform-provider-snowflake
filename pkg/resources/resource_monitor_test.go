@@ -25,6 +25,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	in := map[string]interface{}{
 		"name":                       "good_name",
+		"notify_users":               []interface{}{"USERONE", "USERTWO"},
 		"credit_quota":               100,
 		"notify_triggers":            []interface{}{75, 88},
 		"suspend_triggers":           []interface{}{99},
@@ -37,7 +38,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
+			`^CREATE RESOURCE MONITOR "good_name" CREDIT_QUOTA=100 NOTIFY_USERS=\('USERTWO', 'USERONE'\) TRIGGERS ON 99 PERCENT DO SUSPEND ON 105 PERCENT DO SUSPEND_IMMEDIATE ON 88 PERCENT DO NOTIFY ON 75 PERCENT DO NOTIFY$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^ALTER ACCOUNT SET RESOURCE_MONITOR = "good_name"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -51,10 +52,10 @@ func expectReadResourceMonitor(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"name", "credit_quota", "used_credits", "remaining_credits", "level",
 		"frequency", "start_time", "end_time", "notify_at", "suspend_at",
-		"suspend_immediately_at", "created_on", "owner", "comment",
+		"suspend_immediately_at", "created_on", "owner", "comment", "notify_users",
 	}).AddRow(
 		"good_name", 100.00, 0.00, 100.00, "ACCOUNT", "MONTHLY", "2001-01-01 00:00:00.000 -0700",
-		"", "75%,88%", "99%", "105%", "2001-01-01 00:00:00.000 -0700", "ACCOUNTADMIN", "")
+		"", "75%,88%", "99%", "105%", "2001-01-01 00:00:00.000 -0700", "ACCOUNTADMIN", "", "USERONE, USERTWO")
 	mock.ExpectQuery(`^SHOW RESOURCE MONITORS LIKE 'good_name'$`).WillReturnRows(rows)
 }
 

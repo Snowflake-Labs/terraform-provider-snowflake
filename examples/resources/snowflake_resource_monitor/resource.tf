@@ -9,4 +9,6 @@ resource "snowflake_resource_monitor" "monitor" {
   notify_triggers            = [40]
   suspend_triggers           = [50]
   suspend_immediate_triggers = [90]
+
+  notify_users = ["USERONE", "USERTWO"]
 }

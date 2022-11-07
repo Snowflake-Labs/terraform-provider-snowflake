@@ -62,12 +62,13 @@ const (
 func (rb *ResourceMonitorBuilder) Create() *ResourceMonitorCreateBuilder {
 	return &ResourceMonitorCreateBuilder{
 		CreateBuilder{
-			name:             rb.name,
-			entityType:       rb.entityType,
-			stringProperties: make(map[string]string),
-			boolProperties:   make(map[string]bool),
-			intProperties:    make(map[string]int),
-			floatProperties:  make(map[string]float64),
+			name:                 rb.name,
+			entityType:           rb.entityType,
+			stringProperties:     make(map[string]string),
+			boolProperties:       make(map[string]bool),
+			intProperties:        make(map[string]int),
+			floatProperties:      make(map[string]float64),
+			stringListProperties: make(map[string][]string),
 		},
 		make([]trigger, 0),
 	}
@@ -108,6 +109,10 @@ func (rcb *ResourceMonitorCreateBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(` %v=%.2f`, strings.ToUpper(k), v))
 	}
 
+	for k, v := range rcb.stringListProperties {
+		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
+	}
+
 	if len(rcb.triggers) > 0 {
 		sb.WriteString(" TRIGGERS")
 	}
@@ -144,6 +149,7 @@ type resourceMonitor struct {
 	CreatedOn            sql.NullString `db:"created_on"`
 	Owner                sql.NullString `db:"owner"`
 	Comment              sql.NullString `db:"comment"`
+	NotifyUsers          sql.NullString `db:"notify_users"`
 }
 
 func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {

@@ -21,6 +21,15 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "Identifier for the resource monitor; must be unique for your account.",
 		ForceNew:    true,
 	},
+	"notify_users": {
+		Type:        schema.TypeSet,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the list of users to receive email notifications on resource monitors.",
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	},
 	"credit_quota": {
 		Type:        schema.TypeInt,
 		Optional:    true,
@@ -108,6 +117,9 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	cb := snowflake.ResourceMonitor(name).Create()
 	// Set optionals
+	if v, ok := d.GetOk("notify_users"); ok {
+		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
+	}
 	if v, ok := d.GetOk("credit_quota"); ok {
 		cb.SetInt("credit_quota", v.(int))
 	}
@@ -192,6 +204,13 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	err = setDataFromNullStrings(d, nullStrings)
 	if err != nil {
 		return err
+	}
+
+	if len(rm.NotifyUsers.String) > 0 {
+		err = d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", "))
+		if err != nil {
+			return err
+		}
 	}
 
 	// Snowflake returns credit_quota as a float, but only accepts input as an int
