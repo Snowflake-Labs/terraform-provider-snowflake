@@ -34,16 +34,16 @@ jobs:
 
       - name: pull_request actions/checkout
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: pull_request actions/checkout
         if: github.event_name == 'repository_dispatch'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
 
       - name: setup-go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: '1.19'
 
@@ -103,7 +103,7 @@ jobs:
             Integration tests ${{ job.status }} for [${{ github.event.client_payload.slash_command.args.named.sha || github.event.pull_request.head.sha }}](https://github.com/Snowflake-Labs/terraform-provider-snowflake/actions/runs/${{ github.run_id }})
 
       - name: set fork job status
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         if: ${{ always() }}
         id: update-check-run
         env:
@@ -123,7 +123,7 @@ jobs:
 
             const ref = process.env.sha;
 
-            const { data: checks } = await github.checks.listForRef({
+            const { data: checks } = await github.rest.checks.listForRef({
               ...context.repo,
               ref
             });
@@ -131,7 +131,7 @@ jobs:
             const check = checks.check_runs.filter(c => c.name === process.env.job);
             console.log(check);
 
-            const { data: result } = await github.checks.update({
+            const { data: result } = await github.rest.checks.update({
               ...context.repo,
               check_run_id: check[0].id,
               status: 'completed',
