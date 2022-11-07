@@ -25,6 +25,8 @@ type Users interface {
 	Update(ctx context.Context, user string, options UserUpdateOptions) (*User, error)
 	// Delete an user by its name.
 	Delete(ctx context.Context, user string) error
+	// Rename a user name.
+	Rename(ctx context.Context, old string, new string) error
 }
 
 // users implements Users
@@ -285,6 +287,15 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 // Delete an user by its name.
 func (u *users) Delete(ctx context.Context, user string) error {
 	sql := fmt.Sprintf(`DROP USER %s`, user)
+	if _, err := u.client.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// Rename a user name.
+func (u *users) Rename(ctx context.Context, old string, new string) error {
+	sql := fmt.Sprintf("ALTER USER %s RENAME TO %s", old, new)
 	if _, err := u.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}

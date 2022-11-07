@@ -25,6 +25,8 @@ type Schemas interface {
 	Update(ctx context.Context, schema string, options SchemaUpdateOptions) (*Schema, error)
 	// Delete a schema by its name.
 	Delete(ctx context.Context, schema string) error
+	// Rename a schema name.
+	Rename(ctx context.Context, old string, new string) error
 }
 
 // schemas implements Schemas
@@ -84,6 +86,9 @@ func (o SchemaListOptions) validate() error {
 }
 
 type SchemaProperties struct {
+	// Optional: Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema
+	DataRetentionTimeInDays *int32
+
 	// Optional: Specifies a comment for the schema.
 	Comment *string
 }
@@ -181,6 +186,9 @@ func (*schemas) formatSchemaProperties(properties *SchemaProperties) string {
 	if properties.Comment != nil {
 		s = s + " comment='" + *properties.Comment + "'"
 	}
+	if properties.DataRetentionTimeInDays != nil {
+		s = s + fmt.Sprintf(" data_retention_time_in_days=%d", *properties.DataRetentionTimeInDays)
+	}
 	return s
 }
 
@@ -202,6 +210,15 @@ func (s *schemas) Update(ctx context.Context, schema string, options SchemaUpdat
 // Delete a schema by its name.
 func (s *schemas) Delete(ctx context.Context, schema string) error {
 	sql := fmt.Sprintf(`DROP SCHEMA %s`, schema)
+	if _, err := s.client.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// Rename a schema name.
+func (s *schemas) Rename(ctx context.Context, old string, new string) error {
+	sql := fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", old, new)
 	if _, err := s.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}

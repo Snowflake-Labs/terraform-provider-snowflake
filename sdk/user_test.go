@@ -66,3 +66,12 @@ func (ts *testSuite) TestUpdateUser() {
 
 	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
 }
+
+func (ts *testSuite) TestRenameUser() {
+	user, err := ts.createUser()
+	ts.NoError(err)
+
+	newUser := "NEW_USER_TEST"
+	ts.NoError(ts.client.Users.Rename(context.Background(), user.Name, newUser))
+	ts.NoError(ts.client.Users.Delete(context.Background(), newUser))
+}

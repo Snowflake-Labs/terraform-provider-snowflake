@@ -23,7 +23,7 @@ type Databases interface {
 	// Delete a database by its name.
 	Delete(ctx context.Context, database string) error
 	// Rename a database name.
-	Rename(ctx context.Context, oldName string, newName string) error
+	Rename(ctx context.Context, old string, new string) error
 }
 
 // databases implements Databases
@@ -203,8 +203,8 @@ func (d *databases) Delete(ctx context.Context, database string) error {
 }
 
 // Rename a database name.
-func (d *databases) Rename(ctx context.Context, oldName string, newName string) error {
-	sql := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", oldName, newName)
+func (d *databases) Rename(ctx context.Context, old string, new string) error {
+	sql := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", old, new)
 	if _, err := d.client.exec(ctx, sql); err != nil {
 		return fmt.Errorf("db exec: %w", err)
 	}

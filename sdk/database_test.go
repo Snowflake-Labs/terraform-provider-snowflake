@@ -63,3 +63,12 @@ func (ts *testSuite) TestUpdateDatabase() {
 
 	ts.NoError(ts.client.Databases.Delete(context.Background(), database.Name))
 }
+
+func (ts *testSuite) TestRenameDatabase() {
+	database, err := ts.createDatabase()
+	ts.NoError(err)
+
+	newDB := "NEW_DATABASE_TEST"
+	ts.NoError(ts.client.Databases.Rename(context.Background(), database.Name, newDB))
+	ts.NoError(ts.client.Databases.Delete(context.Background(), newDB))
+}
