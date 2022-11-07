@@ -17,7 +17,7 @@ jobs:
           private_key: ${{ secrets.OK_TO_TEST_PRIVATE_KEY }}
 
       - name: Slash Command Dispatch
-        uses: peter-evans/slash-command-dispatch@v2
+        uses: peter-evans/slash-command-dispatch@v3
         env:
           TOKEN: ${{ steps.generate_token.outputs.token }}
           ACTIONS_STEP_DEBUG: true
