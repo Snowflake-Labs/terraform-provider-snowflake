@@ -23,6 +23,7 @@ description: |-
 ### Optional
 
 - `current_grants` (String) Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role.
+- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy.
 
 ### Read-Only
 
