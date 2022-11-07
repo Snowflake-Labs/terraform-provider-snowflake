@@ -86,7 +86,7 @@ func getRolesSweeper(name string) *resource.Sweeper {
 				return fmt.Errorf("Error getting db handle: %w", err)
 			}
 
-			roles, err := snowflake.ListRoles(db)
+			roles, err := snowflake.ListRoles(db, "%")
 			if err != nil {
 				return fmt.Errorf("Error listing roles: %w", err)
 			}

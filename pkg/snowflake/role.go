@@ -2,7 +2,9 @@ package snowflake
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -17,6 +19,7 @@ func Role(name string) *Builder {
 type role struct {
 	Name    sql.NullString `db:"name"`
 	Comment sql.NullString `db:"comment"`
+	Owner   sql.NullString `db:"owner"`
 }
 
 func ScanRole(row *sqlx.Row) (*role, error) {
@@ -25,9 +28,13 @@ func ScanRole(row *sqlx.Row) (*role, error) {
 	return r, err
 }
 
-func ListRoles(db *sql.DB) ([]*role, error) {
-	stmt := "SHOW ROLES"
-	rows, err := Query(db, stmt)
+func ListRoles(db *sql.DB, rolePattern string) ([]*role, error) {
+	stmt := strings.Builder{}
+	stmt.WriteString("SHOW ROLES")
+	if rolePattern != "" {
+		stmt.WriteString(fmt.Sprintf(` LIKE '%v'`, rolePattern))
+	}
+	rows, err := Query(db, stmt.String())
 	if err != nil {
 		return nil, err
 	}
