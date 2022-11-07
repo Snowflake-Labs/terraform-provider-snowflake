@@ -120,7 +120,7 @@ func (d *databases) List(ctx context.Context, options DatabaseListOptions) ([]*D
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, options.Pattern)
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceDatabases, options.Pattern)
 	rows, err := d.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -143,7 +143,7 @@ func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("CREATE DATABASE %s", options.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceDatabase, options.Name)
 	if options.DatabaseProperties != nil {
 		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
 	}
@@ -178,7 +178,7 @@ func (d *databases) Update(ctx context.Context, database string, options Databas
 	if database == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	sql := fmt.Sprintf("ALTER DATABASE %s SET", database)
+	sql := fmt.Sprintf("ALTER %s %s SET", ResourceDatabase, database)
 	if options.DatabaseProperties != nil {
 		sql = sql + d.formatDatabaseProperties(options.DatabaseProperties)
 	}

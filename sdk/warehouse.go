@@ -204,7 +204,7 @@ func (w *warehouses) List(ctx context.Context, options WarehouseListOptions) ([]
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, options.Pattern)
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceWarehouses, options.Pattern)
 	rows, err := w.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -253,7 +253,7 @@ func (w *warehouses) Create(ctx context.Context, options WarehouseCreateOptions)
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("CREATE WAREHOUSE %s", options.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceWarehouse, options.Name)
 	if options.WarehouseProperties != nil {
 		sql = sql + w.formatWarehouseProperties(options.WarehouseProperties)
 	}
@@ -277,7 +277,7 @@ func (w *warehouses) Update(ctx context.Context, warehouse string, options Wareh
 	if warehouse == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	sql := fmt.Sprintf("ALTER WAREHOUSE %s SET", warehouse)
+	sql := fmt.Sprintf("ALTER %s %s SET", ResourceWarehouse, warehouse)
 	if options.WarehouseProperties != nil {
 		sql = sql + w.formatWarehouseProperties(options.WarehouseProperties)
 	}

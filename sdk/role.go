@@ -124,7 +124,7 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, options.Pattern)
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceRoles, options.Pattern)
 	rows, err := r.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -164,7 +164,7 @@ func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions)
 	if role == "" {
 		return nil, errors.New("role name must not be empty")
 	}
-	sql := fmt.Sprintf("ALTER ROLE %s SET", role)
+	sql := fmt.Sprintf("ALTER %s %s SET", ResourceRole, role)
 	if opts.RoleProperties != nil {
 		sql = sql + r.formatRoleProperties(opts.RoleProperties)
 	}
@@ -179,7 +179,7 @@ func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, erro
 	if err := opts.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("CREATE ROLE %s", opts.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceRole, opts.Name)
 	if opts.RoleProperties != nil {
 		sql = sql + r.formatRoleProperties(opts.RoleProperties)
 	}

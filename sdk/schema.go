@@ -129,7 +129,7 @@ func (s *schemas) List(ctx context.Context, options SchemaListOptions) ([]*Schem
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW SCHEMAS LIKE '%s'`, options.Pattern)
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceSchemas, options.Pattern)
 	rows, err := s.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -152,12 +152,12 @@ func (s *schemas) Create(ctx context.Context, options SchemaCreateOptions) (*Sch
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("USE DATABASE %s", options.DatabaseName)
+	sql := fmt.Sprintf("USE %s %s", ResourceDatabase, options.DatabaseName)
 	if _, err := s.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
 
-	sql = fmt.Sprintf("CREATE SCHEMA %s", options.Name)
+	sql = fmt.Sprintf("CREATE %s %s", ResourceSchema, options.Name)
 	if options.SchemaProperties != nil {
 		sql = sql + s.formatSchemaProperties(options.SchemaProperties)
 	}
@@ -192,7 +192,7 @@ func (s *schemas) Update(ctx context.Context, schema string, options SchemaUpdat
 	if schema == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	sql := fmt.Sprintf("ALTER SCHEMA %s SET", schema)
+	sql := fmt.Sprintf("ALTER %s %s SET", ResourceSchema, schema)
 	if options.SchemaProperties != nil {
 		sql = sql + s.formatSchemaProperties(options.SchemaProperties)
 	}

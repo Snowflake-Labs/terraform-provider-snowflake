@@ -174,7 +174,7 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, options.Pattern)
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceUsers, options.Pattern)
 	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)
@@ -254,7 +254,7 @@ func (u *users) Update(ctx context.Context, user string, options UserUpdateOptio
 	if user == "" {
 		return nil, errors.New("name must not be empty")
 	}
-	sql := fmt.Sprintf("ALTER USER %s SET", user)
+	sql := fmt.Sprintf("ALTER %s %s SET", ResourceUser, user)
 	if options.UserProperties != nil {
 		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
@@ -269,7 +269,7 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("CREATE USER %s", options.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceUser, options.Name)
 	if options.UserProperties != nil {
 		sql = sql + u.formatUserProperties(options.UserProperties)
 	}
