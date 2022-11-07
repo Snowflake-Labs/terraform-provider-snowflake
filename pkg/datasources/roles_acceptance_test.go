@@ -26,15 +26,15 @@ func TestAcc_Roles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.0.name"),
-					//resource.TestCheckTypeSetElemAttr("data.snowflake_roles.r", "roles.*", "name"),
-					//TODO SHOW ROLES output also includes built in roles, i.e. ACCOUNTADMIN, SYSADMIN, etc.
+					// resource.TestCheckTypeSetElemAttr("data.snowflake_roles.r", "roles.*", "name"),
+					// TODO SHOW ROLES output also includes built in roles, i.e. ACCOUNTADMIN, SYSADMIN, etc.
 				),
 			},
 			{
 				Config: rolesPattern(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.#"),
-					//resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.0.name"),
+					// resource.TestCheckResourceAttrSet("data.snowflake_roles.r", "roles.0.name"),
 					resource.TestCheckResourceAttr("data.snowflake_roles.r", "roles.#", "1"),
 					resource.TestCheckResourceAttr("data.snowflake_roles.r", "roles.0.name", accountAdmin),
 				),
