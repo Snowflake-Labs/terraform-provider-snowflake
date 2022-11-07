@@ -31,7 +31,7 @@ func prepDummyFunctionResource(t *testing.T) *schema.ResourceData {
 		"packages":            []interface{}{"numpy", "pandas"},
 		"handler":             "add_py",
 		"return_type":         "varchar",
-		"statement":           functionBody, //var message = DATA + DATA;return message
+		"statement":           functionBody, // var message = DATA + DATA;return message
 	}
 	d := function(t, "my_db|my_schema|my_funct|VARCHAR-DATE", in)
 	return d

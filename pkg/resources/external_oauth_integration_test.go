@@ -70,7 +70,8 @@ func TestExternalOauthIntegrationDelete(t *testing.T) {
 
 func expectReadExternalOauthIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "comment", "created_on"},
+		"name", "type", "category", "enabled", "comment", "created_on",
+	},
 	).AddRow("test_external_oauth_integration", "EXTERNAL_OAUTH - AZURE", "SECURITY", true, nil, "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_external_oauth_integration'$`).WillReturnRows(showRows)
 

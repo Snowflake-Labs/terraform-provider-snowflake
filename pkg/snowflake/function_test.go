@@ -13,7 +13,8 @@ func getJavaScriptFuction(withArgs bool) *FunctionBuilder {
 	if withArgs {
 		s.WithArgs([]map[string]string{
 			{"name": "user", "type": "varchar"},
-			{"name": "eventdt", "type": "date"}})
+			{"name": "eventdt", "type": "date"},
+		})
 	}
 	return s
 }
@@ -31,7 +32,8 @@ func getJavaFuction(withArgs bool) *FunctionBuilder {
 	if withArgs {
 		s.WithArgs([]map[string]string{
 			{"name": "user", "type": "varchar"},
-			{"name": "count", "type": "number"}})
+			{"name": "count", "type": "number"},
+		})
 	}
 	return s
 }
@@ -39,13 +41,14 @@ func getJavaFuction(withArgs bool) *FunctionBuilder {
 const pythonfunc = `def add_py(i):` + "\n " +
 	` return i+1`
 
-func getPythonFuction(withArgs bool) *FunctionBuilder {
+func getPythonFunction(withArgs bool) *FunctionBuilder {
 	s := Function("test_db", "test_schema", "test_func", []string{})
 	s.WithReturnType("int")
 	s.WithStatement(pythonfunc)
 	if withArgs {
 		s.WithArgs([]map[string]string{
-			{"name": "arg", "type": "int"}})
+			{"name": "arg", "type": "int"},
+		})
 	}
 	return s
 }
@@ -140,7 +143,7 @@ func TestFunctionCreateWithJavaFunctionWithTargetPath(t *testing.T) {
 
 func TestFunctionCreateWithPythonFunction(t *testing.T) {
 	r := require.New(t)
-	s := getPythonFuction(true)
+	s := getPythonFunction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
 	s.WithRuntimeVersion("3.8")
@@ -155,7 +158,7 @@ func TestFunctionCreateWithPythonFunction(t *testing.T) {
 
 func TestFunctionCreateWithPythonFunctionWithPackages(t *testing.T) {
 	r := require.New(t)
-	s := getPythonFuction(true)
+	s := getPythonFunction(true)
 
 	pkgs := []string{"numpy", "pandas"}
 
@@ -176,7 +179,7 @@ func TestFunctionCreateWithPythonFunctionWithPackages(t *testing.T) {
 
 func TestFunctionCreateWithPythonFunctionWithImports(t *testing.T) {
 	r := require.New(t)
-	s := getPythonFuction(true)
+	s := getPythonFunction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
 	s.WithRuntimeVersion("3.8")
@@ -194,7 +197,7 @@ func TestFunctionCreateWithPythonFunctionWithImports(t *testing.T) {
 
 func TestFunctionCreateWithPythonFunctionWithTargetPath(t *testing.T) {
 	r := require.New(t)
-	s := getPythonFuction(true)
+	s := getPythonFunction(true)
 	s.WithComment("this is cool func!")
 	s.WithLanguage("PYTHON")
 	s.WithRuntimeVersion("3.8")

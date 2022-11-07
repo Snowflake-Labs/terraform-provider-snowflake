@@ -60,34 +60,42 @@ func (tb *ExternalTableBuilder) WithColumns(c []map[string]string) *ExternalTabl
 	tb.columns = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithPartitionBys(c []string) *ExternalTableBuilder {
 	tb.partitionBys = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithLocation(c string) *ExternalTableBuilder {
 	tb.location = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithRefreshOnCreate(c bool) *ExternalTableBuilder {
 	tb.refreshOnCreate = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithAutoRefresh(c bool) *ExternalTableBuilder {
 	tb.autoRefresh = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithPattern(c string) *ExternalTableBuilder {
 	tb.pattern = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithFileFormat(c string) *ExternalTableBuilder {
 	tb.fileFormat = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithCopyGrants(c bool) *ExternalTableBuilder {
 	tb.copyGrants = c
 	return tb
 }
+
 func (tb *ExternalTableBuilder) WithAwsSNSTopic(c string) *ExternalTableBuilder {
 	tb.awsSNSTopic = c
 	return tb

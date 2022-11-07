@@ -340,7 +340,7 @@ func (c columns) toSnowflakeColumns() []snowflake.Column {
 type changedColumns []changedColumn
 
 type changedColumn struct {
-	newColumn             column //our new column
+	newColumn             column // our new column
 	changedDataType       bool
 	changedNullConstraint bool
 	dropedDefault         bool
@@ -587,13 +587,13 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"comment":    table.Comment.String,
 		"column":     snowflake.NewColumns(tableDescription).Flatten(),
 		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
-		//"primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		// "primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
 		"data_retention_days": table.RetentionTime.Int32,
 		"change_tracking":     (table.ChangeTracking.String == "ON"),
 	}
 
 	for key, val := range toSet {
-		err = d.Set(key, val) //lintignore:R001
+		err = d.Set(key, val) // lintignore:R001
 		if err != nil {
 			return err
 		}
@@ -661,7 +661,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		for _, cA := range added {
 			var q string
 
-			if cA.identity == nil && cA._default == nil {
+			if cA.identity == nil && cA._default == nil { //nolint:gocritic  // todo: please fix this to pass gocritic
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
 			} else if cA.identity != nil {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)
@@ -723,7 +723,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		oldpk := getPrimaryKey(opk)
 
 		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
-			//drop our pk if there was an old primary key, or pk has been removed
+			// drop our pk if there was an old primary key, or pk has been removed
 			q := builder.DropPrimaryKey()
 			err := snowflake.Exec(db, q)
 			if err != nil {

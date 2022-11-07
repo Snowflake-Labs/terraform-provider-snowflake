@@ -10,6 +10,7 @@ var validUserPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOwnership,
 )
+
 var userGrantSchema = map[string]*schema.Schema{
 	"user_name": {
 		Type:        schema.TypeString,

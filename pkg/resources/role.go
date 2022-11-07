@@ -9,23 +9,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var roleProperties = []string{"comment"}
-var roleSchema = map[string]*schema.Schema{
-	"name": {
-		Type:     schema.TypeString,
-		Required: true,
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+var (
+	roleProperties = []string{"comment"}
+	roleSchema     = map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+				additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+				return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			},
 		},
-	},
-	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// TODO validation
-	},
-	"tag": tagReferenceSchema,
-}
+		"comment": {
+			Type:     schema.TypeString,
+			Optional: true,
+			// TODO validation
+		},
+		"tag": tagReferenceSchema,
+	}
+)
 
 func Role() *schema.Resource {
 	return &schema.Resource{

@@ -2,9 +2,8 @@ package resources_test
 
 import (
 	"database/sql"
-	"testing"
-
 	"regexp"
+	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
@@ -88,7 +87,8 @@ func TestTagMaskingPolicyAssociationRead(t *testing.T) {
 
 func expectReadTestTagMaskingPolicyAssociation(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"POLICY_DB", "POLICY_SCHEMA", "POLICY_NAME", "POLICY_KIND", "REF_DATABASE_NAME", "REF_SCHEMA_NAME", "REF_ENTITY_NAME", "REF_ENTITY_DOMAIN"},
+		"POLICY_DB", "POLICY_SCHEMA", "POLICY_NAME", "POLICY_KIND", "REF_DATABASE_NAME", "REF_SCHEMA_NAME", "REF_ENTITY_NAME", "REF_ENTITY_DOMAIN",
+	},
 	).AddRow("mp_db", "mp_schema", "mp_name", "MASKING", "tag_db", "tag_schema", "tag_name", "TAG")
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * from table ("tag_db".information_schema.policy_references(ref_entity_name => '"tag_db"."tag_schema"."tag_name"', ref_entity_domain => 'TAG')) where policy_db='mp_db' and policy_schema='mp_schema' and policy_name='mp_name'`)).WillReturnRows(rows)
 }

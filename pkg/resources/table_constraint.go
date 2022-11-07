@@ -288,7 +288,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTableConstraint implements schema.ReadFunc.
 func ReadTableConstraint(d *schema.ResourceData, meta interface{}) error {
-	//commenting this out since it requires an active warehouse to be set which may not be intuitive.
+	// commenting this out since it requires an active warehouse to be set which may not be intuitive.
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
 	// step like in tag association. People don't like waiting 40 minutes for Terraform to run.
 

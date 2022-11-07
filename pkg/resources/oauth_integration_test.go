@@ -66,7 +66,8 @@ func TestOAuthIntegrationDelete(t *testing.T) {
 
 func expectReadOAuthIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "comment", "created_on"},
+		"name", "type", "category", "enabled", "comment", "created_on",
+	},
 	).AddRow("test_oauth_integration", "OAUTH - TABLEAU_DESKTOP", "SECURITY", true, nil, "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_oauth_integration'$`).WillReturnRows(showRows)
 

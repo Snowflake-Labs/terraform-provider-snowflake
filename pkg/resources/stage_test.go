@@ -70,7 +70,8 @@ func TestExternalStageCreate(t *testing.T) {
 
 func expectReadStage(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"parent_property", "property", "property_type", "property_value", "property_default"},
+		"parent_property", "property", "property_type", "property_value", "property_default",
+	},
 	).AddRow("STAGE_LOCATION", "URL", "string", `["s3://load/test/"]`, "").
 		AddRow("STAGE_CREDENTIALS", "AWS_EXTERNAL_ID", "string", "test", "").
 		AddRow("STAGE_FILE_FORMAT", "FORMAT_NAME", "string", "CSV", "").
@@ -80,7 +81,8 @@ func expectReadStage(mock sqlmock.Sqlmock) {
 
 func expectReadStageShow(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud", "notification_channel", "storage_integration"},
+		"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud", "notification_channel", "storage_integration",
+	},
 	).AddRow("2019-12-23 17:20:50.088 +0000", "test_stage", "test_db", "test_schema", "s3://load/test/", "N", "Y", "test", "great comment", "us-east-1", "EXTERNAL", "AWS", "NULL", "NULL")
 	mock.ExpectQuery(`^SHOW STAGES LIKE 'test_stage' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }

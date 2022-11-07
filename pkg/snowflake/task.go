@@ -145,10 +145,8 @@ func (tb *TaskBuilder) Create() string {
 
 	if tb.warehouse != "" {
 		q.WriteString(fmt.Sprintf(` WAREHOUSE = "%v"`, EscapeString(tb.warehouse)))
-	} else {
-		if tb.userTaskManagedInitialWarehouseSize != "" {
-			q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.userTaskManagedInitialWarehouseSize)))
-		}
+	} else if tb.userTaskManagedInitialWarehouseSize != "" {
+		q.WriteString(fmt.Sprintf(` USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = '%v'`, EscapeString(tb.userTaskManagedInitialWarehouseSize)))
 	}
 
 	if tb.schedule != "" {

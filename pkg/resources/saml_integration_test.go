@@ -70,7 +70,8 @@ func TestSAMLIntegrationDelete(t *testing.T) {
 
 func expectReadSAMLIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_saml_integration", "SAML2", "SECURITY", true, "now")
 	mock.ExpectQuery(`^SHOW SECURITY INTEGRATIONS LIKE 'test_saml_integration'$`).WillReturnRows(showRows)
 

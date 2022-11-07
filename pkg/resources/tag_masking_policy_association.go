@@ -128,7 +128,6 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	q := builder.AddMaskingPolicy()
 
 	err := snowflake.Exec(db, q)
-
 	if err != nil {
 		return errors.Wrapf(err, "error attaching masking policy %v to tag %v", mpName, tagName)
 	}

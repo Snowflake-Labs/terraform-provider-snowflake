@@ -132,7 +132,8 @@ func TestNotificationIntegrationDelete(t *testing.T) {
 
 func expectReadNotificationIntegration(mock sqlmock.Sqlmock, notificationProvider string) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_notification_integration", "QUEUE", "NOTIFICATION", true, "now")
 	mock.ExpectQuery(`^SHOW NOTIFICATION INTEGRATIONS LIKE 'test_notification_integration'$`).WillReturnRows(showRows)
 

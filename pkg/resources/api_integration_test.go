@@ -89,7 +89,8 @@ func TestAPIIntegrationDelete(t *testing.T) {
 
 func expectReadAPIIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_api_integration", "EXTERNAL_API", "API", true, "now")
 	mock.ExpectQuery(`^SHOW API INTEGRATIONS LIKE 'test_api_integration'$`).WillReturnRows(showRows)
 
@@ -106,7 +107,8 @@ func expectReadAPIIntegration(mock sqlmock.Sqlmock) {
 
 func expectReadGovAPIIntegration(mock sqlmock.Sqlmock) {
 	showRows := sqlmock.NewRows([]string{
-		"name", "type", "category", "enabled", "created_on"},
+		"name", "type", "category", "enabled", "created_on",
+	},
 	).AddRow("test_gov_api_integration", "EXTERNAL_API", "API", true, "now")
 	mock.ExpectQuery(`^SHOW API INTEGRATIONS LIKE 'test_gov_api_integration'$`).WillReturnRows(showRows)
 

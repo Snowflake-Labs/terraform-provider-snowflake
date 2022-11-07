@@ -352,7 +352,7 @@ func (gb *CurrentGrantBuilder) Share(n string) GrantExecutable {
 // Grant returns the SQL that will grant privileges on the grant to the grantee.
 func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 	var template string
-	if p == `OWNERSHIP` {
+	if p == `OWNERSHIP` { //nolint:gocritic // todo: please fix this
 		template = `GRANT %v ON %v %v TO %v "%v" COPY CURRENT GRANTS`
 	} else if w {
 		template = `GRANT %v ON %v %v TO %v "%v" WITH GRANT OPTION`

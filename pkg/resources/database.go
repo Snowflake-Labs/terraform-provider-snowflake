@@ -227,7 +227,6 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	database, err := snowflake.ScanDatabase(row)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// If not found, mark resource to be removed from statefile during apply or refresh
@@ -260,8 +259,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	if opts := database.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
-			switch opt {
-			case "TRANSIENT":
+			if opt == "TRANSIENT" {
 				err = d.Set("is_transient", true)
 				if err != nil {
 					return err

@@ -28,7 +28,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
-				return strings.ToUpper(strings.Replace(s, "-", "", -1))
+				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
 			}
 			return normalize(old) == normalize(new)
 		},
@@ -42,7 +42,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
-				return strings.ToUpper(strings.Replace(s, "-", "", -1))
+				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
 			}
 			return normalize(old) == normalize(new)
 		},

@@ -392,7 +392,7 @@ func DSN(
 		config.Warehouse = warehouse
 	}
 
-	if privateKeyPath != "" {
+	if privateKeyPath != "" { //nolint:gocritic // todo: please fix this to pass gocritic
 		privateKeyBytes, err := ReadPrivateKeyFile(privateKeyPath)
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key file could not be read")
@@ -502,7 +502,8 @@ func GetOauthAccessToken(
 	endPoint,
 	clientID,
 	clientSecret string,
-	data url.Values) (string, error) {
+	data url.Values,
+) (string, error) {
 	client := &http.Client{}
 	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {

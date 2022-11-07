@@ -200,7 +200,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 		num2, _ := strconv.Atoi(pkds[j].KeySequence.String)
 		return num1 < num2
 	})
-	//sort our keys on the key sequence
+	// sort our keys on the key sequence
 
 	flat := map[string]interface{}{}
 	var keys []string
@@ -208,7 +208,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	var nameSet bool
 
 	for _, pk := range pkds {
-		//set as empty string, sys_constraint means it was an unnnamed constraint
+		// set as empty string, sys_constraint means it was an unnnamed constraint
 		if strings.Contains(pk.ConstraintName.String, "SYS_CONSTRAINT") && !nameSet {
 			name = ""
 			nameSet = true
@@ -390,7 +390,7 @@ func (tb *TableBuilder) UnsetTag(tag TagValue) string {
 
 // Function to get clustering definition.
 func (tb *TableBuilder) GetClusterKeyString() string {
-	return JoinStringList(tb.clusterBy[:], ", ")
+	return JoinStringList(tb.clusterBy, ", ")
 }
 
 func (tb *TableBuilder) GetTagValueString() string {
@@ -409,7 +409,7 @@ func (tb *TableBuilder) GetTagValueString() string {
 }
 
 func JoinStringList(instrings []string, delimiter string) string {
-	return fmt.Sprint(strings.Join(instrings[:], delimiter))
+	return fmt.Sprint(strings.Join(instrings, delimiter))
 }
 
 func quoteStringList(instrings []string) []string {
@@ -427,7 +427,7 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 	colDef := tb.columns.getColumnDefinitions(true, true)
 
 	if len(tb.primaryKey.keys) > 0 {
-		colDef = strings.TrimSuffix(colDef, ")") //strip trailing
+		colDef = strings.TrimSuffix(colDef, ")") // strip trailing
 		q.WriteString(colDef)
 		if tb.primaryKey.name != "" {
 			q.WriteString(fmt.Sprintf(` ,CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
@@ -503,7 +503,7 @@ func (tb *TableBuilder) Create() string {
 	}
 
 	if tb.clusterBy != nil {
-		//add optional clustering statement
+		// add optional clustering statement
 		q.WriteString(fmt.Sprintf(` CLUSTER BY LINEAR(%v)`, tb.GetClusterKeyString()))
 	}
 

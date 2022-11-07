@@ -44,7 +44,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
-				return strings.ToUpper(strings.Replace(s, "-", "", -1))
+				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
 			}
 			return normalize(old) == normalize(new)
 		},
@@ -154,7 +154,7 @@ func Warehouse() *schema.Resource {
 
 // CreateWarehouse implements schema.CreateFunc.
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	props := append(warehouseProperties, warehouseCreateProperties...)
+	props := append(warehouseProperties, warehouseCreateProperties...) //nolint:gocritic // todo: please fix this to pass gocritic
 	return CreateResource(
 		"warehouse",
 		props,
@@ -255,7 +255,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		key := strings.ToLower(param.Key)
-		//lintignore:R001
+		// lintignore:R001
 		err = d.Set(key, value)
 		if err != nil {
 			return err

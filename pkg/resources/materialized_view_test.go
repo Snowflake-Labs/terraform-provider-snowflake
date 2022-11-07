@@ -49,6 +49,7 @@ func TestMaterializedViewCreate(t *testing.T) {
 		r.NoError(err)
 	})
 }
+
 func TestMaterializedViewCreateOrReplace(t *testing.T) {
 	r := require.New(t)
 
@@ -80,6 +81,7 @@ func TestMaterializedViewCreateOrReplace(t *testing.T) {
 		r.NoError(err)
 	})
 }
+
 func TestMaterializedViewCreateAmpersand(t *testing.T) {
 	r := require.New(t)
 
@@ -113,7 +115,8 @@ func TestMaterializedViewCreateAmpersand(t *testing.T) {
 
 func expectReadMaterializedView(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure", "is_materialized"},
+		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure", "is_materialized",
+	},
 	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "test_db", "GREAT_SCHEMA", "admin", "great comment", "SELECT * FROM test_db.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true, true)
 	mock.ExpectQuery(`^SHOW MATERIALIZED VIEWS LIKE 'good_name' IN DATABASE "test_db"$`).WillReturnRows(rows)
 }

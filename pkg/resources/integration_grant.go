@@ -10,6 +10,7 @@ var validIntegrationPrivileges = NewPrivilegeSet(
 	privilegeUsage,
 	privilegeOwnership,
 )
+
 var integrationGrantSchema = map[string]*schema.Schema{
 	"integration_name": {
 		Type:        schema.TypeString,

@@ -114,6 +114,7 @@ func TestExternalFunctionRead(t *testing.T) {
 		r.Equal("CURRENT_TIMESTAMP", testFuncContextHeaders[0])
 	})
 }
+
 func TestExternalFunctionReadReturnTypeVariant(t *testing.T) {
 	r := require.New(t)
 

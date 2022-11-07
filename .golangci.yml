@@ -10,10 +10,28 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - gofmt
     - whitespace
-    # - unparam
+    # unparam: Checks Go code for unused constants, variables, functions and types
+    # - unparam  # todo: enabled
     - exportloopref
     - godot
-    # - gocritic
+    - gocritic
     - misspell
+    # errcheck: Errcheck is a program for checking for unchecked errors in go programs.
+    - errcheck
+    # gosimple: Linter for Go source code that specializes in simplifying a code
+    - gosimple
+    # govet: Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - govet
+    # ineffassign: Detects when assignments to existing variables are not used
+    - ineffassign
+    # staticcheck: Finds unused struct fields
+    - staticcheck
+    # typecheck: Like the front-end of a Go compiler, parses and type-checks Go code
+    - typecheck
+
+    # not default
+    # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
+    - gofmt
+    # gofumpt: Gofumpt checks whether code was gofumpt-ed.
+    - gofumpt

@@ -4,8 +4,10 @@ import (
 	"fmt"
 )
 
-type futureGrantType string
-type futureGrantTarget string
+type (
+	futureGrantType   string
+	futureGrantTarget string
+)
 
 const (
 	futureSchemaType           futureGrantType = "SCHEMA"

@@ -20,3 +20,22 @@ jobs:
 
       - name: Check Go formatting
         run: if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then exit 1; fi
+
+  golang-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+          cache: true
+
+      - run: go mod download
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+
+      - name: Run golangci-lint
+        run: golangci-lint run ./... -v

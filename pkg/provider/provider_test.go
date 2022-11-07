@@ -41,14 +41,26 @@ func TestDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple", args{"acct", "user", "pass", false, "region", "role", "", "https", 443, ""},
-			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false},
-		{"us-west-2 special case", args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", "https", 443, ""},
-			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false},
-		{"customhostwregion", args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", "https", 443, ""},
-			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&application=terraform-provider-snowflake&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false},
-		{"customhostignoreregion", args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", "https", 8443, ""},
-			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:8443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false},
+		{
+			"simple",
+			args{"acct", "user", "pass", false, "region", "role", "", "https", 443, ""},
+			"user:pass@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false,
+		},
+		{
+			"us-west-2 special case",
+			args{"acct2", "user2", "pass2", false, "us-west-2", "role2", "", "https", 443, ""},
+			"user2:pass2@acct2.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=role2&validateDefaultParameters=true", false,
+		},
+		{
+			"customhostwregion",
+			args{"acct3", "user3", "pass3", false, "", "role3", "zha123.us-east-1.privatelink.snowflakecomputing.com", "https", 443, ""},
+			"user3:pass3@zha123.us-east-1.privatelink.snowflakecomputing.com:443?account=acct3&application=terraform-provider-snowflake&ocspFailOpen=true&role=role3&validateDefaultParameters=true", false,
+		},
+		{
+			"customhostignoreregion",
+			args{"acct4", "user4", "pass4", false, "fakeregion", "role4", "zha1234.us-east-1.privatelink.snowflakecomputing.com", "https", 8443, ""},
+			"user4:pass4@zha1234.us-east-1.privatelink.snowflakecomputing.com:8443?account=acct4&application=terraform-provider-snowflake&ocspFailOpen=true&role=role4&validateDefaultParameters=true", false,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -83,12 +95,21 @@ func TestOAuthDSN(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simple_oauth", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
-			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"oauth_over_password", args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
-			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false},
-		{"empty_token_no_password_errors_out", args{"acct", "user", "", "region", "role", "", "https", 443},
-			"", true},
+		{
+			"simple_oauth",
+			args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false,
+		},
+		{
+			"oauth_over_password",
+			args{"acct", "user", pseudorandomAccessToken, "region", "role", "", "https", 443},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false,
+		},
+		{
+			"empty_token_no_password_errors_out",
+			args{"acct", "user", "", "region", "role", "", "https", 443},
+			"", true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -119,12 +140,18 @@ func TestGetOauthDATA(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simpleData", param{refreshToken, redirectURL},
+		{
+			"simpleData",
+			param{refreshToken, redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=ETMsDgAAAXdeJNwXABRBRVMvQ0JDL1BLQ1M1UGFwPu1hHM3UoUexZBtXW%2B0cE7KJx2yoUV0ysWu3HKwhJ1v%2FiEa1Np5EdjGDsBqedR15aFb8NstLTWDUoTJPuQNZRJTjJeuxrX%2FJUM3%2FwzcrKt2zDf6QIpkfLXuSlDH4VABeqsaRdl5z6bE9VJVgAUKgZwizwedHAt6pcJgFcQffYZPaY%3D",
-			false},
-		{"errorData", param{"no_refresh_token", redirectURL},
+			false,
+		},
+		{
+			"errorData",
+			param{"no_refresh_token", redirectURL},
 			"grant_type=refresh_token&redirect_uri=https%3A%2F%2Flocalhost.com&refresh_token=no_refresh_token",
-			false},
+			false,
+		},
 	}
 	for _, tt := range cases {
 		tt := tt
@@ -159,9 +186,12 @@ func TestGetOauthResponse(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"simpleContent", param{dataStuff, endpoint, clientid, clientsecret},
+		{
+			"simpleContent",
+			param{dataStuff, endpoint, clientid, clientsecret},
 			"application/x-www-form-urlencoded;charset=UTF-8",
-			false},
+			false,
+		},
 	}
 	for _, tt := range cases {
 		tt := tt
@@ -211,12 +241,18 @@ func TestGetOauthAccessToken(t *testing.T) {
 		wantTok    string
 		wantErr    bool
 	}{
-		{"simpleAccessToken", param{dataStuff, endpoint, clientid, clientsecret},
+		{
+			"simpleAccessToken",
+			param{dataStuff, endpoint, clientid, clientsecret},
 			`{"access_token": "ABCDEFGHIabchefghiJKLMNOPQRjklmnopqrSTUVWXYZstuvwxyz","token_type": "Bearer","expires_in": 600}`,
-			"200", "ABCDEFGHIabchefghiJKLMNOPQRjklmnopqrSTUVWXYZstuvwxyz", false},
-		{"errorAccessToken", param{dataStuff, endpoint, clientid, clientsecret},
+			"200", "ABCDEFGHIabchefghiJKLMNOPQRjklmnopqrSTUVWXYZstuvwxyz", false,
+		},
+		{
+			"errorAccessToken",
+			param{dataStuff, endpoint, clientid, clientsecret},
 			"",
-			"404", "", false},
+			"404", "", false,
+		},
 	}
 	for _, tt := range cases {
 		tt := tt

@@ -187,6 +187,7 @@ func TestAcc_FileFormatXML(t *testing.T) {
 		},
 	})
 }
+
 func fileFormatConfigCSV(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {

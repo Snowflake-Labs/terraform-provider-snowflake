@@ -362,7 +362,6 @@ resource "snowflake_task" "solo_task" {
 	{{- end }}
 }
 	`)
-
 	if err != nil {
 		fmt.Println(err)
 	}
