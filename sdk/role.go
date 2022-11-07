@@ -9,6 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ResourceRole  = "ROLE"
+	ResourceRoles = "ROLES"
+)
+
 // Compile-time proof of interface implementation.
 var _ Roles = (*roles)(nil)
 
@@ -23,8 +28,10 @@ type Roles interface {
 	Read(ctx context.Context, role string) (*Role, error)
 	// Update attributes of an existing role.
 	Update(ctx context.Context, role string, options RoleUpdateOptions) (*Role, error)
-	// Delete an role by its name.
+	// Delete a role by its name.
 	Delete(ctx context.Context, role string) error
+	// Rename a role name.
+	Rename(ctx context.Context, old string, new string) error
 }
 
 // roles implements Roles
@@ -135,21 +142,11 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 	return entities, nil
 }
 
-// Read an role by its name.
+// Read a role by its name.
 func (r *roles) Read(ctx context.Context, role string) (*Role, error) {
-	sql := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, role)
-	rows, err := r.client.query(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, nil
-	}
 	var entity roleEntity
-	if err := rows.StructScan(&entity); err != nil {
-		return nil, fmt.Errorf("rows scan: %w", err)
+	if err := r.client.read(ctx, ResourceRoles, role, &entity); err != nil {
+		return nil, err
 	}
 	return entity.toRole(), nil
 }
@@ -192,11 +189,12 @@ func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, erro
 	return r.Read(ctx, opts.Name)
 }
 
-// Delete an role by its name.
+// Delete a role by its name.
 func (r *roles) Delete(ctx context.Context, role string) error {
-	sql := fmt.Sprintf(`DROP ROLE %s`, role)
-	if _, err := r.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return r.client.drop(ctx, ResourceRole, role)
+}
+
+// Rename a role name.
+func (r *roles) Rename(ctx context.Context, old string, new string) error {
+	return r.client.rename(ctx, ResourceRole, old, new)
 }

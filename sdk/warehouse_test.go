@@ -74,3 +74,12 @@ func (ts *testSuite) TestUpdateWarehouse() {
 
 	ts.NoError(ts.client.Warehouses.Delete(context.Background(), warehouse.Name))
 }
+
+func (ts *testSuite) TestRenameWarehouse() {
+	warehouse, err := ts.createWarehouse()
+	ts.NoError(err)
+
+	newWarehouse := "NEW_WAREHOUSE_TEST"
+	ts.NoError(ts.client.Warehouses.Rename(context.Background(), warehouse.Name, newWarehouse))
+	ts.NoError(ts.client.Warehouses.Delete(context.Background(), newWarehouse))
+}

@@ -9,6 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ResourceSchema  = "SCHEMA"
+	ResourceSchemas = "SCHEMAS"
+)
+
 // Compile-time proof of interface implementation.
 var _ Schemas = (*schemas)(nil)
 
@@ -164,19 +169,9 @@ func (s *schemas) Create(ctx context.Context, options SchemaCreateOptions) (*Sch
 
 // Read a schema by its name.
 func (s *schemas) Read(ctx context.Context, schema string) (*Schema, error) {
-	sql := fmt.Sprintf(`SHOW SCHEMAS LIKE '%s'`, schema)
-	rows, err := s.client.query(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, nil
-	}
 	var entity schemaEntity
-	if err := rows.StructScan(&entity); err != nil {
-		return nil, fmt.Errorf("rows scan: %w", err)
+	if err := s.client.read(ctx, ResourceSchemas, schema, &entity); err != nil {
+		return nil, err
 	}
 	return entity.toSchema(), nil
 }
@@ -209,18 +204,10 @@ func (s *schemas) Update(ctx context.Context, schema string, options SchemaUpdat
 
 // Delete a schema by its name.
 func (s *schemas) Delete(ctx context.Context, schema string) error {
-	sql := fmt.Sprintf(`DROP SCHEMA %s`, schema)
-	if _, err := s.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return s.client.drop(ctx, ResourceSchema, schema)
 }
 
 // Rename a schema name.
 func (s *schemas) Rename(ctx context.Context, old string, new string) error {
-	sql := fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", old, new)
-	if _, err := s.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return s.client.rename(ctx, ResourceSchema, old, new)
 }

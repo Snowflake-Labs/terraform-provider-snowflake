@@ -9,7 +9,12 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
+	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+)
+
+var (
+	ErrNoRecord = errors.New("record not found")
 )
 
 type Config struct {
@@ -130,4 +135,40 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 
 func (c *Client) query(ctx context.Context, sql string) (*sqlx.Rows, error) {
 	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, sql)
+}
+
+// drop a resource
+func (c *Client) drop(ctx context.Context, resource string, name string) error {
+	sql := fmt.Sprintf("DROP %s %s", resource, name)
+	if _, err := c.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// rename a resource
+func (c *Client) rename(ctx context.Context, resource string, old string, new string) error {
+	sql := fmt.Sprintf("ALTER %s %s RENAME TO %s", resource, old, new)
+	if _, err := c.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// read a resource
+func (c *Client) read(ctx context.Context, resources string, name string, v interface{}) error {
+	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, resources, name)
+	rows, err := c.query(ctx, sql)
+	if err != nil {
+		return fmt.Errorf("do query: %w", err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return ErrNoRecord
+	}
+	if err := rows.StructScan(v); err != nil {
+		return fmt.Errorf("rows scan: %w", err)
+	}
+	return nil
 }

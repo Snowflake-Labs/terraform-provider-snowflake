@@ -9,6 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ResourceWarehouse  = "WAREHOUSE"
+	ResourceWarehouses = "WAREHOUSES"
+)
+
 // Compile-time proof of interface implementation.
 var _ Warehouses = (*warehouses)(nil)
 
@@ -23,8 +28,10 @@ type Warehouses interface {
 	Read(ctx context.Context, warehouse string) (*Warehouse, error)
 	// Update attributes of an existing warehouse.
 	Update(ctx context.Context, warehouse string, options WarehouseUpdateOptions) (*Warehouse, error)
-	// Delete an warehouse by its name.
+	// Delete a warehouse by its name.
 	Delete(ctx context.Context, warehouse string) error
+	// Rename a warehouse name.
+	Rename(ctx context.Context, old string, new string) error
 }
 
 // warehouses implements Warehouses
@@ -258,19 +265,9 @@ func (w *warehouses) Create(ctx context.Context, options WarehouseCreateOptions)
 
 // Read an warehouse by its name.
 func (w *warehouses) Read(ctx context.Context, warehouse string) (*Warehouse, error) {
-	sql := fmt.Sprintf(`SHOW WAREHOUSES LIKE '%s'`, warehouse)
-	rows, err := w.client.query(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, nil
-	}
 	var entity warehouseEntity
-	if err := rows.StructScan(&entity); err != nil {
-		return nil, fmt.Errorf("rows scan: %w", err)
+	if err := w.client.read(ctx, ResourceWarehouses, warehouse, &entity); err != nil {
+		return nil, err
 	}
 	return entity.toWarehouse(), nil
 }
@@ -290,11 +287,12 @@ func (w *warehouses) Update(ctx context.Context, warehouse string, options Wareh
 	return w.Read(ctx, warehouse)
 }
 
-// Delete an warehouse by its name.
+// Delete a warehouse by its name.
 func (w *warehouses) Delete(ctx context.Context, warehouse string) error {
-	sql := fmt.Sprintf(`DROP WAREHOUSE %s`, warehouse)
-	if _, err := w.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return w.client.drop(ctx, ResourceWarehouse, warehouse)
+}
+
+// Rename a warehouse name.
+func (w *warehouses) Rename(ctx context.Context, old string, new string) error {
+	return w.client.rename(ctx, ResourceWarehouse, old, new)
 }

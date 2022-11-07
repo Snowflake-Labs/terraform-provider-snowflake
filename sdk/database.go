@@ -9,6 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ResourceDatabase  = "DATABASE"
+	ResourceDatabases = "DATABASES"
+)
+
 // Databases describes all the databases related methods that the
 // Snowflake API supports.
 type Databases interface {
@@ -150,19 +155,9 @@ func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (
 
 // Read a database by its name.
 func (d *databases) Read(ctx context.Context, database string) (*Database, error) {
-	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, database)
-	rows, err := d.client.query(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, nil
-	}
 	var entity databaseEntity
-	if err := rows.StructScan(&entity); err != nil {
-		return nil, fmt.Errorf("rows scan: %w", err)
+	if err := d.client.read(ctx, ResourceDatabases, database, &entity); err != nil {
+		return nil, err
 	}
 	return entity.toDatabase(), nil
 }
@@ -195,18 +190,10 @@ func (d *databases) Update(ctx context.Context, database string, options Databas
 
 // Delete a database by its name.
 func (d *databases) Delete(ctx context.Context, database string) error {
-	sql := fmt.Sprintf(`DROP DATABASE %s`, database)
-	if _, err := d.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return d.client.drop(ctx, ResourceDatabase, database)
 }
 
 // Rename a database name.
 func (d *databases) Rename(ctx context.Context, old string, new string) error {
-	sql := fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", old, new)
-	if _, err := d.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return d.client.rename(ctx, ResourceDatabase, old, new)
 }

@@ -9,6 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ResourceUser  = "USER"
+	ResourceUsers = "USERS"
+)
+
 // Compile-time proof of interface implementation.
 var _ Users = (*users)(nil)
 
@@ -25,7 +30,7 @@ type Users interface {
 	Update(ctx context.Context, user string, options UserUpdateOptions) (*User, error)
 	// Delete an user by its name.
 	Delete(ctx context.Context, user string) error
-	// Rename a user name.
+	// Rename an user name.
 	Rename(ctx context.Context, old string, new string) error
 }
 
@@ -189,19 +194,9 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 
 // Read an user by its name.
 func (u *users) Read(ctx context.Context, user string) (*User, error) {
-	sql := fmt.Sprintf(`SHOW USERS LIKE '%s'`, user)
-	rows, err := u.client.query(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, nil
-	}
 	var entity userEntity
-	if err := rows.StructScan(&entity); err != nil {
-		return nil, fmt.Errorf("rows scan: %w", err)
+	if err := u.client.read(ctx, ResourceUsers, user, &entity); err != nil {
+		return nil, err
 	}
 	return entity.toUser(), nil
 }
@@ -286,18 +281,10 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 
 // Delete an user by its name.
 func (u *users) Delete(ctx context.Context, user string) error {
-	sql := fmt.Sprintf(`DROP USER %s`, user)
-	if _, err := u.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return u.client.drop(ctx, ResourceUser, user)
 }
 
-// Rename a user name.
+// Rename an user name.
 func (u *users) Rename(ctx context.Context, old string, new string) error {
-	sql := fmt.Sprintf("ALTER USER %s RENAME TO %s", old, new)
-	if _, err := u.client.exec(ctx, sql); err != nil {
-		return fmt.Errorf("db exec: %w", err)
-	}
-	return nil
+	return u.client.rename(ctx, ResourceUser, old, new)
 }
