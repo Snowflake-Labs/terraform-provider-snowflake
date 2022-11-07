@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.51.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.50.0...v0.51.0) (2022-11-07)
+
+
+### Features
+
+* add support for `notify_users` to `snowflake_resource_monitor` resource ([#1340](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1340)) ([7094f15](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7094f15133cd768bd4aa4431adc66802a7f955c0))
+* **ci:** add some linters and fix codes to pass lint ([#1345](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1345)) ([75557d4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/75557d49bd03b21fa3cca903c1207b01cf6fcead))
+* Delete ownership grant updates ([#1334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1334)) ([4e6aba7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4e6aba780edf81624b0b12c171d24802c9a2911b))
+* show roles data source ([#1309](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1309)) ([b2e5ecf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b2e5ecf050711a9562857bd5e0eee383a6ed497c))
+
+
+### Misc
+
+* **docs:** update documentation adding double quotes ([#1346](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1346)) ([c4af174](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c4af1741347dc080211c726dd1c80116b5e121ef))
+
+
+### BugFixes
+
+* format for go ci ([#1349](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1349)) ([75d7fd5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/75d7fd54c2758783f448626165062bc8f1c8ebf1))
+* tag on schema fix ([#1313](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1313)) ([62bf8b7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/62bf8b77e841cf58b622e77d7f2b3cb53d7361c5))
+* workflow warnings ([#1316](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1316)) ([6f513c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6f513c27810ed62d49f0e10895cefc219e9d9226))
+
 ## [0.50.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.49.0...v0.50.0) (2022-11-04)
 
 
