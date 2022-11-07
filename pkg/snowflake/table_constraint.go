@@ -183,7 +183,6 @@ func (b *TableConstraintBuilder) Create() string {
 	}
 
 	return q.String()
-
 }
 
 // Rename returns the SQL query that will rename the table constraint.

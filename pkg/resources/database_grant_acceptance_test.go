@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testRolesAndShares(t *testing.T, path string, roles, shares []string) func(*terraform.State) error {
+func testRolesAndShares(t *testing.T, path string, roles []string) func(*terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
@@ -49,7 +49,7 @@ func TestAcc_DatabaseGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "shares.#", "1"),
-					testRolesAndShares(t, "snowflake_database_grant.test", []string{roleName}, []string{shareName}),
+					testRolesAndShares(t, "snowflake_database_grant.test", []string{roleName}),
 				),
 			},
 			// IMPORT

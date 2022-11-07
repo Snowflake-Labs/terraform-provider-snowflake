@@ -1,4 +1,4 @@
-resource snowflake_task task {
+resource "snowflake_task" "task" {
   comment = "my task"
 
   database  = "db"
@@ -19,7 +19,7 @@ resource snowflake_task task {
   enabled              = true
 }
 
-resource snowflake_task serverless_task {
+resource "snowflake_task" "serverless_task" {
   comment = "my serverless task"
 
   database = "db"
@@ -35,12 +35,12 @@ resource snowflake_task serverless_task {
 
   user_task_timeout_ms                     = 10000
   user_task_managed_initial_warehouse_size = "XSMALL"
-  after                                    = "preceding_task"
+  after                                    = [snowflake_task.task.name]
   when                                     = "foo AND bar"
   enabled                                  = true
 }
 
-resource snowflake_task test_task {
+resource "snowflake_task" "test_task" {
   comment = "task with allow_overlapping_execution"
 
   database = "db"

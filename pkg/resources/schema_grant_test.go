@@ -24,6 +24,7 @@ func TestSchemaGrantCreate(t *testing.T) {
 	r := require.New(t)
 
 	for _, testPriv := range []string{"USAGE", "MODIFY", "CREATE TAG"} {
+		testPriv := testPriv
 		in := map[string]interface{}{
 			"schema_name":       "test-schema",
 			"database_name":     "test-db",

@@ -240,7 +240,7 @@ func (ffb *FileFormatBuilder) WithDisableSnowflakeData(n bool) *FileFormatBuilde
 	return ffb
 }
 
-// WithDisableAutoConvert adds disbale auto convert to the FileFormatBuilder.
+// WithDisableAutoConvert adds disable auto convert to the FileFormatBuilder.
 func (ffb *FileFormatBuilder) WithDisableAutoConvert(n bool) *FileFormatBuilder {
 	ffb.disableAutoConvert = n
 	return ffb

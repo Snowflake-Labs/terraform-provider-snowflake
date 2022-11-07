@@ -364,8 +364,8 @@ func DSN(
 	host string,
 	protocol string,
 	port int,
-	warehouse string) (string, error) {
-
+	warehouse string,
+) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
 	if region == "us-west-2" {
@@ -504,7 +504,6 @@ func GetOauthAccessToken(
 	clientID,
 	clientSecret string,
 	data url.Values) (string, error) {
-
 	client := &http.Client{}
 	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {

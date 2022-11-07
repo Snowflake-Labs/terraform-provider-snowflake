@@ -1,8 +1,19 @@
 run:
-  linters:
-    enable:
-      - gofmt
-      - whitespace
-      - unparam
-      - scopelint
-      - godot
+  timeout: 5m
+  skip-files: []
+  # skip-dirs:
+
+linters-settings:
+  misspell:
+    locale: US
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - whitespace
+    # - unparam
+    - exportloopref
+    - godot
+    # - gocritic
+    - misspell

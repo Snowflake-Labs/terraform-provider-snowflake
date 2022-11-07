@@ -40,11 +40,11 @@ type replication struct {
 	AccountLocator   sql.NullString `db:"account_locator"`
 }
 
-func ScanReplication(rows *sqlx.Rows, AccName string) (*replication, error) {
+func ScanReplication(rows *sqlx.Rows, accName string) (*replication, error) {
 	for rows.Next() {
 		r := &replication{}
 		err := rows.StructScan(r)
-		if r.AccountName.String == AccName {
+		if r.AccountName.String == accName {
 			return r, err
 		}
 	}

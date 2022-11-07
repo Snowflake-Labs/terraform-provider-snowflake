@@ -186,7 +186,6 @@ func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 			return nil, err
 		}
 		grants = append(grants, g)
-
 	}
 
 	for _, g := range grants {
@@ -252,7 +251,6 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 		}
 	}
 	return err
-
 }
 
 func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {

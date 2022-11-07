@@ -57,10 +57,11 @@ func TestAddressEscape(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.id, func(t *testing.T) {
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.id, func(t *testing.T) {
 			r := require.New(t)
-			r.Equal(testCase.expected, snowflake.AddressEscape(testCase.name...))
+			r.Equal(tc.expected, snowflake.AddressEscape(tc.name...))
 		})
 	}
 }
