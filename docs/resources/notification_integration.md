@@ -13,10 +13,10 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource snowflake_notification_integration integration {
+resource "snowflake_notification_integration" "integration" {
   name    = "notification"
   comment = "A notification integration."
-  
+
   enabled   = true
   type      = "QUEUE"
   direction = "OUTBOUND"
@@ -28,12 +28,12 @@ resource snowflake_notification_integration integration {
 
   # AWS_SQS
   #notification_provider = "AWS_SQS"
-  #aws_sqs_arn           = "..." 
+  #aws_sqs_arn           = "..."
   #aws_sqs_role_arn      = "..."
 
   # AWS_SNS
   #notification_provider = "AWS_SNS"
-  #aws_sns_topic_arn     = "..." 
+  #aws_sns_topic_arn     = "..."
   #aws_sns_role_arn      = "..."
 }
 ```

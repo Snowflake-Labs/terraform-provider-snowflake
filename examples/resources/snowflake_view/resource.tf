@@ -1,5 +1,5 @@
-resource snowflake_view view {
-  database = "db"
+resource "snowflake_view" "view" {
+  database = "database"
   schema   = "schema"
   name     = "view"
 

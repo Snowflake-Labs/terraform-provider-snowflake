@@ -16,7 +16,7 @@ description: |-
 resource "snowflake_task" "task" {
   comment = "my task"
 
-  database  = "db"
+  database  = "database"
   schema    = "schema"
   warehouse = "warehouse"
 
@@ -58,7 +58,7 @@ resource "snowflake_task" "serverless_task" {
 resource "snowflake_task" "test_task" {
   comment = "task with allow_overlapping_execution"
 
-  database = "db"
+  database = "database"
   schema   = "schema"
 
   name          = "test_task"

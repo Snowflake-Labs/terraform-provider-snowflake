@@ -14,11 +14,11 @@ description: |-
 
 ```terraform
 resource "snowflake_database" "database" {
-  name    = "db1"
+  name = "database"
 }
 
 resource "snowflake_schema" "schema" {
-  name     = "schema1"
+  name     = "schema"
   database = snowflake_database.database.name
 }
 

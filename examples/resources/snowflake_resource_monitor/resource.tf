@@ -1,4 +1,4 @@
-resource snowflake_resource_monitor monitor {
+resource "snowflake_resource_monitor" "monitor" {
   name         = "monitor"
   credit_quota = 100
 

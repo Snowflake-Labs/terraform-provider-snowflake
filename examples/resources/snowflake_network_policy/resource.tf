@@ -1,4 +1,4 @@
-resource snowflake_network_policy policy {
+resource "snowflake_network_policy" "policy" {
   name    = "policy"
   comment = "A policy."
 
