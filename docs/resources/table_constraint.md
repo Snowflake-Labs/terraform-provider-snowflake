@@ -18,14 +18,14 @@ resource "snowflake_database" "d" {
 }
 
 resource "snowflake_schema" "s" {
-  name      = "some_schema"
-  database  = snowflake_database.d.name
+  name     = "some_schema"
+  database = snowflake_database.d.name
 }
 
 resource "snowflake_table" "t" {
-  database            = snowflake_database.d.name
-  schema              = snowflake_schema.s.name
-  name                = "some_table"
+  database = snowflake_database.d.name
+  schema   = snowflake_schema.s.name
+  name     = "some_table"
 
   column {
     name     = "col1"
@@ -33,7 +33,7 @@ resource "snowflake_table" "t" {
     nullable = false
   }
 
-   column {
+  column {
     name     = "col2"
     type     = "text"
     nullable = false
@@ -41,9 +41,9 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "fk_t" {
-  database            = snowflake_database.d.name
-  schema              = snowflake_schema.s.name
-  name                = "fk_table"
+  database = snowflake_database.d.name
+  schema   = snowflake_schema.s.name
+  name     = "fk_table"
 
   column {
     name     = "fk_col1"
@@ -51,7 +51,7 @@ resource "snowflake_table" "fk_t" {
     nullable = false
   }
 
-   column {
+  column {
     name     = "fk_col2"
     type     = "text"
     nullable = false
@@ -59,28 +59,28 @@ resource "snowflake_table" "fk_t" {
 }
 
 resource "snowflake_table_constraint" "primary_key" {
-  name="myconstraint"
-  type="PRIMARY KEY"
+  name     = "myconstraint"
+  type     = "PRIMARY KEY"
   table_id = snowflake_table.t.id
-  columns = ["col1"]
-  comment = "hello world"
+  columns  = ["col1"]
+  comment  = "hello world"
 }
 
 resource "snowflake_table_constraint" "foreign_key" {
-  name="myconstraintfk"
-  type="FOREIGN KEY"
+  name     = "myconstraintfk"
+  type     = "FOREIGN KEY"
   table_id = snowflake_table.t.id
-  columns = ["col2"]
+  columns  = ["col2"]
   foreign_key_properties {
     references {
       table_id = snowflake_table.fk_t.id
-      columns = ["fk_col1"]
+      columns  = ["fk_col1"]
     }
   }
-  enforced = false
+  enforced   = false
   deferrable = false
-  initially = "IMMEDIATE"
-  comment = "hello fk"
+  initially  = "IMMEDIATE"
+  comment    = "hello fk"
 }
 ```
 

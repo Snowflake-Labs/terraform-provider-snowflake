@@ -14,8 +14,8 @@ description: |-
 
 ```terraform
 data "snowflake_masking_policies" "current" {
-    database = "MYDB"
-    schema   = "MYSCHEMA"
+  database = "MYDB"
+  schema   = "MYSCHEMA"
 }
 ```
 

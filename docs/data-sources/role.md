@@ -14,7 +14,7 @@ description: |-
 
 ```terraform
 data "snowflake_role" "this" {
-    name = "role1"
+  name = "role1"
 }
 ```
 
