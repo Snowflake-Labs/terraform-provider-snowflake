@@ -23,6 +23,12 @@ resource "snowflake_table" "t" {
     type     = "text"
     nullable = false
   }
+
+   column {
+    name     = "col3"
+    type     = "text"
+    nullable = false
+  }
 }
 
 resource "snowflake_table" "fk_t" {
@@ -66,4 +72,12 @@ resource "snowflake_table_constraint" "foreign_key" {
   deferrable = false
   initially = "IMMEDIATE"
   comment = "hello fk"
+}
+
+resource "snowflake_table_constraint" "unique" {
+  name="unique"
+  type="UNIQUE"
+  table_id = snowflake_table.t.id
+  columns = ["col3"]
+  comment = "hello unique"
 }
