@@ -39,3 +39,5 @@ linters:
     - thelper
     # wastedassign: wastedassign finds wasted assignment statements.
     - wastedassign
+    # whitespace: Tool for detection of leading and trailing whitespace
+    - whitespace
