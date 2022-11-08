@@ -1,7 +1,7 @@
 resource "snowflake_procedure_grant" "grant" {
-  database_name   = "database"
-  schema_name     = "schema"
-  procedure_name  = "procedure"
+  database_name  = "database"
+  schema_name    = "schema"
+  procedure_name = "procedure"
 
   arguments {
     name = "a"
@@ -14,7 +14,7 @@ resource "snowflake_procedure_grant" "grant" {
   return_type = "string"
 
   privilege = "SELECT"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   shares = ["share1", "share2"]
 

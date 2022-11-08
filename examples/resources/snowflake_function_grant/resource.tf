@@ -1,7 +1,7 @@
 resource "snowflake_function_grant" "grant" {
-  database_name   = "database"
-  schema_name     = "schema"
-  function_name  = "function"
+  database_name = "database"
+  schema_name   = "schema"
+  function_name = "function"
 
   arguments {
     name = "a"
@@ -14,7 +14,7 @@ resource "snowflake_function_grant" "grant" {
   return_type = "string"
 
   privilege = "USAGE"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   shares = ["share1", "share2"]
 
