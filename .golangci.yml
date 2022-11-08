@@ -37,3 +37,5 @@ linters:
     - gofumpt
     # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     - thelper
+    # wastedassign: wastedassign finds wasted assignment statements.
+    - wastedassign
