@@ -218,52 +218,52 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "COMMENT":
 			if val := v.(string); val != "" {
-				if err = d.Set("comment", v.(string)); err != nil {
+				if err := d.Set("comment", v.(string)); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_PROVIDER":
-			if err = d.Set("storage_provider", v.(string)); err != nil {
+			if err := d.Set("storage_provider", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_ALLOWED_LOCATIONS":
-			if err = d.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
+			if err := d.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
 				return err
 			}
 		case "STORAGE_BLOCKED_LOCATIONS":
 			if val := v.(string); val != "" {
-				if err = d.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
+				if err := d.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_AWS_IAM_USER_ARN":
-			if err = d.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_OBJECT_ACL":
 			if val := v.(string); val != "" {
-				if err = d.Set("storage_aws_object_acl", v.(string)); err != nil {
+				if err := d.Set("storage_aws_object_acl", v.(string)); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_AWS_ROLE_ARN":
-			if err = d.Set("storage_aws_role_arn", v.(string)); err != nil {
+			if err := d.Set("storage_aws_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_EXTERNAL_ID":
-			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
+			if err := d.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_GCP_SERVICE_ACCOUNT":
-			if err = d.Set("storage_gcp_service_account", v.(string)); err != nil {
+			if err := d.Set("storage_gcp_service_account", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_CONSENT_URL":
-			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+			if err := d.Set("azure_consent_url", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
-			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+			if err := d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
 				return err
 			}
 		default:

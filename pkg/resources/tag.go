@@ -262,7 +262,7 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 
 	split := strings.Split(av, ",")
 
-	if err = d.Set("allowed_values", split); err != nil {
+	if err := d.Set("allowed_values", split); err != nil {
 		return err
 	}
 
@@ -310,7 +310,7 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			addQuery := builder.AddAllowedValues(ns)
-			if err = snowflake.Exec(db, addQuery); err != nil {
+			if err := snowflake.Exec(db, addQuery); err != nil {
 				return fmt.Errorf("error adding ALLOWED_VALUES for tag %v", tag)
 			}
 		} else {

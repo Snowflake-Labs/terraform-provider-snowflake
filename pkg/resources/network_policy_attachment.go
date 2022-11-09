@@ -116,7 +116,7 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		isSetOnAccount = true
 	}
 
-	if err = d.Set("set_for_account", isSetOnAccount); err != nil {
+	if err := d.Set("set_for_account", isSetOnAccount); err != nil {
 		return err
 	}
 

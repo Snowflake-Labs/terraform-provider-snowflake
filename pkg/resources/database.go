@@ -234,7 +234,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unable to scan row for SHOW DATABASES")
 	}
 
-	if err = d.Set("name", database.DBName.String); err != nil {
+	if err := d.Set("name", database.DBName.String); err != nil {
 		return err
 	}
 	if err := d.Set("comment", database.Comment.String); err != nil {
@@ -247,14 +247,14 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// reset the options before reading back from the DB
-	if err = d.Set("is_transient", false); err != nil {
+	if err := d.Set("is_transient", false); err != nil {
 		return err
 	}
 
 	if opts := database.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
 			if opt == "TRANSIENT" {
-				if err = d.Set("is_transient", true); err != nil {
+				if err := d.Set("is_transient", true); err != nil {
 					return err
 				}
 			}

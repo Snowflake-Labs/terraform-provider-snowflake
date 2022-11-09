@@ -328,7 +328,7 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	// then add
 
-	if err = createGenericGrantRolesAndShares(
+	if err := createGenericGrantRolesAndShares(
 		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
 		return err

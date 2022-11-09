@@ -226,20 +226,20 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	if err = d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	onFuture := false
 	if schemaName == "" {
 		onFuture = true
 	}
-	if err = d.Set("on_future", onFuture); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	if err = d.Set("privilege", grantID.Privilege); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

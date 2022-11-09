@@ -196,7 +196,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return fmt.Errorf("returned OAuth issue refresh tokens that is not boolean err = %w", err)
 			}
-			if err = d.Set("oauth_issue_refresh_tokens", b); err != nil {
+			if err := d.Set("oauth_issue_refresh_tokens", b); err != nil {
 				return fmt.Errorf("unable to set OAuth issue refresh tokens for security integration err = %w", err)
 			}
 		case "OAUTH_REFRESH_TOKEN_VALIDITY":
@@ -204,11 +204,11 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return fmt.Errorf("returned OAuth refresh token validity that is not integer err = %w", err)
 			}
-			if err = d.Set("oauth_refresh_token_validity", i); err != nil {
+			if err := d.Set("oauth_refresh_token_validity", i); err != nil {
 				return fmt.Errorf("unable to set OAuth refresh token validity for security integration err = %w", err)
 			}
 		case "OAUTH_USE_SECONDARY_ROLES":
-			if err = d.Set("oauth_use_secondary_roles", v.(string)); err != nil {
+			if err := d.Set("oauth_use_secondary_roles", v.(string)); err != nil {
 				return fmt.Errorf("unable to set OAuth use secondary roles for security integration err = %w", err)
 			}
 		case "BLOCKED_ROLES_LIST":
@@ -223,11 +223,11 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			if err = d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
+			if err := d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
 				return fmt.Errorf("unable to set blocked roles list for security integration err = %w", err)
 			}
 		case "OAUTH_REDIRECT_URI":
-			if err = d.Set("oauth_redirect_uri", v.(string)); err != nil {
+			if err := d.Set("oauth_redirect_uri", v.(string)); err != nil {
 				return fmt.Errorf("unable to set OAuth redirect URI for security integration err = %w", err)
 			}
 		case "OAUTH_CLIENT_TYPE":

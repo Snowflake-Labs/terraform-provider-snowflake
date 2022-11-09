@@ -149,7 +149,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	if err = d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureFileFormatsEnabled := false

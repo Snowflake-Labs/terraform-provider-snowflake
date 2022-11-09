@@ -147,11 +147,11 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		}
 		switch k {
 		case "NETWORK_POLICY":
-			if err = d.Set("network_policy", v.(string)); err != nil {
+			if err := d.Set("network_policy", v.(string)); err != nil {
 				return fmt.Errorf("unable to set network policy for security integration")
 			}
 		case "RUN_AS_ROLE":
-			if err = d.Set("provisioner_role", v.(string)); err != nil {
+			if err := d.Set("provisioner_role", v.(string)); err != nil {
 				return fmt.Errorf("unable to set provisioner role for security integration")
 			}
 		default:

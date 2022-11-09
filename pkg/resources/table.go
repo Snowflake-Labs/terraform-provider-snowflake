@@ -764,7 +764,7 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Table(tableName, dbName, schemaName).Drop()
 
-	if err = snowflake.Exec(db, q); err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 

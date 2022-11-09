@@ -156,16 +156,16 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	if sequenceName == "" {
 		futureSequencesEnabled = true
 	}
-	if err = d.Set("sequence_name", sequenceName); err != nil {
+	if err := d.Set("sequence_name", sequenceName); err != nil {
 		return err
 	}
-	if err = d.Set("on_future", futureSequencesEnabled); err != nil {
+	if err := d.Set("on_future", futureSequencesEnabled); err != nil {
 		return err
 	}
-	if err = d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

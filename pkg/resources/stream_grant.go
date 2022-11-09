@@ -146,11 +146,11 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	streamName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	if err = d.Set("database_name", dbName); err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
 
-	if err = d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureStreamsEnabled := false
@@ -170,7 +170,7 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

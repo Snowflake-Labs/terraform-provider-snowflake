@@ -257,25 +257,25 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 		case "COMMENT":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "EXTERNAL_OAUTH_ISSUER":
-			if err = d.Set("issuer", v.(string)); err != nil {
+			if err := d.Set("issuer", v.(string)); err != nil {
 				return fmt.Errorf("unable to set issuer for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_JWS_KEYS_URL":
 			list := []string{}
 			list = append(list, strings.Split(v.(string), ",")...)
-			if err = d.Set("jws_keys_urls", list); err != nil {
+			if err := d.Set("jws_keys_urls", list); err != nil {
 				return fmt.Errorf("unable to set jws keys urls for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_ANY_ROLE_MODE":
-			if err = d.Set("any_role_mode", v.(string)); err != nil {
+			if err := d.Set("any_role_mode", v.(string)); err != nil {
 				return fmt.Errorf("unable to set any role mode for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY":
-			if err = d.Set("rsa_public_key", v.(string)); err != nil {
+			if err := d.Set("rsa_public_key", v.(string)); err != nil {
 				return fmt.Errorf("unable to set rsa public key for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2":
-			if err = d.Set("rsa_public_key_2", v.(string)); err != nil {
+			if err := d.Set("rsa_public_key_2", v.(string)); err != nil {
 				return fmt.Errorf("unable to set rsa public key 2 for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST":
@@ -289,7 +289,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
-			if err = d.Set("blocked_roles", blockedRolesCustom); err != nil {
+			if err := d.Set("blocked_roles", blockedRolesCustom); err != nil {
 				return fmt.Errorf("unable to set blocked roles for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST":
@@ -299,7 +299,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, item)
 				}
 			}
-			if err = d.Set("allowed_roles", list); err != nil {
+			if err := d.Set("allowed_roles", list); err != nil {
 				return fmt.Errorf("unable to set allowed roles for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_AUDIENCE_LIST":
@@ -309,7 +309,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, item)
 				}
 			}
-			if err = d.Set("audience_urls", list); err != nil {
+			if err := d.Set("audience_urls", list); err != nil {
 				return fmt.Errorf("unable to set audience urls for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM":
@@ -319,11 +319,11 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, strings.Replace(item, "'", "", 2))
 				}
 			}
-			if err = d.Set("token_user_mapping_claims", list); err != nil {
+			if err := d.Set("token_user_mapping_claims", list); err != nil {
 				return fmt.Errorf("unable to set token user mapping claims for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE":
-			if err = d.Set("snowflake_user_mapping_attribute", v.(string)); err != nil {
+			if err := d.Set("snowflake_user_mapping_attribute", v.(string)); err != nil {
 				return fmt.Errorf("unable to set snowflake mapping attribute for security integration err = %w", err)
 			}
 		default:

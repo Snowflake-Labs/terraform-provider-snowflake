@@ -282,11 +282,11 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err = d.Set("name", externalTable.ExternalTableName.String); err != nil {
+	if err := d.Set("name", externalTable.ExternalTableName.String); err != nil {
 		return err
 	}
 
-	if err = d.Set("owner", externalTable.Owner.String); err != nil {
+	if err := d.Set("owner", externalTable.Owner.String); err != nil {
 		return err
 	}
 

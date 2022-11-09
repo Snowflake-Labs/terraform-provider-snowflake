@@ -109,7 +109,7 @@ func ListUsers(pattern string, db *sql.DB) ([]user, error) {
 	defer rows.Close()
 
 	dbs := []user{}
-	if err = sqlx.StructScan(rows, &dbs); err != nil {
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no users found")
 			return nil, nil

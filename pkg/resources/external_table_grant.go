@@ -159,23 +159,23 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	if err = d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureExternalTablesEnabled := false
 	if externalTableName == "" {
 		futureExternalTablesEnabled = true
 	}
-	if err = d.Set("external_table_name", externalTableName); err != nil {
+	if err := d.Set("external_table_name", externalTableName); err != nil {
 		return err
 	}
-	if err = d.Set("on_future", futureExternalTablesEnabled); err != nil {
+	if err := d.Set("on_future", futureExternalTablesEnabled); err != nil {
 		return err
 	}
-	if err = d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

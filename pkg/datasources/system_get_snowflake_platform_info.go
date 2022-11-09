@@ -62,11 +62,11 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
-	if err = d.Set("azure_vnet_subnet_ids", info.AzureVnetSubnetIds); err != nil {
+	if err := d.Set("azure_vnet_subnet_ids", info.AzureVnetSubnetIds); err != nil {
 		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
-	if err = d.Set("aws_vpc_ids", info.AwsVpcIds); err != nil {
+	if err := d.Set("aws_vpc_ids", info.AwsVpcIds); err != nil {
 		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 

@@ -193,7 +193,7 @@ func UpdateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	// then add
-	if err = createGenericGrantRolesAndShares(
+	if err := createGenericGrantRolesAndShares(
 		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err

@@ -114,10 +114,10 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("database_name", grantID.ResourceName); err != nil {
 		return err
 	}
-	if err = d.Set("privilege", grantID.Privilege); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

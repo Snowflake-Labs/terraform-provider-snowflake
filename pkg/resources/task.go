@@ -407,7 +407,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 					if !(rootTask.Name == name) {
 						defer func() {
 							q = rootTask.Resume()
-							if err = snowflake.Exec(db, q); err != nil {
+							if err := snowflake.Exec(db, q); err != nil {
 								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 							}
 						}()
@@ -424,7 +424,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-	if err = snowflake.Exec(db, q); err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error creating task %v err = %w", name, err)
 	}
 
@@ -469,7 +469,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		// if a root task is enabled, then it needs to be suspended before the child tasks can be created
 		if rootTask.IsEnabled() {
 			q := rootTask.Suspend()
-			if err = snowflake.Exec(db, q); err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return err
 			}
 
@@ -477,7 +477,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				// resume the task after modifications are complete, as long as it is not a standalone task
 				defer func() {
 					q = rootTask.Resume()
-					if err = snowflake.Exec(db, q); err != nil {
+					if err := snowflake.Exec(db, q); err != nil {
 						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 					}
 				}()
@@ -535,7 +535,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		// making changes to after require suspending the current task
 		q = builder.Suspend()
-		if err = snowflake.Exec(db, q); err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error suspending task %v", d.Id())
 		}
 
@@ -589,7 +589,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 							// resume the task after modifications are complete, as long as it is not a standalone task
 							defer func() {
 								q = rootTask.Resume()
-								if err = snowflake.Exec(db, q); err != nil {
+								if err := snowflake.Exec(db, q); err != nil {
 									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 								}
 							}()
@@ -758,7 +758,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := snowflake.Task(name, database, schema).Drop()
-	if err = snowflake.Exec(db, q); err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting task %v err = %w", d.Id(), err)
 	}
 

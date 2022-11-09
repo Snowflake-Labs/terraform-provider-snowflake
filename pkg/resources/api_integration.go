@@ -192,33 +192,33 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "API_ALLOWED_PREFIXES":
-			if err = d.Set("api_allowed_prefixes", strings.Split(v.(string), ",")); err != nil {
+			if err := d.Set("api_allowed_prefixes", strings.Split(v.(string), ",")); err != nil {
 				return err
 			}
 		case "API_BLOCKED_PREFIXES":
 			if val := v.(string); val != "" {
-				if err = d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
+				if err := d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "API_AWS_IAM_USER_ARN":
-			if err = d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "API_AWS_ROLE_ARN":
-			if err = d.Set("api_aws_role_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "API_AWS_EXTERNAL_ID":
-			if err = d.Set("api_aws_external_id", v.(string)); err != nil {
+			if err := d.Set("api_aws_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_CONSENT_URL":
-			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+			if err := d.Set("azure_consent_url", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
-			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+			if err := d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
 				return err
 			}
 		default:

@@ -275,7 +275,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	for _, fg := range failoverGroups {
 		if fg.Name.String == name && fg.AccountLocator.String == accountLocator {
 			found = true
-			if err = d.Set("name", fg.Name.String); err != nil {
+			if err := d.Set("name", fg.Name.String); err != nil {
 				return err
 			}
 			// if the failover group is created from a replica, then we do not want to get the other values
@@ -307,7 +307,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			for _, v := range currentObjectTypeList {
 				if !slices.Contains(objectTypes, v.(string)) {
 					log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)
-					if err = d.Set("object_types", objectTypes); err != nil {
+					if err := d.Set("object_types", objectTypes); err != nil {
 						return err
 					}
 					break
@@ -373,7 +373,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	} else {
-		if err = d.Set("allowed_databases", nil); err != nil {
+		if err := d.Set("allowed_databases", nil); err != nil {
 			return err
 		}
 	}
@@ -388,7 +388,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			sharesInterface[i] = v
 		}
 		sharesSet := schema.NewSet(schema.HashString, sharesInterface)
-		if err = d.Set("allowed_shares", sharesSet); err != nil {
+		if err := d.Set("allowed_shares", sharesSet); err != nil {
 			return err
 		}
 	}

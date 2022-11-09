@@ -301,20 +301,20 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("arguments", args); err != nil {
+				if err := d.Set("arguments", args); err != nil {
 					return err
 				}
 			}
 		case "null handling":
-			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "volatility":
-			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+			if err := d.Set("return_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "body":
-			if err = d.Set("statement", desc.Value.String); err != nil {
+			if err := d.Set("statement", desc.Value.String); err != nil {
 				return err
 			}
 		case "returns":
@@ -325,12 +325,12 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			if match != nil {
 				rt = match[1]
 			}
-			if err = d.Set("return_type", rt); err != nil {
+			if err := d.Set("return_type", rt); err != nil {
 				return err
 			}
 		case "language":
 			if snowflake.Contains(languages, desc.Value.String) {
-				if err = d.Set("language", desc.Value.String); err != nil {
+				if err := d.Set("language", desc.Value.String); err != nil {
 					return err
 				}
 			}
@@ -338,7 +338,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if packagesString != "" { // Do nothing for Java / Python functions without packages
 				packages := strings.Split(packagesString, ",")
-				if err = d.Set("packages", packages); err != nil {
+				if err := d.Set("packages", packages); err != nil {
 					return err
 				}
 			}
@@ -346,20 +346,20 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if importsString != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(importsString, ",")
-				if err = d.Set("imports", imports); err != nil {
+				if err := d.Set("imports", imports); err != nil {
 					return err
 				}
 			}
 		case "handler":
-			if err = d.Set("handler", desc.Value.String); err != nil {
+			if err := d.Set("handler", desc.Value.String); err != nil {
 				return err
 			}
 		case "target_path":
-			if err = d.Set("target_path", desc.Value.String); err != nil {
+			if err := d.Set("target_path", desc.Value.String); err != nil {
 				return err
 			}
 		case "runtime_version":
-			if err = d.Set("runtime_version", desc.Value.String); err != nil {
+			if err := d.Set("runtime_version", desc.Value.String); err != nil {
 				return err
 			}
 		default:
@@ -390,7 +390,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 
 	for _, v := range foundFunctions {
 		if v.Arguments.String == argSig {
-			if err = d.Set("comment", v.Comment.String); err != nil {
+			if err := d.Set("comment", v.Comment.String); err != nil {
 				return err
 			}
 		}

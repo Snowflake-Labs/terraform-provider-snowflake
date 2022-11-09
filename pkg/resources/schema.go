@@ -199,7 +199,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err = d.Set("comment", s.Comment.String); err != nil {
+	if err := d.Set("comment", s.Comment.String); err != nil {
 		return err
 	}
 
@@ -221,7 +221,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// reset the options before reading back from the DB
-	if err = d.Set("is_transient", false); err != nil {
+	if err := d.Set("is_transient", false); err != nil {
 		return err
 	}
 
@@ -320,7 +320,7 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	schema := schemaID.SchemaName
 
 	q := snowflake.Schema(schema).WithDB(dbName).Drop()
-	if err = snowflake.Exec(db, q); err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting schema %v err = %w", d.Id(), err)
 	}
 

@@ -269,32 +269,32 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("arguments", args); err != nil {
+				if err := d.Set("arguments", args); err != nil {
 					return err
 				}
 			}
 		case "null handling":
-			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "volatility":
-			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+			if err := d.Set("return_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "body":
-			if err = d.Set("statement", desc.Value.String); err != nil {
+			if err := d.Set("statement", desc.Value.String); err != nil {
 				return err
 			}
 		case "execute as":
-			if err = d.Set("execute_as", desc.Value.String); err != nil {
+			if err := d.Set("execute_as", desc.Value.String); err != nil {
 				return err
 			}
 		case "returns":
-			if err = d.Set("return_type", desc.Value.String); err != nil {
+			if err := d.Set("return_type", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":
-			if err = d.Set("language", desc.Value.String); err != nil {
+			if err := d.Set("language", desc.Value.String); err != nil {
 				return err
 			}
 

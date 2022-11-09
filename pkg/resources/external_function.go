@@ -403,7 +403,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("arg", args); err != nil {
+				if err := d.Set("arg", args); err != nil {
 					return err
 				}
 			}
@@ -411,7 +411,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 			returnType := desc.Value.String
 			// We first check for VARIANT
 			if returnType == "VARIANT" {
-				if err = d.Set("return_type", returnType); err != nil {
+				if err := d.Set("return_type", returnType); err != nil {
 					return err
 				}
 				break
@@ -423,16 +423,16 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 			if len(match) < 2 {
 				return fmt.Errorf("return_type %s not recognized", returnType)
 			}
-			if err = d.Set("return_type", match[1]); err != nil {
+			if err := d.Set("return_type", match[1]); err != nil {
 				return err
 			}
 
 		case "null handling":
-			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "volatility":
-			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+			if err := d.Set("return_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "headers":
@@ -450,7 +450,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 					headers = append(headers, header)
 				}
 
-				if err = d.Set("header", headers); err != nil {
+				if err := d.Set("header", headers); err != nil {
 					return err
 				}
 			}
@@ -459,7 +459,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				// Format in Snowflake DB is: ["CONTEXT_FUNCTION_1","CONTEXT_FUNCTION_2"]
 				contextHeaders := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "\"", ""), ",")
 
-				if err = d.Set("context_headers", contextHeaders); err != nil {
+				if err := d.Set("context_headers", contextHeaders); err != nil {
 					return err
 				}
 			}
@@ -470,16 +470,16 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 
-				if err = d.Set("max_batch_rows", i); err != nil {
+				if err := d.Set("max_batch_rows", i); err != nil {
 					return err
 				}
 			}
 		case "compression":
-			if err = d.Set("compression", desc.Value.String); err != nil {
+			if err := d.Set("compression", desc.Value.String); err != nil {
 				return err
 			}
 		case "body":
-			if err = d.Set("url_of_proxy_and_resource", desc.Value.String); err != nil {
+			if err := d.Set("url_of_proxy_and_resource", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":
@@ -506,7 +506,7 @@ func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
 	q := snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
-	if err = snowflake.Exec(db, q); err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting external function %v error %w", d.Id(), err)
 	}
 
