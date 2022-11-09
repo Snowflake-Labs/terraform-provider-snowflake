@@ -1,7 +1,9 @@
 package resources
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"regexp"
@@ -92,6 +94,56 @@ func View() *schema.Resource {
 	}
 }
 
+type viewID struct {
+	DatabaseName string
+	SchemaName   string
+	ViewName     string
+}
+
+const (
+	viewDelimiter = '|'
+)
+
+// String() takes in a viewID object and returns a pipe-delimited string:
+// DatabaseName|SchemaName|viewName.
+func (si *viewID) String() (string, error) {
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+	csvWriter.Comma = viewDelimiter
+	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ViewName}}
+	err := csvWriter.WriteAll(dataIdentifiers)
+	if err != nil {
+		return "", err
+	}
+	strViewID := strings.TrimSpace(buf.String())
+	return strViewID, nil
+}
+
+// viewIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|viewName
+// and returns a externalTableID object.
+func viewIDFromString(stringID string) (*viewID, error) {
+	reader := csv.NewReader(strings.NewReader(stringID))
+	reader.Comma = viewDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("not CSV compatible")
+	}
+
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("1 line at a time")
+	}
+	if len(lines[0]) != 3 {
+		return nil, fmt.Errorf("3 fields allowed")
+	}
+
+	viewResult := &viewID{
+		DatabaseName: lines[0][0],
+		SchemaName:   lines[0][1],
+		ViewName:     lines[0][2],
+	}
+	return viewResult, nil
+}
+
 // CreateView implements schema.CreateFunc.
 func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -129,7 +181,16 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		return errors.Wrapf(err, "error creating view %v", name)
 	}
 
-	d.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
+	viewID := &viewID{
+		DatabaseName: database,
+		SchemaName:   schema,
+		ViewName:     name,
+	}
+	dataIDInput, err := viewID.String()
+	if err != nil {
+		return err
+	}
+	d.SetId(dataIDInput)
 
 	return ReadView(d, meta)
 }
@@ -137,10 +198,13 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 // ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(d.Id())
+	viewId, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
+	dbName := viewId.DatabaseName
+	schema := viewId.SchemaName
+	view := viewId.ViewName
 
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
@@ -193,11 +257,13 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateView implements schema.UpdateFunc.
 func UpdateView(d *schema.ResourceData, meta interface{}) error {
-	dbName, schema, view, err := splitViewID(d.Id())
+	viewId, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-
+	dbName := viewId.DatabaseName
+	schema := viewId.SchemaName
+	view := viewId.ViewName
 	builder := snowflake.View(view).WithDB(dbName).WithSchema(schema)
 
 	db := meta.(*sql.DB)
@@ -213,7 +279,16 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			return errors.Wrapf(err, "error renaming view %v", d.Id())
 		}
 
-		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
+		viewID := &viewID{
+			DatabaseName: dbName,
+			SchemaName:   schema,
+			ViewName:     name.(string),
+		}
+		dataIDInput, err := viewID.String()
+		if err != nil {
+			return err
+		}
+		d.SetId(dataIDInput)
 	}
 
 	if d.HasChange("comment") {
@@ -299,10 +374,13 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbName, schema, view, err := splitViewID(d.Id())
+	viewId, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
+	dbName := viewId.DatabaseName
+	schema := viewId.SchemaName
+	view := viewId.ViewName
 
 	q, err := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
 	if err != nil {
@@ -317,15 +395,4 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-// splitViewID takes the <database_name>|<schema_name>|<view_name> ID and returns the database
-// name, schema name and view name.
-func splitViewID(v string) (string, string, string, error) {
-	arr := strings.Split(v, "|")
-	if len(arr) != 3 {
-		return "", "", "", fmt.Errorf("ID %v is invalid", v)
-	}
-
-	return arr[0], arr[1], arr[2], nil
 }
