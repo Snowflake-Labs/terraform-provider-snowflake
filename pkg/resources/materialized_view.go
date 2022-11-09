@@ -242,14 +242,14 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateMaterializedView implements schema.UpdateFunc.
 func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	materializedViewID, err := materializedViewIDFromString(d.Id())
+	mvid, err := materializedViewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := materializedViewID.DatabaseName
-	schema := materializedViewID.SchemaName
-	view := materializedViewID.ViewName
+	dbName := mvid.DatabaseName
+	schema := mvid.SchemaName
+	view := mvid.ViewName
 
 	builder := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema)
 
@@ -262,8 +262,16 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error renaming view %v", d.Id())
 		}
-
-		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
+		materializedViewID := &materializedViewID{
+			DatabaseName: dbName,
+			SchemaName:   schema,
+			ViewName:     name.(string),
+		}
+		dataIDInput, err := materializedViewID.String()
+		if err != nil {
+			return err
+		}
+		d.SetId(dataIDInput)
 	}
 
 	if d.HasChange("comment") {

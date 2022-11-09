@@ -260,13 +260,13 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateSchema implements schema.UpdateFunc.
 func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
-	schemaID, err := schemaIDFromString(d.Id())
+	sid, err := schemaIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := schemaID.DatabaseName
-	schema := schemaID.SchemaName
+	dbName := sid.DatabaseName
+	schema := sid.SchemaName
 
 	builder := snowflake.Schema(schema).WithDB(dbName)
 
@@ -278,7 +278,16 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return errors.Wrapf(err, "error updating schema name on %v", d.Id())
 		}
-		d.SetId(fmt.Sprintf("%v|%v", dbName, name.(string)))
+
+		schemaID := &schemaID{
+			DatabaseName: dbName,
+			SchemaName:   name.(string),
+		}
+		dataIDInput, err := schemaID.String()
+		if err != nil {
+			return err
+		}
+		d.SetId(dataIDInput)
 	}
 
 	if d.HasChange("comment") {
