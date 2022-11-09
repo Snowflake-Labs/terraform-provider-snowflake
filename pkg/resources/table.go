@@ -632,7 +632,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		d.SetId(dataIDInput)
-		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
 	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
