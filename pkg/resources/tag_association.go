@@ -114,8 +114,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).WithTagValue(tagValue)
 
 	q := builder.Create()
-	err := snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error associating tag to object: [%v] with command: [%v], tag_id [%v]", objectIdentifier, q, tagID)
 	}
 
@@ -123,7 +122,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	if !skipValidate {
 		log.Println("[DEBUG] validating tag creation")
 
-		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		if err := resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
 			resp, err := snowflake.ListTagAssociations(builder, db)
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("error: %w", err))
@@ -134,8 +133,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 				return resource.RetryableError(fmt.Errorf("expected tag association to be created but not yet created"))
 			}
 			return nil
-		})
-		if err != nil {
+		}); err != nil {
 			return fmt.Errorf("error validating tag association")
 		}
 	}
@@ -176,8 +174,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tag associations")
 	}
 
-	err = d.Set("tag_value", ta.TagValue.String)
-	if err != nil {
+	if err := d.Set("tag_value", ta.TagValue.String); err != nil {
 		return err
 	}
 
@@ -225,8 +222,7 @@ func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier, objectType)
 	q := snowflake.TagAssociation(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).Drop()
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		log.Printf("[DEBUG] error is %v", err.Error())
 		return fmt.Errorf("error deleting tag association for object [%v]", objectIdentifier)
 	}

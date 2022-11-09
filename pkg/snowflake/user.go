@@ -45,8 +45,7 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 
 	for rows.Next() {
 		userProp := &DescribeUserProp{}
-		err := rows.StructScan(userProp)
-		if err != nil {
+		if err := rows.StructScan(userProp); err != nil {
 			return nil, err
 		}
 
@@ -110,8 +109,7 @@ func ListUsers(pattern string, db *sql.DB) ([]user, error) {
 	defer rows.Close()
 
 	dbs := []user{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err != nil {
+	if err = sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no users found")
 			return nil, nil

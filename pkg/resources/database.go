@@ -102,8 +102,7 @@ func createDatabase(d *schema.ResourceData, builder *snowflake.DatabaseBuilder, 
 	q := builder.Create()
 	name := d.Get("name").(string)
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error creating database %v err = %w", name, err)
 	}
 
@@ -192,8 +191,7 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(comment.(string))
 	}
 
-	err := snowflake.Exec(db, builder.Create())
-	if err != nil {
+	if err := snowflake.Exec(db, builder.Create()); err != nil {
 		return fmt.Errorf("error creating database %v from share %v.%v err = %w", name, prov, share, err)
 	}
 
@@ -209,8 +207,7 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	builder := snowflake.DatabaseFromReplica(name, sourceDB)
 
-	err := snowflake.Exec(db, builder.Create())
-	if err != nil {
+	if err := snowflake.Exec(db, builder.Create()); err != nil {
 		return fmt.Errorf("error creating a secondary database %v from database %v err = %w", name, sourceDB, err)
 	}
 
@@ -237,12 +234,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unable to scan row for SHOW DATABASES")
 	}
 
-	err = d.Set("name", database.DBName.String)
-	if err != nil {
+	if err = d.Set("name", database.DBName.String); err != nil {
 		return err
 	}
-	err = d.Set("comment", database.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", database.Comment.String); err != nil {
 		return err
 	}
 
@@ -252,16 +247,14 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// reset the options before reading back from the DB
-	err = d.Set("is_transient", false)
-	if err != nil {
+	if err = d.Set("is_transient", false); err != nil {
 		return err
 	}
 
 	if opts := database.Options.String; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
 			if opt == "TRANSIENT" {
-				err = d.Set("is_transient", true)
-				if err != nil {
+				if err = d.Set("is_transient", true); err != nil {
 					return err
 				}
 			}
@@ -285,8 +278,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		if newConfigLength > 0 {
 			newAccounts := extractInterfaceFromAttribute(newConfig, "accounts")
 			enableQuery := builder.EnableReplicationAccounts(dbName, strings.Join(expandStringList(newAccounts), ", "))
-			err := snowflake.Exec(db, enableQuery)
-			if err != nil {
+			if err := snowflake.Exec(db, enableQuery); err != nil {
 				return fmt.Errorf("error enabling replication configuration with statement %v err = %w", enableQuery, err)
 			}
 		}
@@ -303,8 +295,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 			// If accounts were found to be removed, disable replication
 			if len(accountsToDisableReplication) > 0 {
 				disableQuery := builder.DisableReplicationAccounts(dbName, strings.Join(expandStringList(accountsToDisableReplication), ", "))
-				err := snowflake.Exec(db, disableQuery)
-				if err != nil {
+				if err := snowflake.Exec(db, disableQuery); err != nil {
 					return fmt.Errorf("error disabling replication configuration with statement %v err = %w", disableQuery, err)
 				}
 			}
@@ -314,8 +305,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		name := d.Get("name")
 		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
 		}
 		d.SetId(fmt.Sprintf("%v", name.(string)))
@@ -324,18 +314,15 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating database comment on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("data_retention_time_in_days") {
 		days := d.Get("data_retention_time_in_days")
-
 		q := builder.ChangeDataRetentionDays(days.(int))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating data retention days on %v err = %w", d.Id(), err)
 		}
 	}
@@ -353,9 +340,7 @@ func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 
 	q := snowflake.Database(name).Drop()
-
-	err := snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting database %v err = %w", d.Id(), err)
 	}
 

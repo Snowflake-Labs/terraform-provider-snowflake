@@ -131,8 +131,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SchemaGrant(db, schemaName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -224,28 +223,23 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err = d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	onFuture := false
 	if schemaName == "" {
 		onFuture = true
 	}
-	err = d.Set("on_future", onFuture)
-	if err != nil {
+	if err = d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	err = d.Set("privilege", grantID.Privilege)
-	if err != nil {
+	if err = d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

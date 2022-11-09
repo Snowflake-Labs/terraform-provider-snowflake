@@ -455,8 +455,7 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 
 	for rows.Next() {
 		r := &taskParams{}
-		err := rows.StructScan(r)
-		if err != nil {
+		if err := rows.StructScan(r); err != nil {
 			return nil, err
 		}
 		t = append(t, r)
@@ -534,8 +533,7 @@ func WaitResumeTask(db *sql.DB, name string, database string, schema string) err
 	// if its not resumed then try again up until a maximum of 5 times
 	for i := 0; i < 5; i++ {
 		q := builder.Resume()
-		err := Exec(db, q)
-		if err != nil {
+		if err := Exec(db, q); err != nil {
 			return fmt.Errorf("error resuming task %v err = %w", name, err)
 		}
 

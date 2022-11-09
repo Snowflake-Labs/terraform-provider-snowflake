@@ -90,8 +90,7 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetString(`NETWORK_POLICY`, d.Get("network_policy").(string))
 	}
 
-	err := snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating security integration")
 	}
 
@@ -186,8 +185,7 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("network_policy") {
 		v := d.Get("network_policy").(string)
 		if len(v) == 0 {
-			err := snowflake.Exec(db, fmt.Sprintf(`ALTER SECURITY INTEGRATION %v UNSET NETWORK_POLICY`, id))
-			if err != nil {
+			if err := snowflake.Exec(db, fmt.Sprintf(`ALTER SECURITY INTEGRATION %v UNSET NETWORK_POLICY`, id)); err != nil {
 				return fmt.Errorf("error unsetting network_policy")
 			}
 		} else {

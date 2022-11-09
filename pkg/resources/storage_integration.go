@@ -145,13 +145,10 @@ func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Now, set the storage provider
-	err := setStorageProviderSettings(d, stmt)
-	if err != nil {
+	if err := setStorageProviderSettings(d, stmt); err != nil {
 		return err
 	}
-
-	err = snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating storage integration: %w", err)
 	}
 
@@ -310,8 +307,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("storage_blocked_locations") {
 		v := d.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
-			err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_BLOCKED_LOCATIONS")
-			if err != nil {
+			if err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_BLOCKED_LOCATIONS"); err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
 			}
 		} else {
@@ -323,13 +319,11 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// also need to UNSET STORAGE_AWS_OBJECT_ACL if removed
 	if d.HasChange("storage_aws_object_acl") {
 		if _, ok := d.GetOk("storage_aws_object_acl"); ok {
-			err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control")
-			if err != nil {
+			if err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control"); err != nil {
 				return fmt.Errorf("error setting storage_aws_object_acl: %w", err)
 			}
 		} else {
-			err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL")
-			if err != nil {
+			if err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL"); err != nil {
 				return fmt.Errorf("error unsetting storage_aws_object_acl: %w", err)
 			}
 		}

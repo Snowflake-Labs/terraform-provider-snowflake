@@ -179,8 +179,7 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
 	}
 
-	err := snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating notification integration: %w", err)
 	}
 

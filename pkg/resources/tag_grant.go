@@ -89,8 +89,7 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.TagGrant(dbName, schemaName, tagName)
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -122,24 +121,23 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 	tagName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	err = d.Set("tag_name", tagName)
-	if err != nil {
+
+	if err := d.Set("tag_name", tagName); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

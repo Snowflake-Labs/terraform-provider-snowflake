@@ -205,8 +205,8 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
+
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error creating procedure %v err = %w", name, err)
 	}
 
@@ -327,20 +327,16 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	for _, v := range foundProcedures {
 		showArgs := strings.Split(v.Arguments.String, " RETURN ")
 		if showArgs[0] == argSig {
-			err = d.Set("name", v.Name.String)
-			if err != nil {
+			if err := d.Set("name", v.Name.String); err != nil {
 				return err
 			}
-			err = d.Set("database", v.DatabaseName.String)
-			if err != nil {
+			if err := d.Set("database", v.DatabaseName.String); err != nil {
 				return err
 			}
-			err = d.Set("schema", v.SchemaName.String)
-			if err != nil {
+			if err := d.Set("schema", v.SchemaName.String); err != nil {
 				return err
 			}
-			err = d.Set("comment", v.Comment.String)
-			if err != nil {
+			if err := d.Set("comment", v.Comment.String); err != nil {
 				return err
 			}
 		}
@@ -369,8 +365,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error renaming procedure %v", d.Id())
 		}
 		newID := &procedureID{
@@ -390,8 +385,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting comment for procedure %v", d.Id())
 			}
 		} else {
@@ -399,8 +393,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error updating comment for procedure %v", d.Id())
 			}
 		}
@@ -412,8 +405,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error changing execute as for procedure %v", d.Id())
 		}
 	}
@@ -440,8 +432,7 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting procedure %v err = %w", d.Id(), err)
 	}
 

@@ -76,15 +76,13 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating role grant err = %w", err)
 	}
 	for _, role := range roles {
-		err := grantRoleToRole(db, roleName, role)
-		if err != nil {
+		if err := grantRoleToRole(db, roleName, role); err != nil {
 			return err
 		}
 	}
 
 	for _, user := range users {
-		err := grantRoleToUser(db, roleName, user)
-		if err != nil {
+		if err := grantRoleToUser(db, roleName, user); err != nil {
 			return err
 		}
 	}
@@ -151,16 +149,13 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err = d.Set("role_name", roleName)
-	if err != nil {
+	if err := d.Set("role_name", roleName); err != nil {
 		return err
 	}
-	err = d.Set("roles", roles)
-	if err != nil {
+	if err := d.Set("roles", roles); err != nil {
 		return err
 	}
-	err = d.Set("users", users)
-	if err != nil {
+	if err := d.Set("users", users); err != nil {
 		return err
 	}
 
@@ -180,8 +175,7 @@ func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 	grants := make([]*roleGrant, 0)
 	for rows.Next() {
 		g := &roleGrant{}
-		err = rows.StructScan(g)
-		if err != nil {
+		if err := rows.StructScan(g); err != nil {
 			return nil, err
 		}
 		grants = append(grants, g)
@@ -207,15 +201,13 @@ func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	users := expandStringList(d.Get("users").(*schema.Set).List())
 
 	for _, role := range roles {
-		err := revokeRoleFromRole(db, roleName, role)
-		if err != nil {
+		if err := revokeRoleFromRole(db, roleName, role); err != nil {
 			return err
 		}
 	}
 
 	for _, user := range users {
-		err := revokeRoleFromUser(db, roleName, user)
-		if err != nil {
+		if err := revokeRoleFromUser(db, roleName, user); err != nil {
 			return err
 		}
 	}
@@ -272,27 +264,23 @@ func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		add := expandStringList(ns.Difference(os).List())
 
 		for _, user := range remove {
-			err := revoke(db, roleName, user)
-			if err != nil {
+			if err := revoke(db, roleName, user); err != nil {
 				return err
 			}
 		}
 		for _, user := range add {
-			err := grant(db, roleName, user)
-			if err != nil {
+			if err := grant(db, roleName, user); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
 
-	err := x("users", grantRoleToUser, revokeRoleFromUser)
-	if err != nil {
+	if err := x("users", grantRoleToUser, revokeRoleFromUser); err != nil {
 		return err
 	}
 
-	err = x("roles", grantRoleToRole, revokeRoleFromRole)
-	if err != nil {
+	if err := x("roles", grantRoleToRole, revokeRoleFromRole); err != nil {
 		return err
 	}
 

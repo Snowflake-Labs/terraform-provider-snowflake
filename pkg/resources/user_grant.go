@@ -73,8 +73,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.UserGrant(w)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -102,16 +101,15 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 	w := grantID.ResourceName
 	priv := grantID.Privilege
 
-	err = d.Set("user_name", w)
-	if err != nil {
+	if err := d.Set("user_name", w); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

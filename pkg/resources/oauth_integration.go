@@ -123,8 +123,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetString(`COMMENT`, d.Get("comment").(string))
 	}
 
-	err := snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating security integration err = %w", err)
 	}
 

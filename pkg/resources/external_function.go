@@ -195,8 +195,7 @@ func (si *externalFunctionID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = externalFunctionIDDelimiter
-	err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName, si.ExternalFunctionArgTypes}})
-	if err != nil {
+	if err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName, si.ExternalFunctionArgTypes}}); err != nil {
 		return "", err
 	}
 
@@ -303,8 +302,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
+	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error creating external function %v err = %w", name, err)
 	}
 
@@ -508,9 +506,7 @@ func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
 	q := snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err = snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting external function %v error %w", d.Id(), err)
 	}
 

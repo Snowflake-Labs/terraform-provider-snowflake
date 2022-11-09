@@ -219,8 +219,7 @@ func (si *tableID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = tableIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.TableName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strTableID := strings.TrimSpace(buf.String())
@@ -516,8 +515,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
+	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error creating table %v", name)
 	}
 
@@ -594,8 +592,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for key, val := range toSet {
-		err = d.Set(key, val) // lintignore:R001
-		if err != nil {
+		if err := d.Set(key, val); err != nil { // lintignore:R001
 			return err
 		}
 	}
@@ -619,8 +616,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		name := d.Get("name")
 		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating table name on %v", d.Id())
 		}
 		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
@@ -628,8 +624,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating table comment on %v", d.Id())
 		}
 	}
@@ -644,8 +639,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			q = builder.DropClustering()
 		}
 
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating table clustering on %v", d.Id())
 		}
 	}
@@ -654,8 +648,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		removed, added, changed := getColumns(old).diffs(getColumns(new))
 		for _, cA := range removed {
 			q := builder.DropColumn(cA.name)
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error dropping column on %v", d.Id())
 			}
 		}
@@ -674,44 +667,38 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
 			}
 
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error adding column on %v", d.Id())
 			}
 		}
 		for _, cA := range changed {
 			if cA.changedDataType {
 				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
-				err := snowflake.Exec(db, q)
-				if err != nil {
+				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedNullConstraint {
 				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
-				err := snowflake.Exec(db, q)
-				if err != nil {
+				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.dropedDefault {
 				q := builder.DropColumnDefault(cA.newColumn.name)
-				err := snowflake.Exec(db, q)
-				if err != nil {
+				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedComment {
 				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.comment)
-				err := snowflake.Exec(db, q)
-				if err != nil {
+				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedMaskingPolicy {
 				q := builder.ChangeColumnMaskingPolicy(cA.newColumn.name, cA.newColumn.maskingPolicy)
-				err := snowflake.Exec(db, q)
-				if err != nil {
+				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
@@ -726,8 +713,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
 			// drop our pk if there was an old primary key, or pk has been removed
 			q := builder.DropPrimaryKey()
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error changing primary key first on %v", d.Id())
 			}
 		}
@@ -735,8 +721,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if len(newpk.keys) > 0 {
 			// add our new pk
 			q := builder.ChangePrimaryKey(newpk.toSnowflakePrimaryKey())
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error changing property on %v", d.Id())
 			}
 		}
@@ -745,8 +730,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		ndr := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetention(ndr.(int))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error changing property on %v", d.Id())
 		}
 	}
@@ -754,8 +738,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		nct := d.Get("change_tracking")
 
 		q := builder.ChangeChangeTracking(nct.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error changing property on %v", d.Id())
 		}
 	}
@@ -781,8 +764,7 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Table(tableName, dbName, schemaName).Drop()
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err = snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 

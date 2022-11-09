@@ -117,8 +117,7 @@ func (si *streamID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = streamIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StreamName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strStreamID := strings.TrimSpace(buf.String())
@@ -236,8 +235,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
+	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error creating stream %v", name)
 	}
 
@@ -280,53 +278,43 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", stream.StreamName.String)
-	if err != nil {
+	if err := d.Set("name", stream.StreamName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("database", stream.DatabaseName.String)
-	if err != nil {
+	if err := d.Set("database", stream.DatabaseName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", stream.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", stream.SchemaName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("on_table", stream.TableName.String)
-	if err != nil {
+	if err := d.Set("on_table", stream.TableName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("on_view", stream.ViewName.String)
-	if err != nil {
+	if err := d.Set("on_view", stream.ViewName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("append_only", stream.Mode.String == "APPEND_ONLY")
-	if err != nil {
+	if err := d.Set("append_only", stream.Mode.String == "APPEND_ONLY"); err != nil {
 		return err
 	}
 
-	err = d.Set("insert_only", stream.Mode.String == "INSERT_ONLY")
-	if err != nil {
+	if err := d.Set("insert_only", stream.Mode.String == "INSERT_ONLY"); err != nil {
 		return err
 	}
 
-	err = d.Set("show_initial_rows", stream.ShowInitialRows)
-	if err != nil {
+	if err := d.Set("show_initial_rows", stream.ShowInitialRows); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", stream.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", stream.Comment.String); err != nil {
 		return err
 	}
 
-	err = d.Set("owner", stream.Owner.String)
-	if err != nil {
+	if err := d.Set("owner", stream.Owner.String); err != nil {
 		return err
 	}
 
@@ -347,8 +335,7 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stream(streamName, dbName, schema).Drop()
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting stream %v err = %w", d.Id(), err)
 	}
 
@@ -374,8 +361,7 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating stream comment on %v", d.Id())
 		}
 	}

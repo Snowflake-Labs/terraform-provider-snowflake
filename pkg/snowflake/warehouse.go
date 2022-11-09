@@ -110,8 +110,7 @@ func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
 
 	for rows.Next() {
 		w := &warehouseParams{}
-		err := rows.StructScan(w)
-		if err != nil {
+		if err := rows.StructScan(w); err != nil {
 			return nil, err
 		}
 		params = append(params, w)
@@ -128,8 +127,7 @@ func ListWarehouses(db *sql.DB) ([]warehouse, error) {
 	defer rows.Close()
 
 	dbs := []warehouse{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err != nil {
+	if err = sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no warehouses found")
 			return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)

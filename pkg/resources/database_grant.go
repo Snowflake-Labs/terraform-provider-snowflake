@@ -86,8 +86,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	grantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return fmt.Errorf("error creating database grant err = %w", err)
 	}
 
@@ -112,16 +111,13 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("database_name", grantID.ResourceName)
-	if err != nil {
+	if err := d.Set("database_name", grantID.ResourceName); err != nil {
 		return err
 	}
-	err = d.Set("privilege", grantID.Privilege)
-	if err != nil {
+	if err = d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err = d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

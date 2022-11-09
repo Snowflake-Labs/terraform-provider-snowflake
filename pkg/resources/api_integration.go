@@ -123,13 +123,11 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Now, set the API provider
-	err := setAPIProviderSettings(d, stmt)
-	if err != nil {
+	if err := setAPIProviderSettings(d, stmt); err != nil {
 		return err
 	}
 
-	err = snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating api integration: %w", err)
 	}
 
@@ -254,8 +252,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("api_blocked_prefixes") {
 		v := d.Get("api_blocked_prefixes").([]interface{})
 		if len(v) == 0 {
-			err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id))
-			if err != nil {
+			if err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id)); err != nil {
 				return fmt.Errorf("error unsetting api_blocked_prefixes: %w", err)
 			}
 		} else {

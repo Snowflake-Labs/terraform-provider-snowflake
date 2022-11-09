@@ -165,8 +165,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -204,12 +203,11 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	procedureSignature := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureProceduresEnabled := false
@@ -225,28 +223,28 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		arguments = procedureSignatureMap["arguments"].([]interface{})
 		argumentTypes = procedureSignatureMap["argumentTypes"].([]string)
 	}
-	err = d.Set("procedure_name", procedureName)
-	if err != nil {
+
+	if err := d.Set("procedure_name", procedureName); err != nil {
 		return err
 	}
-	err = d.Set("arguments", arguments)
-	if err != nil {
+
+	if err := d.Set("arguments", arguments); err != nil {
 		return err
 	}
-	err = d.Set("return_type", returnType)
-	if err != nil {
+
+	if err := d.Set("return_type", returnType); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureProceduresEnabled)
-	if err != nil {
+
+	if err := d.Set("on_future", futureProceduresEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -329,15 +327,15 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke,
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
+	); err != nil {
 		return err
 	}
 

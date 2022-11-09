@@ -235,8 +235,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error creating function %v err = %w", name, err)
 	}
 
@@ -391,8 +390,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 
 	for _, v := range foundFunctions {
 		if v.Arguments.String == argSig {
-			err = d.Set("comment", v.Comment.String)
-			if err != nil {
+			if err = d.Set("comment", v.Comment.String); err != nil {
 				return err
 			}
 		}
@@ -421,8 +419,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error renaming function %v", d.Id())
 		}
 		newID := &functionID{
@@ -442,8 +439,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting comment for function %v err = %w", d.Id(), err)
 			}
 		} else {
@@ -451,8 +447,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error updating comment for function %v err = %w", d.Id(), err)
 			}
 		}
@@ -479,9 +474,7 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting function %v err = %w", d.Id(), err)
 	}
 

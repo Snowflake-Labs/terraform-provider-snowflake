@@ -148,9 +148,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := cb.Statement()
-
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
+	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
 	}
 
@@ -202,14 +200,12 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		"start_timestamp": rm.StartTime,
 		"end_timestamp":   rm.EndTime,
 	}
-	err = setDataFromNullStrings(d, nullStrings)
-	if err != nil {
+	if err := setDataFromNullStrings(d, nullStrings); err != nil {
 		return err
 	}
 
 	if len(rm.NotifyUsers.String) > 0 {
-		err = d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", "))
-		if err != nil {
+		if err := d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", ")); err != nil {
 			return err
 		}
 	}
@@ -220,9 +216,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-
-		err = d.Set("credit_quota", int(cqf))
-		if err != nil {
+		if err := d.Set("credit_quota", int(cqf)); err != nil {
 			return err
 		}
 	}
@@ -232,30 +226,26 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("suspend_triggers", sTrigs)
-	if err != nil {
+	if err := d.Set("suspend_triggers", sTrigs); err != nil {
 		return err
 	}
 	siTrigs, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
-	err = d.Set("suspend_immediate_triggers", siTrigs)
-	if err != nil {
+	if err := d.Set("suspend_immediate_triggers", siTrigs); err != nil {
 		return err
 	}
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
 	if err != nil {
 		return err
 	}
-	err = d.Set("notify_triggers", nTrigs)
-	if err != nil {
+	if err := d.Set("notify_triggers", nTrigs); err != nil {
 		return err
 	}
 
 	// Account level
-	err = d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
-	if err != nil {
+	if err := d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT"); err != nil {
 		return err
 	}
 
@@ -302,9 +292,7 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
 	stmt := snowflake.ResourceMonitor(d.Id()).Drop()
-
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
+	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error deleting resource monitor %v err = %w", d.Id(), err)
 	}
 

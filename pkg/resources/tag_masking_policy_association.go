@@ -51,8 +51,7 @@ func (ti *attachmentID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = tagAttachmentPolicyIDDelimiter
 	dataIdentifiers := [][]string{{ti.TagDatabaseName, ti.TagSchemaName, ti.TagName, ti.MaskingPolicyDatabaseName, ti.MaskingPolicySchemaName, ti.MaskingPolicyName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strTagID := strings.TrimSpace(buf.String())
@@ -127,8 +126,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 
 	q := builder.AddMaskingPolicy()
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error attaching masking policy %v to tag %v", mpName, tagName)
 	}
 
@@ -201,15 +199,12 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	err = d.Set("tag_id", tagIDString)
 
-	if err != nil {
+	if err := d.Set("tag_id", tagIDString); err != nil {
 		return err
 	}
 
-	err = d.Set("masking_policy_id", mpIDString)
-
-	if err != nil {
+	if err := d.Set("masking_policy_id", mpIDString); err != nil {
 		return err
 	}
 
@@ -235,8 +230,7 @@ func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 
 	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
-	err = snowflake.Exec(db, builder.RemoveMaskingPolicy())
-	if err != nil {
+	if err := snowflake.Exec(db, builder.RemoveMaskingPolicy()); err != nil {
 		return fmt.Errorf("error unattaching masking policy for %v err = %w", d.Id(), err)
 	}
 

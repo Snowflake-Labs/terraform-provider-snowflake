@@ -45,8 +45,7 @@ func CreateResource(
 			tags := getTags(v)
 			qb.SetTags(tags.toSnowflakeTagValues())
 		}
-		err := snowflake.Exec(db, qb.Statement())
-		if err != nil {
+		if err := snowflake.Exec(db, qb.Statement()); err != nil {
 			return fmt.Errorf("error creating %s err = %w", t, err)
 		}
 
@@ -114,8 +113,7 @@ func UpdateResource(
 				qb.SetTags(tags.toSnowflakeTagValues())
 			}
 
-			err := snowflake.Exec(db, qb.Statement())
-			if err != nil {
+			if err := snowflake.Exec(db, qb.Statement()); err != nil {
 				return fmt.Errorf("error altering %s err = %w", t, err)
 			}
 		}
@@ -130,9 +128,7 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 		name := d.Get("name").(string)
 
 		stmt := builder(name).Drop()
-
-		err := snowflake.Exec(db, stmt)
-		if err != nil {
+		if err := snowflake.Exec(db, stmt); err != nil {
 			return fmt.Errorf("error dropping %s %s err = %w", t, name, err)
 		}
 

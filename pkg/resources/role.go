@@ -64,12 +64,11 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", role.Name.String)
-	if err != nil {
+	if err := d.Set("name", role.Name.String); err != nil {
 		return err
 	}
-	err = d.Set("comment", role.Comment.String)
-	if err != nil {
+
+	if err := d.Set("comment", role.Comment.String); err != nil {
 		return err
 	}
 

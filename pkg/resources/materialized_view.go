@@ -96,8 +96,7 @@ func (si *materializedViewID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = materializedViewDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ViewName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strMeterilizedViewID := strings.TrimSpace(buf.String())
@@ -160,8 +159,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 	log.Print("[DEBUG] xxx ", q)
-	err := snowflake.ExecMulti(db, q)
-	if err != nil {
+	if err := snowflake.ExecMulti(db, q); err != nil {
 		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
@@ -204,23 +202,19 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", v.Name.String)
-	if err != nil {
+	if err := d.Set("name", v.Name.String); err != nil {
 		return err
 	}
 
-	err = d.Set("is_secure", v.IsSecure)
-	if err != nil {
+	if err := d.Set("is_secure", v.IsSecure); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", v.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", v.Comment.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", v.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", v.SchemaName.String); err != nil {
 		return err
 	}
 
@@ -232,8 +226,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("statement", substringOfQuery)
-	if err != nil {
+	if err := d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
 
@@ -258,8 +251,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		name := d.Get("name")
 
 		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
+		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
 		}
 
@@ -271,14 +263,12 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting comment for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error updating comment for view %v err = %w", d.Id(), err)
 			}
 		}
@@ -288,14 +278,12 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 		if secure.(bool) {
 			q := builder.Secure()
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error setting secure for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.Unsecure()
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting secure for materialized view %v err = %w", d.Id(), err)
 			}
 		}
@@ -322,9 +310,7 @@ func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	view := materializedViewID.ViewName
 
 	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting materialized view %v err = %w", d.Id(), err)
 	}
 
