@@ -9,7 +9,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -74,7 +73,7 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if err != nil {
-		return errors.Wrap(err, "error creating role grant")
+		return fmt.Errorf("error creating role grant err = %w", err)
 	}
 	for _, role := range roles {
 		err := grantRoleToRole(db, roleName, role)
@@ -234,7 +233,7 @@ func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 	rg := snowflake.RoleGrant(role1).User(user)
 	err := snowflake.Exec(db, rg.Revoke())
-	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
 		// handling error if a user has been deleted prior to revoking a role
 		// 002003 (02000): SQL compilation error:
 		// User 'XXX' does not exist or not authorized.

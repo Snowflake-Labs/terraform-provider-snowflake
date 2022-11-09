@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -129,7 +130,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	a, err := snowflake.ScanManagedAccount(row)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, remove resource from
 		log.Printf("[DEBUG] managed account (%s) not found", d.Id())
 		d.SetId("")

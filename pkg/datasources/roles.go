@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -59,7 +60,7 @@ func ReadRoles(d *schema.ResourceData, meta interface{}) error {
 	rolePattern := d.Get(pattern).(string)
 
 	listRoles, err := snowflake.ListRoles(db, rolePattern)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] no roles found in account (%s)", d.Id())
 		d.SetId("")
 		return nil

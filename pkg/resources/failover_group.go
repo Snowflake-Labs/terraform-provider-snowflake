@@ -2,12 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -162,7 +163,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		stmt := builder.CreateFromReplica(fullyQualifiedFailoverGroupIdentifier)
 		err := snowflake.Exec(db, stmt)
 		if err != nil {
-			return errors.Wrapf(err, "error creating failover group %v", name)
+			return fmt.Errorf("error creating failover group %v err = %w", name, err)
 		}
 		d.SetId(name)
 		return ReadFailoverGroup(d, meta)
@@ -189,7 +190,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		// validation since we cannot do that in the ValidateFunc
 		parts := strings.Split(allowedAccounts[i], ".")
 		if len(parts) != 2 {
-			return errors.New(fmt.Sprintf("allowed_account %s must be of the format <org_name>.<target_account_name>", allowedAccounts[i]))
+			return fmt.Errorf("allowed_account %s must be of the format <org_name>.<target_account_name>", allowedAccounts[i])
 		}
 	}
 	builder.WithAllowedAccounts(allowedAccounts)
@@ -248,7 +249,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating failover group %v", name)
+		return fmt.Errorf("error creating failover group %v err = %w", name, err)
 	}
 
 	d.SetId(name)
@@ -266,12 +267,12 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	var accountLocator string
 	err := row.Scan(&accountLocator)
 	if err != nil {
-		return errors.Wrapf(err, "error getting current account")
+		return fmt.Errorf("error getting current account err = %w", err)
 	}
 
 	failoverGroups, err := snowflake.ListFailoverGroups(db, accountLocator)
 	if err != nil {
-		return errors.Wrapf(err, "error listing failover groups")
+		return fmt.Errorf("error listing failover groups err = %w", err)
 	}
 
 	found := false
@@ -369,7 +370,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	allowedDatabases, err := snowflake.ShowDatabasesInFailoverGroup(name, db)
 	if err != nil {
-		return errors.Wrapf(err, "error listing databases in failover group %v", name)
+		return fmt.Errorf("error listing databases in failover group %v err = %w", name, err)
 	}
 	if len(allowedDatabases) > 0 {
 		allowedDatabasesInterface := make([]interface{}, len(allowedDatabases))
@@ -390,7 +391,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	shares, err := snowflake.ShowSharesInFailoverGroup(name, db)
 	if err != nil {
-		return errors.Wrapf(err, "error listing shares in failover group %v", name)
+		return fmt.Errorf("error listing shares in failover group %v err = %w", name, err)
 	}
 	if len(shares) > 0 {
 		sharesInterface := make([]interface{}, len(shares))
@@ -429,7 +430,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		stmt := builder.ChangeObjectTypes(objectTypes)
 		err := snowflake.Exec(db, stmt)
 		if err != nil {
-			return errors.Wrapf(err, "error updating object types for failover group %v", name)
+			return fmt.Errorf("error updating object types for failover group %v err = %w", name, err)
 		}
 	}
 
@@ -456,7 +457,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.RemoveAllowedDatabases(removedDatabases)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error removing allowed databases for failover group %v", name)
+				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", name, err)
 			}
 		}
 
@@ -471,7 +472,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.AddAllowedDatabases(addedDatabases)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error adding allowed databases for failover group %v", name)
+				return fmt.Errorf("error adding allowed databases for failover group %v err = %w", name, err)
 			}
 		}
 	}
@@ -499,7 +500,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.RemoveAllowedShares(removedShares)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error removing allowed shares for failover group %v", name)
+				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", name, err)
 			}
 		}
 
@@ -514,7 +515,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.AddAllowedShares(addedShares)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error adding allowed shares for failover group %v", name)
+				return fmt.Errorf("error adding allowed shares for failover group %v err = %w", name, err)
 			}
 		}
 	}
@@ -528,7 +529,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		stmt := builder.ChangeAllowedIntegrationTypes(allowedIntegrationTypes)
 		err := snowflake.Exec(db, stmt)
 		if err != nil {
-			return errors.Wrapf(err, "error updating allowed integration types for failover group %v", name)
+			return fmt.Errorf("error updating allowed integration types for failover group %v err = %w", name, err)
 		}
 	}
 
@@ -555,7 +556,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.RemoveAllowedAccounts(removedAccounts)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error removing allowed accounts for failover group %v", name)
+				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", name, err)
 			}
 		}
 
@@ -570,7 +571,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.AddAllowedAccounts(addedAccounts)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error adding allowed accounts for failover group %v", name)
+				return fmt.Errorf("error adding allowed accounts for failover group %v err = %w", name, err)
 			}
 		}
 	}
@@ -588,7 +589,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.ChangeReplicationCronSchedule(cronExpression, timeZone)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error updating replication cron schedule for failover group %v", name)
+				return fmt.Errorf("error updating replication cron schedule for failover group %v err = %w", name, err)
 			}
 		}
 		if v, ok := replicationSchedule["interval"]; ok {
@@ -596,7 +597,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			stmt := builder.ChangeReplicationIntervalSchedule(interval)
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error updating replication interval schedule for failover group %v", name)
+				return fmt.Errorf("error updating replication interval schedule for failover group %v err = %w", name, err)
 			}
 		}
 	}
@@ -612,7 +613,7 @@ func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Drop()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting file format %v", d.Id())
+		return fmt.Errorf("error deleting file format %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var samlIntegrationSchema = map[string]*schema.Schema{
@@ -210,7 +209,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, stmt.Statement())
 	if err != nil {
-		return errors.Wrap(err, "error creating security integration")
+		return fmt.Errorf("error creating security integration err = %w", err)
 	}
 
 	d.SetId(name)
@@ -230,7 +229,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanSamlIntegration(row)
 	if err != nil {
-		return errors.Wrap(err, "could not show security integration")
+		return fmt.Errorf("could not show security integration err = %w", err)
 	}
 
 	// Note: category must be Security or something is broken
@@ -262,35 +261,35 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.SamlIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return errors.Wrap(err, "could not describe security integration")
+		return fmt.Errorf("could not describe security integration err = %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return errors.Wrap(err, "unable to parse security integration rows")
+			return fmt.Errorf("unable to parse security integration rows err = %w", err)
 		}
 		switch k {
 		case "ENABLED":
 			// set using the SHOW INTEGRATION, ignoring here
 		case "SAML2_ISSUER":
 			if err = d.Set("saml2_issuer", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_issuer for security integration")
+				return fmt.Errorf("unable to set saml2_issuer for security integration err = %w", err)
 			}
 		case "SAML2_SSO_URL":
 			if err = d.Set("saml2_sso_url", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_sso_url for security integration")
+				return fmt.Errorf("unable to set saml2_sso_url for security integration err = %w", err)
 			}
 		case "SAML2_PROVIDER":
 			if err = d.Set("saml2_provider", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_provider for security integration")
+				return fmt.Errorf("unable to set saml2_provider for security integration err = %w", err)
 			}
 		case "SAML2_X509_CERT":
 			if err = d.Set("saml2_x509_cert", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_x509_cert for security integration")
+				return fmt.Errorf("unable to set saml2_x509_cert for security integration err = %w", err)
 			}
 		case "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL":
 			if err = d.Set("saml2_sp_initiated_login_page_label", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_sp_initiated_login_page_label for security integration")
+				return fmt.Errorf("unable to set saml2_sp_initiated_login_page_label for security integration")
 			}
 		case "SAML2_ENABLE_SP_INITIATED":
 			b := false
@@ -300,17 +299,17 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
 				}
 			default:
-				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				return fmt.Errorf("returned saml2_force_authn that is not boolean")
 			}
 			if err = d.Set("saml2_enable_sp_initiated", b); err != nil {
-				return errors.Wrap(err, "unable to set saml2_enable_sp_initiated for security integration")
+				return fmt.Errorf("unable to set saml2_enable_sp_initiated for security integration err = %w", err)
 			}
 		case "SAML2_SNOWFLAKE_X509_CERT":
 			if err = d.Set("saml2_snowflake_x509_cert", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_snowflake_x509_cert for security integration")
+				return fmt.Errorf("unable to set saml2_snowflake_x509_cert for security integration err = %w", err)
 			}
 		case "SAML2_SIGN_REQUEST":
 			b := false
@@ -320,21 +319,21 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
 				}
 			default:
-				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
 			}
 			if err = d.Set("saml2_sign_request", b); err != nil {
-				return errors.Wrap(err, "unable to set saml2_sign_request for security integration")
+				return fmt.Errorf("unable to set saml2_sign_request for security integration err = %w", err)
 			}
 		case "SAML2_REQUESTED_NAMEID_FORMAT":
 			if err = d.Set("saml2_requested_nameid_format", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_requested_nameid_format for security integration")
+				return fmt.Errorf("unable to set saml2_requested_nameid_format for security integration err = %w", err)
 			}
 		case "SAML2_POST_LOGOUT_REDIRECT_URL":
 			if err = d.Set("saml2_post_logout_redirect_url", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_post_logout_redirect_url for security integration")
+				return fmt.Errorf("unable to set saml2_post_logout_redirect_url for security integration err = %w", err)
 			}
 		case "SAML2_FORCE_AUTHN":
 			b := false
@@ -344,33 +343,33 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
 				}
 			default:
-				return errors.Wrap(err, "returned saml2_force_authn that is not boolean")
+				return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
 			}
 			if err = d.Set("saml2_force_authn", b); err != nil {
-				return errors.Wrap(err, "unable to set saml2_force_authn for security integration")
+				return fmt.Errorf("unable to set saml2_force_authn for security integration err = %w", err)
 			}
 		case "SAML2_SNOWFLAKE_ISSUER_URL":
 			if err = d.Set("saml2_snowflake_issuer_url", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_snowflake_issuer_url for security integration")
+				return fmt.Errorf("unable to set saml2_snowflake_issuer_url for security integration err = %w", err)
 			}
 		case "SAML2_SNOWFLAKE_ACS_URL":
 			if err = d.Set("saml2_snowflake_acs_url", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_snowflake_acs_url for security integration")
+				return fmt.Errorf("unable to set saml2_snowflake_acs_url for security integration err = %w", err)
 			}
 		case "SAML2_SNOWFLAKE_METADATA":
 			if err = d.Set("saml2_snowflake_metadata", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_snowflake_metadata for security integration")
+				return fmt.Errorf("unable to set saml2_snowflake_metadata for security integration err = %w", err)
 			}
 		case "SAML2_DIGEST_METHODS_USED":
 			if err = d.Set("saml2_digest_methods_used", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_digest_methods_used for security integration")
+				return fmt.Errorf("unable to set saml2_digest_methods_used for security integration err = %w", err)
 			}
 		case "SAML2_SIGNATURE_METHODS_USED":
 			if err = d.Set("saml2_signature_methods_used", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set saml2_signature_methods_used for security integration")
+				return fmt.Errorf("unable to set saml2_signature_methods_used for security integration err = %w", err)
 			}
 		case "COMMENT":
 			// COMMENT cannot be set according to snowflake docs, so ignoring
@@ -463,7 +462,7 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return errors.Wrap(err, "error updating security integration")
+			return fmt.Errorf("error updating security integration err = %w", err)
 		}
 	}
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -505,7 +504,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating file format %v", fileFormatName)
+		return fmt.Errorf("error creating file format %v err = %w", fileFormatName, err)
 	}
 
 	fileFormatID := &fileFormatID{
@@ -745,7 +744,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeCompression(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format compression on %v", d.Id())
+			return fmt.Errorf("error updating file format compression on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -754,7 +753,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeRecordDelimiter(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format record delimiter on %v", d.Id())
+			return fmt.Errorf("error updating file format record delimiter on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -763,7 +762,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeFieldDelimiter(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format field delimiter on %v", d.Id())
+			return fmt.Errorf("error updating file format field delimiter on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -772,7 +771,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeFileExtension(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format file extension on %v", d.Id())
+			return fmt.Errorf("error updating file format file extension on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -781,7 +780,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeSkipHeader(change.(int))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip header on %v", d.Id())
+			return fmt.Errorf("error updating file format skip header on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -790,7 +789,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeSkipBlankLines(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip blank lines on %v", d.Id())
+			return fmt.Errorf("error updating file format skip blank lines on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -799,7 +798,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeDateFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format date format on %v", d.Id())
+			return fmt.Errorf("error updating file format date format on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -808,7 +807,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeTimeFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format time format on %v", d.Id())
+			return fmt.Errorf("error updating file format time format on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -817,7 +816,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeTimestampFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format timstamp format on %v", d.Id())
+			return fmt.Errorf("error updating file format timestamp format on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -826,7 +825,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeBinaryFormat(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format binary format on %v", d.Id())
+			return fmt.Errorf("error updating file format binary format on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -835,7 +834,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEscape(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format escape on %v", d.Id())
+			return fmt.Errorf("error updating file format escape on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -844,7 +843,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEscapeUnenclosedField(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format escape_unenclosed_field on %v", d.Id())
+			return fmt.Errorf("error updating file format escape_unenclosed_field on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -853,7 +852,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeFieldOptionallyEnclosedBy(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format field_optionally_enclosed_by on %v", d.Id())
+			return fmt.Errorf("error updating file format field_optionally_enclosed_by on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -862,7 +861,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEncoding(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format encoding on %v", d.Id())
+			return fmt.Errorf("error updating file format encoding on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -871,7 +870,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(change.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format comment on %v", d.Id())
+			return fmt.Errorf("error updating file format comment on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -880,7 +879,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeTrimSpace(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format trim_space on %v", d.Id())
+			return fmt.Errorf("error updating file format trim_space on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -889,7 +888,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeErrorOnColumnCountMismatch(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format error_on_column_count_mismatch on %v", d.Id())
+			return fmt.Errorf("error updating file format error_on_column_count_mismatch on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -898,7 +897,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeReplaceInvalidCharacters(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format replace_invalid_characters on %v", d.Id())
+			return fmt.Errorf("error updating file format replace_invalid_characters on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -907,7 +906,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEmptyFieldAsNull(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format empty_field_as_null on %v", d.Id())
+			return fmt.Errorf("error updating file format empty_field_as_null on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -916,7 +915,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeSkipByteOrderMark(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip_byte_order_mark on %v", d.Id())
+			return fmt.Errorf("error updating file format skip_byte_order_mark on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -925,7 +924,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEnableOctal(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format enable_octal on %v", d.Id())
+			return fmt.Errorf("error updating file format enable_octal on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -934,7 +933,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeAllowDuplicate(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format allow_duplicate on %v", d.Id())
+			return fmt.Errorf("error updating file format allow_duplicate on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -943,7 +942,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeStripOuterArray(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_outer_array on %v", d.Id())
+			return fmt.Errorf("error updating file format strip_outer_array on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -952,7 +951,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeStripNullValues(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_null_values on %v", d.Id())
+			return fmt.Errorf("error updating file format strip_null_values on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -961,7 +960,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeIgnoreUTF8Errors(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format ignore_utf8_errors on %v", d.Id())
+			return fmt.Errorf("error updating file format ignore_utf8_errors on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -970,7 +969,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeBinaryAsText(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format binary_as_text on %v", d.Id())
+			return fmt.Errorf("error updating file format binary_as_text on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -979,7 +978,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangePreserveSpace(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format preserve_space on %v", d.Id())
+			return fmt.Errorf("error updating file format preserve_space on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -988,7 +987,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeStripOuterElement(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_outer_element on %v", d.Id())
+			return fmt.Errorf("error updating file format strip_outer_element on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -997,7 +996,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeDisableSnowflakeData(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format disable_snowflake_data on %v", d.Id())
+			return fmt.Errorf("error updating file format disable_snowflake_data on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -1006,7 +1005,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeDisableAutoConvert(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format disable_auto_convert on %v", d.Id())
+			return fmt.Errorf("error updating file format disable_auto_convert on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -1015,7 +1014,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeNullIf(expandStringList(change.([]interface{})))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format null_if on %v", d.Id())
+			return fmt.Errorf("error updating file format null_if on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -1038,7 +1037,7 @@ func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting file format %v", d.Id())
+		return fmt.Errorf("error deleting file format %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -2,13 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -69,7 +69,7 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, builder.Statement())
 	if err != nil {
-		return errors.Wrapf(err, "error creating share")
+		return fmt.Errorf("error creating share err = %w", err)
 	}
 	d.SetId(name)
 
@@ -99,7 +99,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	tempDB := snowflake.Database(tempName)
 	err := snowflake.Exec(db, tempDB.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating temporary DB %v", tempName)
+		return fmt.Errorf("error creating temporary DB %v err = %w", tempName, err)
 	}
 
 	// 2. Create temporary DB grant to the share
@@ -117,7 +117,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// an error to revoke it, so it's ok to just do the revoke every time.
 	err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false))
 	if err != nil {
-		return errors.Wrapf(err, "error creating temporary DB REFERENCE_USAGE grant %v", tempName)
+		return fmt.Errorf("error creating temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
 	}
 
 	// 3. Add the accounts to the share
@@ -125,32 +125,32 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error adding accounts to share %v", name)
+			return fmt.Errorf("error adding accounts to share %v err = %w", name, err)
 		}
 	} else {
 		q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error unsetting accounts to share %v", name)
+			return fmt.Errorf("error unsetting accounts to share %v err = %w", name, err)
 		}
 	}
 
 	// 4. Revoke temporary DB grant to the share
 	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE"))
 	if err != nil {
-		return errors.Wrapf(err, "error revoking temporary DB REFERENCE_USAGE grant %v", tempName)
+		return fmt.Errorf("error revoking temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
 	}
 
 	// revoke the maybe automatically granted USAGE privilege.
 	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
 	if err != nil {
-		return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
+		return fmt.Errorf("error revoking temporary DB grant %v err = %w", tempName, err)
 	}
 
 	// 5. Remove the temporary DB
 	err = snowflake.Exec(db, tempDB.Drop())
 	if err != nil {
-		return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
+		return fmt.Errorf("error dropping temporary DB %v err = %w", tempName, err)
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	s, err := snowflake.ScanShare(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] share (%s) not found", d.Id())
 		d.SetId("")

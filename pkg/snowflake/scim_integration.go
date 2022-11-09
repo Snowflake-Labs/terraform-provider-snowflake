@@ -2,9 +2,9 @@ package snowflake
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // ScimIntegration returns a pointer to a Builder that abstracts the DDL operations for an api integration.
@@ -33,5 +33,8 @@ type scimIntegration struct {
 
 func ScanScimIntegration(row *sqlx.Row) (*scimIntegration, error) {
 	r := &scimIntegration{}
-	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
+	if err := row.StructScan(r); err != nil {
+		return r, fmt.Errorf("error scanning struct err = %w", err)
+	}
+	return r, nil
 }

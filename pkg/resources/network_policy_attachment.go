@@ -2,12 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var networkPolicyAttachmentSchema = map[string]*schema.Schema{
@@ -54,7 +55,7 @@ func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 	if d.Get("set_for_account").(bool) {
 		err := setOnAccount(d, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error creating attachment for network policy %v", policyName)
+			return fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err)
 		}
 	}
 
@@ -68,7 +69,7 @@ func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 
 		err = setOnUsers(users, d, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error creating attachment for network policy %v", policyName)
+			return fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err)
 		}
 	}
 
@@ -93,7 +94,7 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		for _, user := range users {
 			row := snowflake.QueryRow(db, builder.ShowOnUser(user))
 			attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				log.Printf("[DEBUG] network policy (%s) not found on user (%s)", d.Id(), user)
 				continue
 			}
@@ -112,7 +113,7 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 	isSetOnAccount := false
 	row := snowflake.QueryRow(db, builder.ShowOnAccount())
 	attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] network policy (%s) not found on account", d.Id())
 		isSetOnAccount = false
 	}
@@ -188,7 +189,7 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 	if d.Get("set_for_account").(bool) {
 		err := unsetOnAccount(d, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+			return fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err)
 		}
 	}
 
@@ -202,7 +203,7 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 
 		err = unsetOnUsers(users, d, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error deleting attachment for network policy %v", policyName)
+			return fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err)
 		}
 	}
 
@@ -219,7 +220,7 @@ func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, acctSQL)
 	if err != nil {
-		return errors.Wrapf(err, "error setting network policy %v on account", policyName)
+		return fmt.Errorf("error setting network policy %v on account err = %w", policyName, err)
 	}
 
 	return nil
@@ -234,7 +235,7 @@ func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, acctSQL)
 	if err != nil {
-		return errors.Wrapf(err, "error unsetting network policy %v on account", policyName)
+		return fmt.Errorf("error unsetting network policy %v on account err = %w", policyName, err)
 	}
 
 	return nil
@@ -246,7 +247,7 @@ func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) err
 	for _, user := range users {
 		err := setOnUser(user, data, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error setting network policy %v on user %v", policyName, user)
+			return fmt.Errorf("error setting network policy %v on user %v err = %w", policyName, user, err)
 		}
 	}
 
@@ -260,7 +261,7 @@ func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	userSQL := snowflake.NetworkPolicy(policyName).SetOnUser(user)
 	err := snowflake.Exec(db, userSQL)
 	if err != nil {
-		return errors.Wrapf(err, "error setting network policy %v on user %v", policyName, user)
+		return fmt.Errorf("error setting network policy %v on user %v err = %w", policyName, user, err)
 	}
 
 	return nil
@@ -272,7 +273,7 @@ func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) e
 	for _, user := range users {
 		err := unsetOnUser(user, data, meta)
 		if err != nil {
-			return errors.Wrapf(err, "error unsetting network policy %v on user %v", policyName, user)
+			return fmt.Errorf("error unsetting network policy %v on user %v err = %w", policyName, user, err)
 		}
 	}
 
@@ -286,7 +287,7 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 	userSQL := snowflake.NetworkPolicy(policyName).UnsetOnUser(user)
 	err := snowflake.Exec(db, userSQL)
 	if err != nil {
-		return errors.Wrapf(err, "error unsetting network policy %v on user %v", policyName, user)
+		return fmt.Errorf("error unsetting network policy %v on user %v", policyName, user)
 	}
 
 	return nil
@@ -299,7 +300,7 @@ func ensureUserAlterPrivileges(users []string, meta interface{}) error {
 		userDescSQL := snowflake.User(user).Describe()
 		err := snowflake.Exec(db, userDescSQL)
 		if err != nil {
-			return errors.Wrapf(err, "error altering network policy of user %v", user)
+			return fmt.Errorf("error altering network policy of user %v", user)
 		}
 	}
 

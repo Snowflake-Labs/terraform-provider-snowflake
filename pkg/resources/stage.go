@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -204,7 +204,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating stage %v", name)
+		return fmt.Errorf("error creating stage %v", name)
 	}
 
 	stageID := &stageID{
@@ -236,14 +236,14 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Stage(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] stage (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
 		// 002003 (02000): SQL compilation error:
 		// 'XXX' does not exist or not authorized.
 		if driverErr.Number == 2003 {
@@ -338,7 +338,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeURL(url.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage url on %v", d.Id())
+			return fmt.Errorf("error updating stage url on %v", d.Id())
 		}
 	}
 
@@ -347,7 +347,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeCredentials(credentials.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage credentials on %v", d.Id())
+			return fmt.Errorf("error updating stage credentials on %v", d.Id())
 		}
 	}
 
@@ -356,7 +356,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeStorageIntegration(si.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage storage integration on %v", d.Id())
+			return fmt.Errorf("error updating stage storage integration on %v", d.Id())
 		}
 	}
 
@@ -365,7 +365,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeEncryption(encryption.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage encryption on %v", d.Id())
+			return fmt.Errorf("error updating stage encryption on %v", d.Id())
 		}
 	}
 	if d.HasChange("file_format") {
@@ -373,7 +373,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeFileFormat(fileFormat.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage file formaat on %v", d.Id())
+			return fmt.Errorf("error updating stage file formaat on %v", d.Id())
 		}
 	}
 	if d.HasChange("copy_options") {
@@ -381,7 +381,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeCopyOptions(copyOptions.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage copy options on %v", d.Id())
+			return fmt.Errorf("error updating stage copy options on %v", d.Id())
 		}
 	}
 	if d.HasChange("comment") {
@@ -389,7 +389,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stage comment on %v", d.Id())
+			return fmt.Errorf("error updating stage comment on %v", d.Id())
 		}
 	}
 
@@ -417,7 +417,7 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting stage %v", d.Id())
+		return fmt.Errorf("error deleting stage %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

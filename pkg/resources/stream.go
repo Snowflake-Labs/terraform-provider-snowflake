@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -238,7 +238,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating stream %v", name)
+		return fmt.Errorf("error creating stream %v", name)
 	}
 
 	streamID := &streamID{
@@ -270,7 +270,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	stmt := snowflake.Stream(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	stream, err := snowflake.ScanStream(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")
@@ -349,7 +349,7 @@ func DeleteStream(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting stream %v", d.Id())
+		return fmt.Errorf("error deleting stream %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -376,7 +376,7 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating stream comment on %v", d.Id())
+			return fmt.Errorf("error updating stream comment on %v", d.Id())
 		}
 	}
 

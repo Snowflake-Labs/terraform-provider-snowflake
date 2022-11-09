@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -170,7 +171,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Some properties can come from the SHOW INTEGRATION call
 
 	s, err := snowflake.ScanStorageIntegration(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] storage integration (%s) not found", d.Id())
 		d.SetId("")

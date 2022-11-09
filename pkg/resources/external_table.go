@@ -10,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -243,7 +242,7 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating externalTable %v", name)
+		return fmt.Errorf("error creating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -316,7 +315,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Update()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error updating externalTable %v", name)
+		return fmt.Errorf("error updating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -349,7 +348,7 @@ func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

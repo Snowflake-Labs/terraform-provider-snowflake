@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -53,7 +54,7 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
 	role, err := snowflake.ScanRole(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] role (%s) not found", d.Id())
 		d.SetId("")

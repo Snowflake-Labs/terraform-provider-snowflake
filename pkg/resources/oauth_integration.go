@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var oauthIntegrationSchema = map[string]*schema.Schema{
@@ -126,7 +125,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, stmt.Statement())
 	if err != nil {
-		return errors.Wrap(err, "error creating security integration")
+		return fmt.Errorf("error creating security integration err = %w", err)
 	}
 
 	d.SetId(name)
@@ -146,12 +145,12 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanOAuthIntegration(row)
 	if err != nil {
-		return errors.Wrap(err, "could not show security integration")
+		return fmt.Errorf("could not show security integration err = %w", err)
 	}
 
 	// Note: category must be Security or something is broken
 	if c := s.Category.String; c != "SECURITY" {
-		return fmt.Errorf("expected %v to be an Security integration, got %v", id, c)
+		return fmt.Errorf("expected %v to be an Security integration, got %v err = %w", id, c, err)
 	}
 
 	if err := d.Set("oauth_client", strings.TrimPrefix(s.IntegrationType.String, "OAUTH - ")); err != nil {
@@ -181,12 +180,12 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.OAuthIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return errors.Wrap(err, "could not describe security integration")
+		return fmt.Errorf("could not describe security integration err = %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return errors.Wrap(err, "unable to parse security integration rows")
+			return fmt.Errorf("unable to parse security integration rows err = %w", err)
 		}
 		switch k {
 		case "ENABLED":
@@ -196,22 +195,22 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		case "OAUTH_ISSUE_REFRESH_TOKENS":
 			b, err := strconv.ParseBool(v.(string))
 			if err != nil {
-				return errors.Wrap(err, "returned OAuth issue refresh tokens that is not boolean")
+				return fmt.Errorf("returned OAuth issue refresh tokens that is not boolean err = %w", err)
 			}
 			if err = d.Set("oauth_issue_refresh_tokens", b); err != nil {
-				return errors.Wrap(err, "unable to set OAuth issue refresh tokens for security integration")
+				return fmt.Errorf("unable to set OAuth issue refresh tokens for security integration err = %w", err)
 			}
 		case "OAUTH_REFRESH_TOKEN_VALIDITY":
 			i, err := strconv.Atoi(v.(string))
 			if err != nil {
-				return errors.Wrap(err, "returned OAuth refresh token validity that is not integer")
+				return fmt.Errorf("returned OAuth refresh token validity that is not integer err = %w", err)
 			}
 			if err = d.Set("oauth_refresh_token_validity", i); err != nil {
-				return errors.Wrap(err, "unable to set OAuth refresh token validity for security integration")
+				return fmt.Errorf("unable to set OAuth refresh token validity for security integration err = %w", err)
 			}
 		case "OAUTH_USE_SECONDARY_ROLES":
 			if err = d.Set("oauth_use_secondary_roles", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set OAuth use secondary roles for security integration")
+				return fmt.Errorf("unable to set OAuth use secondary roles for security integration err = %w", err)
 			}
 		case "BLOCKED_ROLES_LIST":
 			blockedRolesAll := strings.Split(v.(string), ",")
@@ -226,11 +225,11 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err = d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
-				return errors.Wrap(err, "unable to set blocked roles list for security integration")
+				return fmt.Errorf("unable to set blocked roles list for security integration err = %w", err)
 			}
 		case "OAUTH_REDIRECT_URI":
 			if err = d.Set("oauth_redirect_uri", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set OAuth redirect URI for security integration")
+				return fmt.Errorf("unable to set OAuth redirect URI for security integration err = %w", err)
 			}
 		case "OAUTH_CLIENT_TYPE":
 			// Only used for custom OAuth clients (not supported yet)
@@ -306,7 +305,7 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return errors.Wrap(err, "error updating security integration")
+			return fmt.Errorf("error updating security integration err = %w", err)
 		}
 	}
 

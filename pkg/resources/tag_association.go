@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -117,7 +116,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	q := builder.Create()
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error associating tag to object: [%v] with command: [%v], tag_id [%v]", objectIdentifier, q, tagID)
+		return fmt.Errorf("error associating tag to object: [%v] with command: [%v], tag_id [%v]", objectIdentifier, q, tagID)
 	}
 
 	skipValidate := d.Get("skip_validation").(bool)
@@ -127,7 +126,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		err = resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
 			resp, err := snowflake.ListTagAssociations(builder, db)
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error: %s", err))
+				return resource.NonRetryableError(fmt.Errorf("error: %w", err))
 			}
 
 			// if length of response is zero, tag association was not found. retry for up to 70 minutes
@@ -137,7 +136,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		})
 		if err != nil {
-			return errors.Wrap(err, "error validating tag association")
+			return fmt.Errorf("error validating tag association")
 		}
 	}
 
@@ -148,7 +147,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataIDInput, err := t.String()
 	if err != nil {
-		return errors.Wrap(err, "error creating tag id")
+		return fmt.Errorf("error creating tag id")
 	}
 	d.SetId(dataIDInput)
 	return ReadTagAssociation(d, meta)
@@ -166,7 +165,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 
 	ta, err := snowflake.ScanTagAssociation(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] tag association (%s) not found", d.Id())
 		d.SetId("")
@@ -174,7 +173,7 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err != nil {
 		// return err
-		return errors.Wrap(err, "error listing tag associations")
+		return fmt.Errorf("error listing tag associations")
 	}
 
 	err = d.Set("tag_value", ta.TagValue.String)
@@ -209,7 +208,7 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating tag association value for object [%v]", objectIdentifier)
+			return fmt.Errorf("error updating tag association value for object [%v]", objectIdentifier)
 		}
 	}
 
@@ -229,7 +228,7 @@ func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		log.Printf("[DEBUG] error is %v", err.Error())
-		return errors.Wrapf(err, "error deleting tag association for object [%v]", objectIdentifier)
+		return fmt.Errorf("error deleting tag association for object [%v]", objectIdentifier)
 	}
 
 	d.SetId("")

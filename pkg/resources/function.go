@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,7 +11,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var languages = []string{"javascript", "java", "sql", "python"}
@@ -237,7 +237,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating function %v", name)
+		return fmt.Errorf("error creating function %v err = %w", name, err)
 	}
 
 	functionID := &functionID{
@@ -370,7 +370,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 
 	q := funct.Show()
 	showRows, err := snowflake.Query(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] function (%s) not found", d.Id())
 		d.SetId("")
@@ -423,7 +423,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error renaming function %v", d.Id())
+			return fmt.Errorf("error renaming function %v", d.Id())
 		}
 		newID := &functionID{
 			DatabaseName: pID.DatabaseName,
@@ -444,7 +444,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for function %v", d.Id())
+				return fmt.Errorf("error unsetting comment for function %v err = %w", d.Id(), err)
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
@@ -453,7 +453,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for function %v", d.Id())
+				return fmt.Errorf("error updating comment for function %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -482,7 +482,7 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting function %v", d.Id())
+		return fmt.Errorf("error deleting function %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -206,7 +207,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	}
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating procedure %v", name)
+		return fmt.Errorf("error creating procedure %v err = %w", name, err)
 	}
 
 	procedureID := &procedureID{
@@ -304,7 +305,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 
 	q := proc.Show()
 	showRows, err := snowflake.Query(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] procedure (%s) not found", d.Id())
 		d.SetId("")
@@ -370,7 +371,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error renaming procedure %v", d.Id())
+			return fmt.Errorf("error renaming procedure %v", d.Id())
 		}
 		newID := &procedureID{
 			DatabaseName:  pID.DatabaseName,
@@ -391,7 +392,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for procedure %v", d.Id())
+				return fmt.Errorf("error unsetting comment for procedure %v", d.Id())
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
@@ -400,7 +401,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for procedure %v", d.Id())
+				return fmt.Errorf("error updating comment for procedure %v", d.Id())
 			}
 		}
 	}
@@ -413,7 +414,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error changing execute as for procedure %v", d.Id())
+			return fmt.Errorf("error changing execute as for procedure %v", d.Id())
 		}
 	}
 
@@ -441,7 +442,7 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting procedure %v", d.Id())
+		return fmt.Errorf("error deleting procedure %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

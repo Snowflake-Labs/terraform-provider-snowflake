@@ -13,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -306,7 +305,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating external function %v", name)
+		return fmt.Errorf("error creating external function %v err = %w", name, err)
 	}
 
 	externalFunctionID := &externalFunctionID{
@@ -424,7 +423,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 			re := regexp.MustCompile(`^(\w+)\([0-9]*\)$`)
 			match := re.FindStringSubmatch(desc.Value.String)
 			if len(match) < 2 {
-				return errors.Errorf("return_type %s not recognized", returnType)
+				return fmt.Errorf("return_type %s not recognized", returnType)
 			}
 			if err = d.Set("return_type", match[1]); err != nil {
 				return err
@@ -512,7 +511,7 @@ func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting external function %v", d.Id())
+		return fmt.Errorf("error deleting external function %v error %w", d.Id(), err)
 	}
 
 	d.SetId("")

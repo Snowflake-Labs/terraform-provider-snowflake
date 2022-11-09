@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -204,7 +205,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] task (%s) not found", d.Id())
 		d.SetId("")
@@ -439,7 +440,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	q := builder.Create()
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating task %v", name)
+		return fmt.Errorf("error creating task %v err = %w", name, err)
 	}
 
 	taskID := &taskID{
@@ -514,7 +515,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating warehouse on task %v", d.Id())
+			return fmt.Errorf("error updating warehouse on task %v", d.Id())
 		}
 	}
 
@@ -526,7 +527,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q := builder.SwitchManagedWithInitialSize(newSize.(string))
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
+				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
 			}
 		}
 	}
@@ -540,7 +541,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating task error_integration on %v", d.Id())
+			return fmt.Errorf("error updating task error_integration on %v", d.Id())
 		}
 	}
 
@@ -549,14 +550,14 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		q := builder.RemoveSchedule()
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+			return fmt.Errorf("error updating schedule on task %v", d.Id())
 		}
 
 		// making changes to after require suspending the current task
 		q = builder.Suspend()
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error suspending task %v", d.Id())
+			return fmt.Errorf("error suspending task %v", d.Id())
 		}
 
 		old, new := d.GetChange("after")
@@ -581,7 +582,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveAfter(toRemove)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing after dependencies from task %v", d.Id())
+				return fmt.Errorf("error removing after dependencies from task %v", d.Id())
 			}
 		}
 
@@ -623,7 +624,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q := builder.AddAfter(toAdd)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding after dependencies to task %v", d.Id())
+				return fmt.Errorf("error adding after dependencies to task %v", d.Id())
 			}
 		}
 	}
@@ -638,7 +639,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+			return fmt.Errorf("error updating schedule on task %v", d.Id())
 		}
 	}
 
@@ -652,7 +653,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating user task timeout on task %v", d.Id())
+			return fmt.Errorf("error updating user task timeout on task %v", d.Id())
 		}
 	}
 
@@ -666,7 +667,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating comment on task %v", d.Id())
+			return fmt.Errorf("error updating comment on task %v", d.Id())
 		}
 	}
 
@@ -681,7 +682,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating task %v", d.Id())
+			return fmt.Errorf("error updating task %v", d.Id())
 		}
 	}
 
@@ -705,7 +706,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.RemoveSessionParameters(remove)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing session_parameters on task %v", d.Id())
+				return fmt.Errorf("error removing session_parameters on task %v", d.Id())
 			}
 		}
 
@@ -713,7 +714,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.AddSessionParameters(add)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding session_parameters to task %v", d.Id())
+				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
 			}
 		}
 	}
@@ -723,7 +724,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeCondition(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating when condition on task %v", d.Id())
+			return fmt.Errorf("error updating when condition on task %v", d.Id())
 		}
 	}
 
@@ -732,7 +733,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeSQLStatement(new.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating sql statement on task %v", d.Id())
+			return fmt.Errorf("error updating sql statement on task %v", d.Id())
 		}
 	}
 
@@ -746,7 +747,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		q := builder.Suspend()
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating task state %v", d.Id())
+			return fmt.Errorf("error updating task state %v", d.Id())
 		}
 	}
 	return ReadTask(d, meta)
@@ -793,7 +794,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	q := snowflake.Task(name, database, schema).Drop()
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting task %v", d.Id())
+		return fmt.Errorf("error deleting task %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

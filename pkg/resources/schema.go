@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -153,7 +153,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating schema %v", name)
+		return fmt.Errorf("error creating schema %v err = %w", name, err)
 	}
 
 	schemaID := &schemaID{
@@ -184,7 +184,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 
 	s, err := snowflake.ScanSchema(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] schema (%s) not found", d.Id())
 		d.SetId("")
@@ -276,7 +276,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		q := builder.Rename(name.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schema name on %v", d.Id())
+			return fmt.Errorf("error updating schema name on %v err = %w", d.Id(), err)
 		}
 		d.SetId(fmt.Sprintf("%v|%v", dbName, name.(string)))
 	}
@@ -286,7 +286,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating schema comment on %v", d.Id())
+			return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -301,7 +301,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error changing management state on %v", d.Id())
+			return fmt.Errorf("error changing management state on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -311,7 +311,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeDataRetentionDays(days.(int))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating data retention days on %v", d.Id())
+			return fmt.Errorf("error updating data retention days on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -338,7 +338,7 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting schema %v", d.Id())
+		return fmt.Errorf("error deleting schema %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

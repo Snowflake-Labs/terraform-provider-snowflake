@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -66,7 +67,7 @@ func ReadStreams(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema").(string)
 
 	currentStreams, err := snowflake.ListStreams(databaseName, schemaName, db)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] streams in schema (%s) not found", d.Id())
 		d.SetId("")

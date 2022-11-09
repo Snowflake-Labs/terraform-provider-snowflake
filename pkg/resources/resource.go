@@ -2,11 +2,11 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 func CreateResource(
@@ -47,7 +47,7 @@ func CreateResource(
 		}
 		err := snowflake.Exec(db, qb.Statement())
 		if err != nil {
-			return errors.Wrapf(err, "error creating %s", t)
+			return fmt.Errorf("error creating %s err = %w", t, err)
 		}
 
 		d.SetId(name)
@@ -75,7 +75,7 @@ func UpdateResource(
 
 			err := snowflake.Exec(db, stmt)
 			if err != nil {
-				return errors.Wrapf(err, "error renaming %s %s to %s", t, oldName, newName)
+				return fmt.Errorf("error renaming %s %s to %s err = %w", t, oldName, newName, err)
 			}
 			d.SetId(newName)
 		}
@@ -116,7 +116,7 @@ func UpdateResource(
 
 			err := snowflake.Exec(db, qb.Statement())
 			if err != nil {
-				return errors.Wrapf(err, "error altering %s", t)
+				return fmt.Errorf("error altering %s err = %w", t, err)
 			}
 		}
 		log.Println("[DEBUG] performing read")
@@ -133,7 +133,7 @@ func DeleteResource(t string, builder func(string) *snowflake.Builder) func(*sch
 
 		err := snowflake.Exec(db, stmt)
 		if err != nil {
-			return errors.Wrapf(err, "error dropping %s %s", t, name)
+			return fmt.Errorf("error dropping %s %s err = %w", t, name, err)
 		}
 
 		d.SetId("")

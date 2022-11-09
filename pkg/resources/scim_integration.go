@@ -9,7 +9,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var scimIntegrationSchema = map[string]*schema.Schema{
@@ -93,7 +92,7 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, stmt.Statement())
 	if err != nil {
-		return errors.Wrap(err, "error creating security integration")
+		return fmt.Errorf("error creating security integration")
 	}
 
 	d.SetId(name)
@@ -113,7 +112,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanScimIntegration(row)
 	if err != nil {
-		return errors.Wrap(err, "could not show security integration")
+		return fmt.Errorf("could not show security integration")
 	}
 
 	// Note: category must be Security or something is broken
@@ -140,21 +139,21 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.ScimIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return errors.Wrap(err, "could not describe security integration")
+		return fmt.Errorf("could not describe security integration")
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return errors.Wrap(err, "unable to parse security integration rows")
+			return fmt.Errorf("unable to parse security integration rows")
 		}
 		switch k {
 		case "NETWORK_POLICY":
 			if err = d.Set("network_policy", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set network policy for security integration")
+				return fmt.Errorf("unable to set network policy for security integration")
 			}
 		case "RUN_AS_ROLE":
 			if err = d.Set("provisioner_role", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set provisioner role for security integration")
+				return fmt.Errorf("unable to set provisioner role for security integration")
 			}
 		default:
 			log.Printf("[WARN] unexpected security integration property %v returned from Snowflake", k)
@@ -189,7 +188,7 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 		if len(v) == 0 {
 			err := snowflake.Exec(db, fmt.Sprintf(`ALTER SECURITY INTEGRATION %v UNSET NETWORK_POLICY`, id))
 			if err != nil {
-				return errors.Wrap(err, "error unsetting network_policy")
+				return fmt.Errorf("error unsetting network_policy")
 			}
 		} else {
 			runSetStatement = true
@@ -199,7 +198,7 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return errors.Wrap(err, "error updating security integration")
+			return fmt.Errorf("error updating security integration")
 		}
 	}
 

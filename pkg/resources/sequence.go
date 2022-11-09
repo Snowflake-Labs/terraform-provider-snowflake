@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -116,7 +116,7 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, sq.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating sequence")
+		return fmt.Errorf("error creating sequence err = %w", err)
 	}
 
 	sequenceID := &sequenceID{
@@ -152,13 +152,13 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 
 	sequence, err := snowflake.ScanSequence(row)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// If not found, mark resource to be removed from statefile during apply or refresh
 			log.Printf("[DEBUG] sequence (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errors.Wrap(err, "unable to scan row for SHOW SEQUENCES")
+		return fmt.Errorf("unable to scan row for SHOW SEQUENCES")
 	}
 
 	err = d.Set("name", sequence.Name.String)
@@ -226,7 +226,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 
 	sequence, err := snowflake.ScanSequence(row)
 	if err != nil {
-		return errors.Wrap(err, "unable to scan row for SHOW SEQUENCES")
+		return fmt.Errorf("unable to scan row for SHOW SEQUENCES")
 	}
 	deleteSequenceErr := DeleteSequence(d, meta)
 	if deleteSequenceErr != nil {
@@ -255,7 +255,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, sq.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating sequence")
+		return fmt.Errorf("error creating sequence err = %w", err)
 	}
 
 	return ReadSequence(d, meta)
@@ -276,7 +276,7 @@ func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error dropping sequence %s", name)
+		return fmt.Errorf("error dropping sequence %s err = %w", name, err)
 	}
 
 	d.SetId("")

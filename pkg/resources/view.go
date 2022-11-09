@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var space = regexp.MustCompile(`\s+`)
@@ -126,7 +126,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	}
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating view %v", name)
+		return fmt.Errorf("error creating view %v", name)
 	}
 
 	d.SetId(fmt.Sprintf("%v|%v|%v", database, schema, name))
@@ -145,7 +145,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
@@ -210,7 +210,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error renaming view %v", d.Id())
+			return fmt.Errorf("error renaming view %v", d.Id())
 		}
 
 		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
@@ -226,7 +226,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for view %v", d.Id())
+				return fmt.Errorf("error unsetting comment for view %v", d.Id())
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
@@ -235,7 +235,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for view %v", d.Id())
+				return fmt.Errorf("error updating comment for view %v", d.Id())
 			}
 		}
 	}
@@ -249,7 +249,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error setting secure for view %v", d.Id())
+				return fmt.Errorf("error setting secure for view %v", d.Id())
 			}
 		} else {
 			q, err := builder.Unsecure()
@@ -258,7 +258,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 			err = snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting secure for view %v", d.Id())
+				return fmt.Errorf("error unsetting secure for view %v", d.Id())
 			}
 		}
 	}
@@ -273,7 +273,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			q := builder.UnsetTag(tA.toSnowflakeTagValue())
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+				return fmt.Errorf("error dropping tag on %v", d.Id())
 			}
 		}
 		for _, tA := range added {
@@ -281,14 +281,14 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding column on %v", d.Id())
+				return fmt.Errorf("error adding column on %v", d.Id())
 			}
 		}
 		for _, tA := range changed {
 			q := builder.ChangeTag(tA.toSnowflakeTagValue())
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error changing property on %v", d.Id())
+				return fmt.Errorf("error changing property on %v", d.Id())
 			}
 		}
 	}
@@ -311,7 +311,7 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting view %v", d.Id())
+		return fmt.Errorf("error deleting view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

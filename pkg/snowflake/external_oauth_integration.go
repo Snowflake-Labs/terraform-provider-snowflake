@@ -2,9 +2,9 @@ package snowflake
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // ExternalOauthIntegration returns a pointer to a Builder that abstracts the DDL operations for an api integration.
@@ -35,5 +35,8 @@ type externalOauthIntegration struct {
 
 func ScanExternalOauthIntegration(row *sqlx.Row) (*externalOauthIntegration, error) {
 	r := &externalOauthIntegration{}
-	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
+	if err := row.StructScan(r); err != nil {
+		return r, fmt.Errorf("error scanning struct err = %w", err)
+	}
+	return r, nil
 }

@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 type WarehouseBuilder struct {
@@ -129,9 +129,12 @@ func ListWarehouses(db *sql.DB) ([]warehouse, error) {
 
 	dbs := []warehouse{}
 	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no warehouses found")
-		return nil, nil
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no warehouses found")
+			return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		}
+		return nil, fmt.Errorf("unable to scan %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

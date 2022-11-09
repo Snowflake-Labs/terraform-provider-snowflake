@@ -13,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -221,7 +220,7 @@ func readGenericGrant(
 		// We also check the error number matches
 		// We set the tf id == blank and return.
 		// I don't know of a better way to work around this issue
-		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok &&
+		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok && //nolint:errorlint // todo: should be fixed
 			snowflakeErr.Number == 2003 &&
 			strings.Contains(err.Error(), "does not exist or not authorized") {
 			log.Printf("[WARN] resource (%s) not found, removing from state file", d.Id())
@@ -442,7 +441,7 @@ func parseCallableObjectName(objectName string) (map[string]interface{}, error) 
 	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
 	matches := r.FindStringSubmatch(objectName)
 	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
+		return nil, fmt.Errorf(`Could not parse objectName: %v`, objectName)
 	}
 	callableSignatureMap := make(map[string]interface{})
 

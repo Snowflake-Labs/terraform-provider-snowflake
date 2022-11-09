@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -55,7 +56,7 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 	row := snowflake.QueryRow(db, sel)
 	rawConfig, err := snowflake.ScanPrivateLinkConfig(row)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Println("[DEBUG] system_get_privatelink_config not found")
 		d.SetId("")

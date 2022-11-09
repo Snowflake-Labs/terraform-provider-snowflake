@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -102,7 +102,7 @@ func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) er
 			q := builder.UnsetTag(tA.toSnowflakeTagValue())
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error dropping tag on %v", d.Id())
+				return fmt.Errorf("error dropping tag on %v", d.Id())
 			}
 		}
 		for _, tA := range added {
@@ -110,14 +110,14 @@ func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) er
 
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error adding column on %v", d.Id())
+				return fmt.Errorf("error adding column on %v", d.Id())
 			}
 		}
 		for _, tA := range changed {
 			q := builder.ChangeTag(tA.toSnowflakeTagValue())
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error changing property on %v", d.Id())
+				return fmt.Errorf("error changing property on %v", d.Id())
 			}
 		}
 	}
@@ -201,7 +201,7 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating tag %v", name)
+		return fmt.Errorf("error creating tag %v", name)
 	}
 
 	tagID := &TagID{
@@ -234,7 +234,7 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 
 	t, err := snowflake.ScanTag(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] tag (%s) not found", d.Id())
 		d.SetId("")
@@ -302,7 +302,7 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating tag comment on %v", d.Id())
+			return fmt.Errorf("error updating tag comment on %v", d.Id())
 		}
 	}
 
@@ -316,19 +316,19 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveAllowedValues()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+				return fmt.Errorf("error removing ALLOWED_VALUES for tag %v", tag)
 			}
 
 			addQuery := builder.AddAllowedValues(ns)
 			err = snowflake.Exec(db, addQuery)
 			if err != nil {
-				return errors.Wrapf(err, "error adding ALLOWED_VALUES for tag %v", tag)
+				return fmt.Errorf("error adding ALLOWED_VALUES for tag %v", tag)
 			}
 		} else {
 			q := builder.RemoveAllowedValues()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error removing ALLOWED_VALUES for tag %v", tag)
+				return fmt.Errorf("error removing ALLOWED_VALUES for tag %v", tag)
 			}
 		}
 	}
@@ -363,7 +363,7 @@ func DeleteTag(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting tag %v", d.Id())
+		return fmt.Errorf("error deleting tag %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

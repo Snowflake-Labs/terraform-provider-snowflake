@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )
 
@@ -160,7 +159,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating masking policy %v", name)
+		return fmt.Errorf("error creating masking policy %v err = %w", name, err)
 	}
 
 	maskingPolicyID := &maskingPolicyID{
@@ -285,13 +284,13 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveComment()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for masking policy on %v", d.Id())
+				return fmt.Errorf("error unsetting comment for masking policy on %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for masking policy on %v", d.Id())
+				return fmt.Errorf("error updating comment for masking policy on %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -301,7 +300,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeMaskingExpression(maskingExpression.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating masking policy expression on %v", d.Id())
+			return fmt.Errorf("error updating masking policy expression on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -324,7 +323,7 @@ func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting masking policy %v", d.Id())
+		return fmt.Errorf("error deleting masking policy %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

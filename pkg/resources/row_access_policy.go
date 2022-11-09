@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -138,7 +137,7 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating row access policy %v", name)
+		return fmt.Errorf("error creating row access policy %v err = %w", name, err)
 	}
 
 	rowAccessPolicyID := &rowAccessPolicyID{
@@ -251,13 +250,13 @@ func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveComment()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for row access policy on %v", d.Id())
+				return fmt.Errorf("error unsetting comment for row access policy on %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for row access policy on %v", d.Id())
+				return fmt.Errorf("error updating comment for row access policy on %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -267,7 +266,7 @@ func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeRowAccessExpression(rowAccessExpression.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating row access policy expression on %v", d.Id())
+			return fmt.Errorf("error updating row access policy expression on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -290,7 +289,7 @@ func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting row access policy %v", d.Id())
+		return fmt.Errorf("error deleting row access policy %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

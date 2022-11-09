@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var materializedViewSchema = map[string]*schema.Schema{
@@ -162,7 +162,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	log.Print("[DEBUG] xxx ", q)
 	err := snowflake.ExecMulti(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating view %v", name)
+		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
 	materializedViewID := &materializedViewID{
@@ -194,7 +194,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanMaterializedView(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
@@ -260,7 +260,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		q := builder.Rename(name.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error renaming view %v", d.Id())
+			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
 		}
 
 		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
@@ -273,13 +273,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveComment()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for view %v", d.Id())
+				return fmt.Errorf("error unsetting comment for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for view %v", d.Id())
+				return fmt.Errorf("error updating comment for view %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -290,13 +290,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 			q := builder.Secure()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error setting secure for view %v", d.Id())
+				return fmt.Errorf("error setting secure for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.Unsecure()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting secure for materialized view %v", d.Id())
+				return fmt.Errorf("error unsetting secure for materialized view %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -325,7 +325,7 @@ func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting materialized view %v", d.Id())
+		return fmt.Errorf("error deleting materialized view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

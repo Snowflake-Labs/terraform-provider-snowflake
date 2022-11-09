@@ -2,13 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -104,7 +104,7 @@ func createDatabase(d *schema.ResourceData, builder *snowflake.DatabaseBuilder, 
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating database %v", name)
+		return fmt.Errorf("error creating database %v err = %w", name, err)
 	}
 
 	d.SetId(name)
@@ -158,7 +158,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 		resource := createDatabase(d, builder, meta)
 		if err := enableReplication(d, meta, replicationConfiguration); err != nil {
-			return errors.Wrapf(err, "error enabling replication - account does not exist or System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true")
+			return fmt.Errorf("error enabling replication - account does not exist or System Parameter ENABLE_ACCOUNT_DATABASE_REPLICATION must be set to true, err = %w", err)
 		}
 		return resource
 	}
@@ -194,7 +194,7 @@ func createDatabaseFromShare(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating database %v from share %v.%v", name, prov, share)
+		return fmt.Errorf("error creating database %v from share %v.%v err = %w", name, prov, share, err)
 	}
 
 	d.SetId(name)
@@ -211,7 +211,7 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, builder.Create())
 	if err != nil {
-		return errors.Wrapf(err, "error creating a secondary database %v from database %v", name, sourceDB)
+		return fmt.Errorf("error creating a secondary database %v from database %v err = %w", name, sourceDB, err)
 	}
 
 	d.SetId(name)
@@ -228,13 +228,13 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	database, err := snowflake.ScanDatabase(row)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// If not found, mark resource to be removed from statefile during apply or refresh
 			log.Printf("[DEBUG] database (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errors.Wrap(err, "unable to scan row for SHOW DATABASES")
+		return fmt.Errorf("unable to scan row for SHOW DATABASES")
 	}
 
 	err = d.Set("name", database.DBName.String)
@@ -287,7 +287,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 			enableQuery := builder.EnableReplicationAccounts(dbName, strings.Join(expandStringList(newAccounts), ", "))
 			err := snowflake.Exec(db, enableQuery)
 			if err != nil {
-				return errors.Wrapf(err, "error enabling replication configuration with statement %v", enableQuery)
+				return fmt.Errorf("error enabling replication configuration with statement %v err = %w", enableQuery, err)
 			}
 		}
 
@@ -305,7 +305,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 				disableQuery := builder.DisableReplicationAccounts(dbName, strings.Join(expandStringList(accountsToDisableReplication), ", "))
 				err := snowflake.Exec(db, disableQuery)
 				if err != nil {
-					return errors.Wrapf(err, "error disabling replication configuration with statement %v", disableQuery)
+					return fmt.Errorf("error disabling replication configuration with statement %v err = %w", disableQuery, err)
 				}
 			}
 		}
@@ -316,7 +316,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		q := builder.Rename(name.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating database name on %v", d.Id())
+			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
 		}
 		d.SetId(fmt.Sprintf("%v", name.(string)))
 	}
@@ -326,7 +326,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating database comment on %v", d.Id())
+			return fmt.Errorf("error updating database comment on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -336,7 +336,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeDataRetentionDays(days.(int))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating data retention days on %v", d.Id())
+			return fmt.Errorf("error updating data retention days on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -356,7 +356,7 @@ func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting database %v", d.Id())
+		return fmt.Errorf("error deleting database %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

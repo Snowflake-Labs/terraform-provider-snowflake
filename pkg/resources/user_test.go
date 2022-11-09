@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
-
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -112,7 +111,7 @@ func TestUserRead(t *testing.T) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
 		q := snowflake.User(d.Id()).Describe()
-		mock.ExpectQuery(q).WillReturnError(errors.New(fmt.Sprintf("SQL compilation error:User '%s' does not exist or not authorized.", name)))
+		mock.ExpectQuery(q).WillReturnError(fmt.Errorf("SQL compilation error:User '%s' does not exist or not authorized.", name))
 		err2 := resources.ReadUser(d, db)
 		r.Empty(d.State())
 		r.Nil(err2)

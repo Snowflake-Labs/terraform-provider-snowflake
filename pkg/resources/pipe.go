@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -190,7 +190,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating pipe %v", name)
+		return fmt.Errorf("error creating pipe %v err = %w", name, err)
 	}
 
 	pipeID := &pipeID{
@@ -222,7 +222,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	sq := snowflake.Pipe(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
 		d.SetId("")
@@ -309,7 +309,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeComment(comment.(string))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating pipe comment on %v", d.Id())
+			return fmt.Errorf("error updating pipe comment on %v", d.Id())
 		}
 	}
 
@@ -322,7 +322,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating pipe error_integration on %v", d.Id())
+			return fmt.Errorf("error updating pipe error_integration on %v", d.Id())
 		}
 	}
 
@@ -345,7 +345,7 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 
 	err = snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

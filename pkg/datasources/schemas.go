@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -52,7 +53,7 @@ func ReadSchemas(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] database name %s", databaseName)
 
 	currentSchemas, err := snowflake.ListSchemas(databaseName, db)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] schemas in database (%s) not found", d.Id())
 		d.SetId("")
