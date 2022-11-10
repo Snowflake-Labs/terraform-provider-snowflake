@@ -105,6 +105,7 @@ type SchemaCreateOptions struct {
 	// Required: Specifies the identifier for the schema; must be unique for the database in which the schema is created.
 	Name string
 
+	// Required: Specifies the database name
 	DatabaseName string
 }
 
