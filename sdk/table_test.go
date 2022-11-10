@@ -23,9 +23,13 @@ func (ts *testSuite) TestListTable() {
 	table, err := ts.createTable(database.Name)
 	ts.NoError(err)
 
-	tables, err := ts.client.Tables.List(context.Background(), TableListOptions{Pattern: "TABLE%"})
+	limit := 1
+	tables, err := ts.client.Tables.List(context.Background(), TableListOptions{
+		Pattern: "TABLE%",
+		Limit:   Int(limit),
+	})
 	ts.NoError(err)
-	ts.Equal(1, len(tables))
+	ts.Equal(limit, len(tables))
 
 	ts.NoError(ts.client.Tables.Delete(context.Background(), table.Name))
 	ts.NoError(ts.client.Databases.Delete(context.Background(), database.Name))

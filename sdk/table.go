@@ -99,7 +99,11 @@ func (t *tableEntity) toTable() *Table {
 
 // TableListOptions represents the options for listing tables.
 type TableListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o TableListOptions) validate() error {
@@ -150,7 +154,7 @@ func (t *tables) List(ctx context.Context, options TableListOptions) ([]*Table, 
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceTables, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceTables, options.Pattern)
 	rows, err := t.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

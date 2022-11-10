@@ -168,7 +168,11 @@ type WarehouseProperties struct {
 
 // WarehouseListOptions represents the options for listing warehouses.
 type WarehouseListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o WarehouseListOptions) validate() error {
@@ -204,7 +208,10 @@ func (w *warehouses) List(ctx context.Context, options WarehouseListOptions) ([]
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceWarehouses, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceWarehouses, options.Pattern)
+	if options.Limit != nil {
+		sql = sql + fmt.Sprintf(" LIMIT %d", *options.Limit)
+	}
 	rows, err := w.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

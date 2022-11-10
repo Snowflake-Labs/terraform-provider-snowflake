@@ -83,7 +83,11 @@ func (e *roleEntity) toRole() *Role {
 
 // RoleListOptions represents the options for listing roles.
 type RoleListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o RoleListOptions) validate() error {
@@ -124,7 +128,7 @@ func (r *roles) List(ctx context.Context, options RoleListOptions) ([]*Role, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceRoles, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceRoles, options.Pattern)
 	rows, err := r.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

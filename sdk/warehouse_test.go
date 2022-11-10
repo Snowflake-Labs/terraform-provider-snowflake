@@ -25,9 +25,13 @@ func (ts *testSuite) TestListWarehouse() {
 	warehouse, err := ts.createWarehouse()
 	ts.NoError(err)
 
-	warehouses, err := ts.client.Warehouses.List(context.Background(), WarehouseListOptions{Pattern: "WAREHOUSE%"})
+	limit := 1
+	warehouses, err := ts.client.Warehouses.List(context.Background(), WarehouseListOptions{
+		Pattern: "WAREHOUSE%",
+		Limit:   Int(limit),
+	})
 	ts.NoError(err)
-	ts.Equal(1, len(warehouses))
+	ts.Equal(limit, len(warehouses))
 
 	ts.NoError(ts.client.Warehouses.Delete(context.Background(), warehouse.Name))
 }

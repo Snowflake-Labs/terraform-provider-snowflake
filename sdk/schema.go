@@ -80,7 +80,11 @@ func (s *schemaEntity) toSchema() *Schema {
 
 // SchemaListOptions represents the options for listing schemas.
 type SchemaListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o SchemaListOptions) validate() error {
@@ -130,7 +134,7 @@ func (s *schemas) List(ctx context.Context, options SchemaListOptions) ([]*Schem
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceSchemas, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceSchemas, options.Pattern)
 	rows, err := s.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

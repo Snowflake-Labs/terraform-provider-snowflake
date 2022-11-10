@@ -15,7 +15,12 @@ func Bool(v bool) *bool {
 	return &v
 }
 
-// Int returns a pointer to the given int32.
+// Int returns a pointer to the given int.
+func Int(v int) *int {
+	return &v
+}
+
+// Int32 returns a pointer to the given int32.
 func Int32(v int32) *int32 {
 	return &v
 }

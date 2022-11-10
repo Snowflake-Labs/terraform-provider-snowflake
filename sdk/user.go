@@ -97,7 +97,11 @@ func (e *userEntity) toUser() *User {
 
 // UserListOptions represents the options for listing users.
 type UserListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o UserListOptions) validate() error {
@@ -174,7 +178,7 @@ func (u *users) List(ctx context.Context, options UserListOptions) ([]*User, err
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceUsers, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceUsers, options.Pattern)
 	rows, err := u.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

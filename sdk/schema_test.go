@@ -22,9 +22,13 @@ func (ts *testSuite) TestListSchema() {
 	schema, err := ts.createSchema(database.Name)
 	ts.NoError(err)
 
-	schemas, err := ts.client.Schemas.List(context.Background(), SchemaListOptions{Pattern: "SCHEMA%"})
+	limit := 1
+	schemas, err := ts.client.Schemas.List(context.Background(), SchemaListOptions{
+		Pattern: "SCHEMA%",
+		Limit:   Int(limit),
+	})
 	ts.NoError(err)
-	ts.Equal(1, len(schemas))
+	ts.Equal(limit, len(schemas))
 
 	ts.NoError(ts.client.Schemas.Delete(context.Background(), schema.Name))
 	ts.NoError(ts.client.Databases.Delete(context.Background(), database.Name))

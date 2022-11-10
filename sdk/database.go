@@ -77,7 +77,11 @@ func (d *databaseEntity) toDatabase() *Database {
 
 // DatabaseListOptions represents the options for listing databases.
 type DatabaseListOptions struct {
+	// Required: Filters the command output by object name
 	Pattern string
+
+	// Optional: Limits the maximum number of rows returned
+	Limit *int
 }
 
 func (o DatabaseListOptions) validate() error {
@@ -120,7 +124,7 @@ func (d *databases) List(ctx context.Context, options DatabaseListOptions) ([]*D
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, ResourceDatabases, options.Pattern)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceDatabases, options.Pattern)
 	rows, err := d.client.query(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("do query: %w", err)

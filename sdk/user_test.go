@@ -23,9 +23,13 @@ func (ts *testSuite) TestListUser() {
 	user, err := ts.createUser()
 	ts.NoError(err)
 
-	users, err := ts.client.Users.List(context.Background(), UserListOptions{Pattern: "USER%"})
+	limit := 1
+	users, err := ts.client.Users.List(context.Background(), UserListOptions{
+		Pattern: "USER%",
+		Limit:   Int(1),
+	})
 	ts.NoError(err)
-	ts.Equal(1, len(users))
+	ts.Equal(limit, len(users))
 
 	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
 }
