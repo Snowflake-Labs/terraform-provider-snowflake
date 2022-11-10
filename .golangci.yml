@@ -6,6 +6,11 @@ run:
 linters-settings:
   misspell:
     locale: US
+  depguard:
+    include-go-root: true
+    packages:
+      - github.com/pkg/error
+      - io/ioutil
 
 linters:
   disable-all: true
@@ -31,6 +36,8 @@ linters:
     - typecheck
 
     # not default
+    # depguard: Go linter that checks if package imports are in a list of acceptable packages
+    - depguard
     # unconvert: Remove unnecessary type conversions
     - unconvert
     # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
