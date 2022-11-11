@@ -6,7 +6,7 @@ func (ts *testSuite) createRole() (*Role, error) {
 	options := RoleCreateOptions{
 		Name: "ROLE_TEST",
 		RoleProperties: &RoleProperties{
-			Comment: String("test account"),
+			Comment: String("test role"),
 		},
 	}
 	return ts.client.Roles.Create(context.Background(), options)

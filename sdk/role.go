@@ -164,13 +164,13 @@ func (*roles) formatRoleProperties(properties *RoleProperties) string {
 }
 
 // Update attributes of an existing role.
-func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions) (*Role, error) {
+func (r *roles) Update(ctx context.Context, role string, options RoleUpdateOptions) (*Role, error) {
 	if role == "" {
 		return nil, errors.New("role name must not be empty")
 	}
 	sql := fmt.Sprintf("ALTER %s %s SET", ResourceRole, role)
-	if opts.RoleProperties != nil {
-		sql = sql + r.formatRoleProperties(opts.RoleProperties)
+	if options.RoleProperties != nil {
+		sql = sql + r.formatRoleProperties(options.RoleProperties)
 	}
 	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
@@ -179,18 +179,18 @@ func (r *roles) Update(ctx context.Context, role string, opts RoleUpdateOptions)
 }
 
 // Create a new role with the given options.
-func (r *roles) Create(ctx context.Context, opts RoleCreateOptions) (*Role, error) {
-	if err := opts.validate(); err != nil {
+func (r *roles) Create(ctx context.Context, options RoleCreateOptions) (*Role, error) {
+	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("CREATE %s %s", ResourceRole, opts.Name)
-	if opts.RoleProperties != nil {
-		sql = sql + r.formatRoleProperties(opts.RoleProperties)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceRole, options.Name)
+	if options.RoleProperties != nil {
+		sql = sql + r.formatRoleProperties(options.RoleProperties)
 	}
 	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return r.Read(ctx, opts.Name)
+	return r.Read(ctx, options.Name)
 }
 
 // Delete a role by its name.

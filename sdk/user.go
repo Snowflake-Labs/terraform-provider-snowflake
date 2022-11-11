@@ -241,10 +241,7 @@ func (*users) formatUserProperties(properties *UserProperties) string {
 		s = s + " default_role='" + *properties.DefaultRole + "'"
 	}
 	if properties.DefaultSecondaryRoles != nil {
-		roles := []string{}
-		for _, role := range *properties.DefaultSecondaryRoles {
-			roles = append(roles, "'"+role+"'")
-		}
+		roles := addQuote(*properties.DefaultSecondaryRoles)
 		s = s + " default_secondary_roles=(" + strings.Join(roles, ",") + ")"
 	}
 	if properties.Comment != nil {

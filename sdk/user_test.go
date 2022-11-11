@@ -11,7 +11,7 @@ func (ts *testSuite) createUser() (*User, error) {
 		UserProperties: &UserProperties{
 			FirstName:             String("John"),
 			LastName:              String("Hi"),
-			Comment:               String("test account"),
+			Comment:               String("test user"),
 			DefaultSecondaryRoles: StringSlice([]string{"ALL", "READ", "WRITE"}),
 			Disabled:              Bool(false),
 		},

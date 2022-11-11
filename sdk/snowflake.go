@@ -48,12 +48,13 @@ func DefaultConfig() *Config {
 type Client struct {
 	conn *sql.DB
 
-	Users      Users
-	Roles      Roles
-	Warehouses Warehouses
-	Databases  Databases
-	Schemas    Schemas
-	Tables     Tables
+	Users           Users
+	Roles           Roles
+	Warehouses      Warehouses
+	Databases       Databases
+	Schemas         Schemas
+	Tables          Tables
+	NetworkPolicies NetworkPolicies
 }
 
 func NewClient(cfg *Config) (*Client, error) {
@@ -121,6 +122,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	client.Databases = &databases{client: client}
 	client.Schemas = &schemas{client: client}
 	client.Tables = &tables{client: client}
+	client.NetworkPolicies = &networkPolicies{client: client}
 
 	return client, nil
 }
@@ -159,7 +161,7 @@ func (c *Client) rename(ctx context.Context, resource string, old string, new st
 
 // read a resource
 func (c *Client) read(ctx context.Context, resources string, name string, v interface{}) error {
-	sql := fmt.Sprintf(`SHOW %s LIKE '%s'`, resources, name)
+	sql := fmt.Sprintf("SHOW %s LIKE '%s'", resources, name)
 	rows, err := c.query(ctx, sql)
 	if err != nil {
 		return fmt.Errorf("do query: %w", err)
