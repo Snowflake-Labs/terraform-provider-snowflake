@@ -23,7 +23,7 @@ func (ts *testSuite) TestListNetworkPolicy() {
 
 	networkPolicies, err := ts.client.NetworkPolicies.List(context.Background())
 	ts.NoError(err)
-	ts.T().Logf("count: %d", len(networkPolicies))
+	ts.Greater(1, len(networkPolicies))
 
 	ts.NoError(ts.client.NetworkPolicies.Delete(context.Background(), networkPolicy.Name))
 }
@@ -35,7 +35,8 @@ func (ts *testSuite) TestReadNetworkPolicy() {
 	entity, err := ts.client.NetworkPolicies.Read(context.Background(), networkPolicy.Name)
 	ts.NoError(err)
 	ts.Equal(networkPolicy.Name, entity.Name)
-
+	ts.Equal(networkPolicy.AllowedIPList, entity.AllowedIPList)
+	ts.Equal(networkPolicy.BlockedIPList, entity.BlockedIPList)
 	ts.NoError(ts.client.NetworkPolicies.Delete(context.Background(), networkPolicy.Name))
 }
 

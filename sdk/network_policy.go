@@ -13,7 +13,12 @@ import (
 const (
 	ResourceNetworkPolicy   = "NETWORK POLICY"
 	ResourceNetworkPolicies = "NETWORK POLICIES"
+	DescAllowedIPList       = "ALLOWED_IP_LIST"
+	DescBlockedIPList       = "BLOCKED_IP_LIST"
 )
+
+// Compile-time proof of interface implementation.
+var _ NetworkPolicies = (*networkPolicies)(nil)
 
 // NetworkPolicies describes all the network policies related methods that the
 // Snowflake API supports.
@@ -39,15 +44,22 @@ type networkPolicies struct {
 
 // NetworkPolicy represents a Snowflake network policy.
 type NetworkPolicy struct {
-	Name      string
-	Comment   string
-	CreatedOn time.Time
+	Name          string
+	Comment       string
+	CreatedOn     time.Time
+	AllowedIPList []string
+	BlockedIPList []string
 }
 
 type networkPolicyEntity struct {
 	Name      sql.NullString `db:"name"`
 	Comment   sql.NullString `db:"comment"`
 	CreatedOn sql.NullTime   `db:"created_on"`
+}
+
+type networkPolicyDesc struct {
+	Name  sql.NullString `db:"name"`
+	Value sql.NullString `db:"value"`
 }
 
 func (np *networkPolicyEntity) toNetworkPolicy() *NetworkPolicy {
@@ -161,7 +173,40 @@ func (np *networkPolicies) List(ctx context.Context) ([]*NetworkPolicy, error) {
 		if err := rows.StructScan(&entity); err != nil {
 			return nil, fmt.Errorf("rows scan: %w", err)
 		}
-		entities = append(entities, entity.toNetworkPolicy())
+		networkPolicy := entity.toNetworkPolicy()
+
+		values, err := np.desc(ctx, entity.Name.String)
+		if err != nil {
+			return nil, fmt.Errorf("desc: %w", err)
+		}
+		for _, item := range values {
+			if item.Name.String == DescAllowedIPList {
+				networkPolicy.AllowedIPList = strings.Split(item.Value.String, ",")
+			}
+			if item.Name.String == DescBlockedIPList {
+				networkPolicy.BlockedIPList = strings.Split(item.Value.String, ",")
+			}
+		}
+		entities = append(entities, networkPolicy)
+	}
+	return entities, nil
+}
+
+func (np *networkPolicies) desc(ctx context.Context, policy string) ([]*networkPolicyDesc, error) {
+	sql := fmt.Sprintf("DESC %s %s", ResourceNetworkPolicy, policy)
+	rows, err := np.client.query(ctx, sql)
+	if err != nil {
+		return nil, fmt.Errorf("do query: %w", err)
+	}
+	defer rows.Close()
+
+	entities := []*networkPolicyDesc{}
+	for rows.Next() {
+		var entity networkPolicyDesc
+		if err := rows.StructScan(&entity); err != nil {
+			return nil, fmt.Errorf("rows scan: %w", err)
+		}
+		entities = append(entities, &entity)
 	}
 	return entities, nil
 }
