@@ -79,3 +79,13 @@ func (ts *testSuite) TestRenameUser() {
 	ts.NoError(ts.client.Users.Rename(context.Background(), user.Name, newUser))
 	ts.NoError(ts.client.Users.Delete(context.Background(), newUser))
 }
+
+func (ts *testSuite) TestResetPassword() {
+	user, err := ts.createUser()
+	ts.NoError(err)
+
+	result, err := ts.client.Users.ResetPassword(context.Background(), user.Name)
+	ts.NoError(err)
+	ts.NotEmpty(result.Status)
+	ts.NoError(ts.client.Users.Delete(context.Background(), user.Name))
+}

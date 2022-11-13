@@ -32,6 +32,8 @@ type Users interface {
 	Delete(ctx context.Context, user string) error
 	// Rename an user name.
 	Rename(ctx context.Context, old string, new string) error
+	// Reset an user's password.
+	ResetPassword(ctx context.Context, user string) (*ResetPasswordResult, error)
 }
 
 // users implements Users
@@ -70,6 +72,10 @@ type userEntity struct {
 	HasRsaPublicKey       sql.NullBool   `db:"has_rsa_public_key"`
 	LastName              sql.NullString `db:"last_name"`
 	LoginName             sql.NullString `db:"login_name"`
+}
+
+type ResetPasswordResult struct {
+	Status string `db:"status"`
 }
 
 func (e *userEntity) toUser() *User {
@@ -296,4 +302,23 @@ func (u *users) Delete(ctx context.Context, user string) error {
 // Rename an user name.
 func (u *users) Rename(ctx context.Context, old string, new string) error {
 	return u.client.rename(ctx, ResourceUser, old, new)
+}
+
+// Reset an user's password.
+func (u *users) ResetPassword(ctx context.Context, user string) (*ResetPasswordResult, error) {
+	sql := fmt.Sprintf("ALTER %s %s RESET PASSWORD;", ResourceUser, user)
+	rows, err := u.client.query(ctx, sql)
+	if err != nil {
+		return nil, fmt.Errorf("do query: %w", err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil, ErrNoRecord
+	}
+	var result ResetPasswordResult
+	if err := rows.StructScan(&result); err != nil {
+		return nil, fmt.Errorf("rows scan: %w", err)
+	}
+	return &result, err
 }
