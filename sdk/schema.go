@@ -157,19 +157,21 @@ func (s *schemas) Create(ctx context.Context, options SchemaCreateOptions) (*Sch
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("USE %s %s", ResourceDatabase, options.DatabaseName)
-	if _, err := s.client.exec(ctx, sql); err != nil {
-		return nil, fmt.Errorf("db exec: %w", err)
+	if err := s.client.use(ctx, ResourceDatabase, options.DatabaseName); err != nil {
+		return nil, fmt.Errorf("use database: %w", err)
 	}
-
-	sql = fmt.Sprintf("CREATE %s %s", ResourceSchema, options.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceSchema, options.Name)
 	if options.SchemaProperties != nil {
 		sql = sql + s.formatSchemaProperties(options.SchemaProperties)
 	}
 	if _, err := s.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return s.Read(ctx, options.Name)
+	var entity schemaEntity
+	if err := s.client.read(ctx, ResourceSchemas, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toSchema(), nil
 }
 
 // Read a schema by its name.
@@ -204,7 +206,11 @@ func (s *schemas) Update(ctx context.Context, schema string, options SchemaUpdat
 	if _, err := s.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return s.Read(ctx, schema)
+	var entity schemaEntity
+	if err := s.client.read(ctx, ResourceSchemas, schema, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toSchema(), nil
 }
 
 // Delete a schema by its name.

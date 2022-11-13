@@ -72,3 +72,21 @@ func (ts *testSuite) TestRenameDatabase() {
 	ts.NoError(ts.client.Databases.Rename(context.Background(), database.Name, newDB))
 	ts.NoError(ts.client.Databases.Delete(context.Background(), newDB))
 }
+
+func (ts *testSuite) TestCloneDatabase() {
+	database, err := ts.createDatabase()
+	ts.NoError(err)
+
+	destDB := "CLONE_DATABASE_TEST"
+	ts.NoError(ts.client.Databases.Clone(context.Background(), database.Name, destDB))
+	ts.NoError(ts.client.Databases.Delete(context.Background(), database.Name))
+	ts.NoError(ts.client.Databases.Delete(context.Background(), destDB))
+}
+
+func (ts *testSuite) TestUseDatabase() {
+	database, err := ts.createDatabase()
+	ts.NoError(err)
+
+	ts.NoError(ts.client.Databases.Use(context.Background(), database.Name))
+	ts.NoError(ts.client.Databases.Delete(context.Background(), database.Name))
+}

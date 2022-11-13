@@ -23,7 +23,7 @@ func (ts *testSuite) TestListNetworkPolicy() {
 
 	networkPolicies, err := ts.client.NetworkPolicies.List(context.Background())
 	ts.NoError(err)
-	ts.Greater(1, len(networkPolicies))
+	ts.Greater(len(networkPolicies), 1)
 
 	ts.NoError(ts.client.NetworkPolicies.Delete(context.Background(), networkPolicy.Name))
 }

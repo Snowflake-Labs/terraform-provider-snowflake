@@ -191,12 +191,10 @@ func (t *tables) Create(ctx context.Context, options TableCreateOptions) (*Table
 	if err := options.validate(); err != nil {
 		return nil, fmt.Errorf("validate create options: %w", err)
 	}
-	sql := fmt.Sprintf("USE %s %s", ResourceDatabase, options.DatabaseName)
-	if _, err := t.client.exec(ctx, sql); err != nil {
-		return nil, fmt.Errorf("db exec: %w", err)
+	if err := t.client.use(ctx, ResourceDatabase, options.DatabaseName); err != nil {
+		return nil, fmt.Errorf("use database: %w", err)
 	}
-
-	sql = fmt.Sprintf("CREATE %s %s", ResourceTable, options.Name)
+	sql := fmt.Sprintf("CREATE %s %s", ResourceTable, options.Name)
 	sql = sql + "(" + strings.Join(options.Columns, ",") + ")"
 	if options.TableProperties != nil {
 		sql = sql + " " + t.formatTableProperties(options.TableProperties)
@@ -204,7 +202,11 @@ func (t *tables) Create(ctx context.Context, options TableCreateOptions) (*Table
 	if _, err := t.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return t.Read(ctx, options.Name)
+	var entity tableEntity
+	if err := t.client.read(ctx, ResourceTables, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toTable(), nil
 }
 
 // Delete a table by its name.

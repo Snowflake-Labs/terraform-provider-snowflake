@@ -175,7 +175,11 @@ func (r *roles) Update(ctx context.Context, role string, options RoleUpdateOptio
 	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return r.Read(ctx, role)
+	var entity roleEntity
+	if err := r.client.read(ctx, ResourceRoles, role, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toRole(), nil
 }
 
 // Create a new role with the given options.
@@ -190,7 +194,11 @@ func (r *roles) Create(ctx context.Context, options RoleCreateOptions) (*Role, e
 	if _, err := r.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return r.Read(ctx, options.Name)
+	var entity roleEntity
+	if err := r.client.read(ctx, ResourceRoles, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toRole(), nil
 }
 
 // Delete a role by its name.

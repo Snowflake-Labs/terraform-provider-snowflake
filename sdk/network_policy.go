@@ -135,7 +135,17 @@ func (np *networkPolicies) Update(ctx context.Context, policy string, options Ne
 	if _, err := np.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return np.Read(ctx, policy)
+
+	entities, err := np.list(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, entity := range entities {
+		if entity.Name == policy {
+			return entity, nil
+		}
+	}
+	return nil, ErrNoRecord
 }
 
 // Create a new network policy with the given options.
@@ -155,11 +165,20 @@ func (np *networkPolicies) Create(ctx context.Context, options NetworkPolicyCrea
 	if _, err := np.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return np.Read(ctx, options.Name)
+
+	entities, err := np.list(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, entity := range entities {
+		if entity.Name == options.Name {
+			return entity, nil
+		}
+	}
+	return nil, ErrNoRecord
 }
 
-// List all the network policies.
-func (np *networkPolicies) List(ctx context.Context) ([]*NetworkPolicy, error) {
+func (np *networkPolicies) list(ctx context.Context) ([]*NetworkPolicy, error) {
 	sql := fmt.Sprintf("SHOW %s", ResourceNetworkPolicies)
 	rows, err := np.client.query(ctx, sql)
 	if err != nil {
@@ -192,6 +211,11 @@ func (np *networkPolicies) List(ctx context.Context) ([]*NetworkPolicy, error) {
 	return entities, nil
 }
 
+// List all the network policies.
+func (np *networkPolicies) List(ctx context.Context) ([]*NetworkPolicy, error) {
+	return np.list(ctx)
+}
+
 func (np *networkPolicies) desc(ctx context.Context, policy string) ([]*networkPolicyDesc, error) {
 	sql := fmt.Sprintf("DESC %s %s", ResourceNetworkPolicy, policy)
 	rows, err := np.client.query(ctx, sql)
@@ -213,7 +237,7 @@ func (np *networkPolicies) desc(ctx context.Context, policy string) ([]*networkP
 
 // Read a network policy by its name.
 func (np *networkPolicies) Read(ctx context.Context, policy string) (*NetworkPolicy, error) {
-	entities, err := np.List(ctx)
+	entities, err := np.list(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -159,6 +159,24 @@ func (c *Client) rename(ctx context.Context, resource string, old string, new st
 	return nil
 }
 
+// clone a resource
+func (c *Client) clone(ctx context.Context, resource string, source string, dest string) error {
+	sql := fmt.Sprintf("CREATE %s %s CLONE %s", resource, dest, source)
+	if _, err := c.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
+// use a resource
+func (c *Client) use(ctx context.Context, resource string, name string) error {
+	sql := fmt.Sprintf("USE %s %s", resource, name)
+	if _, err := c.exec(ctx, sql); err != nil {
+		return fmt.Errorf("db exec: %w", err)
+	}
+	return nil
+}
+
 // read a resource
 func (c *Client) read(ctx context.Context, resources string, name string, v interface{}) error {
 	sql := fmt.Sprintf("SHOW %s LIKE '%s'", resources, name)

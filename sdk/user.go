@@ -262,7 +262,11 @@ func (u *users) Update(ctx context.Context, user string, options UserUpdateOptio
 	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return u.Read(ctx, user)
+	var entity userEntity
+	if err := u.client.read(ctx, ResourceUsers, user, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toUser(), nil
 }
 
 // Create a new user with the given options.
@@ -277,7 +281,11 @@ func (u *users) Create(ctx context.Context, options UserCreateOptions) (*User, e
 	if _, err := u.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return u.Read(ctx, options.Name)
+	var entity userEntity
+	if err := u.client.read(ctx, ResourceUsers, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toUser(), nil
 }
 
 // Delete an user by its name.

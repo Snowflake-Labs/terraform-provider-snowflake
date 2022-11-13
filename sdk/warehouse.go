@@ -267,7 +267,11 @@ func (w *warehouses) Create(ctx context.Context, options WarehouseCreateOptions)
 	if _, err := w.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return w.Read(ctx, options.Name)
+	var entity warehouseEntity
+	if err := w.client.read(ctx, ResourceWarehouses, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toWarehouse(), nil
 }
 
 // Read an warehouse by its name.
@@ -291,7 +295,11 @@ func (w *warehouses) Update(ctx context.Context, warehouse string, options Wareh
 	if _, err := w.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return w.Read(ctx, warehouse)
+	var entity warehouseEntity
+	if err := w.client.read(ctx, ResourceWarehouses, warehouse, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toWarehouse(), nil
 }
 
 // Delete a warehouse by its name.

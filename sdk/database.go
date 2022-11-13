@@ -29,6 +29,10 @@ type Databases interface {
 	Delete(ctx context.Context, database string) error
 	// Rename a database name.
 	Rename(ctx context.Context, old string, new string) error
+	// Create a copy of an existing database.
+	Clone(ctx context.Context, source string, dest string) error
+	// Use the active/current database for the session.
+	Use(ctx context.Context, database string) error
 }
 
 // databases implements Databases
@@ -154,7 +158,11 @@ func (d *databases) Create(ctx context.Context, options DatabaseCreateOptions) (
 	if _, err := d.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return d.Read(ctx, options.Name)
+	var entity databaseEntity
+	if err := d.client.read(ctx, ResourceDatabases, options.Name, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toDatabase(), nil
 }
 
 // Read a database by its name.
@@ -189,7 +197,11 @@ func (d *databases) Update(ctx context.Context, database string, options Databas
 	if _, err := d.client.exec(ctx, sql); err != nil {
 		return nil, fmt.Errorf("db exec: %w", err)
 	}
-	return d.Read(ctx, database)
+	var entity databaseEntity
+	if err := d.client.read(ctx, ResourceDatabases, database, &entity); err != nil {
+		return nil, err
+	}
+	return entity.toDatabase(), nil
 }
 
 // Delete a database by its name.
@@ -200,4 +212,14 @@ func (d *databases) Delete(ctx context.Context, database string) error {
 // Rename a database name.
 func (d *databases) Rename(ctx context.Context, old string, new string) error {
 	return d.client.rename(ctx, ResourceDatabase, old, new)
+}
+
+// Create a copy of an existing database.
+func (d *databases) Clone(ctx context.Context, source string, dest string) error {
+	return d.client.clone(ctx, ResourceDatabase, source, dest)
+}
+
+// Use the active/current database for the session.
+func (d *databases) Use(ctx context.Context, database string) error {
+	return d.client.use(ctx, ResourceDatabase, database)
 }
