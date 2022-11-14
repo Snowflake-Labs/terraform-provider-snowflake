@@ -32,6 +32,8 @@ type Warehouses interface {
 	Delete(ctx context.Context, warehouse string) error
 	// Rename a warehouse name.
 	Rename(ctx context.Context, old string, new string) error
+	// Use the active/current warehouse for the session.
+	Use(ctx context.Context, warehouse string) error
 }
 
 // warehouses implements Warehouses
@@ -144,6 +146,9 @@ func (w *warehouseEntity) toWarehouse() *Warehouse {
 }
 
 type WarehouseProperties struct {
+	// Optional: Specifies the warehouse type.
+	WarehouseType *string
+
 	// Optional: Specifies the size of the virtual warehouse.
 	WarehouseSize *string
 
@@ -231,6 +236,9 @@ func (w *warehouses) List(ctx context.Context, options WarehouseListOptions) ([]
 
 func (*warehouses) formatWarehouseProperties(properties *WarehouseProperties) string {
 	var s string
+	if properties.WarehouseType != nil {
+		s = s + " warehouse_type='" + *properties.WarehouseType + "'"
+	}
 	if properties.WarehouseSize != nil {
 		s = s + " warehouse_size='" + *properties.WarehouseSize + "'"
 	}
@@ -310,4 +318,9 @@ func (w *warehouses) Delete(ctx context.Context, warehouse string) error {
 // Rename a warehouse name.
 func (w *warehouses) Rename(ctx context.Context, old string, new string) error {
 	return w.client.rename(ctx, ResourceWarehouse, old, new)
+}
+
+// Use the active/current warehouse for the session.
+func (w *warehouses) Use(ctx context.Context, warehouse string) error {
+	return w.client.use(ctx, ResourceWarehouse, warehouse)
 }

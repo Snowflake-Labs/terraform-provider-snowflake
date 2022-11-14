@@ -9,6 +9,7 @@ func (ts *testSuite) createWarehouse() (*Warehouse, error) {
 	options := WarehouseCreateOptions{
 		Name: "WAREHOUSE_TEST",
 		WarehouseProperties: &WarehouseProperties{
+			WarehouseType:   String("STANDARD"),
 			WarehouseSize:   String("SMALL"),
 			MaxClusterCount: Int32(5),
 			MinClusterCount: Int32(5),
@@ -86,4 +87,12 @@ func (ts *testSuite) TestRenameWarehouse() {
 	newWarehouse := "NEW_WAREHOUSE_TEST"
 	ts.NoError(ts.client.Warehouses.Rename(context.Background(), warehouse.Name, newWarehouse))
 	ts.NoError(ts.client.Warehouses.Delete(context.Background(), newWarehouse))
+}
+
+func (ts *testSuite) TestUseWarehouse() {
+	warehouse, err := ts.createWarehouse()
+	ts.NoError(err)
+
+	ts.NoError(ts.client.Warehouses.Use(context.Background(), warehouse.Name))
+	ts.NoError(ts.client.Warehouses.Delete(context.Background(), warehouse.Name))
 }
