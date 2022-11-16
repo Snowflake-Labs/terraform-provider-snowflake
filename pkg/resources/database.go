@@ -34,7 +34,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"data_retention_time_in_days": {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Computed: true,
+		Description: "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database, schema, or table. For more information, see Understanding & Using Time Travel."
 	},
 	"from_share": {
 		Type:          schema.TypeMap,
