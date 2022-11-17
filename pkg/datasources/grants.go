@@ -357,7 +357,10 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("grants", flattenGrants(grantDetails))
+	err = d.Set("grants", flattenGrants(grantDetails))
+	if err != nil {
+		return err
+	}
 	d.SetId("grants")
 	return nil
 }
