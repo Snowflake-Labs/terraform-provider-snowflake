@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.52.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.51.0...v0.52.0) (2022-11-17)
+
+
+### Features
+
+* **ci:** golangci lint adding thelper, wastedassign and whitespace ([#1356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1356)) ([0079bee](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0079bee139f9cbaaa4b26c2a92a56c37a9366d68))
+* grants datasource ([#1377](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1377)) ([0daafa0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0daafa09cb0c53e9a51e42a9574533ebd81135b4))
+
+
+### Misc
+
+* **docs:** terraform fmt ([#1358](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1358)) ([0a2fe08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0a2fe089fd777fc44583ee3616a726840a13d984))
+
+
+### BugFixes
+
+* **ci:** remove unnecessary type conversions ([#1357](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1357)) ([1d2b455](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1d2b4550902767baad67f88df42d773b76b952b8))
+* Improve table constraint docs ([#1355](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1355)) ([7c650bd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7c650bd601662ed71aa06f5f71eddbf9dedb95bd))
+* test modules in acceptance test for warehouse ([#1359](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1359)) ([2d8f2b6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2d8f2b6ec0564bbbf577f8efaf9b2d8103198b22))
+* update id serialization ([#1362](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1362)) ([4d08a8c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4d08a8cd4058df12d536739965efed776ec7f364))
+
 ## [0.51.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.50.0...v0.51.0) (2022-11-07)
 
 
