@@ -288,6 +288,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_role":                               datasources.Role(),
 		"snowflake_roles":                              datasources.Roles(),
 		"snowflake_users":                              datasources.Users(),
+		"snowflake_grants":                             datasources.Grants(),
 	}
 
 	return dataSources
