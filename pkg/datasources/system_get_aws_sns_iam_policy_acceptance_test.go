@@ -3,18 +3,8 @@ package datasources_test
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// FIXME refactor to testhelpers.
-func providers() map[string]*schema.Provider {
-	p := provider.Provider()
-	return map[string]*schema.Provider{
-		"snowflake": p,
-	}
-}
 
 func TestAcc_SystemGetAWSSNSIAMPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
