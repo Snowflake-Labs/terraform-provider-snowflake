@@ -35,3 +35,9 @@ linters:
     - gofmt
     # gofumpt: Gofumpt checks whether code was gofumpt-ed.
     - gofumpt
+    # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers
+    - thelper
+    # wastedassign: wastedassign finds wasted assignment statements.
+    - wastedassign
+    # whitespace: Tool for detection of leading and trailing whitespace
+    - whitespace
