@@ -31,6 +31,8 @@ linters:
     - typecheck
 
     # not default
+    # unconvert: Remove unnecessary type conversions
+    - unconvert
     # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
     - gofmt
     # gofumpt: Gofumpt checks whether code was gofumpt-ed.

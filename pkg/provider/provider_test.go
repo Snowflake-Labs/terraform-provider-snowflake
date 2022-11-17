@@ -218,7 +218,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 // NewTestClient returns *http.Client with Transport replaced to avoid making real calls.
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: fn,
 	}
 }
 
@@ -282,7 +282,7 @@ func TestGetOauthAccessToken(t *testing.T) {
 				t.Errorf("Response body was not able to be parsed %v", err)
 			}
 			var result provider.Result
-			unmarshalErr := json.Unmarshal([]byte(got), &result)
+			unmarshalErr := json.Unmarshal(got, &result)
 			if unmarshalErr != nil {
 				return
 			}
