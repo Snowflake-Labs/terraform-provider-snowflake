@@ -18,7 +18,7 @@ resource "snowflake_role_grants" "grants" {
 }
 
 resource "snowflake_role_ownership_grant" "grant" {
-  on_role_name = snowflake_role.role.name
-  to_role_name = snowflake_role.other_role.name
+  on_role_name   = snowflake_role.role.name
+  to_role_name   = snowflake_role.other_role.name
   current_grants = "COPY"
 }
