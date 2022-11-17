@@ -13,7 +13,7 @@ var grantsSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		Optional:      true,
 		ConflictsWith: []string{"grants_of", "grants_to", "future_grants_in", "future_grants_to"},
-		Description:   "Lists all priviliges that have been granted on an object or account",
+		Description:   "Lists all privileges that have been granted on an object or account",
 		ExactlyOneOf:  []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -21,7 +21,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Type:          schema.TypeString,
 					Optional:      true,
 					RequiredWith:  []string{"grants_on.0.object_type"},
-					Description:   "Name of object to list priviliges on",
+					Description:   "Name of object to list privileges on",
 					ConflictsWith: []string{"grants_on.0.account"},
 					AtLeastOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
 				},
@@ -29,13 +29,13 @@ var grantsSchema = map[string]*schema.Schema{
 					Type:          schema.TypeString,
 					Optional:      true,
 					RequiredWith:  []string{"grants_on.0.object_name"},
-					Description:   "Type of object to list priviliges on.",
+					Description:   "Type of object to list privileges on.",
 					ConflictsWith: []string{"grants_on.0.account"},
 				},
 				"account": {
 					Type:          schema.TypeBool,
 					Optional:      true,
-					Description:   "Object hierarchy to list priviliges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.",
+					Description:   "Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.",
 					ConflictsWith: []string{"grants_on.0.object_name", "grants_on.0.object_type"},
 					AtLeastOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
 				},
@@ -47,13 +47,13 @@ var grantsSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		Optional:      true,
 		ConflictsWith: []string{"grants_on", "grants_of", "future_grants_in", "future_grants_to"},
-		Description:   "Lists all priviliges granted to the object",
+		Description:   "Lists all privileges granted to the object",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all priviliges and roles granted to the role",
+					Description: "Lists all privileges and roles granted to the role",
 					ConflictsWith: []string{
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -81,7 +81,7 @@ var grantsSchema = map[string]*schema.Schema{
 				"share": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all the priviliges granted to the share",
+					Description: "Lists all the privileges granted to the share",
 					ConflictsWith: []string{
 						"grants_to.0.role",
 						"grants_to.0.user",
@@ -135,7 +135,7 @@ var grantsSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		Optional:      true,
 		ConflictsWith: []string{"grants_on", "grants_of", "grants_to", "future_grants_to"},
-		Description:   "Lists all priviliges on new (i.e. future) objects",
+		Description:   "Lists all privileges on new (i.e. future) objects",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"database": {
@@ -167,7 +167,7 @@ var grantsSchema = map[string]*schema.Schema{
 							"schema_name": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The name of the schema to list all priviliges of new (ie. future) objects granted to",
+								Description: "The name of the schema to list all privileges of new (ie. future) objects granted to",
 							},
 							"database_name": {
 								Type:        schema.TypeString,
@@ -185,7 +185,7 @@ var grantsSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		Optional:      true,
 		ConflictsWith: []string{"grants_on", "grants_of", "grants_to", "future_grants_in"},
-		Description:   "Lists all priviliges granted to the object on new (i.e. future) objects",
+		Description:   "Lists all privileges granted to the object on new (i.e. future) objects",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"role": {

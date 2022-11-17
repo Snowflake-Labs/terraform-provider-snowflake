@@ -72,11 +72,11 @@ data "snowflake_grants" "grants7" {
 
 ### Optional
 
-- `future_grants_in` (Block List, Max: 1) Lists all priviliges on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_in))
-- `future_grants_to` (Block List, Max: 1) Lists all priviliges granted to the object on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_to))
+- `future_grants_in` (Block List, Max: 1) Lists all privileges on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_in))
+- `future_grants_to` (Block List, Max: 1) Lists all privileges granted to the object on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_to))
 - `grants_of` (Block List, Max: 1) Lists all objects to which the given object has been granted (see [below for nested schema](#nestedblock--grants_of))
-- `grants_on` (Block List, Max: 1) Lists all priviliges that have been granted on an object or account (see [below for nested schema](#nestedblock--grants_on))
-- `grants_to` (Block List, Max: 1) Lists all priviliges granted to the object (see [below for nested schema](#nestedblock--grants_to))
+- `grants_on` (Block List, Max: 1) Lists all privileges that have been granted on an object or account (see [below for nested schema](#nestedblock--grants_on))
+- `grants_to` (Block List, Max: 1) Lists all privileges granted to the object (see [below for nested schema](#nestedblock--grants_to))
 
 ### Read-Only
 
@@ -96,7 +96,7 @@ Optional:
 
 Required:
 
-- `schema_name` (String) The name of the schema to list all priviliges of new (ie. future) objects granted to
+- `schema_name` (String) The name of the schema to list all privileges of new (ie. future) objects granted to
 
 Optional:
 
@@ -126,9 +126,9 @@ Optional:
 
 Optional:
 
-- `account` (Boolean) Object hierarchy to list priviliges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.
-- `object_name` (String) Name of object to list priviliges on
-- `object_type` (String) Type of object to list priviliges on.
+- `account` (Boolean) Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.
+- `object_name` (String) Name of object to list privileges on
+- `object_type` (String) Type of object to list privileges on.
 
 
 <a id="nestedblock--grants_to"></a>
@@ -136,8 +136,8 @@ Optional:
 
 Optional:
 
-- `role` (String) Lists all priviliges and roles granted to the role
-- `share` (String) Lists all the priviliges granted to the share
+- `role` (String) Lists all privileges and roles granted to the role
+- `share` (String) Lists all the privileges granted to the share
 - `user` (String) Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed
 
 
