@@ -14,7 +14,7 @@ description: |-
 
 ```terraform
 data "snowflake_database" "this" {
-    name = "DEMO_DB"
+  name = "DEMO_DB"
 }
 ```
 

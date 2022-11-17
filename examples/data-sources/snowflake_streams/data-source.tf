@@ -1,4 +1,4 @@
 data "snowflake_streams" "current" {
-    database = "MYDB"
-    schema   = "MYSCHEMA"
+  database = "MYDB"
+  schema   = "MYSCHEMA"
 }

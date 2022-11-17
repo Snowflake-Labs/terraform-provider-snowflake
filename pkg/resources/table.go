@@ -601,14 +601,14 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTable implements schema.UpdateFunc.
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
-	tableID, err := tableIDFromString(d.Id())
+	tid, err := tableIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := tableID.DatabaseName
-	schema := tableID.SchemaName
-	tableName := tableID.TableName
+	dbName := tid.DatabaseName
+	schema := tid.SchemaName
+	tableName := tid.TableName
 
 	builder := snowflake.Table(tableName, dbName, schema)
 
@@ -619,7 +619,16 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating table name on %v", d.Id())
 		}
-		d.SetId(fmt.Sprintf("%v|%v|%v", dbName, schema, name.(string)))
+		tableID := &tableID{
+			DatabaseName: dbName,
+			SchemaName:   schema,
+			TableName:    name.(string),
+		}
+		dataIDInput, err := tableID.String()
+		if err != nil {
+			return err
+		}
+		d.SetId(dataIDInput)
 	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment")

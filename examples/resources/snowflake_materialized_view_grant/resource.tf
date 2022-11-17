@@ -4,7 +4,7 @@ resource "snowflake_materialized_view_grant" "grant" {
   materialized_view_name = "materialized_view"
 
   privilege = "SELECT"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   shares = ["share1", "share2"]
 

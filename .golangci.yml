@@ -31,6 +31,8 @@ linters:
     - typecheck
 
     # not default
+    # unconvert: Remove unnecessary type conversions
+    - unconvert
     # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
     - gofmt
     # gofumpt: Gofumpt checks whether code was gofumpt-ed.
@@ -40,3 +42,9 @@ linters:
     # errorlint is a linter for that can be used to find code that will cause problems
     # with the error wrapping scheme introduced in Go 1.13.
     - errorlint
+    # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers
+    - thelper
+    # wastedassign: wastedassign finds wasted assignment statements.
+    - wastedassign
+    # whitespace: Tool for detection of leading and trailing whitespace
+    - whitespace

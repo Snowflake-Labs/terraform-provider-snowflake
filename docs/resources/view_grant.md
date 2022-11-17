@@ -19,7 +19,7 @@ resource "snowflake_view_grant" "grant" {
   view_name     = "view"
 
   privilege = "SELECT"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   shares = ["share1", "share2"]
 

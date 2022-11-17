@@ -31,8 +31,8 @@ provider "snowflake" {
   oauth_redirect_url     = "..."
 
   // optional
-  role = "..."
-  host = "..."
+  role      = "..."
+  host      = "..."
   warehouse = "..."
 }
 ```

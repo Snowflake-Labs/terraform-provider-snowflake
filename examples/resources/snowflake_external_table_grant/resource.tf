@@ -4,7 +4,7 @@ resource "snowflake_external_table_grant" "grant" {
   external_table_name = "external_table"
 
   privilege = "SELECT"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   shares = ["share1", "share2"]
 

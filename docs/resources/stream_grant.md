@@ -19,7 +19,7 @@ resource "snowflake_stream_grant" "grant" {
   stream_name   = "view"
 
   privilege = "SELECT"
-  roles = ["role1", "role2"]
+  roles     = ["role1", "role2"]
 
   on_future         = false
   with_grant_option = false

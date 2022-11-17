@@ -21,7 +21,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 	"type": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "Type of constraint",
+		Description:  "Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', 'FOREIGN KEY', or 'NOT NULL'",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"UNIQUE", "PRIMARY KEY", "FOREIGN KEY", "NOT NULL"}, false),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {

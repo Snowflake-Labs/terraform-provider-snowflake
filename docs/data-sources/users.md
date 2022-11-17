@@ -14,7 +14,7 @@ description: |-
 
 ```terraform
 data "snowflake_users" "current" {
-    pattern = "user1"
+  pattern = "user1"
 }
 ```
 

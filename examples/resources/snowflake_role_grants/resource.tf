@@ -18,14 +18,14 @@ resource "snowflake_role" "other_role" {
 }
 
 resource "snowflake_role_grants" "grants" {
-  role_name = "${snowflake_role.role.name}"
+  role_name = snowflake_role.role.name
 
   roles = [
-    "${snowflake_role.other_role.name}",
+    snowflake_role.other_role.name,
   ]
 
   users = [
-    "${snowflake_user.user.name}",
-    "${snowflake_user.user2.name}",
+    snowflake_user.user.name,
+    snowflake_user.user2.name,
   ]
 }
