@@ -9,15 +9,15 @@ import (
 func TestTagCreate(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.QualifiedName(), `"test"`)
+	r.Equal(`"test"`, o.QualifiedName())
 
 	o.WithDB("db")
-	r.Equal(o.QualifiedName(), `"db"."test"`)
+	r.Equal(`"db"."test"`, o.QualifiedName())
 
 	o.WithSchema("schema")
-	r.Equal(o.QualifiedName(), `"db"."schema"."test"`)
+	r.Equal(`"db"."schema"."test"`, o.QualifiedName())
 
-	r.Equal(o.Create(), `CREATE TAG "db"."schema"."test"`)
+	r.Equal(`CREATE TAG "db"."schema"."test"`, o.Create())
 
 	allowedValues := []string{"marketing", "finance"}
 	o.WithAllowedValues(allowedValues)
@@ -29,7 +29,7 @@ func TestTagCreate(t *testing.T) {
 func TestTagRename(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.Rename("bob"), `ALTER TAG "test" RENAME TO "bob"`)
+	r.Equal(`ALTER TAG "test" RENAME TO "bob"`, o.Rename("bob"))
 }
 
 func TestTagChangeComment(t *testing.T) {
@@ -41,65 +41,65 @@ func TestTagChangeComment(t *testing.T) {
 func TestTagRemoveComment(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.RemoveComment(), `ALTER TAG "test" UNSET COMMENT`)
+	r.Equal(`ALTER TAG "test" UNSET COMMENT`, o.RemoveComment())
 }
 
 func TestTagAddAllowedValues(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
 	avs := []string{"foo", "bar"}
-	r.Equal(o.AddAllowedValues(avs), `ALTER TAG "test" ADD ALLOWED_VALUES 'foo', 'bar'`)
+	r.Equal(`ALTER TAG "test" ADD ALLOWED_VALUES 'foo', 'bar'`, o.AddAllowedValues(avs))
 }
 
 func TestTagDropAllowedValues(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
 	avs := []string{"foo"}
-	r.Equal(o.DropAllowedValues(avs), `ALTER TAG "test" DROP ALLOWED_VALUES 'foo'`)
+	r.Equal(`ALTER TAG "test" DROP ALLOWED_VALUES 'foo'`, o.DropAllowedValues(avs))
 }
 
 func TestTagRemoveAllowedValues(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.RemoveAllowedValues(), `ALTER TAG "test" UNSET ALLOWED_VALUES`)
+	r.Equal(`ALTER TAG "test" UNSET ALLOWED_VALUES`, o.RemoveAllowedValues())
 }
 
 func TestTagDrop(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.Drop(), `DROP TAG "test"`)
+	r.Equal(`DROP TAG "test"`, o.Drop())
 }
 
 func TestTagUndrop(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.Undrop(), `UNDROP TAG "test"`)
+	r.Equal(`UNDROP TAG "test"`, o.Undrop())
 }
 
 func TestTagShow(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test'`)
+	r.Equal(`SHOW TAGS LIKE 'test'`, o.Show())
 
 	o.WithDB("db")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN DATABASE "db"`)
+	r.Equal(`SHOW TAGS LIKE 'test' IN DATABASE "db"`, o.Show())
 
 	o.WithSchema("schema")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`)
+	r.Equal(`SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`, o.Show())
 }
 
 func TestTagShowAttachedPolicy(t *testing.T) {
 	r := require.New(t)
 	o := Tag("test")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test'`)
+	r.Equal(`SHOW TAGS LIKE 'test'`, o.Show())
 
 	o.WithDB("db")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN DATABASE "db"`)
+	r.Equal(`SHOW TAGS LIKE 'test' IN DATABASE "db"`, o.Show())
 
 	o.WithSchema("schema")
-	r.Equal(o.Show(), `SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`)
+	r.Equal(`SHOW TAGS LIKE 'test' IN SCHEMA "db"."schema"`, o.Show())
 
 	mP := MaskingPolicy("policy", "db2", "schema2")
 	o.WithMaskingPolicy(mP)
-	r.Equal(o.ShowAttachedPolicy(), `SELECT * from table ("db".information_schema.policy_references(ref_entity_name => '"db"."schema"."test"', ref_entity_domain => 'TAG')) where policy_db='db2' and policy_schema='schema2' and policy_name='policy'`)
+	r.Equal(`SELECT * from table ("db".information_schema.policy_references(ref_entity_name => '"db"."schema"."test"', ref_entity_domain => 'TAG')) where policy_db='db2' and policy_schema='schema2' and policy_name='policy'`, o.ShowAttachedPolicy())
 }

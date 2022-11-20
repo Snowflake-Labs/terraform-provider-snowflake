@@ -10,7 +10,7 @@ import (
 func TestFutureSchemaGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureSchemaGrant("test_db")
-	r.Equal(fvg.Name(), "test_db")
+	r.Equal("test_db", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -25,7 +25,7 @@ func TestFutureSchemaGrant(t *testing.T) {
 func TestFutureTableGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureTableGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -38,7 +38,7 @@ func TestFutureTableGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureTableGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -53,7 +53,7 @@ func TestFutureTableGrant(t *testing.T) {
 func TestFutureMaterializedViewGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureMaterializedViewGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -66,7 +66,7 @@ func TestFutureMaterializedViewGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureMaterializedViewGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -81,7 +81,7 @@ func TestFutureMaterializedViewGrant(t *testing.T) {
 func TestFutureViewGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureViewGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -94,7 +94,7 @@ func TestFutureViewGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureViewGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -109,7 +109,7 @@ func TestFutureViewGrant(t *testing.T) {
 func TestFutureStageGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureStageGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -122,7 +122,7 @@ func TestFutureStageGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureStageGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -152,7 +152,7 @@ func TestShowFutureGrantsInSchema(t *testing.T) {
 func TestFutureExternalTableGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureExternalTableGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -165,7 +165,7 @@ func TestFutureExternalTableGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureExternalTableGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
@@ -180,7 +180,7 @@ func TestFutureExternalTableGrant(t *testing.T) {
 func TestFutureFileFormatGrant(t *testing.T) {
 	r := require.New(t)
 	fvg := snowflake.FutureFileFormatGrant("test_db", "PUBLIC")
-	r.Equal(fvg.Name(), "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
 
 	s := fvg.Show()
 	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
@@ -193,7 +193,7 @@ func TestFutureFileFormatGrant(t *testing.T) {
 
 	b := require.New(t)
 	fvgd := snowflake.FutureFileFormatGrant("test_db", "")
-	b.Equal(fvgd.Name(), "test_db")
+	b.Equal("test_db", fvgd.Name())
 
 	s = fvgd.Show()
 	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)

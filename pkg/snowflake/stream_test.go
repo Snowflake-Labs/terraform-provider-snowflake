@@ -11,44 +11,44 @@ func TestStreamCreate(t *testing.T) {
 	s := Stream("test_stream", "test_db", "test_schema")
 
 	s.WithOnTable("test_db", "test_schema", "test_target_table")
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`, s.Create())
 
 	s.WithComment("Test Comment")
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`, s.Create())
 
 	s.WithShowInitialRows(true)
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = true`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = true`, s.Create())
 
 	s.WithAppendOnly(true)
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = false SHOW_INITIAL_ROWS = true`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = false SHOW_INITIAL_ROWS = true`, s.Create())
 
 	s.WithInsertOnly(true)
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`, s.Create())
 
 	s.WithExternalTable(true)
-	r.Equal(s.Create(), `CREATE STREAM "test_db"."test_schema"."test_stream" ON EXTERNAL TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON EXTERNAL TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`, s.Create())
 }
 
 func TestStreamChangeComment(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
-	r.Equal(s.ChangeComment("new stream comment"), `ALTER STREAM "test_db"."test_schema"."test_stream" SET COMMENT = 'new stream comment'`)
+	r.Equal(`ALTER STREAM "test_db"."test_schema"."test_stream" SET COMMENT = 'new stream comment'`, s.ChangeComment("new stream comment"))
 }
 
 func TestStreamRemoveComment(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
-	r.Equal(s.RemoveComment(), `ALTER STREAM "test_db"."test_schema"."test_stream" UNSET COMMENT`)
+	r.Equal(`ALTER STREAM "test_db"."test_schema"."test_stream" UNSET COMMENT`, s.RemoveComment())
 }
 
 func TestStreamDrop(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
-	r.Equal(s.Drop(), `DROP STREAM "test_db"."test_schema"."test_stream"`)
+	r.Equal(`DROP STREAM "test_db"."test_schema"."test_stream"`, s.Drop())
 }
 
 func TestStreamShow(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
-	r.Equal(s.Show(), `SHOW STREAMS LIKE 'test_stream' IN SCHEMA "test_db"."test_schema"`)
+	r.Equal(`SHOW STREAMS LIKE 'test_stream' IN SCHEMA "test_db"."test_schema"`, s.Show())
 }
