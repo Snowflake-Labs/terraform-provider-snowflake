@@ -12,7 +12,7 @@ func TestStringFromTaskID(t *testing.T) {
 	task := taskID{DatabaseName: "test_db", SchemaName: "test_schema", TaskName: "test_task"}
 	id, err := task.String()
 	r.NoError(err)
-	r.Equal(id, "test_db|test_schema|test_task")
+	r.Equal("test_db|test_schema|test_task", id)
 }
 
 func TestTaskIDFromString(t *testing.T) {
