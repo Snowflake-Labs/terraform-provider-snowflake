@@ -50,12 +50,23 @@ func (tb *TagAssociationBuilder) GetTagDatabase() string {
 
 // GetTagName returns the value of the tag name of TagAssociationBuilder.
 func (tb *TagAssociationBuilder) GetTagName() string {
-	return tb.schemaName
+	return tb.tagName
 }
 
 // GetTagSchema returns the value of the tag schema of TagAssociationBuilder.
 func (tb *TagAssociationBuilder) GetTagSchema() string {
 	return tb.schemaName
+}
+
+func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
+	if strings.ToUpper(tb.objectType) != "COLUMN" {
+		return tb.objectIdentifier, ""
+	} else {
+		splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
+		tableName := strings.ReplaceAll(splObjIdentifier[1], "\"", "")
+		columnName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
+		return fmt.Sprintf(`"%s"."%s"."%s"`, tb.databaseName, tb.schemaName, tableName), columnName
+	}
 }
 
 // TagAssociation returns a pointer to a Builder that abstracts the DDL operations for a tag sssociation.
@@ -77,12 +88,9 @@ func TagAssociation(tagID string) *TagAssociationBuilder {
 
 // Create returns the SQL query that will set the tag on an object.
 func (tb *TagAssociationBuilder) Create() string {
-	if tb.objectType == "COLUMN" {
-		splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
-		columnName := splObjIdentifier[len(splObjIdentifier)-1]
-		tableNameIdentifierSlice := splObjIdentifier[:len(splObjIdentifier)-1]
-		tableNameIdentifier := strings.Join(tableNameIdentifierSlice, ".")
-		return fmt.Sprintf(`ALTER TABLE %v ALTER COLUMN %v SET TAG "%v"."%v"."%v" = '%v'`, tableNameIdentifier, columnName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
+	if strings.ToUpper(tb.objectType) == "COLUMN" {
+		tableName, columnName := tb.GetTableAndColumnName()
+		return fmt.Sprintf(`ALTER TABLE %v ALTER COLUMN %v SET TAG "%v"."%v"."%v" = '%v'`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 	} else {
 		return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 	}
@@ -90,12 +98,9 @@ func (tb *TagAssociationBuilder) Create() string {
 
 // Drop returns the SQL query that will remove a tag from an object.
 func (tb *TagAssociationBuilder) Drop() string {
-	if tb.objectType == "COLUMN" {
-		splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
-		columnName := splObjIdentifier[len(splObjIdentifier)-1]
-		tableNameIdentifierSlice := splObjIdentifier[:len(splObjIdentifier)-1]
-		tableNameIdentifier := strings.Join(tableNameIdentifierSlice, ".")
-		return fmt.Sprintf(`ALTER TABLE %v ALTER COLUMN %v UNSET TAG "%v"."%v"."%v"`, tableNameIdentifier, columnName, tb.databaseName, tb.schemaName, tb.tagName)
+	if strings.ToUpper(tb.objectType) == "COLUMN" {
+		tableName, columnName := tb.GetTableAndColumnName()
+		return fmt.Sprintf(`ALTER TABLE %v ALTER COLUMN %v UNSET TAG "%v"."%v"."%v"`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName)
 	} else {
 		return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName)
 	}
