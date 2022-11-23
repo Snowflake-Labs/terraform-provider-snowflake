@@ -275,7 +275,7 @@ func ShowDatabasesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 		return nil, nil
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedDatabase))
 	for _, v := range failoverGroupAllowedDatabase {
 		result = append(result, v.Name.String)
 	}
@@ -302,7 +302,7 @@ func ShowSharesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 		return nil, nil
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedShares))
 	for _, v := range failoverGroupAllowedShares {
 		result = append(result, v.Name.String)
 	}
