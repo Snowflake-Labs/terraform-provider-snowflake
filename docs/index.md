@@ -46,8 +46,8 @@ provider "snowflake" {
 
 ### Required
 
-- `account` (String) The Snowflake [account identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). The [preferred](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-1-preferred-account-name-in-your-organization) format uses `<org_name>-<account_name>` as the value. If the `account_locator` is used as the value, then the `region` is required to complete the [legacy](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) format. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable.
-- `username` (String) Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable.
+- `account` (String) The Snowflake [account identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). The [preferred](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-1-preferred-account-name-in-your-organization) format uses `<org_name>-<account_name>` as the value. If the `account_locator` is used as the value, then the `region` is required to complete the [legacy](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) format. Can be sourced from the `SNOWFLAKE_ACCOUNT` environment variable.
+- `username` (String) Username for username+password authentication. Can be sourced from the `SNOWFLAKE_USER` environment variable.
 
 ### Optional
 
@@ -59,14 +59,14 @@ provider "snowflake" {
 - `oauth_endpoint` (String, Sensitive) Required when `oauth_refresh_token` is used. Can be sourced from `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
 - `oauth_redirect_url` (String, Sensitive) Required when `oauth_refresh_token` is used. Can be sourced from `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
 - `oauth_refresh_token` (String, Sensitive) Token for use with OAuth. Setup and generation of the token is left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment variable.
-- `password` (String, Sensitive) Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.
+- `password` (String, Sensitive) Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can be sourced from `SNOWFLAKE_PASSWORD` environment variable.
 - `port` (Number) Support custom port values to snowflake go driver for use with privatelink. Can be sourced from `SNOWFLAKE_PORT` environment variable.
-- `private_key` (String, Sensitive) Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY` environment variable.
+- `private_key` (String, Sensitive) Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY` environment variable.
 - `private_key_passphrase` (String, Sensitive) Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc
-- `private_key_path` (String, Sensitive) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
+- `private_key_path` (String, Sensitive) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 - `protocol` (String) Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.
-- `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be source from the `SNOWFLAKE_REGION` environment variable.
-- `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
+- `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.
+- `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.
 - `warehouse` (String) Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.
 
 ## Authentication
