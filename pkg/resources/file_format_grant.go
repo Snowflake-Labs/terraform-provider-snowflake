@@ -75,7 +75,7 @@ func FileFormatGrant() *TerraformGrantResource {
 			Create: CreateFileFormatGrant,
 			Read:   ReadFileFormatGrant,
 			Delete: DeleteFileFormatGrant,
-			Update: UpdateFileFormat,
+			Update: UpdateFileFormatGrant,
 
 			Schema: fileFormatGrantSchema,
 			Importer: &schema.ResourceImporter{
