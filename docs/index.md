@@ -14,11 +14,10 @@ Coverage is focused on part of Snowflake related to access control.
 ```terraform
 provider "snowflake" {
   // required
+  account  = "..." # the Snowflake account identifier
   username = "..."
-  account  = "..."
-  region   = "..."
 
-  // optional, at exactly one must be set
+  // optional, exactly one must be set
   password               = "..."
   oauth_access_token     = "..."
   private_key_path       = "..."
@@ -31,6 +30,7 @@ provider "snowflake" {
   oauth_redirect_url     = "..."
 
   // optional
+  region    = "..." # required if using legacy format for account identifier
   role      = "..."
   host      = "..."
   warehouse = "..."
@@ -46,7 +46,7 @@ provider "snowflake" {
 
 ### Required
 
-- `account` (String) The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable.
+- `account` (String) The Snowflake [account identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). The [preferred](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-1-preferred-account-name-in-your-organization) format uses `<org_name>-<account_name>` as the value. If the `account_locator` is used as the value, then the `region` is required to complete the [legacy](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) format. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable.
 - `username` (String) Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable.
 
 ### Optional
@@ -65,7 +65,7 @@ provider "snowflake" {
 - `private_key_passphrase` (String, Sensitive) Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc
 - `private_key_path` (String, Sensitive) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 - `protocol` (String) Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.
-- `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Can be source from the `SNOWFLAKE_REGION` environment variable.
+- `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be source from the `SNOWFLAKE_REGION` environment variable.
 - `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.
 - `warehouse` (String) Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.
 
@@ -79,7 +79,7 @@ The Snowflake provider support multiple ways to authenticate:
 * Browser Auth
 * Private Key
 
-In all cases account, username, and region are required.
+In all cases account and username are required.
 
 ### Keypair Authentication Environment Variables
 
