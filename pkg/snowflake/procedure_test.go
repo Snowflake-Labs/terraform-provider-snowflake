@@ -62,7 +62,7 @@ func TestProcedureDrop(t *testing.T) {
 	// Without arg
 	s := getProcedure(false)
 	stmnt, _ := s.Drop()
-	r.Equal(stmnt, `DROP PROCEDURE "test_db"."test_schema"."test_proc"()`)
+	r.Equal(`DROP PROCEDURE "test_db"."test_schema"."test_proc"()`, stmnt)
 
 	// With arg
 	ss := getProcedure(true)
@@ -74,7 +74,7 @@ func TestProcedureShow(t *testing.T) {
 	r := require.New(t)
 	s := getProcedure(false)
 	stmnt := s.Show()
-	r.Equal(stmnt, `SHOW PROCEDURES LIKE 'test_proc' IN SCHEMA "test_db"."test_schema"`)
+	r.Equal(`SHOW PROCEDURES LIKE 'test_proc' IN SCHEMA "test_db"."test_schema"`, stmnt)
 }
 
 func TestProcedureRename(t *testing.T) {
