@@ -80,6 +80,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	"api_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "The API key (also called a “subscription key”).",
 	},
 	"enabled": {
@@ -209,10 +210,6 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 				if err := d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
 					return err
 				}
-			}
-		case "API_KEY":
-			if err = d.Set("api_key", v.(string)); err != nil {
-				return err
 			}
 		case "API_AWS_IAM_USER_ARN":
 			if err := d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
