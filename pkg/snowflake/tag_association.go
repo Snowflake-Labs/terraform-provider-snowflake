@@ -96,8 +96,8 @@ func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
-	stmt := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
-	rows, err := db.Query(stmt)
+	rows, err := db.Query(`SELECT SYSTEM$GET_TAG('"?"."?"."?"', '?', '?') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`,
+		tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 	if err != nil {
 		return nil, err
 	}
@@ -110,5 +110,5 @@ func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociatio
 		log.Printf("[DEBUG] no tag associations found for tag %s", tb.tagName)
 		return nil, err
 	}
-	return tagAssociations, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return tagAssociations, errors.Wrapf(err, "unable to scan row")
 }
