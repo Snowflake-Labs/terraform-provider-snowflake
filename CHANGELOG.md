@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.53.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.52.0...v0.53.0) (2022-12-07)
+
+
+### Features
+
+* Added (missing) API Key to API Integration ([#1386](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1386)) ([500d6cf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/500d6cf21e983515a95b142d2745594684df33a0))
+* Adding warehouse type for snowpark optimized warehouses ([#1369](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1369)) ([b5bedf9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b5bedf90720fcc64cf3e01add659b077b34e5ae7))
+* **ci:** add depguard ([#1368](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1368)) ([1b29f05](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1b29f05d67a1d2fb7938f2c1c0b27071d47f13ab))
+* **ci:** add goimports and makezero ([#1378](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1378)) ([b0e6580](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b0e6580d1086cc9cc2000b201425aa049e684502))
+
+
+### BugFixes
+
+* errors package with new linter rules ([#1360](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1360)) ([b8df2d7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b8df2d737239d7c7b472fb3e031cccdeef832c2d))
+* File Format Update Grants ([#1397](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1397)) ([19933c0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/19933c04d7e9c10a08b5a06fe70a2f31fdd6c52e))
+* Go Expression Fix [#1384](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1384) ([#1403](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1403)) ([8936e1a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8936e1a0defc2b6d11812a88f486903a3ced31ac))
+* insecure go expression ([#1384](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1384)) ([a6c8e75](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a6c8e75e142f28ad6e2e9ef3ff4b2b877c101c90))
+* preallocate slice ([#1385](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1385)) ([9e972c0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9e972c06f7840d1b516766068bb92f7cb458c428))
+* remove shares from snowflake_stage_grant [#1285](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1285) ([#1361](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1361)) ([3167d9d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3167d9d402960cb2535a036aa373ad9e62d3ef18))
+* Removed Read for API_KEY ([#1402](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1402)) ([ddd00c5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ddd00c5b7e1862e2328dbdf599d157a443dce134))
+* stop file format failure when does not exist ([#1399](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1399)) ([3611ff5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3611ff5afe3e44c63cdec6ff8b191d0d88849426))
+* warehouses update issue ([#1405](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1405)) ([1c57462](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1c57462a78f6836ed67678a88b6529a4d75f6b9e))
+* wrong usage of testify Equal() function ([#1379](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1379)) ([476b330](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/476b330e69735a285322506d0656b7ea96e359bd))
+
 ## [0.52.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.51.0...v0.52.0) (2022-11-17)
 
 
