@@ -2,6 +2,8 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -9,7 +11,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
@@ -147,24 +148,22 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := cb.Statement()
-
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error creating resource monitor %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
 	}
 
 	d.SetId(name)
 
 	if d.Get("set_for_account").(bool) {
 		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
-			return errors.Wrapf(err, "error setting resource monitor %v on account", name)
+			return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
 		}
 	}
 
 	if v, ok := d.GetOk("warehouses"); ok {
 		for _, w := range v.(*schema.Set).List() {
 			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
-				return errors.Wrapf(err, "error setting resource monitor %v on warehouse %v", name, w.(string))
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, w.(string), err)
 			}
 		}
 	}
@@ -184,7 +183,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	rm, err := snowflake.ScanResourceMonitor(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] resource monitor (%s) not found", d.Id())
 		d.SetId("")
@@ -201,14 +200,12 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		"start_timestamp": rm.StartTime,
 		"end_timestamp":   rm.EndTime,
 	}
-	err = setDataFromNullStrings(d, nullStrings)
-	if err != nil {
+	if err := setDataFromNullStrings(d, nullStrings); err != nil {
 		return err
 	}
 
 	if len(rm.NotifyUsers.String) > 0 {
-		err = d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", "))
-		if err != nil {
+		if err := d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", ")); err != nil {
 			return err
 		}
 	}
@@ -219,9 +216,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-
-		err = d.Set("credit_quota", int(cqf))
-		if err != nil {
+		if err := d.Set("credit_quota", int(cqf)); err != nil {
 			return err
 		}
 	}
@@ -231,30 +226,26 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("suspend_triggers", sTrigs)
-	if err != nil {
+	if err := d.Set("suspend_triggers", sTrigs); err != nil {
 		return err
 	}
 	siTrigs, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
-	err = d.Set("suspend_immediate_triggers", siTrigs)
-	if err != nil {
+	if err := d.Set("suspend_immediate_triggers", siTrigs); err != nil {
 		return err
 	}
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
 	if err != nil {
 		return err
 	}
-	err = d.Set("notify_triggers", nTrigs)
-	if err != nil {
+	if err := d.Set("notify_triggers", nTrigs); err != nil {
 		return err
 	}
 
 	// Account level
-	err = d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT")
-	if err != nil {
+	if err := d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT"); err != nil {
 		return err
 	}
 
@@ -289,7 +280,7 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	for _, i := range ints {
 		myInt, err := strconv.Atoi(i[:len(i)-1])
 		if err != nil {
-			return out, errors.Wrapf(err, "failed to convert %v to integer", i)
+			return out, fmt.Errorf("failed to convert %v to integer err = %w", i, err)
 		}
 		out = append(out, myInt)
 	}
@@ -301,10 +292,8 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
 	stmt := snowflake.ResourceMonitor(d.Id()).Drop()
-
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting resource monitor %v", d.Id())
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error deleting resource monitor %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

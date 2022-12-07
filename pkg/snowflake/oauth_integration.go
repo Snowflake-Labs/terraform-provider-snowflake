@@ -2,10 +2,11 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // OAuthIntegration returns a pointer to a Builder that abstracts the DDL operations for an api integration.
@@ -36,11 +37,15 @@ type oauthIntegration struct {
 
 func ScanOAuthIntegration(row *sqlx.Row) (*oauthIntegration, error) {
 	r := &oauthIntegration{}
-	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
+	if err := row.StructScan(r); err != nil {
+		return nil, fmt.Errorf("error scanning struct err = %w", err)
+	}
+	return r, nil
 }
 
 func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
-	rows, err := db.Query("SHOW INTEGRATIONS")
+	stmt := "SHOW INTEGRATIONS"
+	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +53,12 @@ func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
 	defer rows.Close()
 
 	r := []oauthIntegration{}
-	err = sqlx.StructScan(rows, &r)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no integrations found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &r); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no integrations found")
+			return nil, nil
+		}
+		return r, fmt.Errorf("failed to scan row for %s err = %w", stmt, err)
 	}
 	return r, nil
 }

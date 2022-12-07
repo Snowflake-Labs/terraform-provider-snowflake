@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -62,7 +63,7 @@ func checkUserExists(db *sql.DB, name string) (bool, error) {
 	// First check if user exists
 	stmt := snowflake.User(name).Describe()
 	_, err := snowflake.Query(db, stmt)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] user (%s) not found", name)
 		return false, nil
 	}

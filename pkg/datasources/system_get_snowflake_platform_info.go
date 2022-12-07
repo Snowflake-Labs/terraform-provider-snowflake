@@ -2,12 +2,12 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var systemGetSnowflakePlatformInfoSchema = map[string]*schema.Schema{
@@ -43,31 +43,31 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		d.SetId("")
 		log.Println("[DEBUG] current_account failed to decode")
-		return errors.Wrap(err, "error current_account")
+		return fmt.Errorf("error current_account err = %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s.%s", acc.Account, acc.Region))
 
 	rawInfo, err := snowflake.ScanSnowflakePlatformInfo(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Println("[DEBUG] system_get_snowflake_platform_info not found")
-		return errors.Wrap(err, "error system_get_snowflake_platform_info")
+		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
 	info, err := rawInfo.GetStructuredConfig()
 	if err != nil {
 		log.Println("[DEBUG] system_get_snowflake_platform_info failed to decode")
 		d.SetId("")
-		return errors.Wrap(err, "error system_get_snowflake_platform_info")
+		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
-	if err = d.Set("azure_vnet_subnet_ids", info.AzureVnetSubnetIds); err != nil {
-		return errors.Wrap(err, "error system_get_snowflake_platform_info")
+	if err := d.Set("azure_vnet_subnet_ids", info.AzureVnetSubnetIds); err != nil {
+		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
-	if err = d.Set("aws_vpc_ids", info.AwsVpcIds); err != nil {
-		return errors.Wrap(err, "error system_get_snowflake_platform_info")
+	if err := d.Set("aws_vpc_ids", info.AwsVpcIds); err != nil {
+		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}
 
 	return nil

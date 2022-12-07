@@ -87,8 +87,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.AccountGrant()
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -113,12 +112,10 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("privilege", grantID.Privilege)
-	if err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -152,14 +149,12 @@ func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil); err != nil {
 		return err
 	}
 
 	// then add
-	err = createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil)
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil); err != nil {
 		return err
 	}
 

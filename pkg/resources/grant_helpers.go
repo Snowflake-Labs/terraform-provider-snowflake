@@ -13,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -94,8 +93,7 @@ func (gi *grantID) String() (string, error) {
 	grantOption := fmt.Sprintf("%v", gi.GrantOption)
 	roles := strings.Join(gi.Roles, ",")
 	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, roles, grantOption}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strGrantID := strings.TrimSpace(buf.String())
@@ -170,15 +168,13 @@ func createGenericGrantRolesAndShares(
 ) error {
 	db := meta.(*sql.DB)
 	for _, role := range roles {
-		err := snowflake.Exec(db, builder.Role(role).Grant(priv, grantOption))
-		if err != nil {
+		if err := snowflake.Exec(db, builder.Role(role).Grant(priv, grantOption)); err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := snowflake.Exec(db, builder.Share(share).Grant(priv, grantOption))
-		if err != nil {
+		if err := snowflake.Exec(db, builder.Share(share).Grant(priv, grantOption)); err != nil {
 			return err
 		}
 	}
@@ -221,7 +217,7 @@ func readGenericGrant(
 		// We also check the error number matches
 		// We set the tf id == blank and return.
 		// I don't know of a better way to work around this issue
-		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok &&
+		if snowflakeErr, ok := err.(*gosnowflake.SnowflakeError); ok && //nolint:errorlint // todo: should be fixed
 			snowflakeErr.Number == 2003 &&
 			strings.Contains(err.Error(), "does not exist or not authorized") {
 			log.Printf("[WARN] resource (%s) not found, removing from state file", d.Id())
@@ -295,24 +291,20 @@ func readGenericGrant(
 		}
 	}
 
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("roles", roles)
-	if err != nil {
+	if err := d.Set("roles", roles); err != nil {
 		return err
 	}
 
 	_, sharesOk := grantSchema["shares"]
 	if sharesOk && !futureObjects {
-		err = d.Set("shares", shares)
-		if err != nil {
+		if err := d.Set("shares", shares); err != nil {
 			return err
 		}
 	}
-	err = d.Set("with_grant_option", grantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantOption); err != nil {
 		return err
 	}
 
@@ -330,8 +322,7 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 	var grants []*grant
 	for rows.Next() {
 		currentGrant := &currentGrant{}
-		err := rows.StructScan(currentGrant)
-		if err != nil {
+		if err := rows.StructScan(currentGrant); err != nil {
 			return nil, err
 		}
 		if currentGrant.GrantedBy == "" {
@@ -369,8 +360,7 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 	var grants []*grant
 	for rows.Next() {
 		futureGrant := &futureGrant{}
-		err := rows.StructScan(futureGrant)
-		if err != nil {
+		if err := rows.StructScan(futureGrant); err != nil {
 			return nil, err
 		}
 		grant := &grant{
@@ -400,15 +390,13 @@ func deleteGenericGrantRolesAndShares(
 	db := meta.(*sql.DB)
 
 	for _, role := range roles {
-		err := snowflake.ExecMulti(db, builder.Role(role).Revoke(priv))
-		if err != nil {
+		if err := snowflake.ExecMulti(db, builder.Role(role).Revoke(priv)); err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		err := snowflake.ExecMulti(db, builder.Share(share).Revoke(priv))
-		if err != nil {
+		if err := snowflake.ExecMulti(db, builder.Share(share).Revoke(priv)); err != nil {
 			return err
 		}
 	}
@@ -418,8 +406,7 @@ func deleteGenericGrantRolesAndShares(
 func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	priv := d.Get("privilege").(string)
 	roles, shares := expandRolesAndShares(d)
-	err := deleteGenericGrantRolesAndShares(meta, builder, priv, roles, shares)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, priv, roles, shares); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -442,7 +429,7 @@ func parseCallableObjectName(objectName string) (map[string]interface{}, error) 
 	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
 	matches := r.FindStringSubmatch(objectName)
 	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf(`Could not parse objectName: %v`, objectName))
+		return nil, fmt.Errorf(`Could not parse objectName: %v`, objectName)
 	}
 	callableSignatureMap := make(map[string]interface{})
 

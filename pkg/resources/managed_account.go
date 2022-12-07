@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -129,7 +130,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	a, err := snowflake.ScanManagedAccount(row)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, remove resource from
 		log.Printf("[DEBUG] managed account (%s) not found", d.Id())
 		d.SetId("")
@@ -139,38 +140,32 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", a.Name.String)
-	if err != nil {
-		return err
-	}
-	err = d.Set("cloud", a.Cloud.String)
-	if err != nil {
+	if err := d.Set("name", a.Name.String); err != nil {
 		return err
 	}
 
-	err = d.Set("region", a.Region.String)
-	if err != nil {
+	if err := d.Set("cloud", a.Cloud.String); err != nil {
 		return err
 	}
 
-	err = d.Set("locator", a.Locator.String)
-	if err != nil {
+	if err := d.Set("region", a.Region.String); err != nil {
 		return err
 	}
 
-	err = d.Set("created_on", a.CreatedOn.String)
-	if err != nil {
+	if err := d.Set("locator", a.Locator.String); err != nil {
 		return err
 	}
 
-	err = d.Set("url", a.URL.String)
-	if err != nil {
+	if err := d.Set("created_on", a.CreatedOn.String); err != nil {
+		return err
+	}
+
+	if err := d.Set("url", a.URL.String); err != nil {
 		return err
 	}
 
 	if a.IsReader {
-		err = d.Set("type", "READER")
-		if err != nil {
+		if err := d.Set("type", "READER"); err != nil {
 			return err
 		}
 	} else {

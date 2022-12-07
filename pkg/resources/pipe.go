@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -119,8 +119,7 @@ func (si *pipeID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = pipeIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.PipeName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strPipeID := strings.TrimSpace(buf.String())
@@ -188,9 +187,8 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating pipe %v", name)
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error creating pipe %v err = %w", name, err)
 	}
 
 	pipeID := &pipeID{
@@ -222,7 +220,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	sq := snowflake.Pipe(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
 		d.SetId("")
@@ -232,43 +230,35 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", pipe.Name)
-	if err != nil {
+	if err := d.Set("name", pipe.Name); err != nil {
 		return err
 	}
 
-	err = d.Set("database", pipe.DatabaseName)
-	if err != nil {
+	if err := d.Set("database", pipe.DatabaseName); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", pipe.SchemaName)
-	if err != nil {
+	if err := d.Set("schema", pipe.SchemaName); err != nil {
 		return err
 	}
 
-	err = d.Set("copy_statement", pipe.Definition)
-	if err != nil {
+	if err := d.Set("copy_statement", pipe.Definition); err != nil {
 		return err
 	}
 
-	err = d.Set("owner", pipe.Owner)
-	if err != nil {
+	if err := d.Set("owner", pipe.Owner); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", pipe.Comment)
-	if err != nil {
+	if err := d.Set("comment", pipe.Comment); err != nil {
 		return err
 	}
 
-	err = d.Set("notification_channel", pipe.NotificationChannel)
-	if err != nil {
+	if err := d.Set("notification_channel", pipe.NotificationChannel); err != nil {
 		return err
 	}
 
-	err = d.Set("auto_ingest", pipe.NotificationChannel != nil)
-	if err != nil {
+	if err := d.Set("auto_ingest", pipe.NotificationChannel != nil); err != nil {
 		return err
 	}
 
@@ -282,8 +272,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		pipe.ErrorIntegration.Valid = false
 		pipe.ErrorIntegration.String = ""
 	}
-	err = d.Set("error_integration", pipe.ErrorIntegration.String)
-	if err != nil {
+	if err := d.Set("error_integration", pipe.ErrorIntegration.String); err != nil {
 		return err
 	}
 
@@ -307,9 +296,8 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating pipe comment on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating pipe comment on %v", d.Id())
 		}
 	}
 
@@ -320,9 +308,8 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.RemoveErrorIntegration()
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating pipe error_integration on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating pipe error_integration on %v", d.Id())
 		}
 	}
 
@@ -343,9 +330,8 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 
 	q := snowflake.Pipe(pipe, dbName, schema).Drop()
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

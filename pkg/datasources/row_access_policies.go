@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -61,7 +62,7 @@ func ReadRowAccessPolicies(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema").(string)
 
 	currentRowAccessPolicies, err := snowflake.ListRowAccessPolicies(databaseName, schemaName, db)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] row access policy in schema (%s) not found", d.Id())
 		d.SetId("")

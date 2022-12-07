@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // TableConstraintBuilder abstracts the creation of SQL queries for a Snowflake table constraint.
@@ -228,12 +228,13 @@ func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.D
 	}
 	defer rows.Close()
 	tableConstraints := []tableConstraint{}
-	err = sqlx.StructScan(rows, &tableConstraints)
 	log.Printf("[DEBUG] tableConstraints is %v", tableConstraints)
-
-	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tableConstraints found for constraint %s", name)
-		return nil, err
+	if err := sqlx.StructScan(rows, &tableConstraints); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("[DEBUG] no tableConstraints found for constraint %s", name)
+			return nil, err
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return &tableConstraints[0], errors.Wrapf(err, "unable to scan row")
+	return &tableConstraints[0], nil
 }

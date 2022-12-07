@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )
 
@@ -88,8 +87,7 @@ func (mpi *maskingPolicyID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = maskingPolicyIDDelimiter
 	dataIdentifiers := [][]string{{mpi.DatabaseName, mpi.SchemaName, mpi.MaskingPolicyName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strMaskingPolicyID := strings.TrimSpace(buf.String())
@@ -158,9 +156,8 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error creating masking policy %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating masking policy %v err = %w", name, err)
 	}
 
 	maskingPolicyID := &maskingPolicyID{
@@ -200,28 +197,23 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", s.Name.String)
-	if err != nil {
+	if err := d.Set("name", s.Name.String); err != nil {
 		return err
 	}
 
-	err = d.Set("database", s.DatabaseName.String)
-	if err != nil {
+	if err := d.Set("database", s.DatabaseName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", s.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", s.SchemaName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", s.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", s.Comment.String); err != nil {
 		return err
 	}
 
-	err = d.Set("qualified_name", builder.QualifiedName())
-	if err != nil {
+	if err := d.Set("qualified_name", builder.QualifiedName()); err != nil {
 		return err
 	}
 
@@ -238,25 +230,21 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		body       string
 	)
 	for rows.Next() {
-		err := rows.Scan(&name, &signature, &returnType, &body)
-		if err != nil {
+		if err := rows.Scan(&name, &signature, &returnType, &body); err != nil {
 			return err
 		}
 
-		err = d.Set("masking_expression", body)
-		if err != nil {
+		if err := d.Set("masking_expression", body); err != nil {
 			return err
 		}
 
-		err = d.Set("return_data_type", returnType)
-		if err != nil {
+		if err := d.Set("return_data_type", returnType); err != nil {
 			return err
 		}
 
 		// format in database is `(VAL <data_type>)`
 		valueDataType := strings.TrimSuffix(strings.Split(signature, " ")[1], ")")
-		err = d.Set("value_data_type", valueDataType)
-		if err != nil {
+		if err := d.Set("value_data_type", valueDataType); err != nil {
 			return err
 		}
 	}
@@ -283,15 +271,13 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		comment := d.Get("comment")
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for masking policy on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting comment for masking policy on %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error updating comment for masking policy on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating comment for masking policy on %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -299,9 +285,8 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("masking_expression") {
 		maskingExpression := d.Get("masking_expression")
 		q := builder.ChangeMaskingExpression(maskingExpression.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating masking policy expression on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating masking policy expression on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -321,10 +306,8 @@ func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	policyName := maskingPolicyID.MaskingPolicyName
 
 	q := snowflake.MaskingPolicy(policyName, dbName, schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting masking policy %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting masking policy %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -182,7 +183,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] warehouse (%s) not found", d.Id())
 		d.SetId("")

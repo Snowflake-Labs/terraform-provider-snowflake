@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	pe "github.com/pkg/errors"
 )
 
 // FunctionBuilder abstracts the creation of Function.
@@ -340,10 +339,12 @@ func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]functi
 	defer rows.Close()
 
 	dbs := []function{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no functions found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no functions found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 }

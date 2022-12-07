@@ -1,25 +1,23 @@
 package snowflake
 
-import (
-	"github.com/pkg/errors"
-)
+import "fmt"
 
 // ValidateIdentifier implements a strict definition of valid identifiers from
 // https://docs.snowflake.net/manuals/sql-reference/identifiers-syntax.html
 func ValidateIdentifier(val interface{}, exclusions []string) (warns []string, errs []error) {
 	name, ok := val.(string)
 	if !ok {
-		errs = append(errs, errors.Errorf("Unable to assert identifier as string type."))
+		errs = append(errs, fmt.Errorf("Unable to assert identifier as string type."))
 		return
 	}
 
 	if len(name) == 0 {
-		errs = append(errs, errors.Errorf("Identifier must be at least 1 character."))
+		errs = append(errs, fmt.Errorf("Identifier must be at least 1 character."))
 		return
 	}
 
 	if len(name) > 256 {
-		errs = append(errs, errors.Errorf("Identifier must be <= 256 characters."))
+		errs = append(errs, fmt.Errorf("Identifier must be <= 256 characters."))
 		return
 	}
 
@@ -30,12 +28,12 @@ func ValidateIdentifier(val interface{}, exclusions []string) (warns []string, e
 	}
 	for k, r := range name {
 		if k == 0 && !isInitialIdentifierRune(r) {
-			errs = append(errs, errors.Errorf("'%s' can not start an identifier.", string(r)))
+			errs = append(errs, fmt.Errorf("'%s' can not start an identifier.", string(r)))
 			continue
 		}
 
 		if !isIdentifierRune(r, excludedCharacterMap) {
-			errs = append(errs, errors.Errorf("'%s' is not valid identifier character.", string(r)))
+			errs = append(errs, fmt.Errorf("'%s' is not valid identifier character.", string(r)))
 		}
 	}
 	return

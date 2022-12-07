@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -74,7 +75,7 @@ func ReadProcedures(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema").(string)
 
 	currentProcedures, err := snowflake.ListProcedures(databaseName, schemaName, db)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] procedures in schema (%s) not found", d.Id())
 		d.SetId("")

@@ -2,13 +2,13 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // TagBuilder abstracts the creation of SQL queries for a Snowflake tag.
@@ -223,10 +223,12 @@ func ListTags(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
 	defer rows.Close()
 
 	tags := []tag{}
-	err = sqlx.StructScan(rows, &tags)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no tags found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &tags); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no tags found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return tags, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return tags, nil
 }

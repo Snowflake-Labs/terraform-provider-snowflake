@@ -9,7 +9,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var oauthExternalIntegrationSchema = map[string]*schema.Schema{
@@ -189,9 +188,8 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 		stmt.SetString(`COMMENT`, d.Get("comment").(string))
 	}
 
-	err := snowflake.Exec(db, stmt.Statement())
-	if err != nil {
-		return errors.Wrap(err, "error creating security integration"+stmt.Statement())
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+		return fmt.Errorf("error creating security integration" + stmt.Statement())
 	}
 
 	d.SetId(name)
@@ -211,7 +209,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 
 	s, err := snowflake.ScanExternalOauthIntegration(row)
 	if err != nil {
-		return errors.Wrap(err, "could not show security integration")
+		return fmt.Errorf("could not show security integration")
 	}
 
 	// Note: category must be Security or something is broken
@@ -246,12 +244,12 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	stmt = snowflake.ExternalOauthIntegration(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return errors.Wrap(err, "could not describe security integration")
+		return fmt.Errorf("could not describe security integration err = %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return errors.Wrap(err, "unable to parse security integration rows")
+			return fmt.Errorf("unable to parse security integration rows err = %w", err)
 		}
 		switch k {
 		case "ENABLED":
@@ -259,26 +257,26 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 		case "COMMENT":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "EXTERNAL_OAUTH_ISSUER":
-			if err = d.Set("issuer", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set issuer for security integration")
+			if err := d.Set("issuer", v.(string)); err != nil {
+				return fmt.Errorf("unable to set issuer for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_JWS_KEYS_URL":
 			list := []string{}
 			list = append(list, strings.Split(v.(string), ",")...)
-			if err = d.Set("jws_keys_urls", list); err != nil {
-				return errors.Wrap(err, "unable to set jws keys urls for security integration")
+			if err := d.Set("jws_keys_urls", list); err != nil {
+				return fmt.Errorf("unable to set jws keys urls for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_ANY_ROLE_MODE":
-			if err = d.Set("any_role_mode", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set any role mode for security integration")
+			if err := d.Set("any_role_mode", v.(string)); err != nil {
+				return fmt.Errorf("unable to set any role mode for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY":
-			if err = d.Set("rsa_public_key", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set rsa public key for security integration")
+			if err := d.Set("rsa_public_key", v.(string)); err != nil {
+				return fmt.Errorf("unable to set rsa public key for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2":
-			if err = d.Set("rsa_public_key_2", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set rsa public key 2 for security integration")
+			if err := d.Set("rsa_public_key_2", v.(string)); err != nil {
+				return fmt.Errorf("unable to set rsa public key 2 for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST":
 			blockedRolesAll := strings.Split(v.(string), ",")
@@ -291,8 +289,8 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
-			if err = d.Set("blocked_roles", blockedRolesCustom); err != nil {
-				return errors.Wrap(err, "unable to set blocked roles for security integration")
+			if err := d.Set("blocked_roles", blockedRolesCustom); err != nil {
+				return fmt.Errorf("unable to set blocked roles for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST":
 			list := []string{}
@@ -301,8 +299,8 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, item)
 				}
 			}
-			if err = d.Set("allowed_roles", list); err != nil {
-				return errors.Wrap(err, "unable to set allowed roles for security integration")
+			if err := d.Set("allowed_roles", list); err != nil {
+				return fmt.Errorf("unable to set allowed roles for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_AUDIENCE_LIST":
 			list := []string{}
@@ -311,8 +309,8 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, item)
 				}
 			}
-			if err = d.Set("audience_urls", list); err != nil {
-				return errors.Wrap(err, "unable to set audience urls for security integration")
+			if err := d.Set("audience_urls", list); err != nil {
+				return fmt.Errorf("unable to set audience urls for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM":
 			list := []string{}
@@ -321,12 +319,12 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 					list = append(list, strings.Replace(item, "'", "", 2))
 				}
 			}
-			if err = d.Set("token_user_mapping_claims", list); err != nil {
-				return errors.Wrap(err, "unable to set token user mapping claims for security integration")
+			if err := d.Set("token_user_mapping_claims", list); err != nil {
+				return fmt.Errorf("unable to set token user mapping claims for security integration err = %w", err)
 			}
 		case "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE":
-			if err = d.Set("snowflake_user_mapping_attribute", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set snowflake mapping attribute for security integration")
+			if err := d.Set("snowflake_user_mapping_attribute", v.(string)); err != nil {
+				return fmt.Errorf("unable to set snowflake mapping attribute for security integration err = %w", err)
 			}
 		default:
 			log.Printf("[WARN] unexpected security integration property %v returned from Snowflake", k)
@@ -404,7 +402,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return errors.Wrap(err, "error updating security integration")
+			return fmt.Errorf("error updating security integration err = %w", err)
 		}
 	}
 

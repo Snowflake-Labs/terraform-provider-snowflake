@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -74,8 +74,7 @@ func (si *sequenceID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = pipeIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.SequenceName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strSequenceID := strings.TrimSpace(buf.String())
@@ -114,9 +113,8 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 		sq.WithComment(v.(string))
 	}
 
-	err := snowflake.Exec(db, sq.Create())
-	if err != nil {
-		return errors.Wrapf(err, "error creating sequence")
+	if err := snowflake.Exec(db, sq.Create()); err != nil {
+		return fmt.Errorf("error creating sequence err = %w", err)
 	}
 
 	sequenceID := &sequenceID{
@@ -152,32 +150,28 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 
 	sequence, err := snowflake.ScanSequence(row)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// If not found, mark resource to be removed from statefile during apply or refresh
 			log.Printf("[DEBUG] sequence (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errors.Wrap(err, "unable to scan row for SHOW SEQUENCES")
+		return fmt.Errorf("unable to scan row for SHOW SEQUENCES")
 	}
 
-	err = d.Set("name", sequence.Name.String)
-	if err != nil {
+	if err := d.Set("name", sequence.Name.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", sequence.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", sequence.SchemaName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("database", sequence.DBName.String)
-	if err != nil {
+	if err := d.Set("database", sequence.DBName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", sequence.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", sequence.Comment.String); err != nil {
 		return err
 	}
 
@@ -186,8 +180,7 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("increment", i)
-	if err != nil {
+	if err := d.Set("increment", i); err != nil {
 		return err
 	}
 
@@ -196,13 +189,11 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("next_value", n)
-	if err != nil {
+	if err := d.Set("next_value", n); err != nil {
 		return err
 	}
 
-	err = d.Set("fully_qualified_name", seq.Address())
-	if err != nil {
+	if err := d.Set("fully_qualified_name", seq.Address()); err != nil {
 		return err
 	}
 
@@ -226,7 +217,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 
 	sequence, err := snowflake.ScanSequence(row)
 	if err != nil {
-		return errors.Wrap(err, "unable to scan row for SHOW SEQUENCES")
+		return fmt.Errorf("unable to scan row for SHOW SEQUENCES")
 	}
 	deleteSequenceErr := DeleteSequence(d, meta)
 	if deleteSequenceErr != nil {
@@ -246,16 +237,14 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("next_value", nextValue)
-	if err != nil {
+	if err := d.Set("next_value", nextValue); err != nil {
 		return err
 	}
 
 	sq.WithStart(nextValue)
 
-	err = snowflake.Exec(db, sq.Create())
-	if err != nil {
-		return errors.Wrapf(err, "error creating sequence")
+	if err := snowflake.Exec(db, sq.Create()); err != nil {
+		return fmt.Errorf("error creating sequence err = %w", err)
 	}
 
 	return ReadSequence(d, meta)
@@ -273,10 +262,8 @@ func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
 	name := sequenceID.SequenceName
 
 	stmt := snowflake.Sequence(name, database, schema).Drop()
-
-	err = snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error dropping sequence %s", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error dropping sequence %s err = %w", name, err)
 	}
 
 	d.SetId("")
