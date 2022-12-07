@@ -69,12 +69,12 @@ func TestMaterializedViewGrantRead(t *testing.T) {
 	roles := d.Get("roles").(*schema.Set)
 	r.True(roles.Contains("test-role-1"))
 	r.True(roles.Contains("test-role-2"))
-	r.Equal(roles.Len(), 2)
+	r.Equal(2, roles.Len())
 
 	shares := d.Get("shares").(*schema.Set)
 	r.True(shares.Contains("test-share-1"))
 	r.True(shares.Contains("test-share-2"))
-	r.Equal(shares.Len(), 2)
+	r.Equal(2, shares.Len())
 }
 
 func expectReadMaterializedViewGrant(mock sqlmock.Sqlmock) {

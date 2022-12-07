@@ -213,7 +213,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.TableConstraint(name, constraintType, formattedTableID)
 
 	cc := d.Get("columns").([]interface{})
-	var columns []string
+	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
@@ -342,7 +342,7 @@ func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
 	builder := snowflake.TableConstraint(tc.name, tc.constraintType, formattedTableID)
 	cc := d.Get("columns").([]interface{})
-	var columns []string
+	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}

@@ -9,21 +9,21 @@ import (
 func TestSchemaCreate(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.QualifiedName(), `"test"`)
+	r.Equal(`"test"`, s.QualifiedName())
 
 	s.WithDB("db")
-	r.Equal(s.QualifiedName(), `"db"."test"`)
+	r.Equal(`"db"."test"`, s.QualifiedName())
 
-	r.Equal(s.Create(), `CREATE SCHEMA "db"."test"`)
+	r.Equal(`CREATE SCHEMA "db"."test"`, s.Create())
 
 	s.Transient()
-	r.Equal(s.Create(), `CREATE TRANSIENT SCHEMA "db"."test"`)
+	r.Equal(`CREATE TRANSIENT SCHEMA "db"."test"`, s.Create())
 
 	s.Managed()
-	r.Equal(s.Create(), `CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS`)
+	r.Equal(`CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS`, s.Create())
 
 	s.WithDataRetentionDays(7)
-	r.Equal(s.Create(), `CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7`)
+	r.Equal(`CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7`, s.Create())
 
 	s.WithComment("Yee'haw")
 	r.Equal(`CREATE TRANSIENT SCHEMA "db"."test" WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 7 COMMENT = 'Yee\'haw'`, s.Create())
@@ -32,13 +32,13 @@ func TestSchemaCreate(t *testing.T) {
 func TestSchemaRename(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Rename("bob"), `ALTER SCHEMA "test" RENAME TO "bob"`)
+	r.Equal(`ALTER SCHEMA "test" RENAME TO "bob"`, s.Rename("bob"))
 }
 
 func TestSchemaSwap(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Swap("bob"), `ALTER SCHEMA "test" SWAP WITH "bob"`)
+	r.Equal(`ALTER SCHEMA "test" SWAP WITH "bob"`, s.Swap("bob"))
 }
 
 func TestSchemaChangeComment(t *testing.T) {
@@ -50,56 +50,56 @@ func TestSchemaChangeComment(t *testing.T) {
 func TestSchemaRemoveComment(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.RemoveComment(), `ALTER SCHEMA "test" UNSET COMMENT`)
+	r.Equal(`ALTER SCHEMA "test" UNSET COMMENT`, s.RemoveComment())
 }
 
 func TestSchemaChangeDataRetentionDays(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.ChangeDataRetentionDays(22), `ALTER SCHEMA "test" SET DATA_RETENTION_TIME_IN_DAYS = 22`)
+	r.Equal(`ALTER SCHEMA "test" SET DATA_RETENTION_TIME_IN_DAYS = 22`, s.ChangeDataRetentionDays(22))
 }
 
 func TestSchemaRemoveDataRetentionDays(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.RemoveDataRetentionDays(), `ALTER SCHEMA "test" UNSET DATA_RETENTION_TIME_IN_DAYS`)
+	r.Equal(`ALTER SCHEMA "test" UNSET DATA_RETENTION_TIME_IN_DAYS`, s.RemoveDataRetentionDays())
 }
 
 func TestSchemaManage(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Manage(), `ALTER SCHEMA "test" ENABLE MANAGED ACCESS`)
+	r.Equal(`ALTER SCHEMA "test" ENABLE MANAGED ACCESS`, s.Manage())
 }
 
 func TestSchemaUnmanage(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Unmanage(), `ALTER SCHEMA "test" DISABLE MANAGED ACCESS`)
+	r.Equal(`ALTER SCHEMA "test" DISABLE MANAGED ACCESS`, s.Unmanage())
 }
 
 func TestSchemaDrop(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Drop(), `DROP SCHEMA "test"`)
+	r.Equal(`DROP SCHEMA "test"`, s.Drop())
 }
 
 func TestSchemaUndrop(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Undrop(), `UNDROP SCHEMA "test"`)
+	r.Equal(`UNDROP SCHEMA "test"`, s.Undrop())
 }
 
 func TestSchemaUse(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Use(), `USE SCHEMA "test"`)
+	r.Equal(`USE SCHEMA "test"`, s.Use())
 }
 
 func TestSchemaShow(t *testing.T) {
 	r := require.New(t)
 	s := Schema("test")
-	r.Equal(s.Show(), `SHOW SCHEMAS LIKE 'test'`)
+	r.Equal(`SHOW SCHEMAS LIKE 'test'`, s.Show())
 
 	s.WithDB("db")
-	r.Equal(s.Show(), `SHOW SCHEMAS LIKE 'test' IN DATABASE "db"`)
+	r.Equal(`SHOW SCHEMAS LIKE 'test' IN DATABASE "db"`, s.Show())
 }

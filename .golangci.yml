@@ -29,10 +29,12 @@ linters:
     - staticcheck
     # typecheck: Like the front-end of a Go compiler, parses and type-checks Go code
     - typecheck
-
-    # not default
+    # Inspects source code for security problems
+    - gosec
     # unconvert: Remove unnecessary type conversions
     - unconvert
+    # Finds slice declarations that could potentially be pre-allocated
+    - prealloc
     # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
     - gofmt
     # gofumpt: Gofumpt checks whether code was gofumpt-ed.
@@ -48,3 +50,7 @@ linters:
     - wastedassign
     # whitespace: Tool for detection of leading and trailing whitespace
     - whitespace
+    # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
+    - goimports
+    # Finds slice declarations with non-zero initial length
+    - makezero

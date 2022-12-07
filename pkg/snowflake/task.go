@@ -412,7 +412,7 @@ func (t *task) GetPredecessors() ([]string, error) {
 	}
 
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
-	var predecessorNames []string
+	var predecessorNames []string // nolint: prealloc  //todo: fixme
 	if err := json.Unmarshal([]byte(*t.Predecessors), &predecessorNames); err == nil {
 		for i, predecessorName := range predecessorNames {
 			formattedName := predecessorName[strings.LastIndex(predecessorName, ".")+1:]
@@ -503,7 +503,7 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 		return []*task{t}, nil
 	}
 
-	var tasks []*task
+	tasks := make([]*task, 0, len(predecessors))
 	// get the root tasks for each predecessor and append them all together
 	for _, predecessor := range predecessors {
 		predecessorTasks, err := GetRootTasks(predecessor, databaseName, schemaName, db)

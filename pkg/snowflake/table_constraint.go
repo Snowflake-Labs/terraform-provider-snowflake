@@ -221,8 +221,8 @@ type tableConstraint struct {
 
 // Show returns the SQL query that will show a table constraint by ID.
 func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*tableConstraint, error) {
-	stmt := fmt.Sprintf(`SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '%v' AND TABLE_SCHEMA = '%v' AND TABLE_CATALOG = '%v' AND CONSTRAINT_NAME = '%v'`, tableName, tableSchema, tableDB, name)
-	rows, err := db.Query(stmt)
+	rows, err := db.Query(`SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '?' AND TABLE_SCHEMA = '?' AND TABLE_CATALOG = '?' AND CONSTRAINT_NAME = '?'`,
+		tableName, tableSchema, tableDB, name)
 	if err != nil {
 		return nil, err
 	}

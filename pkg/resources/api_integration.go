@@ -77,6 +77,11 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.",
 	},
+	"api_key": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The API key (also called a “subscription key”).",
+	},
 	"enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -120,6 +125,10 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Set optional fields
 	if _, ok := d.GetOk("api_blocked_prefixes"); ok {
 		stmt.SetStringList("API_BLOCKED_PREFIXES", expandStringList(d.Get("api_blocked_prefixes").([]interface{})))
+	}
+
+	if _, ok := d.GetOk("api_key"); ok {
+		stmt.SetString("API_KEY", d.Get("api_key").(string))
 	}
 
 	// Now, set the API provider
@@ -201,6 +210,10 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			}
+		case "API_KEY":
+			if err = d.Set("api_key", v.(string)); err != nil {
+				return err
+			}
 		case "API_AWS_IAM_USER_ARN":
 			if err := d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
 				return err
@@ -246,6 +259,11 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("api_allowed_prefixes") {
 		runSetStatement = true
 		stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
+	}
+
+	if d.HasChange("api_key") {
+		runSetStatement = true
+		stmt.SetString("API_KEY", d.Get("api_key").(string))
 	}
 
 	// We need to UNSET this if we remove all api blocked prefixes.
