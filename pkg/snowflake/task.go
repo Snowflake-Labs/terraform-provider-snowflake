@@ -3,6 +3,7 @@ package snowflake
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // TaskBuilder abstracts the creation of sql queries for a snowflake task.
@@ -412,7 +412,7 @@ func (t *task) GetPredecessors() ([]string, error) {
 	}
 
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
-	var predecessorNames []string
+	var predecessorNames []string // nolint: prealloc  //todo: fixme
 	if err := json.Unmarshal([]byte(*t.Predecessors), &predecessorNames); err == nil {
 		for i, predecessorName := range predecessorNames {
 			formattedName := predecessorName[strings.LastIndex(predecessorName, ".")+1:]
@@ -455,8 +455,7 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 
 	for rows.Next() {
 		r := &taskParams{}
-		err := rows.StructScan(r)
-		if err != nil {
+		if err := rows.StructScan(r); err != nil {
 			return nil, err
 		}
 		t = append(t, r)
@@ -473,12 +472,14 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 	defer rows.Close()
 
 	dbs := []task{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no tasks found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no tasks found")
+			return nil, nil
+		}
+		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }
 
 // GetRootTasks tries to retrieve the root of current task or returns the current (standalone) task.
@@ -494,7 +495,7 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 
 	predecessors, err := t.GetPredecessors()
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get predecessors for task %s", builder.QualifiedName())
+		return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", builder.QualifiedName(), err)
 	}
 
 	// no predecessors mean this is a root task
@@ -502,12 +503,12 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 		return []*task{t}, nil
 	}
 
-	var tasks []*task
+	tasks := make([]*task, 0, len(predecessors))
 	// get the root tasks for each predecessor and append them all together
 	for _, predecessor := range predecessors {
 		predecessorTasks, err := GetRootTasks(predecessor, databaseName, schemaName, db)
 		if err != nil {
-			return nil, errors.Wrapf(err, "unable to get predecessors for task %s", builder.QualifiedName())
+			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", builder.QualifiedName(), err)
 		}
 		tasks = append(tasks, predecessorTasks...)
 	}
@@ -532,9 +533,8 @@ func WaitResumeTask(db *sql.DB, name string, database string, schema string) err
 	// if its not resumed then try again up until a maximum of 5 times
 	for i := 0; i < 5; i++ {
 		q := builder.Resume()
-		err := Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error resuming task %v", name)
+		if err := Exec(db, q); err != nil {
+			return fmt.Errorf("error resuming task %v err = %w", name, err)
 		}
 
 		q = builder.Show()
@@ -548,5 +548,5 @@ func WaitResumeTask(db *sql.DB, name string, database string, schema string) err
 		}
 		time.Sleep(10 * time.Second)
 	}
-	return errors.Errorf("unable to resume task %v after 5 attempts", name)
+	return fmt.Errorf("unable to resume task %v after 5 attempts", name)
 }

@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // ResourceMonitorBuilder extends the generic builder to provide support for triggers.
@@ -167,10 +167,12 @@ func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
 	defer rows.Close()
 
 	dbs := []resourceMonitor{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no resource monitors found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no resource monitors found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

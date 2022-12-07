@@ -45,6 +45,7 @@ resource "snowflake_warehouse" "warehouse" {
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 - `wait_for_provisioning` (Boolean) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
 - `warehouse_size` (String) Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).
+- `warehouse_type` (String) Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse
 
 ### Read-Only
 

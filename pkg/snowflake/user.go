@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 func User(name string) *Builder {
@@ -45,8 +45,7 @@ func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
 
 	for rows.Next() {
 		userProp := &DescribeUserProp{}
-		err := rows.StructScan(userProp)
-		if err != nil {
+		if err := rows.StructScan(userProp); err != nil {
 			return nil, err
 		}
 
@@ -110,10 +109,12 @@ func ListUsers(pattern string, db *sql.DB) ([]user, error) {
 	defer rows.Close()
 
 	dbs := []user{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no users found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no users found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

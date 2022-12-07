@@ -10,7 +10,6 @@ import (
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var tableConstraintSchema = map[string]*schema.Schema{
@@ -214,7 +213,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.TableConstraint(name, constraintType, formattedTableID)
 
 	cc := d.Get("columns").([]interface{})
-	var columns []string
+	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
@@ -272,7 +271,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] create table constraint statement: %v\n", stmt)
 	result, err := db.Exec(stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating table constraint %v", name)
+		return fmt.Errorf("error creating table constraint %v err = %w", name, err)
 	}
 	log.Printf("[DEBUG] result: %v\n", result)
 
@@ -300,7 +299,7 @@ func ReadTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	// just need to check to make sure it exists
 	_, err := snowflake.ShowTableConstraint(tc.name, databaseName, schemaName, tableName, db)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error reading table constraint %v", tc.String()))
+		return fmt.Errorf(fmt.Sprintf("error reading table constraint %v", tc.String()))
 	}*/
 
 	return nil
@@ -320,7 +319,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		_, new := d.GetChange("comment")
 		_, err := db.Exec(builder.SetComment(new.(string)))
 		if err != nil {
-			return errors.Wrapf(err, "error setting comment for table constraint %v", tc.name)
+			return fmt.Errorf("error setting comment for table constraint %v", tc.name)
 		}
 	}*/
 
@@ -328,7 +327,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		_, new := d.GetChange("name")
 		_, err := db.Exec(builder.Rename(new.(string)))
 		if err != nil {
-			return errors.Wrapf(err, "error renaming table constraint %v", tc.name)
+			return fmt.Errorf("error renaming table constraint %v err = %w", tc.name, err)
 		}
 	}
 
@@ -343,7 +342,7 @@ func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
 	builder := snowflake.TableConstraint(tc.name, tc.constraintType, formattedTableID)
 	cc := d.Get("columns").([]interface{})
-	var columns []string
+	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
@@ -357,7 +356,7 @@ func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return errors.Wrapf(err, "error deleting table constraint %v", tc.name)
+		return fmt.Errorf("error deleting table constraint %v err = %w", tc.name, err)
 	}
 
 	d.SetId("")

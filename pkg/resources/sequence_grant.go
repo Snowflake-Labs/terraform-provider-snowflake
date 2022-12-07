@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validSequencePrivileges = NewPrivilegeSet(
@@ -113,8 +114,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.SequenceGrant(dbName, schemaName, sequenceName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -146,32 +146,26 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	sequenceName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureSequencesEnabled := false
 	if sequenceName == "" {
 		futureSequencesEnabled = true
 	}
-	err = d.Set("sequence_name", sequenceName)
-	if err != nil {
+	if err := d.Set("sequence_name", sequenceName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureSequencesEnabled)
-	if err != nil {
+	if err := d.Set("on_future", futureSequencesEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -239,15 +233,15 @@ func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+	); err != nil {
 		return err
 	}
 

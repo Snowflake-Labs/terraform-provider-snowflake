@@ -18,7 +18,7 @@ func TestView(t *testing.T) {
 	r.False(v.secure)
 	qn, err := v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view))
+	r.Equal(fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view), qn)
 
 	v.WithSecure()
 	r.True(v.secure)
@@ -59,7 +59,7 @@ func TestView(t *testing.T) {
 	v.WithDB("mydb")
 	qn, err = v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, `"mydb"."some_schema"."test"`)
+	r.Equal(`"mydb"."some_schema"."test"`, qn)
 
 	q, err = v.Create()
 	r.NoError(err)
@@ -82,7 +82,7 @@ func TestQualifiedName(t *testing.T) {
 	v := View("view").WithDB("db").WithSchema("schema")
 	qn, err := v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, `"db"."schema"."view"`)
+	r.Equal(`"db"."schema"."view"`, qn)
 }
 
 func TestRename(t *testing.T) {

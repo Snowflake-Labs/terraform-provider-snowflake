@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // FailoverGroupBuilder abstracts the creation of SQL queries for a Snowflake file format.
@@ -232,11 +232,11 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, err
 
 	v := []failoverGroup{}
 	err = sqlx.StructScan(rows, &v)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("[DEBUG] no failover groups found")
 		return nil, nil
 	}
-	return v, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return v, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 }
 
 type failoverGroup struct {
@@ -264,18 +264,18 @@ func ShowDatabasesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 	stmt := fmt.Sprintf(`SHOW DATABASES IN FAILOVER GROUP %v`, name)
 	rows, err := Query(db, stmt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error listing allowed databases for failover group %v", name)
+		return nil, fmt.Errorf("error listing allowed databases for failover group %v err = %w", name, err)
 	}
 	defer rows.Close()
 
 	failoverGroupAllowedDatabase := []failoverGroupAllowedDatabase{}
 	err = sqlx.StructScan(rows, &failoverGroupAllowedDatabase)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("[DEBUG] no failover group databases found")
 		return nil, nil
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedDatabase))
 	for _, v := range failoverGroupAllowedDatabase {
 		result = append(result, v.Name.String)
 	}
@@ -290,19 +290,21 @@ func ShowSharesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 	stmt := fmt.Sprintf(`SHOW SHARES IN FAILOVER GROUP %v`, name)
 	rows, err := Query(db, stmt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error listing allowed shares for failover group %v", name)
+		return nil, fmt.Errorf("error listing allowed shares for failover group %v err = %w", name, err)
 	}
 
 	defer rows.Close()
 
 	failoverGroupAllowedShares := []failoverGroupAllowedShare{}
-	err = sqlx.StructScan(rows, &failoverGroupAllowedShares)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no failover group shares found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &failoverGroupAllowedShares); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no failover group shares found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan row for %s err = %w", stmt, err)
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedShares))
 	for _, v := range failoverGroupAllowedShares {
 		result = append(result, v.Name.String)
 	}

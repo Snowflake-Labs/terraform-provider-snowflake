@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -72,8 +73,7 @@ func CreateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	currentGrants := d.Get("current_grants").(string)
 
 	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
-	err := snowflake.Exec(db, g.Role(toRoleName).Grant())
-	if err != nil {
+	if err := snowflake.Exec(db, g.Role(toRoleName).Grant()); err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	grant, err := snowflake.ScanRoleOwnershipGrant(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] role (%s) not found", d.Id())
 		d.SetId("")
@@ -108,20 +108,17 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 	grant.Name.String = strings.TrimPrefix(grant.Name.String, `"`)
 	grant.Name.String = strings.TrimSuffix(grant.Name.String, `"`)
-	err = d.Set("on_role_name", grant.Name.String)
-	if err != nil {
+	if err := d.Set("on_role_name", grant.Name.String); err != nil {
 		return err
 	}
 
 	grant.Owner.String = strings.TrimPrefix(grant.Owner.String, `"`)
 	grant.Owner.String = strings.TrimSuffix(grant.Owner.String, `"`)
-	err = d.Set("to_role_name", grant.Owner.String)
-	if err != nil {
+	if err := d.Set("to_role_name", grant.Owner.String); err != nil {
 		return err
 	}
 
-	err = d.Set("current_grants", currentGrants)
-	if err != nil {
+	if err := d.Set("current_grants", currentGrants); err != nil {
 		return err
 	}
 
@@ -137,8 +134,7 @@ func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(fmt.Sprintf(`%s|%s|%s`, onRoleName, toRoleName, currentGrants))
 
 	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
-	err := snowflake.Exec(db, g.Role(toRoleName).Grant())
-	if err != nil {
+	if err := snowflake.Exec(db, g.Role(toRoleName).Grant()); err != nil {
 		return err
 	}
 
@@ -152,8 +148,7 @@ func DeleteRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 
 	g := snowflake.RoleOwnershipGrant(onRoleName, currentGrants)
-	err := snowflake.Exec(db, g.Role(reversionRole).Revoke())
-	if err != nil {
+	if err := snowflake.Exec(db, g.Role(reversionRole).Revoke()); err != nil {
 		return err
 	}
 

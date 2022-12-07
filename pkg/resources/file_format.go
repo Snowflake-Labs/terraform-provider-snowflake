@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -280,8 +279,7 @@ func (ffi *fileFormatID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = fileFormatIDDelimiter
-	err := csvWriter.WriteAll([][]string{{ffi.DatabaseName, ffi.SchemaName, ffi.FileFormatName}})
-	if err != nil {
+	if err := csvWriter.WriteAll([][]string{{ffi.DatabaseName, ffi.SchemaName, ffi.FileFormatName}}); err != nil {
 		return "", err
 	}
 
@@ -505,7 +503,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, q)
 	if err != nil {
-		return errors.Wrapf(err, "error creating file format %v", fileFormatName)
+		return fmt.Errorf("error creating file format %v err = %w", fileFormatName, err)
 	}
 
 	fileFormatID := &fileFormatID{
@@ -547,178 +545,143 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", f.FileFormatName.String)
-	if err != nil {
+	if err := d.Set("name", f.FileFormatName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("database", f.DatabaseName.String)
-	if err != nil {
+	if err := d.Set("database", f.DatabaseName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", f.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", f.SchemaName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("format_type", opts.Type)
-	if err != nil {
+	if err := d.Set("format_type", opts.Type); err != nil {
 		return err
 	}
 
-	err = d.Set("compression", opts.Compression)
-	if err != nil {
+	if err := d.Set("compression", opts.Compression); err != nil {
 		return err
 	}
 
-	err = d.Set("record_delimiter", opts.RecordDelimiter)
-	if err != nil {
+	if err := d.Set("record_delimiter", opts.RecordDelimiter); err != nil {
 		return err
 	}
 
-	err = d.Set("field_delimiter", opts.FieldDelimiter)
-	if err != nil {
+	if err := d.Set("field_delimiter", opts.FieldDelimiter); err != nil {
 		return err
 	}
 
-	err = d.Set("file_extension", opts.FileExtension)
-	if err != nil {
+	if err := d.Set("file_extension", opts.FileExtension); err != nil {
 		return err
 	}
 
-	err = d.Set("skip_header", opts.SkipHeader)
-	if err != nil {
+	if err := d.Set("skip_header", opts.SkipHeader); err != nil {
 		return err
 	}
 
-	err = d.Set("skip_blank_lines", opts.SkipBlankLines)
-	if err != nil {
+	if err := d.Set("skip_blank_lines", opts.SkipBlankLines); err != nil {
 		return err
 	}
 
-	err = d.Set("date_format", opts.DateFormat)
-	if err != nil {
+	if err := d.Set("date_format", opts.DateFormat); err != nil {
 		return err
 	}
 
-	err = d.Set("time_format", opts.TimeFormat)
-	if err != nil {
+	if err := d.Set("time_format", opts.TimeFormat); err != nil {
 		return err
 	}
 
-	err = d.Set("timestamp_format", opts.TimestampFormat)
-	if err != nil {
+	if err := d.Set("timestamp_format", opts.TimestampFormat); err != nil {
 		return err
 	}
 
-	err = d.Set("binary_format", opts.BinaryFormat)
-	if err != nil {
+	if err := d.Set("binary_format", opts.BinaryFormat); err != nil {
 		return err
 	}
 
-	err = d.Set("escape", opts.Escape)
-	if err != nil {
+	if err := d.Set("escape", opts.Escape); err != nil {
 		return err
 	}
 
-	err = d.Set("escape_unenclosed_field", opts.EscapeUnenclosedField)
-	if err != nil {
+	if err := d.Set("escape_unenclosed_field", opts.EscapeUnenclosedField); err != nil {
 		return err
 	}
 
-	err = d.Set("trim_space", opts.TrimSpace)
-	if err != nil {
+	if err := d.Set("trim_space", opts.TrimSpace); err != nil {
 		return err
 	}
 
-	err = d.Set("field_optionally_enclosed_by", opts.FieldOptionallyEnclosedBy)
-	if err != nil {
+	if err := d.Set("field_optionally_enclosed_by", opts.FieldOptionallyEnclosedBy); err != nil {
 		return err
 	}
 
-	err = d.Set("null_if", opts.NullIf)
-	if err != nil {
+	if err := d.Set("null_if", opts.NullIf); err != nil {
 		return err
 	}
 
-	err = d.Set("error_on_column_count_mismatch", opts.ErrorOnColumnCountMismatch)
-	if err != nil {
+	if err := d.Set("error_on_column_count_mismatch", opts.ErrorOnColumnCountMismatch); err != nil {
 		return err
 	}
 
-	err = d.Set("replace_invalid_characters", opts.ReplaceInvalidCharacters)
-	if err != nil {
+	if err := d.Set("replace_invalid_characters", opts.ReplaceInvalidCharacters); err != nil {
 		return err
 	}
 
-	err = d.Set("empty_field_as_null", opts.EmptyFieldAsNull)
-	if err != nil {
+	if err := d.Set("empty_field_as_null", opts.EmptyFieldAsNull); err != nil {
 		return err
 	}
 
-	err = d.Set("skip_byte_order_mark", opts.SkipByteOrderMark)
-	if err != nil {
+	if err := d.Set("skip_byte_order_mark", opts.SkipByteOrderMark); err != nil {
 		return err
 	}
 
-	err = d.Set("encoding", opts.Encoding)
-	if err != nil {
+	if err := d.Set("encoding", opts.Encoding); err != nil {
 		return err
 	}
 
-	err = d.Set("enable_octal", opts.EnabelOctal)
-	if err != nil {
+	if err := d.Set("enable_octal", opts.EnabelOctal); err != nil {
 		return err
 	}
 
-	err = d.Set("allow_duplicate", opts.AllowDuplicate)
-	if err != nil {
+	if err := d.Set("allow_duplicate", opts.AllowDuplicate); err != nil {
 		return err
 	}
 
-	err = d.Set("strip_outer_array", opts.StripOuterArray)
-	if err != nil {
+	if err := d.Set("strip_outer_array", opts.StripOuterArray); err != nil {
 		return err
 	}
 
-	err = d.Set("strip_null_values", opts.StripNullValues)
-	if err != nil {
+	if err := d.Set("strip_null_values", opts.StripNullValues); err != nil {
 		return err
 	}
 
-	err = d.Set("ignore_utf8_errors", opts.IgnoreUTF8Errors)
-	if err != nil {
+	if err := d.Set("ignore_utf8_errors", opts.IgnoreUTF8Errors); err != nil {
 		return err
 	}
 
-	err = d.Set("binary_as_text", opts.BinaryAsText)
-	if err != nil {
+	if err := d.Set("binary_as_text", opts.BinaryAsText); err != nil {
 		return err
 	}
 
-	err = d.Set("preserve_space", opts.PreserveSpace)
-	if err != nil {
+	if err := d.Set("preserve_space", opts.PreserveSpace); err != nil {
 		return err
 	}
 
-	err = d.Set("strip_outer_element", opts.StripOuterElement)
-	if err != nil {
+	if err := d.Set("strip_outer_element", opts.StripOuterElement); err != nil {
 		return err
 	}
 
-	err = d.Set("disable_snowflake_data", opts.DisableSnowflakeData)
-	if err != nil {
+	if err := d.Set("disable_snowflake_data", opts.DisableSnowflakeData); err != nil {
 		return err
 	}
 
-	err = d.Set("disable_auto_convert", opts.DisableAutoConvert)
-	if err != nil {
+	if err := d.Set("disable_auto_convert", opts.DisableAutoConvert); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", f.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", f.Comment.String); err != nil {
 		return err
 	}
 
@@ -743,135 +706,120 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("compression") {
 		change := d.Get("compression")
 		q := builder.ChangeCompression(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format compression on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format compression on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("record_delimiter") {
 		change := d.Get("record_delimiter")
 		q := builder.ChangeRecordDelimiter(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format record delimiter on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format record delimiter on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("field_delimiter") {
 		change := d.Get("field_delimiter")
 		q := builder.ChangeFieldDelimiter(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format field delimiter on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format field delimiter on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("file_extension") {
 		change := d.Get("file_extension")
 		q := builder.ChangeFileExtension(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format file extension on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format file extension on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("skip_header") {
 		change := d.Get("skip_header")
 		q := builder.ChangeSkipHeader(change.(int))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip header on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format skip header on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("skip_blank_lines") {
 		change := d.Get("skip_blank_lines")
 		q := builder.ChangeSkipBlankLines(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip blank lines on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format skip blank lines on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("date_format") {
 		change := d.Get("date_format")
 		q := builder.ChangeDateFormat(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format date format on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format date format on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("time_format") {
 		change := d.Get("time_format")
 		q := builder.ChangeTimeFormat(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format time format on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format time format on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("timestamp_format") {
 		change := d.Get("timestamp_format")
 		q := builder.ChangeTimestampFormat(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format timstamp format on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format timestamp format on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("binary_format") {
 		change := d.Get("binary_format")
 		q := builder.ChangeBinaryFormat(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format binary format on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format binary format on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("escape") {
 		change := d.Get("escape")
 		q := builder.ChangeEscape(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format escape on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format escape on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("escape_unenclosed_field") {
 		change := d.Get("escape_unenclosed_field")
 		q := builder.ChangeEscapeUnenclosedField(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format escape_unenclosed_field on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format escape_unenclosed_field on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("field_optionally_enclosed_by") {
 		change := d.Get("field_optionally_enclosed_by")
 		q := builder.ChangeFieldOptionallyEnclosedBy(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format field_optionally_enclosed_by on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format field_optionally_enclosed_by on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("encoding") {
 		change := d.Get("encoding")
 		q := builder.ChangeEncoding(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format encoding on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format encoding on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("comment") {
 		change := d.Get("comment")
 		q := builder.ChangeComment(change.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format comment on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format comment on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -880,79 +828,71 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeTrimSpace(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format trim_space on %v", d.Id())
+			return fmt.Errorf("error updating file format trim_space on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("error_on_column_count_mismatch") {
 		change := d.Get("error_on_column_count_mismatch")
 		q := builder.ChangeErrorOnColumnCountMismatch(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format error_on_column_count_mismatch on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format error_on_column_count_mismatch on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("replace_invalid_characters") {
 		change := d.Get("replace_invalid_characters")
 		q := builder.ChangeReplaceInvalidCharacters(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format replace_invalid_characters on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format replace_invalid_characters on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("empty_field_as_null") {
 		change := d.Get("empty_field_as_null")
 		q := builder.ChangeEmptyFieldAsNull(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format empty_field_as_null on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format empty_field_as_null on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("skip_byte_order_mark") {
 		change := d.Get("skip_byte_order_mark")
 		q := builder.ChangeSkipByteOrderMark(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format skip_byte_order_mark on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format skip_byte_order_mark on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_octal") {
 		change := d.Get("enable_octal")
 		q := builder.ChangeEnableOctal(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format enable_octal on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format enable_octal on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("allow_duplicate") {
 		change := d.Get("allow_duplicate")
 		q := builder.ChangeAllowDuplicate(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format allow_duplicate on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format allow_duplicate on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("strip_outer_array") {
 		change := d.Get("strip_outer_array")
 		q := builder.ChangeStripOuterArray(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_outer_array on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format strip_outer_array on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("strip_null_values") {
 		change := d.Get("strip_null_values")
 		q := builder.ChangeStripNullValues(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_null_values on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format strip_null_values on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -961,61 +901,55 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeIgnoreUTF8Errors(change.(bool))
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating file format ignore_utf8_errors on %v", d.Id())
+			return fmt.Errorf("error updating file format ignore_utf8_errors on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("binary_as_text") {
 		change := d.Get("binary_as_text")
 		q := builder.ChangeBinaryAsText(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format binary_as_text on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format binary_as_text on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("preserve_space") {
 		change := d.Get("preserve_space")
 		q := builder.ChangePreserveSpace(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format preserve_space on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format preserve_space on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("strip_outer_element") {
 		change := d.Get("strip_outer_element")
 		q := builder.ChangeStripOuterElement(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format strip_outer_element on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format strip_outer_element on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("disable_snowflake_data") {
 		change := d.Get("disable_snowflake_data")
 		q := builder.ChangeDisableSnowflakeData(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format disable_snowflake_data on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format disable_snowflake_data on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("disable_auto_convert") {
 		change := d.Get("disable_auto_convert")
 		q := builder.ChangeDisableAutoConvert(change.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format disable_auto_convert on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format disable_auto_convert on %v err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("null_if") {
 		change := d.Get("null_if")
 		q := builder.ChangeNullIf(expandStringList(change.([]interface{})))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating file format null_if on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating file format null_if on %v err = %w", d.Id(), err)
 		}
 	}
 
@@ -1035,10 +969,8 @@ func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
 	fileFormatName := fileFormatID.FileFormatName
 
 	q := snowflake.FileFormat(fileFormatName, dbName, schemaName).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting file format %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting file format %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

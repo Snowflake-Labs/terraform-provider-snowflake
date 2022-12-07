@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -144,13 +145,10 @@ func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Now, set the storage provider
-	err := setStorageProviderSettings(d, stmt)
-	if err != nil {
+	if err := setStorageProviderSettings(d, stmt); err != nil {
 		return err
 	}
-
-	err = snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating storage integration: %w", err)
 	}
 
@@ -170,7 +168,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Some properties can come from the SHOW INTEGRATION call
 
 	s, err := snowflake.ScanStorageIntegration(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] storage integration (%s) not found", d.Id())
 		d.SetId("")
@@ -220,52 +218,52 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "COMMENT":
 			if val := v.(string); val != "" {
-				if err = d.Set("comment", v.(string)); err != nil {
+				if err := d.Set("comment", v.(string)); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_PROVIDER":
-			if err = d.Set("storage_provider", v.(string)); err != nil {
+			if err := d.Set("storage_provider", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_ALLOWED_LOCATIONS":
-			if err = d.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
+			if err := d.Set("storage_allowed_locations", strings.Split(v.(string), ",")); err != nil {
 				return err
 			}
 		case "STORAGE_BLOCKED_LOCATIONS":
 			if val := v.(string); val != "" {
-				if err = d.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
+				if err := d.Set("storage_blocked_locations", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_AWS_IAM_USER_ARN":
-			if err = d.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("storage_aws_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_OBJECT_ACL":
 			if val := v.(string); val != "" {
-				if err = d.Set("storage_aws_object_acl", v.(string)); err != nil {
+				if err := d.Set("storage_aws_object_acl", v.(string)); err != nil {
 					return err
 				}
 			}
 		case "STORAGE_AWS_ROLE_ARN":
-			if err = d.Set("storage_aws_role_arn", v.(string)); err != nil {
+			if err := d.Set("storage_aws_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_AWS_EXTERNAL_ID":
-			if err = d.Set("storage_aws_external_id", v.(string)); err != nil {
+			if err := d.Set("storage_aws_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "STORAGE_GCP_SERVICE_ACCOUNT":
-			if err = d.Set("storage_gcp_service_account", v.(string)); err != nil {
+			if err := d.Set("storage_gcp_service_account", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_CONSENT_URL":
-			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+			if err := d.Set("azure_consent_url", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
-			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+			if err := d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -309,8 +307,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("storage_blocked_locations") {
 		v := d.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
-			err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_BLOCKED_LOCATIONS")
-			if err != nil {
+			if err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_BLOCKED_LOCATIONS"); err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations: %w", err)
 			}
 		} else {
@@ -322,13 +319,11 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// also need to UNSET STORAGE_AWS_OBJECT_ACL if removed
 	if d.HasChange("storage_aws_object_acl") {
 		if _, ok := d.GetOk("storage_aws_object_acl"); ok {
-			err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control")
-			if err != nil {
+			if err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control"); err != nil {
 				return fmt.Errorf("error setting storage_aws_object_acl: %w", err)
 			}
 		} else {
-			err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL")
-			if err != nil {
+			if err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL"); err != nil {
 				return fmt.Errorf("error unsetting storage_aws_object_acl: %w", err)
 			}
 		}

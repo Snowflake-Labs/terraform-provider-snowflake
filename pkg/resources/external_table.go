@@ -10,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -158,8 +157,7 @@ func (si *externalTableID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = externalTableIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ExternalTableName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strExternalTableID := strings.TrimSpace(buf.String())
@@ -241,9 +239,8 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error creating externalTable %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -285,13 +282,11 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err = d.Set("name", externalTable.ExternalTableName.String)
-	if err != nil {
+	if err := d.Set("name", externalTable.ExternalTableName.String); err != nil {
 		return err
 	}
 
-	err = d.Set("owner", externalTable.Owner.String)
-	if err != nil {
+	if err := d.Set("owner", externalTable.Owner.String); err != nil {
 		return err
 	}
 
@@ -314,9 +309,8 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Update()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error updating externalTable %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error updating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -346,10 +340,8 @@ func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 	externalTableName := externalTableID.ExternalTableName
 
 	q := snowflake.ExternalTable(externalTableName, dbName, schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

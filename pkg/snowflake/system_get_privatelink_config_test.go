@@ -10,7 +10,7 @@ func TestSystemGetPrivateLinkConfigQuery(t *testing.T) {
 	r := require.New(t)
 	sb := SystemGetPrivateLinkConfigQuery()
 
-	r.Equal(sb, `SELECT SYSTEM$GET_PRIVATELINK_CONFIG() AS "config"`)
+	r.Equal(`SELECT SYSTEM$GET_PRIVATELINK_CONFIG() AS "config"`, sb)
 }
 
 func TestSystemGetPrivateLinkGetStructuredConfigAws(t *testing.T) {

@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // TagAssociationBuilder abstracts the creation of SQL queries for a Snowflake tag.
@@ -96,19 +96,21 @@ func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
-	stmt := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
-	rows, err := db.Query(stmt)
+	rows, err := db.Query(`SELECT SYSTEM$GET_TAG('"?"."?"."?"', '?', '?') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`,
+		tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	tagAssociations := []tagAssociation{}
-	err = sqlx.StructScan(rows, &tagAssociations)
 	log.Printf("[DEBUG] tagAssociations is %v", tagAssociations)
-
-	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tag associations found for tag %s", tb.tagName)
-		return nil, err
+	if err := sqlx.StructScan(rows, &tagAssociations); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("[DEBUG] no tag associations found for tag %s", tb.tagName)
+			return nil, err
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return tagAssociations, errors.Wrapf(err, "unable to scan row for %s", stmt)
+
+	return tagAssociations, nil
 }

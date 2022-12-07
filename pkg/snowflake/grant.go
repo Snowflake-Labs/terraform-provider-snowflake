@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 type grantType string
@@ -409,11 +409,14 @@ func queryGrants(db *sql.DB, stmt string) ([]GrantDetail, error) {
 
 	grantDetails := []GrantDetail{}
 	err = sqlx.StructScan(rows, &grantDetails)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no grants found")
-		return nil, err
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no grants found")
+			return nil, fmt.Errorf("unable to scan rows for %s, err = %w", stmt, err)
+		}
+		return grantDetails, err
 	}
-	return grantDetails, errors.Wrapf(err, "unable to scan rows for %s", stmt)
+	return grantDetails, nil
 }
 
 func ShowGrantsOn(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {

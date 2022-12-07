@@ -34,19 +34,30 @@ linters:
     - staticcheck
     # typecheck: Like the front-end of a Go compiler, parses and type-checks Go code
     - typecheck
-
-    # not default
     # depguard: Go linter that checks if package imports are in a list of acceptable packages
     - depguard
+    # Inspects source code for security problems
+    - gosec
     # unconvert: Remove unnecessary type conversions
     - unconvert
+    # Finds slice declarations that could potentially be pre-allocated
+    - prealloc
     # gofmt: Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
     - gofmt
     # gofumpt: Gofumpt checks whether code was gofumpt-ed.
     - gofumpt
+    # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
+    - errname
+    # errorlint is a linter for that can be used to find code that will cause problems
+    # with the error wrapping scheme introduced in Go 1.13.
+    - errorlint
     # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     - thelper
     # wastedassign: wastedassign finds wasted assignment statements.
     - wastedassign
     # whitespace: Tool for detection of leading and trailing whitespace
     - whitespace
+    # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
+    - goimports
+    # Finds slice declarations with non-zero initial length
+    - makezero

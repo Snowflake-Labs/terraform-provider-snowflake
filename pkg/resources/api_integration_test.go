@@ -26,6 +26,7 @@ func TestAPIIntegrationCreate(t *testing.T) {
 		"api_allowed_prefixes": []interface{}{"https://123456.execute-api.us-west-2.amazonaws.com/prod/"},
 		"api_provider":         "aws_api_gateway",
 		"api_aws_role_arn":     "arn:aws:iam::000000000001:/role/test",
+		"api_key":              "12345",
 	}
 
 	in2 := map[string]interface{}{
@@ -33,6 +34,7 @@ func TestAPIIntegrationCreate(t *testing.T) {
 		"api_allowed_prefixes": []interface{}{"https://123456.execute-api.us-gov-west-1.amazonaws.com/prod/"},
 		"api_provider":         "aws_gov_api_gateway",
 		"api_aws_role_arn":     "arn:aws:iam::000000000001:/role/test",
+		"api_key":              "12345",
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.APIIntegration().Schema, in)
@@ -43,7 +45,7 @@ func TestAPIIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE API INTEGRATION "test_api_integration" API_PROVIDER=aws_api_gateway API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-west-2.amazonaws.com/prod/'\) ENABLED=true$`,
+			`^CREATE API INTEGRATION "test_api_integration" API_PROVIDER=aws_api_gateway API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_KEY='12345' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-west-2.amazonaws.com/prod/'\) ENABLED=true$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadAPIIntegration(mock)
 
@@ -53,7 +55,7 @@ func TestAPIIntegrationCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE API INTEGRATION "test_gov_api_integration" API_PROVIDER=aws_gov_api_gateway API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-gov-west-1.amazonaws.com/prod/'\) ENABLED=true$`,
+			`^CREATE API INTEGRATION "test_gov_api_integration" API_PROVIDER=aws_gov_api_gateway API_AWS_ROLE_ARN='arn:aws:iam::000000000001:/role/test' API_KEY='12345' API_ALLOWED_PREFIXES=\('https://123456.execute-api.us-gov-west-1.amazonaws.com/prod/'\) ENABLED=true$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadGovAPIIntegration(mock)
 
@@ -97,6 +99,7 @@ func expectReadAPIIntegration(mock sqlmock.Sqlmock) {
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
 	}).AddRow("ENABLED", "Boolean", true, false).
+		AddRow("API_KEY", "String", "12345", nil).
 		AddRow("API_ALLOWED_PREFIXES", "List", "https://123456.execute-api.us-west-2.amazonaws.com/prod/,https://123456.execute-api.us-west-2.amazonaws.com/staging/", nil).
 		AddRow("API_AWS_IAM_USER_ARN", "String", "arn:aws:iam::000000000000:/user/test", nil).
 		AddRow("API_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).
@@ -115,6 +118,7 @@ func expectReadGovAPIIntegration(mock sqlmock.Sqlmock) {
 	descRows := sqlmock.NewRows([]string{
 		"property", "property_type", "property_value", "property_default",
 	}).AddRow("ENABLED", "Boolean", true, false).
+		AddRow("API_KEY", "String", "12345", nil).
 		AddRow("API_ALLOWED_PREFIXES", "List", "https://123456.execute-api.us-gov-west-1.amazonaws.com/prod/,https://123456.execute-api.us-gov-west-1.amazonaws.com/staging/", nil).
 		AddRow("API_AWS_IAM_USER_ARN", "String", "arn:aws:iam::000000000000:/user/test", nil).
 		AddRow("API_AWS_ROLE_ARN", "String", "arn:aws:iam::000000000001:/role/test", nil).

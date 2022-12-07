@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	pe "github.com/pkg/errors"
 )
 
 // ProcedureBuilder abstracts the creation of Stored Procedure.
@@ -287,10 +286,12 @@ func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]proce
 	defer rows.Close()
 
 	dbs := []procedure{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no procedures found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no procedures found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // PrimaryKey structure that represents a tables primary key.
@@ -203,7 +203,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	// sort our keys on the key sequence
 
 	flat := map[string]interface{}{}
-	var keys []string
+	keys := make([]string, 0, len(pkds))
 	var name string
 	var nameSet bool
 
@@ -413,7 +413,7 @@ func JoinStringList(instrings []string, delimiter string) string {
 }
 
 func quoteStringList(instrings []string) []string {
-	var clean []string
+	clean := make([]string, 0, len(instrings))
 	for _, word := range instrings {
 		quoted := fmt.Sprintf(`"%s"`, word)
 		clean = append(clean, quoted)
@@ -452,9 +452,9 @@ func ClusterStatementToList(clusterStatement string) []string {
 	cleanStatement := strings.TrimSuffix(strings.Replace(clusterStatement, "LINEAR(", "", 1), ")")
 	// remove cluster statement and trailing parenthesis
 
-	var clean []string
-
-	for _, s := range strings.Split(cleanStatement, ",") {
+	spCleanStatement := strings.Split(cleanStatement, ",")
+	clean := make([]string, 0, len(spCleanStatement))
+	for _, s := range spCleanStatement {
 		clean = append(clean, strings.TrimSpace(s))
 	}
 
@@ -762,10 +762,12 @@ func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, er
 	defer rows.Close()
 
 	dbs := []table{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no tables found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no tables found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
-	_ "github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,6 +76,7 @@ func TestDSN(t *testing.T) {
 	}
 }
 
+// nolint: gosec
 func TestOAuthDSN(t *testing.T) {
 	type args struct {
 		account          string
@@ -127,6 +127,7 @@ func TestOAuthDSN(t *testing.T) {
 	}
 }
 
+// nolint: gosec
 func TestGetOauthDATA(t *testing.T) {
 	type param struct {
 		refreshToken,
@@ -169,6 +170,7 @@ func TestGetOauthDATA(t *testing.T) {
 	}
 }
 
+// nolint: gosec
 func TestGetOauthResponse(t *testing.T) {
 	type param struct {
 		dataStuff,
@@ -222,6 +224,7 @@ func NewTestClient(fn RoundTripFunc) *http.Client {
 	}
 }
 
+// nolint: gosec
 func TestGetOauthAccessToken(t *testing.T) {
 	type param struct {
 		dataStuff,

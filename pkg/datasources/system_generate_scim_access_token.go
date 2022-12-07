@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -36,7 +37,7 @@ func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{})
 	sel := snowflake.SystemGenerateSCIMAccessToken(integrationName).Select()
 	row := snowflake.QueryRow(db, sel)
 	accessToken, err := snowflake.ScanSCIMAccessToken(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] system_generate_scim_access_token (%s) not found", d.Id())
 		d.SetId("")
