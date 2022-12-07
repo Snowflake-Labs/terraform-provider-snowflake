@@ -96,7 +96,8 @@ func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
 }
 
 func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
-	rows, err := db.Query(`SELECT SYSTEM$GET_TAG('"?"."?"."?"', '?', '?') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`,
+	stmt := `SELECT SYSTEM$GET_TAG('"?"."?"."?"', '?', '?') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`
+	rows, err := db.Query(stmt,
 		tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 	if err != nil {
 		return nil, err
