@@ -330,15 +330,22 @@ func ScanFunctions(rows *sqlx.Rows) ([]*function, error) {
 	return pcs, rows.Err()
 }
 
-func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]function, error) {
-	stmt := fmt.Sprintf(`SHOW USER FUNCTIONS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+type listFunctions struct {
+	Name 	  sql.NullString `db:"name"`
+	Arguments sql.NullString `db:"arguments"`
+	Description sql.NullString `db:"description"`
+	Language sql.NullString `db:"language"`
+}
+
+func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]listFunctions, error) {
+	stmt := fmt.Sprintf(`SHOW USER FUNCTIONS IN SCHEMA "%v"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	dbs := []function{}
+	dbs := []listFunctions{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no functions found")
