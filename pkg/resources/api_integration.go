@@ -80,7 +80,6 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 	"api_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "",
 		Description: "The API key (also called a “subscription key”).",
 	},
 	"enabled": {
