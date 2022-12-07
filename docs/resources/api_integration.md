@@ -35,7 +35,7 @@ resource "snowflake_api_integration" "api_integration" {
 
 - `api_aws_role_arn` (String) ARN of a cloud platform role.
 - `api_blocked_prefixes` (List of String) Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.
-- `api_key` (String) The API key (also called a “subscription key”).
+- `api_key` (String, Sensitive) The API key (also called a “subscription key”).
 - `azure_ad_application_id` (String) The 'Application (client) id' of the Azure AD app for your remote service.
 - `azure_tenant_id` (String) Specifies the ID for your Office 365 tenant that all Azure API Management instances belong to.
 - `enabled` (Boolean) Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.
