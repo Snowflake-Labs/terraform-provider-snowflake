@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -537,7 +538,7 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, ff)
 
 	f, err := snowflake.ScanFileFormatShow(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] file_format (%s) not found", d.Id())
 		d.SetId("")
