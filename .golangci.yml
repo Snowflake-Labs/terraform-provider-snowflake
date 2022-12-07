@@ -6,6 +6,11 @@ run:
 linters-settings:
   misspell:
     locale: US
+  depguard:
+    include-go-root: true
+    packages:
+      - github.com/pkg/error
+      - io/ioutil
 
 linters:
   disable-all: true
@@ -29,6 +34,8 @@ linters:
     - staticcheck
     # typecheck: Like the front-end of a Go compiler, parses and type-checks Go code
     - typecheck
+    # depguard: Go linter that checks if package imports are in a list of acceptable packages
+    - depguard
     # Inspects source code for security problems
     - gosec
     # unconvert: Remove unnecessary type conversions
