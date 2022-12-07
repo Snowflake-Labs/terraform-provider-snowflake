@@ -22,7 +22,6 @@ func TestAcc_Functions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_functions.t", "database", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_functions.t", "schema", schemaName),
-					resource.TestCheckResourceAttrSet("data.snowflake_functions.t", "functions.#"),
 				),
 			},
 		},
