@@ -19,7 +19,7 @@ var warehouseProperties = []string{
 	"scaling_policy", "auto_suspend", "auto_resume",
 	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
 	"statement_timeout_in_seconds", "enable_query_acceleration", "query_acceleration_max_scale_factor",
-	"warehouse_type"
+	"warehouse_type",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
