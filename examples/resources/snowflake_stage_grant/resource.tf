@@ -5,8 +5,7 @@ resource "snowflake_stage_grant" "grant" {
 
   privilege = "USAGE"
 
-  roles  = ["role1", "role2"]
-  shares = ["share1", "share2"]
+  roles = ["role1", "role2"]
 
   on_future         = false
   with_grant_option = false

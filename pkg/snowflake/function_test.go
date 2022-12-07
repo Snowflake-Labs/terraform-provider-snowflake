@@ -219,7 +219,7 @@ func TestFunctionDrop(t *testing.T) {
 	// Without arg
 	s := getJavaScriptFuction(false)
 	stmnt, _ := s.Drop()
-	r.Equal(stmnt, `DROP FUNCTION "test_db"."test_schema"."test_func"()`)
+	r.Equal(`DROP FUNCTION "test_db"."test_schema"."test_func"()`, stmnt)
 
 	// With arg
 	ss := getJavaScriptFuction(true)
@@ -231,7 +231,7 @@ func TestFunctionShow(t *testing.T) {
 	r := require.New(t)
 	s := getJavaScriptFuction(false)
 	stmnt := s.Show()
-	r.Equal(stmnt, `SHOW USER FUNCTIONS LIKE 'test_func' IN SCHEMA "test_db"."test_schema"`)
+	r.Equal(`SHOW USER FUNCTIONS LIKE 'test_func' IN SCHEMA "test_db"."test_schema"`, stmnt)
 }
 
 func TestFunctionRename(t *testing.T) {

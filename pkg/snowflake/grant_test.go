@@ -10,7 +10,7 @@ import (
 func TestDatabaseGrant(t *testing.T) {
 	r := require.New(t)
 	dg := snowflake.DatabaseGrant("testDB")
-	r.Equal(dg.Name(), "testDB")
+	r.Equal("testDB", dg.Name())
 
 	s := dg.Show()
 	r.Equal(`SHOW GRANTS ON DATABASE "testDB"`, s)
@@ -37,7 +37,7 @@ func TestDatabaseGrant(t *testing.T) {
 func TestSchemaGrant(t *testing.T) {
 	r := require.New(t)
 	sg := snowflake.SchemaGrant("test_db", "testSchema")
-	r.Equal(sg.Name(), "testSchema")
+	r.Equal("testSchema", sg.Name())
 
 	s := sg.Show()
 	r.Equal(`SHOW GRANTS ON SCHEMA "test_db"."testSchema"`, s)
@@ -64,7 +64,7 @@ func TestSchemaGrant(t *testing.T) {
 func TestViewGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.ViewGrant("test_db", "PUBLIC", "testView")
-	r.Equal(vg.Name(), "testView")
+	r.Equal("testView", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON VIEW "test_db"."PUBLIC"."testView"`, s)
@@ -91,7 +91,7 @@ func TestViewGrant(t *testing.T) {
 func TestMaterializedViewGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.MaterializedViewGrant("test_db", "PUBLIC", "testMaterializedView")
-	r.Equal(vg.Name(), "testMaterializedView")
+	r.Equal("testMaterializedView", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON MATERIALIZED VIEW "test_db"."PUBLIC"."testMaterializedView"`, s)
@@ -118,7 +118,7 @@ func TestMaterializedViewGrant(t *testing.T) {
 func TestExternalTableGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.ExternalTableGrant("test_db", "PUBLIC", "testExternalTable")
-	r.Equal(vg.Name(), "testExternalTable")
+	r.Equal("testExternalTable", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable"`, s)
@@ -145,7 +145,7 @@ func TestExternalTableGrant(t *testing.T) {
 func TestFileFormatGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.FileFormatGrant("test_db", "PUBLIC", "testFileFormat")
-	r.Equal(vg.Name(), "testFileFormat")
+	r.Equal("testFileFormat", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat"`, s)
@@ -172,7 +172,7 @@ func TestFileFormatGrant(t *testing.T) {
 func TestFunctionGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.FunctionGrant("test_db", "PUBLIC", "testFunction", []string{"ARRAY", "STRING"})
-	r.Equal(vg.Name(), "testFunction")
+	r.Equal("testFunction", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING)`, s)
@@ -199,7 +199,7 @@ func TestFunctionGrant(t *testing.T) {
 func TestProcedureGrant(t *testing.T) {
 	r := require.New(t)
 	vg := snowflake.ProcedureGrant("test_db", "PUBLIC", "testProcedure", []string{"ARRAY", "STRING"})
-	r.Equal(vg.Name(), "testProcedure")
+	r.Equal("testProcedure", vg.Name())
 
 	s := vg.Show()
 	r.Equal(`SHOW GRANTS ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING)`, s)
@@ -226,7 +226,7 @@ func TestProcedureGrant(t *testing.T) {
 func TestWarehouseGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.WarehouseGrant("test_warehouse")
-	r.Equal(wg.Name(), "test_warehouse")
+	r.Equal("test_warehouse", wg.Name())
 
 	s := wg.Show()
 	r.Equal(`SHOW GRANTS ON WAREHOUSE "test_warehouse"`, s)
@@ -248,7 +248,7 @@ func TestWarehouseGrant(t *testing.T) {
 func TestAccountGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.AccountGrant()
-	r.Equal(wg.Name(), "")
+	r.Equal("", wg.Name())
 
 	// There's an extra space after "ACCOUNT"
 	//  because accounts don't have names
@@ -269,7 +269,7 @@ func TestAccountGrant(t *testing.T) {
 func TestIntegrationGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.IntegrationGrant("test_integration")
-	r.Equal(wg.Name(), "test_integration")
+	r.Equal("test_integration", wg.Name())
 
 	s := wg.Show()
 	r.Equal(`SHOW GRANTS ON INTEGRATION "test_integration"`, s)
@@ -290,7 +290,7 @@ func TestIntegrationGrant(t *testing.T) {
 func TestResourceMonitorGrant(t *testing.T) {
 	r := require.New(t)
 	wg := snowflake.ResourceMonitorGrant("test_monitor")
-	r.Equal(wg.Name(), "test_monitor")
+	r.Equal("test_monitor", wg.Name())
 
 	s := wg.Show()
 	r.Equal(`SHOW GRANTS ON RESOURCE MONITOR "test_monitor"`, s)
@@ -311,7 +311,7 @@ func TestResourceMonitorGrant(t *testing.T) {
 func TestMaskingPolicyGrant(t *testing.T) {
 	r := require.New(t)
 	mg := snowflake.MaskingPolicyGrant("test_db", "PUBLIC", "testMaskingPolicy")
-	r.Equal(mg.Name(), "testMaskingPolicy")
+	r.Equal("testMaskingPolicy", mg.Name())
 
 	s := mg.Show()
 	r.Equal(`SHOW GRANTS ON MASKING POLICY "test_db"."PUBLIC"."testMaskingPolicy"`, s)

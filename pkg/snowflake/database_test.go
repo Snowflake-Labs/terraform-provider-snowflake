@@ -132,13 +132,15 @@ func TestListDatabases(t *testing.T) {
 func TestEnableReplicationAccounts(t *testing.T) {
 	r := require.New(t)
 	db := snowflake.Database("good_name")
-	r.Equal(db.EnableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1`)
+	expected := `ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1`
+	r.Equal(expected, db.EnableReplicationAccounts("good_name", "account1"))
 }
 
 func TestDisableReplicationAccounts(t *testing.T) {
 	r := require.New(t)
 	db := snowflake.Database("good_name")
-	r.Equal(db.DisableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" DISABLE REPLICATION TO ACCOUNTS account1`)
+	expected := `ALTER DATABASE "good_name" DISABLE REPLICATION TO ACCOUNTS account1`
+	r.Equal(expected, db.DisableReplicationAccounts("good_name", "account1"))
 }
 
 func TestGetRemovedAccountsFromReplicationConfiguration(t *testing.T) {
@@ -148,5 +150,5 @@ func TestGetRemovedAccountsFromReplicationConfiguration(t *testing.T) {
 	oldAccounts := []interface{}{"acc1", "acc2", "acc3"}
 	newAccounts := []interface{}{"acc1", "acc2"}
 
-	r.Equal(db.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts), []interface{}{"acc3"})
+	r.Equal([]interface{}{"acc3"}, db.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts))
 }
