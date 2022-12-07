@@ -109,7 +109,7 @@ func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociatio
 			log.Printf("[DEBUG] no tag associations found for tag %s", tb.tagName)
 			return nil, err
 		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		return nil, fmt.Errorf("unable to scan row err = %w", err)
 	}
 
 	return tagAssociations, nil

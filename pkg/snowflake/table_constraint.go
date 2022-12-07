@@ -234,7 +234,7 @@ func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.D
 			log.Printf("[DEBUG] no tableConstraints found for constraint %s", name)
 			return nil, err
 		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		return nil, fmt.Errorf("unable to scan row err = %w", err)
 	}
 	return &tableConstraints[0], nil
 }
