@@ -237,9 +237,17 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("warehouse_type", w.WarehouseType)
-	if err != nil {
-		return err
+	log.Printf("[DEBUG] warehouse type is: %s", w.WarehouseType)
+	if w.WarehouseType == "STANDARD" || w.WarehouseType == "SNOWPARK-OPTIMIZED" {
+		err = d.Set("warehouse_type", w.WarehouseType)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = d.Set("warehouse_type", "STANDARD")
+		if err != nil {
+			return err
+		}
 	}
 
 	stmt = warehouseBuilder.ShowParameters()
