@@ -285,7 +285,7 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 		return []int{}, nil
 	}
 	ints := strings.Split(s.String, ",")
-	var out []int
+	out := make([]int, 0, len(ints))
 	for _, i := range ints {
 		myInt, err := strconv.Atoi(i[:len(i)-1])
 		if err != nil {
