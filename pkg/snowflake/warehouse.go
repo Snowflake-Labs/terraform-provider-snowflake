@@ -86,6 +86,7 @@ type warehouse struct {
 	Suspended                       int64         `db:"suspended"`
 	UUID                            string        `db:"uuid"`
 	ScalingPolicy                   string        `db:"scaling_policy"`
+	WarehouseType                   string        `db:"warehouse_type"`
 }
 
 // warehouseParams struct to represent a row of parameters.

@@ -19,6 +19,7 @@ var warehouseProperties = []string{
 	"scaling_policy", "auto_suspend", "auto_resume",
 	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
 	"statement_timeout_in_seconds", "enable_query_acceleration", "query_acceleration_max_scale_factor",
+	"warehouse_type",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
@@ -134,6 +135,13 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
+	"warehouse_type": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      "STANDARD",
+		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "SNOWPARK-OPTIMIZED"}, true),
+		Description:  "Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -225,6 +233,10 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor)
+	if err != nil {
+		return err
+	}
+	err = d.Set("warehouse_type", w.WarehouseType)
 	if err != nil {
 		return err
 	}
