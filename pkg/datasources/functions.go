@@ -3,7 +3,6 @@ package datasources
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -75,11 +74,11 @@ func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 	currentFunctions, err := snowflake.ListFunctions(databaseName, schemaName, db)
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] functions in schema (%s) not found", d.Id())
+		log.Printf("[DEBUG] functions in schema (%s) not found", schemaName)
 		d.SetId("")
 		return nil
 	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse functions in schema (%s)", d.Id())
+		log.Printf("[DEBUG] unable to parse functions in schema (%s)", schemaName)
 		d.SetId("")
 		return nil
 	}
@@ -104,6 +103,6 @@ func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 		functions = append(functions, functionMap)
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId("functions")
 	return d.Set("functions", functions)
 }
