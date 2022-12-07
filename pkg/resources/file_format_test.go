@@ -73,7 +73,6 @@ func expectReadFileFormat(mock sqlmock.Sqlmock) {
 	mock.ExpectQuery(`^SHOW FILE FORMATS LIKE 'test_file_format' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 
-
 func TestFileFormatWhenMissing(t *testing.T) {
 	r := require.New(t)
 
