@@ -331,10 +331,10 @@ func ScanFunctions(rows *sqlx.Rows) ([]*function, error) {
 }
 
 type listFunctions struct {
-	Name 	  sql.NullString `db:"name"`
-	Arguments sql.NullString `db:"arguments"`
+	Name        sql.NullString `db:"name"`
+	Arguments   sql.NullString `db:"arguments"`
 	Description sql.NullString `db:"description"`
-	Language sql.NullString `db:"language"`
+	Language    sql.NullString `db:"language"`
 }
 
 func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]listFunctions, error) {
