@@ -106,7 +106,7 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		"this does not seem to be used",
 		managedAccountProperties,
 		managedAccountSchema,
-		snowflake.ManagedAccount,
+		snowflake.NewManagedAccountBuilder,
 		initialReadManagedAccount,
 	)(d, meta)
 }
@@ -126,7 +126,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ManagedAccount(id).Show()
+	stmt := snowflake.NewManagedAccountBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 	a, err := snowflake.ScanManagedAccount(row)
 
@@ -179,5 +179,5 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteManagedAccount implements schema.DeleteFunc.
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.ManagedAccount)(d, meta)
+	return DeleteResource("this does not seem to be used", snowflake.NewManagedAccountBuilder)(d, meta)
 }
