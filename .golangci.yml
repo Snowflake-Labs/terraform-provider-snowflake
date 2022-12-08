@@ -18,7 +18,9 @@ linters:
     - whitespace
     # unparam: Checks Go code for unused constants, variables, functions and types
     # - unparam  # todo: enabled
+    # checks for pointers to enclosing loop variables
     - exportloopref
+    # Check if comments end in a period
     - godot
     - gocritic
     - misspell
@@ -61,3 +63,5 @@ linters:
     - goimports
     # Finds slice declarations with non-zero initial length
     - makezero
+    # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint
+    - revive
