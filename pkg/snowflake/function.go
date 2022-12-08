@@ -144,7 +144,7 @@ func (pb *FunctionBuilder) ArgTypes() []string {
 //   - DESCRIBE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/user-defined-functions.html)
-func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
+func NewFunctionBuilder(db, schema, name string, argTypes []string) *FunctionBuilder {
 	return &FunctionBuilder{
 		name:          name,
 		db:            db,
@@ -285,7 +285,7 @@ func (pb *FunctionBuilder) Drop() (string, error) {
 	return fmt.Sprintf(`DROP FUNCTION %v`, qn), nil
 }
 
-type function struct {
+type Function struct {
 	Comment sql.NullString `db:"description"`
 	// Snowflake returns is_secure in the show function output, but it is irrelevant
 	Name         sql.NullString `db:"name"`
@@ -317,10 +317,10 @@ func ScanFunctionDescription(rows *sqlx.Rows) ([]functionDescription, error) {
 
 // SHOW FUNCTION can return more than one item because of function names overloading
 // https://docs.snowflake.com/en/sql-reference/sql/show-functions.html
-func ScanFunctions(rows *sqlx.Rows) ([]*function, error) {
-	var pcs []*function
+func ScanFunctions(rows *sqlx.Rows) ([]*Function, error) {
+	var pcs []*Function
 	for rows.Next() {
-		r := &function{}
+		r := &Function{}
 		err := rows.StructScan(r)
 		if err != nil {
 			return nil, err

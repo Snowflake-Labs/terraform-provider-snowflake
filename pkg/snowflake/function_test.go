@@ -7,7 +7,7 @@ import (
 )
 
 func getJavaScriptFuction(withArgs bool) *FunctionBuilder {
-	s := Function("test_db", "test_schema", "test_func", []string{})
+	s := NewFunctionBuilder("test_db", "test_schema", "test_func", []string{})
 	s.WithStatement(`var message = "Hi"` + "\n" + `return message`)
 	s.WithReturnType("varchar")
 	if withArgs {
@@ -26,7 +26,7 @@ const javafunc = `class CoolFunc {` + "\n" +
 	`}`
 
 func getJavaFuction(withArgs bool) *FunctionBuilder {
-	s := Function("test_db", "test_schema", "test_func", []string{})
+	s := NewFunctionBuilder("test_db", "test_schema", "test_func", []string{})
 	s.WithReturnType("varchar")
 	s.WithStatement(javafunc)
 	if withArgs {
@@ -42,7 +42,7 @@ const pythonfunc = `def add_py(i):` + "\n " +
 	` return i+1`
 
 func getPythonFunction(withArgs bool) *FunctionBuilder {
-	s := Function("test_db", "test_schema", "test_func", []string{})
+	s := NewFunctionBuilder("test_db", "test_schema", "test_func", []string{})
 	s.WithReturnType("int")
 	s.WithStatement(pythonfunc)
 	if withArgs {

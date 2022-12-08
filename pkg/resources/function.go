@@ -164,7 +164,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	s := d.Get("statement").(string)
 	ret := d.Get("return_type").(string)
 
-	builder := snowflake.Function(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
+	builder := snowflake.NewFunctionBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
 
 	// Set optionals, args
 	if _, ok := d.GetOk("arguments"); ok {
@@ -258,7 +258,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	funct := snowflake.Function(
+	funct := snowflake.NewFunctionBuilder(
 		functionID.DatabaseName,
 		functionID.SchemaName,
 		functionID.FunctionName,
@@ -405,7 +405,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Function(
+	builder := snowflake.NewFunctionBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.FunctionName,
