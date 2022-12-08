@@ -114,7 +114,7 @@ func (tb *ExternalTableBuilder) WithTags(tags []TagValue) *ExternalTableBuilder 
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/sql/create-external-table.html)
 
-func ExternalTable(name, db, schema string) *ExternalTableBuilder {
+func NewExternalTableBuilder(name, db, schema string) *ExternalTableBuilder {
 	return &ExternalTableBuilder{
 		name:   name,
 		db:     db,
@@ -207,7 +207,7 @@ func (tb *ExternalTableBuilder) GetTagValueString() string {
 	return strings.TrimSuffix(q.String(), ", ")
 }
 
-type externalTable struct {
+type ExternalTable struct {
 	CreatedOn         sql.NullString `db:"created_on"`
 	ExternalTableName sql.NullString `db:"name"`
 	DatabaseName      sql.NullString `db:"database_name"`
@@ -216,13 +216,13 @@ type externalTable struct {
 	Owner             sql.NullString `db:"owner"`
 }
 
-func ScanExternalTable(row *sqlx.Row) (*externalTable, error) {
-	t := &externalTable{}
+func ScanExternalTable(row *sqlx.Row) (*ExternalTable, error) {
+	t := &ExternalTable{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]externalTable, error) {
+func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]ExternalTable, error) {
 	stmt := fmt.Sprintf(`SHOW EXTERNAL TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -230,7 +230,7 @@ func ListExternalTables(databaseName string, schemaName string, db *sql.DB) ([]e
 	}
 	defer rows.Close()
 
-	dbs := []externalTable{}
+	dbs := []ExternalTable{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no external tables found")

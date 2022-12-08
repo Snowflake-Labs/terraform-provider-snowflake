@@ -206,7 +206,7 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 		}
 		columns = append(columns, columnDef)
 	}
-	builder := snowflake.ExternalTable(name, database, dbSchema)
+	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
 	builder.WithColumns(columns)
 	builder.WithFileFormat(d.Get("file_format").(string))
 	builder.WithLocation(d.Get("location").(string))
@@ -269,7 +269,7 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	schema := externalTableID.SchemaName
 	name := externalTableID.ExternalTableName
 
-	stmt := snowflake.ExternalTable(name, dbName, schema).Show()
+	stmt := snowflake.NewExternalTableBuilder(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	externalTable, err := snowflake.ScanExternalTable(row)
 	if err != nil {
@@ -277,9 +277,8 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] external table (%s) not found", d.Id())
 			d.SetId("")
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 
 	if err := d.Set("name", externalTable.ExternalTableName.String); err != nil {
@@ -300,7 +299,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	builder := snowflake.ExternalTable(name, database, dbSchema)
+	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
 
 	if d.HasChange("tag") {
 		v := d.Get("tag")
@@ -339,7 +338,7 @@ func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 	schema := externalTableID.SchemaName
 	externalTableName := externalTableID.ExternalTableName
 
-	q := snowflake.ExternalTable(externalTableName, dbName, schema).Drop()
+	q := snowflake.NewExternalTableBuilder(externalTableName, dbName, schema).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
