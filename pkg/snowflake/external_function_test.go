@@ -8,7 +8,7 @@ import (
 
 func TestExternalFunctionCreate(t *testing.T) {
 	r := require.New(t)
-	s := ExternalFunction("test_function", "test_db", "test_schema")
+	s := NewExternalFunctionBuilder("test_function", "test_db", "test_schema")
 	s.WithArgs([]map[string]string{{"name": "data", "type": "varchar"}})
 	s.WithArgTypes("varchar")
 	s.WithReturnType("varchar")
@@ -28,16 +28,16 @@ func TestExternalFunctionDrop(t *testing.T) {
 	r := require.New(t)
 
 	// Without arg
-	s := ExternalFunction("test_function", "test_db", "test_schema")
+	s := NewExternalFunctionBuilder("test_function", "test_db", "test_schema")
 	r.Equal(`DROP FUNCTION "test_db"."test_schema"."test_function" ()`, s.Drop())
 
 	// With arg
-	s = ExternalFunction("test_function", "test_db", "test_schema").WithArgTypes("varchar")
+	s = NewExternalFunctionBuilder("test_function", "test_db", "test_schema").WithArgTypes("varchar")
 	r.Equal(`DROP FUNCTION "test_db"."test_schema"."test_function" (varchar)`, s.Drop())
 }
 
 func TestExternalFunctionShow(t *testing.T) {
 	r := require.New(t)
-	s := ExternalFunction("test_function", "test_db", "test_schema")
+	s := NewExternalFunctionBuilder("test_function", "test_db", "test_schema")
 	r.Equal(`SHOW EXTERNAL FUNCTIONS LIKE 'test_function' IN SCHEMA "test_db"."test_schema"`, s.Show())
 }

@@ -137,7 +137,7 @@ func (fb *ExternalFunctionBuilder) WithComment(c string) *ExternalFunctionBuilde
 	return fb
 }
 
-// ExternalFunction returns a pointer to a Builder that abstracts the DDL operations for an external function.
+// NewExternalFunctionBuilder returns a pointer to a Builder that abstracts the DDL operations for an external function.
 //
 // Supported DDL operations are:
 //   - CREATE EXTERNAL FUNCTION
@@ -147,7 +147,7 @@ func (fb *ExternalFunctionBuilder) WithComment(c string) *ExternalFunctionBuilde
 //   - DESCRIBE FUNCTION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-udf.html#external-function-management)
-func ExternalFunction(name, db, schema string) *ExternalFunctionBuilder {
+func NewExternalFunctionBuilder(name, db, schema string) *ExternalFunctionBuilder {
 	return &ExternalFunctionBuilder{
 		name:              name,
 		db:                db,
@@ -232,7 +232,7 @@ func (fb *ExternalFunctionBuilder) Describe() string {
 	return fmt.Sprintf(`DESCRIBE FUNCTION %s`, fb.QualifiedNameWithArgTypes())
 }
 
-type externalFunction struct {
+type ExternalFunction struct {
 	CreatedOn            sql.NullString `db:"created_on"`
 	ExternalFunctionName sql.NullString `db:"name"`
 	DatabaseName         sql.NullString `db:"catalog_name"`
@@ -243,22 +243,22 @@ type externalFunction struct {
 }
 
 // ScanExternalFunction.
-func ScanExternalFunction(row *sqlx.Row) (*externalFunction, error) {
-	f := &externalFunction{}
+func ScanExternalFunction(row *sqlx.Row) (*ExternalFunction, error) {
+	f := &ExternalFunction{}
 	e := row.StructScan(f)
 	return f, e
 }
 
-type externalFunctionDescription struct {
+type ExternalFunctionDescription struct {
 	Property sql.NullString `db:"property"`
 	Value    sql.NullString `db:"value"`
 }
 
 // ScanExternalFunctionDescription.
-func ScanExternalFunctionDescription(rows *sqlx.Rows) ([]externalFunctionDescription, error) {
-	efds := []externalFunctionDescription{}
+func ScanExternalFunctionDescription(rows *sqlx.Rows) ([]ExternalFunctionDescription, error) {
+	efds := []ExternalFunctionDescription{}
 	for rows.Next() {
-		efd := externalFunctionDescription{}
+		efd := ExternalFunctionDescription{}
 		err := rows.StructScan(&efd)
 		if err != nil {
 			return nil, err
@@ -268,7 +268,7 @@ func ScanExternalFunctionDescription(rows *sqlx.Rows) ([]externalFunctionDescrip
 	return efds, rows.Err()
 }
 
-func ListExternalFunctions(databaseName string, schemaName string, db *sql.DB) ([]externalFunction, error) {
+func ListExternalFunctions(databaseName string, schemaName string, db *sql.DB) ([]ExternalFunction, error) {
 	stmt := fmt.Sprintf(`SHOW EXTERNAL FUNCTIONS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -276,7 +276,7 @@ func ListExternalFunctions(databaseName string, schemaName string, db *sql.DB) (
 	}
 	defer rows.Close()
 
-	dbs := []externalFunction{}
+	dbs := []ExternalFunction{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no external functions found")

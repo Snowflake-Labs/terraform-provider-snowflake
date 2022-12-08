@@ -233,7 +233,7 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	var argtypes string
 
-	builder := snowflake.ExternalFunction(name, database, dbSchema)
+	builder := snowflake.NewExternalFunctionBuilder(name, database, dbSchema)
 	builder.WithReturnType(d.Get("return_type").(string))
 	builder.WithReturnBehavior(d.Get("return_behavior").(string))
 	builder.WithAPIIntegration(d.Get("api_integration").(string))
@@ -335,16 +335,15 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
 	// Some properties can come from the SHOW EXTERNAL FUNCTION call
-	stmt := snowflake.ExternalFunction(name, dbName, dbSchema).Show()
+	stmt := snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	externalFunction, err := snowflake.ScanExternalFunction(row)
 	if err != nil {
 		if err.Error() == snowflake.ErrNoRowInRS {
 			d.SetId("")
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 
 	// Note: 'language' must be EXTERNAL and 'is_external_function' set to Y
@@ -373,7 +372,7 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Some properties come from the DESCRIBE FUNCTION call
-	stmt = snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Describe()
+	stmt = snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).WithArgTypes(argtypes).Describe()
 	externalFunctionDescriptionRows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		return err
@@ -505,7 +504,7 @@ func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	name := externalFunctionID.ExternalFunctionName
 	argtypes := externalFunctionID.ExternalFunctionArgTypes
 
-	q := snowflake.ExternalFunction(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
+	q := snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting external function %v error %w", d.Id(), err)
 	}
