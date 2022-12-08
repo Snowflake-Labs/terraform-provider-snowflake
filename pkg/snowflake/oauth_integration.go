@@ -19,14 +19,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-user-security.html#security-integrations)
-func OAuthIntegration(name string) *Builder {
+func NewOAuthIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: SecurityIntegrationType,
 		name:       name,
 	}
 }
 
-type oauthIntegration struct {
+type OauthIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
@@ -35,15 +35,15 @@ type oauthIntegration struct {
 	CreatedOn       sql.NullString `db:"created_on"`
 }
 
-func ScanOAuthIntegration(row *sqlx.Row) (*oauthIntegration, error) {
-	r := &oauthIntegration{}
+func ScanOAuthIntegration(row *sqlx.Row) (*OauthIntegration, error) {
+	r := &OauthIntegration{}
 	if err := row.StructScan(r); err != nil {
 		return nil, fmt.Errorf("error scanning struct err = %w", err)
 	}
 	return r, nil
 }
 
-func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
+func ListIntegrations(db *sql.DB) ([]OauthIntegration, error) {
 	stmt := "SHOW INTEGRATIONS"
 	rows, err := db.Query(stmt)
 	if err != nil {
@@ -52,7 +52,7 @@ func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
 
 	defer rows.Close()
 
-	r := []oauthIntegration{}
+	r := []OauthIntegration{}
 	if err := sqlx.StructScan(rows, &r); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no integrations found")
@@ -64,6 +64,6 @@ func ListIntegrations(db *sql.DB) ([]oauthIntegration, error) {
 }
 
 func DropIntegration(db *sql.DB, name string) error {
-	stmt := OAuthIntegration(name).Drop()
+	stmt := NewOAuthIntegrationBuilder(name).Drop()
 	return Exec(db, stmt)
 }

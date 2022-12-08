@@ -9,7 +9,7 @@ import (
 
 func TestOAuthIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.OAuthIntegration("tableau_desktop")
+	builder := snowflake.NewOAuthIntegrationBuilder("tableau_desktop")
 	r.NotNil(builder)
 
 	q := builder.Show()
