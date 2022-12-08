@@ -38,7 +38,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The account privilege to grant. Valid priviliges are those in [globalPriviliges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
+		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 	},
