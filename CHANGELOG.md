@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.53.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.53.0...v0.53.1) (2022-12-08)
+
+
+### Misc
+
+* **deps:** bump github.com/hashicorp/terraform-plugin-sdk/v2 ([#1373](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1373)) ([b22a2bd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b22a2bdc5c2ec3031fb116323f9802945efddcc2))
+* **deps:** bump github.com/snowflakedb/gosnowflake ([#1375](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1375)) ([e1891b6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e1891b61ef5eeabc49276099594d9c1726ca5373))
+* **deps:** bump github/codeql-action from 1 to 2 ([#1353](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1353)) ([9d7bc15](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9d7bc15790eca62d893a2bec3535d468e34710c2))
+* **deps:** bump golang.org/x/crypto from 0.1.0 to 0.4.0 ([#1407](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1407)) ([fc96d62](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc96d62119bdd985eca8b7c6b09031592a4a7f65))
+* **deps:** bump golang.org/x/tools from 0.2.0 to 0.4.0 ([#1400](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1400)) ([58ca9d8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/58ca9d895254574bc54fadf0ca202a0ab99992fb))
+* **deps:** bump goreleaser/goreleaser-action from 2 to 3 ([#1354](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1354)) ([9ad93a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9ad93a85a72e54d4b93339a3078ab1d4ca85a764))
+* **deps:** bump peter-evans/create-or-update-comment from 1 to 2 ([#1350](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1350)) ([d4d340e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d4d340e85369fa1727014d3f51f752b85687994c))
+* **deps:** bump peter-evans/find-comment from 1 to 2 ([#1352](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1352)) ([ce13a8e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ce13a8e6655f9cbe03bb2e1c91b9f5746fd5d5f7))
+* **deps:** bump peter-evans/slash-command-dispatch from 2 to 3 ([#1351](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1351)) ([9d17ead](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9d17ead0156979a5001f95bbc5636221b232fb17))
+
+
+### BugFixes
+
+* docs ([#1409](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1409)) ([fb68c25](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb68c25d9c1145fa9bbe38395ce1594d9d127139))
+
 ## [0.53.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.52.0...v0.53.0) (2022-12-07)
 
 
