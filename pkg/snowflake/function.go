@@ -242,8 +242,8 @@ func (pb *FunctionBuilder) Rename(newName string) (string, error) {
 }
 
 // ChangeComment returns the SQL query that will update the comment on the function.
-func (vb *FunctionBuilder) ChangeComment(c string) (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *FunctionBuilder) ChangeComment(c string) (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -252,8 +252,8 @@ func (vb *FunctionBuilder) ChangeComment(c string) (string, error) {
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the function.
-func (vb *FunctionBuilder) RemoveComment() (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *FunctionBuilder) RemoveComment() (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -295,17 +295,17 @@ type Function struct {
 	Arguments    sql.NullString `db:"arguments"`
 }
 
-type functionDescription struct {
+type FunctionDescription struct {
 	Property sql.NullString `db:"property"`
 	Value    sql.NullString `db:"value"`
 }
 
 // ScanFunctionDescription reads through the rows with property and value columns
 // and returns a slice of functionDescription structs.
-func ScanFunctionDescription(rows *sqlx.Rows) ([]functionDescription, error) {
-	pdsl := []functionDescription{}
+func ScanFunctionDescription(rows *sqlx.Rows) ([]FunctionDescription, error) {
+	pdsl := []FunctionDescription{}
 	for rows.Next() {
-		pd := functionDescription{}
+		pd := FunctionDescription{}
 		err := rows.StructScan(&pd)
 		if err != nil {
 			return nil, err
@@ -330,14 +330,14 @@ func ScanFunctions(rows *sqlx.Rows) ([]*Function, error) {
 	return pcs, rows.Err()
 }
 
-type listFunctions struct {
+type UserFunctions struct {
 	Name        sql.NullString `db:"name"`
 	Arguments   sql.NullString `db:"arguments"`
 	Description sql.NullString `db:"description"`
 	Language    sql.NullString `db:"language"`
 }
 
-func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]listFunctions, error) {
+func ListUserFunctions(databaseName string, schemaName string, db *sql.DB) ([]UserFunctions, error) {
 	stmt := fmt.Sprintf(`SHOW USER FUNCTIONS IN SCHEMA "%v"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -345,7 +345,7 @@ func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]listFu
 	}
 	defer rows.Close()
 
-	dbs := []listFunctions{}
+	dbs := []UserFunctions{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no functions found")

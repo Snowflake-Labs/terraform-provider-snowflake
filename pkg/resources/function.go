@@ -463,7 +463,7 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Function(
+	builder := snowflake.NewFunctionBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.FunctionName,

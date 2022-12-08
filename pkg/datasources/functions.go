@@ -65,14 +65,14 @@ func Functions() *schema.Resource {
 	}
 }
 
-// todo: fix this. ListFunctions isn't using the right struct right now and also the signature of this doesn't support all the features it could for example, database and schema should be optional, and you could also list by account.
+// todo: fix this. ListUserFunctions isn't using the right struct right now and also the signature of this doesn't support all the features it could for example, database and schema should be optional, and you could also list by account.
 func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
 	d.SetId("functions")
-	currentFunctions, err := snowflake.ListFunctions(databaseName, schemaName, db)
+	currentFunctions, err := snowflake.ListUserFunctions(databaseName, schemaName, db)
 	if err != nil {
 		log.Printf("[DEBUG] error listing functions: %v", err)
 		return nil
