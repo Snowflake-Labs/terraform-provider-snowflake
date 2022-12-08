@@ -162,7 +162,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	s := d.Get("statement").(string)
 	ret := d.Get("return_type").(string)
 
-	builder := snowflake.Procedure(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
+	builder := snowflake.NewProcedureBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
 
 	// Set optionals, args
 	if _, ok := d.GetOk("arguments"); ok {
@@ -229,7 +229,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	proc := snowflake.Procedure(
+	proc := snowflake.NewProcedureBuilder(
 		procedureID.DatabaseName,
 		procedureID.SchemaName,
 		procedureID.ProcedureName,
@@ -351,7 +351,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Procedure(
+	builder := snowflake.NewProcedureBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.ProcedureName,
@@ -420,7 +420,7 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Procedure(
+	builder := snowflake.NewProcedureBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.ProcedureName,
