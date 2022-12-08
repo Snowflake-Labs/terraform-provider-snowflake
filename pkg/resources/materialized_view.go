@@ -137,7 +137,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	warehouse := d.Get("warehouse").(string)
 	s := d.Get("statement").(string)
 
-	builder := snowflake.MaterializedView(name).WithDB(database).WithSchema(schema).WithWarehouse(warehouse).WithStatement(s)
+	builder := snowflake.NewMaterializedViewBuilder(name).WithDB(database).WithSchema(schema).WithWarehouse(warehouse).WithStatement(s)
 
 	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
@@ -189,7 +189,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := materializedViewID.SchemaName
 	view := materializedViewID.ViewName
 
-	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Show()
+	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanMaterializedView(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -244,7 +244,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := mvid.SchemaName
 	view := mvid.ViewName
 
-	builder := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema)
+	builder := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
@@ -317,7 +317,7 @@ func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := materializedViewID.SchemaName
 	view := materializedViewID.ViewName
 
-	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Drop()
+	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting materialized view %v err = %w", d.Id(), err)
 	}

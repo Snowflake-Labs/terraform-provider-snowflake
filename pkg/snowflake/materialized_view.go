@@ -118,7 +118,7 @@ func (vb *MaterializedViewBuilder) UnsetTag(tag TagValue) string {
 //   - DESCRIBE MATERIALIZED VIEW
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-table.html#materialized-view-management)
-func MaterializedView(name string) *MaterializedViewBuilder {
+func NewMaterializedViewBuilder(name string) *MaterializedViewBuilder {
 	return &MaterializedViewBuilder{
 		name: name,
 	}
@@ -200,7 +200,7 @@ func (vb *MaterializedViewBuilder) Drop() string {
 	return fmt.Sprintf(`DROP MATERIALIZED VIEW %v`, vb.QualifiedName())
 }
 
-type materializedView struct {
+type MaterializedView struct {
 	Comment       sql.NullString `db:"comment"`
 	IsSecure      bool           `db:"is_secure"`
 	Name          sql.NullString `db:"name"`
@@ -210,13 +210,13 @@ type materializedView struct {
 	WarehouseName sql.NullString `db:"warehouse_name"`
 }
 
-func ScanMaterializedView(row *sqlx.Row) (*materializedView, error) {
-	r := &materializedView{}
+func ScanMaterializedView(row *sqlx.Row) (*MaterializedView, error) {
+	r := &MaterializedView{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) ([]materializedView, error) {
+func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) ([]MaterializedView, error) {
 	stmt := fmt.Sprintf(`SHOW MATERIALIZED VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -224,7 +224,7 @@ func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) (
 	}
 	defer rows.Close()
 
-	dbs := []materializedView{}
+	dbs := []MaterializedView{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no materialized views found")
