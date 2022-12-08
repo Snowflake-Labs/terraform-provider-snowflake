@@ -169,7 +169,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		props,
 		warehouseSchema,
 		func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 		ReadWarehouse,
 	)(d, meta)
@@ -178,7 +178,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 // ReadWarehouse implements schema.ReadFunc.
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	warehouseBuilder := snowflake.Warehouse(d.Id())
+	warehouseBuilder := snowflake.NewWarehouseBuilder(d.Id())
 	stmt := warehouseBuilder.Show()
 
 	row := snowflake.QueryRow(db, stmt)
@@ -293,7 +293,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		warehouseProperties,
 		warehouseSchema,
 		func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 		ReadWarehouse,
 	)(d, meta)
@@ -303,7 +303,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource(
 		"warehouse", func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 	)(d, meta)
 }
