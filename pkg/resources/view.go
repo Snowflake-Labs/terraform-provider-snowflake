@@ -94,7 +94,7 @@ func View() *schema.Resource {
 	}
 }
 
-type viewID struct {
+type ViewID struct {
 	DatabaseName string
 	SchemaName   string
 	ViewName     string
@@ -106,7 +106,7 @@ const (
 
 // String() takes in a viewID object and returns a pipe-delimited string:
 // DatabaseName|SchemaName|viewName.
-func (si *viewID) String() (string, error) {
+func (si *ViewID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = viewDelimiter
@@ -121,7 +121,7 @@ func (si *viewID) String() (string, error) {
 
 // viewIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|viewName
 // and returns a externalTableID object.
-func viewIDFromString(stringID string) (*viewID, error) {
+func viewIDFromString(stringID string) (*ViewID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = viewDelimiter
 	lines, err := reader.ReadAll()
@@ -136,7 +136,7 @@ func viewIDFromString(stringID string) (*viewID, error) {
 		return nil, fmt.Errorf("3 fields allowed")
 	}
 
-	viewResult := &viewID{
+	viewResult := &ViewID{
 		DatabaseName: lines[0][0],
 		SchemaName:   lines[0][1],
 		ViewName:     lines[0][2],
@@ -152,7 +152,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	s := d.Get("statement").(string)
 
-	builder := snowflake.View(name).WithDB(database).WithSchema(schema).WithStatement(s)
+	builder := snowflake.NewViewBuilder(name).WithDB(database).WithSchema(schema).WithStatement(s)
 
 	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
@@ -181,7 +181,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating view %v", name)
 	}
 
-	viewID := &viewID{
+	viewID := &ViewID{
 		DatabaseName: database,
 		SchemaName:   schema,
 		ViewName:     name,
@@ -198,15 +198,15 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 // ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewId, err := viewIDFromString(d.Id())
+	viewID, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := viewId.DatabaseName
-	schema := viewId.SchemaName
-	view := viewId.ViewName
+	dbName := viewID.DatabaseName
+	schema := viewID.SchemaName
+	view := viewID.ViewName
 
-	q := snowflake.View(view).WithDB(dbName).WithSchema(schema).Show()
+	q := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -257,14 +257,14 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateView implements schema.UpdateFunc.
 func UpdateView(d *schema.ResourceData, meta interface{}) error {
-	viewId, err := viewIDFromString(d.Id())
+	viewID, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := viewId.DatabaseName
-	schema := viewId.SchemaName
-	view := viewId.ViewName
-	builder := snowflake.View(view).WithDB(dbName).WithSchema(schema)
+	dbName := viewID.DatabaseName
+	schema := viewID.SchemaName
+	view := viewID.ViewName
+	builder := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
@@ -279,7 +279,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error renaming view %v", d.Id())
 		}
 
-		viewID := &viewID{
+		viewID := &ViewID{
 			DatabaseName: dbName,
 			SchemaName:   schema,
 			ViewName:     name.(string),
@@ -374,15 +374,15 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewId, err := viewIDFromString(d.Id())
+	viewID, err := viewIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := viewId.DatabaseName
-	schema := viewId.SchemaName
-	view := viewId.ViewName
+	dbName := viewID.DatabaseName
+	schema := viewID.SchemaName
+	view := viewID.ViewName
 
-	q, err := snowflake.View(view).WithDB(dbName).WithSchema(schema).Drop()
+	q, err := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
 	if err != nil {
 		return err
 	}
