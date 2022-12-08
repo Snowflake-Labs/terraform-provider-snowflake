@@ -9,7 +9,7 @@ import (
 
 func TestExternalOauthIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.ExternalOauthIntegration("azure")
+	builder := snowflake.NewExternalOauthIntegrationBuilder("azure")
 	r.NotNil(builder)
 
 	q := builder.Show()

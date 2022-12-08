@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ExternalOauthIntegration returns a pointer to a Builder that abstracts the DDL operations for an api integration.
+// NewExternalOauthIntegrationBuilder returns a pointer to a Builder that abstracts the DDL operations for an api integration.
 //
 // Supported DDL operations are:
 //   - CREATE SECURITY INTEGRATION
@@ -17,14 +17,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-user-security.html#security-integrations)
-func ExternalOauthIntegration(name string) *Builder {
+func NewExternalOauthIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: SecurityIntegrationType,
 		name:       name,
 	}
 }
 
-type externalOauthIntegration struct {
+type ExternalOauthIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
@@ -33,8 +33,8 @@ type externalOauthIntegration struct {
 	CreatedOn       sql.NullString `db:"created_on"`
 }
 
-func ScanExternalOauthIntegration(row *sqlx.Row) (*externalOauthIntegration, error) {
-	r := &externalOauthIntegration{}
+func ScanExternalOauthIntegration(row *sqlx.Row) (*ExternalOauthIntegration, error) {
+	r := &ExternalOauthIntegration{}
 	if err := row.StructScan(r); err != nil {
 		return r, fmt.Errorf("error scanning struct err = %w", err)
 	}
