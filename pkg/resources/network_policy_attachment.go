@@ -277,7 +277,7 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 func ensureUserAlterPrivileges(users []string, meta interface{}) error {
 	db := meta.(*sql.DB)
 	for _, user := range users {
-		userDescSQL := snowflake.User(user).Describe()
+		userDescSQL := snowflake.NewUser(user).Describe()
 		if err := snowflake.Exec(db, userDescSQL); err != nil {
 			return fmt.Errorf("error altering network policy of user %v", user)
 		}
