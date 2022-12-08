@@ -134,7 +134,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		if ret, ok := d.GetOk("return_type"); ok {
 			returnType = strings.ToUpper(ret.(string))
 		} else {
-			return errors.New("return_type must be set when specifying procedure_name.")
+			return errors.New("return_type must be set when specifying procedure_name")
 		}
 	}
 	dbName := d.Get("database_name").(string)
@@ -146,10 +146,10 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (procedureName == "") && !futureProcedures {
-		return errors.New("procedure_name must be set unless on_future is true.")
+		return errors.New("procedure_name must be set unless on_future is true")
 	}
 	if (procedureName != "") && futureProcedures {
-		return errors.New("procedure_name must be empty if on_future is true.")
+		return errors.New("procedure_name must be empty if on_future is true")
 	}
 
 	if procedureName != "" {

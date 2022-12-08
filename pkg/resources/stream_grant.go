@@ -101,10 +101,10 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (streamName == "") && !futureStreams {
-		return errors.New("stream_name must be set unless on_future is true.")
+		return errors.New("stream_name must be set unless on_future is true")
 	}
 	if (streamName != "") && futureStreams {
-		return errors.New("stream_name must be empty if on_future is true.")
+		return errors.New("stream_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder

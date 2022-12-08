@@ -101,10 +101,10 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (fileFormatName == "") && !futureFileFormats {
-		return errors.New("file_format_name must be set unless on_future is true.")
+		return errors.New("file_format_name must be set unless on_future is true")
 	}
 	if (fileFormatName != "") && futureFileFormats {
-		return errors.New("file_format_name must be empty if on_future is true.")
+		return errors.New("file_format_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder

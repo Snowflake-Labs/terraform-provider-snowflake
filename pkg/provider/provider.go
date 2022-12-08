@@ -506,7 +506,7 @@ func GetOauthAccessToken(
 	client := &http.Client{}
 	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {
-		return "", fmt.Errorf("Oauth request returned an error:")
+		return "", fmt.Errorf("oauth request returned an error")
 	}
 
 	var result Result
