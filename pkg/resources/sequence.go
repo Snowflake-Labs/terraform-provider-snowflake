@@ -103,7 +103,7 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	sq := snowflake.Sequence(name, database, schema)
+	sq := snowflake.NewSequenceBuilder(name, database, schema)
 
 	if i, ok := d.GetOk("increment"); ok {
 		sq.WithIncrement(i.(int))
@@ -144,7 +144,7 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	schema := sequenceID.SchemaName
 	name := sequenceID.SequenceName
 
-	seq := snowflake.Sequence(name, database, schema)
+	seq := snowflake.NewSequenceBuilder(name, database, schema)
 	stmt := seq.Show()
 	row := snowflake.QueryRow(db, stmt)
 
@@ -211,7 +211,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 	schema := sequenceID.SchemaName
 	name := sequenceID.SequenceName
 
-	sq := snowflake.Sequence(name, database, schema)
+	sq := snowflake.NewSequenceBuilder(name, database, schema)
 	stmt := sq.Show()
 	row := snowflake.QueryRow(db, stmt)
 
@@ -261,7 +261,7 @@ func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
 	schema := sequenceID.SchemaName
 	name := sequenceID.SequenceName
 
-	stmt := snowflake.Sequence(name, database, schema).Drop()
+	stmt := snowflake.NewSequenceBuilder(name, database, schema).Drop()
 	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error dropping sequence %s err = %w", name, err)
 	}
