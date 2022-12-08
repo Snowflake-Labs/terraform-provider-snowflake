@@ -57,7 +57,7 @@ func TestSchemaRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.Schema("good_name").WithDB("test_db").Show()
+		q := snowflake.NewSchemaBuilder("good_name").WithDB("test_db").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadSchema(d, db)
 		r.Empty(d.State())
