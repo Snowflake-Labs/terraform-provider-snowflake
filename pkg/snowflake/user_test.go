@@ -9,7 +9,7 @@ import (
 
 func TestUser(t *testing.T) {
 	r := require.New(t)
-	u := snowflake.User("user1")
+	u := snowflake.NewUserBuilder("user1")
 	r.NotNil(u)
 
 	q := u.Show()

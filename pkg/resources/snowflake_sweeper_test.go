@@ -122,7 +122,7 @@ func getUsersSweeper(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if user %s starts with tst-terraform", user.Name.String)
 				if strings.HasPrefix(user.Name.String, "tst-terraform") {
 					log.Printf("[DEBUG] deleting user %s", user.Name.String)
-					stmt := snowflake.NewUser(user.Name.String).Drop()
+					stmt := snowflake.NewUserBuilder(user.Name.String).Drop()
 					if err := snowflake.Exec(db, stmt); err != nil {
 						return fmt.Errorf("Error deleting user %q %w", user.Name.String, err)
 					}
