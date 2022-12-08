@@ -9,7 +9,7 @@ import (
 
 func TestAPIIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.APIIntegration("aws_api")
+	builder := snowflake.NewAPIIntegrationBuilder("aws_api")
 	r.NotNil(builder)
 
 	q := builder.Show()
