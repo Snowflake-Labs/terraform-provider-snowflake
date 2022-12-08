@@ -157,7 +157,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.SamlIntegration(name).Create()
+	stmt := snowflake.NewSamlIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetRaw(`TYPE=SAML2`)
@@ -222,7 +222,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.SamlIntegration(id).Show()
+	stmt := snowflake.NewSamlIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -258,7 +258,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.SamlIntegration(id).Describe()
+	stmt = snowflake.NewSamlIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe security integration err = %w", err)
@@ -386,7 +386,7 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.SamlIntegration(id).Alter()
+	stmt := snowflake.NewSamlIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -471,5 +471,5 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSAMLIntegration implements schema.DeleteFunc.
 func DeleteSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.SamlIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewSamlIntegrationBuilder)(d, meta)
 }

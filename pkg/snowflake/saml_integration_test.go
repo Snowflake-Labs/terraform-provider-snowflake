@@ -9,7 +9,7 @@ import (
 
 func TestSamlIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.SamlIntegration("test_saml_integration")
+	builder := snowflake.NewSamlIntegrationBuilder("test_saml_integration")
 	r.NotNil(builder)
 
 	q := builder.Show()
