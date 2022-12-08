@@ -158,7 +158,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	builder := snowflake.Pipe(name, database, schema)
+	builder := snowflake.NewPipeBuilder(name, database, schema)
 
 	// Set optionals
 	if v, ok := d.GetOk("copy_statement"); ok {
@@ -217,7 +217,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	schema := pipeID.SchemaName
 	name := pipeID.PipeName
 
-	sq := snowflake.Pipe(name, dbName, schema).Show()
+	sq := snowflake.NewPipeBuilder(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 	pipe, err := snowflake.ScanPipe(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -290,7 +290,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	schema := pipeID.SchemaName
 	pipe := pipeID.PipeName
 
-	builder := snowflake.Pipe(pipe, dbName, schema)
+	builder := snowflake.NewPipeBuilder(pipe, dbName, schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("comment") {
@@ -328,7 +328,7 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	schema := pipeID.SchemaName
 	pipe := pipeID.PipeName
 
-	q := snowflake.Pipe(pipe, dbName, schema).Drop()
+	q := snowflake.NewPipeBuilder(pipe, dbName, schema).Drop()
 
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)

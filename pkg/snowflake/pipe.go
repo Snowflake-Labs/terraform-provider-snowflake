@@ -89,7 +89,7 @@ func (pb *PipeBuilder) WithErrorIntegration(s string) *PipeBuilder {
 //   - SHOW PIPE
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-pipe.html#pipe-management)
-func Pipe(name, db, schema string) *PipeBuilder {
+func NewPipeBuilder(name, db, schema string) *PipeBuilder {
 	return &PipeBuilder{
 		name:   name,
 		db:     db,
@@ -160,7 +160,7 @@ func (pb *PipeBuilder) Show() string {
 	return fmt.Sprintf(`SHOW PIPES LIKE '%v' IN SCHEMA "%v"."%v"`, pb.name, pb.db, pb.schema)
 }
 
-type pipe struct {
+type Pipe struct {
 	Createdon           string         `db:"created_on"`
 	Name                string         `db:"name"`
 	DatabaseName        string         `db:"database_name"`
@@ -173,13 +173,13 @@ type pipe struct {
 	ErrorIntegration    sql.NullString `db:"error_integration"`
 }
 
-func ScanPipe(row *sqlx.Row) (*pipe, error) {
-	p := &pipe{}
+func ScanPipe(row *sqlx.Row) (*Pipe, error) {
+	p := &Pipe{}
 	e := row.StructScan(p)
 	return p, e
 }
 
-func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]pipe, error) {
+func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]Pipe, error) {
 	stmt := fmt.Sprintf(`SHOW PIPES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -187,7 +187,7 @@ func ListPipes(databaseName string, schemaName string, db *sql.DB) ([]pipe, erro
 	}
 	defer rows.Close()
 
-	dbs := []pipe{}
+	dbs := []Pipe{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no pipes found")
