@@ -34,7 +34,7 @@ func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{})
 	db := meta.(*sql.DB)
 	integrationName := d.Get("integration_name").(string)
 
-	sel := snowflake.SystemGenerateSCIMAccessToken(integrationName).Select()
+	sel := snowflake.NewSystemGenerateSCIMAccessTokenBuilder(integrationName).Select()
 	row := snowflake.QueryRow(db, sel)
 	accessToken, err := snowflake.ScanSCIMAccessToken(row)
 	if errors.Is(err, sql.ErrNoRows) {

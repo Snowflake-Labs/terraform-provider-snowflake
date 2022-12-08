@@ -19,14 +19,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-user-security.html#storage-integrations)
-func StorageIntegration(name string) *Builder {
+func NewStorageIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: StorageIntegrationType,
 		name:       name,
 	}
 }
 
-type storageIntegration struct {
+type StorageIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
@@ -35,13 +35,13 @@ type storageIntegration struct {
 	Comment         sql.NullString `db:"comment"`
 }
 
-func ScanStorageIntegration(row *sqlx.Row) (*storageIntegration, error) {
-	r := &storageIntegration{}
+func ScanStorageIntegration(row *sqlx.Row) (*StorageIntegration, error) {
+	r := &StorageIntegration{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListStorageIntegrations(db *sql.DB) ([]storageIntegration, error) {
+func ListStorageIntegrations(db *sql.DB) ([]StorageIntegration, error) {
 	stmt := "SHOW STORAGE INTEGRATIONS"
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -49,7 +49,7 @@ func ListStorageIntegrations(db *sql.DB) ([]storageIntegration, error) {
 	}
 	defer rows.Close()
 
-	dbs := []storageIntegration{}
+	dbs := []StorageIntegration{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no resource monitors found")

@@ -16,7 +16,7 @@ func TestSystemGetSnowflakePlatformInfoQuery(t *testing.T) {
 func TestSystemGetSnowflakePlatformInfoGetStructuredConfigAws(t *testing.T) {
 	r := require.New(t)
 
-	raw := &RawSnowflakePlatformInfo{
+	raw := &RawPlatformInfo{
 		Info: `{"snowflake-vpc-id": ["vpc-1", "vpc-2"]}`,
 	}
 
@@ -30,7 +30,7 @@ func TestSystemGetSnowflakePlatformInfoGetStructuredConfigAws(t *testing.T) {
 func TestSystemGetSnowflakePlatformInfoGetStructuredConfigAzure(t *testing.T) {
 	r := require.New(t)
 
-	raw := &RawSnowflakePlatformInfo{
+	raw := &RawPlatformInfo{
 		Info: `{"snowflake-vnet-subnet-id": ["/subscription/1/1", "/subscription/1/2"]}`,
 	}
 
