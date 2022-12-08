@@ -8,7 +8,7 @@ import (
 
 func TestTagCreate(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`"test"`, o.QualifiedName())
 
 	o.WithDB("db")
@@ -28,57 +28,57 @@ func TestTagCreate(t *testing.T) {
 
 func TestTagRename(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`ALTER TAG "test" RENAME TO "bob"`, o.Rename("bob"))
 }
 
 func TestTagChangeComment(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`ALTER TAG "test" SET COMMENT = 'worst\' tag ever'`, o.ChangeComment("worst' tag ever"))
 }
 
 func TestTagRemoveComment(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`ALTER TAG "test" UNSET COMMENT`, o.RemoveComment())
 }
 
 func TestTagAddAllowedValues(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	avs := []string{"foo", "bar"}
 	r.Equal(`ALTER TAG "test" ADD ALLOWED_VALUES 'foo', 'bar'`, o.AddAllowedValues(avs))
 }
 
 func TestTagDropAllowedValues(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	avs := []string{"foo"}
 	r.Equal(`ALTER TAG "test" DROP ALLOWED_VALUES 'foo'`, o.DropAllowedValues(avs))
 }
 
 func TestTagRemoveAllowedValues(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`ALTER TAG "test" UNSET ALLOWED_VALUES`, o.RemoveAllowedValues())
 }
 
 func TestTagDrop(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`DROP TAG "test"`, o.Drop())
 }
 
 func TestTagUndrop(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`UNDROP TAG "test"`, o.Undrop())
 }
 
 func TestTagShow(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`SHOW TAGS LIKE 'test'`, o.Show())
 
 	o.WithDB("db")
@@ -90,7 +90,7 @@ func TestTagShow(t *testing.T) {
 
 func TestTagShowAttachedPolicy(t *testing.T) {
 	r := require.New(t)
-	o := Tag("test")
+	o := NewTagBuilder("test")
 	r.Equal(`SHOW TAGS LIKE 'test'`, o.Show())
 
 	o.WithDB("db")

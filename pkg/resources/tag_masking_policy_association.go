@@ -122,7 +122,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	mpName := mpIDStruct.MaskingPolicyName
 
 	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
-	builder := snowflake.Tag(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
 
 	q := builder.AddMaskingPolicy()
 
@@ -163,7 +163,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	mpName := attachementID.MaskingPolicyName
 
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
-	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
@@ -228,7 +228,7 @@ func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 
-	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	if err := snowflake.Exec(db, builder.RemoveMaskingPolicy()); err != nil {
 		return fmt.Errorf("error unattaching masking policy for %v err = %w", d.Id(), err)
