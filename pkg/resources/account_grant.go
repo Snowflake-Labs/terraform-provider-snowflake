@@ -8,7 +8,9 @@ import (
 
 var validAccountPrivileges = NewPrivilegeSet(
 	privilegeApplyMaskingPolicy,
+	priviligeApplyPasswordPolicy,
 	privilegeApplyRowAccessPolicy,
+	priviligeApplySessionPolicy,
 	privilegeApplyTag,
 	privilegeAttachPolicy,
 	privilegeCreateAccount,
@@ -36,7 +38,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the account.",
+		Description:  "The account privilege to grant. Valid priviliges are those in [globalPriviliges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 	},
