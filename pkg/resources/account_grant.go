@@ -8,9 +8,9 @@ import (
 
 var validAccountPrivileges = NewPrivilegeSet(
 	privilegeApplyMaskingPolicy,
-	priviligeApplyPasswordPolicy,
+	privilegeApplyPasswordPolicy,
 	privilegeApplyRowAccessPolicy,
-	priviligeApplySessionPolicy,
+	privilegeApplySessionPolicy,
 	privilegeApplyTag,
 	privilegeAttachPolicy,
 	privilegeCreateAccount,
