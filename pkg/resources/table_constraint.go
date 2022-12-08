@@ -210,7 +210,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	tableID := d.Get("table_id").(string)
 
 	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tableID)
-	builder := snowflake.TableConstraint(name, constraintType, formattedTableID)
+	builder := snowflake.NewTableConstraintBuilder(name, constraintType, formattedTableID)
 
 	cc := d.Get("columns").([]interface{})
 	columns := make([]string, 0, len(cc))
@@ -312,7 +312,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	tc.parse(d.Id())
 	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
 
-	builder := snowflake.TableConstraint(tc.name, tc.constraintType, formattedTableID)
+	builder := snowflake.NewTableConstraintBuilder(tc.name, tc.constraintType, formattedTableID)
 
 	/* "unsupported feature comment error message"
 	if d.HasChange("comment") {
@@ -340,7 +340,7 @@ func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
 	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
-	builder := snowflake.TableConstraint(tc.name, tc.constraintType, formattedTableID)
+	builder := snowflake.NewTableConstraintBuilder(tc.name, tc.constraintType, formattedTableID)
 	cc := d.Get("columns").([]interface{})
 	columns := make([]string, 0, len(cc))
 	for _, c := range cc {

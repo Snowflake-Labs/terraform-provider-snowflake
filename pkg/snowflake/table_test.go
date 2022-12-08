@@ -8,7 +8,7 @@ import (
 
 func TestTableCreate(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	cols := []Column{
 		{
 			name:     "column1",
@@ -89,7 +89,7 @@ func TestTableCreate(t *testing.T) {
 
 func TestTableCreateIdentity(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	cols := []Column{
 		{
 			name:     "column1",
@@ -124,156 +124,156 @@ func TestTableCreateIdentity(t *testing.T) {
 
 func TestTableChangeComment(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" SET COMMENT = 'new table comment'`, s.ChangeComment("new table comment"))
 }
 
 func TestTableRemoveComment(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" UNSET COMMENT`, s.RemoveComment())
 }
 
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "", ""))
 }
 
 func TestTableAddColumnWithComment(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "some comment", ""))
 }
 
 func TestTableAddColumnWithDefault(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) DEFAULT 1 COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, NewColumnDefaultWithConstant("1"), nil, "", ""))
 }
 
 func TestTableAddColumnWithIdentity(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", ""))
 }
 
 func TestTableAddColumnWithMaskingPolicy(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) WITH MASKING POLICY TEST_MP COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", "TEST_MP"))
 }
 
 func TestTableDropColumn(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" DROP COLUMN "old_column"`, s.DropColumn("old_column"))
 }
 
 func TestTableChangeColumnType(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" BIGINT`, s.ChangeColumnType("old_column", "BIGINT"))
 }
 
 func TestTableChangeColumnComment(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" COMMENT 'some comment'`, s.ChangeColumnComment("old_column", "some comment"))
 }
 
 func TestTableChangeColumnMaskingPolicy(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" SET MASKING POLICY TEST_MP`, s.ChangeColumnMaskingPolicy("old_column", "TEST_MP"))
 }
 
 func TestTableDropColumnDefault(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN "old_column" DROP DEFAULT`, s.DropColumnDefault("old_column"))
 }
 
 func TestTableChangeClusterBy(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" CLUSTER BY LINEAR(column2, column3)`, s.ChangeClusterBy("column2, column3"))
 }
 
 func TestTableChangeDataRetention(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" SET DATA_RETENTION_TIME_IN_DAYS = 5`, s.ChangeDataRetention(5))
 }
 
 func TestTableChangeChangeTracking(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" SET CHANGE_TRACKING = true`, s.ChangeChangeTracking(true))
 }
 
 func TestTableDropClusterBy(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" DROP CLUSTERING KEY`, s.DropClustering())
 }
 
 func TestTableDrop(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`DROP TABLE "test_db"."test_schema"."test_table"`, s.Drop())
 }
 
 func TestTableShow(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`SHOW TABLES LIKE 'test_table' IN SCHEMA "test_db"."test_schema"`, s.Show())
 }
 
 func TestTableShowPrimaryKeys(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`SHOW PRIMARY KEYS IN TABLE "test_db"."test_schema"."test_table"`, s.ShowPrimaryKeys())
 }
 
 func TestTableDropPrimaryKeys(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" DROP PRIMARY KEY`, s.DropPrimaryKey())
 }
 
 func TestTableChangePrimaryKeysWithConstraintName(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD CONSTRAINT "MY_KEY" PRIMARY KEY("column1", "column2")`, s.ChangePrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1", "column2"}}))
 }
 
 func TestTableChangePrimaryKeysWithoutConstraintName(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD PRIMARY KEY("column1", "column2")`, s.ChangePrimaryKey(PrimaryKey{name: "", keys: []string{"column1", "column2"}}))
 }
 
 func TestTableAddTag(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" SET TAG "test_db"."test_schema"."tag" = "value"`, s.AddTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db", Value: "value"}))
 }
 
 func TestTableChangeTag(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" SET TAG "test_db"."test_schema"."tag" = "value"`, s.ChangeTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db", Value: "value"}))
 }
 
 func TestTableUnsetTag(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table", "test_db", "test_schema")
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" UNSET TAG "test_db"."test_schema"."tag"`, s.UnsetTag(TagValue{Name: "tag", Schema: "test_schema", Database: "test_db"}))
 }
 
 func TestTableRename(t *testing.T) {
 	r := require.New(t)
-	s := Table("test_table1", "test_db", "test_schema")
+	s := NewTableBuilder("test_table1", "test_db", "test_schema")
 	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table1" RENAME TO "test_db"."test_schema"."test_table2"`, s.Rename("test_table2"))
 }
