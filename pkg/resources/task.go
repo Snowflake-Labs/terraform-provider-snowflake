@@ -200,7 +200,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
@@ -352,7 +352,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 	builder.WithStatement(sql)
 
 	// Set optionals
@@ -459,7 +459,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	database := taskID.DatabaseName
 	schema := taskID.SchemaName
 	name := taskID.TaskName
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 
 	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
@@ -757,7 +757,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	q := snowflake.Task(name, database, schema).Drop()
+	q := snowflake.NewTaskBuilder(name, database, schema).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting task %v err = %w", d.Id(), err)
 	}

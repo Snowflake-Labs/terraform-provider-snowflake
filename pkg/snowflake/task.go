@@ -127,7 +127,7 @@ func (tb *TaskBuilder) WithErrorIntegration(s string) *TaskBuilder {
 //   - DESCRIBE TASK
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/tasks-intro.html#task-ddl)
-func Task(name, db, schema string) *TaskBuilder {
+func NewTaskBuilder(name, db, schema string) *TaskBuilder {
 	return &TaskBuilder{
 		name:     name,
 		db:       db,
@@ -372,7 +372,7 @@ func (tb *TaskBuilder) IsAllowOverlappingExecution() bool {
 	return tb.allowOverlappingExecution
 }
 
-type task struct {
+type Task struct {
 	ID                        string         `db:"id"`
 	CreatedOn                 string         `db:"created_on"`
 	Name                      string         `db:"name"`
@@ -390,23 +390,23 @@ type task struct {
 	AllowOverlappingExecution sql.NullString `db:"allow_overlapping_execution"`
 }
 
-func (t *task) QualifiedName() string {
+func (t *Task) QualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"."%v"`, EscapeString(t.DatabaseName), EscapeString(t.SchemaName), EscapeString(t.Name))
 }
 
-func (t *task) Suspend() string {
+func (t *Task) Suspend() string {
 	return fmt.Sprintf(`ALTER TASK %v SUSPEND`, t.QualifiedName())
 }
 
-func (t *task) Resume() string {
+func (t *Task) Resume() string {
 	return fmt.Sprintf(`ALTER TASK %v RESUME`, t.QualifiedName())
 }
 
-func (t *task) IsEnabled() bool {
+func (t *Task) IsEnabled() bool {
 	return strings.ToLower(t.State) == "started"
 }
 
-func (t *task) GetPredecessors() ([]string, error) {
+func (t *Task) GetPredecessors() ([]string, error) {
 	if t.Predecessors == nil {
 		return []string{}, nil
 	}
@@ -434,14 +434,14 @@ func (t *task) GetPredecessors() ([]string, error) {
 }
 
 // ScanTask turns a sql row into a task object.
-func ScanTask(row *sqlx.Row) (*task, error) {
-	t := &task{}
+func ScanTask(row *sqlx.Row) (*Task, error) {
+	t := &Task{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-// taskParams struct to represent a row of parameters.
-type taskParams struct {
+// TaskParams struct to represent a row of parameters.
+type TaskParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
 	DefaultValue string `db:"default"`
@@ -450,11 +450,11 @@ type taskParams struct {
 }
 
 // ScanTaskParameters takes a database row and converts it to a task parameter pointer.
-func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
-	t := []*taskParams{}
+func ScanTaskParameters(rows *sqlx.Rows) ([]*TaskParams, error) {
+	t := []*TaskParams{}
 
 	for rows.Next() {
-		r := &taskParams{}
+		r := &TaskParams{}
 		if err := rows.StructScan(r); err != nil {
 			return nil, err
 		}
@@ -463,7 +463,7 @@ func ScanTaskParameters(rows *sqlx.Rows) ([]*taskParams, error) {
 	return t, nil
 }
 
-func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, error) {
+func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]Task, error) {
 	stmt := fmt.Sprintf(`SHOW TASKS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -471,7 +471,7 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 	}
 	defer rows.Close()
 
-	dbs := []task{}
+	dbs := []Task{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no tasks found")
@@ -483,8 +483,8 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]task, erro
 }
 
 // GetRootTasks tries to retrieve the root of current task or returns the current (standalone) task.
-func GetRootTasks(name string, databaseName string, schemaName string, db *sql.DB) ([]*task, error) {
-	builder := Task(name, databaseName, schemaName)
+func GetRootTasks(name string, databaseName string, schemaName string, db *sql.DB) ([]*Task, error) {
+	builder := NewTaskBuilder(name, databaseName, schemaName)
 	log.Printf("[DEBUG] retrieving predecessors for task %s\n", builder.QualifiedName())
 	q := builder.Show()
 	row := QueryRow(db, q)
@@ -500,10 +500,10 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 
 	// no predecessors mean this is a root task
 	if len(predecessors) == 0 {
-		return []*task{t}, nil
+		return []*Task{t}, nil
 	}
 
-	tasks := make([]*task, 0, len(predecessors))
+	tasks := make([]*Task, 0, len(predecessors))
 	// get the root tasks for each predecessor and append them all together
 	for _, predecessor := range predecessors {
 		predecessorTasks, err := GetRootTasks(predecessor, databaseName, schemaName, db)
@@ -514,11 +514,11 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 	}
 
 	// remove duplicate root tasks
-	uniqueTasks := make(map[string]*task)
+	uniqueTasks := make(map[string]*Task)
 	for _, task := range tasks {
 		uniqueTasks[task.QualifiedName()] = task
 	}
-	tasks = []*task{}
+	tasks = []*Task{}
 	for _, task := range uniqueTasks {
 		tasks = append(tasks, task)
 	}
@@ -527,7 +527,7 @@ func GetRootTasks(name string, databaseName string, schemaName string, db *sql.D
 }
 
 func WaitResumeTask(db *sql.DB, name string, database string, schema string) error {
-	builder := Task(name, database, schema)
+	builder := NewTaskBuilder(name, database, schema)
 
 	// try to resume the task, and verify that it was resumed.
 	// if its not resumed then try again up until a maximum of 5 times
