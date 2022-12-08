@@ -105,8 +105,8 @@ func (ab *AlterPropertiesBuilder) SetRaw(rawStatement string) {
 	ab.rawStatement = sb.String()
 }
 
-func (b *AlterPropertiesBuilder) SetTags(tags []TagValue) {
-	b.tags = tags
+func (ab *AlterPropertiesBuilder) SetTags(tags []TagValue) {
+	ab.tags = tags
 }
 
 func (ab *AlterPropertiesBuilder) GetTagValueString() string {

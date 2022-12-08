@@ -39,23 +39,23 @@ func SelectCurrentAccount() string {
 	return `SELECT CURRENT_ACCOUNT() AS "account", CURRENT_REGION() AS "region";`
 }
 
-type account struct {
+type Account struct {
 	Account string `db:"account"`
 	Region  string `db:"region"`
 }
 
-func ScanCurrentAccount(row *sqlx.Row) (*account, error) {
-	acc := &account{}
+func ScanCurrentAccount(row *sqlx.Row) (*Account, error) {
+	acc := &Account{}
 	err := row.StructScan(acc)
 	return acc, err
 }
 
-func ReadCurrentAccount(db *sql.DB) (*account, error) {
+func ReadCurrentAccount(db *sql.DB) (*Account, error) {
 	row := QueryRow(db, SelectCurrentAccount())
 	return ScanCurrentAccount(row)
 }
 
-func (acc *account) AccountURL() (string, error) {
+func (acc *Account) AccountURL() (string, error) {
 	if regionID, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
 		accountID := acc.Account
 		if len(regionID) > 0 {
