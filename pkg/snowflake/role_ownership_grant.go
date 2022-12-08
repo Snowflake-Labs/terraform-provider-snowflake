@@ -19,7 +19,7 @@ type RoleOwnershipGrantExecutable struct {
 	currentGrants string
 }
 
-func RoleOwnershipGrant(role string, currentGrants string) *RoleOwnershipGrantBuilder {
+func NewRoleOwnershipGrantBuilder(role string, currentGrants string) *RoleOwnershipGrantBuilder {
 	return &RoleOwnershipGrantBuilder{role: role, currentGrants: currentGrants}
 }
 
@@ -40,7 +40,7 @@ func (gr *RoleOwnershipGrantExecutable) Revoke() string {
 	return fmt.Sprintf(`GRANT OWNERSHIP ON %s "%s" TO ROLE "%s" %s CURRENT GRANTS`, gr.granteeType, gr.grantee, gr.role, gr.currentGrants) // nolint: gosec
 }
 
-type roleOwnershipGrant struct {
+type RoleOwnershipGrant struct {
 	CreatedOn       sql.NullString `db:"created_on"`
 	Name            sql.NullString `db:"name"`
 	IsDefault       sql.NullString `db:"is_default"`
@@ -53,8 +53,8 @@ type roleOwnershipGrant struct {
 	Comment         sql.NullString `db:"comment"`
 }
 
-func ScanRoleOwnershipGrant(row *sqlx.Row) (*roleOwnershipGrant, error) {
-	rog := &roleOwnershipGrant{}
+func ScanRoleOwnershipGrant(row *sqlx.Row) (*RoleOwnershipGrant, error) {
+	rog := &RoleOwnershipGrant{}
 	err := row.StructScan(rog)
 	return rog, err
 }
