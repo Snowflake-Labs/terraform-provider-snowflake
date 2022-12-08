@@ -116,7 +116,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	cb := snowflake.ResourceMonitor(name).Create()
+	cb := snowflake.NewResourceMonitorBuilder(name).Create()
 	// Set optionals
 	if v, ok := d.GetOk("notify_users"); ok {
 		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
@@ -178,7 +178,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 // ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.ResourceMonitor(d.Id()).Show()
+	stmt := snowflake.NewResourceMonitorBuilder(d.Id()).Show()
 
 	row := snowflake.QueryRow(db, stmt)
 
@@ -291,7 +291,7 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 
-	stmt := snowflake.ResourceMonitor(d.Id()).Drop()
+	stmt := snowflake.NewResourceMonitorBuilder(d.Id()).Drop()
 	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error deleting resource monitor %v err = %w", d.Id(), err)
 	}

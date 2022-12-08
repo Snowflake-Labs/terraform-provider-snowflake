@@ -24,7 +24,7 @@ type ResourceMonitorBuilder struct {
 //   - SHOW RESOURCE MONITOR
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/user-guide/resource-monitors.html#ddl-for-resource-monitors)
-func ResourceMonitor(name string) *ResourceMonitorBuilder {
+func NewResourceMonitorBuilder(name string) *ResourceMonitorBuilder {
 	return &ResourceMonitorBuilder{
 		Builder{
 			entityType: ResourceMonitorType,
@@ -134,7 +134,7 @@ func (rcb *ResourceMonitorCreateBuilder) SetOnWarehouse(warehouse string) string
 	return fmt.Sprintf(`ALTER WAREHOUSE "%v" SET RESOURCE_MONITOR = "%v"`, warehouse, rcb.name)
 }
 
-type resourceMonitor struct {
+type ResourceMonitor struct {
 	Name                 sql.NullString `db:"name"`
 	CreditQuota          sql.NullString `db:"credit_quota"`
 	UsedCredits          sql.NullString `db:"used_credits"`
@@ -152,13 +152,13 @@ type resourceMonitor struct {
 	NotifyUsers          sql.NullString `db:"notify_users"`
 }
 
-func ScanResourceMonitor(row *sqlx.Row) (*resourceMonitor, error) {
-	rm := &resourceMonitor{}
+func ScanResourceMonitor(row *sqlx.Row) (*ResourceMonitor, error) {
+	rm := &ResourceMonitor{}
 	err := row.StructScan(rm)
 	return rm, err
 }
 
-func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
+func ListResourceMonitors(db *sql.DB) ([]ResourceMonitor, error) {
 	stmt := "SHOW RESOURCE MONITORS"
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -166,7 +166,7 @@ func ListResourceMonitors(db *sql.DB) ([]resourceMonitor, error) {
 	}
 	defer rows.Close()
 
-	dbs := []resourceMonitor{}
+	dbs := []ResourceMonitor{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no resource monitors found")
