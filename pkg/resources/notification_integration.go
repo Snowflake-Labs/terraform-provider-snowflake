@@ -138,7 +138,7 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.NotificationIntegration(name).Create()
+	stmt := snowflake.NewNotificationIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetString(`TYPE`, d.Get("type").(string))
@@ -193,7 +193,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NotificationIntegration(d.Id()).Show()
+	stmt := snowflake.NewNotificationIntegrationBuilder(d.Id()).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -232,7 +232,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	// We need to grab them in a loop
 	var k, pType string
 	var v, n interface{}
-	stmt = snowflake.NotificationIntegration(d.Id()).Describe()
+	stmt = snowflake.NewNotificationIntegrationBuilder(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe notification integration: %w", err)
@@ -314,7 +314,7 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NotificationIntegration(id).Alter()
+	stmt := snowflake.NewNotificationIntegrationBuilder(id).Alter()
 
 	// This is required in case the only change is to UNSET STORAGE_ALLOWED_LOCATIONS.
 	// Not sure if there is a more elegant way of determining this
@@ -391,5 +391,5 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 
 // DeleteNotificationIntegration implements schema.DeleteFunc.
 func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewNotificationIntegrationBuilder)(d, meta)
 }
