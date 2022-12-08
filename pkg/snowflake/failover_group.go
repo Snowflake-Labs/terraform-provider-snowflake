@@ -75,7 +75,7 @@ func (b *FailoverGroupBuilder) WithReplicationScheduleTimeZone(replicationSchedu
 }
 
 // CreateFailoverGroup returns a pointer to a Builder that abstracts the DDL operations for a failover group.
-func FailoverGroup(name string) *FailoverGroupBuilder {
+func NewFailoverGroupBuilder(name string) *FailoverGroupBuilder {
 	return &FailoverGroupBuilder{
 		name: name,
 	}
@@ -222,7 +222,7 @@ func (b *FailoverGroupBuilder) Show() string {
 }
 
 // ListFailoverGroups returns a list of all failover groups in the account.
-func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, error) {
+func ListFailoverGroups(db *sql.DB, accountLocator string) ([]FailoverGroup, error) {
 	stmt := fmt.Sprintf("SHOW FAILOVER GROUPS IN ACCOUNT %s", accountLocator)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -230,7 +230,7 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, err
 	}
 	defer rows.Close()
 
-	v := []failoverGroup{}
+	v := []FailoverGroup{}
 	err = sqlx.StructScan(rows, &v)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("[DEBUG] no failover groups found")
@@ -239,7 +239,7 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, err
 	return v, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 }
 
-type failoverGroup struct {
+type FailoverGroup struct {
 	RegionGroup             sql.NullString `db:"region_group"`
 	SnowflakeRegion         sql.NullString `db:"snowflake_region"`
 	CreatedOn               sql.NullString `db:"created_on"`

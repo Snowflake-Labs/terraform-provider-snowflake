@@ -151,7 +151,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	// getting required attributes
 	name := d.Get("name").(string)
-	builder := snowflake.FailoverGroup(name)
+	builder := snowflake.NewFailoverGroupBuilder(name)
 
 	// if from_replica is set, then we are creating a failover group from an existing replica
 	if v, ok := d.GetOk("from_replica"); ok {
@@ -403,7 +403,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
-	builder := snowflake.FailoverGroup(name)
+	builder := snowflake.NewFailoverGroupBuilder(name)
 
 	if d.HasChange("object_types") {
 		_, new := d.GetChange("object_types")
@@ -585,7 +585,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
-	builder := snowflake.FailoverGroup(name)
+	builder := snowflake.NewFailoverGroupBuilder(name)
 	stmt := builder.Drop()
 	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error deleting file format %v err = %w", d.Id(), err)
