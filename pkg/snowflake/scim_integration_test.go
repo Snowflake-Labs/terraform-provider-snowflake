@@ -9,7 +9,7 @@ import (
 
 func TestScimIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.ScimIntegration("aad_provisioning")
+	builder := snowflake.NewSCIMIntegrationBuilder("aad_provisioning")
 	r.NotNil(builder)
 
 	q := builder.Show()
