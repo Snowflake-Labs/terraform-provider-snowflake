@@ -109,13 +109,13 @@ func (d *ColumnDefault) UnescapeConstantSnowflakeString(columnType string) strin
 
 // Column structure that represents a table column.
 type Column struct {
-	name           string
-	_type          string // type is reserved
-	nullable       bool
-	_default       *ColumnDefault // default is reserved
-	identity       *ColumnIdentity
-	comment        string // pointer as value is nullable
-	masking_policy string
+	name          string
+	_type         string // type is reserved
+	nullable      bool
+	_default      *ColumnDefault // default is reserved
+	identity      *ColumnIdentity
+	comment       string // pointer as value is nullable
+	maskingPolicy string
 }
 
 // WithName set the column name.
@@ -148,7 +148,7 @@ func (c *Column) WithComment(comment string) *Column {
 }
 
 func (c *Column) WithMaskingPolicy(maskingPolicy string) *Column {
-	c.masking_policy = maskingPolicy
+	c.maskingPolicy = maskingPolicy
 	return c
 }
 
@@ -178,8 +178,8 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 		colDef.WriteString(fmt.Sprintf(` IDENTITY(%v, %v)`, c.identity.startNum, c.identity.stepNum))
 	}
 
-	if strings.TrimSpace(c.masking_policy) != "" {
-		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.masking_policy)))
+	if strings.TrimSpace(c.maskingPolicy) != "" {
+		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.maskingPolicy)))
 	}
 
 	if withComment {
@@ -238,13 +238,13 @@ func NewColumns(tds []tableDescription) Columns {
 		}
 
 		cs = append(cs, Column{
-			name:           td.Name.String,
-			_type:          td.Type.String,
-			nullable:       td.IsNullable(),
-			_default:       td.ColumnDefault(),
-			identity:       td.ColumnIdentity(),
-			comment:        td.Comment.String,
-			masking_policy: td.MaskingPolicy.String,
+			name:          td.Name.String,
+			_type:         td.Type.String,
+			nullable:      td.IsNullable(),
+			_default:      td.ColumnDefault(),
+			identity:      td.ColumnIdentity(),
+			comment:       td.Comment.String,
+			maskingPolicy: td.MaskingPolicy.String,
 		})
 	}
 	return Columns(cs)
@@ -258,7 +258,7 @@ func (c Columns) Flatten() []interface{} {
 		flat["type"] = col._type
 		flat["nullable"] = col.nullable
 		flat["comment"] = col.comment
-		flat["masking_policy"] = col.masking_policy
+		flat["masking_policy"] = col.maskingPolicy
 
 		if col._default != nil {
 			def := map[string]interface{}{}
@@ -540,13 +540,13 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 // AddColumn returns the SQL query that will add a new column to the table.
 func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string, maskingPolicy string) string {
 	col := Column{
-		name:           name,
-		_type:          dataType,
-		nullable:       nullable,
-		_default:       _default,
-		identity:       identity,
-		comment:        comment,
-		masking_policy: maskingPolicy,
+		name:          name,
+		_type:         dataType,
+		nullable:      nullable,
+		_default:      _default,
+		identity:      identity,
+		comment:       comment,
+		maskingPolicy: maskingPolicy,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
 }

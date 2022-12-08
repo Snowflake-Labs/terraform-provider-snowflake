@@ -40,10 +40,10 @@ func TestTableCreate(t *testing.T) {
 			_default: NewColumnDefaultWithExpression("CURRENT_TIMESTAMP()"),
 		},
 		{
-			name:           "column6",
-			_type:          "VARCHAR",
-			nullable:       true,
-			masking_policy: "TEST_MP",
+			name:          "column6",
+			_type:         "VARCHAR",
+			nullable:      true,
+			maskingPolicy: "TEST_MP",
 		},
 	}
 
@@ -109,10 +109,10 @@ func TestTableCreateIdentity(t *testing.T) {
 			identity: &ColumnIdentity{2, 5},
 		},
 		{
-			name:           "column4",
-			_type:          "VARCHAR",
-			nullable:       true,
-			masking_policy: "TEST_MP",
+			name:          "column4",
+			_type:         "VARCHAR",
+			nullable:      true,
+			maskingPolicy: "TEST_MP",
 		},
 	}
 
