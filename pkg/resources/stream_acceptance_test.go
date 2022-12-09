@@ -87,6 +87,16 @@ func TestAcc_Stream(t *testing.T) {
 				),
 			},
 			{
+				Config: stageStreamConfig(accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_stage", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_STAGE")),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+				),
+			},
+			{
 				ResourceName:      "snowflake_stream.test_stream",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -259,4 +269,35 @@ resource "snowflake_stream" "test_stream" {
 }
 `
 	return fmt.Sprintf(s, name, name, name, appendOnlyConfig)
+}
+
+func stageStreamConfig(name string) string {
+	s := `
+resource "snowflake_database" "test_database" {
+	name    = "%s"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test_schema" {
+	name     = "%s"
+	database = snowflake_database.test_database.name
+	comment  = "Terraform acceptance test"
+}
+
+resource "snowflake_stage" "test_stage" {
+	name	 = "%s"
+	database = snowflake_database.test_database.name"
+	schema	 = snowflake_schema.test_schema.name
+	directory = "ENABLE = true"
+}
+
+resource "snowflake_stream" "test_stream" {
+	database    = snowflake_database.test_database.name
+	schema      = snowflake_schema.test_schema.name
+	name        = "%s"
+	comment     = "Terraform acceptance test"
+	on_stage    = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_stage.test_stream_on_stage.name}"
+}
+`
+	return fmt.Sprintf(s, name, name, name, name)
 }
