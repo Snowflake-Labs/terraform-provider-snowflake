@@ -145,7 +145,7 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		default:
-			return fmt.Errorf("unknown grant type %s", grant.GrantedTo.String)
+			log.Printf("[WARN] Ignoring unknown grant type %s", grant.GrantedTo.String)
 		}
 	}
 
