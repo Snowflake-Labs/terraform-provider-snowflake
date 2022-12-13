@@ -17,7 +17,7 @@ data "snowflake_current_role" "this" {}
 resource "aws_ssm_parameter" "snowflake_account_role" {
   name  = "/snowflake/account_role"
   type  = "String"
-  value = data.snowflake_current_account.this.current_role
+  value = data.snowflake_current_account.this.name
 }
 ```
 
