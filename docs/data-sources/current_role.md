@@ -27,7 +27,7 @@ resource "aws_ssm_parameter" "snowflake_account_role" {
 
 ### Read-Only
 
-- `current_role` (String)
+- `name` (String)
 - `id` (String) The ID of this resource.
 
 

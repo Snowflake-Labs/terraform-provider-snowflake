@@ -20,7 +20,7 @@ func TestCurrentRoleRead(t *testing.T) {
 	}
 
 	testCases := map[string]testCaseEntry{
-		"current_role": {
+		"name": {
 			"sys_admin",
 		},
 	}

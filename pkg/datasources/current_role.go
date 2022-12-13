@@ -10,9 +10,10 @@ import (
 )
 
 var currentRoleSchema = map[string]*schema.Schema{
-	"current_role": {
+	"name": {
 		Type:     schema.TypeString,
 		Computed: true,
+		Description: "The Snowflake Primary Role ID; as returned by CURRENT_ROLE()."
 	},
 }
 
@@ -34,7 +35,7 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(role.Role))
-	d.Set("current_role", role.Role)
+	d.Set("name", role.Role)
 
 	return nil
 }

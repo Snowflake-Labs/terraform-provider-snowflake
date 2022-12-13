@@ -13,7 +13,7 @@ func TestAccCurrentRole(t *testing.T) {
 			{
 				Config: currentRole(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_current_role.p", "current_role"),
+					resource.TestCheckResourceAttrSet("data.snowflake_current_role.p", "name"),
 				),
 			},
 		},
