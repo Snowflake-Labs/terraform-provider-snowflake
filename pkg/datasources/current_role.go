@@ -13,7 +13,7 @@ var currentRoleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Computed: true,
-		Description: "The name of the [primary role](https://docs.snowflake.com/en/user-guide/security-access-control-overview.html#label-access-control-role-enforcement) in use for the current session."
+		Description: "The name of the [primary role](https://docs.snowflake.com/en/user-guide/security-access-control-overview.html#label-access-control-role-enforcement) in use for the current session.",
 	},
 }
 
