@@ -23,7 +23,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The name of the schema containing the current or future pipes on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -89,26 +89,33 @@ func PipeGrant() *TerraformGrantResource {
 
 // CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
-	var pipeName string
+	var (
+		pipeName string
+		schemaName string
+	)
 	if name, ok := d.GetOk("pipe_name"); ok {
 		pipeName = name.(string)
 	}
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
+	} else {
+		schemaName = ""
+	}
 	dbName := d.Get("database_name").(string)
-	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
-	futurePipes := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (pipeName == "") && !futurePipes {
-		return errors.New("pipe_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true.")
 	}
-	if (pipeName != "") && futurePipes {
-		return errors.New("pipe_name must be empty if on_future is true")
+	if (pipeName == "") && !onFuture {
+		return errors.New("pipe_name must be set unless on_future is true.")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futurePipes {
+	if onFuture {
 		builder = snowflake.FuturePipeGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
@@ -152,14 +159,13 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	futurePipesEnabled := false
-	if pipeName == "" {
-		futurePipesEnabled = true
-	}
+
+	onFuture := (pipeName == "")
+	
 	if err := d.Set("pipe_name", pipeName); err != nil {
 		return err
 	}
-	if err := d.Set("on_future", futurePipesEnabled); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", priv); err != nil {
@@ -170,13 +176,13 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futurePipesEnabled {
+	if onFuture {
 		builder = snowflake.FuturePipeGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
 	}
 
-	return readGenericGrant(d, meta, pipeGrantSchema, builder, futurePipesEnabled, validPipePrivileges)
+	return readGenericGrant(d, meta, pipeGrantSchema, builder, onFuture, validPipePrivileges)
 }
 
 // DeletePipeGrant implements schema.DeleteFunc.
@@ -189,10 +195,10 @@ func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	pipeName := grantID.ObjectName
 
-	futurePipes := (pipeName == "")
+	onFuture := (pipeName == "")
 
 	var builder snowflake.GrantBuilder
-	if futurePipes {
+	if onFuture {
 		builder = snowflake.FuturePipeGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
@@ -223,11 +229,11 @@ func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	pipeName := grantID.ObjectName
-	futurePipes := (pipeName == "")
+	onFuture := (pipeName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if futurePipes {
+	if onFuture {
 		builder = snowflake.FuturePipeGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
