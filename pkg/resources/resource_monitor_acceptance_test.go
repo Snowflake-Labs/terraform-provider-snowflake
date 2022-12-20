@@ -23,7 +23,17 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 				Config: resourceMonitorConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "frequency", "YEARLY"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+				),
+			},
+			{
+				Config: resourceMonitorConfigSecond(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "frequency", "DAILY"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "50"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 				),
 			},
@@ -41,7 +51,21 @@ func resourceMonitorConfig(accName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
+	frequency       = "YEARLY"
+	start_timestamp = "2024-12-07 00:00"
 	credit_quota    = 100
+	set_for_account = false
+}
+`, accName)
+}
+
+func resourceMonitorConfigSecond(accName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+	name            = "%v"
+	frequency       = "DAILY"
+	start_timestamp = "2024-12-07 00:00"
+	credit_quota    = 50
 	set_for_account = false
 }
 `, accName)

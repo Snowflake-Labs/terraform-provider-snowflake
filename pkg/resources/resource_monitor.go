@@ -4,13 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"log"
+	"strconv"
+	"strings"
 )
 
 var validFrequencies = []string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}
@@ -20,12 +19,12 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the resource monitor; must be unique for your account.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"notify_users": {
 		Type:        schema.TypeSet,
 		Optional:    true,
-		ForceNew:    true,
+		ForceNew:    false,
 		Description: "Specifies the list of users to receive email notifications on resource monitors.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
@@ -36,7 +35,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "The number of credits allocated monthly to the resource monitor.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"frequency": {
 		Type:         schema.TypeString,
@@ -44,41 +43,41 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Computed:     true,
 		Description:  "The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.",
 		ValidateFunc: validation.StringInSlice(validFrequencies, false),
-		ForceNew:     true,
+		ForceNew:     false,
 	},
 	"start_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
 		Description: "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"end_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"suspend_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to suspend all warehouses.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"suspend_immediate_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"notify_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
-		ForceNew:    true,
+		ForceNew:    false,
 	},
 	"set_for_account": {
 		Type:        schema.TypeBool,
@@ -101,7 +100,7 @@ func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateResourceMonitor,
 		Read:   ReadResourceMonitor,
-		// Update: UpdateResourceMonitor, @TODO implement updates
+		Update: UpdateResourceMonitor,
 		Delete: DeleteResourceMonitor,
 
 		Schema: resourceMonitorSchema,
@@ -297,5 +296,74 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+	return nil
+}
+
+func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+
+	cb := snowflake.ResourceMonitor(name).Alter()
+	// Set optionals
+	if d.HasChange("notify_users") {
+		v := d.Get("notify_users")
+		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
+	}
+	if d.HasChange("credit_quota") {
+		v := d.Get("credit_quota")
+		cb.SetInt("credit_quota", v.(int))
+	}
+	if d.HasChange("frequency") {
+		v := d.Get("frequency")
+		cb.SetString("frequency", v.(string))
+	}
+	if d.HasChange("start_timestamp") {
+		v := d.Get("start_timestamp")
+		cb.SetString("start_timestamp", v.(string))
+	}
+	if d.HasChange("end_timestamp") {
+		v := d.Get("end_timestamp")
+		cb.SetString("end_timestamp", v.(string))
+	}
+	// Set triggers
+	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
+	for _, t := range sTrigs {
+		cb.SuspendAt(t)
+	}
+	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
+	for _, t := range siTrigs {
+		cb.SuspendImmediatelyAt(t)
+	}
+	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
+	for _, t := range nTrigs {
+		cb.NotifyAt(t)
+	}
+
+	stmt := cb.Statement()
+	fmt.Println(stmt)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
+	}
+
+	d.SetId(name)
+
+	if d.Get("set_for_account").(bool) {
+		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
+			return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
+		}
+	}
+
+	if v, ok := d.GetOk("warehouses"); ok {
+		for _, w := range v.(*schema.Set).List() {
+			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, w.(string), err)
+			}
+		}
+	}
+
+	if err := ReadResourceMonitor(d, meta); err != nil {
+		return err
+	}
+
 	return nil
 }
