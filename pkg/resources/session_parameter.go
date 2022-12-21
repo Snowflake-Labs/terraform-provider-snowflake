@@ -62,17 +62,17 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeSession, db)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating session parameter err = %v", err)
+		return fmt.Errorf("error creating session parameter err = %w", err)
 	}
 
 	d.SetId(key)
 	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeSession)
 	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %v", err)
+		return fmt.Errorf("error reading session parameter err = %w", err)
 	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
-		return fmt.Errorf("error setting session parameter err = %v", err)
+		return fmt.Errorf("error setting session parameter err = %w", err)
 	}
 	return nil
 }
@@ -83,11 +83,11 @@ func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	key := d.Id()
 	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeSession)
 	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %v", err)
+		return fmt.Errorf("error reading session parameter err = %w", err)
 	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
-		return fmt.Errorf("error setting session parameter err = %v", err)
+		return fmt.Errorf("error setting session parameter err = %w", err)
 	}
 	return nil
 }
@@ -114,11 +114,11 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeSession, db)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %v", err)
+		return fmt.Errorf("error creating account parameter err = %w", err)
 	}
 	_, err = snowflake.ShowParameter(db, key, snowflake.ParameterTypeSession)
 	if err != nil {
-		return fmt.Errorf("error reading a parameter err = %v", err)
+		return fmt.Errorf("error reading a parameter err = %w", err)
 	}
 
 	d.SetId("")
