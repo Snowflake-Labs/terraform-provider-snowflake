@@ -83,13 +83,13 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	builder.WithObjectType(objectType)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating object parameter err = %v", err)
+		return fmt.Errorf("error creating object parameter err = %w", err)
 	}
 	id := fmt.Sprintf("%v❄️%v❄️%v", key, objectType, objectName)
 	d.SetId(id)
 	p, err := snowflake.ShowObjectParameter(db, key, objectType, objectName)
 	if err != nil {
-		return fmt.Errorf("error reading object parameter err = %v", err)
+		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
@@ -113,7 +113,10 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %v", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

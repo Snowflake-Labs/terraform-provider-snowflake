@@ -114,11 +114,11 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeAccount, db)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %v", err)
+		return fmt.Errorf("error creating account parameter err = %w", err)
 	}
 	_, err = snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
 	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %v", err)
+		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
 
 	d.SetId("")

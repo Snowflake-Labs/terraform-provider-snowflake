@@ -816,7 +816,7 @@ func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern
 	defer rows.Close()
 	params := []snowflakeParameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)

@@ -70,7 +70,10 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading session parameter err = %v", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return fmt.Errorf("error setting session parameter err = %v", err)
+	}
 	return nil
 }
 
@@ -82,7 +85,10 @@ func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading session parameter err = %v", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return fmt.Errorf("error setting session parameter err = %v", err)
+	}
 	return nil
 }
 
