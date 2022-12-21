@@ -208,6 +208,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
+		"snowflake_account_parameter":              resources.AccountParameter(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
 		"snowflake_external_function":              resources.ExternalFunction(),
@@ -220,6 +221,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_network_policy_attachment":      resources.NetworkPolicyAttachment(),
 		"snowflake_network_policy":                 resources.NetworkPolicy(),
 		"snowflake_oauth_integration":              resources.OAuthIntegration(),
+		"snowflake_object_parameter":               resources.ObjectParameter(),
 		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
 		"snowflake_pipe":                           resources.Pipe(),
 		"snowflake_procedure":                      resources.Procedure(),
@@ -232,6 +234,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_schema":                         resources.Schema(),
 		"snowflake_scim_integration":               resources.SCIMIntegration(),
 		"snowflake_sequence":                       resources.Sequence(),
+		"snowflake_session_parameter":              resources.SessionParameter(),
 		"snowflake_share":                          resources.Share(),
 		"snowflake_stage":                          resources.Stage(),
 		"snowflake_storage_integration":            resources.StorageIntegration(),
@@ -273,7 +276,6 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_sequences":                          datasources.Sequences(),
 		"snowflake_streams":                            datasources.Streams(),
 		"snowflake_tasks":                              datasources.Tasks(),
-		"snowflake_pipes":                              datasources.Pipes(),
 		"snowflake_masking_policies":                   datasources.MaskingPolicies(),
 		"snowflake_external_functions":                 datasources.ExternalFunctions(),
 		"snowflake_external_tables":                    datasources.ExternalTables(),
@@ -282,6 +284,8 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
 		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
 		"snowflake_functions":                          datasources.Functions(),
+		"snowflake_parameters":                         datasources.Parameters(),
+		"snowflake_pipes":                              datasources.Pipes(),
 		"snowflake_procedures":                         datasources.Procedures(),
 		"snowflake_databases":                          datasources.Databases(),
 		"snowflake_database":                           datasources.Database(),
