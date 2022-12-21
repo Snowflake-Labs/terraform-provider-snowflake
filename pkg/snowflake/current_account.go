@@ -23,6 +23,7 @@ var regionMapping = map[string]string{
 	"aws_ap_southeast_1":     "ap-southeast-1",
 	"aws_ap_southeast_2":     "ap-southeast-2",
 	"gcp_us_central1":        "us-central1.gcp",
+	"gcp_us_east4":           "us-east4.gcp",
 	"gcp_europe_west2":       "europe-west2.gcp",
 	"gcp_europe_west4":       "europe-west4.gcp",
 	"azure_westus2":          "west-us-2.azure",
