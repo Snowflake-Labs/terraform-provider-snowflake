@@ -111,7 +111,7 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	objectName := parts[2]
 	p, err := snowflake.ShowObjectParameter(db, key, objectType, objectName)
 	if err != nil {
-		return fmt.Errorf("error reading object parameter err = %v", err)
+		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
@@ -146,11 +146,11 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	builder.WithObjectType(objectType)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error restoring default for object parameter err = %v", err)
+		return fmt.Errorf("error restoring default for object parameter err = %w", err)
 	}
 	_, err = snowflake.ShowObjectParameter(db, key, objectType, objectName)
 	if err != nil {
-		return fmt.Errorf("error reading object parameter err = %v", err)
+		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
 
 	d.SetId("")
