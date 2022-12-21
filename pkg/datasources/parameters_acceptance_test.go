@@ -14,7 +14,7 @@ func TestAcc_Parameters(t *testing.T) {
 			{
 				Config: parameters(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "warehouses.#"),
+					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.key"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.value"),
 				),

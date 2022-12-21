@@ -31,9 +31,9 @@ var parametersSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
 	},
 	"object_name": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "If parameter_type is set to \"OBJECT\" then object_name is the name of the object to display object parameters for.",
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "If parameter_type is set to \"OBJECT\" then object_name is the name of the object to display object parameters for.",
 	},
 	"parameters": {
 		Type:        schema.TypeList,
@@ -101,7 +101,7 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		} else if err != nil {
-			log.Printf("[DEBUG] error occured during read: %v", err.Error())
+			log.Printf("[DEBUG] error occurred during read: %v", err.Error())
 			return err
 		}
 		d.SetId("parameters")
@@ -126,7 +126,7 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		} else if err != nil {
-			log.Printf("[DEBUG] error occured during read: %v", err.Error())
+			log.Printf("[DEBUG] error occurred during read: %v", err.Error())
 			return err
 		}
 		d.SetId("parameters")

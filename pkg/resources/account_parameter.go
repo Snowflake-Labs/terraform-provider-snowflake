@@ -56,21 +56,24 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	// add quotes to value if it is a string
 	typeString := reflect.TypeOf("")
 	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'",  snowflake.EscapeString(value))
+		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
 	}
 
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeAccount, db)
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %v", err)
+		return fmt.Errorf("error creating account parameter err = %w", err)
 	}
 
 	d.SetId(key)
 	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
 	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %v", err)
+		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return fmt.Errorf("error setting account parameter value err = %w", err)
+	}
 	return nil
 }
 
@@ -80,9 +83,12 @@ func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	key := d.Id()
 	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
 	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %v", err)
+		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return fmt.Errorf("error setting account parameter value err = %w", err)
+	}
 	return nil
 }
 

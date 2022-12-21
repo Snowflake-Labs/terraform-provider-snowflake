@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -113,7 +114,7 @@ func ParameterDefaults() map[string]Parameter {
 			TypeSet:      []ParameterType{ParameterTypeAccount, ParameterTypeObject},
 			DefaultValue: "none",
 			Validate: func(value string) (err error) {
-				if len(value) <= 0 {
+				if len(value) == 0 {
 					return fmt.Errorf("NETWORK_POLICY cannot be empty")
 				}
 				_, errs := ValidateIdentifier(value, []string{})
@@ -633,7 +634,7 @@ func ParameterDefaults() map[string]Parameter {
 	}
 }
 
-// GetParameterObjectTypeSetAsStrings returns a slice of all object types that can have parameters
+// GetParameterObjectTypeSetAsStrings returns a slice of all object types that can have parameters.
 func GetParameterObjectTypeSetAsStrings() []string {
 	objectTypeSet := []ObjectType{
 		ObjectTypeDatabase,
@@ -654,7 +655,7 @@ func GetParameterObjectTypeSetAsStrings() []string {
 	return result
 }
 
-// GetParameters returns a map of parameters that match the given type (e.g. Account, Session, Object)
+// GetParameters returns a map of parameters that match the given type (e.g. Account, Session, Object).
 func GetParameters(t ParameterType) map[string]Parameter {
 	parameters := ParameterDefaults()
 	keys := maps.Keys(parameters)
@@ -667,7 +668,7 @@ func GetParameters(t ParameterType) map[string]Parameter {
 	return parameters
 }
 
-// GetParameter returns a parameter by key
+// GetParameter returns a parameter by key.
 func GetParameter(key string) Parameter {
 	return ParameterDefaults()[key]
 }
@@ -723,7 +724,7 @@ type snowflakeParameter struct {
 	Key         sql.NullString `db:"key"`
 	Value       sql.NullString `db:"value"`
 	Default     sql.NullString `db:"default"`
-	Level       sql.NullString`db:"level"`
+	Level       sql.NullString `db:"level"`
 	Description sql.NullString `db:"description"`
 	PType       sql.NullString `db:"type"`
 }
@@ -743,7 +744,7 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*snowfl
 	defer rows.Close()
 	params := []snowflakeParameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
@@ -763,7 +764,7 @@ func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectNa
 	defer rows.Close()
 	params := []snowflakeParameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
@@ -775,11 +776,11 @@ func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectNa
 
 func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]snowflakeParameter, error) {
 	var stmt string
-	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession{
+	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession {
 		if pattern != "" {
 			stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %v", pattern, parameterType)
 		} else {
-			stmt = fmt.Sprintf("SHOW PARAMETERS IN %v",parameterType)
+			stmt = fmt.Sprintf("SHOW PARAMETERS IN %v", parameterType)
 		}
 	} else {
 		return nil, fmt.Errorf("unsupported parameter type %s", parameterType)
@@ -792,7 +793,7 @@ func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]
 	defer rows.Close()
 	params := []snowflakeParameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)

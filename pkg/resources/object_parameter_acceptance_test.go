@@ -38,5 +38,5 @@ resource "snowflake_object_parameter" "p" {
 	object_name = snowflake_database.d.name
 }
 `
-	return fmt.Sprintf(s,prefix, key, value)
+	return fmt.Sprintf(s, prefix, key, value)
 }

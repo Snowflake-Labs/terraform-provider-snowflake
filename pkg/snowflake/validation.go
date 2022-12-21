@@ -55,9 +55,9 @@ func isInitialIdentifierRune(r rune) bool {
 type DateFormat string
 
 const (
-	DateFormatISO DateFormat = "DateFormatISO"
+	DateFormatISO   DateFormat = "DateFormatISO"
 	DateFormatOther DateFormat = "DateFormatOther"
-	DateFormatAny DateFormat = "DateFormatAny"
+	DateFormatAny   DateFormat = "DateFormatAny"
 )
 
 func getValidDateFormats(f DateFormat, includeAuto bool) []string {
@@ -68,7 +68,9 @@ func getValidDateFormats(f DateFormat, includeAuto bool) []string {
 		"DD-MON-YYYY",
 		"MM/DD/YYYY",
 	}
-	AnyDateFormats := append(ISODateFormats, OtherDateFormats...)
+	AnyDateFormats := make([]string, 0, len(ISODateFormats)+len(OtherDateFormats))
+	AnyDateFormats = append(AnyDateFormats, ISODateFormats...)
+	AnyDateFormats = append(AnyDateFormats, OtherDateFormats...)
 	var formats []string
 
 	switch f {
@@ -80,7 +82,7 @@ func getValidDateFormats(f DateFormat, includeAuto bool) []string {
 		formats = AnyDateFormats
 	}
 	if includeAuto {
-		formats= append(formats, "auto")
+		formats = append(formats, "auto")
 	}
 	return formats
 }
@@ -90,7 +92,7 @@ type TimeFormat string
 const (
 	TimeFormatISO TimeFormat = "TimeFormatISO"
 	TimeFormatRFC TimeFormat = "TimeFormatRFC"
-	TimeFormatAny  TimeFormat = "TimeFormatAny"
+	TimeFormatAny TimeFormat = "TimeFormatAny"
 )
 
 func getValidTimeFormats(f TimeFormat, includeAuto bool) []string {
@@ -105,7 +107,9 @@ func getValidTimeFormats(f TimeFormat, includeAuto bool) []string {
 		"HH12:MI:SS AM",
 		"HH12:MI AM",
 	}
-	AnyTimeFormats := append(ISOTimeFormats, RFCTimeFormats...)
+	AnyTimeFormats := make([]string, 0, len(ISOTimeFormats)+len(RFCTimeFormats))
+	AnyTimeFormats = append(AnyTimeFormats, ISOTimeFormats...)
+	AnyTimeFormats = append(AnyTimeFormats, RFCTimeFormats...)
 	var formats []string
 
 	switch f {
@@ -115,9 +119,9 @@ func getValidTimeFormats(f TimeFormat, includeAuto bool) []string {
 		formats = RFCTimeFormats
 	case TimeFormatAny:
 		formats = AnyTimeFormats
-	}	
+	}
 	if includeAuto {
-		formats= append(formats, "auto")
+		formats = append(formats, "auto")
 	}
 	return formats
 }
@@ -125,14 +129,13 @@ func getValidTimeFormats(f TimeFormat, includeAuto bool) []string {
 type TimeStampFormat string
 
 const (
-	TimeStampFormatISO TimeStampFormat = "TimeStampFormatISO"
-	TimeStampFormatRFC TimeStampFormat = "TimeStampFormatRFC"
+	TimeStampFormatISO   TimeStampFormat = "TimeStampFormatISO"
+	TimeStampFormatRFC   TimeStampFormat = "TimeStampFormatRFC"
 	TimeStampFormatOther TimeStampFormat = "TimeStampFormatOther"
-	TimeStampFormatAny  TimeStampFormat = "TimeStampFormatAny"
+	TimeStampFormatAny   TimeStampFormat = "TimeStampFormatAny"
 )
 
 func getValidTimeStampFormats(f TimeStampFormat, includeAuto bool) []string {
-
 	ISOTimeStampFormats := []string{
 		"YYYY-MM-DD\"T\"HH24:MI:SS.FFTZH:TZM",
 		"YYYY-MM-DD HH24:MI:SS.FFTZH:TZM",
@@ -169,7 +172,11 @@ func getValidTimeStampFormats(f TimeStampFormat, includeAuto bool) []string {
 		"MM/DD/YYYY HH24:MI:SS",
 		"DY MON DD HH24:MI:SS TZHTZM YYYY",
 	}
-	AnyTimeStampFormats := append(ISOTimeStampFormats, append(RFCTimeStampFormats, OtherTimeStampFormats...)...)
+	AnyTimeStampFormats := make([]string, 0, len(ISOTimeStampFormats)+len(RFCTimeStampFormats)+len(OtherTimeStampFormats))
+	AnyTimeStampFormats = append(AnyTimeStampFormats, ISOTimeStampFormats...)
+	AnyTimeStampFormats = append(AnyTimeStampFormats, RFCTimeStampFormats...)
+	AnyTimeStampFormats = append(AnyTimeStampFormats, OtherTimeStampFormats...)
+
 	var formats []string
 	switch f {
 	case TimeStampFormatISO:
@@ -187,4 +194,3 @@ func getValidTimeStampFormats(f TimeStampFormat, includeAuto bool) []string {
 	}
 	return formats
 }
-

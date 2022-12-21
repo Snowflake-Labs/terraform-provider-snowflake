@@ -91,7 +91,10 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %v", err)
 	}
-	d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
