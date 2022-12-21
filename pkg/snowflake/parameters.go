@@ -711,7 +711,7 @@ func (v *ParameterBuilder) SetParameter() error {
 			return err
 		}
 	} else if v.parameterType == ParameterTypeObject {
-		stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectName, v.key, v.value)
+		stmt := fmt.Sprintf("ALTER %s \"%s\" SET %s = %s", v.objectType, v.objectName, v.key, v.value)
 		_, err := v.db.Exec(stmt)
 		if err != nil {
 			return err
@@ -756,7 +756,7 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*snowfl
 
 func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectName string) (*snowflakeParameter, error) {
 	var value snowflakeParameter
-	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s %s", key, objectType.String(), objectName)
+	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", key, objectType.String(), objectName)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -804,7 +804,7 @@ func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]
 func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern string) ([]snowflakeParameter, error) {
 	var stmt string
 	if pattern != "" {
-		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s %s", pattern, objectType.String(), objectName)
+		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", pattern, objectType.String(), objectName)
 	} else {
 		stmt = fmt.Sprintf("SHOW PARAMETERS IN %s %s", objectType.String(), objectName)
 	}
