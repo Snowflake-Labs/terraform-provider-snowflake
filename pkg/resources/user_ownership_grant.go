@@ -68,7 +68,7 @@ func CreateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(role).Grant())
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf(`%s|%s|%s`, user, role, currentGrants))
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(role).Grant())
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func DeleteUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	currentGrants := d.Get("current_grants").(string)
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(reversionRole).Revoke())
 	if err != nil {
 		return err

@@ -101,10 +101,10 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (sequenceName == "") && !futureSequences {
-		return errors.New("sequence_name must be set unless on_future is true.")
+		return errors.New("sequence_name must be set unless on_future is true")
 	}
 	if (sequenceName != "") && futureSequences {
-		return errors.New("sequence_name must be empty if on_future is true.")
+		return errors.New("sequence_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder

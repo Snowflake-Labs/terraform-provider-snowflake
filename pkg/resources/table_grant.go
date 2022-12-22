@@ -122,11 +122,11 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true.")
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	if (tableName == "") && !onFuture {
-		return errors.New("table_name must be set unless on_future is true.")
+		return errors.New("table_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder

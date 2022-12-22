@@ -561,7 +561,7 @@ func (ffb *FileFormatBuilder) Show() string {
 	return fmt.Sprintf(`SHOW FILE FORMATS LIKE '%v' IN SCHEMA "%v"."%v"`, ffb.name, ffb.db, ffb.schema)
 }
 
-type fileFormatShow struct {
+type FileFormatShow struct {
 	CreatedOn      sql.NullString `db:"created_on"`
 	FileFormatName sql.NullString `db:"name"`
 	DatabaseName   sql.NullString `db:"database_name"`
@@ -572,7 +572,7 @@ type fileFormatShow struct {
 	FormatOptions  sql.NullString `db:"format_options"`
 }
 
-type fileFormatOptions struct {
+type FileFormatOptions struct {
 	Type                       string   `json:"TYPE"`
 	Compression                string   `json:"COMPRESSION,omitempty"`
 	RecordDelimiter            string   `json:"RECORD_DELIMITER,omitempty"`
@@ -606,19 +606,19 @@ type fileFormatOptions struct {
 	DisableAutoConvert         bool     `json:"DISABLE_AUTO_CONVERT,omitempty"`
 }
 
-func ScanFileFormatShow(row *sqlx.Row) (*fileFormatShow, error) {
-	r := &fileFormatShow{}
+func ScanFileFormatShow(row *sqlx.Row) (*FileFormatShow, error) {
+	r := &FileFormatShow{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ParseFormatOptions(fileOptions string) (*fileFormatOptions, error) {
-	ff := &fileFormatOptions{}
+func ParseFormatOptions(fileOptions string) (*FileFormatOptions, error) {
+	ff := &FileFormatOptions{}
 	err := json.Unmarshal([]byte(fileOptions), ff)
 	return ff, err
 }
 
-func ListFileFormats(databaseName string, schemaName string, db *sql.DB) ([]fileFormatShow, error) {
+func ListFileFormats(databaseName string, schemaName string, db *sql.DB) ([]FileFormatShow, error) {
 	stmt := fmt.Sprintf(`SHOW FILE FORMATS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -626,7 +626,7 @@ func ListFileFormats(databaseName string, schemaName string, db *sql.DB) ([]file
 	}
 	defer rows.Close()
 
-	dbs := []fileFormatShow{}
+	dbs := []FileFormatShow{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no file formats found")

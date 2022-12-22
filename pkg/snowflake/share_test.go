@@ -9,7 +9,7 @@ import (
 
 func TestShare(t *testing.T) {
 	r := require.New(t)
-	s := snowflake.Share("share1")
+	s := snowflake.NewShareBuilder("share1")
 	r.NotNil(s)
 
 	q := s.Show()

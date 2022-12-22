@@ -124,7 +124,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	name := d.Get("name").(string)
-	builder := snowflake.Database(name)
+	builder := snowflake.NewDatabaseBuilder(name)
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -221,7 +221,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
 
-	stmt := snowflake.Database(name).Show()
+	stmt := snowflake.NewDatabaseBuilder(name).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	database, err := snowflake.ScanDatabase(row)
@@ -267,7 +267,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Id()
-	builder := snowflake.Database(dbName)
+	builder := snowflake.NewDatabaseBuilder(dbName)
 	db := meta.(*sql.DB)
 
 	// If replication configuration changes, need to update accounts that have permission to replicate database
@@ -340,7 +340,7 @@ func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Id()
 
-	q := snowflake.Database(name).Drop()
+	q := snowflake.NewDatabaseBuilder(name).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting database %v err = %w", d.Id(), err)
 	}

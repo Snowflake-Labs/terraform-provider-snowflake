@@ -47,7 +47,7 @@ func TestManagedAccountRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.ManagedAccount(d.Id()).Show()
+		q := snowflake.NewManagedAccountBuilder(d.Id()).Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadManagedAccount(d, db)
 

@@ -16,14 +16,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-user-security.html#api-integrations)
-func APIIntegration(name string) *Builder {
+func NewAPIIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: APIIntegrationType,
 		name:       name,
 	}
 }
 
-type apiIntegration struct {
+type APIIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
@@ -31,8 +31,8 @@ type apiIntegration struct {
 	Enabled         sql.NullBool   `db:"enabled"`
 }
 
-func ScanAPIIntegration(row *sqlx.Row) (*apiIntegration, error) {
-	r := &apiIntegration{}
+func ScanAPIIntegration(row *sqlx.Row) (*APIIntegration, error) {
+	r := &APIIntegration{}
 	err := row.StructScan(r)
 	return r, err
 }

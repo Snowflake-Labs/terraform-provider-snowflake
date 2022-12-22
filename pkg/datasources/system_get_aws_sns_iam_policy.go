@@ -35,7 +35,7 @@ func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) erro
 	db := meta.(*sql.DB)
 	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)
 
-	sel := snowflake.SystemGetAWSSNSIAMPolicy(awsSNSTopicArn).Select()
+	sel := snowflake.NewSystemGetAWSSNSIAMPolicyBuilder(awsSNSTopicArn).Select()
 	row := snowflake.QueryRow(db, sel)
 	policy, err := snowflake.ScanAWSSNSIAMPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {

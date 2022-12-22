@@ -149,7 +149,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.ExternalOauthIntegration(name).Create()
+	stmt := snowflake.NewExternalOauthIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetRaw(`TYPE=EXTERNAL_OAUTH`)
@@ -202,7 +202,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ExternalOauthIntegration(id).Show()
+	stmt := snowflake.NewExternalOauthIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -241,7 +241,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.ExternalOauthIntegration(id).Describe()
+	stmt = snowflake.NewExternalOauthIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe security integration err = %w", err)
@@ -339,7 +339,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ExternalOauthIntegration(id).Alter()
+	stmt := snowflake.NewExternalOauthIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -411,5 +411,5 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 
 // DeleteExternalOauthIntegration implements schema.DeleteFunc.
 func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.ExternalOauthIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewExternalOauthIntegrationBuilder)(d, meta)
 }

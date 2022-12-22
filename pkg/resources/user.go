@@ -156,7 +156,7 @@ func User() *schema.Resource {
 }
 
 func CreateUser(d *schema.ResourceData, meta interface{}) error {
-	return CreateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
+	return CreateResource("user", userProperties, userSchema, snowflake.NewUserBuilder, ReadUser)(d, meta)
 }
 
 func ReadUser(d *schema.ResourceData, meta interface{}) error {
@@ -165,7 +165,7 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 
 	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
 	// requires the "MANAGE GRANTS" global privilege
-	stmt := snowflake.User(id).Describe()
+	stmt := snowflake.NewUserBuilder(id).Describe()
 	rows, err := snowflake.Query(db, stmt)
 
 	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
@@ -253,9 +253,9 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateUser(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("user", userProperties, userSchema, snowflake.User, ReadUser)(d, meta)
+	return UpdateResource("user", userProperties, userSchema, snowflake.NewUserBuilder, ReadUser)(d, meta)
 }
 
 func DeleteUser(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("user", snowflake.User)(d, meta)
+	return DeleteResource("user", snowflake.NewUserBuilder)(d, meta)
 }

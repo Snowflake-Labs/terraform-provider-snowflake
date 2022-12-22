@@ -34,7 +34,7 @@ func getWarehousesSweeper(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if warehouse %s starts with tst-terraform", wh.Name)
 				if strings.HasPrefix(wh.Name, "tst-terraform") {
 					log.Printf("[DEBUG] deleting warehouse %s", wh.Name)
-					whBuilder := snowflake.Warehouse(name).Builder
+					whBuilder := snowflake.NewWarehouseBuilder(name).Builder
 					stmt := whBuilder.Drop()
 					if err := snowflake.Exec(db, stmt); err != nil {
 						return fmt.Errorf("Error deleting warehouse %q %w", wh.Name, err)
@@ -64,7 +64,7 @@ func getDatabaseSweepers(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if database %s starts with tst-terraform", database.DBName.String)
 				if strings.HasPrefix(database.DBName.String, "tst-terraform") {
 					log.Printf("[DEBUG] deleting database %s", database.DBName.String)
-					stmt := snowflake.Database(database.DBName.String).Drop()
+					stmt := snowflake.NewDatabaseBuilder(database.DBName.String).Drop()
 					if err := snowflake.Exec(db, stmt); err != nil {
 						return fmt.Errorf("Error deleting database %q %w", database.DBName.String, err)
 					}
@@ -93,7 +93,7 @@ func getRolesSweeper(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if role %s starts with tst-terraform", role.Name.String)
 				if strings.HasPrefix(role.Name.String, "tst-terraform") {
 					log.Printf("[DEBUG] deleting role %s", role.Name.String)
-					stmt := snowflake.Role(role.Name.String).Drop()
+					stmt := snowflake.NewRoleBuilder(role.Name.String).Drop()
 					if err := snowflake.Exec(db, stmt); err != nil {
 						return fmt.Errorf("Error deleting role %q %w", role.Name.String, err)
 					}
@@ -122,7 +122,7 @@ func getUsersSweeper(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if user %s starts with tst-terraform", user.Name.String)
 				if strings.HasPrefix(user.Name.String, "tst-terraform") {
 					log.Printf("[DEBUG] deleting user %s", user.Name.String)
-					stmt := snowflake.User(user.Name.String).Drop()
+					stmt := snowflake.NewUserBuilder(user.Name.String).Drop()
 					if err := snowflake.Exec(db, stmt); err != nil {
 						return fmt.Errorf("Error deleting user %q %w", user.Name.String, err)
 					}

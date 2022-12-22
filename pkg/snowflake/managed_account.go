@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ManagedAccount returns a pointer to a Builder that abstracts the DDL
+// NewManagedAccountBuilder returns a pointer to a Builder that abstracts the DDL
 // operations for a reader account.
 //
 // Supported DDL operations are:
@@ -15,14 +15,14 @@ import (
 //   - SHOW MANAGED ACCOUNTS
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/user-guide/data-sharing-reader-create.html)
-func ManagedAccount(name string) *Builder {
+func NewManagedAccountBuilder(name string) *Builder {
 	return &Builder{
 		entityType: ManagedAccountType,
 		name:       name,
 	}
 }
 
-type managedAccount struct {
+type ManagedAccount struct {
 	Name      sql.NullString `db:"name"`
 	Cloud     sql.NullString `db:"cloud"`
 	Region    sql.NullString `db:"region"`
@@ -33,8 +33,8 @@ type managedAccount struct {
 	IsReader  bool           `db:"is_reader"`
 }
 
-func ScanManagedAccount(row *sqlx.Row) (*managedAccount, error) {
-	a := &managedAccount{}
+func ScanManagedAccount(row *sqlx.Row) (*ManagedAccount, error) {
+	a := &ManagedAccount{}
 	e := row.StructScan(a)
 	return a, e
 }

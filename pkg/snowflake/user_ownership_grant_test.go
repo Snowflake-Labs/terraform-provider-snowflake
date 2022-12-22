@@ -9,8 +9,8 @@ import (
 
 func TestUserOwnershipGrantQuery(t *testing.T) {
 	r := require.New(t)
-	copy := snowflake.UserOwnershipGrant("user1", "COPY")
-	revoke := snowflake.UserOwnershipGrant("user1", "REVOKE")
+	copy := snowflake.NewUserOwnershipGrantBuilder("user1", "COPY")
+	revoke := snowflake.NewUserOwnershipGrantBuilder("user1", "REVOKE")
 
 	g1 := copy.Role("role1").Grant()
 	r.Equal(`GRANT OWNERSHIP ON USER "user1" TO ROLE "role1" COPY CURRENT GRANTS`, g1)

@@ -7,7 +7,7 @@ import (
 )
 
 func getProcedure(withArgs bool) *ProcedureBuilder {
-	s := Procedure("test_db", "test_schema", "test_proc", []string{})
+	s := NewProcedureBuilder("test_db", "test_schema", "test_proc", []string{})
 	s.WithStatement(`var message = "Hi"` + "\n" + `return message`)
 	s.WithReturnType("varchar")
 	s.WithExecuteAs("CALLER")

@@ -43,7 +43,7 @@ func (wb *WarehouseBuilder) ShowParameters() string {
 	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %q", wb.Builder.name)
 }
 
-func Warehouse(name string) *WarehouseBuilder {
+func NewWarehouseBuilder(name string) *WarehouseBuilder {
 	return &WarehouseBuilder{
 		&Builder{
 			name:       name,
@@ -54,7 +54,7 @@ func Warehouse(name string) *WarehouseBuilder {
 
 // warehouse is a go representation of a grant that can be used in conjunction
 // with github.com/jmoiron/sqlx.
-type warehouse struct {
+type Warehouse struct {
 	Name                            string        `db:"name"`
 	State                           string        `db:"state"`
 	Type                            string        `db:"type"`
@@ -90,7 +90,7 @@ type warehouse struct {
 }
 
 // warehouseParams struct to represent a row of parameters.
-type warehouseParams struct {
+type WarehouseParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
 	DefaultValue string `db:"default"`
@@ -99,18 +99,18 @@ type warehouseParams struct {
 	Type         string `db:"type"`
 }
 
-func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
-	w := &warehouse{}
+func ScanWarehouse(row *sqlx.Row) (*Warehouse, error) {
+	w := &Warehouse{}
 	err := row.StructScan(w)
 	return w, err
 }
 
 // ScanWarehouseParameters takes a database row and converts it to a warehouse parameter pointer.
-func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
-	params := []*warehouseParams{}
+func ScanWarehouseParameters(rows *sqlx.Rows) ([]*WarehouseParams, error) {
+	params := []*WarehouseParams{}
 
 	for rows.Next() {
-		w := &warehouseParams{}
+		w := &WarehouseParams{}
 		if err := rows.StructScan(w); err != nil {
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
 	return params, nil
 }
 
-func ListWarehouses(db *sql.DB) ([]warehouse, error) {
+func ListWarehouses(db *sql.DB) ([]Warehouse, error) {
 	stmt := "SHOW WAREHOUSES"
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -127,7 +127,7 @@ func ListWarehouses(db *sql.DB) ([]warehouse, error) {
 	}
 	defer rows.Close()
 
-	dbs := []warehouse{}
+	dbs := []Warehouse{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no warehouses found")

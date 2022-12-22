@@ -116,7 +116,7 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.APIIntegration(name).Create()
+	stmt := snowflake.NewAPIIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
@@ -151,7 +151,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.APIIntegration(id).Show()
+	stmt := snowflake.NewAPIIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -162,9 +162,8 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		if err.Error() == snowflake.ErrNoRowInRS {
 			d.SetId("")
 			return nil
-		} else {
-			return fmt.Errorf("could not show api integration: %w", err)
 		}
+		return fmt.Errorf("could not show api integration: %w", err)
 	}
 
 	// Note: category must be API or something is broken
@@ -188,7 +187,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.APIIntegration(id).Describe()
+	stmt = snowflake.NewAPIIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe api integration: %w", err)
@@ -244,7 +243,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.APIIntegration(id).Alter()
+	stmt := snowflake.NewAPIIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -308,7 +307,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.APIIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewAPIIntegrationBuilder)(d, meta)
 }
 
 func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {

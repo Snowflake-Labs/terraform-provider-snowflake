@@ -108,13 +108,13 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (externalTableName == "") && !futureExternalTables {
-		return errors.New("external_table_name must be set unless on_future is true.")
+		return errors.New("external_table_name must be set unless on_future is true")
 	}
 	if (externalTableName != "") && futureExternalTables {
-		return errors.New("external_table_name must be empty if on_future is true.")
+		return errors.New("external_table_name must be empty if on_future is true")
 	}
 	if (schemaName == "") && !futureExternalTables {
-		return errors.New("schema_name must be set when on_future is false.")
+		return errors.New("schema_name must be set when on_future is false")
 	}
 
 	var builder snowflake.GrantBuilder

@@ -147,7 +147,7 @@ func (sb *StreamBuilder) Show() string {
 	return fmt.Sprintf(`SHOW STREAMS LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
-type descStreamRow struct {
+type DescStreamRow struct {
 	CreatedOn       sql.NullString `db:"created_on"`
 	StreamName      sql.NullString `db:"name"`
 	DatabaseName    sql.NullString `db:"database_name"`
@@ -162,13 +162,13 @@ type descStreamRow struct {
 	Mode            sql.NullString `db:"mode"`
 }
 
-func ScanStream(row *sqlx.Row) (*descStreamRow, error) {
-	t := &descStreamRow{}
+func ScanStream(row *sqlx.Row) (*DescStreamRow, error) {
+	t := &DescStreamRow{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-func ListStreams(databaseName string, schemaName string, db *sql.DB) ([]descStreamRow, error) {
+func ListStreams(databaseName string, schemaName string, db *sql.DB) ([]DescStreamRow, error) {
 	stmt := fmt.Sprintf(`SHOW STREAMS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -176,7 +176,7 @@ func ListStreams(databaseName string, schemaName string, db *sql.DB) ([]descStre
 	}
 	defer rows.Close()
 
-	dbs := []descStreamRow{}
+	dbs := []DescStreamRow{}
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no stages found")

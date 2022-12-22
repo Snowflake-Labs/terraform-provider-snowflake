@@ -110,8 +110,8 @@ func TestUserRead(t *testing.T) {
 
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.User(d.Id()).Describe()
-		mock.ExpectQuery(q).WillReturnError(fmt.Errorf("SQL compilation error:User '%s' does not exist or not authorized.", name))
+		q := snowflake.NewUserBuilder(d.Id()).Describe()
+		mock.ExpectQuery(q).WillReturnError(fmt.Errorf("SQL compilation error:User '%s' does not exist or not authorized", name))
 		err2 := resources.ReadUser(d, db)
 		r.Empty(d.State())
 		r.Nil(err2)

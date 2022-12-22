@@ -198,7 +198,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		tq := snowflake.Table(id.Name, id.DatabaseName, id.SchemaName).Show()
+		tq := snowflake.NewTableBuilder(id.Name, id.DatabaseName, id.SchemaName).Show()
 		tableRow := snowflake.QueryRow(db, tq)
 
 		t, err := snowflake.ScanTable(tableRow)
@@ -214,7 +214,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		tq := snowflake.View(id.Name).WithDB(id.DatabaseName).WithSchema(id.SchemaName).Show()
+		tq := snowflake.NewViewBuilder(id.Name).WithDB(id.DatabaseName).WithSchema(id.SchemaName).Show()
 		viewRow := snowflake.QueryRow(db, tq)
 
 		t, err := snowflake.ScanView(viewRow)

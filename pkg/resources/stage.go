@@ -159,7 +159,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
 
-	builder := snowflake.Stage(name, database, schema)
+	builder := snowflake.NewStageBuilder(name, database, schema)
 
 	// Set optionals
 	if v, ok := d.GetOk("url"); ok {
@@ -232,7 +232,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	q := snowflake.Stage(stage, dbName, schema).Describe()
+	q := snowflake.NewStageBuilder(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
@@ -251,7 +251,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	sq := snowflake.Stage(stage, dbName, schema).Show()
+	sq := snowflake.NewStageBuilder(stage, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 
 	s, err := snowflake.ScanStageShow(row)
@@ -317,7 +317,7 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	builder := snowflake.Stage(stage, dbName, schema)
+	builder := snowflake.NewStageBuilder(stage, dbName, schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("url") {
@@ -393,7 +393,7 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	q := snowflake.Stage(stage, dbName, schema).Drop()
+	q := snowflake.NewStageBuilder(stage, dbName, schema).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting stage %v err = %w", d.Id(), err)
 	}

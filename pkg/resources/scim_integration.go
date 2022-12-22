@@ -78,7 +78,7 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.ScimIntegration(name).Create()
+	stmt := snowflake.NewSCIMIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetRaw(`TYPE=SCIM`)
@@ -104,7 +104,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ScimIntegration(id).Show()
+	stmt := snowflake.NewSCIMIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -135,7 +135,7 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.ScimIntegration(id).Describe()
+	stmt = snowflake.NewSCIMIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe security integration")
@@ -167,7 +167,7 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.ScimIntegration(id).Alter()
+	stmt := snowflake.NewSCIMIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -205,5 +205,5 @@ func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSCIMIntegration implements schema.DeleteFunc.
 func DeleteSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.ScimIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewSCIMIntegrationBuilder)(d, meta)
 }

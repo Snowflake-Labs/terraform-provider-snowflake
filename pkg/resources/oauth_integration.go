@@ -94,7 +94,7 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.OAuthIntegration(name).Create()
+	stmt := snowflake.NewOAuthIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetRaw(`TYPE=OAUTH`)
@@ -137,7 +137,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.OAuthIntegration(id).Show()
+	stmt := snowflake.NewOAuthIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -176,7 +176,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.OAuthIntegration(id).Describe()
+	stmt = snowflake.NewOAuthIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe security integration err = %w", err)
@@ -258,7 +258,7 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.OAuthIntegration(id).Alter()
+	stmt := snowflake.NewOAuthIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -313,5 +313,5 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteOAuthIntegration implements schema.DeleteFunc.
 func DeleteOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.OAuthIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewOAuthIntegrationBuilder)(d, meta)
 }

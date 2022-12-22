@@ -348,9 +348,9 @@ type changedColumn struct {
 	changedMaskingPolicy  bool
 }
 
-func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
+func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
-	for _, cO := range old {
+	for _, cO := range c {
 		for _, cN := range new {
 			changeColumn := changedColumn{cN, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
@@ -377,8 +377,8 @@ func (old columns) getChangedColumnProperties(new columns) (changed changedColum
 	return
 }
 
-func (old columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
-	return old.getNewIn(new), new.getNewIn(old), old.getChangedColumnProperties(new)
+func (c columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
+	return c.getNewIn(new), new.getNewIn(c), c.getChangedColumnProperties(new)
 }
 
 func getColumnDefault(def map[string]interface{}) *columnDefault {
@@ -485,7 +485,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	columns := getColumns(d.Get("column").([]interface{}))
 
-	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns.toSnowflakeColumns())
+	builder := snowflake.NewTableWithColumnDefinitionsBuilder(name, database, schema, columns.toSnowflakeColumns())
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -540,7 +540,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Table(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
+	builder := snowflake.NewTableBuilder(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
@@ -610,7 +610,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	schema := tid.SchemaName
 	tableName := tid.TableName
 
-	builder := snowflake.Table(tableName, dbName, schema)
+	builder := snowflake.NewTableBuilder(tableName, dbName, schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
@@ -653,8 +653,8 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("column") {
-		old, new := d.GetChange("column")
-		removed, added, changed := getColumns(old).diffs(getColumns(new))
+		t, new := d.GetChange("column")
+		removed, added, changed := getColumns(t).diffs(getColumns(new))
 		for _, cA := range removed {
 			q := builder.DropColumn(cA.name)
 			if err := snowflake.Exec(db, q); err != nil {
@@ -771,7 +771,7 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	schemaName := tableID.SchemaName
 	tableName := tableID.TableName
 
-	q := snowflake.Table(tableName, dbName, schemaName).Drop()
+	q := snowflake.NewTableBuilder(tableName, dbName, schemaName).Drop()
 
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)

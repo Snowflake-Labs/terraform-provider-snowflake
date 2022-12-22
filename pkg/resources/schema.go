@@ -124,7 +124,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 
-	builder := snowflake.Schema(name).WithDB(database)
+	builder := snowflake.NewSchemaBuilder(name).WithDB(database)
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -177,7 +177,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	dbName := schemaID.DatabaseName
 	schema := schemaID.SchemaName
 
-	q := snowflake.Schema(schema).WithDB(dbName).Show()
+	q := snowflake.NewSchemaBuilder(schema).WithDB(dbName).Show()
 	row := snowflake.QueryRow(db, q)
 
 	s, err := snowflake.ScanSchema(row)
@@ -257,7 +257,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	dbName := sid.DatabaseName
 	schema := sid.SchemaName
 
-	builder := snowflake.Schema(schema).WithDB(dbName)
+	builder := snowflake.NewSchemaBuilder(schema).WithDB(dbName)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
@@ -328,7 +328,7 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	dbName := schemaID.DatabaseName
 	schema := schemaID.SchemaName
 
-	q := snowflake.Schema(schema).WithDB(dbName).Drop()
+	q := snowflake.NewSchemaBuilder(schema).WithDB(dbName).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting schema %v err = %w", d.Id(), err)
 	}

@@ -102,7 +102,7 @@ func (vb *ViewBuilder) UnsetTag(tag TagValue) string {
 //   - DESCRIBE VIEW
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-table.html#standard-view-management)
-func View(name string) *ViewBuilder {
+func NewViewBuilder(name string) *ViewBuilder {
 	return &ViewBuilder{
 		name: name,
 	}
@@ -208,7 +208,7 @@ func (vb *ViewBuilder) Drop() (string, error) {
 	return fmt.Sprintf(`DROP VIEW %v`, qn), nil
 }
 
-type view struct {
+type View struct {
 	Comment      sql.NullString `db:"comment"`
 	IsSecure     bool           `db:"is_secure"`
 	Name         sql.NullString `db:"name"`
@@ -217,13 +217,13 @@ type view struct {
 	DatabaseName sql.NullString `db:"database_name"`
 }
 
-func ScanView(row *sqlx.Row) (*view, error) {
-	r := &view{}
+func ScanView(row *sqlx.Row) (*View, error) {
+	r := &View{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListViews(databaseName string, schemaName string, db *sql.DB) ([]view, error) {
+func ListViews(databaseName string, schemaName string, db *sql.DB) ([]View, error) {
 	stmt := fmt.Sprintf(`SHOW VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -231,7 +231,7 @@ func ListViews(databaseName string, schemaName string, db *sql.DB) ([]view, erro
 	}
 	defer rows.Close()
 
-	dbs := []view{}
+	dbs := []View{}
 
 	if err := sqlx.StructScan(rows, &dbs); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

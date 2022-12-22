@@ -109,7 +109,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var s *snowflake.NetworkPolicyStruct = nil
+	var s *snowflake.NetworkPolicyStruct
 	for _, value := range allPolicies {
 		if value.Name.String == policyName {
 			s = value

@@ -64,7 +64,7 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	builder := snowflake.Share(name).Create()
+	builder := snowflake.NewShareBuilder(name).Create()
 	builder.SetString("COMMENT", d.Get("comment").(string))
 
 	if err := snowflake.Exec(db, builder.Statement()); err != nil {
@@ -94,7 +94,7 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// thing working.
 	// 1. Create new temporary DB
 	tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
-	tempDB := snowflake.Database(tempName)
+	tempDB := snowflake.NewDatabaseBuilder(tempName)
 	if err := snowflake.Exec(db, tempDB.Create()); err != nil {
 		return fmt.Errorf("error creating temporary DB %v err = %w", tempName, err)
 	}
@@ -152,7 +152,7 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.Share(id).Show()
+	stmt := snowflake.NewShareBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	s, err := snowflake.ScanShare(row)
@@ -188,12 +188,12 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(d, meta)
+	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.NewShareBuilder, ReadShare)(d, meta)
 }
 
 // DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
+	return DeleteResource("this does not seem to be used", snowflake.NewShareBuilder)(d, meta)
 }
 
 // StripAccountFromName removes the account prefix from a resource (e.g. a share)

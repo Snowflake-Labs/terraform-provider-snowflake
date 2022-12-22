@@ -78,7 +78,7 @@ func (tb *TagBuilder) WithMaskingPolicy(mpb *MaskingPolicyBuilder) *TagBuilder {
 //   - SHOW TAGS
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
-func Tag(name string) *TagBuilder {
+func NewTagBuilder(name string) *TagBuilder {
 	return &TagBuilder{
 		name: name,
 	}
@@ -175,7 +175,7 @@ func (tb *TagBuilder) ShowAttachedPolicy() string {
 	return q.String()
 }
 
-type tag struct {
+type Tag struct {
 	Name          sql.NullString `db:"name"`
 	DatabaseName  sql.NullString `db:"database_name"`
 	SchemaName    sql.NullString `db:"schema_name"`
@@ -183,7 +183,7 @@ type tag struct {
 	AllowedValues sql.NullString `db:"allowed_values"`
 }
 
-type tagPolicyAttachment struct {
+type TagPolicyAttachment struct {
 	PolicyDB        sql.NullString `db:"POLICY_DB"`
 	PolicySchema    sql.NullString `db:"POLICY_SCHEMA"`
 	PolicyName      sql.NullString `db:"POLICY_NAME"`
@@ -201,20 +201,20 @@ type TagValue struct {
 	Value    string
 }
 
-func ScanTag(row *sqlx.Row) (*tag, error) {
-	r := &tag{}
+func ScanTag(row *sqlx.Row) (*Tag, error) {
+	r := &Tag{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ScanTagPolicy(row *sqlx.Row) (*tagPolicyAttachment, error) {
-	r := &tagPolicyAttachment{}
+func ScanTagPolicy(row *sqlx.Row) (*TagPolicyAttachment, error) {
+	r := &TagPolicyAttachment{}
 	err := row.StructScan(r)
 	return r, err
 }
 
 // ListTags returns a list of tags in a database or schema.
-func ListTags(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
+func ListTags(databaseName, schemaName string, db *sql.DB) ([]Tag, error) {
 	stmt := fmt.Sprintf(`SHOW TAGS IN SCHEMA "%v"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -222,7 +222,7 @@ func ListTags(databaseName, schemaName string, db *sql.DB) ([]tag, error) {
 	}
 	defer rows.Close()
 
-	tags := []tag{}
+	tags := []Tag{}
 	if err := sqlx.StructScan(rows, &tags); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("[DEBUG] no tags found")

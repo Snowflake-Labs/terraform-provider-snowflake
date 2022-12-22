@@ -30,7 +30,7 @@ type TableConstraintBuilder struct {
 	comment          string
 }
 
-func TableConstraint(name string, constraintType string, tableID string) *TableConstraintBuilder {
+func NewTableConstraintBuilder(name string, constraintType string, tableID string) *TableConstraintBuilder {
 	return &TableConstraintBuilder{
 		name:           name,
 		constraintType: constraintType,
@@ -205,7 +205,7 @@ func (b *TableConstraintBuilder) Drop() string {
 	return s
 }
 
-type tableConstraint struct {
+type TableConstraint struct {
 	ConstraintCatalog sql.NullString `db:"CONSTRAINT_CATALOG"`
 	ConstraintSchema  sql.NullString `db:"CONSTRAINT_SCHEMA"`
 	ConstraintName    sql.NullString `db:"CONSTRAINT_NAME"`
@@ -220,7 +220,7 @@ type tableConstraint struct {
 }
 
 // Show returns the SQL query that will show a table constraint by ID.
-func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*tableConstraint, error) {
+func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*TableConstraint, error) {
 	stmt := `SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '?' AND TABLE_SCHEMA = '?' AND TABLE_CATALOG = '?' AND CONSTRAINT_NAME = '?'`
 	rows, err := db.Query(stmt,
 		tableName, tableSchema, tableDB, name)
@@ -228,7 +228,7 @@ func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.D
 		return nil, err
 	}
 	defer rows.Close()
-	tableConstraints := []tableConstraint{}
+	tableConstraints := []TableConstraint{}
 	log.Printf("[DEBUG] tableConstraints is %v", tableConstraints)
 	if err := sqlx.StructScan(rows, &tableConstraints); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

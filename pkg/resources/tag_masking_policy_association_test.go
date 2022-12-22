@@ -76,7 +76,7 @@ func TestTagMaskingPolicyAssociationRead(t *testing.T) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
 		mP := snowflake.MaskingPolicy("mp_name", "mp_db", "mp_schema")
-		q := snowflake.Tag("tag_name").WithDB("tag_db").WithSchema("tag_schema").WithMaskingPolicy(mP).ShowAttachedPolicy()
+		q := snowflake.NewTagBuilder("tag_name").WithDB("tag_db").WithSchema("tag_schema").WithMaskingPolicy(mP).ShowAttachedPolicy()
 		mock.ExpectQuery(regexp.QuoteMeta(q)).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadTagMaskingPolicyAssociation(d, db)
 

@@ -117,14 +117,13 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !futureViews {
-		return errors.New("schema_name must be set unless on_future is true.")
+		return errors.New("schema_name must be set unless on_future is true")
 	}
-
 	if (viewName == "") && !futureViews {
-		return errors.New("view_name must be set unless on_future is true.")
+		return errors.New("view_name must be set unless on_future is true")
 	}
 	if (viewName != "") && futureViews {
-		return errors.New("view_name must be empty if on_future is true.")
+		return errors.New("view_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder

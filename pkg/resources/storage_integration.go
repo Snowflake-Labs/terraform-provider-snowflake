@@ -123,7 +123,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.StorageIntegration(name).Create()
+	stmt := snowflake.NewStorageIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetString(`TYPE`, d.Get("type").(string))
@@ -162,7 +162,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.StorageIntegration(d.Id()).Show()
+	stmt := snowflake.NewStorageIntegrationBuilder(d.Id()).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -203,7 +203,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.StorageIntegration(d.Id()).Describe()
+	stmt = snowflake.NewStorageIntegrationBuilder(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe storage integration: %w", err)
@@ -279,7 +279,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.StorageIntegration(id).Alter()
+	stmt := snowflake.NewStorageIntegrationBuilder(id).Alter()
 
 	// This is required in case the only change is to UNSET STORAGE_ALLOWED_LOCATIONS.
 	// Not sure if there is a more elegant way of determining this
@@ -361,7 +361,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteStorageIntegration implements schema.DeleteFunc.
 func DeleteStorageIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.StorageIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewStorageIntegrationBuilder)(d, meta)
 }
 
 func setStorageProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {

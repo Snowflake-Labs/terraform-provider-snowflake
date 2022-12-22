@@ -20,13 +20,13 @@ type ReplicationBuilder struct {
 }
 
 // DatabaseFromDatabase returns a pointer to a builder that can create a database from a source database.
-func Replication(database string) *ReplicationBuilder {
+func NewReplicationBuilder(database string) *ReplicationBuilder {
 	return &ReplicationBuilder{
 		database: database,
 	}
 }
 
-type replication struct {
+type Replication struct {
 	Region           sql.NullString `db:"snowflake_region"`
 	CreatedOn        sql.NullString `db:"created_on"`
 	AccountName      sql.NullString `db:"account_name"`
@@ -40,9 +40,9 @@ type replication struct {
 	AccountLocator   sql.NullString `db:"account_locator"`
 }
 
-func ScanReplication(rows *sqlx.Rows, accName string) (*replication, error) {
+func ScanReplication(rows *sqlx.Rows, accName string) (*Replication, error) {
 	for rows.Next() {
-		r := &replication{}
+		r := &Replication{}
 		err := rows.StructScan(r)
 		if r.AccountName.String == accName {
 			return r, err

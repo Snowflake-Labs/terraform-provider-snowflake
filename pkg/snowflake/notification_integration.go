@@ -16,14 +16,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-user-security.html#notification-integrations)
-func NotificationIntegration(name string) *Builder {
+func NewNotificationIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: NotificationIntegrationType,
 		name:       name,
 	}
 }
 
-type notificationIntegration struct {
+type NotificationIntegration struct {
 	Name      sql.NullString `db:"name"`
 	Category  sql.NullString `db:"category"`
 	Type      sql.NullString `db:"type"`
@@ -31,8 +31,8 @@ type notificationIntegration struct {
 	Enabled   sql.NullBool   `db:"enabled"`
 }
 
-func ScanNotificationIntegration(row *sqlx.Row) (*notificationIntegration, error) {
-	r := &notificationIntegration{}
+func ScanNotificationIntegration(row *sqlx.Row) (*NotificationIntegration, error) {
+	r := &NotificationIntegration{}
 	err := row.StructScan(r)
 	return r, err
 }

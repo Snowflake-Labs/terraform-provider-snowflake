@@ -20,7 +20,7 @@ type TagAssociationBuilder struct {
 	tagValue         string
 }
 
-type tagAssociation struct {
+type TagAssociation struct {
 	TagValue sql.NullString `db:"TAG_VALUE"`
 }
 
@@ -65,7 +65,7 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 //   - SYSTEM$GET_TAG (get current tag value)
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/object-tagging.html)
-func TagAssociation(tagID string) *TagAssociationBuilder {
+func NewTagAssociationBuilder(tagID string) *TagAssociationBuilder {
 	databaseName, schemaName, tagName := validation.ParseFullyQualifiedObjectID(tagID)
 	return &TagAssociationBuilder{
 		databaseName: databaseName,
@@ -89,13 +89,13 @@ func (tb *TagAssociationBuilder) Show() string {
 	return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 }
 
-func ScanTagAssociation(row *sqlx.Row) (*tagAssociation, error) {
-	r := &tagAssociation{}
+func ScanTagAssociation(row *sqlx.Row) (*TagAssociation, error) {
+	r := &TagAssociation{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociation, error) {
+func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]TagAssociation, error) {
 	stmt := `SELECT SYSTEM$GET_TAG('"?"."?"."?"', '?', '?') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`
 	rows, err := db.Query(stmt,
 		tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
@@ -103,7 +103,7 @@ func ListTagAssociations(tb *TagAssociationBuilder, db *sql.DB) ([]tagAssociatio
 		return nil, err
 	}
 	defer rows.Close()
-	tagAssociations := []tagAssociation{}
+	tagAssociations := []TagAssociation{}
 	log.Printf("[DEBUG] tagAssociations is %v", tagAssociations)
 	if err := sqlx.StructScan(rows, &tagAssociations); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
