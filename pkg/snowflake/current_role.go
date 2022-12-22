@@ -19,6 +19,7 @@ func ScanCurrentRole(row *sqlx.Row) (*CurrentRole, error) {
 	err := row.StructScan(role)
 	return role, err
 }
+
 func ReadCurrentRole(db *sql.DB) (*CurrentRole, error) {
 	row := QueryRow(db, SelectCurrentRole())
 	return ScanCurrentRole(row)

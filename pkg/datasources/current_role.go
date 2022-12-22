@@ -27,7 +27,6 @@ func CurrentRole() *schema.Resource {
 func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	role, err := snowflake.ReadCurrentRole(db)
-
 	if err != nil {
 		log.Printf("[DEBUG] current_role failed to decode")
 		d.SetId("")
