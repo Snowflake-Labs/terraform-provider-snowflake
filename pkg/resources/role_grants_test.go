@@ -107,3 +107,39 @@ func TestRoleGrantsReadLegacyId(t *testing.T) {
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
+
+func expectReadUnhandledRoleGrants(mock sqlmock.Sqlmock) {
+	rows := sqlmock.NewRows([]string{
+		"created_on",
+		"role",
+		"granted_to",
+		"grantee_name",
+		"granted_by",
+	}).
+		AddRow("_", "good_name", "ROLE", "role1", "").
+		AddRow("_", "good_name", "ROLE", "role2", "").
+		AddRow("_", "good_name", "OTHER", "other1", "").
+		AddRow("_", "good_name", "OTHER", "other2", "").
+		AddRow("_", "good_name", "USER", "user1", "").
+		AddRow("_", "good_name", "USER", "user2", "")
+	mock.ExpectQuery(`SHOW GRANTS OF ROLE "good_name"`).WillReturnRows(rows)
+}
+
+func TestIgnoreUnknownRoleGrants(t *testing.T) {
+	r := require.New(t)
+
+	d := roleGrants(t, "good_name||||role1,role2|false", map[string]interface{}{
+		"role_name": "good_name",
+		"roles":     []interface{}{"role1", "role2"},
+		"users":     []interface{}{"user1", "user2"},
+	})
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Make sure that extraneous grants are ignored.
+		expectReadUnhandledRoleGrants(mock)
+		err := resources.ReadRoleGrants(d, db)
+		r.NoError(err)
+		r.Len(d.Get("users").(*schema.Set).List(), 2)
+		r.Len(d.Get("roles").(*schema.Set).List(), 2)
+	})
+}
