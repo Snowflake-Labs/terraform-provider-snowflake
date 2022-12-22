@@ -23,8 +23,8 @@ const (
 	ParameterTypeObject  ParameterType = "OBJECT"
 )
 
-// Parameter is a parameter that can be set on an account, session, or object.
-type Parameter struct {
+// ParameterDefault is a parameter that can be set on an account, session, or object.
+type ParameterDefault struct {
 	TypeSet            []ParameterType
 	DefaultValue       interface{}
 	ValueType          reflect.Type
@@ -33,7 +33,7 @@ type Parameter struct {
 }
 
 // ParameterDefaults returns a map of default values for all parameters.
-func ParameterDefaults() map[string]Parameter {
+func ParameterDefaults() map[string]ParameterDefault {
 	validateBoolFunc := func(value string) (err error) {
 		_, err = strconv.ParseBool(value)
 		if err != nil {
@@ -42,7 +42,7 @@ func ParameterDefaults() map[string]Parameter {
 		return nil
 	}
 
-	return map[string]Parameter{
+	return map[string]ParameterDefault{
 		"ALLOW_CLIENT_MFA_CACHING": {
 			TypeSet:      []ParameterType{ParameterTypeAccount},
 			DefaultValue: false,
@@ -656,7 +656,7 @@ func GetParameterObjectTypeSetAsStrings() []string {
 }
 
 // GetParameters returns a map of parameters that match the given type (e.g. Account, Session, Object).
-func GetParameters(t ParameterType) map[string]Parameter {
+func GetParameterDefaults(t ParameterType) map[string]ParameterDefault {
 	parameters := ParameterDefaults()
 	keys := maps.Keys(parameters)
 	for _, key := range keys {
@@ -669,7 +669,7 @@ func GetParameters(t ParameterType) map[string]Parameter {
 }
 
 // GetParameter returns a parameter by key.
-func GetParameter(key string) Parameter {
+func GetParameterDefault(key string) ParameterDefault {
 	return ParameterDefaults()[key]
 }
 
@@ -720,7 +720,7 @@ func (v *ParameterBuilder) SetParameter() error {
 	return nil
 }
 
-type SnowflakeParameter struct {
+type Parameter struct {
 	Key         sql.NullString `db:"key"`
 	Value       sql.NullString `db:"value"`
 	Default     sql.NullString `db:"default"`
@@ -729,8 +729,8 @@ type SnowflakeParameter struct {
 	PType       sql.NullString `db:"type"`
 }
 
-func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*SnowflakeParameter, error) {
-	var value SnowflakeParameter
+func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Parameter, error) {
+	var value Parameter
 	var stmt string
 	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession {
 		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", key)
@@ -742,7 +742,7 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Snowfl
 		return nil, err
 	}
 	defer rows.Close()
-	params := []SnowflakeParameter{}
+	params := []Parameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -754,15 +754,15 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Snowfl
 	return &value, nil
 }
 
-func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectName string) (*SnowflakeParameter, error) {
-	var value SnowflakeParameter
+func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectName string) (*Parameter, error) {
+	var value Parameter
 	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", key, objectType.String(), objectName)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	params := []SnowflakeParameter{}
+	params := []Parameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -774,7 +774,7 @@ func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectNa
 	return &value, nil
 }
 
-func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]SnowflakeParameter, error) {
+func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]Parameter, error) {
 	var stmt string
 	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession {
 		if pattern != "" {
@@ -791,7 +791,7 @@ func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]
 		return nil, err
 	}
 	defer rows.Close()
-	params := []SnowflakeParameter{}
+	params := []Parameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -801,7 +801,7 @@ func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]
 	return params, nil
 }
 
-func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern string) ([]SnowflakeParameter, error) {
+func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern string) ([]Parameter, error) {
 	var stmt string
 	if pattern != "" {
 		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", pattern, objectType.String(), objectName)
@@ -814,7 +814,7 @@ func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern
 		return nil, err
 	}
 	defer rows.Close()
-	params := []SnowflakeParameter{}
+	params := []Parameter{}
 	if err := sqlx.StructScan(rows, &params); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
