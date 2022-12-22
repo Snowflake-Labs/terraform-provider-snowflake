@@ -17,7 +17,7 @@ var sessionParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of session parameter. Valid values are those in [session parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#session-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameters(snowflake.ParameterTypeSession)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -46,7 +46,7 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeSession)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -102,7 +102,7 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeSession)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
 	defaultValue := parameterDefault.DefaultValue
 	value := fmt.Sprintf("%v", defaultValue)
 

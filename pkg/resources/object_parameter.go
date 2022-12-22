@@ -19,7 +19,7 @@ var objectParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of object parameter. Valid values are those in [object parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#object-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameters(snowflake.ParameterTypeObject)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -62,7 +62,7 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	value := d.Get("value").(string)
 	objectName := d.Get("object_name").(string)
 	objectType := snowflake.ObjectType(d.Get("object_type").(string))
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeObject)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -132,7 +132,7 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	objectType := snowflake.ObjectType(d.Get("object_type").(string))
 	objectName := d.Get("object_name").(string)
 
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeObject)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
 	defaultValue := parameterDefault.DefaultValue
 	value := fmt.Sprintf("%v", defaultValue)
 
