@@ -96,7 +96,7 @@ func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
 		if e.pos+i > len(e.input) || !strings.EqualFold(string(r), string(e.input[e.pos+i])) {
 			break
 		}
-		found += 1
+		found++
 	}
 
 	if found == len(t) {
@@ -112,7 +112,7 @@ func (e *ViewSelectStatementExtractor) consumeSpace() {
 		if e.pos+found > len(e.input)-1 || !unicode.IsSpace(e.input[e.pos+found]) {
 			break
 		}
-		found += 1
+		found++
 	}
 	e.pos += found
 }
@@ -127,7 +127,7 @@ func (e *ViewSelectStatementExtractor) consumeNonSpace() {
 		if e.pos+found > len(e.input)-1 || unicode.IsSpace(e.input[e.pos+found]) {
 			break
 		}
-		found += 1
+		found++
 	}
 	e.pos += found
 }
@@ -163,7 +163,7 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 		} else if e.input[e.pos+found] == '\'' {
 			break
 		}
-		found += 1
+		found++
 	}
 	e.pos += found
 
@@ -181,7 +181,7 @@ func (e *ViewSelectStatementExtractor) consumeClusterBy() {
 		if e.pos+found > len(e.input)-1 || e.input[e.pos+found-1] == ')' {
 			break
 		}
-		found += 1
+		found++
 	}
 	e.pos += found
 }
