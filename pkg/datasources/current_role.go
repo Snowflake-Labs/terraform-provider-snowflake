@@ -11,8 +11,8 @@ import (
 
 var currentRoleSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Computed: true,
+		Type:        schema.TypeString,
+		Computed:    true,
 		Description: "The name of the [primary role](https://docs.snowflake.com/en/user-guide/security-access-control-overview.html#label-access-control-role-enforcement) in use for the current session.",
 	},
 }
@@ -35,7 +35,9 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(role.Role))
-	d.Set("name", role.Role)
-
+	err = d.Set("name", role.Role)
+	if err != nil {
+		return err
+	}
 	return nil
 }

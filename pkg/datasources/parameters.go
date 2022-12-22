@@ -119,31 +119,30 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 			params = append(params, paramMap)
 		}
 		return d.Set("parameters", params)
-	} else {
-		parameters, err := snowflake.ListParameters(db, parameterType, pattern)
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Printf("[DEBUG] parameters not found")
-			d.SetId("")
-			return nil
-		} else if err != nil {
-			log.Printf("[DEBUG] error occurred during read: %v", err.Error())
-			return err
-		}
-		d.SetId("parameters")
-
-		params := []map[string]interface{}{}
-		for _, param := range parameters {
-			paramMap := map[string]interface{}{}
-
-			paramMap["key"] = param.Key.String
-			paramMap["value"] = param.Value.String
-			paramMap["default"] = param.Default.String
-			paramMap["level"] = param.Level.String
-			paramMap["description"] = param.Description.String
-			paramMap["type"] = param.PType.String
-
-			params = append(params, paramMap)
-		}
-		return d.Set("parameters", params)
 	}
+	parameters, err := snowflake.ListParameters(db, parameterType, pattern)
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Printf("[DEBUG] parameters not found")
+		d.SetId("")
+		return nil
+	} else if err != nil {
+		log.Printf("[DEBUG] error occurred during read: %v", err.Error())
+		return err
+	}
+	d.SetId("parameters")
+
+	params := []map[string]interface{}{}
+	for _, param := range parameters {
+		paramMap := map[string]interface{}{}
+
+		paramMap["key"] = param.Key.String
+		paramMap["value"] = param.Value.String
+		paramMap["default"] = param.Default.String
+		paramMap["level"] = param.Level.String
+		paramMap["description"] = param.Description.String
+		paramMap["type"] = param.PType.String
+
+		params = append(params, paramMap)
+	}
+	return d.Set("parameters", params)
 }
