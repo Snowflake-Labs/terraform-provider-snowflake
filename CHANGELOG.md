@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.54.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.53.1...v0.54.0) (2022-12-23)
+
+
+### Features
+
+* add parameters resources + ds ([#1429](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1429)) ([be81aea](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be81aea070d47acf11e2daed4a0c33cd120ab21c))
+* Current role data source ([#1415](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1415)) ([8152aee](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8152aee136e279832b59a6ec1b165390e27a1e0e))
+
+
+### Misc
+
+* **deps:** bump github.com/snowflakedb/gosnowflake ([#1423](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1423)) ([84c9389](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/84c9389c7e945c0b616cacf23b8252c35ff307b3))
+* **deps:** bump goreleaser/goreleaser-action from 3 to 4 ([#1426](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1426)) ([409bcb1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/409bcb19ce17a1babd685ddebbea32f2552d29bd))
+
+
+### BugFixes
+
+* Don't throw an error on unhandled Role Grants ([#1414](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1414)) ([be7e78b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be7e78b31cc460e562de47613a0a095ec623a0ae))
+* go syntax ([#1410](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1410)) ([c5f6b9f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c5f6b9f6a4ccd7c96ad5fb67a10161cdd71da833))
+* Go syntax to add revive ([#1411](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1411)) ([b484bc8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b484bc8a70ab90eb3882d1d49e3020464dd654ec))
+* linting errors ([#1432](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1432)) ([665c944](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/665c94480be82831ec33650175d905c048174f7c))
+
 ## [0.53.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.53.0...v0.53.1) (2022-12-08)
 
 
