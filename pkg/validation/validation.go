@@ -129,7 +129,6 @@ func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string 
 		}
 		n.WriteString(fmt.Sprintf(`."%v"`, objectName))
 		return n.String()
-
 	} // dbName != ""
 	n.WriteString(fmt.Sprintf(`"%v"`, dbName))
 	if schemaName == "" {
