@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -109,13 +108,14 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
 	tagValue := d.Get("tag_value").(string)
-	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
-	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier, objectType)
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+
 	builder := snowflake.NewTagAssociationBuilder(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).WithTagValue(tagValue)
 
 	q := builder.Create()
 	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error associating tag to object: [%v] with command: [%v], tag_id [%v]", objectIdentifier, q, tagID)
+		return fmt.Errorf("error associating tag to object: [%v] with command: [%v], tag_id [%v]", fullyQualifierObjectIdentifier, q, tagID)
 	}
 
 	skipValidate := d.Get("skip_validation").(bool)
@@ -157,8 +157,9 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
-	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier, objectType)
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+
 	q := snowflake.NewTagAssociationBuilder(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).Show()
 	row := snowflake.QueryRow(db, q)
 
@@ -186,8 +187,9 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
-	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier, objectType)
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+
 	builder := snowflake.NewTagAssociationBuilder(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType)
 
 	if d.HasChange("skip_validation") {
@@ -205,7 +207,7 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return fmt.Errorf("error updating tag association value for object [%v]", objectIdentifier)
+			return fmt.Errorf("error updating tag association value for object [%v]", fullyQualifierObjectIdentifier)
 		}
 	}
 
@@ -218,46 +220,15 @@ func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
-	objectIdentifier := d.Get("object_identifier").([]interface{})[0].(map[string]interface{})
-	fullyQualifierObjectIdentifier := tagAssociationFullyQualifiedIdentifier(objectIdentifier, objectType)
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
 	q := snowflake.NewTagAssociationBuilder(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType).Drop()
 
 	if err := snowflake.Exec(db, q); err != nil {
-		log.Printf("[DEBUG] error is %v", err.Error())
-		return fmt.Errorf("error deleting tag association for object [%v]", objectIdentifier)
+		return fmt.Errorf("error deleting tag association for object id [%s]: %w", tagID, err)
 	}
 
 	d.SetId("")
 
 	return nil
-}
-
-func tagAssociationFullyQualifiedIdentifier(objectIdentifier map[string]interface{}, objectType string) string {
-	if strings.ToUpper(objectType) == "SCHEMA" {
-		objectSchema := objectIdentifier["name"].(string)
-		obd := objectIdentifier["database"]
-		objectDatabase := ""
-		if obd != nil {
-			objectDatabase = obd.(string)
-		}
-		/*
-				objectIdentifier["schema"] is ignored
-				objectIdentifier["name"] is schema name (as it's a required parameter)
-			    //TODO add validation to detect situations where both schema and name parameters are specified for object type SCHEMA
-
-		*/
-		return snowflakeValidation.FormatFullyQualifiedObjectID("", objectDatabase, objectSchema) // db_name.schema_name
-	}
-	objectName := objectIdentifier["name"].(string)
-	objectSchema := ""
-	obs := objectIdentifier["schema"]
-	if obs != nil {
-		objectSchema = obs.(string)
-	}
-	objectDatabase := ""
-	obd := objectIdentifier["database"]
-	if obd != nil {
-		objectDatabase = obd.(string)
-	}
-	return snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
 }

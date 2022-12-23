@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/maps"
@@ -33,11 +34,33 @@ var objectParameterSchema = map[string]*schema.Schema{
 		Description:  "Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types).",
 		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
 	},
-	"object_name": {
-		Type:        schema.TypeString,
+	"object_identifier": {
+		Type:        schema.TypeList,
 		Required:    true,
-		ForceNew:    true,
-		Description: "Name of object to which the parameter applies.",
+		MinItems:    1,
+		Description: "Specifies the object identifier for the object parameter.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					ForceNew:    true,
+					Description: "Name of the object to set the parameter for.",
+				},
+				"database": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					ForceNew:    true,
+					Description: "Name of the database that the object was created in.",
+				},
+				"schema": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					ForceNew:    true,
+					Description: "Name of the schema that the object was created in.",
+				},
+			},
+		},
 	},
 }
 
@@ -60,8 +83,10 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	objectName := d.Get("object_name").(string)
 	objectType := snowflake.ObjectType(d.Get("object_type").(string))
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+
 	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
@@ -79,15 +104,15 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeObject, db)
-	builder.WithObjectName(objectName)
+	builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
 	builder.WithObjectType(objectType)
 	err := builder.SetParameter()
 	if err != nil {
 		return fmt.Errorf("error creating object parameter err = %w", err)
 	}
-	id := fmt.Sprintf("%v❄️%v❄️%v", key, objectType, objectName)
+	id := fmt.Sprintf("%v❄️%v❄️%v", key, objectType, fullyQualifierObjectIdentifier)
 	d.SetId(id)
-	p, err := snowflake.ShowObjectParameter(db, key, objectType, objectName)
+	p, err := snowflake.ShowObjectParameter(db, key, objectType, fullyQualifierObjectIdentifier)
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
@@ -104,12 +129,12 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	id := d.Id()
 	parts := strings.Split(id, "❄️")
 	if len(parts) != 3 {
-		return fmt.Errorf("unexpected format of ID (%v), expected key❄️object_type❄️object_name", id)
+		return fmt.Errorf("unexpected format of ID (%v), expected key❄️object_type❄️object_identifier", id)
 	}
 	key := parts[0]
 	objectType := snowflake.ObjectType(parts[1])
-	objectName := parts[2]
-	p, err := snowflake.ShowObjectParameter(db, key, objectType, objectName)
+	objectIdentifier := parts[2]
+	p, err := snowflake.ShowObjectParameter(db, key, objectType, objectIdentifier)
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
@@ -130,7 +155,8 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	objectType := snowflake.ObjectType(d.Get("object_type").(string))
-	objectName := d.Get("object_name").(string)
+	objectDatabase, objectSchema, objectName := expandObjectIdentifier(d.Get("object_identifier"))
+	fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
 
 	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
 	defaultValue := parameterDefault.DefaultValue
@@ -142,13 +168,13 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		value = fmt.Sprintf("'%s'", value)
 	}
 	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeObject, db)
-	builder.WithObjectName(objectName)
+	builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
 	builder.WithObjectType(objectType)
 	err := builder.SetParameter()
 	if err != nil {
 		return fmt.Errorf("error restoring default for object parameter err = %w", err)
 	}
-	_, err = snowflake.ShowObjectParameter(db, key, objectType, objectName)
+	_, err = snowflake.ShowObjectParameter(db, key, objectType, fullyQualifierObjectIdentifier)
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}

@@ -679,7 +679,7 @@ type ParameterBuilder struct {
 	value         string
 	parameterType ParameterType
 	objectType    ObjectType
-	objectName    string
+	objectIdentifier    string
 	db            *sql.DB
 }
 
@@ -697,8 +697,8 @@ func (v *ParameterBuilder) WithObjectType(objectType ObjectType) *ParameterBuild
 	return v
 }
 
-func (v *ParameterBuilder) WithObjectName(objectName string) *ParameterBuilder {
-	v.objectName = objectName
+func (v *ParameterBuilder) WithObjectIdentifier(objectIdentifier string) *ParameterBuilder {
+	v.objectIdentifier = objectIdentifier
 	return v
 }
 
@@ -711,7 +711,7 @@ func (v *ParameterBuilder) SetParameter() error {
 			return err
 		}
 	} else if v.parameterType == ParameterTypeObject {
-		stmt := fmt.Sprintf("ALTER %s \"%s\" SET %s = %s", v.objectType, v.objectName, v.key, v.value)
+		stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectIdentifier, v.key, v.value)
 		_, err := v.db.Exec(stmt)
 		if err != nil {
 			return err
@@ -754,9 +754,9 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Parame
 	return &value, nil
 }
 
-func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectName string) (*Parameter, error) {
+func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectIdentifier string) (*Parameter, error) {
 	var value Parameter
-	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", key, objectType.String(), objectName)
+	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s %s", key, objectType.String(), objectIdentifier)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -801,12 +801,12 @@ func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]
 	return params, nil
 }
 
-func ListObjectParameters(db *sql.DB, objectType ObjectType, objectName, pattern string) ([]Parameter, error) {
+func ListObjectParameters(db *sql.DB, objectType ObjectType, objectIdentifier, pattern string) ([]Parameter, error) {
 	var stmt string
 	if pattern != "" {
-		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s \"%s\"", pattern, objectType.String(), objectName)
+		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s %s", pattern, objectType.String(), objectIdentifier)
 	} else {
-		stmt = fmt.Sprintf("SHOW PARAMETERS IN %s %s", objectType.String(), objectName)
+		stmt = fmt.Sprintf("SHOW PARAMETERS IN %s %s", objectType.String(), objectIdentifier)
 	}
 	log.Printf("[DEBUG] query = %s", stmt)
 	rows, err := db.Query(stmt)
