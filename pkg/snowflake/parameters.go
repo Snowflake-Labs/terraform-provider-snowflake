@@ -675,12 +675,12 @@ func GetParameterDefault(key string) ParameterDefault {
 
 // ParameterBuilder abstracts the creation of SQL queries for Snowflake parameters.
 type ParameterBuilder struct {
-	key           string
-	value         string
-	parameterType ParameterType
-	objectType    ObjectType
-	objectIdentifier    string
-	db            *sql.DB
+	key              string
+	value            string
+	parameterType    ParameterType
+	objectType       ObjectType
+	objectIdentifier string
+	db               *sql.DB
 }
 
 func NewParameter(key, value string, parameterType ParameterType, db *sql.DB) *ParameterBuilder {

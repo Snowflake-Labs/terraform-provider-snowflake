@@ -23,7 +23,7 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func expandObjectIdentifier(objectIdentifier interface{})(string, string, string) {
+func expandObjectIdentifier(objectIdentifier interface{}) (string, string, string) {
 	objectIdentifierMap := objectIdentifier.([]interface{})[0].(map[string]interface{})
 	objectName := objectIdentifierMap["name"].(string)
 	var objectSchema string
