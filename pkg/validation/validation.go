@@ -144,7 +144,6 @@ func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string 
 	}
 	n.WriteString(fmt.Sprintf(`."%v"`, objectName))
 	return n.String()
-
 }
 
 func ParseAndFormatFullyQualifiedObectID(s string) string {
