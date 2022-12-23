@@ -11,8 +11,8 @@ import (
 
 var currentRoleSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Computed: true,
+		Type:        schema.TypeString,
+		Computed:    true,
 		Description: "The name of the [primary role](https://docs.snowflake.com/en/user-guide/security-access-control-overview.html#label-access-control-role-enforcement) in use for the current session.",
 	},
 }
@@ -27,7 +27,6 @@ func CurrentRole() *schema.Resource {
 func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	role, err := snowflake.ReadCurrentRole(db)
-
 	if err != nil {
 		log.Printf("[DEBUG] current_role failed to decode")
 		d.SetId("")
@@ -35,7 +34,9 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(role.Role))
-	d.Set("name", role.Role)
-
+	err = d.Set("name", role.Role)
+	if err != nil {
+		return err
+	}
 	return nil
 }

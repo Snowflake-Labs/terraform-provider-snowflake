@@ -17,7 +17,7 @@ var accountParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameters(snowflake.ParameterTypeAccount)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -46,7 +46,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeAccount)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -102,7 +102,7 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 
-	parameterDefault := snowflake.GetParameters(snowflake.ParameterTypeAccount)[key]
+	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)[key]
 	defaultValue := parameterDefault.DefaultValue
 	value := fmt.Sprintf("%v", defaultValue)
 

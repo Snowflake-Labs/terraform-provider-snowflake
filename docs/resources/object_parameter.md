@@ -17,23 +17,49 @@ resource "snowflake_database" "d" {
   name = "TEST_DB"
 }
 
+resource "snowflake_object_parameter" "o" {
+  key = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+  value = "33"
+  object_type = "DATABASE"
+  object_identifier {
+    name = snowflake_database.d.name
+  }
+}
+
 resource "snowflake_schema" "s" {
-  name     = "TEST_SCHEMA"
+  name = "TEST_SCHEMA"
   database = snowflake_database.d.name
 }
 
-resource "snowflake_object_parameter" "o" {
-  key         = "ENABLE_STREAM_TASK_REPLICATION"
-  value       = "true"
-  object_type = "DATABASE"
-  object_name = snowflake_database.d.name
+resource "snowflake_object_parameter" "o2" {
+  key = "USER_TASK_TIMEOUT_MS"
+  value = "500"
+  object_type = "SCHEMA"
+  object_identifier {
+    database = snowflake_database.d.name
+    name = snowflake_schema.s.name
+  }
 }
 
-resource "snowflake_object_parameter" "o2" {
-  key         = "PIPE_EXECUTION_PAUSED"
-  value       = "false"
-  object_type = "SCHEMA"
-  object_name = "${snowflake_database.d.name}.${snowflake_schema.s.name}"
+resource "snowflake_table" "t" {
+  name = "TEST_TABLE"
+  database = snowflake_database.d.name
+  schema = snowflake_schema.s.name
+  column {
+    name = "id"
+    type = "NUMBER"
+  }
+}
+
+resource "snowflake_object_parameter" "o3" {
+  key = "DATA_RETENTION_TIME_IN_DAYS"
+  value = "89"
+  object_type = "TABLE"
+  object_identifier {
+    database = snowflake_database.d.name
+    schema = snowflake_schema.s.name
+    name = snowflake_table.t.name
+  }
 }
 ```
 
@@ -43,7 +69,7 @@ resource "snowflake_object_parameter" "o2" {
 ### Required
 
 - `key` (String) Name of object parameter. Valid values are those in [object parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#object-parameters).
-- `object_name` (String) Name of object to which the parameter applies.
+- `object_identifier` (Block List, Min: 1) Specifies the object identifier for the object parameter. (see [below for nested schema](#nestedblock--object_identifier))
 - `object_type` (String) Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types).
 - `value` (String) Value of object parameter, as a string. Constraints are the same as those for the parameters in Snowflake documentation.
 
@@ -51,10 +77,22 @@ resource "snowflake_object_parameter" "o2" {
 
 - `id` (String) The ID of this resource.
 
+<a id="nestedblock--object_identifier"></a>
+### Nested Schema for `object_identifier`
+
+Required:
+
+- `name` (String) Name of the object to set the parameter for.
+
+Optional:
+
+- `database` (String) Name of the database that the object was created in.
+- `schema` (String) Name of the schema that the object was created in.
+
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_object_parameter.s <key>❄️<object_type>❄️<object_name>
+terraform import snowflake_object_parameter.s <key>❄️<object_type>❄️<object_identifier>
 ```

@@ -35,7 +35,9 @@ resource "snowflake_object_parameter" "p" {
 	key = "%s"
 	value = "%s"
 	object_type = "DATABASE"
-	object_name = snowflake_database.d.name
+	object_identifier {
+		name = snowflake_database.d.name
+	}
 }
 `
 	return fmt.Sprintf(s, prefix, key, value)
