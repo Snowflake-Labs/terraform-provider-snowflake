@@ -90,7 +90,7 @@ func PipeGrant() *TerraformGrantResource {
 // CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
-		pipeName string
+		pipeName   string
 		schemaName string
 	)
 	if name, ok := d.GetOk("pipe_name"); ok {
@@ -161,7 +161,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	onFuture := (pipeName == "")
-	
+
 	if err := d.Set("pipe_name", pipeName); err != nil {
 		return err
 	}
