@@ -119,36 +119,32 @@ func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string 
 		if schemaName == "" {
 			if objectName == "" {
 				return n.String()
-			} else {
-				n.WriteString(fmt.Sprintf(`"%v"`, objectName))
-				return n.String()
 			}
+			n.WriteString(fmt.Sprintf(`"%v"`, objectName))
+			return n.String()
 		} else {
 			n.WriteString(fmt.Sprintf(`"%v"`, schemaName))
 			if objectName == "" {
 				return n.String()
-			} else {
-				n.WriteString(fmt.Sprintf(`."%v"`, objectName))
-				return n.String()
 			}
+			n.WriteString(fmt.Sprintf(`."%v"`, objectName))
+			return n.String()
 		}
 	} else { // dbName != ""
 		n.WriteString(fmt.Sprintf(`"%v"`, dbName))
 		if schemaName == "" {
 			if objectName == "" {
 				return n.String()
-			} else {
-				n.WriteString(fmt.Sprintf(`."%v"`, objectName))
-				return n.String()
 			}
+			n.WriteString(fmt.Sprintf(`."%v"`, objectName))
+			return n.String()
 		} else { // schemaName != ""
 			n.WriteString(fmt.Sprintf(`."%v"`, schemaName))
 			if objectName == "" {
 				return n.String()
-			} else {
-				n.WriteString(fmt.Sprintf(`."%v"`, objectName))
-				return n.String()
 			}
+			n.WriteString(fmt.Sprintf(`."%v"`, objectName))
+			return n.String()
 		}
 	}
 }
