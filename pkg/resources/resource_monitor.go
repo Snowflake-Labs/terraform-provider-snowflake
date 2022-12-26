@@ -36,7 +36,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "The number of credits allocated monthly to the resource monitor.",
-		ForceNew:    true,
 	},
 	"frequency": {
 		Type:         schema.TypeString,
@@ -44,20 +43,17 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Computed:     true,
 		Description:  "The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.",
 		ValidateFunc: validation.StringInSlice(validFrequencies, false),
-		ForceNew:     true,
 	},
 	"start_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
 		Description: "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.",
-		ForceNew:    true,
 	},
 	"end_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
-		ForceNew:    true,
 	},
 	"suspend_triggers": {
 		Type:        schema.TypeSet,
@@ -101,7 +97,7 @@ func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateResourceMonitor,
 		Read:   ReadResourceMonitor,
-		// Update: UpdateResourceMonitor, @TODO implement updates
+		Update: UpdateResourceMonitor,
 		Delete: DeleteResourceMonitor,
 
 		Schema: resourceMonitorSchema,
@@ -285,6 +281,42 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 		out = append(out, myInt)
 	}
 	return out, nil
+}
+
+func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	id := d.Id()
+
+	stmt := snowflake.NewResourceMonitorBuilder(id).Alter()
+	var runSetStatement bool
+
+	if d.HasChange("credit_quota") {
+		runSetStatement = true
+		stmt.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
+	}
+
+	if d.HasChange("frequency") {
+		runSetStatement = true
+		stmt.SetString(`FREQUENCY`, d.Get("frequency").(string))
+	}
+
+	if d.HasChange("start_timestamp") {
+		runSetStatement = true
+		stmt.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
+	}
+
+	if d.HasChange("end_timestamp") {
+		runSetStatement = true
+		stmt.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
+	}
+
+	if runSetStatement {
+		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+			return fmt.Errorf("error updating resource monitor %v\n%w", id, err)
+		}
+	}
+
+	return ReadResourceMonitor(d, meta)
 }
 
 // DeleteResourceMonitor implements schema.DeleteFunc.

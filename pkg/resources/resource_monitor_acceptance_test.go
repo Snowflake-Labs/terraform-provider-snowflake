@@ -27,6 +27,15 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 				),
 			},
+			// CHANGE PROPERTIES
+			{
+				Config: resourceMonitorConfig2(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+				),
+			},
 			// IMPORT
 			{
 				ResourceName:      "snowflake_resource_monitor.test",
@@ -42,6 +51,16 @@ func resourceMonitorConfig(accName string) string {
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
+	set_for_account = false
+}
+`, accName)
+}
+
+func resourceMonitorConfig2(accName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+	name            = "%v"
+	credit_quota    = 150
 	set_for_account = false
 }
 `, accName)
