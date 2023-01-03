@@ -19,7 +19,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Identifier for the resource monitor; must be unique for your account.",
-		ForceNew:    false,
 	},
 	"notify_users": {
 		Type:        schema.TypeSet,
@@ -35,7 +34,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "The number of credits allocated monthly to the resource monitor.",
-		ForceNew:    false,
 	},
 	"frequency": {
 		Type:         schema.TypeString,
@@ -43,55 +41,47 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Computed:     true,
 		Description:  "The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.",
 		ValidateFunc: validation.StringInSlice(validFrequencies, false),
-		ForceNew:     false,
 	},
 	"start_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
 		Description: "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.",
-		ForceNew:    false,
 	},
 	"end_timestamp": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
-		ForceNew:    false,
 	},
 	"suspend_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to suspend all warehouses.",
-		ForceNew:    false,
 	},
 	"suspend_immediate_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
-		ForceNew:    false,
 	},
 	"notify_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
-		ForceNew:    false,
 	},
 	"set_for_account": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
 		Default:     false,
-		ForceNew:    true,
 	},
 	"warehouses": {
 		Type:        schema.TypeSet,
 		Optional:    true,
 		Description: "A list of warehouses to apply the resource monitor to.",
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		ForceNew:    true,
 	},
 }
 
@@ -110,7 +100,7 @@ func ResourceMonitor() *schema.Resource {
 	}
 }
 
-// CreateResourceMonitor implents schema.CreateFunc.
+// CreateResourceMonitor implements schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -340,20 +330,35 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := cb.Statement()
-	fmt.Println(stmt)
 	if err := snowflake.Exec(db, stmt); err != nil {
 		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
 	}
 
 	d.SetId(name)
 
-	if d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
-			return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
+	if d.HasChange("set_for_account") {
+		if d.Get("set_for_account").(bool) {
+			if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
+			}
+		} else {
+			if err := snowflake.Exec(db, cb.UnsetOnAccount()); err != nil {
+				return fmt.Errorf("error unsetting resource monitor %v on account err = %w", name, err)
+			}
 		}
 	}
 
-	if v, ok := d.GetOk("warehouses"); ok {
+	if d.HasChange("warehouses") {
+		oldV, v := d.GetChange("warehouses")
+
+		// Remove from all old warehouses
+		for _, w := range oldV.(*schema.Set).List() {
+			if err := snowflake.Exec(db, cb.UnsetOnWarehouse(w.(string))); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, w.(string), err)
+			}
+		}
+
+		// Add to all new warehouses
 		for _, w := range v.(*schema.Set).List() {
 			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
 				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, w.(string), err)

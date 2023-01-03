@@ -25,6 +25,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "40"),
 				),
 			},
 			{
@@ -32,7 +33,8 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "50"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
 				),
 			},
 			// IMPORT
@@ -51,6 +53,8 @@ resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
 	set_for_account = false
+  	notify_triggers = [40]
+
 }
 `, accName)
 }
@@ -60,7 +64,8 @@ func resourceMonitorConfigSecond(accName string) string {
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 50
-	set_for_account = false
+	set_for_account = true
+	notify_triggers = [50]
 }
 `, accName)
 }

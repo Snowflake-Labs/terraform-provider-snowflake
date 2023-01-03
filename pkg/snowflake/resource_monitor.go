@@ -213,9 +213,18 @@ func (rcb *ResourceMonitorAlterBuilder) SetOnAccount() string {
 	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = "%v"`, rcb.name)
 }
 
+func (rcb *ResourceMonitorAlterBuilder) UnsetOnAccount() string {
+	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = NULL`)
+}
+
 // SetOnWarehouse returns the SQL query that will set the resource monitor on the specified warehouse.
 func (rcb *ResourceMonitorAlterBuilder) SetOnWarehouse(warehouse string) string {
 	return fmt.Sprintf(`ALTER WAREHOUSE "%v" SET RESOURCE_MONITOR = "%v"`, warehouse, rcb.name)
+}
+
+// UnsetOnWarehouse returns the SQL query that will unset the resource monitor on the specified warehouse.
+func (rcb *ResourceMonitorAlterBuilder) UnsetOnWarehouse(warehouse string) string {
+	return fmt.Sprintf(`ALTER WAREHOUSE "%v" SET RESOURCE_MONITOR = NULL`, warehouse)
 }
 
 type resourceMonitor struct {
