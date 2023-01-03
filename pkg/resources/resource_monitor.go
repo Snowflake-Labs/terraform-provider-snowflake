@@ -24,7 +24,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"notify_users": {
 		Type:        schema.TypeSet,
 		Optional:    true,
-		ForceNew:    false,
 		Description: "Specifies the list of users to receive email notifications on resource monitors.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
