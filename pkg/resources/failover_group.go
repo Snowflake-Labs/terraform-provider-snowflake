@@ -230,17 +230,22 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("replication_schedule"); ok {
 		replicationSchedule := v.([]interface{})[0].(map[string]interface{})
 		if v, ok := replicationSchedule["cron"]; ok {
-			cron := v.([]interface{})[0].(map[string]interface{})
-			cronExpression := cron["expression"].(string)
-			builder.WithReplicationScheduleCronExpression(cronExpression)
-			if v, ok := cron["time_zone"]; ok {
-				timeZone := v.(string)
-				builder.WithReplicationScheduleTimeZone(timeZone)
+			c := v.([]interface{})
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+				builder.WithReplicationScheduleCronExpression(cronExpression)
+				if v, ok := cron["time_zone"]; ok {
+					timeZone := v.(string)
+					builder.WithReplicationScheduleTimeZone(timeZone)
+				}
 			}
 		}
 		if v, ok := replicationSchedule["interval"]; ok {
 			interval := v.(int)
-			builder.WithReplicationScheduleInterval(interval)
+			if interval > 1 {
+				builder.WithReplicationScheduleInterval(interval)
+			}
 		}
 	}
 
