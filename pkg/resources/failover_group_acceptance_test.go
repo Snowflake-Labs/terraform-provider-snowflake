@@ -70,7 +70,6 @@ resource "snowflake_failover_group" "fg" {
 `, randomCharacters, randomCharacters, accountName)
 }
 
-
 func failoverGroupBasicInterval(randomCharacters, accountName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "db" {
