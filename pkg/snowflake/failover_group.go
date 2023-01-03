@@ -128,7 +128,7 @@ func (b *FailoverGroupBuilder) Create() string {
 		q.WriteString("'")
 	}
 	if b.replicationScheduleInterval > 0 {
-		q.WriteString(fmt.Sprintf(" REPLICATION_SCHEDULE = `%v MINUTE`", b.replicationScheduleInterval))
+		q.WriteString(fmt.Sprintf(" REPLICATION_SCHEDULE = '%v MINUTE'", b.replicationScheduleInterval))
 	}
 
 	return q.String()
@@ -236,11 +236,10 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]FailoverGroup, err
 		log.Println("[DEBUG] no failover groups found")
 		return nil, nil
 	}
-	return v, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+	return v, nil
 }
 
 type FailoverGroup struct {
-	RegionGroup             sql.NullString `db:"region_group"`
 	SnowflakeRegion         sql.NullString `db:"snowflake_region"`
 	CreatedOn               sql.NullString `db:"created_on"`
 	AccountName             sql.NullString `db:"account_name"`
