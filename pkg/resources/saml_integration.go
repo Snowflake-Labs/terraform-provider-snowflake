@@ -184,7 +184,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("saml2_sign_request"); ok {
-		stmt.SetString(`SAML2_SIGN_REQUEST`, d.Get("saml2_sign_request").(string))
+		stmt.SetBool(`SAML2_SIGN_REQUEST`, d.Get("saml2_sign_request").(bool))
 	}
 
 	if _, ok := d.GetOk("saml2_requested_nameid_format"); ok {
