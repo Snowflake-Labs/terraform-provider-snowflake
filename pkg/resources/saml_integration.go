@@ -196,7 +196,7 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("saml2_force_authn"); ok {
-		stmt.SetString(`SAML2_FORCE_AUTHN`, d.Get("saml2_force_authn").(string))
+		stmt.SetBool(`SAML2_FORCE_AUTHN`, d.Get("saml2_force_authn").(bool))
 	}
 
 	if _, ok := d.GetOk("saml2_snowflake_issuer_url"); ok {
