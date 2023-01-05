@@ -287,22 +287,22 @@ func inSlice(n string, h []string) bool {
 	return false
 }
 
-// convertTerraformSetToStringSlice turns a terraform set into a string slice
+// convertTerraformSetToStringSlice turns a terraform set into a string slice.
 func convertTerraformSetToStringSlice(i interface{}) []string {
-	var s []string
-	for _, w := range i.(*schema.Set).List() {
-		s = append(s, w.(string))
+	s := make([]string, len(i.(*schema.Set).List()))
+	for x, w := range i.(*schema.Set).List() {
+		s[x] = w.(string)
 	}
 	return s
 }
 
 // compareTerraformSets compares two terraform sets and returns a string slice of all values in the first set that is
 // not in the second set.
-func compareTerraformSets(firstSet interface{}, SecondSet interface{}) []string {
+func compareTerraformSets(firstSet interface{}, secondSet interface{}) []string {
 	res := make([]string, 0)
 	sliceOne := convertTerraformSetToStringSlice(firstSet)
 
-	sliceTwo := convertTerraformSetToStringSlice(SecondSet)
+	sliceTwo := convertTerraformSetToStringSlice(secondSet)
 
 	for _, s := range sliceOne {
 		if !inSlice(s, sliceTwo) {
@@ -369,7 +369,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Remove from account
-	if d.HasChange("set_for_account") && d.Get("set_for_account").(bool) == false {
+	if d.HasChange("set_for_account") && !d.Get("set_for_account").(bool) {
 		if err := snowflake.Exec(db, stmt.UnsetOnAccount()); err != nil {
 			return fmt.Errorf("error unsetting resource monitor %v on account err = %w", id, err)
 		}

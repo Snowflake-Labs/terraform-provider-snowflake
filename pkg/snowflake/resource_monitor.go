@@ -214,7 +214,7 @@ func (rcb *ResourceMonitorAlterBuilder) SetOnAccount() string {
 }
 
 func (rcb *ResourceMonitorAlterBuilder) UnsetOnAccount() string {
-	return fmt.Sprintf(`ALTER ACCOUNT SET RESOURCE_MONITOR = NULL`)
+	return `ALTER ACCOUNT SET RESOURCE_MONITOR = NULL`
 }
 
 // SetOnWarehouse returns the SQL query that will set the resource monitor on the specified warehouse.
