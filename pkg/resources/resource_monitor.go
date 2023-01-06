@@ -277,100 +277,65 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	return out, nil
 }
 
-// inSlice returns true if n is in string slice h otherwise false.
-func inSlice(n string, h []string) bool {
-	for _, v := range h {
-		if v == n {
-			return true
-		}
-	}
-	return false
-}
-
-// convertTerraformSetToStringSlice turns a terraform set into a string slice.
-func convertTerraformSetToStringSlice(i interface{}) []string {
-	s := make([]string, len(i.(*schema.Set).List()))
-	for x, w := range i.(*schema.Set).List() {
-		s[x] = w.(string)
-	}
-	return s
-}
-
-// compareTerraformSets compares two terraform sets and returns a string slice of all values in the first set that is
-// not in the second set.
-func compareTerraformSets(firstSet interface{}, secondSet interface{}) []string {
-	res := make([]string, 0)
-	sliceOne := convertTerraformSetToStringSlice(firstSet)
-
-	sliceTwo := convertTerraformSetToStringSlice(secondSet)
-
-	for _, s := range sliceOne {
-		if !inSlice(s, sliceTwo) {
-			res = append(res, s)
-		}
-	}
-	return res
-}
-
 // UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NewResourceMonitorBuilder(id).Alter()
+	ub := snowflake.NewResourceMonitorBuilder(id).Alter()
 	var runSetStatement bool
 
 	if d.HasChange("notify_users") {
 		runSetStatement = true
-		stmt.SetStringList(`NOTIFY_USERS`, expandStringList(d.Get("notify_users").(*schema.Set).List()))
+		ub.SetStringList(`NOTIFY_USERS`, expandStringList(d.Get("notify_users").(*schema.Set).List()))
 	}
 
 	if d.HasChange("credit_quota") {
 		runSetStatement = true
-		stmt.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
+		ub.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
 	}
 
 	if d.HasChange("frequency") {
 		runSetStatement = true
-		stmt.SetString(`FREQUENCY`, d.Get("frequency").(string))
+		ub.SetString(`FREQUENCY`, d.Get("frequency").(string))
 	}
 
 	if d.HasChange("start_timestamp") {
 		runSetStatement = true
-		stmt.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
+		ub.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
 	}
 
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
-		stmt.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
+		ub.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
 	}
 
 	// Set triggers
 	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
 	for _, t := range sTrigs {
 		runSetStatement = true
-		stmt.SuspendAt(t)
+		ub.SuspendAt(t)
 	}
 	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
 	for _, t := range siTrigs {
 		runSetStatement = true
-		stmt.SuspendImmediatelyAt(t)
+		ub.SuspendImmediatelyAt(t)
 	}
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
 		runSetStatement = true
-		stmt.NotifyAt(t)
+		ub.NotifyAt(t)
 	}
 
 	if runSetStatement {
-		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+		if err := snowflake.Exec(db, ub.Statement()); err != nil {
 			return fmt.Errorf("error updating resource monitor %v\n%w", id, err)
 		}
 	}
 
 	// Remove from account
 	if d.HasChange("set_for_account") && !d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, stmt.UnsetOnAccount()); err != nil {
+		if err := snowflake.Exec(db, ub.UnsetOnAccount()); err != nil {
 			return fmt.Errorf("error unsetting resource monitor %v on account err = %w", id, err)
 		}
 	}
@@ -378,9 +343,9 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	// Remove from all old warehouses
 	if d.HasChange("warehouses") {
 		oldV, v := d.GetChange("warehouses")
-		res := compareTerraformSets(oldV, v)
+		res := intersectionAAndNotB(oldV.(*schema.Set).List(), v.(*schema.Set).List())
 		for _, w := range res {
-			if err := snowflake.Exec(db, stmt.UnsetOnWarehouse(w)); err != nil {
+			if err := snowflake.Exec(db, ub.UnsetOnWarehouse(w)); err != nil {
 				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
 			}
 		}
@@ -388,7 +353,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	// Add to account
 	if d.HasChange("set_for_account") && d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, stmt.SetOnAccount()); err != nil {
+		if err := snowflake.Exec(db, ub.SetOnAccount()); err != nil {
 			return fmt.Errorf("error setting resource monitor %v on account err = %w", id, err)
 		}
 	}
@@ -396,9 +361,9 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	// Add to all new warehouses
 	if d.HasChange("warehouses") {
 		oldV, v := d.GetChange("warehouses")
-		res := compareTerraformSets(v, oldV)
+		res := intersectionAAndNotB(v.(*schema.Set).List(), oldV.(*schema.Set).List())
 		for _, w := range res {
-			if err := snowflake.Exec(db, stmt.SetOnWarehouse(w)); err != nil {
+			if err := snowflake.Exec(db, ub.SetOnWarehouse(w)); err != nil {
 				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
 			}
 		}

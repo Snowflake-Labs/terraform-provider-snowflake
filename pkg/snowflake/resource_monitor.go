@@ -52,18 +52,20 @@ type ResourceMonitorAlterBuilder struct {
 	triggers []trigger
 }
 
+type action string
+
 type trigger struct {
-	action    string
+	action    action
 	threshold int
 }
 
 const (
 	// SuspendTrigger suspends all assigned warehouses while allowing currently running queries to complete.
-	SuspendTrigger = "SUSPEND"
+	SuspendTrigger action = "SUSPEND"
 	// SuspendImmediatelyTrigger suspends all assigned warehouses immediately and cancel any currently running queries or statements using the warehouses.
-	SuspendImmediatelyTrigger = "SUSPEND_IMMEDIATE"
+	SuspendImmediatelyTrigger action = "SUSPEND_IMMEDIATE"
 	// NotifyTrigger sends an alert (to all users who have enabled notifications for themselves), but do not take any other action.
-	NotifyTrigger = "NOTIFY"
+	NotifyTrigger action = "NOTIFY"
 )
 
 // Create returns a pointer to a ResourceMonitorCreateBuilder.
