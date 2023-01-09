@@ -65,7 +65,7 @@ func TestFileFormatGrantRead(t *testing.T) {
 	roles := d.Get("roles").(*schema.Set)
 	r.True(roles.Contains("test-role-1"))
 	r.True(roles.Contains("test-role-2"))
-	r.Equal(roles.Len(), 2)
+	r.Equal(2, roles.Len())
 }
 
 func expectReadFileFormatGrant(mock sqlmock.Sqlmock) {

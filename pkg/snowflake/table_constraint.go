@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // TableConstraintBuilder abstracts the creation of SQL queries for a Snowflake table constraint.
@@ -30,7 +30,7 @@ type TableConstraintBuilder struct {
 	comment          string
 }
 
-func TableConstraint(name string, constraintType string, tableID string) *TableConstraintBuilder {
+func NewTableConstraintBuilder(name string, constraintType string, tableID string) *TableConstraintBuilder {
 	return &TableConstraintBuilder{
 		name:           name,
 		constraintType: constraintType,
@@ -205,7 +205,7 @@ func (b *TableConstraintBuilder) Drop() string {
 	return s
 }
 
-type tableConstraint struct {
+type TableConstraint struct {
 	ConstraintCatalog sql.NullString `db:"CONSTRAINT_CATALOG"`
 	ConstraintSchema  sql.NullString `db:"CONSTRAINT_SCHEMA"`
 	ConstraintName    sql.NullString `db:"CONSTRAINT_NAME"`
@@ -220,20 +220,22 @@ type tableConstraint struct {
 }
 
 // Show returns the SQL query that will show a table constraint by ID.
-func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*tableConstraint, error) {
-	stmt := fmt.Sprintf(`SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '%v' AND TABLE_SCHEMA = '%v' AND TABLE_CATALOG = '%v' AND CONSTRAINT_NAME = '%v'`, tableName, tableSchema, tableDB, name)
-	rows, err := db.Query(stmt)
+func ShowTableConstraint(name, tableDB, tableSchema, tableName string, db *sql.DB) (*TableConstraint, error) {
+	stmt := `SELECT * FROM SNOWFLAKE.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '?' AND TABLE_SCHEMA = '?' AND TABLE_CATALOG = '?' AND CONSTRAINT_NAME = '?'`
+	rows, err := db.Query(stmt,
+		tableName, tableSchema, tableDB, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	tableConstraints := []tableConstraint{}
-	err = sqlx.StructScan(rows, &tableConstraints)
+	tableConstraints := []TableConstraint{}
 	log.Printf("[DEBUG] tableConstraints is %v", tableConstraints)
-
-	if err == sql.ErrNoRows {
-		log.Printf("[DEBUG] no tableConstraints found for constraint %s", name)
-		return nil, err
+	if err := sqlx.StructScan(rows, &tableConstraints); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("[DEBUG] no tableConstraints found for constraint %s", name)
+			return nil, err
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return &tableConstraints[0], errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return &tableConstraints[0], nil
 }

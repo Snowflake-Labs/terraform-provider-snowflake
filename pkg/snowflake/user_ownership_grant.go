@@ -19,7 +19,7 @@ type UserOwnershipGrantExecutable struct {
 	currentGrants string
 }
 
-func UserOwnershipGrant(user string, currentGrants string) *UserOwnershipGrantBuilder {
+func NewUserOwnershipGrantBuilder(user string, currentGrants string) *UserOwnershipGrantBuilder {
 	return &UserOwnershipGrantBuilder{user: user, currentGrants: currentGrants}
 }
 
@@ -40,7 +40,7 @@ func (gr *UserOwnershipGrantExecutable) Revoke() string {
 	return fmt.Sprintf(`GRANT OWNERSHIP ON %s "%s" TO ROLE "%s" %s CURRENT GRANTS`, gr.granteeType, gr.grantee, gr.role, gr.currentGrants) // nolint: gosec
 }
 
-type userOwnershipGrant struct {
+type UserOwnershipGrant struct {
 	Name                  sql.NullString `db:"name"`
 	CreatedOn             sql.NullString `db:"created_on"`
 	LoginName             sql.NullString `db:"login_name"`
@@ -69,8 +69,8 @@ type userOwnershipGrant struct {
 	HasRsaPublicKey       sql.NullString `db:"has_rsa_public_key"`
 }
 
-func ScanUserOwnershipGrant(row *sqlx.Row) (*userOwnershipGrant, error) {
-	uog := &userOwnershipGrant{}
+func ScanUserOwnershipGrant(row *sqlx.Row) (*UserOwnershipGrant, error) {
+	uog := &UserOwnershipGrant{}
 	err := row.StructScan(uog)
 	return uog, err
 }

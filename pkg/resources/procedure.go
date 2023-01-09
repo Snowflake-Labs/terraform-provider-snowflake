@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -161,7 +162,7 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	s := d.Get("statement").(string)
 	ret := d.Get("return_type").(string)
 
-	builder := snowflake.Procedure(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
+	builder := snowflake.NewProcedureBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
 
 	// Set optionals, args
 	if _, ok := d.GetOk("arguments"); ok {
@@ -204,9 +205,9 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating procedure %v", name)
+
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error creating procedure %v err = %w", name, err)
 	}
 
 	procedureID := &procedureID{
@@ -228,7 +229,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	proc := snowflake.Procedure(
+	proc := snowflake.NewProcedureBuilder(
 		procedureID.DatabaseName,
 		procedureID.SchemaName,
 		procedureID.ProcedureName,
@@ -268,32 +269,32 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("arguments", args); err != nil {
+				if err := d.Set("arguments", args); err != nil {
 					return err
 				}
 			}
 		case "null handling":
-			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "volatility":
-			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+			if err := d.Set("return_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "body":
-			if err = d.Set("statement", desc.Value.String); err != nil {
+			if err := d.Set("statement", desc.Value.String); err != nil {
 				return err
 			}
 		case "execute as":
-			if err = d.Set("execute_as", desc.Value.String); err != nil {
+			if err := d.Set("execute_as", desc.Value.String); err != nil {
 				return err
 			}
 		case "returns":
-			if err = d.Set("return_type", desc.Value.String); err != nil {
+			if err := d.Set("return_type", desc.Value.String); err != nil {
 				return err
 			}
 		case "language":
-			if err = d.Set("language", desc.Value.String); err != nil {
+			if err := d.Set("language", desc.Value.String); err != nil {
 				return err
 			}
 
@@ -304,7 +305,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 
 	q := proc.Show()
 	showRows, err := snowflake.Query(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] procedure (%s) not found", d.Id())
 		d.SetId("")
@@ -326,20 +327,16 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 	for _, v := range foundProcedures {
 		showArgs := strings.Split(v.Arguments.String, " RETURN ")
 		if showArgs[0] == argSig {
-			err = d.Set("name", v.Name.String)
-			if err != nil {
+			if err := d.Set("name", v.Name.String); err != nil {
 				return err
 			}
-			err = d.Set("database", v.DatabaseName.String)
-			if err != nil {
+			if err := d.Set("database", v.DatabaseName.String); err != nil {
 				return err
 			}
-			err = d.Set("schema", v.SchemaName.String)
-			if err != nil {
+			if err := d.Set("schema", v.SchemaName.String); err != nil {
 				return err
 			}
-			err = d.Set("comment", v.Comment.String)
-			if err != nil {
+			if err := d.Set("comment", v.Comment.String); err != nil {
 				return err
 			}
 		}
@@ -354,7 +351,7 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Procedure(
+	builder := snowflake.NewProcedureBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.ProcedureName,
@@ -368,9 +365,8 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error renaming procedure %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error renaming procedure %v", d.Id())
 		}
 		newID := &procedureID{
 			DatabaseName:  pID.DatabaseName,
@@ -389,18 +385,16 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for procedure %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting comment for procedure %v", d.Id())
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error updating comment for procedure %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating comment for procedure %v", d.Id())
 			}
 		}
 	}
@@ -411,9 +405,8 @@ func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error changing execute as for procedure %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error changing execute as for procedure %v", d.Id())
 		}
 	}
 
@@ -427,7 +420,7 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Procedure(
+	builder := snowflake.NewProcedureBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.ProcedureName,
@@ -439,9 +432,8 @@ func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting procedure %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting procedure %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

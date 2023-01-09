@@ -1,10 +1,9 @@
 provider "snowflake" {
   // required
   username = "..."
-  account  = "..."
-  region   = "..."
+  account  = "..." # the Snowflake account identifier
 
-  // optional, at exactly one must be set
+  // optional, exactly one must be set
   password               = "..."
   oauth_access_token     = "..."
   private_key_path       = "..."
@@ -17,6 +16,7 @@ provider "snowflake" {
   oauth_redirect_url     = "..."
 
   // optional
+  region    = "..." # required if using legacy format for account identifier
   role      = "..."
   host      = "..."
   warehouse = "..."

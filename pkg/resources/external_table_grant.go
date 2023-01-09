@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validExternalTablePrivileges = NewPrivilegeSet(
@@ -107,13 +108,13 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (externalTableName == "") && !futureExternalTables {
-		return errors.New("external_table_name must be set unless on_future is true.")
+		return errors.New("external_table_name must be set unless on_future is true")
 	}
 	if (externalTableName != "") && futureExternalTables {
-		return errors.New("external_table_name must be empty if on_future is true.")
+		return errors.New("external_table_name must be empty if on_future is true")
 	}
 	if (schemaName == "") && !futureExternalTables {
-		return errors.New("schema_name must be set when on_future is false.")
+		return errors.New("schema_name must be set when on_future is false")
 	}
 
 	var builder snowflake.GrantBuilder
@@ -123,8 +124,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -156,32 +156,26 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	externalTableName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureExternalTablesEnabled := false
 	if externalTableName == "" {
 		futureExternalTablesEnabled = true
 	}
-	err = d.Set("external_table_name", externalTableName)
-	if err != nil {
+	if err := d.Set("external_table_name", externalTableName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureExternalTablesEnabled)
-	if err != nil {
+	if err := d.Set("on_future", futureExternalTablesEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -253,15 +247,16 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke,
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd)
-	if err != nil {
+
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
+	); err != nil {
 		return err
 	}
 

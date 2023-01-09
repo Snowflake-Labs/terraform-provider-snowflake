@@ -2,22 +2,22 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
-func User(name string) *Builder {
+func NewUserBuilder(name string) *Builder {
 	return &Builder{
 		entityType: UserType,
 		name:       name,
 	}
 }
 
-type user struct {
+type User struct {
 	Comment               sql.NullString `db:"comment"`
 	DefaultNamespace      sql.NullString `db:"default_namespace"`
 	DefaultRole           sql.NullString `db:"default_role"`
@@ -33,20 +33,19 @@ type user struct {
 	Name                  sql.NullString `db:"name"`
 }
 
-func ScanUser(row *sqlx.Row) (*user, error) {
-	r := &user{}
+func ScanUser(row *sqlx.Row) (*User, error) {
+	r := &User{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ScanUserDescription(rows *sqlx.Rows) (*user, error) {
-	r := &user{}
+func ScanUserDescription(rows *sqlx.Rows) (*User, error) {
+	r := &User{}
 	var err error
 
 	for rows.Next() {
 		userProp := &DescribeUserProp{}
-		err := rows.StructScan(userProp)
-		if err != nil {
+		if err := rows.StructScan(userProp); err != nil {
 			return nil, err
 		}
 
@@ -101,7 +100,7 @@ type DescribeUserProp struct {
 	Value    sql.NullString `db:"value"`
 }
 
-func ListUsers(pattern string, db *sql.DB) ([]user, error) {
+func ListUsers(pattern string, db *sql.DB) ([]User, error) {
 	stmt := fmt.Sprintf(`SHOW USERS like '%s'`, pattern)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -109,11 +108,13 @@ func ListUsers(pattern string, db *sql.DB) ([]user, error) {
 	}
 	defer rows.Close()
 
-	dbs := []user{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no users found")
-		return nil, nil
+	dbs := []User{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no users found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

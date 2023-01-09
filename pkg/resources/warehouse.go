@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -19,6 +20,7 @@ var warehouseProperties = []string{
 	"scaling_policy", "auto_suspend", "auto_resume",
 	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
 	"statement_timeout_in_seconds", "enable_query_acceleration", "query_acceleration_max_scale_factor",
+	"warehouse_type",
 }
 
 var warehouseSchema = map[string]*schema.Schema{
@@ -134,6 +136,13 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
+	"warehouse_type": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      "STANDARD",
+		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "SNOWPARK-OPTIMIZED"}, true),
+		Description:  "Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -160,7 +169,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		props,
 		warehouseSchema,
 		func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 		ReadWarehouse,
 	)(d, meta)
@@ -169,12 +178,12 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 // ReadWarehouse implements schema.ReadFunc.
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	warehouseBuilder := snowflake.Warehouse(d.Id())
+	warehouseBuilder := snowflake.NewWarehouseBuilder(d.Id())
 	stmt := warehouseBuilder.Show()
 
 	row := snowflake.QueryRow(db, stmt)
 	w, err := snowflake.ScanWarehouse(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] warehouse (%s) not found", d.Id())
 		d.SetId("")
@@ -228,6 +237,18 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("[DEBUG] warehouse type is: %s", w.WarehouseType)
+	if w.WarehouseType == "STANDARD" || w.WarehouseType == "SNOWPARK-OPTIMIZED" {
+		err = d.Set("warehouse_type", w.WarehouseType)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = d.Set("warehouse_type", "STANDARD")
+		if err != nil {
+			return err
+		}
+	}
 
 	stmt = warehouseBuilder.ShowParameters()
 	paramRows, err := snowflake.Query(db, stmt)
@@ -272,7 +293,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		warehouseProperties,
 		warehouseSchema,
 		func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 		ReadWarehouse,
 	)(d, meta)
@@ -282,7 +303,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return DeleteResource(
 		"warehouse", func(name string) *snowflake.Builder {
-			return snowflake.Warehouse(name).Builder
+			return snowflake.NewWarehouseBuilder(name).Builder
 		},
 	)(d, meta)
 }

@@ -9,7 +9,7 @@ import (
 
 func TestResourceMonitor(t *testing.T) {
 	r := require.New(t)
-	rm := snowflake.ResourceMonitor("resource_monitor")
+	rm := snowflake.NewResourceMonitorBuilder("resource_monitor")
 	r.NotNil(rm)
 
 	q := rm.Show()
@@ -31,7 +31,7 @@ func TestResourceMonitor(t *testing.T) {
 	q = ab.Statement()
 	r.Equal(`ALTER RESOURCE MONITOR "resource_monitor" SET NOTIFY_USERS=('USERONE', 'USERTWO')`, q)
 
-	cb := snowflake.ResourceMonitor("resource_monitor").Create()
+	cb := snowflake.NewResourceMonitorBuilder("resource_monitor").Create()
 	cb.NotifyAt(80).NotifyAt(90).SuspendAt(95).SuspendImmediatelyAt(100)
 	cb.SetString("frequency", "YEARLY")
 
@@ -43,7 +43,7 @@ func TestResourceMonitor(t *testing.T) {
 
 func TestResourceMonitorSetOnAccount(t *testing.T) {
 	r := require.New(t)
-	s := snowflake.ResourceMonitor("test_resource_monitor")
+	s := snowflake.NewResourceMonitorBuilder("test_resource_monitor")
 	r.NotNil(s)
 
 	q := s.Create().SetOnAccount()
@@ -52,7 +52,7 @@ func TestResourceMonitorSetOnAccount(t *testing.T) {
 
 func TestResourceMonitorSetOnWarehouse(t *testing.T) {
 	r := require.New(t)
-	s := snowflake.ResourceMonitor("test_resource_monitor")
+	s := snowflake.NewResourceMonitorBuilder("test_resource_monitor")
 	r.NotNil(s)
 
 	q := s.Create().SetOnWarehouse("test_warehouse")

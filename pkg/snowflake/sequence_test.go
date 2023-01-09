@@ -8,7 +8,7 @@ import (
 
 func TestSequenceCreate(t *testing.T) {
 	r := require.New(t)
-	s := Sequence("test_sequence", "test_db", "test_schema")
+	s := NewSequenceBuilder("test_sequence", "test_db", "test_schema")
 
 	r.Equal(`"test_db"."test_schema"."test_sequence"`, s.QualifiedName())
 
@@ -24,12 +24,12 @@ func TestSequenceCreate(t *testing.T) {
 
 func TestSequenceDrop(t *testing.T) {
 	r := require.New(t)
-	s := Sequence("test_sequence", "test_db", "test_schema")
+	s := NewSequenceBuilder("test_sequence", "test_db", "test_schema")
 	r.Equal(`DROP SEQUENCE "test_db"."test_schema"."test_sequence"`, s.Drop())
 }
 
 func TestSequenceShow(t *testing.T) {
 	r := require.New(t)
-	s := Sequence("test_sequence", "test_db", "test_schema")
+	s := NewSequenceBuilder("test_sequence", "test_db", "test_schema")
 	r.Equal(`SHOW SEQUENCES LIKE 'test_sequence' IN SCHEMA "test_db"."test_schema"`, s.Show())
 }

@@ -138,7 +138,7 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.NotificationIntegration(name).Create()
+	stmt := snowflake.NewNotificationIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetString(`TYPE`, d.Get("type").(string))
@@ -179,8 +179,7 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
 	}
 
-	err := snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating notification integration: %w", err)
 	}
 
@@ -194,7 +193,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NotificationIntegration(d.Id()).Show()
+	stmt := snowflake.NewNotificationIntegrationBuilder(d.Id()).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -217,7 +216,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	// so it needs to be parsed in order to not show a diff in Terraform
 	typeParts := strings.Split(s.Type.String, "-")
 	parsedType := strings.TrimSpace(typeParts[0])
-	if err = d.Set("type", parsedType); err != nil {
+	if err := d.Set("type", parsedType); err != nil {
 		return err
 	}
 
@@ -233,7 +232,7 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	// We need to grab them in a loop
 	var k, pType string
 	var v, n interface{}
-	stmt = snowflake.NotificationIntegration(d.Id()).Describe()
+	stmt = snowflake.NewNotificationIntegrationBuilder(d.Id()).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe notification integration: %w", err)
@@ -247,59 +246,59 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "DIRECTION":
-			if err = d.Set("direction", v.(string)); err != nil {
+			if err := d.Set("direction", v.(string)); err != nil {
 				return err
 			}
 		case "NOTIFICATION_PROVIDER":
-			if err = d.Set("notification_provider", v.(string)); err != nil {
+			if err := d.Set("notification_provider", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_STORAGE_QUEUE_PRIMARY_URI":
-			if err = d.Set("azure_storage_queue_primary_uri", v.(string)); err != nil {
+			if err := d.Set("azure_storage_queue_primary_uri", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_TENANT_ID":
-			if err = d.Set("azure_tenant_id", v.(string)); err != nil {
+			if err := d.Set("azure_tenant_id", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_ARN":
-			if err = d.Set("aws_sqs_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sqs_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_ROLE_ARN":
-			if err = d.Set("aws_sqs_role_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sqs_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_EXTERNAL_ID":
-			if err = d.Set("aws_sqs_external_id", v.(string)); err != nil {
+			if err := d.Set("aws_sqs_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SQS_IAM_USER_ARN":
-			if err = d.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SNS_TOPIC_ARN":
-			if err = d.Set("aws_sns_topic_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_topic_arn", v.(string)); err != nil {
 				return err
 			}
 		case "AWS_SNS_ROLE_ARN":
-			if err = d.Set("aws_sns_role_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "SF_AWS_EXTERNAL_ID":
-			if err = d.Set("aws_sns_external_id", v.(string)); err != nil {
+			if err := d.Set("aws_sns_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "SF_AWS_IAM_USER_ARN":
-			if err = d.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
-			if err = d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+			if err := d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
-			if err = d.Set("gcp_pubsub_service_account", v.(string)); err != nil {
+			if err := d.Set("gcp_pubsub_service_account", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -315,7 +314,7 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NotificationIntegration(id).Alter()
+	stmt := snowflake.NewNotificationIntegrationBuilder(id).Alter()
 
 	// This is required in case the only change is to UNSET STORAGE_ALLOWED_LOCATIONS.
 	// Not sure if there is a more elegant way of determining this
@@ -392,5 +391,5 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 
 // DeleteNotificationIntegration implements schema.DeleteFunc.
 func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NotificationIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewNotificationIntegrationBuilder)(d, meta)
 }

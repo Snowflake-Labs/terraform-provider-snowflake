@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -181,6 +182,7 @@ var tableSchema = map[string]*schema.Schema{
 		Default:      1,
 		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
 		ValidateFunc: validation.IntBetween(0, 90),
+		Deprecated:   "Use snowflake_object_parameter instead",
 	},
 	"change_tracking": {
 		Type:        schema.TypeBool,
@@ -218,8 +220,7 @@ func (si *tableID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = tableIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.TableName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strTableID := strings.TrimSpace(buf.String())
@@ -348,9 +349,9 @@ type changedColumn struct {
 	changedMaskingPolicy  bool
 }
 
-func (old columns) getChangedColumnProperties(new columns) (changed changedColumns) {
+func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
-	for _, cO := range old {
+	for _, cO := range c {
 		for _, cN := range new {
 			changeColumn := changedColumn{cN, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
@@ -377,8 +378,8 @@ func (old columns) getChangedColumnProperties(new columns) (changed changedColum
 	return
 }
 
-func (old columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
-	return old.getNewIn(new), new.getNewIn(old), old.getChangedColumnProperties(new)
+func (c columns) diffs(new columns) (removed columns, added columns, changed changedColumns) {
+	return c.getNewIn(new), new.getNewIn(c), c.getChangedColumnProperties(new)
 }
 
 func getColumnDefault(def map[string]interface{}) *columnDefault {
@@ -485,7 +486,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	columns := getColumns(d.Get("column").([]interface{}))
 
-	builder := snowflake.TableWithColumnDefinitions(name, database, schema, columns.toSnowflakeColumns())
+	builder := snowflake.NewTableWithColumnDefinitionsBuilder(name, database, schema, columns.toSnowflakeColumns())
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
@@ -515,9 +516,8 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error creating table %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating table %v", name)
 	}
 
 	tableID := &tableID{
@@ -541,11 +541,11 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Table(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
+	builder := snowflake.NewTableBuilder(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
 
 	row := snowflake.QueryRow(db, builder.Show())
 	table, err := snowflake.ScanTable(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] table (%s) not found", d.Id())
 		d.SetId("")
@@ -593,8 +593,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for key, val := range toSet {
-		err = d.Set(key, val) // lintignore:R001
-		if err != nil {
+		if err := d.Set(key, val); err != nil { // lintignore:R001
 			return err
 		}
 	}
@@ -612,15 +611,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	schema := tid.SchemaName
 	tableName := tid.TableName
 
-	builder := snowflake.Table(tableName, dbName, schema)
+	builder := snowflake.NewTableBuilder(tableName, dbName, schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
 		name := d.Get("name")
 		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating table name on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating table name on %v", d.Id())
 		}
 		tableID := &tableID{
 			DatabaseName: dbName,
@@ -636,9 +634,8 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating table comment on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating table comment on %v", d.Id())
 		}
 	}
 	if d.HasChange("cluster_by") {
@@ -652,19 +649,17 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			q = builder.DropClustering()
 		}
 
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating table clustering on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating table clustering on %v", d.Id())
 		}
 	}
 	if d.HasChange("column") {
-		old, new := d.GetChange("column")
-		removed, added, changed := getColumns(old).diffs(getColumns(new))
+		t, new := d.GetChange("column")
+		removed, added, changed := getColumns(t).diffs(getColumns(new))
 		for _, cA := range removed {
 			q := builder.DropColumn(cA.name)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error dropping column on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error dropping column on %v", d.Id())
 			}
 		}
 		for _, cA := range added {
@@ -682,45 +677,39 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
 			}
 
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding column on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error adding column on %v", d.Id())
 			}
 		}
 		for _, cA := range changed {
 			if cA.changedDataType {
 				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
-				err := snowflake.Exec(db, q)
-				if err != nil {
-					return errors.Wrapf(err, "error changing property on %v", d.Id())
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedNullConstraint {
 				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
-				err := snowflake.Exec(db, q)
-				if err != nil {
-					return errors.Wrapf(err, "error changing property on %v", d.Id())
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.dropedDefault {
 				q := builder.DropColumnDefault(cA.newColumn.name)
-				err := snowflake.Exec(db, q)
-				if err != nil {
-					return errors.Wrapf(err, "error changing property on %v", d.Id())
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedComment {
 				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.comment)
-				err := snowflake.Exec(db, q)
-				if err != nil {
-					return errors.Wrapf(err, "error changing property on %v", d.Id())
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 			if cA.changedMaskingPolicy {
 				q := builder.ChangeColumnMaskingPolicy(cA.newColumn.name, cA.newColumn.maskingPolicy)
-				err := snowflake.Exec(db, q)
-				if err != nil {
-					return errors.Wrapf(err, "error changing property on %v", d.Id())
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
 		}
@@ -734,18 +723,16 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
 			// drop our pk if there was an old primary key, or pk has been removed
 			q := builder.DropPrimaryKey()
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error changing primary key first on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error changing primary key first on %v", d.Id())
 			}
 		}
 
 		if len(newpk.keys) > 0 {
 			// add our new pk
 			q := builder.ChangePrimaryKey(newpk.toSnowflakePrimaryKey())
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error changing property on %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error changing property on %v", d.Id())
 			}
 		}
 	}
@@ -753,18 +740,16 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		ndr := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetention(ndr.(int))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error changing property on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error changing property on %v", d.Id())
 		}
 	}
 	if d.HasChange("change_tracking") {
 		nct := d.Get("change_tracking")
 
 		q := builder.ChangeChangeTracking(nct.(bool))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error changing property on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error changing property on %v", d.Id())
 		}
 	}
 	tagChangeErr := handleTagChanges(db, d, builder)
@@ -787,11 +772,10 @@ func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	schemaName := tableID.SchemaName
 	tableName := tableID.TableName
 
-	q := snowflake.Table(tableName, dbName, schemaName).Drop()
+	q := snowflake.NewTableBuilder(tableName, dbName, schemaName).Drop()
 
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

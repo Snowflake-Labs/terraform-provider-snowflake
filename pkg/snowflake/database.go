@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // DatabaseBuilder abstracts the creation of SQL queries for a Snowflake database.
@@ -83,7 +83,7 @@ func (db *DatabaseBuilder) UnsetTag(tag TagValue) string {
 //   - SHOW DATABASE
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-database.html#database-management)
-func Database(name string) *DatabaseBuilder {
+func NewDatabaseBuilder(name string) *DatabaseBuilder {
 	return &DatabaseBuilder{
 		name: name,
 	}
@@ -251,7 +251,7 @@ func (db *DatabaseBuilder) GetRemovedAccountsFromReplicationConfiguration(oldAcc
 	return removedAccounts
 }
 
-type database struct {
+type Database struct {
 	CreatedOn     sql.NullString `db:"created_on"`
 	DBName        sql.NullString `db:"name"`
 	IsDefault     sql.NullString `db:"is_default"`
@@ -263,13 +263,13 @@ type database struct {
 	RetentionTime sql.NullString `db:"retention_time"`
 }
 
-func ScanDatabase(row *sqlx.Row) (*database, error) {
-	d := &database{}
+func ScanDatabase(row *sqlx.Row) (*Database, error) {
+	d := &Database{}
 	e := row.StructScan(d)
 	return d, e
 }
 
-func ListDatabases(sdb *sqlx.DB) ([]database, error) {
+func ListDatabases(sdb *sqlx.DB) ([]Database, error) {
 	stmt := "SHOW DATABASES"
 	rows, err := sdb.Queryx(stmt)
 	if err != nil {
@@ -277,16 +277,18 @@ func ListDatabases(sdb *sqlx.DB) ([]database, error) {
 	}
 	defer rows.Close()
 
-	dbs := []database{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no databases found")
-		return nil, nil
+	dbs := []Database{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no databases found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }
 
-func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
+func ListDatabase(sdb *sqlx.DB, databaseName string) (*Database, error) {
 	stmt := fmt.Sprintf("SHOW DATABASES LIKE '%s'", databaseName)
 	rows, err := sdb.Queryx(stmt)
 	if err != nil {
@@ -294,13 +296,15 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
 	}
 	defer rows.Close()
 
-	dbs := []database{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows || len(dbs) == 0 {
-		log.Println("[DEBUG] no databases found")
-		return nil, nil
+	dbs := []Database{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) || len(dbs) == 0 {
+			log.Println("[DEBUG] no databases found")
+			return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	db := &database{}
+	db := &Database{}
 	for _, d := range dbs {
 		d := d
 		if d.DBName.String == databaseName {
@@ -308,5 +312,5 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*database, error) {
 			break
 		}
 	}
-	return db, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return db, nil
 }

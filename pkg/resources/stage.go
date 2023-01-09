@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -105,8 +105,7 @@ func (si *stageID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = stageIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StageName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strStageID := strings.TrimSpace(buf.String())
@@ -160,7 +159,7 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
 
-	builder := snowflake.Stage(name, database, schema)
+	builder := snowflake.NewStageBuilder(name, database, schema)
 
 	// Set optionals
 	if v, ok := d.GetOk("url"); ok {
@@ -202,9 +201,8 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating stage %v", name)
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error creating stage %v", name)
 	}
 
 	stageID := &stageID{
@@ -234,16 +232,16 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	q := snowflake.Stage(stage, dbName, schema).Describe()
+	q := snowflake.NewStageBuilder(stage, dbName, schema).Describe()
 	stageDesc, err := snowflake.DescStage(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] stage (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok {
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
 		// 002003 (02000): SQL compilation error:
 		// 'XXX' does not exist or not authorized.
 		if driverErr.Number == 2003 {
@@ -253,7 +251,7 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	sq := snowflake.Stage(stage, dbName, schema).Show()
+	sq := snowflake.NewStageBuilder(stage, dbName, schema).Show()
 	row := snowflake.QueryRow(db, sq)
 
 	s, err := snowflake.ScanStageShow(row)
@@ -261,58 +259,47 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", s.Name)
-	if err != nil {
+	if err := d.Set("name", s.Name); err != nil {
 		return err
 	}
 
-	err = d.Set("database", s.DatabaseName)
-	if err != nil {
+	if err := d.Set("database", s.DatabaseName); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", s.SchemaName)
-	if err != nil {
+	if err := d.Set("schema", s.SchemaName); err != nil {
 		return err
 	}
 
-	err = d.Set("url", stageDesc.URL)
-	if err != nil {
+	if err := d.Set("url", stageDesc.URL); err != nil {
 		return err
 	}
 
-	err = d.Set("file_format", stageDesc.FileFormat)
-	if err != nil {
+	if err := d.Set("file_format", stageDesc.FileFormat); err != nil {
 		return err
 	}
 
-	err = d.Set("copy_options", stageDesc.CopyOptions)
-	if err != nil {
+	if err := d.Set("copy_options", stageDesc.CopyOptions); err != nil {
 		return err
 	}
 
-	err = d.Set("directory", stageDesc.Directory)
-	if err != nil {
+	if err := d.Set("directory", stageDesc.Directory); err != nil {
 		return err
 	}
 
-	err = d.Set("storage_integration", s.StorageIntegration)
-	if err != nil {
+	if err := d.Set("storage_integration", s.StorageIntegration); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", s.Comment)
-	if err != nil {
+	if err := d.Set("comment", s.Comment); err != nil {
 		return err
 	}
 
-	err = d.Set("aws_external_id", stageDesc.AwsExternalID)
-	if err != nil {
+	if err := d.Set("aws_external_id", stageDesc.AwsExternalID); err != nil {
 		return err
 	}
 
-	err = d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser)
-	if err != nil {
+	if err := d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser); err != nil {
 		return err
 	}
 
@@ -330,66 +317,59 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	builder := snowflake.Stage(stage, dbName, schema)
+	builder := snowflake.NewStageBuilder(stage, dbName, schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("url") {
 		url := d.Get("url")
 		q := builder.ChangeURL(url.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage url on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage url on %v", d.Id())
 		}
 	}
 
 	if d.HasChange("credentials") {
 		credentials := d.Get("credentials")
 		q := builder.ChangeCredentials(credentials.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage credentials on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage credentials on %v", d.Id())
 		}
 	}
 
 	if d.HasChange("storage_integration") {
 		si := d.Get("storage_integration")
 		q := builder.ChangeStorageIntegration(si.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage storage integration on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage storage integration on %v", d.Id())
 		}
 	}
 
 	if d.HasChange("encryption") {
 		encryption := d.Get("encryption")
 		q := builder.ChangeEncryption(encryption.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage encryption on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage encryption on %v", d.Id())
 		}
 	}
 	if d.HasChange("file_format") {
 		fileFormat := d.Get("file_format")
 		q := builder.ChangeFileFormat(fileFormat.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage file formaat on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage file formaat on %v", d.Id())
 		}
 	}
 	if d.HasChange("copy_options") {
 		copyOptions := d.Get("copy_options")
 		q := builder.ChangeCopyOptions(copyOptions.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage copy options on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage copy options on %v", d.Id())
 		}
 	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating stage comment on %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating stage comment on %v", d.Id())
 		}
 	}
 
@@ -413,11 +393,9 @@ func DeleteStage(d *schema.ResourceData, meta interface{}) error {
 	schema := stageID.SchemaName
 	stage := stageID.StageName
 
-	q := snowflake.Stage(stage, dbName, schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting stage %v", d.Id())
+	q := snowflake.NewStageBuilder(stage, dbName, schema).Drop()
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting stage %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

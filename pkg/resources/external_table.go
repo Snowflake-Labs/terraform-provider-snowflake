@@ -10,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -158,8 +157,7 @@ func (si *externalTableID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = externalTableIDDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ExternalTableName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strExternalTableID := strings.TrimSpace(buf.String())
@@ -208,7 +206,7 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 		}
 		columns = append(columns, columnDef)
 	}
-	builder := snowflake.ExternalTable(name, database, dbSchema)
+	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
 	builder.WithColumns(columns)
 	builder.WithFileFormat(d.Get("file_format").(string))
 	builder.WithLocation(d.Get("location").(string))
@@ -241,9 +239,8 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error creating externalTable %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error creating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -272,7 +269,7 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	schema := externalTableID.SchemaName
 	name := externalTableID.ExternalTableName
 
-	stmt := snowflake.ExternalTable(name, dbName, schema).Show()
+	stmt := snowflake.NewExternalTableBuilder(name, dbName, schema).Show()
 	row := snowflake.QueryRow(db, stmt)
 	externalTable, err := snowflake.ScanExternalTable(row)
 	if err != nil {
@@ -280,18 +277,15 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] external table (%s) not found", d.Id())
 			d.SetId("")
 			return nil
-		} else {
-			return err
 		}
-	}
-
-	err = d.Set("name", externalTable.ExternalTableName.String)
-	if err != nil {
 		return err
 	}
 
-	err = d.Set("owner", externalTable.Owner.String)
-	if err != nil {
+	if err := d.Set("name", externalTable.ExternalTableName.String); err != nil {
+		return err
+	}
+
+	if err := d.Set("owner", externalTable.Owner.String); err != nil {
 		return err
 	}
 
@@ -305,7 +299,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	builder := snowflake.ExternalTable(name, database, dbSchema)
+	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
 
 	if d.HasChange("tag") {
 		v := d.Get("tag")
@@ -314,9 +308,8 @@ func UpdateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stmt := builder.Update()
-	err := snowflake.Exec(db, stmt)
-	if err != nil {
-		return errors.Wrapf(err, "error updating externalTable %v", name)
+	if err := snowflake.Exec(db, stmt); err != nil {
+		return fmt.Errorf("error updating externalTable %v err = %w", name, err)
 	}
 
 	externalTableID := &externalTableID{
@@ -345,11 +338,9 @@ func DeleteExternalTable(d *schema.ResourceData, meta interface{}) error {
 	schema := externalTableID.SchemaName
 	externalTableName := externalTableID.ExternalTableName
 
-	q := snowflake.ExternalTable(externalTableName, dbName, schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting pipe %v", d.Id())
+	q := snowflake.NewExternalTableBuilder(externalTableName, dbName, schema).Drop()
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

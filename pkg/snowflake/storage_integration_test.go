@@ -9,7 +9,7 @@ import (
 
 func TestStorageIntegration(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.StorageIntegration("aws")
+	builder := snowflake.NewStorageIntegrationBuilder("aws")
 	r.NotNil(builder)
 
 	q := builder.Show()

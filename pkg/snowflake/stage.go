@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 func fixFileFormat(inputFileFormat string) string {
@@ -118,7 +118,7 @@ func (sb *StageBuilder) UnsetTag(tag TagValue) string {
 //   - DESCRIBE STAGE
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-stage.html#stage-management)
-func Stage(name, db, schema string) *StageBuilder {
+func NewStageBuilder(name, db, schema string) *StageBuilder {
 	return &StageBuilder{
 		name:   name,
 		db:     db,
@@ -233,7 +233,7 @@ func (sb *StageBuilder) Show() string {
 	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
 }
 
-type stage struct {
+type Stage struct {
 	Name               *string `db:"name"`
 	DatabaseName       *string `db:"database_name"`
 	SchemaName         *string `db:"schema_name"`
@@ -241,13 +241,13 @@ type stage struct {
 	StorageIntegration *string `db:"storage_integration"`
 }
 
-func ScanStageShow(row *sqlx.Row) (*stage, error) {
-	r := &stage{}
+func ScanStageShow(row *sqlx.Row) (*Stage, error) {
+	r := &Stage{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-type descStageResult struct {
+type DescStageResult struct {
 	URL              string
 	AwsExternalID    string
 	SnowflakeIamUser string
@@ -263,8 +263,8 @@ type descStageRow struct {
 	PropertyDefault string `db:"property_default"`
 }
 
-func DescStage(db *sql.DB, query string) (*descStageResult, error) {
-	r := &descStageResult{}
+func DescStage(db *sql.DB, query string) (*DescStageResult, error) {
+	r := &DescStageResult{}
 	var ff []string
 	var co []string
 	var dir []string
@@ -311,7 +311,7 @@ func DescStage(db *sql.DB, query string) (*descStageResult, error) {
 	return r, nil
 }
 
-func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, error) {
+func ListStages(databaseName string, schemaName string, db *sql.DB) ([]Stage, error) {
 	stmt := fmt.Sprintf(`SHOW STAGES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -319,11 +319,13 @@ func ListStages(databaseName string, schemaName string, db *sql.DB) ([]stage, er
 	}
 	defer rows.Close()
 
-	dbs := []stage{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no stages found")
-		return nil, nil
+	dbs := []Stage{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no stages found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

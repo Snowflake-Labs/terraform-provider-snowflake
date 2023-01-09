@@ -2,13 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -64,12 +64,11 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	builder := snowflake.Share(name).Create()
+	builder := snowflake.NewShareBuilder(name).Create()
 	builder.SetString("COMMENT", d.Get("comment").(string))
 
-	err := snowflake.Exec(db, builder.Statement())
-	if err != nil {
-		return errors.Wrapf(err, "error creating share")
+	if err := snowflake.Exec(db, builder.Statement()); err != nil {
+		return fmt.Errorf("error creating share err = %w", err)
 	}
 	d.SetId(name)
 
@@ -77,8 +76,7 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 
 	// @TODO flesh out the share type in the snowflake package since it doesn't
 	// follow the normal generic rules
-	err = setAccounts(d, meta)
-	if err != nil {
+	if err := setAccounts(d, meta); err != nil {
 		return err
 	}
 
@@ -96,10 +94,9 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// thing working.
 	// 1. Create new temporary DB
 	tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
-	tempDB := snowflake.Database(tempName)
-	err := snowflake.Exec(db, tempDB.Create())
-	if err != nil {
-		return errors.Wrapf(err, "error creating temporary DB %v", tempName)
+	tempDB := snowflake.NewDatabaseBuilder(tempName)
+	if err := snowflake.Exec(db, tempDB.Create()); err != nil {
+		return fmt.Errorf("error creating temporary DB %v err = %w", tempName, err)
 	}
 
 	// 2. Create temporary DB grant to the share
@@ -115,42 +112,36 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// case where the main db doesn't already exist, so it will need to be revoked
 	// before deleting the temp db. Where USAGE hasn't been already granted it is not
 	// an error to revoke it, so it's ok to just do the revoke every time.
-	err = snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false))
-	if err != nil {
-		return errors.Wrapf(err, "error creating temporary DB REFERENCE_USAGE grant %v", tempName)
+	if err := snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false)); err != nil {
+		return fmt.Errorf("error creating temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
 	}
 
 	// 3. Add the accounts to the share
 	if len(accs) > 0 {
 		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error adding accounts to share %v", name)
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error adding accounts to share %v err = %w", name, err)
 		}
 	} else {
 		q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error unsetting accounts to share %v", name)
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error unsetting accounts to share %v err = %w", name, err)
 		}
 	}
 
 	// 4. Revoke temporary DB grant to the share
-	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE"))
-	if err != nil {
-		return errors.Wrapf(err, "error revoking temporary DB REFERENCE_USAGE grant %v", tempName)
+	if err := snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE")); err != nil {
+		return fmt.Errorf("error revoking temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
 	}
 
 	// revoke the maybe automatically granted USAGE privilege.
-	err = snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE"))
-	if err != nil {
-		return errors.Wrapf(err, "error revoking temporary DB grant %v", tempName)
+	if err := snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE")); err != nil {
+		return fmt.Errorf("error revoking temporary DB grant %v err = %w", tempName, err)
 	}
 
 	// 5. Remove the temporary DB
-	err = snowflake.Exec(db, tempDB.Drop())
-	if err != nil {
-		return errors.Wrapf(err, "error dropping temporary DB %v", tempName)
+	if err := snowflake.Exec(db, tempDB.Drop()); err != nil {
+		return fmt.Errorf("error dropping temporary DB %v err = %w", tempName, err)
 	}
 
 	return nil
@@ -161,11 +152,11 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.Share(id).Show()
+	stmt := snowflake.NewShareBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	s, err := snowflake.ScanShare(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] share (%s) not found", d.Id())
 		d.SetId("")
@@ -175,12 +166,10 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", StripAccountFromName(s.Name.String))
-	if err != nil {
+	if err := d.Set("name", StripAccountFromName(s.Name.String)); err != nil {
 		return err
 	}
-	err = d.Set("comment", s.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", s.Comment.String); err != nil {
 		return err
 	}
 
@@ -194,18 +183,17 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	// Change the accounts first - this is a special case and won't work using the generic method
 	if d.HasChange("accounts") {
-		err := setAccounts(d, meta)
-		if err != nil {
+		if err := setAccounts(d, meta); err != nil {
 			return err
 		}
 	}
 
-	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.Share, ReadShare)(d, meta)
+	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.NewShareBuilder, ReadShare)(d, meta)
 }
 
 // DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.Share)(d, meta)
+	return DeleteResource("this does not seem to be used", snowflake.NewShareBuilder)(d, meta)
 }
 
 // StripAccountFromName removes the account prefix from a resource (e.g. a share)

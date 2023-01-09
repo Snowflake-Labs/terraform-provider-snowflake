@@ -9,7 +9,7 @@ import (
 func TestFileFormatCreateCSV(t *testing.T) {
 	r := require.New(t)
 	f := FileFormat("test_file_format", "test_db", "test_schema")
-	r.Equal(f.QualifiedName(), `"test_db"."test_schema"."test_file_format"`)
+	r.Equal(`"test_db"."test_schema"."test_file_format"`, f.QualifiedName())
 
 	f.WithFormatType("CSV")
 	f.WithCompression("AUTO")
@@ -40,7 +40,7 @@ func TestFileFormatCreateCSV(t *testing.T) {
 func TestFileFormatCreateJSON(t *testing.T) {
 	r := require.New(t)
 	f := FileFormat("test_file_format_json", "test_db", "test_schema")
-	r.Equal(f.QualifiedName(), `"test_db"."test_schema"."test_file_format_json"`)
+	r.Equal(`"test_db"."test_schema"."test_file_format_json"`, f.QualifiedName())
 
 	f.WithFormatType("JSON")
 	f.WithCompression("AUTO")

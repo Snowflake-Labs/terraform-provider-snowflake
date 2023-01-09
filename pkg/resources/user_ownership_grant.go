@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -67,7 +68,7 @@ func CreateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(role).Grant())
 	if err != nil {
 		return err
@@ -88,7 +89,7 @@ func ReadUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 
 	grant, err := snowflake.ScanUserOwnershipGrant(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] user (%s) not found", d.Id())
 		d.SetId("")
@@ -132,7 +133,7 @@ func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf(`%s|%s|%s`, user, role, currentGrants))
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(role).Grant())
 	if err != nil {
 		return err
@@ -147,7 +148,7 @@ func DeleteUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	currentGrants := d.Get("current_grants").(string)
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 
-	g := snowflake.UserOwnershipGrant(user, currentGrants)
+	g := snowflake.NewUserOwnershipGrantBuilder(user, currentGrants)
 	err := snowflake.Exec(db, g.Role(reversionRole).Revoke())
 	if err != nil {
 		return err

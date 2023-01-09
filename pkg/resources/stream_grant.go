@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validStreamPrivileges = NewPrivilegeSet(
@@ -100,10 +101,10 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (streamName == "") && !futureStreams {
-		return errors.New("stream_name must be set unless on_future is true.")
+		return errors.New("stream_name must be set unless on_future is true")
 	}
 	if (streamName != "") && futureStreams {
-		return errors.New("stream_name must be empty if on_future is true.")
+		return errors.New("stream_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
@@ -113,8 +114,7 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -146,32 +146,31 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	streamName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureStreamsEnabled := false
 	if streamName == "" {
 		futureStreamsEnabled = true
 	}
-	err = d.Set("stream_name", streamName)
-	if err != nil {
+
+	if err := d.Set("stream_name", streamName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureStreamsEnabled)
-	if err != nil {
+
+	if err := d.Set("on_future", futureStreamsEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -240,15 +239,15 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+	); err != nil {
 		return err
 	}
 

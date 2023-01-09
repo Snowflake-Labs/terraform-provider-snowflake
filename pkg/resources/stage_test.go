@@ -100,7 +100,7 @@ func TestStageRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.Stage("test_stage", "test_db", "test_schema").Describe()
+		q := snowflake.NewStageBuilder("test_stage", "test_db", "test_schema").Describe()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadStage(d, db)
 		r.Empty(d.State())

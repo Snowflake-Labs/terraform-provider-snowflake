@@ -9,7 +9,7 @@ import (
 
 func TestManagedAccount(t *testing.T) {
 	r := require.New(t)
-	u := snowflake.ManagedAccount("managedaccount1")
+	u := snowflake.NewManagedAccountBuilder("managedaccount1")
 	r.NotNil(u)
 
 	q := u.Show()

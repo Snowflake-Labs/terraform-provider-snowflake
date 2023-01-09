@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 type WarehouseBuilder struct {
@@ -43,7 +43,7 @@ func (wb *WarehouseBuilder) ShowParameters() string {
 	return fmt.Sprintf("SHOW PARAMETERS IN WAREHOUSE %q", wb.Builder.name)
 }
 
-func Warehouse(name string) *WarehouseBuilder {
+func NewWarehouseBuilder(name string) *WarehouseBuilder {
 	return &WarehouseBuilder{
 		&Builder{
 			name:       name,
@@ -54,7 +54,7 @@ func Warehouse(name string) *WarehouseBuilder {
 
 // warehouse is a go representation of a grant that can be used in conjunction
 // with github.com/jmoiron/sqlx.
-type warehouse struct {
+type Warehouse struct {
 	Name                            string        `db:"name"`
 	State                           string        `db:"state"`
 	Type                            string        `db:"type"`
@@ -86,10 +86,11 @@ type warehouse struct {
 	Suspended                       int64         `db:"suspended"`
 	UUID                            string        `db:"uuid"`
 	ScalingPolicy                   string        `db:"scaling_policy"`
+	WarehouseType                   string        `db:"warehouse_type"`
 }
 
 // warehouseParams struct to represent a row of parameters.
-type warehouseParams struct {
+type WarehouseParams struct {
 	Key          string `db:"key"`
 	Value        string `db:"value"`
 	DefaultValue string `db:"default"`
@@ -98,20 +99,19 @@ type warehouseParams struct {
 	Type         string `db:"type"`
 }
 
-func ScanWarehouse(row *sqlx.Row) (*warehouse, error) {
-	w := &warehouse{}
+func ScanWarehouse(row *sqlx.Row) (*Warehouse, error) {
+	w := &Warehouse{}
 	err := row.StructScan(w)
 	return w, err
 }
 
 // ScanWarehouseParameters takes a database row and converts it to a warehouse parameter pointer.
-func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
-	params := []*warehouseParams{}
+func ScanWarehouseParameters(rows *sqlx.Rows) ([]*WarehouseParams, error) {
+	params := []*WarehouseParams{}
 
 	for rows.Next() {
-		w := &warehouseParams{}
-		err := rows.StructScan(w)
-		if err != nil {
+		w := &WarehouseParams{}
+		if err := rows.StructScan(w); err != nil {
 			return nil, err
 		}
 		params = append(params, w)
@@ -119,7 +119,7 @@ func ScanWarehouseParameters(rows *sqlx.Rows) ([]*warehouseParams, error) {
 	return params, nil
 }
 
-func ListWarehouses(db *sql.DB) ([]warehouse, error) {
+func ListWarehouses(db *sql.DB) ([]Warehouse, error) {
 	stmt := "SHOW WAREHOUSES"
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -127,11 +127,13 @@ func ListWarehouses(db *sql.DB) ([]warehouse, error) {
 	}
 	defer rows.Close()
 
-	dbs := []warehouse{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no warehouses found")
-		return nil, nil
+	dbs := []Warehouse{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no warehouses found")
+			return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		}
+		return nil, fmt.Errorf("unable to scan %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

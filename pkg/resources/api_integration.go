@@ -77,6 +77,12 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.",
 	},
+	"api_key": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "The API key (also called a “subscription key”).",
+	},
 	"enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -110,7 +116,7 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 
-	stmt := snowflake.APIIntegration(name).Create()
+	stmt := snowflake.NewAPIIntegrationBuilder(name).Create()
 
 	// Set required fields
 	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
@@ -122,14 +128,16 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetStringList("API_BLOCKED_PREFIXES", expandStringList(d.Get("api_blocked_prefixes").([]interface{})))
 	}
 
+	if _, ok := d.GetOk("api_key"); ok {
+		stmt.SetString("API_KEY", d.Get("api_key").(string))
+	}
+
 	// Now, set the API provider
-	err := setAPIProviderSettings(d, stmt)
-	if err != nil {
+	if err := setAPIProviderSettings(d, stmt); err != nil {
 		return err
 	}
 
-	err = snowflake.Exec(db, stmt.Statement())
-	if err != nil {
+	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
 		return fmt.Errorf("error creating api integration: %w", err)
 	}
 
@@ -143,7 +151,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.APIIntegration(id).Show()
+	stmt := snowflake.NewAPIIntegrationBuilder(id).Show()
 	row := snowflake.QueryRow(db, stmt)
 
 	// Some properties can come from the SHOW INTEGRATION call
@@ -154,9 +162,8 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		if err.Error() == snowflake.ErrNoRowInRS {
 			d.SetId("")
 			return nil
-		} else {
-			return fmt.Errorf("could not show api integration: %w", err)
 		}
+		return fmt.Errorf("could not show api integration: %w", err)
 	}
 
 	// Note: category must be API or something is broken
@@ -180,7 +187,7 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// We need to grab them in a loop
 	var k, pType string
 	var v, unused interface{}
-	stmt = snowflake.APIIntegration(id).Describe()
+	stmt = snowflake.NewAPIIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("could not describe api integration: %w", err)
@@ -194,33 +201,33 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "API_ALLOWED_PREFIXES":
-			if err = d.Set("api_allowed_prefixes", strings.Split(v.(string), ",")); err != nil {
+			if err := d.Set("api_allowed_prefixes", strings.Split(v.(string), ",")); err != nil {
 				return err
 			}
 		case "API_BLOCKED_PREFIXES":
 			if val := v.(string); val != "" {
-				if err = d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
+				if err := d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "API_AWS_IAM_USER_ARN":
-			if err = d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
 				return err
 			}
 		case "API_AWS_ROLE_ARN":
-			if err = d.Set("api_aws_role_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_role_arn", v.(string)); err != nil {
 				return err
 			}
 		case "API_AWS_EXTERNAL_ID":
-			if err = d.Set("api_aws_external_id", v.(string)); err != nil {
+			if err := d.Set("api_aws_external_id", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_CONSENT_URL":
-			if err = d.Set("azure_consent_url", v.(string)); err != nil {
+			if err := d.Set("azure_consent_url", v.(string)); err != nil {
 				return err
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
-			if err = d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+			if err := d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
 				return err
 			}
 		default:
@@ -236,7 +243,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.APIIntegration(id).Alter()
+	stmt := snowflake.NewAPIIntegrationBuilder(id).Alter()
 
 	var runSetStatement bool
 
@@ -250,12 +257,16 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
 	}
 
+	if d.HasChange("api_key") {
+		runSetStatement = true
+		stmt.SetString("API_KEY", d.Get("api_key").(string))
+	}
+
 	// We need to UNSET this if we remove all api blocked prefixes.
 	if d.HasChange("api_blocked_prefixes") {
 		v := d.Get("api_blocked_prefixes").([]interface{})
 		if len(v) == 0 {
-			err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id))
-			if err != nil {
+			if err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id)); err != nil {
 				return fmt.Errorf("error unsetting api_blocked_prefixes: %w", err)
 			}
 		} else {
@@ -296,7 +307,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.APIIntegration)(d, meta)
+	return DeleteResource("", snowflake.NewAPIIntegrationBuilder)(d, meta)
 }
 
 func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {

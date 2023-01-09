@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // FailoverGroupBuilder abstracts the creation of SQL queries for a Snowflake file format.
@@ -75,7 +75,7 @@ func (b *FailoverGroupBuilder) WithReplicationScheduleTimeZone(replicationSchedu
 }
 
 // CreateFailoverGroup returns a pointer to a Builder that abstracts the DDL operations for a failover group.
-func FailoverGroup(name string) *FailoverGroupBuilder {
+func NewFailoverGroupBuilder(name string) *FailoverGroupBuilder {
 	return &FailoverGroupBuilder{
 		name: name,
 	}
@@ -128,7 +128,7 @@ func (b *FailoverGroupBuilder) Create() string {
 		q.WriteString("'")
 	}
 	if b.replicationScheduleInterval > 0 {
-		q.WriteString(fmt.Sprintf(" REPLICATION_SCHEDULE = `%v MINUTE`", b.replicationScheduleInterval))
+		q.WriteString(fmt.Sprintf(" REPLICATION_SCHEDULE = '%v MINUTE'", b.replicationScheduleInterval))
 	}
 
 	return q.String()
@@ -222,7 +222,7 @@ func (b *FailoverGroupBuilder) Show() string {
 }
 
 // ListFailoverGroups returns a list of all failover groups in the account.
-func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, error) {
+func ListFailoverGroups(db *sql.DB, accountLocator string) ([]FailoverGroup, error) {
 	stmt := fmt.Sprintf("SHOW FAILOVER GROUPS IN ACCOUNT %s", accountLocator)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -230,17 +230,16 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]failoverGroup, err
 	}
 	defer rows.Close()
 
-	v := []failoverGroup{}
+	v := []FailoverGroup{}
 	err = sqlx.StructScan(rows, &v)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("[DEBUG] no failover groups found")
 		return nil, nil
 	}
-	return v, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return v, nil
 }
 
-type failoverGroup struct {
-	RegionGroup             sql.NullString `db:"region_group"`
+type FailoverGroup struct {
 	SnowflakeRegion         sql.NullString `db:"snowflake_region"`
 	CreatedOn               sql.NullString `db:"created_on"`
 	AccountName             sql.NullString `db:"account_name"`
@@ -264,18 +263,18 @@ func ShowDatabasesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 	stmt := fmt.Sprintf(`SHOW DATABASES IN FAILOVER GROUP %v`, name)
 	rows, err := Query(db, stmt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error listing allowed databases for failover group %v", name)
+		return nil, fmt.Errorf("error listing allowed databases for failover group %v err = %w", name, err)
 	}
 	defer rows.Close()
 
 	failoverGroupAllowedDatabase := []failoverGroupAllowedDatabase{}
 	err = sqlx.StructScan(rows, &failoverGroupAllowedDatabase)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("[DEBUG] no failover group databases found")
 		return nil, nil
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedDatabase))
 	for _, v := range failoverGroupAllowedDatabase {
 		result = append(result, v.Name.String)
 	}
@@ -290,19 +289,21 @@ func ShowSharesInFailoverGroup(name string, db *sql.DB) ([]string, error) {
 	stmt := fmt.Sprintf(`SHOW SHARES IN FAILOVER GROUP %v`, name)
 	rows, err := Query(db, stmt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error listing allowed shares for failover group %v", name)
+		return nil, fmt.Errorf("error listing allowed shares for failover group %v err = %w", name, err)
 	}
 
 	defer rows.Close()
 
 	failoverGroupAllowedShares := []failoverGroupAllowedShare{}
-	err = sqlx.StructScan(rows, &failoverGroupAllowedShares)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no failover group shares found")
-		return nil, nil
+	if err := sqlx.StructScan(rows, &failoverGroupAllowedShares); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no failover group shares found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan row for %s err = %w", stmt, err)
 	}
 
-	var result []string
+	result := make([]string, 0, len(failoverGroupAllowedShares))
 	for _, v := range failoverGroupAllowedShares {
 		result = append(result, v.Name.String)
 	}

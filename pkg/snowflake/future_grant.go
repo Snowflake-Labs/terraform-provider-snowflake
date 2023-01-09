@@ -228,7 +228,7 @@ func (fgb *FutureGrantBuilder) Role(n string) GrantExecutable {
 }
 
 // Share is not implemented because future objects cannot be granted to shares.
-func (gb *FutureGrantBuilder) Share(n string) GrantExecutable {
+func (fgb *FutureGrantBuilder) Share(n string) GrantExecutable {
 	return nil
 }
 

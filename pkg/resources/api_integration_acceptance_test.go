@@ -30,6 +30,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_iam_user_arn"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_aws_external_id"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_aws_int", "api_key"),
 				),
 			},
 			{
@@ -40,6 +41,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "azure_multi_tenant_app_name"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "azure_consent_url"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_azure_int", "api_key"),
 				),
 			},
 		},
@@ -53,6 +55,7 @@ func apiIntegrationConfigAWS(name string, prefixes []string) string {
 		api_provider = "aws_api_gateway"
 		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 		api_allowed_prefixes = %q
+		api_key = "12345"
 		enabled = true
 	}
 	`, name, prefixes)
@@ -66,6 +69,7 @@ func apiIntegrationConfigAzure(name string, prefixes []string) string {
 		azure_tenant_id = "123456"
 		azure_ad_application_id = "7890"
 		api_allowed_prefixes = %q
+		api_key = "12345"
 		enabled = true
 	}
 	`, name, prefixes)

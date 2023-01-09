@@ -115,20 +115,34 @@ func ValidateFullyQualifiedObjectID(i interface{}, k string) (s []string, errors
 func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string {
 	var n strings.Builder
 
-	if dbName != "" && schemaName != "" {
-		n.WriteString(fmt.Sprintf(`"%v"."%v".`, dbName, schemaName))
+	if dbName == "" {
+		if schemaName == "" {
+			if objectName == "" {
+				return n.String()
+			}
+			n.WriteString(fmt.Sprintf(`"%v"`, objectName))
+			return n.String()
+		}
+		n.WriteString(fmt.Sprintf(`"%v"`, schemaName))
+		if objectName == "" {
+			return n.String()
+		}
+		n.WriteString(fmt.Sprintf(`."%v"`, objectName))
+		return n.String()
+	} // dbName != ""
+	n.WriteString(fmt.Sprintf(`"%v"`, dbName))
+	if schemaName == "" {
+		if objectName == "" {
+			return n.String()
+		}
+		n.WriteString(fmt.Sprintf(`."%v"`, objectName))
+		return n.String()
+	} // schemaName != ""
+	n.WriteString(fmt.Sprintf(`."%v"`, schemaName))
+	if objectName == "" {
+		return n.String()
 	}
-
-	if dbName != "" && schemaName == "" {
-		n.WriteString(fmt.Sprintf(`"%v"..`, dbName))
-	}
-
-	if dbName == "" && schemaName != "" {
-		n.WriteString(fmt.Sprintf(`"%v".`, schemaName))
-	}
-
-	n.WriteString(fmt.Sprintf(`"%v"`, objectName))
-
+	n.WriteString(fmt.Sprintf(`."%v"`, objectName))
 	return n.String()
 }
 

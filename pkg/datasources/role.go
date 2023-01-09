@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -41,7 +42,7 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", roleName))
 	role, err := snowflake.ScanRole(row)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] role (%s) not found", roleName)
 		d.SetId("")
 		return nil
@@ -51,12 +52,10 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(role.Name.String)
-	err = d.Set("name", role.Name.String)
-	if err != nil {
+	if err := d.Set("name", role.Name.String); err != nil {
 		return err
 	}
-	err = d.Set("comment", role.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", role.Comment.String); err != nil {
 		return err
 	}
 

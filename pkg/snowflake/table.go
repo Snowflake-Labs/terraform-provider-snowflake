@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // PrimaryKey structure that represents a tables primary key.
@@ -109,13 +109,13 @@ func (d *ColumnDefault) UnescapeConstantSnowflakeString(columnType string) strin
 
 // Column structure that represents a table column.
 type Column struct {
-	name           string
-	_type          string // type is reserved
-	nullable       bool
-	_default       *ColumnDefault // default is reserved
-	identity       *ColumnIdentity
-	comment        string // pointer as value is nullable
-	masking_policy string
+	name          string
+	_type         string // type is reserved
+	nullable      bool
+	_default      *ColumnDefault // default is reserved
+	identity      *ColumnIdentity
+	comment       string // pointer as value is nullable
+	maskingPolicy string
 }
 
 // WithName set the column name.
@@ -148,7 +148,7 @@ func (c *Column) WithComment(comment string) *Column {
 }
 
 func (c *Column) WithMaskingPolicy(maskingPolicy string) *Column {
-	c.masking_policy = maskingPolicy
+	c.maskingPolicy = maskingPolicy
 	return c
 }
 
@@ -178,8 +178,8 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 		colDef.WriteString(fmt.Sprintf(` IDENTITY(%v, %v)`, c.identity.startNum, c.identity.stepNum))
 	}
 
-	if strings.TrimSpace(c.masking_policy) != "" {
-		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.masking_policy)))
+	if strings.TrimSpace(c.maskingPolicy) != "" {
+		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.maskingPolicy)))
 	}
 
 	if withComment {
@@ -189,7 +189,7 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 	return colDef.String()
 }
 
-func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
+func FlattenTablePrimaryKey(pkds []PrimaryKeyDescription) []interface{} {
 	flattened := []interface{}{}
 	if len(pkds) == 0 {
 		return flattened
@@ -203,7 +203,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 	// sort our keys on the key sequence
 
 	flat := map[string]interface{}{}
-	var keys []string
+	keys := make([]string, 0, len(pkds))
 	var name string
 	var nameSet bool
 
@@ -230,7 +230,7 @@ func FlattenTablePrimaryKey(pkds []primaryKeyDescription) []interface{} {
 type Columns []Column
 
 // NewColumns generates columns from a table description.
-func NewColumns(tds []tableDescription) Columns {
+func NewColumns(tds []TableDescription) Columns {
 	cs := []Column{}
 	for _, td := range tds {
 		if td.Kind.String != "COLUMN" {
@@ -238,13 +238,13 @@ func NewColumns(tds []tableDescription) Columns {
 		}
 
 		cs = append(cs, Column{
-			name:           td.Name.String,
-			_type:          td.Type.String,
-			nullable:       td.IsNullable(),
-			_default:       td.ColumnDefault(),
-			identity:       td.ColumnIdentity(),
-			comment:        td.Comment.String,
-			masking_policy: td.MaskingPolicy.String,
+			name:          td.Name.String,
+			_type:         td.Type.String,
+			nullable:      td.IsNullable(),
+			_default:      td.ColumnDefault(),
+			identity:      td.ColumnIdentity(),
+			comment:       td.Comment.String,
+			maskingPolicy: td.MaskingPolicy.String,
 		})
 	}
 	return Columns(cs)
@@ -258,7 +258,7 @@ func (c Columns) Flatten() []interface{} {
 		flat["type"] = col._type
 		flat["nullable"] = col.nullable
 		flat["comment"] = col.comment
-		flat["masking_policy"] = col.masking_policy
+		flat["masking_policy"] = col.maskingPolicy
 
 		if col._default != nil {
 			def := map[string]interface{}{}
@@ -413,7 +413,7 @@ func JoinStringList(instrings []string, delimiter string) string {
 }
 
 func quoteStringList(instrings []string) []string {
-	var clean []string
+	clean := make([]string, 0, len(instrings))
 	for _, word := range instrings {
 		quoted := fmt.Sprintf(`"%s"`, word)
 		clean = append(clean, quoted)
@@ -452,9 +452,9 @@ func ClusterStatementToList(clusterStatement string) []string {
 	cleanStatement := strings.TrimSuffix(strings.Replace(clusterStatement, "LINEAR(", "", 1), ")")
 	// remove cluster statement and trailing parenthesis
 
-	var clean []string
-
-	for _, s := range strings.Split(cleanStatement, ",") {
+	spCleanStatement := strings.Split(cleanStatement, ",")
+	clean := make([]string, 0, len(spCleanStatement))
+	for _, s := range spCleanStatement {
 		clean = append(clean, strings.TrimSpace(s))
 	}
 
@@ -469,7 +469,7 @@ func ClusterStatementToList(clusterStatement string) []string {
 //   - SHOW TABLES
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-table.html)
-func Table(name, db, schema string) *TableBuilder {
+func NewTableBuilder(name, db, schema string) *TableBuilder {
 	return &TableBuilder{
 		name:   name,
 		db:     db,
@@ -483,7 +483,7 @@ func Table(name, db, schema string) *TableBuilder {
 //   - CREATE TABLE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-table.html)
-func TableWithColumnDefinitions(name, db, schema string, columns Columns) *TableBuilder {
+func NewTableWithColumnDefinitionsBuilder(name, db, schema string, columns Columns) *TableBuilder {
 	return &TableBuilder{
 		name:    name,
 		db:      db,
@@ -540,13 +540,13 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 // AddColumn returns the SQL query that will add a new column to the table.
 func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string, maskingPolicy string) string {
 	col := Column{
-		name:           name,
-		_type:          dataType,
-		nullable:       nullable,
-		_default:       _default,
-		identity:       identity,
-		comment:        comment,
-		masking_policy: maskingPolicy,
+		name:          name,
+		_type:         dataType,
+		nullable:      nullable,
+		_default:      _default,
+		identity:      identity,
+		comment:       comment,
+		maskingPolicy: maskingPolicy,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
 }
@@ -590,9 +590,8 @@ func (tb *TableBuilder) RemoveComment() string {
 func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string {
 	if nullable {
 		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" DROP NOT NULL`, tb.QualifiedName(), name)
-	} else {
-		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" SET NOT NULL`, tb.QualifiedName(), name)
 	}
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%s" SET NOT NULL`, tb.QualifiedName(), name)
 }
 
 func (tb *TableBuilder) ChangePrimaryKey(newPk PrimaryKey) string {
@@ -637,7 +636,7 @@ func (tb *TableBuilder) Rename(newName string) string {
 	return fmt.Sprintf(`ALTER TABLE %s RENAME TO %s`, oldName, tb.QualifiedName())
 }
 
-type table struct {
+type Table struct {
 	CreatedOn           sql.NullString `db:"created_on"`
 	TableName           sql.NullString `db:"name"`
 	DatabaseName        sql.NullString `db:"database_name"`
@@ -654,13 +653,13 @@ type table struct {
 	IsExternal          sql.NullString `db:"is_external"`
 }
 
-func ScanTable(row *sqlx.Row) (*table, error) {
-	t := &table{}
+func ScanTable(row *sqlx.Row) (*Table, error) {
+	t := &Table{}
 	e := row.StructScan(t)
 	return t, e
 }
 
-type tableDescription struct {
+type TableDescription struct {
 	Name          sql.NullString `db:"name"`
 	Type          sql.NullString `db:"type"`
 	Kind          sql.NullString `db:"kind"`
@@ -670,15 +669,11 @@ type tableDescription struct {
 	MaskingPolicy sql.NullString `db:"policy name"`
 }
 
-func (td *tableDescription) IsNullable() bool {
-	if td.Nullable.String == "Y" {
-		return true
-	} else {
-		return false
-	}
+func (td *TableDescription) IsNullable() bool {
+	return td.Nullable.String == "Y"
 }
 
-func (td *tableDescription) ColumnDefault() *ColumnDefault {
+func (td *TableDescription) ColumnDefault() *ColumnDefault {
 	if !td.Default.Valid {
 		return nil
 	}
@@ -706,7 +701,7 @@ func (td *tableDescription) ColumnDefault() *ColumnDefault {
 	return NewColumnDefaultWithConstant(td.Default.String)
 }
 
-func (td *tableDescription) ColumnIdentity() *ColumnIdentity {
+func (td *TableDescription) ColumnIdentity() *ColumnIdentity {
 	// if autoincrement is used this is reflected back IDENTITY START 1 INCREMENT 1
 	if !td.Default.Valid {
 		return nil
@@ -721,16 +716,16 @@ func (td *tableDescription) ColumnIdentity() *ColumnIdentity {
 	return nil
 }
 
-type primaryKeyDescription struct {
+type PrimaryKeyDescription struct {
 	ColumnName     sql.NullString `db:"column_name"`
 	KeySequence    sql.NullString `db:"key_sequence"`
 	ConstraintName sql.NullString `db:"constraint_name"`
 }
 
-func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
-	tds := []tableDescription{}
+func ScanTableDescription(rows *sqlx.Rows) ([]TableDescription, error) {
+	tds := []TableDescription{}
 	for rows.Next() {
-		td := tableDescription{}
+		td := TableDescription{}
 		err := rows.StructScan(&td)
 		if err != nil {
 			return nil, err
@@ -740,10 +735,10 @@ func ScanTableDescription(rows *sqlx.Rows) ([]tableDescription, error) {
 	return tds, rows.Err()
 }
 
-func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]primaryKeyDescription, error) {
-	pkds := []primaryKeyDescription{}
+func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]PrimaryKeyDescription, error) {
+	pkds := []PrimaryKeyDescription{}
 	for rows.Next() {
-		pk := primaryKeyDescription{}
+		pk := PrimaryKeyDescription{}
 		err := rows.StructScan(&pk)
 		if err != nil {
 			return nil, err
@@ -753,7 +748,7 @@ func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]primaryKeyDescription, error)
 	return pkds, rows.Err()
 }
 
-func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, error) {
+func ListTables(databaseName string, schemaName string, db *sql.DB) ([]Table, error) {
 	stmt := fmt.Sprintf(`SHOW TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -761,11 +756,13 @@ func ListTables(databaseName string, schemaName string, db *sql.DB) ([]table, er
 	}
 	defer rows.Close()
 
-	dbs := []table{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no tables found")
-		return nil, nil
+	dbs := []Table{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no tables found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

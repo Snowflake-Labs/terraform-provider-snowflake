@@ -60,7 +60,7 @@ func TestWarehouseRead(t *testing.T) {
 
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.Warehouse(d.Id()).Show()
+		q := snowflake.NewWarehouseBuilder(d.Id()).Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err2 := resources.ReadWarehouse(d, db)
 		r.Empty(d.State())

@@ -135,7 +135,7 @@ func TestMaterializedViewRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.MaterializedView("good_name").WithDB("test_db").WithSchema("test_schema").Show()
+		q := snowflake.NewMaterializedViewBuilder("good_name").WithDB("test_db").WithSchema("test_schema").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadMaterializedView(d, db)
 		r.Empty(d.State())

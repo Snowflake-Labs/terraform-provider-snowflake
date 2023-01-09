@@ -2,13 +2,13 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var networkPolicySchema = map[string]*schema.Schema{
@@ -76,7 +76,7 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	stmt := builder.Create()
 	err := snowflake.Exec(db, stmt)
 	if err != nil {
-		return errors.Wrapf(err, "error creating network policy %v", name)
+		return fmt.Errorf("error creating network policy %v err = %w", name, err)
 	}
 	d.SetId(name)
 
@@ -94,7 +94,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	showSQL := builder.ShowAllNetworkPolicies()
 
 	rows, err := snowflake.Query(db, showSQL)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
 		d.SetId("")
@@ -109,7 +109,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var s *snowflake.NetworkPolicyStruct = nil
+	var s *snowflake.NetworkPolicyStruct
 	for _, value := range allPolicies {
 		if value.Name.String == policyName {
 			s = value
@@ -178,13 +178,13 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 			q := builder.RemoveComment()
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for network policy %v", name)
+				return fmt.Errorf("error unsetting comment for network policy %v err = %w", name, err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
 			err := snowflake.Exec(db, q)
 			if err != nil {
-				return errors.Wrapf(err, "error updating comment for network policy %v", name)
+				return fmt.Errorf("error updating comment for network policy %v err = %w", name, err)
 			}
 		}
 	}
@@ -194,7 +194,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeIPList("ALLOWED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating ALLOWED_IP_LIST for network policy %v", name)
+			return fmt.Errorf("error updating ALLOWED_IP_LIST for network policy %v err = %w", name, err)
 		}
 	}
 
@@ -203,7 +203,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		q := builder.ChangeIPList("BLOCKED", newIps)
 		err := snowflake.Exec(db, q)
 		if err != nil {
-			return errors.Wrapf(err, "error updating BLOCKED_IP_LIST for network policy %v", name)
+			return fmt.Errorf("error updating BLOCKED_IP_LIST for network policy %v err = %w", name, err)
 		}
 	}
 
@@ -218,7 +218,7 @@ func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	dropSQL := snowflake.NetworkPolicy(name).Drop()
 	err := snowflake.Exec(db, dropSQL)
 	if err != nil {
-		return errors.Wrapf(err, "error deleting network policy %v", name)
+		return fmt.Errorf("error deleting network policy %v err = %w", name, err)
 	}
 
 	d.SetId("")

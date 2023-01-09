@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -44,7 +45,7 @@ func Role() *schema.Resource {
 }
 
 func CreateRole(d *schema.ResourceData, meta interface{}) error {
-	return CreateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(d, meta)
+	return CreateResource("role", roleProperties, roleSchema, snowflake.NewRoleBuilder, ReadRole)(d, meta)
 }
 
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
@@ -53,7 +54,7 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 
 	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
 	role, err := snowflake.ScanRole(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] role (%s) not found", d.Id())
 		d.SetId("")
@@ -63,12 +64,11 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", role.Name.String)
-	if err != nil {
+	if err := d.Set("name", role.Name.String); err != nil {
 		return err
 	}
-	err = d.Set("comment", role.Comment.String)
-	if err != nil {
+
+	if err := d.Set("comment", role.Comment.String); err != nil {
 		return err
 	}
 
@@ -76,9 +76,9 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateRole(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("role", roleProperties, roleSchema, snowflake.Role, ReadRole)(d, meta)
+	return UpdateResource("role", roleProperties, roleSchema, snowflake.NewRoleBuilder, ReadRole)(d, meta)
 }
 
 func DeleteRole(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("role", snowflake.Role)(d, meta)
+	return DeleteResource("role", snowflake.NewRoleBuilder)(d, meta)
 }

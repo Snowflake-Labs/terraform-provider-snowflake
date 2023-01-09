@@ -2,9 +2,9 @@ package snowflake
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // SamlIntegration returns a pointer to a Builder that abstracts the DDL operations for a SAML2 integration.
@@ -17,14 +17,14 @@ import (
 //   - DESCRIBE INTEGRATION
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/ddl-user-security.html#security-integrations)
-func SamlIntegration(name string) *Builder {
+func NewSamlIntegrationBuilder(name string) *Builder {
 	return &Builder{
 		entityType: SecurityIntegrationType,
 		name:       name,
 	}
 }
 
-type samlIntegration struct {
+type SamlIntegration struct {
 	Name            sql.NullString `db:"name"`
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
@@ -32,7 +32,10 @@ type samlIntegration struct {
 	Enabled         sql.NullBool   `db:"enabled"`
 }
 
-func ScanSamlIntegration(row *sqlx.Row) (*samlIntegration, error) {
-	r := &samlIntegration{}
-	return r, errors.Wrap(row.StructScan(r), "error scanning struct")
+func ScanSamlIntegration(row *sqlx.Row) (*SamlIntegration, error) {
+	r := &SamlIntegration{}
+	if err := row.StructScan(r); err != nil {
+		return r, fmt.Errorf("error scanning struct err = %w", err)
+	}
+	return r, nil
 }

@@ -35,6 +35,7 @@ func warehouses(warehouseName string) string {
 		auto_suspend                 = 60
 		max_concurrency_level        = 8
 		statement_timeout_in_seconds = 172800
+		warehouse_type               = "STANDARD"
 	}
 
 	data snowflake_warehouses "s" {

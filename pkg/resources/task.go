@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -129,8 +130,7 @@ func (t *taskID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = taskIDDelimiter
 	dataIdentifiers := [][]string{{t.DatabaseName, t.SchemaName, t.TaskName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strTaskID := strings.TrimSpace(buf.String())
@@ -200,11 +200,11 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	schema := taskID.SchemaName
 	name := taskID.TaskName
 
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 	q := builder.Show()
 	row := snowflake.QueryRow(db, q)
 	t, err := snowflake.ScanTask(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] task (%s) not found", d.Id())
 		d.SetId("")
@@ -214,38 +214,31 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("enabled", t.IsEnabled())
-	if err != nil {
+	if err := d.Set("enabled", t.IsEnabled()); err != nil {
 		return err
 	}
 
-	err = d.Set("name", t.Name)
-	if err != nil {
+	if err := d.Set("name", t.Name); err != nil {
 		return err
 	}
 
-	err = d.Set("database", t.DatabaseName)
-	if err != nil {
+	if err := d.Set("database", t.DatabaseName); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", t.SchemaName)
-	if err != nil {
+	if err := d.Set("schema", t.SchemaName); err != nil {
 		return err
 	}
 
-	err = d.Set("warehouse", t.Warehouse)
-	if err != nil {
+	if err := d.Set("warehouse", t.Warehouse); err != nil {
 		return err
 	}
 
-	err = d.Set("schedule", t.Schedule)
-	if err != nil {
+	if err := d.Set("schedule", t.Schedule); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", t.Comment)
-	if err != nil {
+	if err := d.Set("comment", t.Comment); err != nil {
 		return err
 	}
 
@@ -259,13 +252,12 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = d.Set("allow_overlapping_execution", allowOverlappingExecution)
-		if err != nil {
+
+		if err := d.Set("allow_overlapping_execution", allowOverlappingExecution); err != nil {
 			return err
 		}
 	} else {
-		err = d.Set("allow_overlapping_execution", false)
-		if err != nil {
+		if err := d.Set("allow_overlapping_execution", false); err != nil {
 			return err
 		}
 	}
@@ -275,8 +267,8 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		t.ErrorIntegration.Valid = false
 		t.ErrorIntegration.String = ""
 	}
-	err = d.Set("error_integration", t.ErrorIntegration.String)
-	if err != nil {
+
+	if err := d.Set("error_integration", t.ErrorIntegration.String); err != nil {
 		return err
 	}
 
@@ -284,18 +276,16 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("after", predecessors)
-	if err != nil {
+
+	if err := d.Set("after", predecessors); err != nil {
 		return err
 	}
 
-	err = d.Set("when", t.Condition)
-	if err != nil {
+	if err := d.Set("when", t.Condition); err != nil {
 		return err
 	}
 
-	err = d.Set("sql_statement", t.Definition)
-	if err != nil {
+	if err := d.Set("sql_statement", t.Definition); err != nil {
 		return err
 	}
 
@@ -336,8 +326,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		err := d.Set("session_parameters", sessionParameters)
-		if err != nil {
+		if err := d.Set("session_parameters", sessionParameters); err != nil {
 			return err
 		}
 
@@ -363,7 +352,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	sql := d.Get("sql_statement").(string)
 	enabled := d.Get("enabled").(bool)
 
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 	builder.WithStatement(sql)
 
 	// Set optionals
@@ -410,8 +399,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 				// if a root task is enabled, then it needs to be suspended before the child tasks can be created
 				if rootTask.IsEnabled() {
 					q := rootTask.Suspend()
-					err = snowflake.Exec(db, q)
-					if err != nil {
+					if err := snowflake.Exec(db, q); err != nil {
 						return err
 					}
 
@@ -419,8 +407,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 					if !(rootTask.Name == name) {
 						defer func() {
 							q = rootTask.Resume()
-							err = snowflake.Exec(db, q)
-							if err != nil {
+							if err := snowflake.Exec(db, q); err != nil {
 								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 							}
 						}()
@@ -437,9 +424,8 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating task %v", name)
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error creating task %v err = %w", name, err)
 	}
 
 	taskID := &taskID{
@@ -454,8 +440,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(dataIDInput)
 
 	if enabled {
-		err := snowflake.WaitResumeTask(db, name, database, schema)
-		if err != nil {
+		if err := snowflake.WaitResumeTask(db, name, database, schema); err != nil {
 			log.Printf("[WARN] failed to resume task %s", name)
 		}
 	}
@@ -474,7 +459,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	database := taskID.DatabaseName
 	schema := taskID.SchemaName
 	name := taskID.TaskName
-	builder := snowflake.Task(name, database, schema)
+	builder := snowflake.NewTaskBuilder(name, database, schema)
 
 	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
@@ -484,8 +469,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		// if a root task is enabled, then it needs to be suspended before the child tasks can be created
 		if rootTask.IsEnabled() {
 			q := rootTask.Suspend()
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return err
 			}
 
@@ -493,8 +477,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				// resume the task after modifications are complete, as long as it is not a standalone task
 				defer func() {
 					q = rootTask.Resume()
-					err = snowflake.Exec(db, q)
-					if err != nil {
+					if err := snowflake.Exec(db, q); err != nil {
 						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 					}
 				}()
@@ -512,9 +495,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			q = builder.ChangeWarehouse(newWarehouse.(string))
 		}
 
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating warehouse on task %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating warehouse on task %v", d.Id())
 		}
 	}
 
@@ -524,9 +506,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		if warehouse == "" && newSize != "" {
 			q := builder.SwitchManagedWithInitialSize(newSize.(string))
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
 			}
 		}
 	}
@@ -538,25 +519,24 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.RemoveErrorIntegration()
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating task error_integration on %v", d.Id())
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating task error_integration on %v", d.Id())
 		}
 	}
 
 	if d.HasChange("after") {
 		// preemitvely removing schedule because a task cannot have both after and schedule
 		q := builder.RemoveSchedule()
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating schedule on task %v", d.Id())
 		}
 
 		// making changes to after require suspending the current task
 		q = builder.Suspend()
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error suspending task %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error suspending task %v", d.Id())
 		}
 
 		old, new := d.GetChange("after")
@@ -579,9 +559,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		if len(toRemove) > 0 {
 			q := builder.RemoveAfter(toRemove)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error removing after dependencies from task %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error removing after dependencies from task %v", d.Id())
 			}
 		}
 
@@ -602,8 +581,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				for _, rootTask := range rootTasks {
 					if rootTask.IsEnabled() {
 						q := rootTask.Suspend()
-						err = snowflake.Exec(db, q)
-						if err != nil {
+						if err := snowflake.Exec(db, q); err != nil {
 							return err
 						}
 
@@ -611,8 +589,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 							// resume the task after modifications are complete, as long as it is not a standalone task
 							defer func() {
 								q = rootTask.Resume()
-								err = snowflake.Exec(db, q)
-								if err != nil {
+								if err := snowflake.Exec(db, q); err != nil {
 									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 								}
 							}()
@@ -621,9 +598,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 			q := builder.AddAfter(toAdd)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding after dependencies to task %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error adding after dependencies to task %v", d.Id())
 			}
 		}
 	}
@@ -636,9 +612,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.ChangeSchedule(new.(string))
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating schedule on task %v", d.Id())
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating schedule on task %v", d.Id())
 		}
 	}
 
@@ -650,9 +626,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.ChangeTimeout(new.(int))
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating user task timeout on task %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating user task timeout on task %v", d.Id())
 		}
 	}
 
@@ -664,9 +639,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.ChangeComment(new.(string))
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating comment on task %v", d.Id())
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating comment on task %v", d.Id())
 		}
 	}
 
@@ -679,9 +654,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		} else {
 			q = builder.UnsetAllowOverlappingExecutionParameter()
 		}
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating task %v", d.Id())
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating task %v", d.Id())
 		}
 	}
 
@@ -703,17 +678,15 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		if len(remove) > 0 {
 			q = builder.RemoveSessionParameters(remove)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error removing session_parameters on task %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error removing session_parameters on task %v", d.Id())
 			}
 		}
 
 		if len(add) > 0 {
 			q = builder.AddSessionParameters(add)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error adding session_parameters to task %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
 			}
 		}
 	}
@@ -721,32 +694,28 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("when") {
 		new := d.Get("when")
 		q := builder.ChangeCondition(new.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating when condition on task %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating when condition on task %v", d.Id())
 		}
 	}
 
 	if d.HasChange("sql_statement") {
 		new := d.Get("sql_statement")
 		q := builder.ChangeSQLStatement(new.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating sql statement on task %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating sql statement on task %v", d.Id())
 		}
 	}
 
 	enabled := d.Get("enabled").(bool)
 	if enabled {
-		err := snowflake.WaitResumeTask(db, name, database, schema)
-		if err != nil {
+		if err := snowflake.WaitResumeTask(db, name, database, schema); err != nil {
 			log.Printf("[WARN] failed to resume task %s", name)
 		}
 	} else {
 		q := builder.Suspend()
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error updating task state %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating task state %v", d.Id())
 		}
 	}
 	return ReadTask(d, meta)
@@ -772,8 +741,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		// if a root task is enabled, then it needs to be suspended before the child tasks can be deleted
 		if rootTask.IsEnabled() {
 			q := rootTask.Suspend()
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return err
 			}
 
@@ -781,8 +749,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 				// resume the task after modifications are complete, as long as it is not a standalone task
 				defer func() {
 					q = rootTask.Resume()
-					err = snowflake.Exec(db, q)
-					if err != nil {
+					if err := snowflake.Exec(db, q); err != nil {
 						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
 					}
 				}()
@@ -790,10 +757,9 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	q := snowflake.Task(name, database, schema).Drop()
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting task %v", d.Id())
+	q := snowflake.NewTaskBuilder(name, database, schema).Drop()
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting task %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

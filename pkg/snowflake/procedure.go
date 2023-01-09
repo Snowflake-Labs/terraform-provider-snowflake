@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	pe "github.com/pkg/errors"
 )
 
 // ProcedureBuilder abstracts the creation of Stored Procedure.
@@ -117,7 +116,7 @@ func (pb *ProcedureBuilder) ArgTypes() []string {
 //   - DESCRIBE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/stored-procedures.html)
-func Procedure(db, schema, name string, argTypes []string) *ProcedureBuilder {
+func NewProcedureBuilder(db, schema, name string, argTypes []string) *ProcedureBuilder {
 	return &ProcedureBuilder{
 		name:          name,
 		db:            db,
@@ -181,8 +180,8 @@ func (pb *ProcedureBuilder) Rename(newName string) (string, error) {
 }
 
 // ChangeComment returns the SQL query that will update the comment on the procedure.
-func (vb *ProcedureBuilder) ChangeComment(c string) (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *ProcedureBuilder) ChangeComment(c string) (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -191,8 +190,8 @@ func (vb *ProcedureBuilder) ChangeComment(c string) (string, error) {
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the procedure.
-func (vb *ProcedureBuilder) RemoveComment() (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *ProcedureBuilder) RemoveComment() (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -200,8 +199,8 @@ func (vb *ProcedureBuilder) RemoveComment() (string, error) {
 }
 
 // ChangeExecuteAs returns the SQL query that will update the call mode on the procedure.
-func (vb *ProcedureBuilder) ChangeExecuteAs(c string) (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *ProcedureBuilder) ChangeExecuteAs(c string) (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -233,7 +232,7 @@ func (pb *ProcedureBuilder) Drop() (string, error) {
 	return fmt.Sprintf(`DROP PROCEDURE %v`, qn), nil
 }
 
-type procedure struct {
+type Procedure struct {
 	Comment sql.NullString `db:"description"`
 	// Snowflake returns is_secure in the show procedure output, but it is irrelevant
 	Name         sql.NullString `db:"name"`
@@ -243,17 +242,17 @@ type procedure struct {
 	Arguments    sql.NullString `db:"arguments"`
 }
 
-type procedureDescription struct {
+type ProcedureDescription struct {
 	Property sql.NullString `db:"property"`
 	Value    sql.NullString `db:"value"`
 }
 
 // ScanProcedureDescription reads through the rows with property and value columns
 // and returns a slice of procedureDescription structs.
-func ScanProcedureDescription(rows *sqlx.Rows) ([]procedureDescription, error) {
-	pdsl := []procedureDescription{}
+func ScanProcedureDescription(rows *sqlx.Rows) ([]ProcedureDescription, error) {
+	pdsl := []ProcedureDescription{}
 	for rows.Next() {
-		pd := procedureDescription{}
+		pd := ProcedureDescription{}
 		err := rows.StructScan(&pd)
 		if err != nil {
 			return nil, err
@@ -265,10 +264,10 @@ func ScanProcedureDescription(rows *sqlx.Rows) ([]procedureDescription, error) {
 
 // SHOW PROCEDURE can return more than one item because of procedure names overloading
 // https://docs.snowflake.com/en/sql-reference/sql/show-procedures.html
-func ScanProcedures(rows *sqlx.Rows) ([]*procedure, error) {
-	var pcs []*procedure
+func ScanProcedures(rows *sqlx.Rows) ([]*Procedure, error) {
+	var pcs []*Procedure
 	for rows.Next() {
-		r := &procedure{}
+		r := &Procedure{}
 		err := rows.StructScan(r)
 		if err != nil {
 			return nil, err
@@ -278,7 +277,7 @@ func ScanProcedures(rows *sqlx.Rows) ([]*procedure, error) {
 	return pcs, rows.Err()
 }
 
-func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]procedure, error) {
+func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]Procedure, error) {
 	stmt := fmt.Sprintf(`SHOW PROCEDURES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -286,11 +285,13 @@ func ListProcedures(databaseName string, schemaName string, db *sql.DB) ([]proce
 	}
 	defer rows.Close()
 
-	dbs := []procedure{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no procedures found")
-		return nil, nil
+	dbs := []Procedure{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no procedures found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

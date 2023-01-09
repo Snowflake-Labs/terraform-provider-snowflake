@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,26 +10,26 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func Role(name string) *Builder {
+func NewRoleBuilder(name string) *Builder {
 	return &Builder{
 		entityType: RoleType,
 		name:       name,
 	}
 }
 
-type role struct {
+type Role struct {
 	Name    sql.NullString `db:"name"`
 	Comment sql.NullString `db:"comment"`
 	Owner   sql.NullString `db:"owner"`
 }
 
-func ScanRole(row *sqlx.Row) (*role, error) {
-	r := &role{}
+func ScanRole(row *sqlx.Row) (*Role, error) {
+	r := &Role{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListRoles(db *sql.DB, rolePattern string) ([]*role, error) {
+func ListRoles(db *sql.DB, rolePattern string) ([]*Role, error) {
 	stmt := strings.Builder{}
 	stmt.WriteString("SHOW ROLES")
 	if rolePattern != "" {
@@ -40,11 +41,13 @@ func ListRoles(db *sql.DB, rolePattern string) ([]*role, error) {
 	}
 	defer rows.Close()
 
-	roles := []*role{}
-	err = sqlx.StructScan(rows, &roles)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no roles found")
-		return nil, nil
+	roles := []*Role{}
+	if err := sqlx.StructScan(rows, &roles); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no roles found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan stmt = %v err = %w", stmt, err)
 	}
 	return roles, nil
 }

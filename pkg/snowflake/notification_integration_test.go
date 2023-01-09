@@ -9,7 +9,7 @@ import (
 
 func TestNotificationIntegration_Azure(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.NotificationIntegration("azure")
+	builder := snowflake.NewNotificationIntegrationBuilder("azure")
 	r.NotNil(builder)
 
 	q := builder.Show()
@@ -28,7 +28,7 @@ func TestNotificationIntegration_Azure(t *testing.T) {
 
 func TestNotificationIntegration_AWS(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.NotificationIntegration("aws_sqs")
+	builder := snowflake.NewNotificationIntegrationBuilder("aws_sqs")
 	r.NotNil(builder)
 
 	q := builder.Show()
@@ -48,7 +48,7 @@ func TestNotificationIntegration_AWS(t *testing.T) {
 
 func TestNotificationIntegration_AWS_SNS(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.NotificationIntegration("aws_sns")
+	builder := snowflake.NewNotificationIntegrationBuilder("aws_sns")
 	r.NotNil(builder)
 
 	q := builder.Show()

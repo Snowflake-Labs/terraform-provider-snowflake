@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 var materializedViewSchema = map[string]*schema.Schema{
@@ -96,8 +96,7 @@ func (si *materializedViewID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = materializedViewDelimiter
 	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ViewName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strMeterilizedViewID := strings.TrimSpace(buf.String())
@@ -138,7 +137,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	warehouse := d.Get("warehouse").(string)
 	s := d.Get("statement").(string)
 
-	builder := snowflake.MaterializedView(name).WithDB(database).WithSchema(schema).WithWarehouse(warehouse).WithStatement(s)
+	builder := snowflake.NewMaterializedViewBuilder(name).WithDB(database).WithSchema(schema).WithWarehouse(warehouse).WithStatement(s)
 
 	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
@@ -160,9 +159,8 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 	q := builder.Create()
 	log.Print("[DEBUG] xxx ", q)
-	err := snowflake.ExecMulti(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating view %v", name)
+	if err := snowflake.ExecMulti(db, q); err != nil {
+		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
 	materializedViewID := &materializedViewID{
@@ -191,10 +189,10 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := materializedViewID.SchemaName
 	view := materializedViewID.ViewName
 
-	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Show()
+	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanMaterializedView(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
@@ -204,23 +202,19 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("name", v.Name.String)
-	if err != nil {
+	if err := d.Set("name", v.Name.String); err != nil {
 		return err
 	}
 
-	err = d.Set("is_secure", v.IsSecure)
-	if err != nil {
+	if err := d.Set("is_secure", v.IsSecure); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", v.Comment.String)
-	if err != nil {
+	if err := d.Set("comment", v.Comment.String); err != nil {
 		return err
 	}
 
-	err = d.Set("schema", v.SchemaName.String)
-	if err != nil {
+	if err := d.Set("schema", v.SchemaName.String); err != nil {
 		return err
 	}
 
@@ -232,8 +226,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("statement", substringOfQuery)
-	if err != nil {
+	if err := d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
 
@@ -251,16 +244,15 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := mvid.SchemaName
 	view := mvid.ViewName
 
-	builder := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema)
+	builder := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema)
 
 	db := meta.(*sql.DB)
 	if d.HasChange("name") {
 		name := d.Get("name")
 
 		q := builder.Rename(name.(string))
-		err := snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error renaming view %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
 		}
 		materializedViewID := &materializedViewID{
 			DatabaseName: dbName,
@@ -279,15 +271,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 		if c := comment.(string); c == "" {
 			q := builder.RemoveComment()
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for view %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting comment for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.ChangeComment(c)
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error updating comment for view %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating comment for view %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -296,15 +286,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 		if secure.(bool) {
 			q := builder.Secure()
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error setting secure for view %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error setting secure for view %v err = %w", d.Id(), err)
 			}
 		} else {
 			q := builder.Unsecure()
-			err := snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting secure for materialized view %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting secure for materialized view %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -329,11 +317,9 @@ func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	schema := materializedViewID.SchemaName
 	view := materializedViewID.ViewName
 
-	q := snowflake.MaterializedView(view).WithDB(dbName).WithSchema(schema).Drop()
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting materialized view %v", d.Id())
+	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting materialized view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

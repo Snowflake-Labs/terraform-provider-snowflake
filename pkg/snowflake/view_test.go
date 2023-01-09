@@ -13,12 +13,12 @@ func TestView(t *testing.T) {
 	schema := "some_schema"
 	view := "test"
 
-	v := View(view).WithDB(db).WithSchema(schema)
+	v := NewViewBuilder(view).WithDB(db).WithSchema(schema)
 	r.NotNil(v)
 	r.False(v.secure)
 	qn, err := v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view))
+	r.Equal(fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view), qn)
 
 	v.WithSecure()
 	r.True(v.secure)
@@ -59,7 +59,7 @@ func TestView(t *testing.T) {
 	v.WithDB("mydb")
 	qn, err = v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, `"mydb"."some_schema"."test"`)
+	r.Equal(`"mydb"."some_schema"."test"`, qn)
 
 	q, err = v.Create()
 	r.NoError(err)
@@ -79,15 +79,15 @@ func TestView(t *testing.T) {
 
 func TestQualifiedName(t *testing.T) {
 	r := require.New(t)
-	v := View("view").WithDB("db").WithSchema("schema")
+	v := NewViewBuilder("view").WithDB("db").WithSchema("schema")
 	qn, err := v.QualifiedName()
 	r.NoError(err)
-	r.Equal(qn, `"db"."schema"."view"`)
+	r.Equal(`"db"."schema"."view"`, qn)
 }
 
 func TestRename(t *testing.T) {
 	r := require.New(t)
-	v := View("test").WithDB("db").WithSchema("schema")
+	v := NewViewBuilder("test").WithDB("db").WithSchema("schema")
 
 	q, err := v.Rename("test2")
 	r.NoError(err)
@@ -98,7 +98,7 @@ func TestRename(t *testing.T) {
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "testDB"."schema"."test2" RENAME TO "testDB"."schema"."test3"`, q)
 
-	v = View("test4").WithDB("db").WithSchema("testSchema")
+	v = NewViewBuilder("test4").WithDB("db").WithSchema("testSchema")
 	q, err = v.Rename("test5")
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "db"."testSchema"."test4" RENAME TO "db"."testSchema"."test5"`, q)

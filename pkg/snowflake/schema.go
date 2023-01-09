@@ -2,12 +2,12 @@ package snowflake
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // SchemaBuilder abstracts the creation of SQL queries for a Snowflake schema.
@@ -88,7 +88,7 @@ func (sb *SchemaBuilder) UnsetTag(tag TagValue) string {
 	return fmt.Sprintf(`ALTER SCHEMA %s UNSET TAG "%v"."%v"."%v"`, sb.QualifiedName(), tag.Database, tag.Schema, tag.Name)
 }
 
-// Schema returns a pointer to a Builder that abstracts the DDL operations for a schema.
+// NewSchemaBuilder returns a pointer to a Builder that abstracts the DDL operations for a schema.
 //
 // Supported DDL operations are:
 //   - CREATE SCHEMA
@@ -99,7 +99,7 @@ func (sb *SchemaBuilder) UnsetTag(tag TagValue) string {
 //   - SHOW SCHEMAS
 //
 // [Snowflake Reference](https://docs.snowflake.net/manuals/sql-reference/ddl-database.html#schema-management)
-func Schema(name string) *SchemaBuilder {
+func NewSchemaBuilder(name string) *SchemaBuilder {
 	return &SchemaBuilder{
 		name: name,
 	}
@@ -204,7 +204,7 @@ func (sb *SchemaBuilder) Show() string {
 	return q.String()
 }
 
-type schema struct {
+type Schema struct {
 	Name          sql.NullString `db:"name"`
 	DatabaseName  sql.NullString `db:"database_name"`
 	Comment       sql.NullString `db:"comment"`
@@ -212,13 +212,13 @@ type schema struct {
 	RetentionTime sql.NullString `db:"retention_time"`
 }
 
-func ScanSchema(row *sqlx.Row) (*schema, error) {
-	r := &schema{}
+func ScanSchema(row *sqlx.Row) (*Schema, error) {
+	r := &Schema{}
 	err := row.StructScan(r)
 	return r, err
 }
 
-func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
+func ListSchemas(databaseName string, db *sql.DB) ([]Schema, error) {
 	stmt := fmt.Sprintf(`SHOW SCHEMAS IN DATABASE "%v"`, databaseName)
 	rows, err := Query(db, stmt)
 	if err != nil {
@@ -226,11 +226,13 @@ func ListSchemas(databaseName string, db *sql.DB) ([]schema, error) {
 	}
 	defer rows.Close()
 
-	dbs := []schema{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no schemas found")
-		return nil, nil
+	dbs := []Schema{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no schemas found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, errors.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, nil
 }

@@ -109,8 +109,7 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.StageGrant(dbName, schemaName, stageName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -141,32 +140,26 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	stageName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureStagesEnabled := false
 	if stageName == "" {
 		futureStagesEnabled = true
 	}
-	err = d.Set("stage_name", stageName)
-	if err != nil {
+	if err := d.Set("stage_name", stageName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureStagesEnabled)
-	if err != nil {
+	if err := d.Set("on_future", futureStagesEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -235,15 +228,15 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+	); err != nil {
 		return err
 	}
 

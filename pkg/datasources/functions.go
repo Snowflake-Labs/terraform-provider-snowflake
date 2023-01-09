@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -66,20 +65,16 @@ func Functions() *schema.Resource {
 	}
 }
 
+// todo: fix this. ListUserFunctions isn't using the right struct right now and also the signature of this doesn't support all the features it could for example, database and schema should be optional, and you could also list by account.
 func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentFunctions, err := snowflake.ListFunctions(databaseName, schemaName, db)
-	if err == sql.ErrNoRows {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] functions in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse functions in schema (%s)", d.Id())
-		d.SetId("")
+	d.SetId("functions")
+	currentFunctions, err := snowflake.ListUserFunctions(databaseName, schemaName, db)
+	if err != nil {
+		log.Printf("[DEBUG] error listing functions: %v", err)
 		return nil
 	}
 
@@ -94,15 +89,14 @@ func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		functionMap["name"] = function.Name.String
-		functionMap["database"] = function.DatabaseName.String
-		functionMap["schema"] = function.SchemaName.String
-		functionMap["comment"] = function.Comment.String
+		functionMap["database"] = databaseName
+		functionMap["schema"] = schemaName
+		functionMap["comment"] = function.Description.String
 		functionMap["argument_types"] = functionSignatureMap["argumentTypes"].([]string)
 		functionMap["return_type"] = functionSignatureMap["returnType"].(string)
 
 		functions = append(functions, functionMap)
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
 	return d.Set("functions", functions)
 }

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,7 +11,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var languages = []string{"javascript", "java", "sql", "python"}
@@ -164,7 +164,7 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	s := d.Get("statement").(string)
 	ret := d.Get("return_type").(string)
 
-	builder := snowflake.Function(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
+	builder := snowflake.NewFunctionBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
 
 	// Set optionals, args
 	if _, ok := d.GetOk("arguments"); ok {
@@ -235,9 +235,8 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error creating function %v", name)
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error creating function %v err = %w", name, err)
 	}
 
 	functionID := &functionID{
@@ -259,7 +258,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	funct := snowflake.Function(
+	funct := snowflake.NewFunctionBuilder(
 		functionID.DatabaseName,
 		functionID.SchemaName,
 		functionID.FunctionName,
@@ -302,20 +301,20 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 					args = append(args, arg)
 				}
 
-				if err = d.Set("arguments", args); err != nil {
+				if err := d.Set("arguments", args); err != nil {
 					return err
 				}
 			}
 		case "null handling":
-			if err = d.Set("null_input_behavior", desc.Value.String); err != nil {
+			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "volatility":
-			if err = d.Set("return_behavior", desc.Value.String); err != nil {
+			if err := d.Set("return_behavior", desc.Value.String); err != nil {
 				return err
 			}
 		case "body":
-			if err = d.Set("statement", desc.Value.String); err != nil {
+			if err := d.Set("statement", desc.Value.String); err != nil {
 				return err
 			}
 		case "returns":
@@ -326,12 +325,12 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			if match != nil {
 				rt = match[1]
 			}
-			if err = d.Set("return_type", rt); err != nil {
+			if err := d.Set("return_type", rt); err != nil {
 				return err
 			}
 		case "language":
 			if snowflake.Contains(languages, desc.Value.String) {
-				if err = d.Set("language", desc.Value.String); err != nil {
+				if err := d.Set("language", desc.Value.String); err != nil {
 					return err
 				}
 			}
@@ -339,7 +338,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if packagesString != "" { // Do nothing for Java / Python functions without packages
 				packages := strings.Split(packagesString, ",")
-				if err = d.Set("packages", packages); err != nil {
+				if err := d.Set("packages", packages); err != nil {
 					return err
 				}
 			}
@@ -347,20 +346,20 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
 			if importsString != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(importsString, ",")
-				if err = d.Set("imports", imports); err != nil {
+				if err := d.Set("imports", imports); err != nil {
 					return err
 				}
 			}
 		case "handler":
-			if err = d.Set("handler", desc.Value.String); err != nil {
+			if err := d.Set("handler", desc.Value.String); err != nil {
 				return err
 			}
 		case "target_path":
-			if err = d.Set("target_path", desc.Value.String); err != nil {
+			if err := d.Set("target_path", desc.Value.String); err != nil {
 				return err
 			}
 		case "runtime_version":
-			if err = d.Set("runtime_version", desc.Value.String); err != nil {
+			if err := d.Set("runtime_version", desc.Value.String); err != nil {
 				return err
 			}
 		default:
@@ -370,7 +369,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 
 	q := funct.Show()
 	showRows, err := snowflake.Query(db, q)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] function (%s) not found", d.Id())
 		d.SetId("")
@@ -391,8 +390,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 
 	for _, v := range foundFunctions {
 		if v.Arguments.String == argSig {
-			err = d.Set("comment", v.Comment.String)
-			if err != nil {
+			if err := d.Set("comment", v.Comment.String); err != nil {
 				return err
 			}
 		}
@@ -407,7 +405,7 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Function(
+	builder := snowflake.NewFunctionBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.FunctionName,
@@ -421,9 +419,8 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
-			return errors.Wrapf(err, "error renaming function %v", d.Id())
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error renaming function %v", d.Id())
 		}
 		newID := &functionID{
 			DatabaseName: pID.DatabaseName,
@@ -442,18 +439,16 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error unsetting comment for function %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting comment for function %v err = %w", d.Id(), err)
 			}
 		} else {
 			q, err := builder.ChangeComment(c)
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
-				return errors.Wrapf(err, "error updating comment for function %v", d.Id())
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating comment for function %v err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -468,7 +463,7 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	builder := snowflake.Function(
+	builder := snowflake.NewFunctionBuilder(
 		pID.DatabaseName,
 		pID.SchemaName,
 		pID.FunctionName,
@@ -479,10 +474,8 @@ func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error deleting function %v", d.Id())
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error deleting function %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

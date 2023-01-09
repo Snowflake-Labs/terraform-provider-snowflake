@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
@@ -43,7 +43,7 @@ func Provider() *schema.Provider {
 			},
 			"password": {
 				Type:          schema.TypeString,
-				Description:   "Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can be source from `SNOWFLAKE_PASSWORD` environment variable.",
+				Description:   "Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can be sourced from `SNOWFLAKE_PASSWORD` environment variable.",
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
 				Sensitive:     true,
@@ -112,7 +112,7 @@ func Provider() *schema.Provider {
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,
-				Description:   "Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.",
+				Description:   "Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.",
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PATH", nil),
 				Sensitive:     true,
@@ -120,7 +120,7 @@ func Provider() *schema.Provider {
 			},
 			"private_key": {
 				Type:          schema.TypeString,
-				Description:   "Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can be source from `SNOWFLAKE_PRIVATE_KEY` environment variable.",
+				Description:   "Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY` environment variable.",
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
 				Sensitive:     true,
@@ -136,13 +136,13 @@ func Provider() *schema.Provider {
 			},
 			"role": {
 				Type:        schema.TypeString,
-				Description: "Snowflake role to use for operations. If left unset, default role for user will be used. Can come from the `SNOWFLAKE_ROLE` environment variable.",
+				Description: "Snowflake role to use for operations. If left unset, default role for user will be used. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
 			},
 			"region": {
 				Type:        schema.TypeString,
-				Description: "[Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use. Can be source from the `SNOWFLAKE_REGION` environment variable.",
+				Description: "[Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.",
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
@@ -208,6 +208,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
+		"snowflake_account_parameter":              resources.AccountParameter(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
 		"snowflake_external_function":              resources.ExternalFunction(),
@@ -220,6 +221,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_network_policy_attachment":      resources.NetworkPolicyAttachment(),
 		"snowflake_network_policy":                 resources.NetworkPolicy(),
 		"snowflake_oauth_integration":              resources.OAuthIntegration(),
+		"snowflake_object_parameter":               resources.ObjectParameter(),
 		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
 		"snowflake_pipe":                           resources.Pipe(),
 		"snowflake_procedure":                      resources.Procedure(),
@@ -232,6 +234,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_schema":                         resources.Schema(),
 		"snowflake_scim_integration":               resources.SCIMIntegration(),
 		"snowflake_sequence":                       resources.Sequence(),
+		"snowflake_session_parameter":              resources.SessionParameter(),
 		"snowflake_share":                          resources.Share(),
 		"snowflake_stage":                          resources.Stage(),
 		"snowflake_storage_integration":            resources.StorageIntegration(),
@@ -260,6 +263,7 @@ func getResources() map[string]*schema.Resource {
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
 		"snowflake_current_account":                    datasources.CurrentAccount(),
+		"snowflake_current_role":                       datasources.CurrentRole(),
 		"snowflake_system_generate_scim_access_token":  datasources.SystemGenerateSCIMAccessToken(),
 		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
@@ -273,7 +277,6 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_sequences":                          datasources.Sequences(),
 		"snowflake_streams":                            datasources.Streams(),
 		"snowflake_tasks":                              datasources.Tasks(),
-		"snowflake_pipes":                              datasources.Pipes(),
 		"snowflake_masking_policies":                   datasources.MaskingPolicies(),
 		"snowflake_external_functions":                 datasources.ExternalFunctions(),
 		"snowflake_external_tables":                    datasources.ExternalTables(),
@@ -282,6 +285,8 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
 		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
 		"snowflake_functions":                          datasources.Functions(),
+		"snowflake_parameters":                         datasources.Parameters(),
+		"snowflake_pipes":                              datasources.Pipes(),
 		"snowflake_procedures":                         datasources.Procedures(),
 		"snowflake_databases":                          datasources.Databases(),
 		"snowflake_database":                           datasources.Database(),
@@ -318,7 +323,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
 		if err != nil {
-			return nil, errors.Wrap(err, "could not retrieve access token from refresh token")
+			return nil, fmt.Errorf("could not retrieve access token from refresh token")
 		}
 		oauthAccessToken = accessToken
 	}
@@ -340,12 +345,12 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		warehouse,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not build dsn for snowflake connection")
+		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
 	}
 
 	db, err := db.Open(dsn)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not open snowflake database.")
+		return nil, fmt.Errorf("Could not open snowflake database err = %w", err)
 	}
 
 	return db, nil
@@ -397,18 +402,18 @@ func DSN(
 	if privateKeyPath != "" { //nolint:gocritic // todo: please fix this to pass gocritic
 		privateKeyBytes, err := ReadPrivateKeyFile(privateKeyPath)
 		if err != nil {
-			return "", errors.Wrap(err, "Private Key file could not be read")
+			return "", fmt.Errorf("Private Key file could not be read err = %w", err)
 		}
 		rsaPrivateKey, err := ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 		if err != nil {
-			return "", errors.Wrap(err, "Private Key could not be parsed")
+			return "", fmt.Errorf("Private Key could not be parsed err = %w", err)
 		}
 		config.PrivateKey = rsaPrivateKey
 		config.Authenticator = gosnowflake.AuthTypeJwt
 	} else if privateKey != "" {
 		rsaPrivateKey, err := ParsePrivateKey([]byte(privateKey), []byte(privateKeyPassphrase))
 		if err != nil {
-			return "", errors.Wrap(err, "Private Key could not be parsed")
+			return "", fmt.Errorf("Private Key could not be parsed err = %w", err)
 		}
 		config.PrivateKey = rsaPrivateKey
 		config.Authenticator = gosnowflake.AuthTypeJwt
@@ -429,12 +434,12 @@ func DSN(
 func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "Invalid Path to private key")
+		return nil, fmt.Errorf("Invalid Path to private key err = %w", err)
 	}
 
 	privateKeyBytes, err := os.ReadFile(expandedPrivateKeyPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not read private key")
+		return nil, fmt.Errorf("Could not read private key err = %w", err)
 	}
 
 	if len(privateKeyBytes) == 0 {
@@ -456,17 +461,14 @@ func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey,
 		}
 		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
 		if err != nil {
-			return nil, errors.Wrap(
-				err,
-				"Could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported",
-			)
+			return nil, fmt.Errorf("Could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported err = %w", err)
 		}
 		return privateKey, nil
 	}
 
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse private key")
+		return nil, fmt.Errorf("Could not parse private key err = %w", err)
 	}
 
 	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
@@ -493,7 +495,7 @@ func GetOauthData(refreshToken, redirectURL string) url.Values {
 func GetOauthRequest(dataContent io.Reader, endPoint, clientID, clientSecret string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", endPoint, dataContent)
 	if err != nil {
-		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
+		return nil, fmt.Errorf("Request to the endpoint could not be completed %w", err)
 	}
 	request.SetBasicAuth(clientID, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
@@ -509,26 +511,26 @@ func GetOauthAccessToken(
 	client := &http.Client{}
 	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {
-		return "", errors.Wrap(err, "Oauth request returned an error:")
+		return "", fmt.Errorf("oauth request returned an error")
 	}
 
 	var result Result
 
 	response, err := client.Do(request)
 	if err != nil {
-		return "", errors.Wrap(err, "Response status returned an error:")
+		return "", fmt.Errorf("Response status returned an err = %w", err)
 	}
 	if response.StatusCode != 200 {
-		return "", errors.New(fmt.Sprintf("Response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode)))
+		return "", fmt.Errorf("Response status code: %s: %s err = %w", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode), err)
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return "", errors.Wrap(err, "Response body was not able to be parsed")
+		return "", fmt.Errorf("Response body was not able to be parsed err = %w", err)
 	}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return "", errors.Wrap(err, "Error parsing JSON from Snowflake")
+		return "", fmt.Errorf("Error parsing JSON from Snowflake err = %w", err)
 	}
 	return result.AccessToken, nil
 }

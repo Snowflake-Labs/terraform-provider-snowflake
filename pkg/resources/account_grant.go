@@ -8,7 +8,9 @@ import (
 
 var validAccountPrivileges = NewPrivilegeSet(
 	privilegeApplyMaskingPolicy,
+	privilegeApplyPasswordPolicy,
 	privilegeApplyRowAccessPolicy,
+	privilegeApplySessionPolicy,
 	privilegeApplyTag,
 	privilegeAttachPolicy,
 	privilegeCreateAccount,
@@ -36,7 +38,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the account.",
+		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 	},
@@ -87,8 +89,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.AccountGrant()
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -113,12 +114,10 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("privilege", grantID.Privilege)
-	if err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -152,14 +151,12 @@ func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil)
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil); err != nil {
 		return err
 	}
 
 	// then add
-	err = createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil)
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil); err != nil {
 		return err
 	}
 

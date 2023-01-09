@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validFileFormatPrivileges = NewPrivilegeSet(
@@ -75,7 +76,7 @@ func FileFormatGrant() *TerraformGrantResource {
 			Create: CreateFileFormatGrant,
 			Read:   ReadFileFormatGrant,
 			Delete: DeleteFileFormatGrant,
-			Update: UpdateFileFormat,
+			Update: UpdateFileFormatGrant,
 
 			Schema: fileFormatGrantSchema,
 			Importer: &schema.ResourceImporter{
@@ -100,10 +101,10 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (fileFormatName == "") && !futureFileFormats {
-		return errors.New("file_format_name must be set unless on_future is true.")
+		return errors.New("file_format_name must be set unless on_future is true")
 	}
 	if (fileFormatName != "") && futureFileFormats {
-		return errors.New("file_format_name must be empty if on_future is true.")
+		return errors.New("file_format_name must be empty if on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
@@ -113,8 +114,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.FileFormatGrant(dbName, schemaName, fileFormatName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -146,32 +146,26 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	fileFormatName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	futureFileFormatsEnabled := false
 	if fileFormatName == "" {
 		futureFileFormatsEnabled = true
 	}
-	err = d.Set("file_format_name", fileFormatName)
-	if err != nil {
+	if err := d.Set("file_format_name", fileFormatName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", futureFileFormatsEnabled)
-	if err != nil {
+	if err := d.Set("on_future", futureFileFormatsEnabled); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -240,15 +234,15 @@ func UpdateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// first revoke
-	err = deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{})
-	if err != nil {
+	if err := deleteGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+	); err != nil {
 		return err
 	}
 	// then add
-	err = createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{})
-	if err != nil {
+	if err := createGenericGrantRolesAndShares(
+		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+	); err != nil {
 		return err
 	}
 

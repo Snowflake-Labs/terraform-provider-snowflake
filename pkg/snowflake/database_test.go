@@ -12,13 +12,13 @@ import (
 
 func TestQualifiedNameDatabase(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`"test"`, db.QualifiedName())
 }
 
 func TestCreateDatabase(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 
 	r.Equal(`CREATE DATABASE "test"`, db.Create())
 
@@ -56,63 +56,63 @@ func TestDatabaseCreateFromReplica(t *testing.T) {
 
 func TestDatabaseRename(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("db1")
+	db := snowflake.NewDatabaseBuilder("db1")
 
 	r.Equal(`ALTER DATABASE "db1" RENAME TO "db2"`, db.Rename("db2"))
 }
 
 func TestDatabaseSwap(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`ALTER DATABASE "test" SWAP WITH "target"`, db.Swap("target"))
 }
 
 func TestDatabaseChangeComment(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`ALTER DATABASE "test" SET COMMENT = 'test\' db'`, db.ChangeComment("test' db"))
 }
 
 func TestDatabaseRemoveComment(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`ALTER DATABASE "test" UNSET COMMENT`, db.RemoveComment())
 }
 
 func TestDatabaseChangeDataRetentionDays(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`ALTER DATABASE "test" SET DATA_RETENTION_TIME_IN_DAYS = 22`, db.ChangeDataRetentionDays(22))
 }
 
 func TestDatabaseRemoveDataRetentionDays(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`ALTER DATABASE "test" UNSET DATA_RETENTION_TIME_IN_DAYS`, db.RemoveDataRetentionDays())
 }
 
 func TestDatabaseDrop(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("db1")
+	db := snowflake.NewDatabaseBuilder("db1")
 
 	r.Equal(`DROP DATABASE "db1"`, db.Drop())
 }
 
 func TestDatabaseUndrop(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`UNDROP DATABASE "test"`, db.Undrop())
 }
 
 func TestDatabaseUse(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("test")
+	db := snowflake.NewDatabaseBuilder("test")
 	r.Equal(`USE DATABASE "test"`, db.Use())
 }
 
 func TestDatabaseShow(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("db1")
+	db := snowflake.NewDatabaseBuilder("db1")
 
 	r.Equal("SHOW DATABASES LIKE 'db1'", db.Show())
 }
@@ -131,22 +131,24 @@ func TestListDatabases(t *testing.T) {
 
 func TestEnableReplicationAccounts(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("good_name")
-	r.Equal(db.EnableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1`)
+	db := snowflake.NewDatabaseBuilder("good_name")
+	expected := `ALTER DATABASE "good_name" ENABLE REPLICATION TO ACCOUNTS account1`
+	r.Equal(expected, db.EnableReplicationAccounts("good_name", "account1"))
 }
 
 func TestDisableReplicationAccounts(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("good_name")
-	r.Equal(db.DisableReplicationAccounts("good_name", "account1"), `ALTER DATABASE "good_name" DISABLE REPLICATION TO ACCOUNTS account1`)
+	db := snowflake.NewDatabaseBuilder("good_name")
+	expected := `ALTER DATABASE "good_name" DISABLE REPLICATION TO ACCOUNTS account1`
+	r.Equal(expected, db.DisableReplicationAccounts("good_name", "account1"))
 }
 
 func TestGetRemovedAccountsFromReplicationConfiguration(t *testing.T) {
 	r := require.New(t)
-	db := snowflake.Database("good_name")
+	db := snowflake.NewDatabaseBuilder("good_name")
 
 	oldAccounts := []interface{}{"acc1", "acc2", "acc3"}
 	newAccounts := []interface{}{"acc1", "acc2"}
 
-	r.Equal(db.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts), []interface{}{"acc3"})
+	r.Equal([]interface{}{"acc3"}, db.GetRemovedAccountsFromReplicationConfiguration(oldAccounts, newAccounts))
 }

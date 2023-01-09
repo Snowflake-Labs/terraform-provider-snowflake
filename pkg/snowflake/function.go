@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	pe "github.com/pkg/errors"
 )
 
 // FunctionBuilder abstracts the creation of Function.
@@ -145,7 +144,7 @@ func (pb *FunctionBuilder) ArgTypes() []string {
 //   - DESCRIBE
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/user-defined-functions.html)
-func Function(db, schema, name string, argTypes []string) *FunctionBuilder {
+func NewFunctionBuilder(db, schema, name string, argTypes []string) *FunctionBuilder {
 	return &FunctionBuilder{
 		name:          name,
 		db:            db,
@@ -243,8 +242,8 @@ func (pb *FunctionBuilder) Rename(newName string) (string, error) {
 }
 
 // ChangeComment returns the SQL query that will update the comment on the function.
-func (vb *FunctionBuilder) ChangeComment(c string) (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *FunctionBuilder) ChangeComment(c string) (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -253,8 +252,8 @@ func (vb *FunctionBuilder) ChangeComment(c string) (string, error) {
 }
 
 // RemoveComment returns the SQL query that will remove the comment on the function.
-func (vb *FunctionBuilder) RemoveComment() (string, error) {
-	qn, err := vb.QualifiedName()
+func (pb *FunctionBuilder) RemoveComment() (string, error) {
+	qn, err := pb.QualifiedName()
 	if err != nil {
 		return "", err
 	}
@@ -286,7 +285,7 @@ func (pb *FunctionBuilder) Drop() (string, error) {
 	return fmt.Sprintf(`DROP FUNCTION %v`, qn), nil
 }
 
-type function struct {
+type Function struct {
 	Comment sql.NullString `db:"description"`
 	// Snowflake returns is_secure in the show function output, but it is irrelevant
 	Name         sql.NullString `db:"name"`
@@ -296,17 +295,17 @@ type function struct {
 	Arguments    sql.NullString `db:"arguments"`
 }
 
-type functionDescription struct {
+type FunctionDescription struct {
 	Property sql.NullString `db:"property"`
 	Value    sql.NullString `db:"value"`
 }
 
 // ScanFunctionDescription reads through the rows with property and value columns
 // and returns a slice of functionDescription structs.
-func ScanFunctionDescription(rows *sqlx.Rows) ([]functionDescription, error) {
-	pdsl := []functionDescription{}
+func ScanFunctionDescription(rows *sqlx.Rows) ([]FunctionDescription, error) {
+	pdsl := []FunctionDescription{}
 	for rows.Next() {
-		pd := functionDescription{}
+		pd := FunctionDescription{}
 		err := rows.StructScan(&pd)
 		if err != nil {
 			return nil, err
@@ -318,10 +317,10 @@ func ScanFunctionDescription(rows *sqlx.Rows) ([]functionDescription, error) {
 
 // SHOW FUNCTION can return more than one item because of function names overloading
 // https://docs.snowflake.com/en/sql-reference/sql/show-functions.html
-func ScanFunctions(rows *sqlx.Rows) ([]*function, error) {
-	var pcs []*function
+func ScanFunctions(rows *sqlx.Rows) ([]*Function, error) {
+	var pcs []*Function
 	for rows.Next() {
-		r := &function{}
+		r := &Function{}
 		err := rows.StructScan(r)
 		if err != nil {
 			return nil, err
@@ -331,19 +330,28 @@ func ScanFunctions(rows *sqlx.Rows) ([]*function, error) {
 	return pcs, rows.Err()
 }
 
-func ListFunctions(databaseName string, schemaName string, db *sql.DB) ([]function, error) {
-	stmt := fmt.Sprintf(`SHOW USER FUNCTIONS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
+type UserFunctions struct {
+	Name        sql.NullString `db:"name"`
+	Arguments   sql.NullString `db:"arguments"`
+	Description sql.NullString `db:"description"`
+	Language    sql.NullString `db:"language"`
+}
+
+func ListUserFunctions(databaseName string, schemaName string, db *sql.DB) ([]UserFunctions, error) {
+	stmt := fmt.Sprintf(`SHOW USER FUNCTIONS IN SCHEMA "%v"."%v"`, databaseName, schemaName)
 	rows, err := Query(db, stmt)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	dbs := []function{}
-	err = sqlx.StructScan(rows, &dbs)
-	if err == sql.ErrNoRows {
-		log.Println("[DEBUG] no functions found")
-		return nil, nil
+	dbs := []UserFunctions{}
+	if err := sqlx.StructScan(rows, &dbs); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("[DEBUG] no functions found")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	return dbs, pe.Wrapf(err, "unable to scan row for %s", stmt)
+	return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 }

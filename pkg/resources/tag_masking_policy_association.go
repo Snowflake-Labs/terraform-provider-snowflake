@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -51,8 +51,7 @@ func (ti *attachmentID) String() (string, error) {
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = tagAttachmentPolicyIDDelimiter
 	dataIdentifiers := [][]string{{ti.TagDatabaseName, ti.TagSchemaName, ti.TagName, ti.MaskingPolicyDatabaseName, ti.MaskingPolicySchemaName, ti.MaskingPolicyName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
+	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
 		return "", err
 	}
 	strTagID := strings.TrimSpace(buf.String())
@@ -123,13 +122,12 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	mpName := mpIDStruct.MaskingPolicyName
 
 	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
-	builder := snowflake.Tag(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
 
 	q := builder.AddMaskingPolicy()
 
-	err := snowflake.Exec(db, q)
-	if err != nil {
-		return errors.Wrapf(err, "error attaching masking policy %v to tag %v", mpName, tagName)
+	if err := snowflake.Exec(db, q); err != nil {
+		return fmt.Errorf("error attaching masking policy %v to tag %v", mpName, tagName)
 	}
 
 	mpAttachmentID := &attachmentID{
@@ -165,11 +163,11 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	mpName := attachementID.MaskingPolicyName
 
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
-	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] attached policy (%s) not found", d.Id())
 		d.SetId("")
@@ -201,15 +199,12 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	err = d.Set("tag_id", tagIDString)
 
-	if err != nil {
+	if err := d.Set("tag_id", tagIDString); err != nil {
 		return err
 	}
 
-	err = d.Set("masking_policy_id", mpIDString)
-
-	if err != nil {
+	if err := d.Set("masking_policy_id", mpIDString); err != nil {
 		return err
 	}
 
@@ -233,11 +228,10 @@ func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 
-	builder := snowflake.Tag(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
-	err = snowflake.Exec(db, builder.RemoveMaskingPolicy())
-	if err != nil {
-		return errors.Wrapf(err, "error unattaching masking policy for %v", d.Id())
+	if err := snowflake.Exec(db, builder.RemoveMaskingPolicy()); err != nil {
+		return fmt.Errorf("error unattaching masking policy for %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

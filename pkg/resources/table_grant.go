@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pkg/errors"
 )
 
 var validTablePrivileges = NewPrivilegeSet(
@@ -121,11 +122,11 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true.")
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	if (tableName == "") && !onFuture {
-		return errors.New("table_name must be set unless on_future is true.")
+		return errors.New("table_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
@@ -135,8 +136,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		builder = snowflake.TableGrant(dbName, schemaName, tableName)
 	}
 
-	err := createGenericGrant(d, meta, builder)
-	if err != nil {
+	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
@@ -172,32 +172,26 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	tableName := grantID.ObjectName
 	priv := grantID.Privilege
 
-	err = d.Set("database_name", dbName)
-	if err != nil {
+	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
-	err = d.Set("schema_name", schemaName)
-	if err != nil {
+	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
 	onFuture := false
 	if tableName == "" {
 		onFuture = true
 	}
-	err = d.Set("table_name", tableName)
-	if err != nil {
+	if err := d.Set("table_name", tableName); err != nil {
 		return err
 	}
-	err = d.Set("on_future", onFuture)
-	if err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	err = d.Set("privilege", priv)
-	if err != nil {
+	if err := d.Set("privilege", priv); err != nil {
 		return err
 	}
-	err = d.Set("with_grant_option", grantID.GrantOption)
-	if err != nil {
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 

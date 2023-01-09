@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -34,10 +35,10 @@ func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) erro
 	db := meta.(*sql.DB)
 	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)
 
-	sel := snowflake.SystemGetAWSSNSIAMPolicy(awsSNSTopicArn).Select()
+	sel := snowflake.NewSystemGetAWSSNSIAMPolicyBuilder(awsSNSTopicArn).Select()
 	row := snowflake.QueryRow(db, sel)
 	policy, err := snowflake.ScanAWSSNSIAMPolicy(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] system_get_aws_sns_iam_policy (%s) not found", d.Id())
 		d.SetId("")
