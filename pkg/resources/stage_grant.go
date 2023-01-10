@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,7 +26,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:      true,
 		Description: "The name of the schema containing the current stage on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -92,18 +94,32 @@ func StageGrant() *TerraformGrantResource {
 
 // CreateStageGrant implements schema.CreateFunc.
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
-	var stageName string
+	var (
+		schemaName string
+		stageName string
+	)
+
 	if name, ok := d.GetOk("stage_name"); ok {
 		stageName = name.(string)
 	}
+	if name, ok := d.GetOk("schema_name"); ok {
+		schemaName = name.(string)
+	}
+
 	dbName := d.Get("database_name").(string)
-	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
-	futureStages := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true")
+	}
+	if (stageName == "") && !onFuture {
+		return errors.New("stage_name must be set unless on_future is true")
+	}
+
 	var builder snowflake.GrantBuilder
-	if futureStages {
+	if onFuture {
 		builder = snowflake.FutureStageGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StageGrant(dbName, schemaName, stageName)
@@ -146,14 +162,13 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	futureStagesEnabled := false
-	if stageName == "" {
-		futureStagesEnabled = true
-	}
+
+	onFuture := (stageName == "")
+	
 	if err := d.Set("stage_name", stageName); err != nil {
 		return err
 	}
-	if err := d.Set("on_future", futureStagesEnabled); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", priv); err != nil {
@@ -164,13 +179,13 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureStagesEnabled {
+	if onFuture {
 		builder = snowflake.FutureStageGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StageGrant(dbName, schemaName, stageName)
 	}
 
-	return readGenericGrant(d, meta, stageGrantSchema, builder, futureStagesEnabled, validStagePrivileges)
+	return readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, validStagePrivileges)
 }
 
 // DeleteStageGrant implements schema.DeleteFunc.
@@ -183,10 +198,10 @@ func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
 
-	futureStages := (stageName == "")
+	onFuture := (stageName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureStages {
+	if onFuture {
 		builder = snowflake.FutureStageGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StageGrant(dbName, schemaName, stageName)
@@ -218,10 +233,10 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	stageName := grantID.ObjectName
-	futureStages := (stageName == "")
+	onFuture := (stageName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureStages {
+	if onFuture {
 		builder = snowflake.FutureStageGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StageGrant(dbName, schemaName, stageName)
