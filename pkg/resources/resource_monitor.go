@@ -25,7 +25,6 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"notify_users": {
 		Type:        schema.TypeSet,
 		Optional:    true,
-		ForceNew:    true,
 		Description: "Specifies the list of users to receive email notifications on resource monitors.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
@@ -60,35 +59,32 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to suspend all warehouses.",
-		ForceNew:    true,
 	},
 	"suspend_immediate_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
-		ForceNew:    true,
 	},
 	"notify_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
 		Optional:    true,
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
-		ForceNew:    true,
 	},
 	"set_for_account": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		ConflictsWith: []string{"warehouses"},
+		Description:   "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Default:       false,
 	},
 	"warehouses": {
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Description: "A list of warehouses to apply the resource monitor to.",
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		ForceNew:    true,
+		Type:          schema.TypeSet,
+		Optional:      true,
+		ConflictsWith: []string{"set_for_account"},
+		Description:   "A list of warehouses to apply the resource monitor to.",
+		Elem:          &schema.Schema{Type: schema.TypeString},
 	},
 }
 
@@ -107,7 +103,7 @@ func ResourceMonitor() *schema.Resource {
 	}
 }
 
-// CreateResourceMonitor implents schema.CreateFunc.
+// CreateResourceMonitor implements schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -283,36 +279,95 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	return out, nil
 }
 
+// UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
 
-	stmt := snowflake.NewResourceMonitorBuilder(id).Alter()
+	ub := snowflake.NewResourceMonitorBuilder(id).Alter()
 	var runSetStatement bool
+
+	if d.HasChange("notify_users") {
+		runSetStatement = true
+		ub.SetStringList(`NOTIFY_USERS`, expandStringList(d.Get("notify_users").(*schema.Set).List()))
+	}
 
 	if d.HasChange("credit_quota") {
 		runSetStatement = true
-		stmt.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
+		ub.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
 	}
 
 	if d.HasChange("frequency") {
 		runSetStatement = true
-		stmt.SetString(`FREQUENCY`, d.Get("frequency").(string))
+		ub.SetString(`FREQUENCY`, d.Get("frequency").(string))
 	}
 
 	if d.HasChange("start_timestamp") {
 		runSetStatement = true
-		stmt.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
+		ub.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
 	}
 
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
-		stmt.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
+		ub.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
+	}
+
+	// Set triggers
+	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
+	for _, t := range sTrigs {
+		runSetStatement = true
+		ub.SuspendAt(t)
+	}
+	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
+	for _, t := range siTrigs {
+		runSetStatement = true
+		ub.SuspendImmediatelyAt(t)
+	}
+	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
+	for _, t := range nTrigs {
+		runSetStatement = true
+		ub.NotifyAt(t)
 	}
 
 	if runSetStatement {
-		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+		if err := snowflake.Exec(db, ub.Statement()); err != nil {
 			return fmt.Errorf("error updating resource monitor %v\n%w", id, err)
+		}
+	}
+
+	// Remove from account
+	if d.HasChange("set_for_account") && !d.Get("set_for_account").(bool) {
+		if err := snowflake.Exec(db, ub.UnsetOnAccount()); err != nil {
+			return fmt.Errorf("error unsetting resource monitor %v on account err = %w", id, err)
+		}
+	}
+
+	// Remove from all old warehouses
+	if d.HasChange("warehouses") {
+		oldV, v := d.GetChange("warehouses")
+		res := intersectionAAndNotB(oldV.(*schema.Set).List(), v.(*schema.Set).List())
+		for _, w := range res {
+			if err := snowflake.Exec(db, ub.UnsetOnWarehouse(w)); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
+			}
+		}
+	}
+
+	// Add to account
+	if d.HasChange("set_for_account") && d.Get("set_for_account").(bool) {
+		if err := snowflake.Exec(db, ub.SetOnAccount()); err != nil {
+			return fmt.Errorf("error setting resource monitor %v on account err = %w", id, err)
+		}
+	}
+
+	// Add to all new warehouses
+	if d.HasChange("warehouses") {
+		oldV, v := d.GetChange("warehouses")
+		res := intersectionAAndNotB(v.(*schema.Set).List(), oldV.(*schema.Set).List())
+		for _, w := range res {
+			if err := snowflake.Exec(db, ub.SetOnWarehouse(w)); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
+			}
 		}
 	}
 
