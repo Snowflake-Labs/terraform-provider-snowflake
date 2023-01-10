@@ -14,13 +14,16 @@ type TagAssociationTest struct {
 
 func TestTagAssociation(t *testing.T) {
 	tests := []TagAssociationTest{
-		{Builder: TagAssociation("test_db|test_schema|sensitive").WithObjectIdentifier(`"test_schema"."test_table"`).WithObjectType("TABLE").WithTagValue("true"),
+		{Builder: NewTagAssociationBuilder("test_db|test_schema|sensitive").WithObjectIdentifier(`"test_schema"."test_table"`).WithObjectType("TABLE").WithTagValue("true"),
 			ExpectedCreate: `ALTER TABLE "test_schema"."test_table" SET TAG "test_db"."test_schema"."sensitive" = 'true'`,
 			ExpectedDrop:   `ALTER TABLE "test_schema"."test_table" UNSET TAG "test_db"."test_schema"."sensitive"`,
 		},
-		{Builder: TagAssociation("test_db|test_schema|sensitive").WithObjectIdentifier(`"test_schema"."test_table.important"`).WithObjectType("COLUMN").WithTagValue("true"),
+		{Builder: NewTagAssociationBuilder("test_db|test_schema|sensitive").WithObjectIdentifier(`"test_schema"."test_table.important"`).WithObjectType("COLUMN").WithTagValue("true"),
 			ExpectedCreate: `ALTER TABLE "test_db"."test_schema"."test_table" ALTER COLUMN important SET TAG "test_db"."test_schema"."sensitive" = 'true'`,
 			ExpectedDrop:   `ALTER TABLE "test_db"."test_schema"."test_table" ALTER COLUMN important UNSET TAG "test_db"."test_schema"."sensitive"`},
+		{Builder: NewTagAssociationBuilder("OPERATION_DB|SECURITY|PII_2").WithObjectIdentifier(`"SECURITY"."test_table.important"`).WithObjectType("COLUMN").WithTagValue("true"),
+			ExpectedCreate: `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" ALTER COLUMN important SET TAG "OPERATION_DB"."SECURITY"."PII_2" = 'true'`,
+			ExpectedDrop:   `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" ALTER COLUMN important UNSET TAG "OPERATION_DB"."SECURITY"."PII_2"`},
 	}
 	for _, testCase := range tests {
 		r := require.New(t)
@@ -30,14 +33,14 @@ func TestTagAssociation(t *testing.T) {
 }
 
 type TableColumnNameTest struct {
-	Builder                               TagAssociationBuilder
+	Builder                               *TagAssociationBuilder
 	expectedTableName, expectedColumnName string
 }
 
 func TestTableColumnName(t *testing.T) {
 	tests := []TableColumnNameTest{
-		{TagAssociationBuilder{objectIdentifier: `"a"."b"."c"`, objectType: "table"}, "c", ""},
-		{TagAssociationBuilder{objectIdentifier: `"db"."schema"."table.column"`, objectType: "column"}, "table", "column"},
+		{NewTagAssociationBuilder("a|b|sensitive").WithObjectIdentifier(`"a"."b"."c"`).WithObjectType("TABLE"), `"a"."b"."c"`, ""},
+		{NewTagAssociationBuilder("db|schema|sensitive").WithObjectIdentifier(`"db"."schema"."table.column"`).WithObjectType("COLUMN"), `"db"."schema"."table"`, "column"},
 	}
 	for _, testCase := range tests {
 		r := require.New(t)
