@@ -93,14 +93,14 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		pipeName   string
 		schemaName string
 	)
+
 	if name, ok := d.GetOk("pipe_name"); ok {
 		pipeName = name.(string)
 	}
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)
-	} else {
-		schemaName = ""
 	}
+
 	dbName := d.Get("database_name").(string)
 	priv := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
@@ -108,10 +108,10 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true.")
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 	if (pipeName == "") && !onFuture {
-		return errors.New("pipe_name must be set unless on_future is true.")
+		return errors.New("pipe_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
