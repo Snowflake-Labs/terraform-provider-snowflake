@@ -73,16 +73,18 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
 	},
 	"set_for_account": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
-		Default:     false,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		ConflictsWith: []string{"warehouses"},
+		Description:   "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Default:       false,
 	},
 	"warehouses": {
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Description: "A list of warehouses to apply the resource monitor to.",
-		Elem:        &schema.Schema{Type: schema.TypeString},
+		Type:          schema.TypeSet,
+		Optional:      true,
+		ConflictsWith: []string{"set_for_account"},
+		Description:   "A list of warehouses to apply the resource monitor to.",
+		Elem:          &schema.Schema{Type: schema.TypeString},
 	},
 }
 
