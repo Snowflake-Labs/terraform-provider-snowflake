@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.55.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.54.0...v0.55.0) (2023-01-10)
+
+
+### Features
+
+* add in more functionality for UpdateResourceMonitor  ([#1456](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1456)) ([2df570f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2df570f0c3271534a37b0cb61b7f4b491081baf7))
+
+
+### Misc
+
+* **deps:** bump golang.org/x/crypto from 0.4.0 to 0.5.0 ([#1454](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1454)) ([ed6bfe0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ed6bfe07930e5703036ada816845176d46f5623c))
+* **deps:** bump golang.org/x/tools from 0.4.0 to 0.5.0 ([#1455](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1455)) ([ff01970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ff019702fdc1ef810bb94533489b89a956f09ef4))
+
+
+### BugFixes
+
+* 0.55 fix ([#1465](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1465)) ([8cb3370](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8cb337048ec5c4a52245feb1b9556fd845d83278))
+* add permissions ([#1464](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1464)) ([e2d249a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e2d249ae1466e05dad2080f05123e0de66fabcf6))
+* interval for failover groups ([#1448](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1448)) ([bd1d3cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bd1d3cc57f72c7774715f1d92a955536d55fb758))
+* saml2_sign_request and saml2_force_authn cast type ([#1452](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1452)) ([f8cecd7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f8cecd7ca45aabec78fd18d8aa220db7eb34b9e0))
+* schema_name is optional to enable future pipe grant ([#1424](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1424)) ([5d966fd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d966fd8624fa3208cebae3d7b32c1b59bdcfd4c))
+
 ## [0.34.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.54.0...v0.34.0) (2022-12-23)
 
 
