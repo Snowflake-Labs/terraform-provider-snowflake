@@ -26,7 +26,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional:      true,
+		Optional:    true,
 		Description: "The name of the schema containing the current stage on which to grant privileges.",
 		ForceNew:    true,
 	},
@@ -96,7 +96,7 @@ func StageGrant() *TerraformGrantResource {
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	var (
 		schemaName string
-		stageName string
+		stageName  string
 	)
 
 	if name, ok := d.GetOk("stage_name"); ok {
@@ -164,7 +164,7 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	onFuture := (stageName == "")
-	
+
 	if err := d.Set("stage_name", stageName); err != nil {
 		return err
 	}
