@@ -25,7 +25,7 @@ const (
 	privilegeReferenceUsage              Privilege = "REFERENCE_USAGE"
 	privilegeUsage                       Privilege = "USAGE"
 	privilegeWrite                       Privilege = "WRITE"
-	privilegeCreateCredential           Privilege = "CREATE CREDENTIAL"
+	privilegeCreateCredential            Privilege = "CREATE CREDENTIAL"
 	privilegeCreateFailoverGroup         Privilege = "CREATE FAILOVER GROUP"
 	privilegeCreateTable                 Privilege = "CREATE TABLE"
 	privilegeCreateTag                   Privilege = "CREATE TAG"
