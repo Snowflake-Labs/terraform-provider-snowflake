@@ -63,6 +63,13 @@ func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
 		return tb.objectIdentifier, ""
 	} else {
 		splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
+		if len(splObjIdentifier) == 3 {
+			// handle case where schema.table.col is used
+			tableName := strings.ReplaceAll(splObjIdentifier[1], "\"", "")
+			columnName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
+			return fmt.Sprintf(`"%s"."%s"`, tb.schemaName, tableName), columnName
+		}
+		// handle case where db.schema.table.col is used
 		tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
 		columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
 		return fmt.Sprintf(`"%s"."%s"."%s"`, tb.databaseName, tb.schemaName, tableName), columnName
