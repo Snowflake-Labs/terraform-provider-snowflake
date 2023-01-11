@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.55.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.55.0...v0.55.1) (2023-01-11)
+
+
+### BugFixes
+
+* resource snowflake_resource_monitor behavior conflict from provider 0.54.0 to 0.55.0 ([#1468](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1468)) ([8ce0c53](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8ce0c533ec5d81273df20be2126b278ca61a59f6))
+
 ## [0.55.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.54.0...v0.55.0) (2023-01-10)
 
 
