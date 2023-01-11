@@ -73,18 +73,16 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
 	},
 	"set_for_account": {
-		Type:          schema.TypeBool,
-		Optional:      true,
-		ConflictsWith: []string{"warehouses"},
-		Description:   "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
-		Default:       false,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Default:     false,
 	},
 	"warehouses": {
-		Type:          schema.TypeSet,
-		Optional:      true,
-		ConflictsWith: []string{"set_for_account"},
-		Description:   "A list of warehouses to apply the resource monitor to.",
-		Elem:          &schema.Schema{Type: schema.TypeString},
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Description: "A list of warehouses to apply the resource monitor to.",
+		Elem:        &schema.Schema{Type: schema.TypeString},
 	},
 }
 
@@ -103,10 +101,26 @@ func ResourceMonitor() *schema.Resource {
 	}
 }
 
+func checkAccountAgainstWarehouses(d *schema.ResourceData, name string) error {
+	account := d.Get("set_for_account").(bool)
+	v := d.Get("warehouses")
+
+	if len(v.(*schema.Set).List()) > 0 && account {
+		return fmt.Errorf("error creating resource monitor %v on account err = set_for_account cannot be true and give warehouses", name)
+	}
+	return nil
+}
+
 // CreateResourceMonitor implements schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
+
+	check := checkAccountAgainstWarehouses(d, name)
+
+	if check != nil {
+		return check
+	}
 
 	cb := snowflake.NewResourceMonitorBuilder(name).Create()
 	// Set optionals
@@ -283,6 +297,12 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
+
+	check := checkAccountAgainstWarehouses(d, id)
+
+	if check != nil {
+		return check
+	}
 
 	ub := snowflake.NewResourceMonitorBuilder(id).Alter()
 	var runSetStatement bool
