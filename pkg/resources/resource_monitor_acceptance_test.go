@@ -50,22 +50,36 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 
 func resourceMonitorConfig(accName string) string {
 	return fmt.Sprintf(`
+resource "snowflake_warehouse" "warehouse" {
+  name           = "test"
+  comment        = "foo"
+  warehouse_size = "small"
+}
+
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
 	set_for_account = false
   	notify_triggers = [40]
+	warehouses      = [snowflake_warehouse.warehouse.id]
 }
 `, accName)
 }
 
 func resourceMonitorConfig2(accName string) string {
 	return fmt.Sprintf(`
+resource "snowflake_warehouse" "warehouse" {
+  name           = "test"
+  comment        = "foo"
+  warehouse_size = "small"
+}
+
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 150
 	set_for_account = true
 	notify_triggers = [50]
+	warehouses      = []
 }
 `, accName)
 }
