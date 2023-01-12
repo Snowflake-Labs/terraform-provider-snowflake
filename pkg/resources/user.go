@@ -161,20 +161,17 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 
 func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
-
 	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
 	// requires the "MANAGE GRANTS" global privilege
-	stmt := snowflake.NewUserBuilder(id).Describe()
+	stmt := snowflake.NewUserBuilder(d.Id()).Describe()
 	rows, err := snowflake.Query(db, stmt)
-
-	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
+		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
+			// If not found, mark resource to be removed from statefile during apply or refresh
+			log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -182,29 +179,19 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = d.Set("name", u.Name.String)
-	if err != nil {
+	if err = d.Set("name", u.Name.String); err != nil {
 		return err
 	}
-
-	err = d.Set("comment", u.Comment.String)
-	if err != nil {
+	if err = d.Set("comment", u.Comment.String); err != nil {
 		return err
 	}
-
-	err = d.Set("login_name", u.LoginName.String)
-	if err != nil {
+	if err = d.Set("login_name", u.LoginName.String); err != nil {
 		return err
 	}
-
-	err = d.Set("disabled", u.Disabled)
-	if err != nil {
+	if err = d.Set("disabled", u.Disabled); err != nil {
 		return err
 	}
-
-	err = d.Set("default_role", u.DefaultRole.String)
-	if err != nil {
+	if err = d.Set("default_role", u.DefaultRole.String); err != nil {
 		return err
 	}
 
@@ -212,44 +199,31 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	if len(u.DefaultSecondaryRoles.String) > 0 {
 		defaultSecondaryRoles = strings.Split(u.DefaultSecondaryRoles.String, ",")
 	}
-	err = d.Set("default_secondary_roles", defaultSecondaryRoles)
-	if err != nil {
+	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 		return err
 	}
-
-	err = d.Set("default_namespace", u.DefaultNamespace.String)
-	if err != nil {
+	if err = d.Set("default_namespace", u.DefaultNamespace.String); err != nil {
 		return err
 	}
-
-	err = d.Set("default_warehouse", u.DefaultWarehouse.String)
-	if err != nil {
+	if err = d.Set("default_warehouse", u.DefaultWarehouse.String); err != nil {
 		return err
 	}
-
-	err = d.Set("has_rsa_public_key", u.HasRsaPublicKey)
-	if err != nil {
+	if err = d.Set("has_rsa_public_key", u.HasRsaPublicKey); err != nil {
 		return err
 	}
-
-	err = d.Set("email", u.Email.String)
-	if err != nil {
+	if err = d.Set("email", u.Email.String); err != nil {
 		return err
 	}
-
-	err = d.Set("display_name", u.DisplayName.String)
-	if err != nil {
+	if err = d.Set("display_name", u.DisplayName.String); err != nil {
 		return err
 	}
-
-	err = d.Set("first_name", u.FirstName.String)
-	if err != nil {
+	if err = d.Set("first_name", u.FirstName.String); err != nil {
 		return err
 	}
-
-	err = d.Set("last_name", u.LastName.String)
-
-	return err
+	if err = d.Set("last_name", u.LastName.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateUser(d *schema.ResourceData, meta interface{}) error {
