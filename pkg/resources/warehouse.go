@@ -233,10 +233,12 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor)
-	if err != nil {
-		return err
+	if w.EnableQueryAcceleration {
+		if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
+			return err
+		}
 	}
+
 	log.Printf("[DEBUG] warehouse type is: %s", w.WarehouseType)
 	if w.WarehouseType == "STANDARD" || w.WarehouseType == "SNOWPARK-OPTIMIZED" {
 		err = d.Set("warehouse_type", w.WarehouseType)
