@@ -32,7 +32,6 @@ resource "snowflake_pipe_grant" "grant" {
 ### Required
 
 - `database_name` (String) The name of the database containing the current or future pipes on which to grant privileges.
-- `schema_name` (String) The name of the schema containing the current or future pipes on which to grant privileges.
 
 ### Optional
 
@@ -41,6 +40,7 @@ resource "snowflake_pipe_grant" "grant" {
 - `pipe_name` (String) The name of the pipe on which to grant privileges immediately (only valid if on_future is false).
 - `privilege` (String) The privilege to grant on the current or future pipe.
 - `roles` (Set of String) Grants privilege to these roles.
+- `schema_name` (String) The name of the schema containing the current or future pipes on which to grant privileges.
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only
