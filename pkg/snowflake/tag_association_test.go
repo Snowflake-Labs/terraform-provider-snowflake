@@ -21,12 +21,12 @@ func TestTagAssociation(t *testing.T) {
 		},
 		{
 			Builder:        NewTagAssociationBuilder("test_db|test_schema|sensitive").WithObjectIdentifier(`"test_db"."test_schema"."test_table.important"`).WithObjectType("COLUMN").WithTagValue("true"),
-			ExpectedCreate: `ALTER TABLE "test_db"."test_schema"."test_table" ALTER COLUMN important SET TAG "test_db"."test_schema"."sensitive" = 'true'`,
-			ExpectedDrop:   `ALTER TABLE "test_db"."test_schema"."test_table" ALTER COLUMN important UNSET TAG "test_db"."test_schema"."sensitive"`},
+			ExpectedCreate: `ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN important SET TAG "test_db"."test_schema"."sensitive" = 'true'`,
+			ExpectedDrop:   `ALTER TABLE "test_db"."test_schema"."test_table" MODIFY COLUMN important UNSET TAG "test_db"."test_schema"."sensitive"`},
 		{
 			Builder:        NewTagAssociationBuilder("OPERATION_DB|SECURITY|PII_2").WithObjectIdentifier(`"OPERATION_DB"."SECURITY"."test_table.important"`).WithObjectType("COLUMN").WithTagValue("true"),
-			ExpectedCreate: `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" ALTER COLUMN important SET TAG "OPERATION_DB"."SECURITY"."PII_2" = 'true'`,
-			ExpectedDrop:   `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" ALTER COLUMN important UNSET TAG "OPERATION_DB"."SECURITY"."PII_2"`},
+			ExpectedCreate: `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" MODIFY COLUMN important SET TAG "OPERATION_DB"."SECURITY"."PII_2" = 'true'`,
+			ExpectedDrop:   `ALTER TABLE "OPERATION_DB"."SECURITY"."test_table" MODIFY COLUMN important UNSET TAG "OPERATION_DB"."SECURITY"."PII_2"`},
 	}
 	for _, testCase := range tests {
 		r := require.New(t)
