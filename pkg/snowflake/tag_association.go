@@ -108,7 +108,13 @@ func (tb *TagAssociationBuilder) Drop() string {
 
 // Show returns the SQL query that will show the current tag value on an object.
 func (tb *TagAssociationBuilder) Show() string {
-	return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
+	if strings.ToUpper(tb.objectType) == "COLUMN" {
+		fqTableName, columnName := tb.GetTableAndColumnName()
+		fqColumnName := fmt.Sprintf(`%v."%v"`, fqTableName, columnName)
+		return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, fqColumnName, tb.objectType)
+	} else {
+		return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
+	}
 }
 
 func ScanTagAssociation(row *sqlx.Row) (*TagAssociation, error) {
