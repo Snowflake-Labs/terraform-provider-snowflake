@@ -77,13 +77,13 @@ var functionGrantSchema = map[string]*schema.Schema{
 	},
 	"roles": {
 		Type:        schema.TypeSet,
-		Required: true,
+		Required:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Description: "Grants privilege to these roles.",
 	},
 	"schema_name": {
 		Type:        schema.TypeString,
-		Optional: true,
+		Optional:    true,
 		Description: "The name of the schema containing the current or future functions on which to grant privileges.",
 		ForceNew:    true,
 	},
