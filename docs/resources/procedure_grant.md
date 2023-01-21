@@ -44,7 +44,7 @@ resource "snowflake_procedure_grant" "grant" {
 ### Required
 
 - `database_name` (String) The name of the database containing the current or future procedures on which to grant privileges.
-- `schema_name` (String) The name of the schema containing the current or future procedures on which to grant privileges.
+- `roles` (Set of String) Grants privilege to these roles.
 
 ### Optional
 
@@ -54,7 +54,7 @@ resource "snowflake_procedure_grant" "grant" {
 - `privilege` (String) The privilege to grant on the current or future procedure.
 - `procedure_name` (String) The name of the procedure on which to grant privileges immediately (only valid if on_future is false).
 - `return_type` (String) The return type of the procedure (must be present if procedure_name is present)
-- `roles` (Set of String) Grants privilege to these roles.
+- `schema_name` (String) The name of the schema containing the current or future procedures on which to grant privileges.
 - `shares` (Set of String) Grants privilege to these shares (only valid if on_future is false).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
