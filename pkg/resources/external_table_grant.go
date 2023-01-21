@@ -15,22 +15,30 @@ var validExternalTablePrivileges = NewPrivilegeSet(
 )
 
 var externalTableGrantSchema = map[string]*schema.Schema{
+	"database_name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The name of the database containing the current or future external tables on which to grant privileges.",
+		ForceNew:    true,
+	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
 	"external_table_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The name of the external table on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
-	"schema_name": {
-		Type:        schema.TypeString,
+	"on_future": {
+		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "The name of the schema containing the current or future external tables on which to grant privileges.",
-		ForceNew:    true,
-	},
-	"database_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the database containing the current or future external tables on which to grant privileges.",
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.",
+		Default:     false,
 		ForceNew:    true,
 	},
 	"privilege": {
@@ -43,9 +51,15 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	},
 	"roles": {
 		Type:        schema.TypeSet,
+		Required:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
 		Description: "Grants privilege to these roles.",
+	},
+	"schema_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the schema containing the current or future external tables on which to grant privileges.",
+		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
@@ -53,24 +67,10 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is false).",
 	},
-	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
-	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
-		Default:     false,
-		ForceNew:    true,
-	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
 		ForceNew:    true,
 	},
@@ -103,22 +103,22 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
-	futureExternalTables := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (externalTableName == "") && !futureExternalTables {
+	if (externalTableName == "") && !onFuture {
 		return errors.New("external_table_name must be set unless on_future is true")
 	}
-	if (externalTableName != "") && futureExternalTables {
+	if (externalTableName != "") && onFuture {
 		return errors.New("external_table_name must be empty if on_future is true")
 	}
-	if (schemaName == "") && !futureExternalTables {
-		return errors.New("schema_name must be set when on_future is false")
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureExternalTables {
+	if onFuture {
 		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
@@ -162,14 +162,14 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	futureExternalTablesEnabled := false
+	onFuture := false
 	if externalTableName == "" {
-		futureExternalTablesEnabled = true
+		onFuture = true
 	}
 	if err := d.Set("external_table_name", externalTableName); err != nil {
 		return err
 	}
-	if err := d.Set("on_future", futureExternalTablesEnabled); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", priv); err != nil {
@@ -180,13 +180,13 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureExternalTablesEnabled {
+	if onFuture {
 		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
 	}
 
-	return readGenericGrant(d, meta, externalTableGrantSchema, builder, futureExternalTablesEnabled, validExternalTablePrivileges)
+	return readGenericGrant(d, meta, externalTableGrantSchema, builder, onFuture, validExternalTablePrivileges)
 }
 
 // DeleteExternalTableGrant implements schema.DeleteFunc.
@@ -199,10 +199,10 @@ func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	externalTableName := grantID.ObjectName
 
-	futureExternalTables := (externalTableName == "")
+	onFuture := (externalTableName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureExternalTables {
+	if onFuture {
 		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
@@ -236,11 +236,11 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	externalTableName := grantID.ObjectName
-	futureExternalTables := (externalTableName == "")
+	onFuture := (externalTableName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if futureExternalTables {
+	if onFuture {
 		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
