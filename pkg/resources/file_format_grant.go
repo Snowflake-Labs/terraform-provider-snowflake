@@ -50,8 +50,8 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 	},
 	"roles": {
 		Type:        schema.TypeSet,
+		Required:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
 		Description: "Grants privilege to these roles.",
 	},
 	"schema_name": {
@@ -105,6 +105,9 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	if (fileFormatName != "") && onFuture {
 		return errors.New("file_format_name must be empty if on_future is true")
+	}
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
