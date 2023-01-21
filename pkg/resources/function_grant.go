@@ -15,12 +15,6 @@ var validFunctionPrivileges = NewPrivilegeSet(
 )
 
 var functionGrantSchema = map[string]*schema.Schema{
-	"function_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
-	},
 	"arguments": {
 		Type: schema.TypeList,
 		Elem: &schema.Resource{
@@ -41,22 +35,30 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Description: "List of the arguments for the function (must be present if function has arguments and function_name is present)",
 		ForceNew:    true,
 	},
-	"return_type": {
-		Type:        schema.TypeString,
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "The return type of the function (must be present if function_name is present)",
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
 		ForceNew:    true,
 	},
-	"schema_name": {
+	"function_name": {
 		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the schema containing the current or future functions on which to grant privileges.",
+		Optional:    true,
+		Description: "The name of the function on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the current or future functions on which to grant privileges.",
+		ForceNew:    true,
+	},
+	"on_future": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name, arguments, return_type, and shares fields must be unset in order to use on_future.",
+		Default:     false,
 		ForceNew:    true,
 	},
 	"privilege": {
@@ -67,11 +69,23 @@ var functionGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
+	"return_type": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The return type of the function (must be present if function_name is present)",
+		ForceNew:    true,
+	},
 	"roles": {
 		Type:        schema.TypeSet,
+		Required: true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
 		Description: "Grants privilege to these roles.",
+	},
+	"schema_name": {
+		Type:        schema.TypeString,
+		Optional: true,
+		Description: "The name of the schema containing the current or future functions on which to grant privileges.",
+		ForceNew:    true,
 	},
 	"shares": {
 		Type:        schema.TypeSet,
@@ -79,24 +93,10 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Grants privilege to these shares (only valid if on_future is false).",
 	},
-	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future functions in the given schema. When this is true and no schema_name is provided apply this grant on all future functions in the given database. The function_name, arguments, return_type, and shares fields must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
-	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
-		Default:     false,
-		ForceNew:    true,
-	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
 		ForceNew:    true,
 	},
@@ -140,16 +140,19 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
-	futureFunctions := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	arguments = d.Get("arguments").([]interface{})
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (functionName == "") && !futureFunctions {
+	if (functionName == "") && !onFuture {
 		return errors.New("function_name must be set unless on_future is true")
 	}
-	if (functionName != "") && futureFunctions {
+	if (functionName != "") && onFuture {
 		return errors.New("function_name must be empty if on_future is true")
+	}
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	if functionName != "" {
@@ -159,7 +162,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFunctions {
+	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
@@ -209,9 +212,9 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	futureFunctionsEnabled := false
+	onFuture := false
 	if functionSignature == "" {
-		futureFunctionsEnabled = true
+		onFuture = true
 	} else {
 		functionSignatureMap, err := parseCallableObjectName(functionSignature)
 		if err != nil {
@@ -231,7 +234,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("return_type", returnType); err != nil {
 		return err
 	}
-	if err := d.Set("on_future", futureFunctionsEnabled); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", priv); err != nil {
@@ -242,13 +245,13 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureFunctionsEnabled {
+	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
 	}
 
-	return readGenericGrant(d, meta, functionGrantSchema, builder, futureFunctionsEnabled, validFunctionPrivileges)
+	return readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, validFunctionPrivileges)
 }
 
 // DeleteFunctionGrant implements schema.DeleteFunc.
@@ -260,10 +263,10 @@ func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 
-	futureFunctions := (grantID.ObjectName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureFunctions {
+	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
 		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
@@ -303,11 +306,11 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 	functionName := grantID.ObjectName
-	futureFunctions := (functionName == "")
+	onFuture := (functionName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if futureFunctions {
+	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
 		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
