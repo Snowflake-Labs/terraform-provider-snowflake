@@ -148,14 +148,14 @@ func (b *AccountBuilder) Create() (*Account, error) {
 	return ShowAccount(b.db, b.name)
 }
 
-// Rename returns the SQL query that will rename the account
+// Rename returns the SQL query that will rename the account.
 func (b *AccountBuilder) Rename(newName string) error {
 	stmt := fmt.Sprintf(`ALTER ACCOUNT %s RENAME TO %s`, b.name, EscapeString(newName))
 	_, err := b.db.Exec(stmt)
 	return err
 }
 
-// SetComment returns the SQL query that will set the comment on the account
+// SetComment returns the SQL query that will set the comment on the account.
 func (b *AccountBuilder) SetComment(comment string) error {
 	stmt := fmt.Sprintf(`COMMENT ON ACCOUNT %s IS '%s'`, b.name, EscapeString(comment))
 	_, err := b.db.Exec(stmt)

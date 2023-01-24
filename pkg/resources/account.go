@@ -192,10 +192,10 @@ var accountSchema = map[string]*schema.Schema{
 func Account() *schema.Resource {
 	return &schema.Resource{
 		Description: "The account resource allows you to create and manage Snowflake accounts.",
-		Create: CreateAccount,
-		Read:   ReadAccount,
-		Update: UpdateAccount,
-		Delete: DeleteAccount,
+		Create:      CreateAccount,
+		Read:        ReadAccount,
+		Update:      UpdateAccount,
+		Delete:      DeleteAccount,
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
