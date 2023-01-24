@@ -108,7 +108,6 @@ func (b *AccountBuilder) Create() (*Account, error) {
 	q.WriteString(fmt.Sprintf(`CREATE ACCOUNT %s `, b.name))
 	q.WriteString(fmt.Sprintf(` ADMIN_NAME = %s`, b.adminName))
 	if (b.adminPassword == "") == (b.adminRSAPublicKey == "") {
-		fmt.Printf("[DEBUG] adminPassword: %s, adminRSAPublicKey: %s", b.adminPassword, b.adminRSAPublicKey)
 		return nil, errors.New("either adminPassword or adminRSAPublicKey must be set, but not both")
 	}
 	if b.adminPassword != "" {
