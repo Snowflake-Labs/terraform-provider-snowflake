@@ -39,7 +39,7 @@ resource "snowflake_table" "t" {
     nullable = false
   }
 
-   column {
+  column {
     name     = "col3"
     type     = "text"
     nullable = false
@@ -90,11 +90,11 @@ resource "snowflake_table_constraint" "foreign_key" {
 }
 
 resource "snowflake_table_constraint" "unique" {
-  name="unique"
-  type="UNIQUE"
+  name     = "unique"
+  type     = "UNIQUE"
   table_id = snowflake_table.t.id
-  columns = ["col3"]
-  comment = "hello unique"
+  columns  = ["col3"]
+  comment  = "hello unique"
 }
 ```
 
