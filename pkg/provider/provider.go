@@ -208,6 +208,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
+		"snowflake_account":                        resources.Account(),
 		"snowflake_account_parameter":              resources.AccountParameter(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),

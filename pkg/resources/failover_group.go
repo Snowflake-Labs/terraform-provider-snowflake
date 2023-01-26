@@ -554,7 +554,9 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		if len(addedAccounts) > 0 {
 			stmt := builder.AddAllowedAccounts(addedAccounts)
 			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error adding allowed accounts for failover group %v err = %w", name, err)
+				if !strings.Contains(err.Error(), "Replication already enabled for account") {
+					return fmt.Errorf("error adding allowed accounts for failover group %v err = %w", name, err)
+				}
 			}
 		}
 	}
@@ -563,18 +565,21 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		_, new := d.GetChange("replication_schedule")
 		replicationSchedule := new.([]interface{})[0].(map[string]interface{})
 		if v, ok := replicationSchedule["cron"]; ok {
-			cron := v.([]interface{})[0].(map[string]interface{})
-			cronExpression := cron["expression"].(string)
-			timeZone := ""
-			if v, ok := cron["time_zone"]; ok {
-				timeZone = v.(string)
+			c := v.([]interface{})
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+
+				timeZone := ""
+				if v, ok := cron["time_zone"]; ok {
+					timeZone = v.(string)
+				}
+				stmt := builder.ChangeReplicationCronSchedule(cronExpression, timeZone)
+				if err := snowflake.Exec(db, stmt); err != nil {
+					return fmt.Errorf("error updating replication cron schedule for failover group %v err = %w", name, err)
+				}
 			}
-			stmt := builder.ChangeReplicationCronSchedule(cronExpression, timeZone)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error updating replication cron schedule for failover group %v err = %w", name, err)
-			}
-		}
-		if v, ok := replicationSchedule["interval"]; ok {
+		} else if v, ok := replicationSchedule["interval"]; ok {
 			interval := v.(int)
 			stmt := builder.ChangeReplicationIntervalSchedule(interval)
 			if err := snowflake.Exec(db, stmt); err != nil {
