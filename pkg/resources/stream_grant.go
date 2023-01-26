@@ -14,22 +14,24 @@ var validStreamPrivileges = NewPrivilegeSet(
 )
 
 var streamGrantSchema = map[string]*schema.Schema{
-	"stream_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is false).",
-		ForceNew:    true,
-	},
-	"schema_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The name of the schema containing the current or future streams on which to grant privileges.",
-		ForceNew:    true,
-	},
 	"database_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the database containing the current or future streams on which to grant privileges.",
+		ForceNew:    true,
+	},
+	"enable_multiple_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+		Default:     false,
+		ForceNew:    true,
+	},
+	"on_future": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future streams in the given schema. When this is true and no schema_name is provided apply this grant on all future streams in the given database. The stream_name field must be unset in order to use on_future.",
+		Default:     false,
 		ForceNew:    true,
 	},
 	"privilege": {
@@ -42,28 +44,26 @@ var streamGrantSchema = map[string]*schema.Schema{
 	},
 	"roles": {
 		Type:        schema.TypeSet,
+		Required:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
 		Description: "Grants privilege to these roles.",
 	},
-	"on_future": {
-		Type:        schema.TypeBool,
+	"schema_name": {
+		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future streams in the given schema. When this is true and no schema_name is provided apply this grant on all future streams in the given database. The stream_name field must be unset in order to use on_future.",
-		Default:     false,
+		Description: "The name of the schema containing the current or future streams on which to grant privileges.",
+		ForceNew:    true,
+	},
+	"stream_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the stream on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When this is set to true, allows the recipient role to grant the privileges to other roles.",
-		Default:     false,
-		ForceNew:    true,
-	},
-	"enable_multiple_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
 		ForceNew:    true,
 	},
@@ -96,19 +96,22 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
-	futureStreams := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (streamName == "") && !futureStreams {
+	if (streamName == "") && !onFuture {
 		return errors.New("stream_name must be set unless on_future is true")
 	}
-	if (streamName != "") && futureStreams {
+	if (streamName != "") && onFuture {
 		return errors.New("stream_name must be empty if on_future is true")
+	}
+	if (schemaName == "") && !onFuture {
+		return errors.New("schema_name must be set unless on_future is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureStreams {
+	if onFuture {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
@@ -153,16 +156,16 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
-	futureStreamsEnabled := false
+	onFuture := false
 	if streamName == "" {
-		futureStreamsEnabled = true
+		onFuture = true
 	}
 
 	if err := d.Set("stream_name", streamName); err != nil {
 		return err
 	}
 
-	if err := d.Set("on_future", futureStreamsEnabled); err != nil {
+	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 
@@ -175,13 +178,13 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureStreamsEnabled {
+	if onFuture {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
 	}
 
-	return readGenericGrant(d, meta, streamGrantSchema, builder, futureStreamsEnabled, validStreamPrivileges)
+	return readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, validStreamPrivileges)
 }
 
 // DeleteStreamGrant implements schema.DeleteFunc.
@@ -194,10 +197,10 @@ func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	streamName := grantID.ObjectName
 
-	futureStreams := (streamName == "")
+	onFuture := (streamName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureStreams {
+	if onFuture {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
@@ -229,10 +232,10 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := grantID.SchemaName
 	streamName := grantID.ObjectName
 
-	futureStreams := (streamName == "")
+	onFuture := (streamName == "")
 
 	var builder snowflake.GrantBuilder
-	if futureStreams {
+	if onFuture {
 		builder = snowflake.FutureStreamGrant(dbName, schemaName)
 	} else {
 		builder = snowflake.StreamGrant(dbName, schemaName, streamName)
