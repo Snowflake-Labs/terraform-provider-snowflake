@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.56.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.55.1...v0.56.0) (2023-01-27)
+
+
+### Features
+
+* add new account resource ([#1492](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1492)) ([b1473ba](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b1473ba158946d81bc4eac095c40c8d0446cf2ed))
+
+
+### BugFixes
+
+* do not set query_acceleration_max_scale_factor when enable enable_query_acceleration = false ([#1474](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1474)) ([d62b1b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d62b1b4d6352e7d2dc99e4603370a1f3de3a4624))
+* refactor for simplify handling error ([#1472](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1472)) ([3937216](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/393721607c9eee5d73e14c27265eb39f195ccb37))
+* refactor handling error to be simple ([#1473](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1473)) ([9f37b99](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9f37b997de073f01b66c86820237eff8049346ba))
+* saml integration test ([#1494](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1494)) ([8c31439](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8c31439253d25aafb54fc09d89e547fa8238258c))
+* schema name is optional for future file_format_grant ([#1484](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1484)) ([1450cdd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1450cddde6328264f9df37e4dd89a78f5f095b2e))
+* schema name is optional for future function_grant ([#1485](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1485)) ([dcc550e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dcc550ed5b3df548d5d300cd2b77907ea544bb43))
+* schema name is optional for future procedure_grant ([#1486](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1486)) ([4cf4561](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4cf456151d83cd71a3b9e68abe9c6f29804f2ee2))
+* schema name is optional for future sequence_grant ([#1487](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1487)) ([ccf9e78](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ccf9e78c9a7884e5beea233dd529a5134c741fb1))
+* schema name is optional for future snowflake_stage_grant ([#1466](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1466)) ([0b4d814](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0b4d8146910e8ea31d2ed5ea8b58725449205dcd))
+* schema name is optional for future stream_grant ([#1488](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1488)) ([3f7e5d6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3f7e5d655ed5738107536c873dd11533573bba46))
+* schema name is optional for future task_grant ([#1489](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1489)) ([4096fd0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4096fd0d8bc65ae23b6d588385e1f81c4f2e7521))
+
 ## [0.55.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.55.0...v0.55.1) (2023-01-11)
 
 
