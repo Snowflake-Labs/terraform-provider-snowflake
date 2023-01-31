@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.56.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.0...v0.56.1) (2023-01-31)
+
+
+### BugFixes
+
+* procedure and function grants ([#1502](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1502)) ([0d08ea8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0d08ea85541ceff6e591d34a671b44ef778a6611))
+
 ## [0.56.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.55.1...v0.56.0) (2023-01-27)
 
 
