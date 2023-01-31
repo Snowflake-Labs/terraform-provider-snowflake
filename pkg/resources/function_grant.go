@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -33,6 +34,14 @@ var functionGrantSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "List of the arguments for the function (must be present if function has arguments and function_name is present)",
+		ForceNew:    true,
+		Deprecated:  "Use argument_data_types instead",
+	},
+	"argument_data_types": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "List of the argument data types for the function (must be present if function has arguments and function_name is present)",
 		ForceNew:    true,
 	},
 	"enable_multiple_grants": {
@@ -74,6 +83,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The return type of the function (must be present if function_name is present)",
 		ForceNew:    true,
+		Deprecated:  "Not used anymore",
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -122,27 +132,29 @@ func FunctionGrant() *TerraformGrantResource {
 
 // CreateFunctionGrant implements schema.CreateFunc.
 func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		functionName      string
-		arguments         []interface{}
-		returnType        string
-		functionSignature string
-		argumentTypes     []string
-	)
+	var functionName string
 	if name, ok := d.GetOk("function_name"); ok {
 		functionName = name.(string)
-		if ret, ok := d.GetOk("return_type"); ok {
-			returnType = strings.ToUpper(ret.(string))
-		} else {
-			return errors.New("return_type must be set when specifying function_name")
-		}
 	}
+
 	dbName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-	arguments = d.Get("arguments").([]interface{})
+	var argumentDataTypes []string
+	// support deprecated arguments
+	if v, ok := d.GetOk("arguments"); ok {
+		arguments := v.([]interface{})
+		for _, argument := range arguments {
+			argumentMap := argument.(map[string]interface{})
+			argumentDataTypes = append(argumentDataTypes, argumentMap["type"].(string))
+		}
+	}
+	if v, ok := d.GetOk("argument_data_types"); ok {
+		argumentDataTypes = expandStringList(v.([]interface{}))
+	}
+
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (functionName == "") && !onFuture {
@@ -155,27 +167,23 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		return errors.New("schema_name must be set unless on_future is true")
 	}
 
-	if functionName != "" {
-		functionSignature, _, argumentTypes = formatCallableObjectName(functionName, returnType, arguments)
-	} else {
-		argumentTypes = make([]string, 0)
-	}
-
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
+
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentDataTypes)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
+	functionObjectName := fmt.Sprintf("%s(%s)", functionName, strings.Join(argumentDataTypes, ","))
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:   functionSignature,
+		ObjectName:   functionObjectName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
 		Roles:        roles,
@@ -191,56 +199,40 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadFunctionGrant implements schema.ReadFunc.
 func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		functionName  string
-		returnType    string
-		arguments     []interface{}
-		argumentTypes []string
-	)
+	var functionName string
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	functionSignature := grantID.ObjectName
-	priv := grantID.Privilege
-
 	if err := d.Set("database_name", dbName); err != nil {
 		return err
 	}
+	schemaName := grantID.SchemaName
 	if err := d.Set("schema_name", schemaName); err != nil {
 		return err
 	}
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
+		return err
+	}
+	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+		return err
+	}
+	functionObjectName := grantID.ObjectName
+	var argumentDataTypes []string
 	onFuture := false
-	if functionSignature == "" {
+	if functionObjectName == "" {
 		onFuture = true
 	} else {
-		functionSignatureMap, err := parseCallableObjectName(functionSignature)
-		if err != nil {
-			return err
-		}
-		functionName = functionSignatureMap["callableName"].(string)
-		returnType = functionSignatureMap["returnType"].(string)
-		arguments = functionSignatureMap["arguments"].([]interface{})
-		argumentTypes = functionSignatureMap["argumentTypes"].([]string)
+		functionName, argumentDataTypes = parseFunctionObjectName(functionObjectName)
 	}
 	if err := d.Set("function_name", functionName); err != nil {
 		return err
 	}
-	if err := d.Set("arguments", arguments); err != nil {
-		return err
-	}
-	if err := d.Set("return_type", returnType); err != nil {
+	if err := d.Set("argument_data_types", argumentDataTypes); err != nil {
 		return err
 	}
 	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", priv); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
 		return err
 	}
 
@@ -248,7 +240,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentDataTypes)
 	}
 
 	return readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, validFunctionPrivileges)
@@ -265,17 +257,15 @@ func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 
 	onFuture := (grantID.ObjectName == "")
 
+	functionObjectName := grantID.ObjectName
+	var functionName string
+	var argumentDataTypes []string
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
-		if err != nil {
-			return err
-		}
-		functionName := functionSignatureMap["callableName"].(string)
-		argumentTypes := functionSignatureMap["argumentTypes"].([]string)
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
+		functionName, argumentDataTypes = parseFunctionObjectName(functionObjectName)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentDataTypes)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -305,32 +295,25 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	functionName := grantID.ObjectName
-	onFuture := (functionName == "")
+	functionObjectName := grantID.ObjectName
+	onFuture := (functionObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
 	} else {
-		functionSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
-		if err != nil {
-			return err
-		}
-		functionName := functionSignatureMap["callableName"].(string)
-		argumentTypes := functionSignatureMap["argumentTypes"].([]string)
-		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentTypes)
+		functionName, argumentDataTypes := parseFunctionObjectName(functionObjectName)
+		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentDataTypes)
 	}
 
 	// first revoke
-
 	if err := deleteGenericGrantRolesAndShares(
 		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke,
 	); err != nil {
 		return err
 	}
 	// then add
-
 	if err := createGenericGrantRolesAndShares(
 		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
