@@ -170,7 +170,6 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(dbName, schemaName)
-
 	} else {
 		builder = snowflake.FunctionGrant(dbName, schemaName, functionName, argumentDataTypes)
 	}

@@ -424,9 +424,12 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 	return roles, shares
 }
 
-// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures
+// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures.
 func parseFunctionObjectName(objectIdentifier string) (string, []string) {
 	nameIndex := strings.Index(objectIdentifier, `(`)
+	if nameIndex == -1 {
+		return "", []string{}
+	}
 	name := objectIdentifier[:nameIndex]
 	argumentString := objectIdentifier[nameIndex+1 : len(objectIdentifier)-1]
 	arguments := strings.Split(argumentString, `,`)
