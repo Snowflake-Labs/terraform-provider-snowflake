@@ -182,7 +182,6 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	var procedureObjectName string
 	if !onFuture {
 		procedureObjectName = fmt.Sprintf("%s(%s)", procedureName, strings.Join(argumentDataTypes, ", "))
-
 	}
 	grant := &grantID{
 		ResourceName: dbName,
