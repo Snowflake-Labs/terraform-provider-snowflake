@@ -178,7 +178,11 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	functionObjectName := fmt.Sprintf("%s(%s)", functionName, strings.Join(argumentDataTypes, ","))
+	// If this is a on_futures grant then the function name and arguments do not get set. This is only used for refresh purposes.
+	var functionObjectName string
+	if !onFuture {
+		functionObjectName = fmt.Sprintf("%s(%s)", functionName, strings.Join(argumentDataTypes, ","))
+	}
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
@@ -187,12 +191,11 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		GrantOption:  grantOption,
 		Roles:        roles,
 	}
-	dataIDInput, err := grant.String()
+	grantID, err := grant.String()
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
-
+	d.SetId(grantID)
 	return ReadFunctionGrant(d, meta)
 }
 

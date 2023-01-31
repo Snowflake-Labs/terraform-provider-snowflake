@@ -178,7 +178,12 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	procedureObjectName := fmt.Sprintf("%s(%s)", procedureName, strings.Join(argumentDataTypes, ", "))
+	// If this is a on_futures grant then the procedure name and arguments do not get set. This is only used for refresh purposes.
+	var procedureObjectName string
+	if !onFuture {
+		procedureObjectName = fmt.Sprintf("%s(%s)", procedureName, strings.Join(argumentDataTypes, ", "))
+
+	}
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
@@ -187,12 +192,11 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		GrantOption:  grantOption,
 		Roles:        roles,
 	}
-	dataIDInput, err := grant.String()
+	grantID, err := grant.String()
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
-
+	d.SetId(grantID)
 	return ReadProcedureGrant(d, meta)
 }
 
