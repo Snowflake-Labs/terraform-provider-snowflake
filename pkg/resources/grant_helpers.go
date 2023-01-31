@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -425,54 +424,19 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 	return roles, shares
 }
 
-func parseCallableObjectName(objectName string) (map[string]interface{}, error) {
-	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
-	matches := r.FindStringSubmatch(objectName)
-	if len(matches) == 0 {
-		return nil, fmt.Errorf(`Could not parse objectName: %v`, objectName)
+// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures.
+func parseFunctionObjectName(objectIdentifier string) (string, []string) {
+	nameIndex := strings.Index(objectIdentifier, `(`)
+	if nameIndex == -1 {
+		return "", []string{}
 	}
-	callableSignatureMap := make(map[string]interface{})
-
-	argumentsSignatures := strings.Split(matches[2], ", ")
-
-	arguments := []interface{}{}
-	argumentTypes := []string{}
-	argumentNames := []string{}
-
-	for i, argumentSignature := range argumentsSignatures {
-		if argumentSignature != "" {
-			signatureComponents := strings.Split(argumentSignature, " ")
-			argumentNames = append(argumentNames, signatureComponents[0])
-			argumentTypes = append(argumentTypes, signatureComponents[1])
-			arguments = append(arguments, map[string]interface{}{
-				"name": argumentNames[i],
-				"type": argumentTypes[i],
-			})
-		}
+	name := objectIdentifier[:nameIndex]
+	argumentString := objectIdentifier[nameIndex+1 : len(objectIdentifier)-1]
+	arguments := strings.Split(argumentString, `,`)
+	for i, argument := range arguments {
+		arguments[i] = strings.TrimSpace(argument)
 	}
-
-	callableSignatureMap["callableName"] = matches[1]
-	callableSignatureMap["arguments"] = arguments
-	callableSignatureMap["argumentTypes"] = argumentTypes
-	callableSignatureMap["argumentNames"] = argumentNames
-	callableSignatureMap["returnType"] = matches[3]
-
-	return callableSignatureMap, nil
-}
-
-func formatCallableObjectName(callableName string, returnType string, arguments []interface{}) (string, []string, []string) {
-	argumentSignatures := make([]string, len(arguments))
-	argumentNames := make([]string, len(arguments))
-	argumentTypes := make([]string, len(arguments))
-
-	for i, arg := range arguments {
-		argMap := arg.(map[string]interface{})
-		argumentNames[i] = strings.ToUpper(argMap["name"].(string))
-		argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
-		argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
-	}
-
-	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
+	return name, arguments
 }
 
 // changeDiff calculates roles/shares to add/revoke.

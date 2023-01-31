@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -33,6 +34,14 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "List of the arguments for the procedure (must be present if procedure has arguments and procedure_name is present)",
+		ForceNew:    true,
+		Deprecated:  "use argument_data_types instead.",
+	},
+	"argument_data_types": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "List of the argument data types for the procedure (must be present if procedure has arguments and procedure_name is present)",
 		ForceNew:    true,
 	},
 	"database_name": {
@@ -74,6 +83,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The return type of the procedure (must be present if procedure_name is present)",
 		ForceNew:    true,
+		Deprecated:  "return_type is no longer required. It will be removed in a future release.",
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -122,27 +132,29 @@ func ProcedureGrant() *TerraformGrantResource {
 
 // CreateProcedureGrant implements schema.CreateFunc.
 func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		procedureName      string
-		arguments          []interface{}
-		returnType         string
-		procedureSignature string
-		argumentTypes      []string
-	)
+	var procedureName string
 	if name, ok := d.GetOk("procedure_name"); ok {
 		procedureName = name.(string)
-		if ret, ok := d.GetOk("return_type"); ok {
-			returnType = strings.ToUpper(ret.(string))
-		} else {
-			return errors.New("return_type must be set when specifying procedure_name")
-		}
 	}
 	dbName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	priv := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
 	grantOption := d.Get("with_grant_option").(bool)
-	arguments = d.Get("arguments").([]interface{})
+
+	argumentDataTypes := make([]string, 0)
+
+	if v, ok := d.GetOk("arguments"); ok {
+		arguments := v.([]interface{})
+		for _, argument := range arguments {
+			argumentDataTypes = append(argumentDataTypes, argument.(map[string]interface{})["data_type"].(string))
+		}
+	}
+
+	if v, ok := d.GetOk("argument_data_types"); ok {
+		argumentDataTypes = expandStringList(v.([]interface{}))
+	}
+
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (procedureName == "") && !onFuture {
@@ -155,55 +167,47 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return errors.New("schema_name must be set unless on_future is true")
 	}
 
-	if procedureName != "" {
-		procedureSignature, _, argumentTypes = formatCallableObjectName(procedureName, returnType, arguments)
-	} else {
-		argumentTypes = make([]string, 0)
-	}
-
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureProcedureGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
+		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentDataTypes)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
+	// If this is a on_futures grant then the procedure name and arguments do not get set. This is only used for refresh purposes.
+	var procedureObjectName string
+	if !onFuture {
+		procedureObjectName = fmt.Sprintf("%s(%s)", procedureName, strings.Join(argumentDataTypes, ", "))
+	}
 	grant := &grantID{
 		ResourceName: dbName,
 		SchemaName:   schemaName,
-		ObjectName:   procedureSignature,
+		ObjectName:   procedureObjectName,
 		Privilege:    priv,
 		GrantOption:  grantOption,
 		Roles:        roles,
 	}
-	dataIDInput, err := grant.String()
+	grantID, err := grant.String()
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
-
+	d.SetId(grantID)
 	return ReadProcedureGrant(d, meta)
 }
 
 // ReadProcedureGrant implements schema.ReadFunc.
 func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		procedureName string
-		returnType    string
-		arguments     []interface{}
-		argumentTypes []string
-	)
 	grantID, err := grantIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	procedureSignature := grantID.ObjectName
+	procedureObjectName := grantID.ObjectName
 	priv := grantID.Privilege
 
 	if err := d.Set("database_name", dbName); err != nil {
@@ -214,28 +218,19 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	onFuture := false
-	if procedureSignature == "" {
+	var procedureName string
+	argumentDataTypes := make([]string, 0)
+	if procedureObjectName == "" {
 		onFuture = true
 	} else {
-		procedureSignatureMap, err := parseCallableObjectName(procedureSignature)
-		if err != nil {
-			return err
-		}
-		procedureName = procedureSignatureMap["callableName"].(string)
-		returnType = procedureSignatureMap["returnType"].(string)
-		arguments = procedureSignatureMap["arguments"].([]interface{})
-		argumentTypes = procedureSignatureMap["argumentTypes"].([]string)
+		procedureName, argumentDataTypes = parseFunctionObjectName(procedureObjectName)
 	}
 
 	if err := d.Set("procedure_name", procedureName); err != nil {
 		return err
 	}
 
-	if err := d.Set("arguments", arguments); err != nil {
-		return err
-	}
-
-	if err := d.Set("return_type", returnType); err != nil {
+	if err := d.Set("argument_data_types", argumentDataTypes); err != nil {
 		return err
 	}
 
@@ -255,7 +250,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	if onFuture {
 		builder = snowflake.FutureProcedureGrant(dbName, schemaName)
 	} else {
-		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
+		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentDataTypes)
 	}
 
 	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, validProcedurePrivileges)
@@ -270,19 +265,15 @@ func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
 
-	onFuture := (grantID.ObjectName == "")
+	procedureObjectName := grantID.ObjectName
+	onFuture := (procedureObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureProcedureGrant(dbName, schemaName)
 	} else {
-		procedureSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
-		if err != nil {
-			return err
-		}
-		procedureName := procedureSignatureMap["callableName"].(string)
-		argumentTypes := procedureSignatureMap["argumentTypes"].([]string)
-		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
+		procedureName, argumentDataTypes := parseFunctionObjectName(procedureObjectName)
+		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentDataTypes)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -312,21 +303,16 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 
 	dbName := grantID.ResourceName
 	schemaName := grantID.SchemaName
-	procedureName := grantID.ObjectName
-	onFuture := (procedureName == "")
+	procedureObjectName := grantID.ObjectName
+	onFuture := (procedureObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureProcedureGrant(dbName, schemaName)
 	} else {
-		procedureSignatureMap, err := parseCallableObjectName(grantID.ObjectName)
-		if err != nil {
-			return err
-		}
-		procedureName := procedureSignatureMap["callableName"].(string)
-		argumentTypes := procedureSignatureMap["argumentTypes"].([]string)
-		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentTypes)
+		procedureName, argumentDataTypes := parseFunctionObjectName(procedureObjectName)
+		builder = snowflake.ProcedureGrant(dbName, schemaName, procedureName, argumentDataTypes)
 	}
 
 	// first revoke
