@@ -61,7 +61,7 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
 	if strings.ToUpper(tb.objectType) != "COLUMN" {
 		return tb.objectIdentifier, ""
-	} 
+	}
 	splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
 	tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
 	columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
