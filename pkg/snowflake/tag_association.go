@@ -109,9 +109,8 @@ func (tb *TagAssociationBuilder) Show() string {
 		fqTableName, columnName := tb.GetTableAndColumnName()
 		fqColumnName := fmt.Sprintf(`%v."%v"`, fqTableName, columnName)
 		return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, fqColumnName, tb.objectType)
-	} else {
-		return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 	}
+	return fmt.Sprintf(`SELECT SYSTEM$GET_TAG('"%v"."%v"."%v"', '%v', '%v') TAG_VALUE WHERE TAG_VALUE IS NOT NULL`, tb.databaseName, tb.schemaName, tb.tagName, tb.objectIdentifier, tb.objectType)
 }
 
 func ScanTagAssociation(row *sqlx.Row) (*TagAssociation, error) {
