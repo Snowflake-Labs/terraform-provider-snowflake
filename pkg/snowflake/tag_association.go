@@ -61,12 +61,11 @@ func (tb *TagAssociationBuilder) GetTagSchema() string {
 func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
 	if strings.ToUpper(tb.objectType) != "COLUMN" {
 		return tb.objectIdentifier, ""
-	} else {
-		splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
-		tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
-		columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
-		return fmt.Sprintf(`"%s"."%s"."%s"`, tb.databaseName, tb.schemaName, tableName), columnName
-	}
+	} 
+	splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
+	tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
+	columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
+	return fmt.Sprintf(`"%s"."%s"."%s"`, tb.databaseName, tb.schemaName, tableName), columnName
 }
 
 // TagAssociation returns a pointer to a Builder that abstracts the DDL operations for a tag sssociation.
@@ -91,9 +90,8 @@ func (tb *TagAssociationBuilder) Create() string {
 	if strings.ToUpper(tb.objectType) == "COLUMN" {
 		tableName, columnName := tb.GetTableAndColumnName()
 		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN %v SET TAG "%v"."%v"."%v" = '%v'`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
-	} else {
-		return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 	}
+	return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 }
 
 // Drop returns the SQL query that will remove a tag from an object.
@@ -101,9 +99,8 @@ func (tb *TagAssociationBuilder) Drop() string {
 	if strings.ToUpper(tb.objectType) == "COLUMN" {
 		tableName, columnName := tb.GetTableAndColumnName()
 		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN %v UNSET TAG "%v"."%v"."%v"`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName)
-	} else {
-		return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName)
 	}
+	return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName)
 }
 
 // Show returns the SQL query that will show the current tag value on an object.
