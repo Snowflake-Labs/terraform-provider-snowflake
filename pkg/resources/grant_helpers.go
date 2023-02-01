@@ -431,7 +431,15 @@ func parseFunctionObjectName(objectIdentifier string) (string, []string) {
 		return "", []string{}
 	}
 	name := objectIdentifier[:nameIndex]
-	argumentString := objectIdentifier[nameIndex+1 : len(objectIdentifier)-1]
+	argumentString := objectIdentifier[nameIndex+1 :]
+
+	// Backwards compatability for functions with return_types (prior to 0.56.1).
+	if strings.Contains(argumentString,":" ) {
+		argumentString = strings.Split(argumentString,":")[0]
+	}
+
+	// Remove trailing ")".
+	argumentString = strings.TrimRight(argumentString, `)`)
 	arguments := strings.Split(argumentString, `,`)
 	for i, argument := range arguments {
 		arguments[i] = strings.TrimSpace(argument)
