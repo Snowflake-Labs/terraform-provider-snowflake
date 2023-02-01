@@ -431,11 +431,11 @@ func parseFunctionObjectName(objectIdentifier string) (string, []string) {
 		return "", []string{}
 	}
 	name := objectIdentifier[:nameIndex]
-	argumentString := objectIdentifier[nameIndex+1 :]
+	argumentString := objectIdentifier[nameIndex+1:]
 
-	// Backwards compatability for functions with return_types (prior to 0.56.1).
-	if strings.Contains(argumentString,":" ) {
-		argumentString = strings.Split(argumentString,":")[0]
+	// Backwards compatibility for functions with return_types (prior to 0.56.1).
+	if strings.Contains(argumentString, ":") {
+		argumentString = strings.Split(argumentString, ":")[0]
 	}
 
 	// Remove trailing ")".
