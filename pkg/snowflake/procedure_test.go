@@ -46,13 +46,18 @@ func TestProcedureCreateWithOptionalParams(t *testing.T) {
 	s := getProcedure(true)
 	s.WithNullInputBehavior("RETURNS NULL ON NULL INPUT")
 	s.WithReturnBehavior("IMMUTABLE")
-	s.WithLanguage("JAVASCRIPT")
+	s.WithLanguage("PYTHON")
+	s.WithRuntimeVersion("3.8")
+	s.WithPackages([]string{"snowflake-snowpark-python", "pandas"})
+	s.WithImports([]string{"@\"test_db\".\"test_schema\".\"test_stage\"/handler.py"})
+	s.WithHandler("handler.test")
 	s.WithComment("this is cool proc!")
 	createStmnt, _ := s.Create()
 	expected := `CREATE OR REPLACE PROCEDURE "test_db"."test_schema"."test_proc"` +
-		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR LANGUAGE JAVASCRIPT RETURNS NULL ON NULL INPUT` +
-		` IMMUTABLE COMMENT = 'this is cool proc!' EXECUTE AS CALLER AS $$` +
-		`var message = "Hi"` + "\nreturn message$$"
+		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR LANGUAGE PYTHON RETURNS NULL ON NULL INPUT ` +
+		`IMMUTABLE RUNTIME_VERSION = '3.8' PACKAGES = ('snowflake-snowpark-python', 'pandas') ` +
+		`IMPORTS = ('@"test_db"."test_schema"."test_stage"/handler.py') HANDLER = 'handler.test' ` +
+		`COMMENT = 'this is cool proc!' EXECUTE AS CALLER AS $$var message = "Hi"` + "\nreturn message$$"
 	r.Equal(expected, createStmnt)
 }
 
