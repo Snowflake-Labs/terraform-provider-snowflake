@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.56.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.2...v0.56.3) (2023-02-02)
+
+
+### BugFixes
+
+* multiple share grants ([#1510](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1510)) ([d501226](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d501226bc2ee8274446efb282c2dfea9599a3c2e))
+
+## [0.56.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.1...v0.56.2) (2023-02-01)
+
+
+### BugFixes
+
+* backwards compatability for grant helpers id used by procedure and functions ([#1508](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1508)) ([3787657](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3787657105fbcf18368136813afd558251f92cd1))
+* misc linting changes for 0.56.2 ([#1509](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1509)) ([e0d1ef5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e0d1ef5c718f9e1e58e80d31bbe2d2f27afec486))
+* support different tag association queries for COLUMN object types ([#1380](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1380)) ([546d0a1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/546d0a144e77c759cd6ddb91a193253f27f8fb91))
+
 ## [0.56.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.0...v0.56.1) (2023-01-31)
 
 
