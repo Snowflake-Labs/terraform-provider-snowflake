@@ -271,13 +271,13 @@ func readGenericGrant(
 	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
 
-	// Now see which roles have our privilege
+	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
 		if privileges.hasString(priv) {
-			// If multiple grants is not enabled then we care about what roles have privilige
+			// If multiple grants is not enabled then we care about what roles have privilige.
 			if !multipleGrantFeatureFlag {
 				roles = append(roles, roleName)
-				// otherwise we only care if the role is something we are already managing, or if future object grants are enabled
+				// otherwise we only care if the role is something we are already managing, or if future object grants are enabled.
 			} else if existingRoles.Contains(roleName) && !futureObjects {
 				roles = append(roles, roleName)
 			}
@@ -285,14 +285,14 @@ func readGenericGrant(
 	}
 
 	existingShares := d.Get("shares").(*schema.Set)
-	// Now see which shares have our privilege
+	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
 		if privileges.hasString(priv) {
-			// If multiple grants is not enabled then we care about what shares have privilige
+			// If multiple grants is not enabled then we care about what shares have privilige.
 			if !multipleGrantFeatureFlag {
 				shares = append(shares, shareName)
 			} else if existingShares.Contains(shareName) && !futureObjects {
-				// otherwise we only care if the share is something we are already managing or if future object grants are enabled
+				// otherwise we only care if the share is something we are already managing or if future object grants are enabled.
 				shares = append(shares, shareName)
 			}
 		}
