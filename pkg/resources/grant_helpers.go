@@ -277,11 +277,9 @@ func readGenericGrant(
 			// If multiple grants is not enabled then we care about what roles have privilige
 			if !multipleGrantFeatureFlag {
 				roles = append(roles, roleName)
-			} else {
 				// otherwise we only care if the role is something we are already managing, or if future object grants are enabled
-				if existingRoles.Contains(roleName) && !futureObjects {
-					roles = append(roles, roleName)
-				}
+			} else if existingRoles.Contains(roleName) && !futureObjects {
+				roles = append(roles, roleName)
 			}
 		}
 	}
@@ -293,11 +291,9 @@ func readGenericGrant(
 			// If multiple grants is not enabled then we care about what shares have privilige
 			if !multipleGrantFeatureFlag {
 				shares = append(shares, shareName)
-			} else {
+			} else if existingShares.Contains(shareName) && !futureObjects {
 				// otherwise we only care if the share is something we are already managing or if future object grants are enabled
-				if existingShares.Contains(shareName) && !futureObjects {
-					shares = append(shares, shareName)
-				}
+				shares = append(shares, shareName)
 			}
 		}
 	}
