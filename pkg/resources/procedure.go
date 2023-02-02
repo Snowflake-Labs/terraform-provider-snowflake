@@ -89,7 +89,7 @@ var procedureSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript code used to create the procedure.",
+		Description:      "Specifies the code used to create the procedure.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
@@ -136,7 +136,7 @@ var procedureSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Required for Python functions. Specifies Python runtime version.",
+		Description: "Required for Python procedures. Specifies Python runtime version.",
 	},
 	"packages": {
 		Type: schema.TypeList,
@@ -145,7 +145,7 @@ var procedureSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
+		Description: "List of package imports to use for Java / Python procedures. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
 	},
 	"imports": {
 		Type: schema.TypeList,
@@ -154,13 +154,13 @@ var procedureSchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.",
+		Description: "Imports for Java / Python procedures. For Java this a list of jar files, for Python this is a list of Python files.",
 	},
 	"handler": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "The handler method for Java / Python function.",
+		Description: "The handler method for Java / Python procedures.",
 	},
 }
 
