@@ -267,10 +267,12 @@ func readGenericGrant(
 		}
 	}
 
-	existingRoles := d.Get("roles").(*schema.Set)
+	var existingRoles *schema.Set
+	if v, ok := d.GetOk("roles"); ok {
+		existingRoles = v.(*schema.Set)
+	}
 	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
-
 	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
 		if privileges.hasString(priv) {
@@ -284,7 +286,10 @@ func readGenericGrant(
 		}
 	}
 
-	existingShares := d.Get("shares").(*schema.Set)
+	var existingShares *schema.Set
+	if v, ok := d.GetOk("shares"); ok {
+		existingShares = v.(*schema.Set)
+	}
 	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
 		if privileges.hasString(priv) {
