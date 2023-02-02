@@ -14,7 +14,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
+var procedureLanguages = []string{"javascript", "java", "scala", "SQL", "python"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {

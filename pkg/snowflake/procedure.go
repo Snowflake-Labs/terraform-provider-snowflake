@@ -87,32 +87,32 @@ func (pb *ProcedureBuilder) WithExecuteAs(s string) *ProcedureBuilder {
 	return pb
 }
 
-// WithReturnType adds the data type of the return type to the FunctionBuilder.
-func (pb *FunctionBuilder) WithReturnType(s string) *FunctionBuilder {
-	pb.returnType = strings.ToUpper(s)
-	return pb
-}
-
 // WithLanguage sets the language to SQL, JAVA, SCALA or JAVASCRIPT.
 func (pb *ProcedureBuilder) WithLanguage(s string) *ProcedureBuilder {
 	pb.language = s
 	return pb
 }
 
+// WithRuntimeVersion.
+func (pb *ProcedureBuilder) WithRuntimeVersion(r string) *ProcedureBuilder {
+	pb.runtimeVersion = r
+	return pb
+}
+
 // WithPackages.
-func (pb *FunctionBuilder) WithPackages(s []string) *FunctionBuilder {
+func (pb *ProcedureBuilder) WithPackages(s []string) *ProcedureBuilder {
 	pb.packages = s
 	return pb
 }
 
 // WithImports adds jar files to import for Java function or Python file for Python function.
-func (pb *FunctionBuilder) WithImports(s []string) *FunctionBuilder {
+func (pb *ProcedureBuilder) WithImports(s []string) *ProcedureBuilder {
 	pb.imports = s
 	return pb
 }
 
 // WithHandler sets the handler method for Java / Python function.
-func (pb *FunctionBuilder) WithHandler(s string) *FunctionBuilder {
+func (pb *ProcedureBuilder) WithHandler(s string) *ProcedureBuilder {
 	pb.handler = s
 	return pb
 }
@@ -175,14 +175,14 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 	q.WriteString(`)`)
 
 	q.WriteString(fmt.Sprintf(" RETURNS %v", pb.returnType))
+	if pb.language != "" {
+		q.WriteString(fmt.Sprintf(" LANGUAGE %v", EscapeString(pb.language)))
+	}
 	if pb.nullInputBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
 	if pb.returnBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
-	}
-	if pb.language != "" {
-		q.WriteString(fmt.Sprintf(" LANGUAGE %v", EscapeString(pb.language)))
 	}
 	if pb.runtimeVersion != "" {
 		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = '%v'", EscapeString(pb.runtimeVersion)))
