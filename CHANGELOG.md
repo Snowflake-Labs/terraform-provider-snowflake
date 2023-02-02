@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.56.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.2...v0.56.3) (2023-02-02)
+
+
+### BugFixes
+
+* multiple share grants ([#1510](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1510)) ([d501226](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d501226bc2ee8274446efb282c2dfea9599a3c2e))
+
 ## [0.56.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.1...v0.56.2) (2023-02-01)
 
 
