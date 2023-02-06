@@ -276,13 +276,11 @@ func readGenericGrant(
 	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
 		if privileges.hasString(priv) {
-			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what roles have privilige.
-			caseA := !multipleGrantFeatureFlag
-			// CASE B: If this is not authoritative, then at least continue managing whatever roles we already are managing
-			caseB := multipleGrantFeatureFlag && existingRoles.Contains(roleName)
-			// CASE C: If this is not authoritative and we are not managing the role, then we only care about the role if future objects is disabled. Otherwise we will get flooded with diffs.
-			caseC := multipleGrantFeatureFlag && !futureObjects
-			if caseA || caseB || caseC {
+			// CASE A: Whatever role we were already managing, continue to do so.
+			caseA := existingRoles.Contains(roleName)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what roles have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			caseB := !multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB {
 				roles = append(roles, roleName)
 			}
 		}
@@ -295,13 +293,11 @@ func readGenericGrant(
 	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
 		if privileges.hasString(priv) {
-			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what shares have privilige.
-			caseA := !multipleGrantFeatureFlag
-			// CASE B: If this is not authoritative, then at least continue managing whatever shares we already are managing
-			caseB := multipleGrantFeatureFlag && existingShares.Contains(shareName)
-			// CASE C: If this is not authoritative and we are not managing the share, then we only care about the share if future objects is disabled. Otherwise we will get flooded with diffs.
-			caseC := multipleGrantFeatureFlag && !futureObjects
-			if caseA || caseB || caseC {
+			// CASE A: Whatever share we were already managing, continue to do so.
+			caseA := existingShares.Contains(shareName)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what shares have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			caseB := !multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB {
 				shares = append(shares, shareName)
 			}
 		}
