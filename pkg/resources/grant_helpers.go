@@ -268,7 +268,7 @@ func readGenericGrant(
 	}
 
 	var existingRoles *schema.Set
-	if v, ok := d.GetOk("roles"); ok && v!= nil {
+	if v, ok := d.GetOk("roles"); ok && v != nil {
 		existingRoles = v.(*schema.Set)
 	}
 	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
@@ -287,7 +287,7 @@ func readGenericGrant(
 	}
 
 	var existingShares *schema.Set
-	if v, ok := d.GetOk("shares"); ok && v!= nil{
+	if v, ok := d.GetOk("shares"); ok && v != nil {
 		existingShares = v.(*schema.Set)
 	}
 	// Now see which shares have our privilege.
