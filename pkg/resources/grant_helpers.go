@@ -276,11 +276,14 @@ func readGenericGrant(
 	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
 		if privileges.hasString(priv) {
-			// If multiple grants is not enabled then we care about what roles have privilige.
+			// If multiple grants is not enabled (meaning this is authoritative) then we always care about what roles have privilige.
 			if !multipleGrantFeatureFlag {
 				roles = append(roles, roleName)
-				// otherwise we only care if the role is something we are already managing, or if future object grants are enabled.
-			} else if existingRoles.Contains(roleName) && !futureObjects {
+			// Otherwise, if we are already managing the role then continue to do so.
+			} else if existingRoles.Contains(roleName)  {
+				roles = append(roles, roleName)
+			// If we are not currently managing the roles but future object grants is disabled then show a diff.
+			} else if !futureObjects {
 				roles = append(roles, roleName)
 			}
 		}
@@ -293,11 +296,14 @@ func readGenericGrant(
 	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
 		if privileges.hasString(priv) {
-			// If multiple grants is not enabled then we care about what shares have privilige.
+			// If multiple grants is not enabled (meaning this is authoritative) then we always care about what shares have privilige.
 			if !multipleGrantFeatureFlag {
 				shares = append(shares, shareName)
-			} else if existingShares.Contains(shareName) && !futureObjects {
-				// otherwise we only care if the share is something we are already managing or if future object grants are enabled.
+			// Otherwise, if we are already managing the share then continue to do so.
+			} else if existingShares.Contains(shareName)  {
+				shares = append(shares, shareName)
+			// If we are not currently managing the shares but future object grants is disabled then show a diff.
+			} else if !futureObjects {
 				shares = append(shares, shareName)
 			}
 		}
