@@ -267,7 +267,7 @@ func readGenericGrant(
 		}
 	}
 
-	var existingRoles = schema.NewSet(schema.HashString, []interface{}{})
+	existingRoles := schema.NewSet(schema.HashString, []interface{}{})
 	if v, ok := d.GetOk("roles"); ok && v != nil {
 		existingRoles = v.(*schema.Set)
 	}
@@ -286,7 +286,7 @@ func readGenericGrant(
 		}
 	}
 
-	var existingShares = schema.NewSet(schema.HashString, []interface{}{})
+	existingShares := schema.NewSet(schema.HashString, []interface{}{})
 	if v, ok := d.GetOk("shares"); ok && v != nil {
 		existingShares = v.(*schema.Set)
 	}
