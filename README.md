@@ -12,7 +12,7 @@ This is a terraform provider plugin for managing [Snowflake](https://www.snowfla
 
 If you need help, try the [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo. We also use this forum to discuss new features and changes to the provider.
 
-**Note**: If you are an enterprise customer, please file a support ticket with your Snowflake account representative. We prioritize support tickets over GitHub issues. Also it helps us with allocating additional engineering resources to supporting the provider.
+**Note**: If you are an enterprise customer, please contact your Snowflake account representative. We prioritize support over GitHub issues. Also it helps us with allocating additional engineering resources to supporting the provider.
 
 ## Install
 
