@@ -198,20 +198,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	onView, onViewSet := d.GetOk("on_view")
 	onStage, onStageSet := d.GetOk("on_stage")
 
-	var sourceCount = 0
 	if onTableSet {
-		sourceCount++
-	}
-	if onViewSet {
-		sourceCount++
-	}
-	if onStageSet {
-		sourceCount++
-	}
-
-	if sourceCount == 0 || sourceCount > 1 {
-		return fmt.Errorf("exactly one of 'on_table' or 'on_view' or 'on_stage' expected")
-	} else if onTableSet {
 		id, err := streamOnObjectIDFromString(onTable.(string))
 		if err != nil {
 			return err
@@ -260,7 +247,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		d, err := snowflake.DescStage(db, sq)
 		if err != nil {
 			return err
-		} else if !strings.Contains(d.Directory, "ENABLE = true") {
+		}
+		if !strings.Contains(d.Directory, "ENABLE = true") {
 			return fmt.Errorf("directory must be enabled on stage")
 		}
 
