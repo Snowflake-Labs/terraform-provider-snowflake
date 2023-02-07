@@ -235,14 +235,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		tq := snowflake.Stage(id.Name, id.DatabaseName, id.SchemaName).Show()
-		stageRow := snowflake.QueryRow(db, tq)
-
-		t, err := snowflake.ScanStageShow(stageRow)
-		if err != nil {
-			return err
-		}
-
 		sq := snowflake.Stage(id.Name, id.DatabaseName, id.SchemaName).Describe()
 		d, err := snowflake.DescStage(db, sq)
 		if err != nil {
@@ -252,7 +244,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("directory must be enabled on stage")
 		}
 
-		builder.WithOnStage(*t.DatabaseName, *t.SchemaName, *t.Name)
+		builder.WithOnStage(id.DatabaseName, id.SchemaName, id.Name)
 	}
 
 	builder.WithAppendOnly(appendOnly)
