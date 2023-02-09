@@ -151,7 +151,7 @@ func (b *FailoverGroupBuilder) ChangeObjectTypes(objectTypes []string) string {
 // ChangeReplicationCronSchedule returns the SQL query that will change the replication schedule of a failover group.
 func (b *FailoverGroupBuilder) ChangeReplicationCronSchedule(replicationScheduleCronExpression string, replicationScheduleTimeZone string) string {
 	q := strings.Builder{}
-	q.WriteString(fmt.Sprintf(`ALTER FAILOVER GROUP %v SET REPLICATION_SCHEDULE = 'CRON %v`, b.name, replicationScheduleCronExpression))
+	q.WriteString(fmt.Sprintf(`ALTER FAILOVER GROUP %v SET REPLICATION_SCHEDULE = 'USING CRON %v`, b.name, replicationScheduleCronExpression))
 
 	if replicationScheduleTimeZone != "" {
 		q.WriteString(fmt.Sprintf(` %v`, replicationScheduleTimeZone))
@@ -236,6 +236,7 @@ func ListFailoverGroups(db *sql.DB, accountLocator string) ([]FailoverGroup, err
 		log.Println("[DEBUG] no failover groups found")
 		return nil, nil
 	}
+
 	return v, nil
 }
 

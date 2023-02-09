@@ -218,24 +218,16 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = d.Set("name", v.Name.String)
-	if err != nil {
+	if err = d.Set("name", v.Name.String); err != nil {
 		return err
 	}
-
-	err = d.Set("is_secure", v.IsSecure)
-	if err != nil {
+	if err = d.Set("is_secure", v.IsSecure); err != nil {
 		return err
 	}
-
-	err = d.Set("comment", v.Comment.String)
-	if err != nil {
+	if err = d.Set("comment", v.Comment.String); err != nil {
 		return err
 	}
-
-	err = d.Set("schema", v.SchemaName.String)
-	if err != nil {
+	if err = d.Set("schema", v.SchemaName.String); err != nil {
 		return err
 	}
 
@@ -246,13 +238,13 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = d.Set("statement", substringOfQuery)
-	if err != nil {
+	if err = d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
-
-	return d.Set("database", v.DatabaseName.String)
+	if err = d.Set("database", v.DatabaseName.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateView implements schema.UpdateFunc.
@@ -274,8 +266,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = snowflake.Exec(db, q)
-		if err != nil {
+		if err = snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error renaming view %v", d.Id())
 		}
 
@@ -299,8 +290,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting comment for view %v", d.Id())
 			}
 		} else {
@@ -308,8 +298,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error updating comment for view %v", d.Id())
 			}
 		}
@@ -322,8 +311,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error setting secure for view %v", d.Id())
 			}
 		} else {
@@ -331,8 +319,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			err = snowflake.Exec(db, q)
-			if err != nil {
+			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting secure for view %v", d.Id())
 			}
 		}
@@ -346,23 +333,19 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		removed, added, changed := getTags(old).diffs(getTags(new))
 		for _, tA := range removed {
 			q := builder.UnsetTag(tA.toSnowflakeTagValue())
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error dropping tag on %v", d.Id())
 			}
 		}
 		for _, tA := range added {
 			q := builder.AddTag(tA.toSnowflakeTagValue())
-
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error adding column on %v", d.Id())
 			}
 		}
 		for _, tA := range changed {
 			q := builder.ChangeTag(tA.toSnowflakeTagValue())
-			err := snowflake.Exec(db, q)
-			if err != nil {
+			if err := snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error changing property on %v", d.Id())
 			}
 		}
@@ -386,9 +369,7 @@ func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = snowflake.Exec(db, q)
-	if err != nil {
+	if err = snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting view %v err = %w", d.Id(), err)
 	}
 

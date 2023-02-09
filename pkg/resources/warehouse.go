@@ -192,51 +192,42 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	if err = d.Set("name", w.Name); err != nil {
+		return err
+	}
+	if err = d.Set("comment", w.Comment); err != nil {
+		return err
+	}
+	if err = d.Set("warehouse_size", w.Size); err != nil {
+		return err
+	}
+	if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
+		return err
+	}
+	if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
+		return err
+	}
+	if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
+		return err
+	}
+	if err = d.Set("auto_suspend", w.AutoSuspend.Int64); err != nil {
+		return err
+	}
+	if err = d.Set("auto_resume", w.AutoResume); err != nil {
+		return err
+	}
+	if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
+		return err
+	}
+	if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+		return err
+	}
+	if w.EnableQueryAcceleration {
+		if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
+			return err
+		}
+	}
 
-	err = d.Set("name", w.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("comment", w.Comment)
-	if err != nil {
-		return err
-	}
-	err = d.Set("warehouse_size", w.Size)
-	if err != nil {
-		return err
-	}
-	err = d.Set("max_cluster_count", w.MaxClusterCount)
-	if err != nil {
-		return err
-	}
-	err = d.Set("min_cluster_count", w.MinClusterCount)
-	if err != nil {
-		return err
-	}
-	err = d.Set("scaling_policy", w.ScalingPolicy)
-	if err != nil {
-		return err
-	}
-	err = d.Set("auto_suspend", w.AutoSuspend.Int64)
-	if err != nil {
-		return err
-	}
-	err = d.Set("auto_resume", w.AutoResume)
-	if err != nil {
-		return err
-	}
-	err = d.Set("resource_monitor", w.ResourceMonitor)
-	if err != nil {
-		return err
-	}
-	err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration)
-	if err != nil {
-		return err
-	}
-	err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor)
-	if err != nil {
-		return err
-	}
 	log.Printf("[DEBUG] warehouse type is: %s", w.WarehouseType)
 	if w.WarehouseType == "STANDARD" || w.WarehouseType == "SNOWPARK-OPTIMIZED" {
 		err = d.Set("warehouse_type", w.WarehouseType)

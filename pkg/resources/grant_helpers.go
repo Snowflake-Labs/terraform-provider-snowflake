@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -268,26 +267,43 @@ func readGenericGrant(
 		}
 	}
 
-	existingRoles := d.Get("roles").(*schema.Set)
+	var existingRoles *schema.Set
+	if v, ok := d.GetOk("roles"); ok && v != nil {
+		existingRoles = v.(*schema.Set)
+	}
 	multipleGrantFeatureFlag := d.Get("enable_multiple_grants").(bool)
 	var roles, shares []string
-
-	// Now see which roles have our privilege
+	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
-		// Where priv is not all so it should match exactly
-		// Match to currently assigned roles or let everything through if no specific role grants
-		if privileges.hasString(priv) && !multipleGrantFeatureFlag {
-			roles = append(roles, roleName)
-		} else if privileges.hasString(priv) && (existingRoles.Contains(roleName) || existingRoles.Len() == 0) && multipleGrantFeatureFlag {
-			roles = append(roles, roleName)
+		if privileges.hasString(priv) {
+			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what roles have privilige.
+			caseA := !multipleGrantFeatureFlag
+			// CASE B: If this is not authoritative, then at least continue managing whatever roles we already are managing
+			caseB := multipleGrantFeatureFlag && existingRoles.Contains(roleName)
+			// CASE C: If this is not authoritative and we are not managing the role, then we only care about the role if future objects is disabled. Otherwise we will get flooded with diffs.
+			caseC := multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB || caseC {
+				roles = append(roles, roleName)
+			}
 		}
 	}
 
-	// Now see which shares have our privilege
+	var existingShares *schema.Set
+	if v, ok := d.GetOk("shares"); ok && v != nil {
+		existingShares = v.(*schema.Set)
+	}
+	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
-		// Where priv is not all so it should match exactly
 		if privileges.hasString(priv) {
-			shares = append(shares, shareName)
+			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what shares have privilige.
+			caseA := !multipleGrantFeatureFlag
+			// CASE B: If this is not authoritative, then at least continue managing whatever shares we already are managing
+			caseB := multipleGrantFeatureFlag && existingShares.Contains(shareName)
+			// CASE C: If this is not authoritative and we are not managing the share, then we only care about the share if future objects is disabled. Otherwise we will get flooded with diffs.
+			caseC := multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB || caseC {
+				shares = append(shares, shareName)
+			}
 		}
 	}
 
@@ -425,54 +441,27 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 	return roles, shares
 }
 
-func parseCallableObjectName(objectName string) (map[string]interface{}, error) {
-	r := regexp.MustCompile(`(?P<callable_name>[^(]+)\((?P<argument_signature>[^)]*)\):(?P<return_type>.*)`)
-	matches := r.FindStringSubmatch(objectName)
-	if len(matches) == 0 {
-		return nil, fmt.Errorf(`Could not parse objectName: %v`, objectName)
+// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures.
+func parseFunctionObjectName(objectIdentifier string) (string, []string) {
+	nameIndex := strings.Index(objectIdentifier, `(`)
+	if nameIndex == -1 {
+		return "", []string{}
 	}
-	callableSignatureMap := make(map[string]interface{})
+	name := objectIdentifier[:nameIndex]
+	argumentString := objectIdentifier[nameIndex+1:]
 
-	argumentsSignatures := strings.Split(matches[2], ", ")
-
-	arguments := []interface{}{}
-	argumentTypes := []string{}
-	argumentNames := []string{}
-
-	for i, argumentSignature := range argumentsSignatures {
-		if argumentSignature != "" {
-			signatureComponents := strings.Split(argumentSignature, " ")
-			argumentNames = append(argumentNames, signatureComponents[0])
-			argumentTypes = append(argumentTypes, signatureComponents[1])
-			arguments = append(arguments, map[string]interface{}{
-				"name": argumentNames[i],
-				"type": argumentTypes[i],
-			})
-		}
+	// Backwards compatibility for functions with return_types (prior to 0.56.1).
+	if strings.Contains(argumentString, ":") {
+		argumentString = strings.Split(argumentString, ":")[0]
 	}
 
-	callableSignatureMap["callableName"] = matches[1]
-	callableSignatureMap["arguments"] = arguments
-	callableSignatureMap["argumentTypes"] = argumentTypes
-	callableSignatureMap["argumentNames"] = argumentNames
-	callableSignatureMap["returnType"] = matches[3]
-
-	return callableSignatureMap, nil
-}
-
-func formatCallableObjectName(callableName string, returnType string, arguments []interface{}) (string, []string, []string) {
-	argumentSignatures := make([]string, len(arguments))
-	argumentNames := make([]string, len(arguments))
-	argumentTypes := make([]string, len(arguments))
-
-	for i, arg := range arguments {
-		argMap := arg.(map[string]interface{})
-		argumentNames[i] = strings.ToUpper(argMap["name"].(string))
-		argumentTypes[i] = strings.ToUpper(argMap["type"].(string))
-		argumentSignatures[i] = fmt.Sprintf(`%v %v`, argumentNames[i], argumentTypes[i])
+	// Remove trailing ")".
+	argumentString = strings.TrimRight(argumentString, `)`)
+	arguments := strings.Split(argumentString, `,`)
+	for i, argument := range arguments {
+		arguments[i] = strings.TrimSpace(argument)
 	}
-
-	return fmt.Sprintf(`%v(%v):%v`, callableName, strings.Join(argumentSignatures, ", "), returnType), argumentNames, argumentTypes
+	return name, arguments
 }
 
 // changeDiff calculates roles/shares to add/revoke.

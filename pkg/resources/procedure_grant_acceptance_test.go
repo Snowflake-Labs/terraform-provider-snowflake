@@ -26,7 +26,6 @@ func TestAcc_ProcedureFutureGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", schemaName),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "procedure_name", ""),
-					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "return_type", ""),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "privilege", "USAGE"),

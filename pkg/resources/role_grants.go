@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
+	"golang.org/x/exp/slices"
 )
 
 func RoleGrants() *schema.Resource {
@@ -219,6 +220,22 @@ func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 	rg := snowflake.RoleGrant(role1).Role(role2)
 	err := snowflake.Exec(db, rg.Revoke())
+	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
+		if driverErr.Number == 2003 {
+			// handling error if a role has been deleted prior to revoking a role
+			// 002003 (02000): SQL compilation error:
+			// User 'XXX' does not exist or not authorized.
+			roles, _ := snowflake.ListRoles(db, role2)
+			roleNames := make([]string, len(roles))
+			for i, r := range roles {
+				roleNames[i] = r.Name.String
+			}
+			if !slices.Contains(roleNames, role2) {
+				log.Printf("[WARN] Role %s does not exist. No need to revoke role %s", role2, role1)
+				return nil
+			}
+		}
+	}
 	return err
 }
 

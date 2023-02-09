@@ -10,9 +10,9 @@ This is a terraform provider plugin for managing [Snowflake](https://www.snowfla
 
 ## Getting Help
 
-If you need help, try the [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo. 
+If you need help, try the [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo. We also use this forum to discuss new features and changes to the provider.
 
-**Note**: If you are an enterprise customer, please file a support ticket with your Snowflake account representative. We prioritize support tickets over GitHub issues. Also it helps us with allocating additional engineering resources to supporting the provider.
+**Note**: If you are an enterprise customer, please contact your Snowflake account representative. We prioritize support over GitHub issues. Also it helps us with allocating additional engineering resources to supporting the provider.
 
 ## Install
 
@@ -23,7 +23,7 @@ terraform {
   required_providers {
     snowflake = {
       source  = "Snowflake-Labs/snowflake"
-      version = "~> 0.55.0"
+      version = "~> 0.56.0"
     }
   }
 }
@@ -82,21 +82,49 @@ In-depth docs are available [on the Terraform registry](https://registry.terrafo
 If you do not have Go installed:
 
 1. Install Go `brew install golang`
-2. Make a Go development directory wherever you like `mkdir go_projects`
-3. Add the following config to your profile
+2. Ensure that your GOPATH is set correctly
+3. Fork this repo and clone it into `~/go/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
+4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
+5. Build provider with `go install`
 
-   ```shell
-   export GOPATH=$HOME/../go_projects # edit with your go_projects dir
-   export PATH=$PATH:$GOPATH/bin
-   ```
+## Testing
+The following environment variables need to be set for acceptance tests to run:
+* `SNOWFLAKE_ACCOUNT` - The account name
+* `SNOWFLAKE_USER` - A snowflake user for running tests.
+* `SNOWFLAKE_PASSWORD` - Password for that user.
+* `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
+* `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
+* `TEST_ACC` - to enable acc tests.
 
-4. Fork this repo and clone it into `go_projects`
-5. cd to `terraform-provider-snowflake` and install all the required packages with `make setup`
-6. Finally install goimports with `(cd && go install golang.org/x/tools/cmd/goimports@latest)`.
-7. You should now be able to successfully run the tests with `make test`
+e.g.
 
-It has not been tested on Windows, so if you find problems let us know.
+```
+export SNOWFLAKE_ACCOUNT=TESTACCOUNT
+export SNOWFLAKE_USER=TEST_USER
+export SNOWFLAKE_PASSWORD=hunter2
+export SNOWFLAKE_ROLE=ACCOUNTADMIN
+export SNOWFLAKE_REGION=us-west-2
+export TEST_ACC=true
+```
 
+**Note: PRs for new resources will not be accepted without passing acceptance tests.**
+
+For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
+
+The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
+
+The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
+
+You can run these first two sets of tests with `make test`.
+
+The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity.
+
+To run all tests, including the acceptance tests, run `make test-acceptance`.
+
+
+If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
+
+## Advanced Debugging
 If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
 
 To debug the provider with a debugger:
@@ -114,43 +142,7 @@ To debug the provider with a debugger:
 
 For further instructions, please check the official [Terraform Plugin Development guide](https://www.terraform.io/plugin/debugging#starting-a-provider-in-debug-mode).
 
-## Testing
-
-**Note: PRs for new resources will not be accepted without passing acceptance tests.**
-
-For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
-
-The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
-
-The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
-
-You can run these first two sets of tests with `make test`.
-
-The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity.
-
-To run all tests, including the acceptance tests, run `make test-acceptance`.
-
-### Pull Request CI
-
-Our CI jobs run the full acceptance test suite, which involves creating and destroying resources in a live snowflake account. Github Actions is configured with environment variables to authenticate to our test snowflake account. For security reasons, those variables are not available to forks of this repo.
-
-If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
-
-* `SNOWFLAKE_ACCOUNT` - The account name
-* `SNOWFLAKE_USER` - A snowflake user for running tests.
-* `SNOWFLAKE_PASSWORD` - Password for that user.
-* `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
-* `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
-
-You will also need to generate a Github API token and add the secret:
-
-* `REVIEWDOG_GITHUB_API_TOKEN` - A token for reviewdog to use to access your github account with privileges to read/write discussion.
-
 ## Releasing
-
-## Running a release
-
-**Note: releases can only be done by those with keybase pgp keys allowed in the terraform registry.**
 
 Releases will be performed as needed, typically once every 1-2 weeks. If your change is more urgent and you need to use it sooner, use the commit hash.
 
