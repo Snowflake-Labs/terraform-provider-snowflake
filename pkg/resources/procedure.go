@@ -368,7 +368,7 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", ""), " ", "")
 			if importsString != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(importsString, ",")
 				if err := d.Set("imports", imports); err != nil {
