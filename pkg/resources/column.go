@@ -1,8 +1,12 @@
 package resources
 
 import (
+	"database/sql"
+	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/exp/slices"
+	"strings"
 )
 
 var columnParameterSchema = map[string]*schema.Schema{
@@ -56,11 +60,12 @@ var columnParameterSchema = map[string]*schema.Schema{
 		Description: "Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.",
 	},
 	"default": {
-		Type:        schema.TypeList,
-		Optional:    true,
-		Description: "Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied",
-		MinItems:    1,
-		MaxItems:    1,
+		Type:          schema.TypeList,
+		Optional:      true,
+		Description:   "Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied",
+		MinItems:      1,
+		MaxItems:      1,
+		ConflictsWith: []string{".identity"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"constant": {
@@ -88,11 +93,12 @@ var columnParameterSchema = map[string]*schema.Schema{
 	the snowflake query will error so we can defer enforcement to there.
 	*/
 	"identity": {
-		Type:        schema.TypeList,
-		Optional:    true,
-		Description: "Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive.",
-		MinItems:    1,
-		MaxItems:    1,
+		Type:          schema.TypeList,
+		Optional:      true,
+		Description:   "Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive.",
+		MinItems:      1,
+		MaxItems:      1,
+		ConflictsWith: []string{".default"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"start_num": {
@@ -116,12 +122,12 @@ var columnParameterSchema = map[string]*schema.Schema{
 		Default:     "",
 		Description: "Column comment",
 	},
-	"masking_policy": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "",
-		Description: "Masking policy to apply on column",
-	},
+	//"masking_policy": {
+	//	Type:        schema.TypeString,
+	//	Optional:    true,
+	//	Default:     "",
+	//	Description: "Masking policy to apply on column",
+	//},
 }
 
 func ColumnParameter() *schema.Resource {
@@ -140,11 +146,105 @@ func ColumnParameter() *schema.Resource {
 
 // CreateColumnParameter implements schema.CreateFunc.
 func CreateColumnParameter(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	tableObjectID := d.Get("table_identifier").(snowflake.ObjectIdentifier)
+	dataType := d.Get("data_type").(snowflake.ColumnDataType)
+
+	nullable := d.Get("nullable").(bool)
+	defaultConstant, defaultConstantBool := d.GetOk("default.constant")
+	defaultExpression, defaultExpressionBool := d.GetOk("default.expression")
+	defaultIdentifier, defaultIdentifierBool := d.GetOk("default.sequence_identifier")
+	defaultBool := defaultConstantBool || defaultExpressionBool || defaultIdentifierBool
+
+	identity, identityBool := d.GetOk("identity")
+
+	comment := d.Get("comment").(string)
+
+	q := snowflake.NewCreateTableColumnBuilder(name, &tableObjectID, &dataType, db)
+
+	q.WithNullable(nullable)
+
+	if defaultBool {
+		var default_ snowflake.ColumnDefault
+		if defaultConstantBool {
+			default_ = defaultConstant.(snowflake.ColumnDefault)
+		} else if defaultExpressionBool {
+			default_ = defaultExpression.(snowflake.ColumnDefault)
+		} else if defaultIdentifierBool {
+			default_ = defaultIdentifier.(snowflake.ColumnDefault)
+		}
+		q.WithDefault(&default_)
+	}
+
+	if identityBool {
+		ident := identity.(snowflake.Identity)
+		q.WithIdentity(&ident)
+	}
+
+	q.WithComment(comment)
+
+	err := q.Create()
+	if err != nil {
+		return err
+	}
+
+	d.SetId(fmt.Sprintf("%s.%s.%s.%s", tableObjectID.Database, tableObjectID.Schema, tableObjectID.Name, name))
 	return nil
 }
 
 // ReadColumnParameter implements schema.ReadFunc.
 func ReadColumnParameter(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	tableObjectID := d.Get("table_identifier").(snowflake.ObjectIdentifier)
+	var err error
+
+	q := snowflake.NewCreateTableColumnBuilder(name, &tableObjectID, nil, db)
+
+	show, err := q.Show()
+	if err != nil {
+		return err
+	}
+
+	if err = d.Set("data_type", show.DataType); err != nil {
+		return err
+	}
+
+	if err = d.Set("nullable", show.Null); err != nil {
+		return err
+	}
+
+	// TODO default stuff
+
+	if err = d.Set("comment", show.Comment); err != nil {
+		return err
+	}
+
+	autoIncrementNullString := show.Autoincrement
+
+	if autoIncrementNullString.Valid {
+		autoIncrementString := autoIncrementNullString.String
+		split := strings.Split(autoIncrementString, " INCREMENT ")
+		splitLeft := split[0]
+		stepString := split[1]
+		startString := strings.Split(splitLeft, "IDENTITY START ")[0]
+
+		if err = d.Set("identity.start_num", startString); err != nil {
+			return err
+		}
+		if err = d.Set("identity.step_num", stepString); err != nil {
+			return err
+		}
+	} else {
+		if err = d.Set("identity.start_num", nil); err != nil {
+			return err
+		}
+		if err = d.Set("identity.step_num", nil); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -155,5 +255,16 @@ func UpdateColumnParameter(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteColumnParameter implements schema.DeleteFunc.
 func DeleteColumnParameter(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	tableObjectID := d.Get("table_identifier").(snowflake.ObjectIdentifier)
+
+	q := snowflake.NewCreateTableColumnBuilder(name, &tableObjectID, nil, db)
+	if err := q.Drop(); err != nil {
+		return fmt.Errorf("error deleting Table column %v err = %w", d.Id(), err)
+	}
+
+	d.SetId("")
+
 	return nil
 }
