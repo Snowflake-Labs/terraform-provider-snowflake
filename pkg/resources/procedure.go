@@ -14,7 +14,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
+var procedureLanguages = []string{"javascript", "java", "scala", "SQL", "python"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
@@ -103,6 +103,12 @@ var procedureSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
 		Description:  "Specifies the language of the stored procedure code.",
 	},
+	"runtime_version": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the runtime version of the stored procedure code.",
+	},
 	"execute_as": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -131,6 +137,32 @@ var procedureSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     "user-defined procedure",
 		Description: "Specifies a comment for the procedure.",
+	},
+	"handler": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Handler for the function method.",
+	},
+	"packages": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Python Anaconda packages to import.",
+	},
+	"imports": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Files to import into the function.",
+	},
+	"warehouse": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Required for Python. Specifies the warehouse to use for the procedure.",
 	},
 }
 
@@ -199,6 +231,28 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("handler"); ok {
+		builder.WithHandler(v.(string))
+	}
+
+	if v, ok := d.GetOk("packages"); ok {
+		builder.WithPackages(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("imports"); ok {
+		builder.WithImports(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("runtime_version"); ok {
+		builder.WithRuntimeVersion(v.(string))
+	}
+
+	if v, ok := d.GetOk("warehouse"); ok {
+		if err := snowflake.Exec(db, fmt.Sprintf("USE WAREHOUSE %v", v)); err != nil {
+			return fmt.Errorf("error using warehouse %v err = %w", name, err)
+		}
 	}
 
 	q, err := builder.Create()
@@ -295,6 +349,10 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "language":
 			if err := d.Set("language", desc.Value.String); err != nil {
+				return err
+			}
+		case "handler":
+			if err := d.Set("handler", desc.Value.String); err != nil {
 				return err
 			}
 

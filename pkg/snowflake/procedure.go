@@ -17,9 +17,13 @@ type ProcedureBuilder struct {
 	db                string
 	argumentTypes     []string // (VARCHAR, VARCHAR)
 	args              []map[string]string
-	returnBehavior    string // VOLATILE, IMMUTABLE
-	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
-	language          string // SQL, JAVASCRIPT, JAVA, SCALA
+	returnBehavior    string   // VOLATILE, IMMUTABLE
+	packages          []string // PACKAGES TO IMPORT
+	imports           []string // IMPORTS TO INCLUDE
+	handlerBehavior   string   // PATH TO HANDLER IN CODE
+	nullInputBehavior string   // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
+	language          string   // SQL, JAVASCRIPT, JAVA, SCALA
+	runtimeVersion    string   // Python, Java, Scala runtime version
 	returnType        string
 	executeAs         string
 	comment           string
@@ -101,6 +105,32 @@ func (pb *ProcedureBuilder) WithStatement(s string) *ProcedureBuilder {
 	return pb
 }
 
+func (pb *ProcedureBuilder) WithHandler(s string) *ProcedureBuilder {
+	pb.handlerBehavior = s
+	return pb
+}
+
+func (pb *ProcedureBuilder) WithPackages(p []interface{}) *ProcedureBuilder {
+	pb.packages = []string{}
+	for _, v := range p {
+		pb.packages = append(pb.packages, v.(string))
+	}
+	return pb
+}
+
+func (pb *ProcedureBuilder) WithImports(i []interface{}) *ProcedureBuilder {
+	pb.imports = []string{}
+	for _, v := range i {
+		pb.imports = append(pb.imports, v.(string))
+	}
+	return pb
+}
+
+func (pb *ProcedureBuilder) WithRuntimeVersion(s string) *ProcedureBuilder {
+	pb.runtimeVersion = s
+	return pb
+}
+
 // Returns the argument types.
 func (pb *ProcedureBuilder) ArgTypes() []string {
 	return pb.argumentTypes
@@ -128,7 +158,6 @@ func NewProcedureBuilder(db, schema, name string, argTypes []string) *ProcedureB
 // Create returns the SQL query that will create a new procedure.
 func (pb *ProcedureBuilder) Create() (string, error) {
 	var q strings.Builder
-
 	q.WriteString("CREATE OR REPLACE")
 
 	qn, err := pb.QualifiedNameWithoutArguments()
@@ -150,12 +179,37 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 	if pb.language != "" {
 		q.WriteString(fmt.Sprintf(" LANGUAGE %v", EscapeString(pb.language)))
 	}
-	if pb.nullInputBehavior != "" {
+	if pb.runtimeVersion != "" {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = '%v'", EscapeString(pb.runtimeVersion)))
+	}
+	if pb.handlerBehavior != "" {
+		q.WriteString(fmt.Sprintf(` HANDLER='%v'`, EscapeString(pb.handlerBehavior)))
+	}
+	if len(pb.packages) > 0 {
+		q.WriteString(" PACKAGES = (")
+		packages := []string{}
+		for _, pkg := range pb.packages {
+			packages = append(packages, fmt.Sprintf(`'%v'`, EscapeString(pkg)))
+		}
+		q.WriteString(strings.Join(packages, ", "))
+		q.WriteString(")")
+	}
+	if len(pb.imports) > 0 {
+		q.WriteString(" IMPORTS = (")
+		imports := []string{}
+		for _, i := range pb.imports {
+			imports = append(imports, fmt.Sprintf(`'%v'`, EscapeString(i)))
+		}
+		q.WriteString(strings.Join(imports, ", "))
+		q.WriteString(")")
+	}
+	if pb.nullInputBehavior != "" && !strings.EqualFold(pb.language, "python") {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.nullInputBehavior)))
 	}
-	if pb.returnBehavior != "" {
+	if pb.returnBehavior != "" && !strings.EqualFold(pb.language, "python") {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
 	}
+
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(pb.comment)))
 	}
