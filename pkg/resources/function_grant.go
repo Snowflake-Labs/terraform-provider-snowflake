@@ -331,7 +331,8 @@ func NewFunctionGrantID(databaseName string, schemaName, objectName string, argu
 func (v *FunctionGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	argumentDataTypes := strings.Join(v.ArgumentDataTypes, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseFunctionGrantID(s string) (*FunctionGrantID, error) {
