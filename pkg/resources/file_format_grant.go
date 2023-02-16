@@ -174,7 +174,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteFileFormatGrant implements schema.DeleteFunc.
 func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseFunctionGrantID(d.Id())
+	grantID, err := parseFileFormatGrant(d.Id())
 	if err != nil {
 		return err
 	}
