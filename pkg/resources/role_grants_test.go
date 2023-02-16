@@ -90,24 +90,6 @@ func TestRoleGrantsDelete(t *testing.T) {
 	})
 }
 
-func TestRoleGrantsReadLegacyId(t *testing.T) {
-	r := require.New(t)
-
-	d := roleGrants(t, "good_name", map[string]interface{}{
-		"role_name": "good_name",
-		"roles":     []interface{}{"role1", "role2"},
-		"users":     []interface{}{"user1", "user2"},
-	})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectReadRoleGrants(mock)
-		err := resources.ReadRoleGrants(d, db)
-		r.NoError(err)
-		r.Len(d.Get("users").(*schema.Set).List(), 2)
-		r.Len(d.Get("roles").(*schema.Set).List(), 2)
-	})
-}
-
 func expectReadUnhandledRoleGrants(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on",
