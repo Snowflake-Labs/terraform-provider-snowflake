@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -68,64 +71,54 @@ func IntegrationGrant() *TerraformGrantResource {
 
 // CreateIntegrationGrant implements schema.CreateFunc.
 func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
-	w := d.Get("integration_name").(string)
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
+	integrationName := d.Get("integration_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	builder := snowflake.IntegrationGrant(w)
+	builder := snowflake.IntegrationGrant(integrationName)
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: w,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewIntegrationGrantID(integrationName, privilege, roles, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadIntegrationGrant(d, meta)
 }
 
 // ReadIntegrationGrant implements schema.ReadFunc.
 func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
-	priv := grantID.Privilege
+	if err := d.Set("roles", grantID.Roles); err != nil {
+		return err
+	}
+	if err := d.Set("integration_name", grantID.ObjectName); err != nil {
+		return err
+	}
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
+		return err
+	}
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+		return err
+	}
 
-	if err := d.Set("integration_name", w); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", priv); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
-		return err
-	}
-
-	builder := snowflake.IntegrationGrant(w)
+	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
 	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc.
 func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
 
-	builder := snowflake.IntegrationGrant(w)
+	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -145,15 +138,13 @@ func UpdateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	w := grantID.ResourceName
-
 	// create the builder
-	builder := snowflake.IntegrationGrant(w)
+	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
 	// first revoke
 
@@ -164,11 +155,59 @@ func UpdateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadIntegrationGrant(d, meta)
+}
+
+type IntegrationGrantID struct {
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewIntegrationGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *IntegrationGrantID {
+	return &IntegrationGrantID{
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		WithGrantOption: withGrantOption,
+		IsOldID: false,
+	}
+}
+
+func (v *IntegrationGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+}
+
+func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &IntegrationGrantID{
+			ObjectName:      idParts[0],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
+			IsOldID: true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 4 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
+	}
+	return &IntegrationGrantID{
+		ObjectName:      idParts[0],
+		Privilege:       idParts[1],
+		Roles:           strings.Split(idParts[2], ","),
+		WithGrantOption: idParts[3] == "true",
+		IsOldID: false,
+	}, nil
 }

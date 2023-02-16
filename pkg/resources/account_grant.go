@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -48,6 +51,7 @@ var accountGrantSchema = map[string]*schema.Schema{
 		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
+		ForceNew:     true,
 	},
 	"roles": {
 		Type:        schema.TypeSet,
@@ -81,53 +85,45 @@ func AccountGrant() *TerraformGrantResource {
 
 			Schema: accountGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					v, err := helpers.DecodeSnowflakeImportID(d.Id(), AccountGrantID{})
+					if err != nil {
+						return nil, err
+					}
+					id := v.(AccountGrantID)
+					d.Set("privilege", id.Privilege)
+					d.Set("roles", id.Roles)
+					d.Set("with_grant_option", id.WithGrantOption)
+					d.SetId(helpers.RandomSnowflakeID())
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validAccountPrivileges,
 	}
 }
 
+type AccountGrantID struct {
+	Privilege       string   `tf:"privilege"`
+	Roles           []string `tf:"roles"`
+	WithGrantOption bool     `tf:"with_grant_option"`
+}
+
 // CreateAccountGrant implements schema.CreateFunc.
 func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
-
 	builder := snowflake.AccountGrant()
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grantID := &grantID{
-		ResourceName: "ACCOUNT",
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grantID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.RandomSnowflakeID())
 
 	return ReadAccountGrant(d, meta)
 }
 
 // ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
-		return err
-	}
-
 	builder := snowflake.AccountGrant()
 
 	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
@@ -150,20 +146,17 @@ func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := grantIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
 	builder := snowflake.AccountGrant()
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// first revoke
-	if err := deleteGenericGrantRolesAndShares(meta, builder, grantID.Privilege, rolesToRevoke, nil); err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, privilege, rolesToRevoke, nil); err != nil {
 		return err
 	}
 
 	// then add
-	if err := createGenericGrantRolesAndShares(meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, nil); err != nil {
+	if err := createGenericGrantRolesAndShares(meta, builder, privilege, withGrantOption, rolesToAdd, nil); err != nil {
 		return err
 	}
 

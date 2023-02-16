@@ -2,6 +2,8 @@ package resources
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -106,12 +108,13 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	if name, ok := d.GetOk("materialized_view_name"); ok {
 		materializedViewName = name.(string)
 	}
-	dbName := d.Get("database_name").(string)
+	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
-	priv := d.Get("privilege").(string)
+	privilege := d.Get("privilege").(string)
 	futureMaterializedViews := d.Get("on_future").(bool)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
 	if (schemaName == "") && !futureMaterializedViews {
 		return errors.New("schema_name must be set unless on_future is true")
@@ -126,71 +129,64 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 
 	var builder snowflake.GrantBuilder
 	if futureMaterializedViews {
-		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+		builder = snowflake.FutureMaterializedViewGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(databaseName, schemaName, materializedViewName)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ObjectName:   materializedViewName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewMaterializedViewGrantID(databaseName, schemaName, materializedViewName, privilege, roles, shares, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadMaterializedViewGrant(d, meta)
 }
 
 // ReadViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	materializedViewName := grantID.ObjectName
-	priv := grantID.Privilege
-
-	if err := d.Set("database_name", dbName); err != nil {
+	if !grantID.IsOldID {
+		if err := d.Set("shares", grantID.Shares); err != nil {
+			return err
+		}
+	}
+	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-	if err := d.Set("schema_name", schemaName); err != nil {
+
+	if err := d.Set("database_name",  grantID.DatabaseName); err != nil {
+		return err
+	}
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
 	futureMaterializedViewsEnabled := false
-	if materializedViewName == "" {
+	if grantID.ObjectName == "" {
 		futureMaterializedViewsEnabled = true
 	}
-	if err := d.Set("materialized_view_name", materializedViewName); err != nil {
+	if err := d.Set("materialized_view_name", grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("on_future", futureMaterializedViewsEnabled); err != nil {
 		return err
 	}
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
 	var builder snowflake.GrantBuilder
 	if futureMaterializedViewsEnabled {
-		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+		builder = snowflake.FutureMaterializedViewGrant( grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant( grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
@@ -198,21 +194,18 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	materializedViewName := grantID.ObjectName
 
-	futureMaterializedViews := (materializedViewName == "")
+	futureMaterializedViews := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if futureMaterializedViews {
-		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -235,22 +228,19 @@ func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	materializedViewName := grantID.ObjectName
-	futureMaterializedViews := (materializedViewName == "")
+	futureMaterializedViews := (grantID.ObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if futureMaterializedViews {
-		builder = snowflake.FutureMaterializedViewGrant(dbName, schemaName)
+		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.MaterializedViewGrant(dbName, schemaName, materializedViewName)
+		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	// first revoke
@@ -261,11 +251,72 @@ func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
+		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadMaterializedViewGrant(d, meta)
+}
+
+type MaterializedViewGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	Shares          []string
+	WithGrantOption bool
+	IsOldID         bool
+}
+
+func NewMaterializedViewGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *MaterializedViewGrantID {
+	return &MaterializedViewGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		Shares:          shares,
+		WithGrantOption: withGrantOption,
+		IsOldID: 	   false,
+	}
+}
+
+func (v *MaterializedViewGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	shares := strings.Join(v.Shares, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, shares, v.WithGrantOption)
+}
+
+func parseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &MaterializedViewGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			Shares:          []string{},
+			WithGrantOption: idParts[5] == "true",
+			IsOldID:         true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 7 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+	}
+	return &MaterializedViewGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		Roles:           strings.Split(idParts[4], ","),
+		Shares:          strings.Split(idParts[5], ","),
+		WithGrantOption: idParts[6] == "true",
+		IsOldID:         false,
+	}, nil
 }

@@ -2,6 +2,8 @@ package resources
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -89,22 +91,19 @@ func PipeGrant() *TerraformGrantResource {
 
 // CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		pipeName   string
-		schemaName string
-	)
-
+	var pipeName string
 	if name, ok := d.GetOk("pipe_name"); ok {
 		pipeName = name.(string)
 	}
+	var schemaName string
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)
 	}
 
-	dbName := d.Get("database_name").(string)
-	priv := d.Get("privilege").(string)
+	databaseName := d.Get("database_name").(string)
+	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if (schemaName == "") && !onFuture {
@@ -116,70 +115,58 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+		builder = snowflake.FuturePipeGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+		builder = snowflake.PipeGrant(databaseName, schemaName, pipeName)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ObjectName:   pipeName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewPipeGrantID(databaseName, schemaName, pipeName, privilege, roles, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadPipeGrant(d, meta)
 }
 
 // ReadPipeGrant implements schema.ReadFunc.
 func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	pipeName := grantID.ObjectName
-	priv := grantID.Privilege
 
-	if err := d.Set("database_name", dbName); err != nil {
+	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-	if err := d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+		return err
+	}
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
 
-	onFuture := (pipeName == "")
+	onFuture := ( grantID.ObjectName == "")
 
-	if err := d.Set("pipe_name", pipeName); err != nil {
+	if err := d.Set("pipe_name",  grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+		builder = snowflake.FuturePipeGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, pipeGrantSchema, builder, onFuture, validPipePrivileges)
@@ -187,21 +174,18 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePipeGrant implements schema.DeleteFunc.
 func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	pipeName := grantID.ObjectName
 
-	onFuture := (pipeName == "")
+	onFuture := ( grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+		builder = snowflake.FuturePipeGrant(grantID.DatabaseName,  grantID.SchemaName)
 	} else {
-		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+		builder = snowflake.PipeGrant(grantID.DatabaseName,  grantID.SchemaName,  grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -221,22 +205,19 @@ func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	pipeName := grantID.ObjectName
-	onFuture := (pipeName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FuturePipeGrant(dbName, schemaName)
+		builder = snowflake.FuturePipeGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.PipeGrant(dbName, schemaName, pipeName)
+		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	// first revoke
@@ -247,11 +228,67 @@ func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadPipeGrant(d, meta)
+}
+
+type PipeGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewPipeGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *PipeGrantID {
+	return &PipeGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		WithGrantOption: withGrantOption,
+		IsOldID: false,
+	}
+}
+
+func (v *PipeGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+}
+
+func parsePipeGrantID(s string) (*PipeGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &PipeGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
+			IsOldID: true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 6 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
+	}
+	return &PipeGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		Roles:           strings.Split(idParts[4], ","),
+		WithGrantOption: idParts[5] == "true",
+		IsOldID: false,
+	}, nil
 }

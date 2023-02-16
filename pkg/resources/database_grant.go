@@ -1,8 +1,9 @@
 package resources
 
 import (
+	"context"
 	"fmt"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -71,70 +72,58 @@ func DatabaseGrant() *TerraformGrantResource {
 
 			Schema: databaseGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					v, err := helpers.DecodeSnowflakeImportID(d.Id(), DatabaseGrantID{})
+					if err != nil {
+						return nil, err
+					}
+					id := v.(DatabaseGrantID)
+					d.Set("database_name", id.DatabaseName)
+					d.Set("privilege", id.Privilege)
+					d.Set("roles", id.Roles)
+					d.Set("shares", id.Shares)
+					d.Set("with_grant_option", id.WithGrantOption)
+					d.SetId(helpers.RandomSnowflakeID())
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validDatabasePrivileges,
 	}
 }
 
+type DatabaseGrantID struct {
+	DatabaseName    string   `tf:"database_name"`
+	Privilege       string   `tf:"privilege"`
+	Roles           []string `tf:"roles"`
+	Shares          []string `tf:"shares"`
+	WithGrantOption bool     `tf:"with_grant_option"`
+}
+
 // CreateDatabaseGrant implements schema.CreateFunc.
 func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	dbName := d.Get("database_name").(string)
-	builder := snowflake.DatabaseGrant(dbName)
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
-
+	databaseName := d.Get("database_name").(string)
+	builder := snowflake.DatabaseGrant(databaseName)
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return fmt.Errorf("error creating database grant err = %w", err)
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return fmt.Errorf("error creating database grant err = %w", err)
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.RandomSnowflakeID())
 
 	return ReadDatabaseGrant(d, meta)
 }
 
 // ReadDatabaseGrant implements schema.ReadFunc.
 func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	if err := d.Set("database_name", grantID.ResourceName); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
-		return err
-	}
-
-	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
-	// that it is still there. Just exit for now
-	if grantID.Privilege == "IMPORTED PRIVILEGES" {
-		return nil
-	}
-
-	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+	databaseName := d.Get("database_name").(string)
+	builder := snowflake.DatabaseGrant(databaseName)
 	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc.
 func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	dbName := d.Get("database_name").(string)
-	builder := snowflake.DatabaseGrant(dbName)
+	databaseName := d.Get("database_name").(string)
+	builder := snowflake.DatabaseGrant(databaseName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -158,19 +147,17 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
+	databaseName := d.Get("database_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
-	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+	builder := snowflake.DatabaseGrant(databaseName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
+		privilege,
 		rolesToRevoke,
 		sharesToRevoke,
 	); err != nil {
@@ -181,8 +168,8 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
-		grantID.GrantOption,
+		privilege,
+		withGrantOption,
 		rolesToAdd,
 		sharesToAdd,
 	); err != nil {

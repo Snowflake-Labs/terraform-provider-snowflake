@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -84,77 +87,61 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("masking_policy_name"); ok {
 		maskingPolicyName = name.(string)
 	}
-	dbName := d.Get("database_name").(string)
+	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
+	builder := snowflake.MaskingPolicyGrant(databaseName, schemaName, maskingPolicyName)
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ObjectName:   maskingPolicyName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewMaskingPolicyGrantID(databaseName, schemaName, maskingPolicyName, privilege, roles, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadMaskingPolicyGrant(d, meta)
 }
 
 // ReadMaskingPolicyGrant implements schema.ReadFunc.
 func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	maskingPolicyName := grantID.ObjectName
-	priv := grantID.Privilege
-
-	if err := d.Set("database_name", dbName); err != nil {
+	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-	if err := d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
-	if err := d.Set("masking_policy_name", maskingPolicyName); err != nil {
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("masking_policy_name", grantID.ObjectName); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
+		return err
+	}
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
-	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
+	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	return readGenericGrant(d, meta, maskingPolicyGrantSchema, builder, false, validMaskingPoilcyPrivileges)
 }
 
 // DeleteMaskingPolicyGrant implements schema.DeleteFunc.
 func DeleteMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	maskingPolicyName := grantID.ObjectName
 
-	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
+	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -174,17 +161,13 @@ func UpdateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	maskingPolicyName := grantID.ObjectName
-
 	// create the builder
-	builder := snowflake.MaskingPolicyGrant(dbName, schemaName, maskingPolicyName)
+	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
@@ -194,11 +177,67 @@ func UpdateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, []string{},
+		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadMaskingPolicyGrant(d, meta)
+}
+
+type MaskingPolicyGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewMaskingPolicyGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *MaskingPolicyGrantID {
+	return &MaskingPolicyGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		WithGrantOption: withGrantOption,
+		IsOldID: false,
+	}
+}
+
+func (v *MaskingPolicyGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+}
+
+func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error){
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &MaskingPolicyGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
+			IsOldID: true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 6 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
+	}
+	return &MaskingPolicyGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		Roles:           strings.Split(idParts[4], ","),
+		WithGrantOption: idParts[5] == "true",
+		IsOldID: false,
+	}, nil
 }

@@ -1,9 +1,7 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
@@ -71,89 +69,6 @@ type grant struct {
 	GranteeType string
 	GranteeName string
 	GrantOption bool
-}
-
-// grantID contains identifying elements that allow unique access privileges.
-type grantID struct {
-	ResourceName string
-	SchemaName   string
-	ObjectName   string
-	Privilege    string
-	Roles        []string
-	GrantOption  bool
-}
-
-// String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption.
-func (gi *grantID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = grantIDDelimiter
-	grantOption := fmt.Sprintf("%v", gi.GrantOption)
-	roles := strings.Join(gi.Roles, ",")
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, roles, grantOption}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strGrantID := strings.TrimSpace(buf.String())
-	return strGrantID, nil
-}
-
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
-// and returns a grantID object.
-func grantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = grantIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per grant")
-	}
-
-	// Len 1 is allowing for legacy IDs where role names are not included
-	if len(lines[0]) < 1 || len(lines[0]) > 6 {
-		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
-	}
-
-	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
-	// Checking for true/false to eliminate scenarios where it would pick up the grant option.
-	// Roles will be empty list if legacy IDs are used, roles from grants are not
-	// used in Read functions, just for uniqueness in IDs of resources
-	roles := []string{}
-	if len(lines[0]) > 4 && lines[0][4] != "true" && lines[0][4] != "false" {
-		roles = strings.Split(lines[0][4], ",")
-	}
-
-	// Allowing legacy IDs to check grant option
-	grantOption := false
-	if len(lines[0]) == 6 && lines[0][5] == "true" {
-		grantOption = true
-	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
-		grantOption = true
-	}
-
-	schemaName := ""
-	objectName := ""
-	privilege := ""
-
-	if len(lines[0]) > 3 {
-		schemaName = lines[0][1]
-		objectName = lines[0][2]
-		privilege = lines[0][3]
-	}
-
-	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		SchemaName:   schemaName,
-		ObjectName:   objectName,
-		Privilege:    privilege,
-		Roles:        roles,
-		GrantOption:  grantOption,
-	}
-	return grantResult, nil
 }
 
 // createGenericGrantRolesAndShares will create generic grants for a set of roles and shares.
@@ -435,29 +350,6 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
-}
-
-// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures.
-func parseFunctionObjectName(objectIdentifier string) (string, []string) {
-	nameIndex := strings.Index(objectIdentifier, `(`)
-	if nameIndex == -1 {
-		return "", []string{}
-	}
-	name := objectIdentifier[:nameIndex]
-	argumentString := objectIdentifier[nameIndex+1:]
-
-	// Backwards compatibility for functions with return_types (prior to 0.56.1).
-	if strings.Contains(argumentString, ":") {
-		argumentString = strings.Split(argumentString, ":")[0]
-	}
-
-	// Remove trailing ")".
-	argumentString = strings.TrimRight(argumentString, `)`)
-	arguments := strings.Split(argumentString, `,`)
-	for i, argument := range arguments {
-		arguments[i] = strings.TrimSpace(argument)
-	}
-	return name, arguments
 }
 
 // changeDiff calculates roles/shares to add/revoke.

@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,67 +84,58 @@ func TagGrant() *TerraformGrantResource {
 // CreateTagGrant implements schema.CreateFunc.
 func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	tagName := d.Get("tag_name").(string)
-	dbName := d.Get("database_name").(string)
+	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
-	priv := d.Get("privilege").(string)
+	privilege := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	builder := snowflake.TagGrant(dbName, schemaName, tagName)
+	builder := snowflake.TagGrant(databaseName, schemaName, tagName)
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ObjectName:   tagName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewTagGrantID(databaseName, schemaName, tagName, privilege, roles, grantOption)
+	d.SetId(grantID.String())
 
 	return ReadTagGrant(d, meta)
 }
 
 // ReadTagGrant implements schema.ReadFunc.
 func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tagName := grantID.ObjectName
-	priv := grantID.Privilege
 
-	if err := d.Set("database_name", dbName); err != nil {
+	if !grantID.IsOldID {
+		if err := d.Set("roles", grantID.Roles); err != nil {
+			return err
+		}
+	}
+
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
 
-	if err := d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
 
-	if err := d.Set("tag_name", tagName); err != nil {
+	if err := d.Set("tag_name",  grantID.ObjectName); err != nil {
 		return err
 	}
 
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
 
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
-	builder := snowflake.TagGrant(dbName, schemaName, tagName)
+	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
 
 	return readGenericGrant(d, meta, tagGrantSchema, builder, false, validTagPrivileges)
 }
@@ -156,16 +150,13 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	// create the builder
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tagName := grantID.ObjectName
-	builder := snowflake.TagGrant(dbName, schemaName, tagName)
+	builder := snowflake.TagGrant( grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
@@ -183,7 +174,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		grantID.Privilege,
-		grantID.GrantOption,
+		grantID.WithGrantOption,
 		rolesToAdd,
 		nil,
 	); err != nil {
@@ -195,15 +186,68 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTagGrant implements schema.DeleteFunc.
 func DeleteTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tagName := grantID.ObjectName
 
-	builder := snowflake.TagGrant(dbName, schemaName, tagName)
+	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	return deleteGenericGrant(d, meta, builder)
+}
+
+type TagGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewTagGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *TagGrantID {
+	return &TagGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		WithGrantOption: withGrantOption,
+		IsOldID: false,
+	}
+}
+
+func (v *TagGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+}
+
+func parseTagGrantID(s string) (*TagGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &TagGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           []string{},
+			WithGrantOption: idParts[4] == "true",
+			IsOldID: true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 6 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
+	}
+	return &TagGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		Roles:           strings.Split(idParts[4], ","),
+		WithGrantOption: idParts[5] == "true",
+		IsOldID: false,
+	}, nil
 }

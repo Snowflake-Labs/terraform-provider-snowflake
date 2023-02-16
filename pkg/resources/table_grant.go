@@ -2,6 +2,8 @@ package resources
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -101,26 +103,20 @@ func TableGrant() *TerraformGrantResource {
 
 // CreateTableGrant implements schema.CreateFunc.
 func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
-	var (
-		tableName  string
-		schemaName string
-	)
+	var tableName  string
 	if _, ok := d.GetOk("table_name"); ok {
 		tableName = d.Get("table_name").(string)
-	} else {
-		tableName = ""
 	}
+	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
 		schemaName = d.Get("schema_name").(string)
-	} else {
-		schemaName = ""
 	}
-	dbName := d.Get("database_name").(string)
-	priv := d.Get("privilege").(string)
+	databaseName := d.Get("database_name").(string)
+	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
-
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 	if (schemaName == "") && !onFuture {
 		return errors.New("schema_name must be set unless on_future is true")
 	}
@@ -131,75 +127,64 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureTableGrant(dbName, schemaName)
+		builder = snowflake.FutureTableGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.TableGrant(dbName, schemaName, tableName)
+		builder = snowflake.TableGrant(databaseName, schemaName, tableName)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	// table_name is empty when on_future = true
-	grantID := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	if !onFuture {
-		grantID.ObjectName = tableName
-	}
-
-	dataIDInput, err := grantID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewTableGrantID(databaseName, schemaName, tableName, privilege, roles, shares,withGrantOption)
+	d.SetId(grantID.String())
 	return ReadTableGrant(d, meta)
 }
 
 // ReadTableGrant implements schema.ReadFunc.
 func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tableName := grantID.ObjectName
-	priv := grantID.Privilege
+	if !grantID.IsOldID {
+		if err := d.Set("roles", grantID.Roles); err != nil {
+			return err
+		}
+		if err := d.Set("shares", grantID.Shares); err != nil {
+			return err
+		}
+	}
 
-	if err := d.Set("database_name", dbName); err != nil {
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
-	if err := d.Set("schema_name", schemaName); err != nil {
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
 	onFuture := false
-	if tableName == "" {
+	if grantID.ObjectName == "" {
 		onFuture = true
 	}
-	if err := d.Set("table_name", tableName); err != nil {
+	if err := d.Set("table_name", grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureTableGrant(dbName, schemaName)
+		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.TableGrant(dbName, schemaName, tableName)
+		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, tableGrantSchema, builder, onFuture, validTablePrivileges)
@@ -207,24 +192,21 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTableGrant implements schema.DeleteFunc.
 func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	tableName := grantID.ObjectName
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
 	onFuture := false
-	if tableName == "" {
+	if grantID.ObjectName == "" {
 		onFuture = true
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureTableGrant(dbName, schemaName)
+		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.TableGrant(dbName, schemaName, tableName)
+		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -258,22 +240,19 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = difference("shares")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	tableName := grantID.ObjectName
-	onFuture := (tableName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureTableGrant(dbName, schemaName)
+		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.TableGrant(dbName, schemaName, tableName)
+		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	// first revoke
@@ -292,7 +271,7 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		grantID.Privilege,
-		grantID.GrantOption,
+		grantID.WithGrantOption,
 		rolesToAdd,
 		sharesToAdd,
 	); err != nil {
@@ -301,4 +280,65 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// Done, refresh state
 	return ReadTableGrant(d, meta)
+}
+
+type TableGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	Shares          []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewTableGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *TableGrantID {
+	return &TableGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		Shares:          shares,
+		WithGrantOption: withGrantOption,
+		IsOldID:		 false,
+	}
+}
+
+func (v *TableGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	shares := strings.Join(v.Shares, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, shares, v.WithGrantOption)
+}
+
+func parseTableGrantID(s string) (*TableGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &TableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			Shares:          []string{},
+			WithGrantOption: idParts[5] == "true",
+			IsOldID:		 true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 7 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+	}
+	return &TableGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		Roles:           strings.Split(idParts[4], ","),
+		Shares:          strings.Split(idParts[5], ","),
+		WithGrantOption: idParts[6] == "true",
+		IsOldID:		 false,
+	}, nil
 }

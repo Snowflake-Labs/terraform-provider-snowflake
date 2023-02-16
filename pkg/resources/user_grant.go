@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,66 +70,60 @@ func UserGrant() *TerraformGrantResource {
 
 // CreateUserGrant implements schema.CreateFunc.
 func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
-	w := d.Get("user_name").(string)
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
-	builder := snowflake.UserGrant(w)
+	userName := d.Get("user_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	builder := snowflake.UserGrant(userName)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: w,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewUserGrantID(userName, privilege, roles, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadUserGrant(d, meta)
 }
 
 // ReadUserGrant implements schema.ReadFunc.
 func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
-	priv := grantID.Privilege
 
-	if err := d.Set("user_name", w); err != nil {
+	if !grantID.IsOldID {
+		if err := d.Set("roles", grantID.Roles); err != nil {
+			return err
+		}
+	}
+
+	if err := d.Set("user_name", grantID.ObjectName); err != nil {
 		return err
 	}
 
-	if err := d.Set("privilege", priv); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
 
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
-	builder := snowflake.UserGrant(w)
+	builder := snowflake.UserGrant(grantID.ObjectName)
 
 	return readGenericGrant(d, meta, userGrantSchema, builder, false, validUserPrivileges)
 }
 
 // DeleteUserGrant implements schema.DeleteFunc.
 func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	w := grantID.ResourceName
 
-	builder := snowflake.UserGrant(w)
+	builder := snowflake.UserGrant(grantID.ObjectName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -141,13 +138,13 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	// create the builder
-	builder := snowflake.UserGrant(grantID.ResourceName)
+	builder := snowflake.UserGrant(grantID.ObjectName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
@@ -165,7 +162,7 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		grantID.Privilege,
-		grantID.GrantOption,
+		grantID.WithGrantOption,
 		rolesToAdd,
 		nil,
 	); err != nil {
@@ -174,4 +171,51 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// Done, refresh state
 	return ReadUserGrant(d, meta)
+}
+
+type UserGrantID struct {
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	WithGrantOption bool
+	IsOldID		 bool
+}
+
+func NewUserGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *UserGrantID {
+	return &UserGrantID{
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		WithGrantOption: withGrantOption,
+	}
+}
+
+func (v *UserGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+}
+
+func parseUserGrantID(s string) (*UserGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &UserGrantID{
+			ObjectName:      idParts[0],
+			Privilege:       idParts[3],
+			Roles:           strings.Split(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
+			IsOldID:         true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 4 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
+	}
+	return &UserGrantID{
+		ObjectName:      idParts[0],
+		Privilege:       idParts[1],
+		Roles:           strings.Split(idParts[2], ","),
+		WithGrantOption: idParts[3] == "true",
+		IsOldID: 	   false,
+	}, nil
 }

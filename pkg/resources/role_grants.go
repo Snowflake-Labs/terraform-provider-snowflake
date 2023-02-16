@@ -66,16 +66,9 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
-	grant := &grantID{
-		ResourceName: roleName,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	d.SetId(dataIDInput)
+	grantID := NewRoleGrantsID(roleName, roles, users)
+	d.SetId(grantID.String())
 
-	if err != nil {
-		return fmt.Errorf("error creating role grant err = %w", err)
-	}
 	for _, role := range roles {
 		if err := grantRoleToRole(db, roleName, role); err != nil {
 			return err
@@ -113,20 +106,17 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	log.Println(d.Id())
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseRoleGrantsID(d.Id())
 	if err != nil {
 		return err
 	}
-	roleName := grantID.ResourceName
 
-	tfRoles := expandStringList(d.Get("roles").(*schema.Set).List())
-	tfUsers := expandStringList(d.Get("users").(*schema.Set).List())
-
+	tfRoles := d.Get("roles").(*schema.Set).List()
+	tfUsers := d.Get("users").(*schema.Set).List()
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
-	grants, err := readGrants(db, roleName)
+	grants, err := readGrants(db, grantID.ObjectName)
 	if err != nil {
 		return err
 	}
@@ -150,7 +140,7 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("role_name", roleName); err != nil {
+	if err := d.Set("role_name", grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("roles", roles); err != nil {
@@ -302,4 +292,49 @@ func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return ReadRoleGrants(d, meta)
+}
+
+type RoleGrantsID struct {
+	ObjectName string
+	Roles      []string
+	Users      []string
+	IsOldID	bool
+}
+
+func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
+	return &RoleGrantsID{
+		ObjectName: objectName,
+		Roles:      roles,
+		Users:      users,
+		IsOldID: false,
+	}
+}
+
+func (v *RoleGrantsID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	users := strings.Join(v.Users, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v", v.ObjectName, roles, users)
+}
+
+func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &RoleGrantsID{
+			ObjectName: idParts[0],
+			Roles:      strings.Split(idParts[4], ","),
+			Users:      []string{},
+			IsOldID: true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 4 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
+	}
+	return &RoleGrantsID{
+		ObjectName: idParts[0],
+		Roles:      strings.Split(idParts[1], ","),
+		Users:      strings.Split(idParts[2], ","),
+		IsOldID: false,
+	}, nil
 }
