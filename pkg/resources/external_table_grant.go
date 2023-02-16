@@ -290,7 +290,7 @@ func NewExternalTableGrantID(databaseName string, schemaName, objectName, privil
 func (v *ExternalTableGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, shares, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
@@ -317,9 +317,9 @@ func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
 		SchemaName:      idParts[1],
 		ObjectName:      idParts[2],
 		Privilege:       idParts[3],
-		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-		Shares:          helpers.SplitStringToSlice(idParts[5], ","),
-		WithGrantOption: idParts[6] == "true",
+		WithGrantOption: idParts[4] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[6], ","),
 		IsOldID:         false,
 	}, nil
 }

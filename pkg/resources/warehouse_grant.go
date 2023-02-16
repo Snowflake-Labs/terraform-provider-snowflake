@@ -200,7 +200,7 @@ func NewWarehouseGrantID(objectName string, privilege string, roles []string, wi
 
 func (v *WarehouseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
@@ -222,8 +222,8 @@ func parseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
 	return &WarehouseGrantID{
 		ObjectName:      idParts[0],
 		Privilege:       idParts[1],
-		Roles:           helpers.SplitStringToSlice(idParts[2], ","),
-		WithGrantOption: idParts[3] == "true",
+		WithGrantOption: idParts[2] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
 		IsOldID:         false,
 	}, nil
 }

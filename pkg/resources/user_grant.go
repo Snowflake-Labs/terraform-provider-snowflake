@@ -193,7 +193,7 @@ func NewUserGrantID(objectName string, privilege string, roles []string, withGra
 
 func (v *UserGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseUserGrantID(s string) (*UserGrantID, error) {
@@ -215,8 +215,8 @@ func parseUserGrantID(s string) (*UserGrantID, error) {
 	return &UserGrantID{
 		ObjectName:      idParts[0],
 		Privilege:       idParts[1],
-		Roles:           helpers.SplitStringToSlice(idParts[2], ","),
-		WithGrantOption: idParts[3] == "true",
+		WithGrantOption: idParts[2] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
 		IsOldID:         false,
 	}, nil
 }

@@ -341,7 +341,7 @@ func NewProcedureGrantID(databaseName string, schemaName, objectName string, arg
 func (v *ProcedureGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, shares, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
@@ -376,9 +376,9 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		ObjectName:        idParts[2],
 		ArgumentDataTypes: helpers.SplitStringToSlice(idParts[3], ","),
 		Privilege:         idParts[4],
-		Roles:             helpers.SplitStringToSlice(idParts[5], ","),
-		Shares:            helpers.SplitStringToSlice(idParts[6], ","),
-		WithGrantOption:   idParts[7] == "true",
+		WithGrantOption:   idParts[5] == "true",
+		Roles:             helpers.SplitStringToSlice(idParts[6], ","),
+		Shares:            helpers.SplitStringToSlice(idParts[7], ","),
 		IsOldID:           false,
 	}, nil
 }

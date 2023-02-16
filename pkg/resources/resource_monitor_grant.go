@@ -182,7 +182,7 @@ func NewResourceMonitorGrantID(objectName string, privilege string, roles []stri
 
 func (v *ResourceMonitorGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
@@ -204,8 +204,8 @@ func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 	return &ResourceMonitorGrantID{
 		ObjectName:      idParts[0],
 		Privilege:       idParts[1],
-		Roles:           helpers.SplitStringToSlice(idParts[2], ","),
-		WithGrantOption: idParts[3] == "true",
+		WithGrantOption: idParts[2] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
 		IsOldID:         false,
 	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -184,7 +185,7 @@ func NewIntegrationGrantID(objectName string, privilege string, roles []string, 
 
 func (v *IntegrationGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
@@ -194,7 +195,7 @@ func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 		return &IntegrationGrantID{
 			ObjectName:      idParts[0],
 			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
@@ -206,8 +207,8 @@ func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 	return &IntegrationGrantID{
 		ObjectName:      idParts[0],
 		Privilege:       idParts[1],
-		Roles:           strings.Split(idParts[2], ","),
-		WithGrantOption: idParts[3] == "true",
+		WithGrantOption: idParts[2] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
 		IsOldID:         false,
 	}, nil
 }

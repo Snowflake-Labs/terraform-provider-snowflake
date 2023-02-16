@@ -1,2 +1,2 @@
-# format is database name | schema name | stage name | privilege | true/false for with_grant_option
-terraform import snowflake_stage_grant.example 'databaseName|schemaName|stageName|USAGE|true'
+# format is database_name ❄️ schema_name ❄️ stage_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_stage_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT❄️USAGE❄️false❄️role1,role2'

@@ -259,7 +259,7 @@ func NewFileFormatGrantID(databaseName string, schemaName, objectName, privilege
 
 func (v *FileFormatGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseFileFormatGrant(s string) (*FileFormatGrantID, error) {
@@ -284,7 +284,7 @@ func parseFileFormatGrant(s string) (*FileFormatGrantID, error) {
 		SchemaName:      idParts[1],
 		ObjectName:      idParts[2],
 		Privilege:       idParts[3],
-		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-		WithGrantOption: idParts[5] == "true",
+		WithGrantOption: idParts[4] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
 	}, nil
 }

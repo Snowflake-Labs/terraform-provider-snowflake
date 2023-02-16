@@ -296,7 +296,7 @@ func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles [
 func (v *SchemaGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, roles, shares, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
@@ -321,9 +321,9 @@ func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
 		DatabaseName:    idParts[0],
 		SchemaName:      idParts[1],
 		Privilege:       idParts[2],
-		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
-		Shares:          helpers.SplitStringToSlice(idParts[4], ","),
-		WithGrantOption: idParts[5] == "true",
+		WithGrantOption: idParts[3] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[5], ","),
 		IsOldID:         false,
 	}, nil
 }
