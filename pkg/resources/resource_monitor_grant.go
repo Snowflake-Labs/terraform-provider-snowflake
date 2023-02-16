@@ -59,7 +59,9 @@ func ResourceMonitorGrant() *TerraformGrantResource {
 			Read:   ReadResourceMonitorGrant,
 			Delete: DeleteResourceMonitorGrant,
 			Update: UpdateResourceMonitorGrant,
-
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 			Schema: resourceMonitorGrantSchema,
 		},
 		ValidPrivs: validResourceMonitorPrivileges,
