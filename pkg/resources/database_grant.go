@@ -79,11 +79,26 @@ func DatabaseGrant() *TerraformGrantResource {
 						return nil, err
 					}
 					id := v.(DatabaseGrantID)
-					d.Set("database_name", id.DatabaseName)
-					d.Set("privilege", id.Privilege)
-					d.Set("roles", id.Roles)
-					d.Set("shares", id.Shares)
-					d.Set("with_grant_option", id.WithGrantOption)
+					err = d.Set("database_name", id.DatabaseName)\
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("privilege", id.Privilege)
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("roles", id.Roles)
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("shares", id.Shares)
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("with_grant_option", id.WithGrantOption)
+					if err != nil {
+						return nil, err
+					}
 					d.SetId(helpers.RandomSnowflakeID())
 					return []*schema.ResourceData{d}, nil
 				},
