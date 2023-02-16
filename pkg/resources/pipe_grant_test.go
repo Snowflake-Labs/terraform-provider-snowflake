@@ -45,7 +45,7 @@ func TestPipeGrantCreate(t *testing.T) {
 func TestPipeGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := pipeGrant(t, "test-db|PUBLIC|test-pipe|OPERATE|false", map[string]interface{}{
+	d := pipeGrant(t, "test-db|PUBLIC|test-pipe|OPERATE||false", map[string]interface{}{
 		"pipe_name":         "test-pipe",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
