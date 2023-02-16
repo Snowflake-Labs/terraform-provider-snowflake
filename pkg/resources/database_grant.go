@@ -209,7 +209,7 @@ func NewDatabaseGrantID(databaseName string, privilege string, roles []string, s
 func (v *DatabaseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.Privilege, roles, shares, v.WithGrantOption, v.IsOldID)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.Privilege, roles, shares, v.WithGrantOption)
 }
 
 func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
