@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -145,6 +146,10 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !grantID.IsOldID {
+		fmt.Printf("[DEBUG] id: %v\n", d.Id())
+		fmt.Printf("[DEBUG] reading external table grant: %v\n", grantID)
+		fmt.Printf("[DEBUG] reading external table grant shares: %v\n", grantID.Shares)
+		fmt.Printf("[DEBUG] len(external table grant shares): %v\n", len(grantID.Shares))
 		if err := d.Set("shares", grantID.Shares); err != nil {
 			return err
 		}
@@ -297,7 +302,7 @@ func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:          []string{},
 			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
@@ -312,8 +317,8 @@ func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
 		SchemaName:      idParts[1],
 		ObjectName:      idParts[2],
 		Privilege:       idParts[3],
-		Roles:           strings.Split(idParts[4], ","),
-		Shares:          strings.Split(idParts[5], ","),
+		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[5], ","),
 		WithGrantOption: idParts[6] == "true",
 		IsOldID:         false,
 	}, nil

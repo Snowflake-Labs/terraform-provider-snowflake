@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -219,9 +220,9 @@ func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
 		return &DatabaseGrantID{
 			DatabaseName:    idParts[0],
 			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
+			Roles:           []string{},
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: idParts[4] == "true",
 			IsOldID:         true,
 		}, nil
 	}
@@ -232,8 +233,8 @@ func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
 	return &DatabaseGrantID{
 		DatabaseName:    idParts[0],
 		Privilege:       idParts[1],
-		Roles:           strings.Split(idParts[2], ","),
-		Shares:          strings.Split(idParts[3], ","),
+		Roles:           helpers.SplitStringToSlice(idParts[2], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[3], ","),
 		WithGrantOption: idParts[4] == "true",
 		IsOldID:         false,
 	}, nil

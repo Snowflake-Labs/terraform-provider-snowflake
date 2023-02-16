@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
@@ -322,7 +323,7 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 		idParts := strings.Split(s, "|")
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
-			Roles:      strings.Split(idParts[4], ","),
+			Roles:      helpers.SplitStringToSlice(idParts[4], ","),
 			Users:      []string{},
 			IsOldID:    true,
 		}, nil
@@ -333,8 +334,8 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 	}
 	return &RoleGrantsID{
 		ObjectName: idParts[0],
-		Roles:      strings.Split(idParts[1], ","),
-		Users:      strings.Split(idParts[2], ","),
+		Roles:      helpers.SplitStringToSlice(idParts[1], ","),
+		Users:      helpers.SplitStringToSlice(idParts[2], ","),
 		IsOldID:    false,
 	}, nil
 }

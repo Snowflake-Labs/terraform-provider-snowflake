@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -222,7 +223,7 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
@@ -236,7 +237,7 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 		SchemaName:      idParts[1],
 		ObjectName:      idParts[2],
 		Privilege:       idParts[3],
-		Roles:           strings.Split(idParts[4], ","),
+		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
 		IsOldID:         false,
 	}, nil

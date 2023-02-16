@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -357,9 +358,9 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 			DatabaseName:      idParts[0],
 			SchemaName:        idParts[1],
 			ObjectName:        objectNameParts[0],
-			ArgumentDataTypes: strings.Split(objectNameParts[1], ","),
+			ArgumentDataTypes: helpers.SplitStringToSlice(objectNameParts[1], ","),
 			Privilege:         idParts[3],
-			Roles:             strings.Split(idParts[4], ","),
+			Roles:             helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:            []string{},
 			WithGrantOption:   idParts[5] == "true",
 			IsOldID:           true,
@@ -373,10 +374,10 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		DatabaseName:      idParts[0],
 		SchemaName:        idParts[1],
 		ObjectName:        idParts[2],
-		ArgumentDataTypes: strings.Split(idParts[3], ","),
+		ArgumentDataTypes: helpers.SplitStringToSlice(idParts[3], ","),
 		Privilege:         idParts[4],
-		Roles:             strings.Split(idParts[5], ","),
-		Shares:            strings.Split(idParts[6], ","),
+		Roles:             helpers.SplitStringToSlice(idParts[5], ","),
+		Shares:            helpers.SplitStringToSlice(idParts[6], ","),
 		WithGrantOption:   idParts[7] == "true",
 		IsOldID:           false,
 	}, nil
