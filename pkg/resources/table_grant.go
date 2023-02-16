@@ -321,9 +321,9 @@ func parseTableGrantID(s string) (*TableGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
+			Roles:           []string{},
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: idParts[4] == "true",
 			IsOldID:         true,
 		}, nil
 	}
