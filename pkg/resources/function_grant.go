@@ -179,7 +179,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewFunctionGrantID(databaseName, schemaName, functionName,argumentDataTypes, privilege, roles, shares, withGrantOption)
+	grantID := NewFunctionGrantID(databaseName, schemaName, functionName, argumentDataTypes, privilege, roles, shares, withGrantOption)
 	d.SetId(grantID.String())
 	return ReadFunctionGrant(d, meta)
 }
@@ -213,7 +213,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	onFuture := false
 	if grantID.ObjectName == "" {
 		onFuture = true
-	} 
+	}
 	if err := d.Set("function_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if onFuture {
 		builder = snowflake.FutureFunctionGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
 	}
 
 	// first revoke
@@ -302,28 +302,28 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 type FunctionGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	ObjectName      string
+	DatabaseName      string
+	SchemaName        string
+	ObjectName        string
 	ArgumentDataTypes []string
-	Privilege       string
-	Roles           []string
-	Shares          []string
-	WithGrantOption bool
-	IsOldID		 bool
+	Privilege         string
+	Roles             []string
+	Shares            []string
+	WithGrantOption   bool
+	IsOldID           bool
 }
 
 func NewFunctionGrantID(databaseName string, schemaName, objectName string, argumentDataTypes []string, privilege string, roles []string, shares []string, withGrantOption bool) *FunctionGrantID {
 	return &FunctionGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		ObjectName:      objectName,
+		DatabaseName:      databaseName,
+		SchemaName:        schemaName,
+		ObjectName:        objectName,
 		ArgumentDataTypes: argumentDataTypes,
-		Privilege:       privilege,
-		Roles:           roles,
-		Shares:          shares,
-		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		Privilege:         privilege,
+		Roles:             roles,
+		Shares:            shares,
+		WithGrantOption:   withGrantOption,
+		IsOldID:           false,
 	}
 }
 
@@ -344,15 +344,15 @@ func parseFunctionGrantID(s string) (*FunctionGrantID, error) {
 		objectNameParts := strings.Split(objectIdentifier, "(")
 
 		return &FunctionGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			ObjectName:      objectNameParts[0],
+			DatabaseName:      idParts[0],
+			SchemaName:        idParts[1],
+			ObjectName:        objectNameParts[0],
 			ArgumentDataTypes: strings.Split(objectNameParts[1], ","),
-			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
-			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			Privilege:         idParts[3],
+			Roles:             strings.Split(idParts[4], ","),
+			Shares:            []string{},
+			WithGrantOption:   idParts[5] == "true",
+			IsOldID:           true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -360,14 +360,14 @@ func parseFunctionGrantID(s string) (*FunctionGrantID, error) {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
 	}
 	return &FunctionGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
+		DatabaseName:      idParts[0],
+		SchemaName:        idParts[1],
+		ObjectName:        idParts[2],
 		ArgumentDataTypes: strings.Split(idParts[3], ","),
-		Privilege:       idParts[4],
-		Roles:           strings.Split(idParts[5], ","),
-		Shares:         strings.Split(idParts[6], ","),
-		WithGrantOption: idParts[7] == "true",
-		IsOldID: false,
+		Privilege:         idParts[4],
+		Roles:             strings.Split(idParts[5], ","),
+		Shares:            strings.Split(idParts[6], ","),
+		WithGrantOption:   idParts[7] == "true",
+		IsOldID:           false,
 	}, nil
 }

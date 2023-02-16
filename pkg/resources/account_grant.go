@@ -91,9 +91,18 @@ func AccountGrant() *TerraformGrantResource {
 						return nil, err
 					}
 					id := v.(AccountGrantID)
-					d.Set("privilege", id.Privilege)
-					d.Set("roles", id.Roles)
-					d.Set("with_grant_option", id.WithGrantOption)
+					err = d.Set("privilege", id.Privilege)
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("roles", id.Roles)
+					if err != nil {
+						return nil, err
+					}
+					err = d.Set("with_grant_option", id.WithGrantOption)
+					if err != nil {
+						return nil, err
+					}
 					d.SetId(helpers.RandomSnowflakeID())
 					return []*schema.ResourceData{d}, nil
 				},

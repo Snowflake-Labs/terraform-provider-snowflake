@@ -124,7 +124,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewTaskGrantID(databaseName, schemaName, taskName, privilege,roles, withGrantOption)
+	grantID := NewTaskGrantID(databaseName, schemaName, taskName, privilege, roles, withGrantOption)
 	d.SetId(grantID.String())
 
 	return ReadTaskGrant(d, meta)
@@ -252,7 +252,7 @@ type TaskGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewTaskGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *TaskGrantID {
@@ -263,7 +263,7 @@ func NewTaskGrantID(databaseName string, schemaName, objectName, privilege strin
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -283,7 +283,7 @@ func parseTaskGrantID(s string) (*TaskGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           []string{},
 			WithGrantOption: idParts[4] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -297,6 +297,6 @@ func parseTaskGrantID(s string) (*TaskGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

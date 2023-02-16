@@ -178,7 +178,7 @@ type UserGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewUserGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *UserGrantID {
@@ -216,6 +216,6 @@ func parseUserGrantID(s string) (*UserGrantID, error) {
 		Privilege:       idParts[1],
 		Roles:           strings.Split(idParts[2], ","),
 		WithGrantOption: idParts[3] == "true",
-		IsOldID: 	   false,
+		IsOldID:         false,
 	}, nil
 }

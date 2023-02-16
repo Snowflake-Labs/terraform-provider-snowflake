@@ -86,7 +86,7 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	grantID := NewWarehouseGrantID(warehouseName, privilege, roles, withGrantOption)
 
-	d.SetId(grantID.String())	
+	d.SetId(grantID.String())
 
 	return ReadWarehouseGrant(d, meta)
 }
@@ -193,7 +193,7 @@ func NewWarehouseGrantID(objectName string, privilege string, roles []string, wi
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: 	   false,
+		IsOldID:         false,
 	}
 }
 

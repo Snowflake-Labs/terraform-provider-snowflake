@@ -160,7 +160,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("schema_name",  grantID.SchemaName); err != nil {
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
 
@@ -187,9 +187,9 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 	var builder snowflake.GrantBuilder
 	if futureViewsEnabled {
-		builder = snowflake.FutureViewGrant(grantID.DatabaseName,  grantID.SchemaName)
+		builder = snowflake.FutureViewGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.ViewGrant(grantID.DatabaseName,  grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.ViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
@@ -271,7 +271,7 @@ type ViewGrantID struct {
 	Roles           []string
 	Shares          []string
 	WithGrantOption bool
-	IsOldID 	   bool
+	IsOldID         bool
 }
 
 func NewViewGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *ViewGrantID {
@@ -283,7 +283,7 @@ func NewViewGrantID(databaseName string, schemaName, objectName, privilege strin
 		Roles:           roles,
 		Shares:          shares,
 		WithGrantOption: withGrantOption,
-		IsOldID: 	   false,
+		IsOldID:         false,
 	}
 }
 
@@ -305,7 +305,7 @@ func parseViewGrantID(s string) (*ViewGrantID, error) {
 			Roles:           strings.Split(idParts[4], ","),
 			Shares:          []string{},
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: 	   true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -320,6 +320,6 @@ func parseViewGrantID(s string) (*ViewGrantID, error) {
 		Roles:           strings.Split(idParts[4], ","),
 		Shares:          strings.Split(idParts[5], ","),
 		WithGrantOption: idParts[6] == "true",
-		IsOldID: 	   false,
+		IsOldID:         false,
 	}, nil
 }

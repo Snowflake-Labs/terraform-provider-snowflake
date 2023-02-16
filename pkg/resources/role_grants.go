@@ -298,7 +298,7 @@ type RoleGrantsID struct {
 	ObjectName string
 	Roles      []string
 	Users      []string
-	IsOldID	bool
+	IsOldID    bool
 }
 
 func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
@@ -306,7 +306,7 @@ func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
 		ObjectName: objectName,
 		Roles:      roles,
 		Users:      users,
-		IsOldID: false,
+		IsOldID:    false,
 	}
 }
 
@@ -324,7 +324,7 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 			ObjectName: idParts[0],
 			Roles:      strings.Split(idParts[4], ","),
 			Users:      []string{},
-			IsOldID: true,
+			IsOldID:    true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -335,6 +335,6 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 		ObjectName: idParts[0],
 		Roles:      strings.Split(idParts[1], ","),
 		Users:      strings.Split(idParts[2], ","),
-		IsOldID: false,
+		IsOldID:    false,
 	}, nil
 }

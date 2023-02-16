@@ -246,7 +246,7 @@ type SequenceGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewSequenceGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *SequenceGrantID {
@@ -257,7 +257,7 @@ func NewSequenceGrantID(databaseName string, schemaName, objectName, privilege s
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID:		 false,
+		IsOldID:         false,
 	}
 }
 
@@ -277,7 +277,7 @@ func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           []string{},
 			WithGrantOption: idParts[4] == "true",
-			IsOldID:		 true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -291,6 +291,6 @@ func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID:		 false,
+		IsOldID:         false,
 	}, nil
 }

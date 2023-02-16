@@ -178,7 +178,7 @@ func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := ( grantID.ObjectName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if onFuture {

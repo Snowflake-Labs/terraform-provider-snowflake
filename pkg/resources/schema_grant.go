@@ -219,7 +219,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	
+
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ type SchemaGrantID struct {
 	Roles           []string
 	Shares          []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles []string, shares []string, withGrantOption bool) *SchemaGrantID {
@@ -288,14 +288,14 @@ func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles [
 		Roles:           roles,
 		Shares:          shares,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
 func (v *SchemaGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, roles, shares, v.WithGrantOption)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, roles, shares, v.WithGrantOption)
 }
 
 func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
@@ -309,7 +309,7 @@ func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
 			Roles:           strings.Split(idParts[4], ","),
 			Shares:          []string{},
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -323,6 +323,6 @@ func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
 		Roles:           strings.Split(idParts[3], ","),
 		Shares:          strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

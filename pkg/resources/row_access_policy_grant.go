@@ -193,7 +193,7 @@ type RowAccessPolicyGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewRowAccessPolicyGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *RowAccessPolicyGrantID {
@@ -204,7 +204,7 @@ func NewRowAccessPolicyGrantID(databaseName string, schemaName, objectName, priv
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -222,9 +222,9 @@ func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:          []string{},
+			Roles:           []string{},
 			WithGrantOption: idParts[4] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -238,6 +238,6 @@ func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

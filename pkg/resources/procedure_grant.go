@@ -182,7 +182,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID := NewProcedureGrantID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, roles, shares, withGrantOption)
 	d.SetId(grantID.String())
 	return ReadProcedureGrant(d, meta)
-} 
+}
 
 // ReadProcedureGrant implements schema.ReadFunc.
 func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
@@ -199,7 +199,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-	
+
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("privilege",  grantID.Privilege); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
 
@@ -312,28 +312,28 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 type ProcedureGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	ObjectName      string
+	DatabaseName      string
+	SchemaName        string
+	ObjectName        string
 	ArgumentDataTypes []string
-	Privilege       string
-	Roles           []string
-	Shares          []string
-	WithGrantOption bool
-	IsOldID 	   bool
+	Privilege         string
+	Roles             []string
+	Shares            []string
+	WithGrantOption   bool
+	IsOldID           bool
 }
 
 func NewProcedureGrantID(databaseName string, schemaName, objectName string, argumentDataTypes []string, privilege string, roles []string, shares []string, withGrantOption bool) *ProcedureGrantID {
 	return &ProcedureGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		ObjectName:      objectName,
+		DatabaseName:      databaseName,
+		SchemaName:        schemaName,
+		ObjectName:        objectName,
 		ArgumentDataTypes: argumentDataTypes,
-		Privilege:       privilege,
-		Roles:           roles,
-		Shares:          shares,
-		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		Privilege:         privilege,
+		Roles:             roles,
+		Shares:            shares,
+		WithGrantOption:   withGrantOption,
+		IsOldID:           false,
 	}
 }
 
@@ -354,15 +354,15 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		objectNameParts := strings.Split(objectIdentifier, "(")
 
 		return &ProcedureGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			ObjectName:      objectNameParts[0],
+			DatabaseName:      idParts[0],
+			SchemaName:        idParts[1],
+			ObjectName:        objectNameParts[0],
 			ArgumentDataTypes: strings.Split(objectNameParts[1], ","),
-			Privilege:       idParts[3],
-			Roles:           strings.Split(idParts[4], ","),
-			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			Privilege:         idParts[3],
+			Roles:             strings.Split(idParts[4], ","),
+			Shares:            []string{},
+			WithGrantOption:   idParts[5] == "true",
+			IsOldID:           true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -370,14 +370,14 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
 	}
 	return &ProcedureGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
+		DatabaseName:      idParts[0],
+		SchemaName:        idParts[1],
+		ObjectName:        idParts[2],
 		ArgumentDataTypes: strings.Split(idParts[3], ","),
-		Privilege:       idParts[4],
-		Roles:           strings.Split(idParts[5], ","),
-		Shares:         strings.Split(idParts[6], ","),
-		WithGrantOption: idParts[7] == "true",
-		IsOldID: false,
+		Privilege:         idParts[4],
+		Roles:             strings.Split(idParts[5], ","),
+		Shares:            strings.Split(idParts[6], ","),
+		WithGrantOption:   idParts[7] == "true",
+		IsOldID:           false,
 	}, nil
 }

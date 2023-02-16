@@ -164,7 +164,7 @@ type ResourceMonitorGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewResourceMonitorGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *ResourceMonitorGrantID {
@@ -173,7 +173,7 @@ func NewResourceMonitorGrantID(objectName string, privilege string, roles []stri
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -191,7 +191,7 @@ func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           strings.Split(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -203,6 +203,6 @@ func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 		Privilege:       idParts[1],
 		Roles:           strings.Split(idParts[2], ","),
 		WithGrantOption: idParts[3] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

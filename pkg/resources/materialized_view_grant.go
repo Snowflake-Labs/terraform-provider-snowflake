@@ -159,7 +159,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("database_name",  grantID.DatabaseName); err != nil {
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
@@ -184,9 +184,9 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 	var builder snowflake.GrantBuilder
 	if futureMaterializedViewsEnabled {
-		builder = snowflake.FutureMaterializedViewGrant( grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.MaterializedViewGrant( grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
@@ -280,7 +280,7 @@ func NewMaterializedViewGrantID(databaseName string, schemaName, objectName, pri
 		Roles:           roles,
 		Shares:          shares,
 		WithGrantOption: withGrantOption,
-		IsOldID: 	   false,
+		IsOldID:         false,
 	}
 }
 

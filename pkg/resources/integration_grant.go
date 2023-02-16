@@ -169,7 +169,7 @@ type IntegrationGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewIntegrationGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *IntegrationGrantID {
@@ -178,7 +178,7 @@ func NewIntegrationGrantID(objectName string, privilege string, roles []string, 
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -196,7 +196,7 @@ func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           strings.Split(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -208,6 +208,6 @@ func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 		Privilege:       idParts[1],
 		Roles:           strings.Split(idParts[2], ","),
 		WithGrantOption: idParts[3] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

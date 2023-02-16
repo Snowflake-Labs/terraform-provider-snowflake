@@ -105,7 +105,7 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)
 	}
-	var stageName  string
+	var stageName string
 	if name, ok := d.GetOk("stage_name"); ok {
 		stageName = name.(string)
 	}
@@ -127,7 +127,7 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	roles :=  expandStringList( d.Get("roles").(*schema.Set).List())
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	grantID := NewStageGrantID(databaseName, schemaName, stageName, privilege, roles, grantOption)
 	d.SetId(grantID.String())
 
@@ -250,7 +250,7 @@ type StageGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewStageGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *StageGrantID {
@@ -261,7 +261,7 @@ func NewStageGrantID(databaseName string, schemaName, objectName, privilege stri
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -281,7 +281,7 @@ func parseStageGrantID(s string) (*StageGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           []string{},
 			WithGrantOption: idParts[4] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -295,6 +295,6 @@ func parseStageGrantID(s string) (*StageGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

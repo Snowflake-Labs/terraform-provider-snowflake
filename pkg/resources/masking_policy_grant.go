@@ -167,7 +167,7 @@ func UpdateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// create the builder
-	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
+	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
@@ -193,7 +193,7 @@ type MaskingPolicyGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewMaskingPolicyGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *MaskingPolicyGrantID {
@@ -204,7 +204,7 @@ func NewMaskingPolicyGrantID(databaseName string, schemaName, objectName, privil
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -213,7 +213,7 @@ func (v *MaskingPolicyGrantID) String() string {
 	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
 }
 
-func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error){
+func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 	// is this an old ID format?
 	if !strings.Contains(s, "❄️") {
 		idParts := strings.Split(s, "|")
@@ -224,7 +224,7 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error){
 			Privilege:       idParts[3],
 			Roles:           strings.Split(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -238,6 +238,6 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error){
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

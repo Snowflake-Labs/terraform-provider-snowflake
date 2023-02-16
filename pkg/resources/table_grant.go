@@ -103,7 +103,7 @@ func TableGrant() *TerraformGrantResource {
 
 // CreateTableGrant implements schema.CreateFunc.
 func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
-	var tableName  string
+	var tableName string
 	if _, ok := d.GetOk("table_name"); ok {
 		tableName = d.Get("table_name").(string)
 	}
@@ -136,7 +136,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewTableGrantID(databaseName, schemaName, tableName, privilege, roles, shares,withGrantOption)
+	grantID := NewTableGrantID(databaseName, schemaName, tableName, privilege, roles, shares, withGrantOption)
 	d.SetId(grantID.String())
 	return ReadTableGrant(d, meta)
 }
@@ -290,7 +290,7 @@ type TableGrantID struct {
 	Roles           []string
 	Shares          []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewTableGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *TableGrantID {
@@ -302,7 +302,7 @@ func NewTableGrantID(databaseName string, schemaName, objectName, privilege stri
 		Roles:           roles,
 		Shares:          shares,
 		WithGrantOption: withGrantOption,
-		IsOldID:		 false,
+		IsOldID:         false,
 	}
 }
 
@@ -324,7 +324,7 @@ func parseTableGrantID(s string) (*TableGrantID, error) {
 			Roles:           strings.Split(idParts[4], ","),
 			Shares:          []string{},
 			WithGrantOption: idParts[5] == "true",
-			IsOldID:		 true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -339,6 +339,6 @@ func parseTableGrantID(s string) (*TableGrantID, error) {
 		Roles:           strings.Split(idParts[4], ","),
 		Shares:          strings.Split(idParts[5], ","),
 		WithGrantOption: idParts[6] == "true",
-		IsOldID:		 false,
+		IsOldID:         false,
 	}, nil
 }

@@ -123,7 +123,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("tag_name",  grantID.ObjectName); err != nil {
+	if err := d.Set("tag_name", grantID.ObjectName); err != nil {
 		return err
 	}
 
@@ -135,7 +135,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
+	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	return readGenericGrant(d, meta, tagGrantSchema, builder, false, validTagPrivileges)
 }
@@ -156,7 +156,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// create the builder
-	builder := snowflake.TagGrant( grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
@@ -203,7 +203,7 @@ type TagGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewTagGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *TagGrantID {
@@ -214,7 +214,7 @@ func NewTagGrantID(databaseName string, schemaName, objectName, privilege string
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -234,7 +234,7 @@ func parseTagGrantID(s string) (*TagGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           []string{},
 			WithGrantOption: idParts[4] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -248,6 +248,6 @@ func parseTagGrantID(s string) (*TagGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }

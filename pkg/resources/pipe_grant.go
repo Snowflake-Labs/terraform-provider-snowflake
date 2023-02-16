@@ -147,9 +147,9 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := ( grantID.ObjectName == "")
+	onFuture := (grantID.ObjectName == "")
 
-	if err := d.Set("pipe_name",  grantID.ObjectName); err != nil {
+	if err := d.Set("pipe_name", grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("on_future", onFuture); err != nil {
@@ -166,7 +166,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	if onFuture {
 		builder = snowflake.FuturePipeGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName,  grantID.ObjectName)
+		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, pipeGrantSchema, builder, onFuture, validPipePrivileges)
@@ -179,13 +179,13 @@ func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := ( grantID.ObjectName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FuturePipeGrant(grantID.DatabaseName,  grantID.SchemaName)
+		builder = snowflake.FuturePipeGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.PipeGrant(grantID.DatabaseName,  grantID.SchemaName,  grantID.ObjectName)
+		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -244,7 +244,7 @@ type PipeGrantID struct {
 	Privilege       string
 	Roles           []string
 	WithGrantOption bool
-	IsOldID		 bool
+	IsOldID         bool
 }
 
 func NewPipeGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *PipeGrantID {
@@ -255,7 +255,7 @@ func NewPipeGrantID(databaseName string, schemaName, objectName, privilege strin
 		Privilege:       privilege,
 		Roles:           roles,
 		WithGrantOption: withGrantOption,
-		IsOldID: false,
+		IsOldID:         false,
 	}
 }
 
@@ -275,7 +275,7 @@ func parsePipeGrantID(s string) (*PipeGrantID, error) {
 			Privilege:       idParts[3],
 			Roles:           strings.Split(idParts[4], ","),
 			WithGrantOption: idParts[5] == "true",
-			IsOldID: true,
+			IsOldID:         true,
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
@@ -289,6 +289,6 @@ func parsePipeGrantID(s string) (*PipeGrantID, error) {
 		Privilege:       idParts[3],
 		Roles:           strings.Split(idParts[4], ","),
 		WithGrantOption: idParts[5] == "true",
-		IsOldID: false,
+		IsOldID:         false,
 	}, nil
 }
