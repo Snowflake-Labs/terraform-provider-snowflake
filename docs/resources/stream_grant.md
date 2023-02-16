@@ -52,6 +52,6 @@ resource "snowflake_stream_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | stream name | privilege | true/false for with_grant_option
-terraform import snowflake_stream_grant.example 'dbName|schemaName|streamName|SELECT|false'
+# format is database_name ❄️ schema_name ❄️ stream_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_stream_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT❄️SELECT❄️false❄️role1,role2'
 ```

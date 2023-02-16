@@ -50,6 +50,6 @@ resource "snowflake_row_access_policy_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | row access policy name | privilege | true/false for with_grant_option
-terraform import snowflake_row_access_policy_grant.example 'dbName|schemaName|rowAccessPolicyName|SELECT|false'
+# format is database_name ❄️ schema_name ❄️ object_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_row_access_policy_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT_NAME❄️SELECT❄️false❄️role1,role2'
 ```

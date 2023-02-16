@@ -46,6 +46,6 @@ resource "snowflake_warehouse_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is warehouse name | | | privilege | true/false for with_grant_option
-terraform import snowflake_warehouse_grant.example 'warehouseName|||MODIFY|true'
+# format is warehouse_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_warehouse_grant.example 'MY_WAREHOUSE❄️MODIFY❄️false❄️role1,role2'
 ```
