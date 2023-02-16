@@ -80,7 +80,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := NewResourceMonitorGrantID(privilege, privilege, roles, withGrantOption)
+	grantID := NewResourceMonitorGrantID(monitorName, privilege, roles, withGrantOption)
 	d.SetId(grantID.String())
 
 	return ReadResourceMonitorGrant(d, meta)
