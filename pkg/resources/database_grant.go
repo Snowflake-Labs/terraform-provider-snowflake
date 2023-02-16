@@ -79,7 +79,7 @@ func DatabaseGrant() *TerraformGrantResource {
 						return nil, err
 					}
 					id := v.(DatabaseGrantID)
-					err = d.Set("database_name", id.DatabaseName)\
+					err = d.Set("database_name", id.DatabaseName)
 					if err != nil {
 						return nil, err
 					}
