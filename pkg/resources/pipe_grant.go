@@ -262,7 +262,7 @@ func NewPipeGrantID(databaseName string, schemaName, objectName, privilege strin
 
 func (v *PipeGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.WithGrantOption, v.Privilege, roles)
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parsePipeGrantID(s string) (*PipeGrantID, error) {
