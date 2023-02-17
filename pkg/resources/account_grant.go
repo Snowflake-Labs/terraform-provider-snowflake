@@ -153,8 +153,8 @@ func parseAccountGrantID(s string) (*AccountGrantID, error) {
 		}, nil
 	}
 	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 5 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 5", len(idParts))
+	if len(idParts) != 3 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
 	}
 	return &AccountGrantID{
 		Privilege:       idParts[0],
