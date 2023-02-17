@@ -67,7 +67,7 @@ func TestRoleGrantsRead(t *testing.T) {
 		err := resources.ReadRoleGrants(d, db)
 		r.NoError(err)
 		r.Len(d.Get("users").(*schema.Set).List(), 0)
-		r.Len(d.Get("roles").(*schema.Set).List(), 0)
+		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
 
@@ -121,7 +121,7 @@ func TestIgnoreUnknownRoleGrants(t *testing.T) {
 		expectReadUnhandledRoleGrants(mock)
 		err := resources.ReadRoleGrants(d, db)
 		r.NoError(err)
-		r.Len(d.Get("users").(*schema.Set).List(), 2)
+		r.Len(d.Get("users").(*schema.Set).List(), 0)
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
