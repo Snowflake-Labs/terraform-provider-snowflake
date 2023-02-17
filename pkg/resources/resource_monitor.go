@@ -54,17 +54,15 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
 	},
-	"suspend_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
+	"suspend_trigger": {
+		Type:        schema.TypeInt,
 		Optional:    true,
-		Description: "A list of percentage thresholds at which to suspend all warehouses.",
+		Description: "The number that represents the percentage threshold at which to suspend all warehouses.",
 	},
-	"suspend_immediate_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
+	"suspend_immediate_trigger": {
+		Type:        schema.TypeInt,
 		Optional:    true,
-		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
+		Description: "The number that represents the percentage threshold at which to immediately suspend all warehouses.",
 	},
 	"notify_triggers": {
 		Type:        schema.TypeSet,
@@ -75,7 +73,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"set_for_account": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).",
 		Default:     false,
 	},
 	"warehouses": {
@@ -140,13 +138,11 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		cb.SetString("end_timestamp", v.(string))
 	}
 	// Set triggers
-	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
-	for _, t := range sTrigs {
-		cb.SuspendAt(t)
+	if v, ok := d.GetOk("suspend_trigger"); ok {
+		cb.SuspendAt(v.(int))
 	}
-	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
-	for _, t := range siTrigs {
-		cb.SuspendImmediatelyAt(t)
+	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		cb.SuspendImmediatelyAt(v.(int))
 	}
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
@@ -228,18 +224,18 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Triggers
-	sTrigs, err := extractTriggerInts(rm.SuspendAt)
+	sTrig, err := extractTriggerInts(rm.SuspendAt)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("suspend_triggers", sTrigs); err != nil {
+	if err := d.Set("suspend_trigger", sTrig); err != nil {
 		return err
 	}
-	siTrigs, err := extractTriggerInts(rm.SuspendImmediatelyAt)
+	siTrig, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("suspend_immediate_triggers", siTrigs); err != nil {
+	if err := d.Set("suspend_immediate_trigger", siTrig); err != nil {
 		return err
 	}
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
@@ -333,15 +329,13 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Set triggers
-	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
-	for _, t := range sTrigs {
+	if d.HasChange("suspend_trigger") {
 		runSetStatement = true
-		ub.SuspendAt(t)
+		ub.SuspendAt(d.Get("suspend_trigger").(int))
 	}
-	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
-	for _, t := range siTrigs {
+	if d.HasChange("suspend_immediate_trigger") {
 		runSetStatement = true
-		ub.SuspendImmediatelyAt(t)
+		ub.SuspendImmediatelyAt(d.Get("suspend_immediate_trigger").(int))
 	}
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
