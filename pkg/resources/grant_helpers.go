@@ -1,9 +1,7 @@
 package resources
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
@@ -71,89 +69,6 @@ type grant struct {
 	GranteeType string
 	GranteeName string
 	GrantOption bool
-}
-
-// grantID contains identifying elements that allow unique access privileges.
-type grantID struct {
-	ResourceName string
-	SchemaName   string
-	ObjectName   string
-	Privilege    string
-	Roles        []string
-	GrantOption  bool
-}
-
-// String() takes in a grantID object and returns a pipe-delimited string:
-// resourceName|schemaName|ObjectName|Privilege|Roles|GrantOption.
-func (gi *grantID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = grantIDDelimiter
-	grantOption := fmt.Sprintf("%v", gi.GrantOption)
-	roles := strings.Join(gi.Roles, ",")
-	dataIdentifiers := [][]string{{gi.ResourceName, gi.SchemaName, gi.ObjectName, gi.Privilege, roles, grantOption}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strGrantID := strings.TrimSpace(buf.String())
-	return strGrantID, nil
-}
-
-// grantIDFromString() takes in a pipe-delimited string: resourceName|schemaName|ObjectName|Privilege|Roles
-// and returns a grantID object.
-func grantIDFromString(stringID string) (*grantID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = grantIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per grant")
-	}
-
-	// Len 1 is allowing for legacy IDs where role names are not included
-	if len(lines[0]) < 1 || len(lines[0]) > 6 {
-		return nil, fmt.Errorf("1 to 6 fields allowed in ID")
-	}
-
-	// Splitting string list if new ID structure, will cause issues if roles names passed are "true" or "false".
-	// Checking for true/false to eliminate scenarios where it would pick up the grant option.
-	// Roles will be empty list if legacy IDs are used, roles from grants are not
-	// used in Read functions, just for uniqueness in IDs of resources
-	roles := []string{}
-	if len(lines[0]) > 4 && lines[0][4] != "true" && lines[0][4] != "false" {
-		roles = strings.Split(lines[0][4], ",")
-	}
-
-	// Allowing legacy IDs to check grant option
-	grantOption := false
-	if len(lines[0]) == 6 && lines[0][5] == "true" {
-		grantOption = true
-	} else if len(lines[0]) == 5 && lines[0][4] == "true" {
-		grantOption = true
-	}
-
-	schemaName := ""
-	objectName := ""
-	privilege := ""
-
-	if len(lines[0]) > 3 {
-		schemaName = lines[0][1]
-		objectName = lines[0][2]
-		privilege = lines[0][3]
-	}
-
-	grantResult := &grantID{
-		ResourceName: lines[0][0],
-		SchemaName:   schemaName,
-		ObjectName:   objectName,
-		Privilege:    privilege,
-		Roles:        roles,
-		GrantOption:  grantOption,
-	}
-	return grantResult, nil
 }
 
 // createGenericGrantRolesAndShares will create generic grants for a set of roles and shares.
@@ -267,7 +182,7 @@ func readGenericGrant(
 		}
 	}
 
-	var existingRoles *schema.Set
+	existingRoles := schema.NewSet(schema.HashString, []interface{}{})
 	if v, ok := d.GetOk("roles"); ok && v != nil {
 		existingRoles = v.(*schema.Set)
 	}
@@ -276,32 +191,28 @@ func readGenericGrant(
 	// Now see which roles have our privilege.
 	for roleName, privileges := range rolePrivileges {
 		if privileges.hasString(priv) {
-			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what roles have privilige.
-			caseA := !multipleGrantFeatureFlag
-			// CASE B: If this is not authoritative, then at least continue managing whatever roles we already are managing
-			caseB := multipleGrantFeatureFlag && existingRoles.Contains(roleName)
-			// CASE C: If this is not authoritative and we are not managing the role, then we only care about the role if future objects is disabled. Otherwise we will get flooded with diffs.
-			caseC := multipleGrantFeatureFlag && !futureObjects
-			if caseA || caseB || caseC {
+			// CASE A: Whatever role we were already managing, continue to do so.
+			caseA := existingRoles.Contains(roleName)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what roles have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			caseB := !multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB {
 				roles = append(roles, roleName)
 			}
 		}
 	}
 
-	var existingShares *schema.Set
+	existingShares := schema.NewSet(schema.HashString, []interface{}{})
 	if v, ok := d.GetOk("shares"); ok && v != nil {
 		existingShares = v.(*schema.Set)
 	}
 	// Now see which shares have our privilege.
 	for shareName, privileges := range sharePrivileges {
 		if privileges.hasString(priv) {
-			// CASE A: If multiple grants is not enabled (meaning this is authoritative) then we always care about what shares have privilige.
-			caseA := !multipleGrantFeatureFlag
-			// CASE B: If this is not authoritative, then at least continue managing whatever shares we already are managing
-			caseB := multipleGrantFeatureFlag && existingShares.Contains(shareName)
-			// CASE C: If this is not authoritative and we are not managing the share, then we only care about the share if future objects is disabled. Otherwise we will get flooded with diffs.
-			caseC := multipleGrantFeatureFlag && !futureObjects
-			if caseA || caseB || caseC {
+			// CASE A: Whatever share we were already managing, continue to do so.
+			caseA := existingShares.Contains(shareName)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what shares have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			caseB := !multipleGrantFeatureFlag && !futureObjects
+			if caseA || caseB {
 				shares = append(shares, shareName)
 			}
 		}
@@ -439,29 +350,6 @@ func expandRolesAndShares(d *schema.ResourceData) ([]string, []string) {
 		shares = expandStringList(d.Get("shares").(*schema.Set).List())
 	}
 	return roles, shares
-}
-
-// parseFunctionObjectName parses a callable object name (including procedures) into its identifier components. For example, functions and procedures.
-func parseFunctionObjectName(objectIdentifier string) (string, []string) {
-	nameIndex := strings.Index(objectIdentifier, `(`)
-	if nameIndex == -1 {
-		return "", []string{}
-	}
-	name := objectIdentifier[:nameIndex]
-	argumentString := objectIdentifier[nameIndex+1:]
-
-	// Backwards compatibility for functions with return_types (prior to 0.56.1).
-	if strings.Contains(argumentString, ":") {
-		argumentString = strings.Split(argumentString, ":")[0]
-	}
-
-	// Remove trailing ")".
-	argumentString = strings.TrimRight(argumentString, `)`)
-	arguments := strings.Split(argumentString, `,`)
-	for i, argument := range arguments {
-		arguments[i] = strings.TrimSpace(argument)
-	}
-	return name, arguments
 }
 
 // changeDiff calculates roles/shares to add/revoke.

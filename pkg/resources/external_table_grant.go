@@ -2,7 +2,10 @@ package resources
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -100,12 +103,13 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("external_table_name"); ok {
 		externalTableName = name.(string)
 	}
-	dbName := d.Get("database_name").(string)
+	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
-	priv := d.Get("privilege").(string)
+	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
 	if (externalTableName == "") && !onFuture {
 		return errors.New("external_table_name must be set unless on_future is true")
@@ -119,71 +123,72 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
+		builder = snowflake.FutureExternalTableGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
+		builder = snowflake.ExternalTableGrant(databaseName, schemaName, externalTableName)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		SchemaName:   schemaName,
-		ObjectName:   externalTableName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	grantID := NewExternalTableGrantID(databaseName, schemaName, externalTableName, privilege, roles, shares, withGrantOption)
+	d.SetId(grantID.String())
 
 	return ReadExternalTableGrant(d, meta)
 }
 
 // ReadExternalTableGrant implements schema.ReadFunc.
 func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseExternalTableGrant(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	externalTableName := grantID.ObjectName
-	priv := grantID.Privilege
 
-	if err := d.Set("database_name", dbName); err != nil {
+	if !grantID.IsOldID {
+		fmt.Printf("[DEBUG] id: %v\n", d.Id())
+		fmt.Printf("[DEBUG] reading external table grant: %v\n", grantID)
+		fmt.Printf("[DEBUG] reading external table grant shares: %v\n", grantID.Shares)
+		fmt.Printf("[DEBUG] len(external table grant shares): %v\n", len(grantID.Shares))
+		if err := d.Set("shares", grantID.Shares); err != nil {
+			return err
+		}
+	}
+
+	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-	if err := d.Set("schema_name", schemaName); err != nil {
+
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
+	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+		return err
+	}
+	if err := d.Set("external_table_name", grantID.ObjectName); err != nil {
+		return err
+	}
+
 	onFuture := false
-	if externalTableName == "" {
+	if grantID.ObjectName == "" {
 		onFuture = true
-	}
-	if err := d.Set("external_table_name", externalTableName); err != nil {
-		return err
 	}
 	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	if err := d.Set("privilege", priv); err != nil {
+
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
+		builder = snowflake.FutureExternalTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
+		builder = snowflake.ExternalTableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	return readGenericGrant(d, meta, externalTableGrantSchema, builder, onFuture, validExternalTablePrivileges)
@@ -191,21 +196,17 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteExternalTableGrant implements schema.DeleteFunc.
 func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseExternalTableGrant(d.Id())
 	if err != nil {
 		return err
 	}
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	externalTableName := grantID.ObjectName
-
-	onFuture := (externalTableName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
+		builder = snowflake.FutureExternalTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
+		builder = snowflake.ExternalTableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -228,22 +229,20 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := grantIDFromString(d.Id())
+
+	grantID, err := parseExternalTableGrant(d.Id())
 	if err != nil {
 		return err
 	}
 
-	dbName := grantID.ResourceName
-	schemaName := grantID.SchemaName
-	externalTableName := grantID.ObjectName
-	onFuture := (externalTableName == "")
+	onFuture := (grantID.ObjectName == "")
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureExternalTableGrant(dbName, schemaName)
+		builder = snowflake.FutureExternalTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
-		builder = snowflake.ExternalTableGrant(dbName, schemaName, externalTableName)
+		builder = snowflake.ExternalTableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
 	// first revoke
@@ -255,11 +254,72 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// then add
 
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.GrantOption, rolesToAdd, sharesToAdd,
+		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadExternalTableGrant(d, meta)
+}
+
+type ExternalTableGrantID struct {
+	DatabaseName    string
+	SchemaName      string
+	ObjectName      string
+	Privilege       string
+	Roles           []string
+	Shares          []string
+	WithGrantOption bool
+	IsOldID         bool
+}
+
+func NewExternalTableGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *ExternalTableGrantID {
+	return &ExternalTableGrantID{
+		DatabaseName:    databaseName,
+		SchemaName:      schemaName,
+		ObjectName:      objectName,
+		Privilege:       privilege,
+		Roles:           roles,
+		Shares:          shares,
+		WithGrantOption: withGrantOption,
+		IsOldID:         false,
+	}
+}
+
+func (v *ExternalTableGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	shares := strings.Join(v.Shares, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+}
+
+func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &ExternalTableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			Shares:          []string{},
+			WithGrantOption: idParts[5] == "true",
+			IsOldID:         true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 7 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+	}
+	return &ExternalTableGrantID{
+		DatabaseName:    idParts[0],
+		SchemaName:      idParts[1],
+		ObjectName:      idParts[2],
+		Privilege:       idParts[3],
+		WithGrantOption: idParts[4] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[6], ","),
+		IsOldID:         false,
+	}, nil
 }

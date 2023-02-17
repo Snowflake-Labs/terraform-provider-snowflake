@@ -52,6 +52,6 @@ resource "snowflake_file_format_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | file format name | privilege | true/false for with_grant_option
-terraform import snowflake_file_format_grant.example 'dbName|schemaName|fileFormatName|USAGE|false'
+# format is database_name ❄️ schema_name ❄️ object_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_file_format_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT_NAME❄️USAGE❄️false❄️role1,role2'
 ```
