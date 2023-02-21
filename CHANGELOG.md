@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.56.5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.4...v0.56.5) (2023-02-21)
+
+
+### Misc
+
+* **deps:** bump golang.org/x/crypto from 0.5.0 to 0.6.0 ([#1528](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1528)) ([8a011e0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8a011e0b1920833c77eb7832f821a4bd52176657))
+* **deps:** bump golang.org/x/net from 0.5.0 to 0.7.0 ([#1551](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1551)) ([35de62f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/35de62f5b722c1dc6eaf2f39f6699935f67557cd))
+
 ## [0.56.4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.3...v0.56.4) (2023-02-17)
 
 
