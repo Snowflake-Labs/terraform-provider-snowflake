@@ -319,9 +319,13 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 	// is this an old ID format?
 	if !strings.Contains(s, "❄️") {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		if len(idParts) > 4 {
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		}
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
-			Roles:      helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:      roles,
 			Users:      []string{},
 			IsOldID:    true,
 		}, nil
