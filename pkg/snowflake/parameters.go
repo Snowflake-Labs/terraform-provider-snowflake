@@ -142,6 +142,11 @@ func ParameterDefaults() map[string]ParameterDefault {
 			DefaultValue: false,
 			Validate:     validateBoolFunc,
 		},
+		"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION": {
+			TypeSet:      []ParameterType{ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+		},
 		"SSO_LOGIN_PAGE": {
 			TypeSet:      []ParameterType{ParameterTypeAccount},
 			DefaultValue: false,
