@@ -344,12 +344,15 @@ func parseFunctionGrantID(s string) (*FunctionGrantID, error) {
 			objectIdentifier = objectIdentifier[0:idx]
 		}
 		objectNameParts := strings.Split(objectIdentifier, "(")
-
+		argumentDataTypes := []string{}
+		if len(objectNameParts) > 1 {
+			argumentDataTypes = helpers.SplitStringToSlice(objectNameParts[1], ",")
+		}
 		return &FunctionGrantID{
 			DatabaseName:      idParts[0],
 			SchemaName:        idParts[1],
 			ObjectName:        objectNameParts[0],
-			ArgumentDataTypes: helpers.SplitStringToSlice(objectNameParts[1], ","),
+			ArgumentDataTypes: argumentDataTypes,
 			Privilege:         idParts[3],
 			Roles:             helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:            []string{},
