@@ -9,7 +9,7 @@ import (
 
 func TestParseProcedureGrantID(t *testing.T) {
 	r := require.New(t)
-	grantID, err := resources.ParseProcedureGrantID("MY_DATABASE❄️MY_SCHEMA❄️MY_PROCEDURE❄️❄️privilege_name❄️role1,role❄️false")
+	grantID, err := resources.ParseProcedureGrantID("MY_DATABASE❄️MY_SCHEMA❄️MY_PROCEDURE❄️❄️privilege_name❄️role1,role2❄️false")
 	r.NoError(err)
 	r.Equal("MY_DATABASE", grantID.DatabaseName)
 	r.Equal("MY_SCHEMA", grantID.SchemaName)
