@@ -356,7 +356,14 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		objectNameParts := strings.Split(objectIdentifier, "(")
 		argumentDataTypes := []string{}
 		if len(objectNameParts) > 1 {
-			argumentDataTypes = helpers.SplitStringToSlice(objectNameParts[1], ",")
+			paramDecl := helpers.SplitStringToSlice(objectNameParts[1], ",")
+			for _, pd := range paramDecl {
+				if strings.Contains(pd, " ") {
+					ix := strings.LastIndex(pd, " ")
+					paramType := pd[ix+1:]
+					argumentDataTypes = append(argumentDataTypes, paramType)
+				}
+			}
 		}
 		return &ProcedureGrantID{
 			DatabaseName:      idParts[0],
