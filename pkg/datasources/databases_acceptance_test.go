@@ -21,7 +21,7 @@ func TestAcc_Databases(t *testing.T) {
 			{
 				Config: databases(databaseName, comment),
 				Check:  resource.ComposeTestCheckFunc(
-				//checkDatabases(databaseName, comment), this test currently fails after switching to new testing framework, need to fix
+				// checkDatabases(databaseName, comment), this test currently fails after switching to new testing framework, need to fix
 				),
 			},
 		},
