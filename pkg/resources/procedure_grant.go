@@ -362,6 +362,8 @@ func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 					ix := strings.LastIndex(pd, " ")
 					paramType := pd[ix+1:]
 					argumentDataTypes = append(argumentDataTypes, paramType)
+				} else {
+					argumentDataTypes = append(argumentDataTypes, pd)
 				}
 			}
 		}
