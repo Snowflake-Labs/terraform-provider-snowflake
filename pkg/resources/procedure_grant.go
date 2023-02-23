@@ -187,7 +187,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadProcedureGrant implements schema.ReadFunc.
 func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseProcedureGrantID(d.Id())
+	grantID, err := ParseProcedureGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteProcedureGrant implements schema.DeleteFunc.
 func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseProcedureGrantID(d.Id())
+	grantID, err := ParseProcedureGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := parseProcedureGrantID(d.Id())
+	grantID, err := ParseProcedureGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -345,7 +345,7 @@ func (v *ProcedureGrantID) String() string {
 	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
+func ParseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 	// is this an old ID format?
 	if !strings.Contains(s, "❄️") {
 		idParts := strings.Split(s, "|")
