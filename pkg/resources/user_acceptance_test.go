@@ -3,32 +3,15 @@ package resources_test
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/Pallinder/go-randomdata"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/require"
 )
-
-func checkBool(path, attr string, value bool) func(*terraform.State) error {
-	return func(state *terraform.State) error {
-		is := state.RootModule().Resources[path].Primary
-		d := is.Attributes[attr]
-		b, err := strconv.ParseBool(d)
-		if err != nil {
-			return err
-		}
-		if b != value {
-			return fmt.Errorf("at %s expected %t but got %t", path, value, b)
-		}
-		return nil
-	}
-}
 
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
@@ -53,13 +36,13 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
-					checkBool("snowflake_user.w", "disabled", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "disabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
-					checkBool("snowflake_user.w", "has_rsa_public_key", true),
-					checkBool("snowflake_user.w", "must_change_password", true),
+					resource.TestCheckResourceAttr("snowflake_user.w", "has_rsa_public_key", "true"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "must_change_password", "true"),
 				),
 			},
 			// RENAME
@@ -73,7 +56,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
-					checkBool("snowflake_user.w", "disabled", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "disabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
@@ -92,12 +75,12 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Benoit"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Dageville"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.net"),
-					checkBool("snowflake_user.w", "disabled", true),
+					resource.TestCheckResourceAttr("snowflake_user.w", "disabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
-					checkBool("snowflake_user.w", "has_rsa_public_key", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "has_rsa_public_key", "false"),
 				),
 			},
 			// IMPORT

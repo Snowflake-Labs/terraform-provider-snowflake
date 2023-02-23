@@ -22,7 +22,7 @@ func TestAcc_View(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
-					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 				),
 			},
 		},
@@ -42,7 +42,7 @@ func TestAcc_View2(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
-					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 				),
 			},
 		},

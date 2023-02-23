@@ -23,8 +23,8 @@ func TestAcc_Schema(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_schema.test", "is_managed", false),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_managed", "false"),
 				),
 			},
 		},
@@ -46,8 +46,8 @@ func TestAcc_SchemaRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_schema.test", "is_managed", false),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_managed", "false"),
 				),
 			},
 			{
@@ -56,8 +56,8 @@ func TestAcc_SchemaRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_schema.test", "is_managed", false),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_managed", "false"),
 				),
 			},
 		},
