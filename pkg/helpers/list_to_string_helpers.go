@@ -32,12 +32,12 @@ func ListContentToString(listString string) string {
 	return re.ReplaceAllString(listString, "")
 }
 
-// SplitStringToSlice splits a string into a slice of strings, separated by a separator. It also removes empty strings.
+// SplitStringToSlice splits a string into a slice of strings, separated by a separator. It also removes empty strings and trims whitespace.
 func SplitStringToSlice(s, sep string) []string {
 	var v []string
 	for _, elem := range strings.Split(s, sep) {
 		if elem != "" {
-			v = append(v, elem)
+			v = append(v, strings.TrimSpace(elem))
 		}
 	}
 	return v
