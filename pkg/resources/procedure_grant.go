@@ -358,8 +358,8 @@ func ParseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 		if len(objectNameParts) > 1 {
 			paramDecl := helpers.SplitStringToSlice(objectNameParts[1], ",")
 			for _, pd := range paramDecl {
-				if strings.Contains(pd, " ") {
-					ix := strings.LastIndex(pd, " ")
+				ix := strings.LastIndex(pd, " ") // 'paramName paramType'
+				if ix != -1 {
 					paramType := pd[ix+1:]
 					argumentDataTypes = append(argumentDataTypes, paramType)
 				} else {
