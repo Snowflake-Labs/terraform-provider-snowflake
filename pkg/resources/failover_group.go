@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
@@ -282,7 +283,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	var failoverGroup snowflake.FailoverGroup
 	// find the failover group we are looking for by matching the name
 	for _, fg := range failoverGroups {
-		if strings.EqualFold(fg.Name.String,name) && strings.EqualFold(fg.AccountLocator.String, accountLocator) {
+		if strings.EqualFold(fg.Name.String, name) && strings.EqualFold(fg.AccountLocator.String, accountLocator) {
 			failoverGroup = fg
 		}
 	}
@@ -309,17 +310,19 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
-			d.Set("replication_schedule", []interface{}{
+			err = d.Set("replication_schedule", []interface{}{
 				map[string]interface{}{
 					"interval": interval,
 				},
 			})
+			if err != nil {
+				return err
+			}
 		} else {
 			repScheduleParts := strings.Split(replicationSchedule, " ")
 			timeZone := repScheduleParts[len(repScheduleParts)-1]
 			expression := strings.TrimSuffix(strings.TrimPrefix(replicationSchedule, "USING CRON "), " "+timeZone)
-			d.Set("replication_schedule", []interface{}{
-
+			err = d.Set("replication_schedule", []interface{}{
 				map[string]interface{}{
 					"cron": []interface{}{
 						map[string]interface{}{
@@ -329,18 +332,13 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 					},
 				},
 			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	ots := strings.Split(failoverGroup.ObjectTypes.String, ",")
-	var objectTypes []string
-	for _, v := range ots {
-		objectType := strings.TrimSpace(v)
-		if objectType == "" {
-			continue
-		}
-		objectTypes = append(objectTypes, objectType)
-	}
+	objectTypes := helpers.SplitStringToSlice(failoverGroup.ObjectTypes.String, ",")
 
 	// this is basically a hack to get around the fact that the API returns the object types in a different order than what is set
 	// this logic could also be put in the diff suppress function, but I think it is better to do it here.
@@ -602,7 +600,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] replicationSchedule: %v", replicationSchedule)
 		log.Printf("[DEBUG] replicationSchedule[cron]: %v", replicationSchedule["cron"])
 		c := replicationSchedule["cron"].([]interface{})
-		if len(c)>0 {
+		if len(c) > 0 {
 			if len(c) > 0 {
 				cron := c[0].(map[string]interface{})
 				cronExpression := cron["expression"].(string)

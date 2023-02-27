@@ -37,7 +37,6 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 	})
 }
 
-
 func TestAcc_FailoverGroupInterval(t *testing.T) {
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -50,7 +49,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName,10),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -64,7 +63,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName,20),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -78,7 +77,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName,"0 0 10-20 * TUE,THU"),
+				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 10-20 * TUE,THU"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -94,7 +93,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName,"0 0 5-20 * TUE,THU"),
+				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 5-20 * TUE,THU"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -110,7 +109,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName,10),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -124,9 +123,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_failover_group.fg",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_failover_group.fg",
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"ignore_edition_check"},
 			},
 		},
@@ -171,7 +170,7 @@ resource "snowflake_failover_group" "fg" {
 		interval = %d
 	}
 }
-`, randomCharacters, randomCharacters, accountName,interval)
+`, randomCharacters, randomCharacters, accountName, interval)
 }
 
 func failoverGroupWithCronExpression(randomCharacters, accountName, expression string) string {
@@ -193,5 +192,5 @@ resource "snowflake_failover_group" "fg" {
 		}
 	}
 }
-`, randomCharacters, randomCharacters, accountName,expression)
+`, randomCharacters, randomCharacters, accountName, expression)
 }
