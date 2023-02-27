@@ -164,7 +164,7 @@ func (b *FailoverGroupBuilder) ChangeReplicationCronSchedule(replicationSchedule
 
 // ChangeReplicationIntervalSchedule returns the SQL query that will change the replication schedule of a failover group.
 func (b *FailoverGroupBuilder) ChangeReplicationIntervalSchedule(replicationScheduleInterval int) string {
-	s := fmt.Sprintf(`ALTER FAILOVER GROUP %v SET REPLICATION_SCHEDULE = %v MINUTE`, b.name, replicationScheduleInterval)
+	s := fmt.Sprintf(`ALTER FAILOVER GROUP %v SET REPLICATION_SCHEDULE = '%v MINUTE'`, b.name, replicationScheduleInterval)
 	b.replicationScheduleInterval = replicationScheduleInterval
 	return s
 }
@@ -178,12 +178,12 @@ func (b *FailoverGroupBuilder) ChangeAllowedIntegrationTypes(allowedIntegrationT
 
 // AddAllowedDatabases returns the SQL query that will change the allowed databases of a failover group.
 func (b *FailoverGroupBuilder) AddAllowedDatabases(allowedDatabases []string) string {
-	return fmt.Sprintf(`ALTER FAILOVER GROUP %v ADD %v TO ALLOWED_DATABASES`, b.name, strings.Join(allowedDatabases, ","))
+	return fmt.Sprintf(`ALTER FAILOVER GROUP %v ADD "%v" TO ALLOWED_DATABASES`, b.name, strings.Join(allowedDatabases, ","))
 }
 
 // RemoveAllowedDatabases returns the SQL query that will change the allowed databases of a failover group.
 func (b *FailoverGroupBuilder) RemoveAllowedDatabases(allowedDatabases []string) string {
-	return fmt.Sprintf(`ALTER FAILOVER GROUP %v REMOVE %v FROM ALLOWED_DATABASES`, b.name, strings.Join(allowedDatabases, ","))
+	return fmt.Sprintf(`ALTER FAILOVER GROUP %v REMOVE "%v" FROM ALLOWED_DATABASES`, b.name, strings.Join(allowedDatabases, ","))
 }
 
 // AddAllowedShares returns the SQL query that will change the allowed shares of a failover group.
