@@ -202,6 +202,9 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		builder.WithObjectType(objectType)
 	}
 	err := builder.SetParameter()
+	if err != nil {
+		return fmt.Errorf("error deleting object parameter err = %w", err)
+	}
 	if fullyQualifierObjectIdentifier != "" {
 		_, err = snowflake.ShowObjectParameter(db, key, objectType, fullyQualifierObjectIdentifier)
 	} else {
