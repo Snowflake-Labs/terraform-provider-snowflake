@@ -12,7 +12,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/xid v1.4.0
 	github.com/snowflakedb/gosnowflake v1.6.16
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	golang.org/x/crypto v0.6.0
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
