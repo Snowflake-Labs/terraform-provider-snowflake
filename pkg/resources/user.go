@@ -84,7 +84,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the set of secondary roles that are active for the user’s session upon login.",
+		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)",
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
