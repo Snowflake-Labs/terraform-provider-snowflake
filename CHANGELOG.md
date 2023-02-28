@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.57.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.5...v0.57.0) (2023-02-28)
+
+
+### Features
+
+* support object parameters on account level ([#1583](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1583)) ([fb24802](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb2480214c8ac4e61fffe3a8e3448597462ad9a1))
+
+
+### BugFixes
+
+* Add contributing section to readme ([#1560](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1560)) ([174355d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/174355d740e325ae05435bbbc22b8b335f94fc6f))
+* add test cases for update repl schedule on failover group ([#1578](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1578)) ([ab638f0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ab638f0b9ba866d22c6f807743eb4eccad2530b8))
+* schema read now checks first if the corresponding database exists ([#1568](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1568)) ([368dc8f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/368dc8fb3f7e5156d16caed1e03792654d49f3d4))
+
 ## [0.56.5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.4...v0.56.5) (2023-02-21)
 
 
