@@ -46,3 +46,9 @@ resource "snowflake_object_parameter" "o3" {
     name     = snowflake_table.t.name
   }
 }
+
+// Setting object parameter at account level
+resource "snowflake_object_parameter" "o4" {
+  key   = "DATA_RETENTION_TIME_IN_DAYS"
+  value = "89"
+}
