@@ -152,7 +152,6 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	if parts[1] == "" {
 		p, err = snowflake.ShowAccountParameter(db, key)
-
 	} else {
 		objectType := snowflake.ObjectType(parts[1])
 		objectIdentifier := parts[2]

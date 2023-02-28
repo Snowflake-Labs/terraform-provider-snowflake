@@ -708,7 +708,6 @@ func (v *ParameterBuilder) WithObjectIdentifier(objectIdentifier string) *Parame
 }
 
 func (v *ParameterBuilder) SetParameter() error {
-
 	// Should this be set on the account level?
 	setOnAccount := v.parameterType == ParameterTypeAccount || v.parameterType == ParameterTypeSession || v.parameterType == ParameterTypeObject && v.objectIdentifier == ""
 	if setOnAccount {
