@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -60,20 +61,21 @@ func CreateRole(d *schema.ResourceData, meta interface{}) error {
 
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := d.Id()
+	id := d.Id()
 	// If the name is not set (such as during import) then use the id
-	if v, ok := d.Get("name").(string); ok && v != "" {
-		name = v
+	name := d.Get("name").(string)
+	if name == "" {
+		name = id
 	}
+
 	builder := snowflake.NewRoleBuilder(db, name)
 	role, err := builder.Show()
-	if err != nil {
-		return err
-	}
-	if role == nil {
+	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[WARN] role (%s) not found", name)
 		d.SetId("")
 		return nil
+	} else if err != nil {
+		return err
 	}
 	if err := d.Set("name", role.Name.String); err != nil {
 		return err

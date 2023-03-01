@@ -13,6 +13,9 @@ func TestAcc_Role(t *testing.T) {
 	name := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	name2 := "5tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
+	resource.Test(t, resource.TestCase{
+		
+	})
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
@@ -23,6 +26,7 @@ func TestAcc_Role(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_role.role", "name", name),
 					resource.TestCheckResourceAttr("snowflake_role.role", "comment", "test comment"),
 				),
+				
 			},
 			// IMPORT
 			{
