@@ -26,6 +26,23 @@ func TestAcc_ObjectParameter(t *testing.T) {
 	})
 }
 
+func TestAcc_ObjectParameterAccount(t *testing.T) {
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: objectParameterAccount(prefix, "ENABLE_STREAM_TASK_REPLICATION", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_STREAM_TASK_REPLICATION"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
+				),
+			},
+		},
+	})
+}
+
 func objectParameterBasic(prefix, key, value string) string {
 	s := `
 resource "snowflake_database" "d" {
@@ -38,6 +55,19 @@ resource "snowflake_object_parameter" "p" {
 	object_identifier {
 		name = snowflake_database.d.name
 	}
+}
+`
+	return fmt.Sprintf(s, prefix, key, value)
+}
+
+func objectParameterAccount(prefix, key, value string) string {
+	s := `
+resource "snowflake_database" "d" {
+	name = "%s"
+}	
+resource "snowflake_object_parameter" "p" {
+	key = "%s"
+	value = "%s"
 }
 `
 	return fmt.Sprintf(s, prefix, key, value)

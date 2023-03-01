@@ -274,7 +274,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			Validate:     nil,
 		},
 		"STATEMENT_TIMEOUT_IN_SECONDS": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 172800,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -466,7 +466,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"DATA_RETENTION_TIME_IN_DAYS": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 1,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -485,7 +485,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"DEFAULT_DDL_COLLATION": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: "",
 			Validate: func(value string) (err error) {
 				// todo: validate collation.
@@ -501,7 +501,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"ENABLE_STREAM_TASK_REPLICATION": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: false,
 			Validate:     validateBoolFunc,
 			AllowedObjectTypes: []ObjectType{
@@ -528,7 +528,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"MAX_DATA_EXTENSION_TIME_IN_DAYS": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 14,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -542,7 +542,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"PIPE_EXECUTION_PAUSED": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: false,
 			Validate:     validateBoolFunc,
 			AllowedObjectTypes: []ObjectType{
@@ -551,7 +551,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"PREVENT_UNLOAD_TO_INTERNAL_STAGES": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: false,
 			Validate:     validateBoolFunc,
 			AllowedObjectTypes: []ObjectType{
@@ -559,7 +559,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 0,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -576,7 +576,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"SHARE_RESTRICTIONS": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: true,
 			Validate:     validateBoolFunc,
 			AllowedObjectTypes: []ObjectType{
@@ -584,7 +584,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"SUSPEND_TASK_AFTER_NUM_FAILURES": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 0,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -603,7 +603,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: "MEDIUM",
 			Validate: func(value string) (err error) {
 				if !slices.Contains([]string{"X-SMALL", "SMALL", "MEDIUM", "LARGE", "X-LARGE", "2X-LARGE", "3X-LARGE", "4X-LARGE", "5X-LARGE", "6X-LARGE"}, value) {
@@ -618,7 +618,7 @@ func ParameterDefaults() map[string]ParameterDefault {
 			},
 		},
 		"USER_TASK_TIMEOUT_MS": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
 			DefaultValue: 3600000,
 			Validate: func(value string) (err error) {
 				v, err := strconv.Atoi(value)
@@ -708,14 +708,15 @@ func (v *ParameterBuilder) WithObjectIdentifier(objectIdentifier string) *Parame
 }
 
 func (v *ParameterBuilder) SetParameter() error {
-	if v.parameterType == ParameterTypeAccount || v.parameterType == ParameterTypeSession {
+	// Should this be set on the account level?
+	setOnAccount := v.parameterType == ParameterTypeAccount || v.parameterType == ParameterTypeSession || v.parameterType == ParameterTypeObject && v.objectIdentifier == ""
+	if setOnAccount {
 		// prepared statements do not work here for some reason. We already validate inputs so its okay
 		stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
 		_, err := v.db.Exec(stmt)
-		if err != nil {
-			return err
-		}
-	} else if v.parameterType == ParameterTypeObject {
+		return err
+	}
+	if v.parameterType == ParameterTypeObject {
 		stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectIdentifier, v.key, v.value)
 		_, err := v.db.Exec(stmt)
 		if err != nil {
@@ -734,14 +735,9 @@ type Parameter struct {
 	PType       sql.NullString `db:"type"`
 }
 
-func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Parameter, error) {
-	var value Parameter
-	var stmt string
-	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession {
-		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", key)
-	} else {
-		return nil, fmt.Errorf("unsupported parameter type %s", parameterType)
-	}
+func ShowAccountParameter(db *sql.DB, key string) (*Parameter, error) {
+	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", key)
+
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -754,9 +750,8 @@ func ShowParameter(db *sql.DB, key string, parameterType ParameterType) (*Parame
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	value = params[0]
 
-	return &value, nil
+	return &params[0], nil
 }
 
 func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectIdentifier string) (*Parameter, error) {
