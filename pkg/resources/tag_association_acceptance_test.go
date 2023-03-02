@@ -94,7 +94,7 @@ resource "snowflake_tag" "tag1" {
  name     = "EXAMPLE_TAG"
  schema   = "PUBLIC"
 
- allowed_values = [""]
+ allowed_values = []
 }
 
 resource "snowflake_tag_association" "schema" {
