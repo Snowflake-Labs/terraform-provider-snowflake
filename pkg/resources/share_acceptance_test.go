@@ -18,7 +18,9 @@ func TestAcc_Share(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	account2 := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
 	account3 := os.Getenv("SNOWFLAKE_ACCOUNT_THIRD")
-
+	if account2 == "" || account3 == "" {
+		t.Skip("SNOWFLAKE_ACCOUNT_SECOND and SNOWFLAKE_ACCOUNT_THIRD must be set for Share acceptance tests")
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
