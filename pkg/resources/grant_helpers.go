@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
@@ -364,7 +363,7 @@ func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []
 }
 
 func IsOldGrantID(id string) bool {
-	parts := helpers.SplitStringToSlice(id, "|")
+	parts := strings.Split(id, "|")
 	if len(parts) == 6 {
 		return parts[5] == "true" || parts[5] == "false"
 	}
