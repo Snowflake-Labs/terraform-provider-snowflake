@@ -151,14 +151,6 @@ func TestAcc_GrantRole(t *testing.T) {
 					},
 				),
 			},
-			// RENAMING
-			{
-				Config:       rgConfig2(role1+"foo", role2, role3, user1, user2),
-				ResourceName: "snowflake_role_grants.w",
-				Check: resource.ComposeTestCheckFunc(
-					testCheckRolesAndUsers(t, "snowflake_role_grants.w", []string{role2}, []string{user1, user2})),
-			},
-			baselineStep,
 			// IMPORT
 			{
 				ResourceName:            "snowflake_role_grants.w",

@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -27,7 +26,6 @@ func RoleGrants() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the role we are granting.",
-				ForceNew:    true,
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
 					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
@@ -116,15 +114,6 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 
 	roles := make([]string, 0)
 	users := make([]string, 0)
-
-	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", grantID.ObjectName))
-	_, err = snowflake.ScanRole(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] role (%s) not found", grantID.ObjectName)
-		d.SetId("")
-		return nil
-	}
 
 	grants, err := readGrants(db, grantID.ObjectName)
 	if err != nil {
@@ -220,7 +209,6 @@ func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 	rg := snowflake.RoleGrant(role1).Role(role2)
 	err := snowflake.Exec(db, rg.Revoke())
-	log.Printf("revokeRoleFromRole %v", err)
 	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
 		if driverErr.Number == 2003 {
 			// handling error if a role has been deleted prior to revoking a role
