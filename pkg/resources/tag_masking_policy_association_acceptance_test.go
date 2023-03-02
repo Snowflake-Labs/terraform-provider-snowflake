@@ -44,7 +44,7 @@ resource "snowflake_tag" "test" {
 	name = "%[1]v"
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
-	allowed_values = [""]
+	allowed_values = []
 	comment = "Terraform acceptance test"
 }
 
