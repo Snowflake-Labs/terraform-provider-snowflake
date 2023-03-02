@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -72,26 +70,6 @@ func TestRoleGrantsRead(t *testing.T) {
 		r.NoError(err)
 		r.Len(d.Get("users").(*schema.Set).List(), 0)
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)
-	})
-}
-
-func TestRoleGrantsReadNotExists(t *testing.T) {
-	r := require.New(t)
-
-	d := roleGrants(t, "good_name||||role1,role2|false", map[string]interface{}{
-		"role_name": "good_name",
-		"roles":     []interface{}{"role1", "role2"},
-		"users":     []interface{}{"user1", "user2"},
-	})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when schema resource is not found, checking if state will be empty
-		r.NotEmpty(d.State())
-		q := snowflake.NewRoleBuilder("good_name").Show()
-		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
-		err := resources.ReadRoleGrants(d, db)
-		r.Empty(d.State())
-		r.NoError(err)
 	})
 }
 

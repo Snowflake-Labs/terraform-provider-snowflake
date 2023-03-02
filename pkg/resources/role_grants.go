@@ -117,8 +117,8 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
-	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", grantID.ObjectName))
-	_, err = snowflake.ScanRole(row)
+	builder := snowflake.NewRoleBuilder(db, grantID.ObjectName)
+	_, err = builder.Show()
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from statefile during apply or refresh
 		log.Printf("[DEBUG] role (%s) not found", grantID.ObjectName)
