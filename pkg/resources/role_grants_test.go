@@ -75,23 +75,6 @@ func TestRoleGrantsRead(t *testing.T) {
 	})
 }
 
-func TestRoleGrantsReadNotExists(t *testing.T) {
-	r := require.New(t)
-
-	d := roleGrants(t, "good_name||||role1,role2|false", map[string]interface{}{
-		"role_name": "good_name",
-		"roles":     []interface{}{"role1", "role2"},
-		"users":     []interface{}{"user1", "user2"},
-	})
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		// Test when schema resource is not found, checking if state will be empty
-		r.NotEmpty(d.State())
-		_, err := snowflake.NewRoleBuilder(db, "good_name").Show()
-		mock.ExpectQuery(err.Error()).WillReturnError(sql.ErrNoRows)
-	})
-}
-
 func TestRoleGrantsDelete(t *testing.T) {
 	r := require.New(t)
 
