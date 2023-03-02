@@ -87,9 +87,9 @@ func TestRoleGrantsReadNotExists(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when schema resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.NewRoleBuilder("good_name").Show()
-		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
-		err := resources.ReadRoleGrants(d, db)
+		_, err := snowflake.NewRoleBuilder(db, "good_name").Show()
+		mock.ExpectQuery(err.Error()).WillReturnError(sql.ErrNoRows)
+		err = resources.ReadRoleGrants(d, db)
 		r.Empty(d.State())
 		r.NoError(err)
 	})
