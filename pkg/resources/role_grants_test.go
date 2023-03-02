@@ -89,9 +89,6 @@ func TestRoleGrantsReadNotExists(t *testing.T) {
 		r.NotEmpty(d.State())
 		_, err := snowflake.NewRoleBuilder(db, "good_name").Show()
 		mock.ExpectQuery(err.Error()).WillReturnError(sql.ErrNoRows)
-		//err = resources.ReadRoleGrants(d, db)
-		//r.Empty(d.State())
-		//r.NoError(err)
 	})
 }
 
