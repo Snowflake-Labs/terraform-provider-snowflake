@@ -291,12 +291,11 @@ func NewViewGrantID(databaseName string, schemaName, objectName, privilege strin
 func (v *ViewGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseViewGrantID(s string) (*ViewGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ViewGrantID{
 			DatabaseName:    idParts[0],
@@ -309,8 +308,9 @@ func parseViewGrantID(s string) (*ViewGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 7 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
 	}
 	return &ViewGrantID{

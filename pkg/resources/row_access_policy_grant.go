@@ -211,12 +211,11 @@ func NewRowAccessPolicyGrantID(databaseName string, schemaName, objectName, priv
 
 func (v *RowAccessPolicyGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RowAccessPolicyGrantID{
 			DatabaseName:    idParts[0],
@@ -228,8 +227,9 @@ func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 6 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &RowAccessPolicyGrantID{

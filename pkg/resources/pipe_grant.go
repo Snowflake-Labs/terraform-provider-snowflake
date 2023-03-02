@@ -262,12 +262,11 @@ func NewPipeGrantID(databaseName string, schemaName, objectName, privilege strin
 
 func (v *PipeGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parsePipeGrantID(s string) (*PipeGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &PipeGrantID{
 			DatabaseName:    idParts[0],
@@ -279,8 +278,9 @@ func parsePipeGrantID(s string) (*PipeGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 6 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &PipeGrantID{

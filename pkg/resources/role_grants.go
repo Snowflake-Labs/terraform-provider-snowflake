@@ -324,12 +324,11 @@ func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
 func (v *RoleGrantsID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	users := strings.Join(v.Users, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v", v.ObjectName, roles, users)
+	return fmt.Sprintf("%v|%v|%v", v.ObjectName, roles, users)
 }
 
 func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
@@ -338,8 +337,9 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 			IsOldID:    true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 3 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
 	}
 	return &RoleGrantsID{

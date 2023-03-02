@@ -225,8 +225,7 @@ func (v *TagGrantID) String() string {
 }
 
 func parseTagGrantID(s string) (*TagGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &TagGrantID{
 			DatabaseName:    idParts[0],
@@ -238,8 +237,9 @@ func parseTagGrantID(s string) (*TagGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 6 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &TagGrantID{

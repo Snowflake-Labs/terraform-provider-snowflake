@@ -346,8 +346,7 @@ func (v *ProcedureGrantID) String() string {
 }
 
 func ParseProcedureGrantID(s string) (*ProcedureGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		objectIdentifier := idParts[2]
 		if idx := strings.Index(objectIdentifier, ")"); idx != -1 {
@@ -377,8 +376,9 @@ func ParseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 			IsOldID:           true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 8 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
 	}
 	return &ProcedureGrantID{

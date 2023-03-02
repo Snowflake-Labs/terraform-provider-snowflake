@@ -210,12 +210,11 @@ func NewDatabaseGrantID(databaseName string, privilege string, roles []string, s
 func (v *DatabaseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &DatabaseGrantID{
 			DatabaseName:    idParts[0],
@@ -226,8 +225,10 @@ func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 5 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 5", len(idParts))
 	}
 	return &DatabaseGrantID{

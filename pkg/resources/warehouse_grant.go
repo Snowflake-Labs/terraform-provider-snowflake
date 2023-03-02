@@ -200,12 +200,11 @@ func NewWarehouseGrantID(objectName string, privilege string, roles []string, wi
 
 func (v *WarehouseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &WarehouseGrantID{
 			ObjectName:      idParts[0],
@@ -215,8 +214,9 @@ func parseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
 	if len(idParts) != 4 {
+		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}
 	return &WarehouseGrantID{
