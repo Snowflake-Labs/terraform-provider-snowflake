@@ -77,6 +77,20 @@ func TestViewGrantRead(t *testing.T) {
 	r.Equal(2, shares.Len())
 }
 
+func TestParseViewGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseViewGrantID("test-db|PUBLIC|test-view|SELECT||false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-view", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+	r.Equal(0, len(grantID.Shares))
+}
+
 func expectReadViewGrant(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
 		"created_on", "privilege", "granted_on", "name", "granted_to", "grantee_name", "grant_option", "granted_by",

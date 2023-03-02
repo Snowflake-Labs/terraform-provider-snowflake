@@ -227,9 +227,9 @@ func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := helpers.SplitStringToSlice(s, "|")
+	idParts := strings.Split(s, "|")
 	if len(idParts) < 6 {
-		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))

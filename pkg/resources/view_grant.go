@@ -143,7 +143,7 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadViewGrant implements schema.ReadFunc.
 func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseViewGrantID(d.Id())
+	grantID, err := ParseViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc.
 func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseViewGrantID(d.Id())
+	grantID, err := ParseViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := parseViewGrantID(d.Id())
+	grantID, err := ParseViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func (v *ViewGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseViewGrantID(s string) (*ViewGrantID, error) {
+func ParseViewGrantID(s string) (*ViewGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ViewGrantID{
@@ -308,9 +308,9 @@ func parseViewGrantID(s string) (*ViewGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := helpers.SplitStringToSlice(s, "|")
+	idParts := strings.Split(s, "|")
 	if len(idParts) < 7 {
-		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 	}
 	if len(idParts) != 7 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))

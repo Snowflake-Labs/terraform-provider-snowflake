@@ -196,9 +196,9 @@ func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := helpers.SplitStringToSlice(s, "|")
+	idParts := strings.Split(s, "|")
 	if len(idParts) < 4 {
-		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 	}
 	if len(idParts) != 4 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
