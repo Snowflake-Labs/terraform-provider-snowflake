@@ -264,7 +264,7 @@ func NewSequenceGrantID(databaseName string, schemaName, objectName, privilege s
 
 func (v *SequenceGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
@@ -280,9 +280,11 @@ func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "|")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 6 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
-		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &SequenceGrantID{

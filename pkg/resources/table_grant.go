@@ -327,9 +327,11 @@ func parseTableGrantID(s string) (*TableGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "|")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 7 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 7 {
-		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
 	}
 	return &TableGrantID{

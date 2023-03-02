@@ -185,7 +185,7 @@ func NewIntegrationGrantID(objectName string, privilege string, roles []string, 
 
 func (v *IntegrationGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
 func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
@@ -199,9 +199,11 @@ func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "|")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 4 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 4 {
-		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}
 	return &IntegrationGrantID{

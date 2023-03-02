@@ -332,7 +332,7 @@ func (v *FunctionGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
 	argumentDataTypes := strings.Join(v.ArgumentDataTypes, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
 func ParseFunctionGrantID(s string) (*FunctionGrantID, error) {
@@ -366,9 +366,11 @@ func ParseFunctionGrantID(s string) (*FunctionGrantID, error) {
 			IsOldID:           true,
 		}, nil
 	}
-	idParts := strings.Split(s, "|")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 8 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 8 {
-		idParts := strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
 	}
 	return &FunctionGrantID{
