@@ -77,3 +77,48 @@ func expectReadMaskingPolicyGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON MASKING POLICY "test-db"."PUBLIC"."test-masking-policy"$`).WillReturnRows(rows)
 }
+
+func TestParseMaskingPolicyGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseMaskingPolicyGrantID("test-db|PUBLIC|test-masking-policy|APPLY|true|role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-masking-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseMaskingPolicyGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseMaskingPolicyGrantID("test-db❄️PUBLIC❄️test-masking-policy❄️APPLY❄️true❄️role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-masking-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseMaskingPolicyGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseMaskingPolicyGrantID("test-db|PUBLIC|test-materialized-view|SELECT|role1,role2|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-materialized-view", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}

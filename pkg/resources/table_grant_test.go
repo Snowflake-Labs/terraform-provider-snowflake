@@ -76,7 +76,7 @@ func TestTableGrantUpdate(t *testing.T) {
 func TestTableGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT|false", map[string]interface{}{
+	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT||false", map[string]interface{}{
 		"table_name":        "test-table",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",
@@ -200,4 +200,55 @@ func expectReadFutureTableDatabaseGrant(mock sqlmock.Sqlmock) {
 		time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), "SELECT", "TABLE", "test-db.<TABLE>", "ROLE", "test-role-2", false,
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
+}
+
+func TestParseTableGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseTableGrantID("test-db|PUBLIC|test-table|SELECT|false|role1,role2|share1,share2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseTableGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseTableGrantID("test-db❄️PUBLIC❄️test-table❄️SELECT❄️false❄️role1,role2❄️share1,share2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseTableGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseTableGrantID("test-db|PUBLIC|test-table|SELECT|role1,role2|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
 }

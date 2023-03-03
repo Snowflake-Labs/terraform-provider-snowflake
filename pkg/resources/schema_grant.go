@@ -163,7 +163,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -296,12 +296,11 @@ func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles [
 func (v *SchemaGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseSchemaGrantID(s string) (*SchemaGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &SchemaGrantID{
 			DatabaseName:    idParts[0],
@@ -313,7 +312,10 @@ func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

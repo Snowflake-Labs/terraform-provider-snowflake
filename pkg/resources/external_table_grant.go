@@ -140,7 +140,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadExternalTableGrant implements schema.ReadFunc.
 func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteExternalTableGrant implements schema.DeleteFunc.
 func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -290,12 +290,11 @@ func NewExternalTableGrantID(databaseName string, schemaName, objectName, privil
 func (v *ExternalTableGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseExternalTableGrantID(s string) (*ExternalTableGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ExternalTableGrantID{
 			DatabaseName:    idParts[0],
@@ -308,7 +307,10 @@ func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 7 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 7 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
 	}

@@ -46,6 +46,6 @@ resource "snowflake_user_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is username ❄️ privilege ❄️ with_grant_option ❄️ roles
-terraform import snowflake_user_grant.example 'USERNAME❄️MONITOR❄️false❄️role1,role2'
+# format is username | privilege | with_grant_option |roles
+terraform import snowflake_user_grant.example 'USERNAME|MONITOR|false|role1,role2'
 ```

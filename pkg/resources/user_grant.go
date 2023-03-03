@@ -89,7 +89,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadUserGrant implements schema.ReadFunc.
 func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteUserGrant implements schema.DeleteFunc.
 func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -193,12 +193,11 @@ func NewUserGrantID(objectName string, privilege string, roles []string, withGra
 
 func (v *UserGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseUserGrantID(s string) (*UserGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseUserGrantID(s string) (*UserGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &UserGrantID{
 			ObjectName:      idParts[0],
@@ -208,7 +207,10 @@ func parseUserGrantID(s string) (*UserGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 4 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 4 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}

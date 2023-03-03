@@ -88,3 +88,47 @@ func expectReadDatabaseGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON DATABASE "test-database"$`).WillReturnRows(rows)
 }
+
+func TestParseDatabaseGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseDatabaseGrantID("test-database|USAGE|true|role1,role2|share1,share2")
+	r.NoError(err)
+	r.Equal("test-database", grantID.DatabaseName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseDatabaseGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+	grantID, err := resources.ParseDatabaseGrantID("test-database❄️USAGE❄️true❄️role1,role2❄️share1,share2")
+	r.NoError(err)
+	r.Equal("test-database", grantID.DatabaseName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseDatabaseGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseDatabaseGrantID("test-database|||USAGE|role1,role2|true")
+	r.NoError(err)
+	r.Equal("test-database", grantID.DatabaseName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}

@@ -105,7 +105,7 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTagGrant implements schema.ReadFunc.
 func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTagGrant implements schema.DeleteFunc.
 func DeleteTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -221,24 +221,26 @@ func NewTagGrantID(databaseName string, schemaName, objectName, privilege string
 
 func (v *TagGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseTagGrantID(s string) (*TagGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseTagGrantID(s string) (*TagGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &TagGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

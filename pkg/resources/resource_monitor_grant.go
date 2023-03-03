@@ -89,7 +89,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 
 // ReadResourceMonitorGrant implements schema.ReadFunc.
 func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc.
 func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -182,12 +182,11 @@ func NewResourceMonitorGrantID(objectName string, privilege string, roles []stri
 
 func (v *ResourceMonitorGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ResourceMonitorGrantID{
 			ObjectName:      idParts[0],
@@ -197,7 +196,10 @@ func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 4 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 4 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}

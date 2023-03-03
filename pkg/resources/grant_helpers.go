@@ -361,3 +361,11 @@ func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []
 	toRemove = expandStringList(oldSet.Difference(newSet).List())
 	return
 }
+
+func IsOldGrantID(id string) bool {
+	parts := strings.Split(id, "|")
+	if len(parts) == 6 {
+		return parts[5] == "true" || parts[5] == "false"
+	}
+	return false
+}

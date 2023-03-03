@@ -151,3 +151,48 @@ func expectReadFutureStreamDatabaseGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
 }
+
+func TestParseStreamGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseStreamGrantID("test-db|PUBLIC|test-stream|SELECT|false|role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-stream", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseStreamGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseStreamGrantID("test-db❄️PUBLIC❄️test-stream❄️SELECT❄️false❄️role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-stream", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseStreamGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseStreamGrantID("test-db|PUBLIC|test-stream|SELECT|role1,role2|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-stream", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}

@@ -151,3 +151,48 @@ func expectReadFutureSequenceDatabaseGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
 }
+
+func TestParseSequenceGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseSequenceGrantID("test-db|PUBLIC|test-sequence|USAGE|false|role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-sequence", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseSequenceGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseSequenceGrantID("test-db❄️PUBLIC❄️test-sequence❄️USAGE❄️false❄️role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-sequence", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseSequenceGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseSequenceGrantID("test-db|PUBLIC|test-sequence|USAGE|role1,role2|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-sequence", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
