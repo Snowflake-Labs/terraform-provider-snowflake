@@ -180,3 +180,54 @@ func expectReadFutureExternalTableDatabaseGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW FUTURE GRANTS IN DATABASE "test-db"$`).WillReturnRows(rows)
 }
+
+func TestParseExternalTableGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseExternalTableGrantID("test-db|PUBLIC|test-external-table|SELECT|false|role1,role2|share1,share2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-external-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseExternalTableGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseExternalTableGrantID("test-db❄️PUBLIC❄️test-external-table❄️SELECT❄️true❄️role1,role2❄️share1,share2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-external-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+	r.Equal(2, len(grantID.Shares))
+	r.Equal("share1", grantID.Shares[0])
+	r.Equal("share2", grantID.Shares[1])
+}
+
+func TestParseExternalTableGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseExternalTableGrantID("test-db|PUBLIC|test-external-table|SELECT|role1,role2|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-external-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}

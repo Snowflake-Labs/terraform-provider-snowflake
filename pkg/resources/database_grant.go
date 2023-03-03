@@ -101,7 +101,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadDatabaseGrant implements schema.ReadFunc.
 func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseDatabaseGrantID(d.Id())
+	grantID, err := ParseDatabaseGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -213,15 +213,15 @@ func (v *DatabaseGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
+func ParseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &DatabaseGrantID{
 			DatabaseName:    idParts[0],
 			Privilege:       idParts[3],
-			Roles:           []string{},
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:          []string{},
-			WithGrantOption: idParts[4] == "true",
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}

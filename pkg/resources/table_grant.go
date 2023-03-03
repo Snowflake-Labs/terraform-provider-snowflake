@@ -144,7 +144,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTableGrant implements schema.ReadFunc.
 func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTableGrantID(d.Id())
+	grantID, err := ParseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTableGrant implements schema.DeleteFunc.
 func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTableGrantID(d.Id())
+	grantID, err := ParseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = difference("shares")
 	}
 
-	grantID, err := parseTableGrantID(d.Id())
+	grantID, err := ParseTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func (v *TableGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseTableGrantID(s string) (*TableGrantID, error) {
+func ParseTableGrantID(s string) (*TableGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &TableGrantID{
@@ -321,9 +321,9 @@ func parseTableGrantID(s string) (*TableGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:          []string{},
-			WithGrantOption: idParts[4] == "true",
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}

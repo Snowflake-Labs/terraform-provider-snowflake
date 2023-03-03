@@ -89,7 +89,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadUserGrant implements schema.ReadFunc.
 func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteUserGrant implements schema.DeleteFunc.
 func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func (v *UserGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseUserGrantID(s string) (*UserGrantID, error) {
+func ParseUserGrantID(s string) (*UserGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &UserGrantID{

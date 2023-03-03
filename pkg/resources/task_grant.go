@@ -133,7 +133,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTaskGrant implements schema.ReadFunc.
 func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTaskGrantID(d.Id())
+	grantID, err := ParseTaskGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTaskGrant implements schema.DeleteFunc.
 func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTaskGrantID(d.Id())
+	grantID, err := ParseTaskGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func UpdateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseTaskGrantID(d.Id())
+	grantID, err := ParseTaskGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func (v *TaskGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseTaskGrantID(s string) (*TaskGrantID, error) {
+func ParseTaskGrantID(s string) (*TaskGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &TaskGrantID{
@@ -281,8 +281,8 @@ func parseTaskGrantID(s string) (*TaskGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}

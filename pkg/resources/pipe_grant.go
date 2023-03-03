@@ -133,7 +133,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadPipeGrant implements schema.ReadFunc.
 func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parsePipeGrantID(d.Id())
+	grantID, err := ParsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePipeGrant implements schema.DeleteFunc.
 func DeletePipeGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parsePipeGrantID(d.Id())
+	grantID, err := ParsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func UpdatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parsePipeGrantID(d.Id())
+	grantID, err := ParsePipeGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (v *PipeGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parsePipeGrantID(s string) (*PipeGrantID, error) {
+func ParsePipeGrantID(s string) (*PipeGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &PipeGrantID{

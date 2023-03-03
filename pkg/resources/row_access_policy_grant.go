@@ -109,7 +109,7 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 
 // ReadRowAccessPolicyGrant implements schema.ReadFunc.
 func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteRowAccessPolicyGrant implements schema.DeleteFunc.
 func DeleteRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (v *RowAccessPolicyGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
+func ParseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RowAccessPolicyGrantID{
@@ -222,8 +222,8 @@ func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}

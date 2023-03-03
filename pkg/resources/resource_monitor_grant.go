@@ -89,7 +89,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 
 // ReadResourceMonitorGrant implements schema.ReadFunc.
 func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc.
 func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	grantID, err := ParseResourceMonitorGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (v *ResourceMonitorGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
+func ParseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ResourceMonitorGrantID{

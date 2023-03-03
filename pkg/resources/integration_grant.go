@@ -90,7 +90,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadIntegrationGrant implements schema.ReadFunc.
 func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseIntegrationGrantID(d.Id())
+	grantID, err := ParseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteIntegrationGrant implements schema.DeleteFunc.
 func DeleteIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseIntegrationGrantID(d.Id())
+	grantID, err := ParseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func UpdateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseIntegrationGrantID(d.Id())
+	grantID, err := ParseIntegrationGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (v *IntegrationGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
+func ParseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &IntegrationGrantID{

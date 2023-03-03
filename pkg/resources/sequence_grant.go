@@ -132,7 +132,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSequenceGrant implements schema.ReadFunc.
 func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSequenceGrant implements schema.DeleteFunc.
 func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func (v *SequenceGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
+func ParseSequenceGrantID(s string) (*SequenceGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &SequenceGrantID{
@@ -275,8 +275,8 @@ func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}

@@ -132,7 +132,7 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadStreamGrant implements schema.ReadFunc.
 func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseStreamGrantID(d.Id())
+	grantID, err := ParseStreamGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteStreamGrant implements schema.DeleteFunc.
 func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseStreamGrantID(d.Id())
+	grantID, err := ParseStreamGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseStreamGrantID(d.Id())
+	grantID, err := ParseStreamGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func (v *StreamGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseStreamGrantID(s string) (*StreamGrantID, error) {
+func ParseStreamGrantID(s string) (*StreamGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &StreamGrantID{
@@ -272,8 +272,8 @@ func parseStreamGrantID(s string) (*StreamGrantID, error) {
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 		}, nil
 	}
 	idParts := strings.Split(s, "|")

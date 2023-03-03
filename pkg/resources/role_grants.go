@@ -109,7 +109,7 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	grantID, err := parseRoleGrantsID(d.Id())
+	grantID, err := ParseRoleGrantsID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func (v *RoleGrantsID) String() string {
 	return fmt.Sprintf("%v|%v|%v", v.ObjectName, roles, users)
 }
 
-func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
+func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RoleGrantsID{

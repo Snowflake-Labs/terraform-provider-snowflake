@@ -132,7 +132,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadFileFormatGrant implements schema.ReadFunc.
 func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseFileFormatGrant(d.Id())
+	grantID, err := ParseFileFormatGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteFileFormatGrant implements schema.DeleteFunc.
 func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseFileFormatGrant(d.Id())
+	grantID, err := ParseFileFormatGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func UpdateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseFileFormatGrant(d.Id())
+	grantID, err := ParseFileFormatGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (v *FileFormatGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseFileFormatGrant(s string) (*FileFormatGrantID, error) {
+func ParseFileFormatGrantID(s string) (*FileFormatGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &FileFormatGrantID{

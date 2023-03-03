@@ -77,3 +77,48 @@ func expectReadRowAccessPolicyGrant(mock sqlmock.Sqlmock) {
 	)
 	mock.ExpectQuery(`^SHOW GRANTS ON ROW ACCESS POLICY "test-db"."PUBLIC"."test-row-access-policy"$`).WillReturnRows(rows)
 }
+
+func TestRowAccessPolicyGrantID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRowAccessPolicyGrantID("test-db|test-schema|test-policy|APPLY|true|role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("test-schema", grantID.SchemaName)
+	r.Equal("test-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseRowAccessPolicyGrantEmojiID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRowAccessPolicyGrantID("test-db❄️test-schema❄️test-policy❄️APPLY❄️true❄️role1,role2")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("test-schema", grantID.SchemaName)
+	r.Equal("test-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseRowAccessPolicyGrantOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRowAccessPolicyGrantID("test-db|test-schema|test-policy|APPLY|role1,role2|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("test-schema", grantID.SchemaName)
+	r.Equal("test-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(2, len(grantID.Roles))
+	r.Equal("role1", grantID.Roles[0])
+	r.Equal("role2", grantID.Roles[1])
+}

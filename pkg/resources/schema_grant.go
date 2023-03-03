@@ -163,7 +163,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,7 @@ func (v *SchemaGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
+func ParseSchemaGrantID(s string) (*SchemaGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &SchemaGrantID{

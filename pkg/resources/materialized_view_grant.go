@@ -147,7 +147,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 
 // ReadViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func (v *MaterializedViewGrantID) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
+func ParseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &MaterializedViewGrantID{

@@ -138,16 +138,16 @@ func NewAccountGrantID(privilege string, roles []string, withGrantOption bool) *
 
 func (v *AccountGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v", v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v", v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseAccountGrantID(s string) (*AccountGrantID, error) {
+func ParseAccountGrantID(s string) (*AccountGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &AccountGrantID{
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
@@ -186,7 +186,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 // ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
-	grantID, err := parseAccountGrantID(d.Id())
+	grantID, err := ParseAccountGrantID(d.Id())
 	if err != nil {
 		return err
 	}
