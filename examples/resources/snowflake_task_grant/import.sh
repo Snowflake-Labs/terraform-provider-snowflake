@@ -1,2 +1,2 @@
-# format is database name | schema name | task name | privilege | true/false for with_grant_option
-terraform import snowflake_pipe_grant.example 'dbName|schemaName|taskName|OPERATE|false'
+# format is database_name ❄️ schema_name ❄️ task_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_task_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT❄️OPERATE❄️false❄️role1,role2'

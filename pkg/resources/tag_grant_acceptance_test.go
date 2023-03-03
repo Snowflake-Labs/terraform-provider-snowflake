@@ -51,7 +51,7 @@ func tagGrantConfig(name string) string {
 		name = "%v"
 		database = snowflake_database.test.name
 		schema = snowflake_schema.test.name
-		allowed_values = [""]
+		allowed_values = []
 	}
 
 	resource "snowflake_tag_grant" "test" {

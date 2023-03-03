@@ -66,7 +66,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(key)
-	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
+	p, err := snowflake.ShowAccountParameter(db, key)
 	if err != nil {
 		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
@@ -81,7 +81,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Id()
-	p, err := snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
+	p, err := snowflake.ShowAccountParameter(db, key)
 	if err != nil {
 		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
@@ -116,7 +116,7 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error creating account parameter err = %w", err)
 	}
-	_, err = snowflake.ShowParameter(db, key, snowflake.ParameterTypeAccount)
+	_, err = snowflake.ShowAccountParameter(db, key)
 	if err != nil {
 		return fmt.Errorf("error reading account parameter err = %w", err)
 	}

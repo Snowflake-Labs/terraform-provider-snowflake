@@ -3,32 +3,28 @@ package resources
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var (
-	roleProperties = []string{"comment"}
-	roleSchema     = map[string]*schema.Schema{
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-				additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-				return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-			},
+var roleSchema = map[string]*schema.Schema{
+	"name": {
+		Type:     schema.TypeString,
+		Required: true,
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
-		"comment": {
-			Type:     schema.TypeString,
-			Optional: true,
-			// TODO validation
-		},
-		"tag": tagReferenceSchema,
-	}
-)
+	},
+	"comment": {
+		Type:     schema.TypeString,
+		Optional: true,
+		// TODO validation
+	},
+	"tag": tagReferenceSchema,
+}
 
 func Role() *schema.Resource {
 	return &schema.Resource{
@@ -45,40 +41,112 @@ func Role() *schema.Resource {
 }
 
 func CreateRole(d *schema.ResourceData, meta interface{}) error {
-	return CreateResource("role", roleProperties, roleSchema, snowflake.NewRoleBuilder, ReadRole)(d, meta)
+	name := d.Get("name").(string)
+	db := meta.(*sql.DB)
+	builder := snowflake.NewRoleBuilder(db, name)
+	if v, ok := d.GetOk("comment"); ok {
+		builder.WithComment(v.(string))
+	}
+	if v, ok := d.GetOk("tag"); ok {
+		tags := getTags(v)
+		builder.WithTags(tags.toSnowflakeTagValues())
+	}
+	err := builder.Create()
+	if err != nil {
+		return err
+	}
+	d.SetId(name)
+	return ReadRole(d, meta)
 }
 
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	id := d.Id()
+	// If the name is not set (such as during import) then use the id
+	name := d.Get("name").(string)
+	if name == "" {
+		name = id
+	}
 
-	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", id))
-	role, err := snowflake.ScanRole(row)
+	builder := snowflake.NewRoleBuilder(db, name)
+	role, err := builder.Show()
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
-		log.Printf("[DEBUG] role (%s) not found", d.Id())
+		log.Printf("[WARN] role (%s) not found", name)
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
+	} else if err != nil {
 		return err
 	}
-
 	if err := d.Set("name", role.Name.String); err != nil {
 		return err
 	}
-
 	if err := d.Set("comment", role.Comment.String); err != nil {
 		return err
 	}
-
-	return err
+	return nil
 }
 
 func UpdateRole(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("role", roleProperties, roleSchema, snowflake.NewRoleBuilder, ReadRole)(d, meta)
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	builder := snowflake.NewRoleBuilder(db, name)
+
+	if d.HasChange("name") {
+		o, n := d.GetChange("name")
+		builder.WithName(o.(string))
+		err := builder.Rename(n.(string))
+		if err != nil {
+			return err
+		}
+		builder.WithName(n.(string))
+	}
+
+	if d.HasChange("comment") {
+		o, n := d.GetChange("comment")
+		if n == nil || n.(string) == "" {
+			builder.WithComment(o.(string))
+			err := builder.UnsetComment()
+			if err != nil {
+				return err
+			}
+		} else {
+			err := builder.SetComment(n.(string))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if d.HasChange("tag") {
+		old, new := d.GetChange("tag")
+		removed, added, changed := getTags(old).diffs(getTags(new))
+		for _, tA := range removed {
+			err := builder.UnsetTag(tA.toSnowflakeTagValue())
+			if err != nil {
+				return err
+			}
+		}
+		for _, tA := range added {
+			err := builder.SetTag(tA.toSnowflakeTagValue())
+			if err != nil {
+				return err
+			}
+		}
+		for _, tA := range changed {
+			err := builder.ChangeTag(tA.toSnowflakeTagValue())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func DeleteRole(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("role", snowflake.NewRoleBuilder)(d, meta)
+	db := meta.(*sql.DB)
+	name := d.Get("name").(string)
+	builder := snowflake.NewRoleBuilder(db, name)
+	err := builder.Drop()
+	return err
 }

@@ -57,7 +57,50 @@ func TestSchemaRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
+		expectReadSchema(mock)
+		err := resources.ReadSchema(d, db)
+		r.NotEmpty(d.State())
+		r.Nil(err)
+	})
+}
+
+func TestSchemaReadNotExists(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "good_name",
+		"database": "test_db",
+	}
+
+	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
+	d.SetId("test_db|good_name")
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when schema resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
 		q := snowflake.NewSchemaBuilder("good_name").WithDB("test_db").Show()
+		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
+		err := resources.ReadSchema(d, db)
+		r.Empty(d.State())
+		r.Nil(err)
+	})
+}
+
+func TestSchemaReadDatabaseDoesNotExist(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "good_name",
+		"database": "test_db",
+	}
+
+	d := schema.TestResourceDataRaw(t, resources.Schema().Schema, in)
+	d.SetId("test_db|good_name")
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		// Test when database resource is not found, checking if state will be empty
+		r.NotEmpty(d.State())
+		q := snowflake.NewDatabaseBuilder("test_db").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadSchema(d, db)
 		r.Empty(d.State())
@@ -70,5 +113,6 @@ func expectReadSchema(mock sqlmock.Sqlmock) {
 		"created_on", "name", "is_default", "is_current", "database_name", "owner", "comment", "options", "retention_time",
 	},
 	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "N", "Y", "test_db", "admin", "great comment", "TRANSIENT, MANAGED ACCESS", 1)
-	mock.ExpectQuery(`^SHOW SCHEMAS LIKE 'good_name' IN DATABASE "test_db"$`).WillReturnRows(rows)
+	q := snowflake.NewSchemaBuilder("good_name").WithDB("test_db").Show()
+	mock.ExpectQuery(q).WillReturnRows(rows)
 }

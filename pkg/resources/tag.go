@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
@@ -260,9 +261,7 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	av = strings.TrimPrefix(av, "[")
 	av = strings.TrimSuffix(av, "]")
 
-	split := strings.Split(av, ",")
-
-	if err := d.Set("allowed_values", split); err != nil {
+	if err := d.Set("allowed_values", helpers.SplitStringToSlice(av, ",")); err != nil {
 		return err
 	}
 

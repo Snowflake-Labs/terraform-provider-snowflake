@@ -2,7 +2,9 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,61 +82,55 @@ func DatabaseGrant() *TerraformGrantResource {
 
 // CreateDatabaseGrant implements schema.CreateFunc.
 func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	dbName := d.Get("database_name").(string)
-	builder := snowflake.DatabaseGrant(dbName)
-	priv := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
-	roles := expandStringList(d.Get("roles").(*schema.Set).List())
-
+	databaseName := d.Get("database_name").(string)
+	builder := snowflake.DatabaseGrant(databaseName)
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return fmt.Errorf("error creating database grant err = %w", err)
 	}
 
-	grant := &grantID{
-		ResourceName: dbName,
-		Privilege:    priv,
-		GrantOption:  grantOption,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	if err != nil {
-		return fmt.Errorf("error creating database grant err = %w", err)
-	}
-	d.SetId(dataIDInput)
+	privilege := d.Get("privilege").(string)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
+	withGrantOption := d.Get("with_grant_option").(bool)
+	grantID := NewDatabaseGrantID(databaseName, privilege, roles, shares, withGrantOption)
+
+	d.SetId(grantID.String())
 
 	return ReadDatabaseGrant(d, meta)
 }
 
 // ReadDatabaseGrant implements schema.ReadFunc.
 func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseDatabaseGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	if err := d.Set("database_name", grantID.ResourceName); err != nil {
+	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("with_grant_option", grantID.GrantOption); err != nil {
+	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
 	}
-
-	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
-	// that it is still there. Just exit for now
-	if grantID.Privilege == "IMPORTED PRIVILEGES" {
-		return nil
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+		return err
+	}
+	if !grantID.IsOldID {
+		if err := d.Set("shares", grantID.Shares); err != nil {
+			return err
+		}
 	}
 
-	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
 	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc.
 func DeleteDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	dbName := d.Get("database_name").(string)
-	builder := snowflake.DatabaseGrant(dbName)
+	databaseName := d.Get("database_name").(string)
+	builder := snowflake.DatabaseGrant(databaseName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -158,19 +154,17 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := grantIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
+	databaseName := d.Get("database_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
-	builder := snowflake.DatabaseGrant(grantID.ResourceName)
+	builder := snowflake.DatabaseGrant(databaseName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
+		privilege,
 		rolesToRevoke,
 		sharesToRevoke,
 	); err != nil {
@@ -181,8 +175,8 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
-		grantID.GrantOption,
+		privilege,
+		withGrantOption,
 		rolesToAdd,
 		sharesToAdd,
 	); err != nil {
@@ -191,4 +185,57 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// Done, refresh state
 	return ReadDatabaseGrant(d, meta)
+}
+
+type DatabaseGrantID struct {
+	DatabaseName    string
+	Privilege       string
+	Roles           []string
+	Shares          []string
+	WithGrantOption bool
+	IsOldID         bool
+}
+
+func NewDatabaseGrantID(databaseName string, privilege string, roles []string, shares []string, withGrantOption bool) *DatabaseGrantID {
+	return &DatabaseGrantID{
+		DatabaseName:    databaseName,
+		Privilege:       privilege,
+		Roles:           roles,
+		Shares:          shares,
+		WithGrantOption: withGrantOption,
+		IsOldID:         false,
+	}
+}
+
+func (v *DatabaseGrantID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	shares := strings.Join(v.Shares, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
+}
+
+func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &DatabaseGrantID{
+			DatabaseName:    idParts[0],
+			Privilege:       idParts[3],
+			Roles:           []string{},
+			Shares:          []string{},
+			WithGrantOption: idParts[4] == "true",
+			IsOldID:         true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 5 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 5", len(idParts))
+	}
+	return &DatabaseGrantID{
+		DatabaseName:    idParts[0],
+		Privilege:       idParts[1],
+		WithGrantOption: idParts[2] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
+		Shares:          helpers.SplitStringToSlice(idParts[4], ","),
+		IsOldID:         false,
+	}, nil
 }

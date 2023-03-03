@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.57.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.5...v0.57.0) (2023-02-28)
+
+
+### Features
+
+* support object parameters on account level ([#1583](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1583)) ([fb24802](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb2480214c8ac4e61fffe3a8e3448597462ad9a1))
+
+
+### BugFixes
+
+* Add contributing section to readme ([#1560](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1560)) ([174355d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/174355d740e325ae05435bbbc22b8b335f94fc6f))
+* add test cases for update repl schedule on failover group ([#1578](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1578)) ([ab638f0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ab638f0b9ba866d22c6f807743eb4eccad2530b8))
+* schema read now checks first if the corresponding database exists ([#1568](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1568)) ([368dc8f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/368dc8fb3f7e5156d16caed1e03792654d49f3d4))
+
+## [0.56.5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.4...v0.56.5) (2023-02-21)
+
+
+### Misc
+
+* **deps:** bump golang.org/x/crypto from 0.5.0 to 0.6.0 ([#1528](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1528)) ([8a011e0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8a011e0b1920833c77eb7832f821a4bd52176657))
+* **deps:** bump golang.org/x/net from 0.5.0 to 0.7.0 ([#1551](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1551)) ([35de62f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/35de62f5b722c1dc6eaf2f39f6699935f67557cd))
+
+## [0.56.4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.3...v0.56.4) (2023-02-17)
+
+
+### BugFixes
+
+* add nill check for grant_helpers ([#1518](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1518)) ([87689bb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/87689bb5b60c73bfe3d741c3da6f4f544f16aa45))
+* cleanup grant logic ([#1522](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1522)) ([0502c61](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0502c61e7211253d029a0bec6a8104738624f243))
+* future read on grants ([#1520](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1520)) ([db78f64](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/db78f64e56d228f3236b6bdefbe9a9c18c8641e1))
+
 ## [0.56.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.2...v0.56.3) (2023-02-02)
 
 

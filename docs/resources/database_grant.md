@@ -48,6 +48,6 @@ resource "snowflake_database_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | | | privilege | true/false for with_grant_option
-terraform import snowflake_database_grant.example 'databaseName|||USAGE|false'
+# format is database_name ❄️ privilege ❄️ with_grant_option ❄️ roles ❄️ shares
+terraform import snowflake_database_grant.example 'MY_DATABASE❄️USAGE❄️false❄️role1,role2❄️share1,share2'
 ```

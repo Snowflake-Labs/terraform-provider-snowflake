@@ -93,8 +93,8 @@ func getRolesSweeper(name string) *resource.Sweeper {
 				log.Printf("[DEBUG] Testing if role %s starts with tst-terraform", role.Name.String)
 				if strings.HasPrefix(role.Name.String, "tst-terraform") {
 					log.Printf("[DEBUG] deleting role %s", role.Name.String)
-					stmt := snowflake.NewRoleBuilder(role.Name.String).Drop()
-					if err := snowflake.Exec(db, stmt); err != nil {
+					err := snowflake.NewRoleBuilder(db, role.Name.String).Drop()
+					if err != nil {
 						return fmt.Errorf("Error deleting role %q %w", role.Name.String, err)
 					}
 				}

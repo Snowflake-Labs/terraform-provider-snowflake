@@ -84,7 +84,6 @@ func CreateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 
 func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	log.Println(d.Id())
 	onRoleName := strings.Split(d.Id(), "|")[0]
 	currentGrants := strings.Split(d.Id(), "|")[2]
 

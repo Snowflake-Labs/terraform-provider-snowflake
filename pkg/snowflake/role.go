@@ -10,23 +10,109 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func NewRoleBuilder(name string) *Builder {
-	return &Builder{
-		entityType: RoleType,
-		name:       name,
+func NewRoleBuilder(db *sql.DB, name string) *RoleBuilder {
+	return &RoleBuilder{
+		db:   db,
+		name: name,
 	}
+}
+
+type RoleBuilder struct {
+	name    string
+	comment string
+	tags    []TagValue
+	db      *sql.DB
+}
+
+func (b *RoleBuilder) WithName(name string) *RoleBuilder {
+	b.name = name
+	return b
+}
+
+func (b *RoleBuilder) WithComment(comment string) *RoleBuilder {
+	b.comment = comment
+	return b
+}
+
+func (b *RoleBuilder) WithTags(tags []TagValue) *RoleBuilder {
+	b.tags = tags
+	return b
+}
+
+func (b *RoleBuilder) Create() error {
+	q := strings.Builder{}
+	q.WriteString(fmt.Sprintf(`CREATE ROLE "%v"`, b.name))
+	if b.comment != "" {
+		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", b.comment))
+	}
+	if len(b.tags) > 0 {
+		q.WriteString(" TAG (")
+		for i, tag := range b.tags {
+			q.WriteString(fmt.Sprintf(`"%v"."%v"."%v" = "%v"`, tag.Database, tag.Schema, tag.Name, tag.Value))
+			if i < len(b.tags)-1 {
+				q.WriteString(", ")
+			}
+		}
+		q.WriteString(")")
+	}
+	_, err := b.db.Exec(q.String())
+	return err
+}
+
+func (b *RoleBuilder) SetComment(comment string) error {
+	q := fmt.Sprintf(`ALTER ROLE "%s" SET COMMENT = '%v'`, b.name, comment)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) UnsetComment() error {
+	q := fmt.Sprintf(`ALTER ROLE "%v" UNSET COMMENT`, b.name)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) UnsetTag(tag TagValue) error {
+	q := fmt.Sprintf(`ALTER ROLE %s UNSET TAG "%v"."%v"."%v"`, b.name, tag.Database, tag.Schema, tag.Name)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) SetTag(tag TagValue) error {
+	q := fmt.Sprintf(`ALTER ROLE %s SET TAG  "%v"."%v"."%v" = "%v"`, b.name, tag.Database, tag.Schema, tag.Name, tag.Value)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) ChangeTag(tag TagValue) error {
+	q := fmt.Sprintf(`ALTER ROLE "%s" SET TAG "%v"."%v"."%v" = "%v"`, b.name, tag.Database, tag.Schema, tag.Name, tag.Value)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) Drop() error {
+	q := fmt.Sprintf(`DROP ROLE "%s"`, b.name)
+	_, err := b.db.Exec(q)
+	return err
+}
+
+func (b *RoleBuilder) Show() (*Role, error) {
+	stmt := fmt.Sprintf(`SHOW ROLES LIKE '%s'`, b.name)
+	row := QueryRow(b.db, stmt)
+	r := &Role{}
+	err := row.StructScan(r)
+	return r, err
+}
+
+func (b *RoleBuilder) Rename(newName string) error {
+	stmt := fmt.Sprintf(`ALTER ROLE "%s" RENAME TO "%s"`, b.name, newName)
+	_, err := b.db.Exec(stmt)
+	return err
 }
 
 type Role struct {
 	Name    sql.NullString `db:"name"`
 	Comment sql.NullString `db:"comment"`
 	Owner   sql.NullString `db:"owner"`
-}
-
-func ScanRole(row *sqlx.Row) (*Role, error) {
-	r := &Role{}
-	err := row.StructScan(r)
-	return r, err
 }
 
 func ListRoles(db *sql.DB, rolePattern string) ([]*Role, error) {

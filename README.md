@@ -142,6 +142,13 @@ To debug the provider with a debugger:
 
 For further instructions, please check the official [Terraform Plugin Development guide](https://www.terraform.io/plugin/debugging#starting-a-provider-in-debug-mode).
 
+## Contributing
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages formatting. Please try to adhere to the standard.
+Validation is done with this regular expression:
+
+https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/titleLint.yml#L17
+
 ## Releasing
 
 Releases will be performed as needed, typically once every 1-2 weeks. If your change is more urgent and you need to use it sooner, use the commit hash.

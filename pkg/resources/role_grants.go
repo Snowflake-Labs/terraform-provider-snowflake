@@ -2,10 +2,12 @@ package resources
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
@@ -25,6 +27,7 @@ func RoleGrants() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the role we are granting.",
+				ForceNew:    true,
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
 					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
@@ -66,16 +69,9 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
-	grant := &grantID{
-		ResourceName: roleName,
-		Roles:        roles,
-	}
-	dataIDInput, err := grant.String()
-	d.SetId(dataIDInput)
+	grantID := NewRoleGrantsID(roleName, roles, users)
+	d.SetId(grantID.String())
 
-	if err != nil {
-		return fmt.Errorf("error creating role grant err = %w", err)
-	}
 	for _, role := range roles {
 		if err := grantRoleToRole(db, roleName, role); err != nil {
 			return err
@@ -113,20 +109,24 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	log.Println(d.Id())
-	grantID, err := grantIDFromString(d.Id())
+	grantID, err := parseRoleGrantsID(d.Id())
 	if err != nil {
 		return err
 	}
-	roleName := grantID.ResourceName
-
-	tfRoles := expandStringList(d.Get("roles").(*schema.Set).List())
-	tfUsers := expandStringList(d.Get("users").(*schema.Set).List())
 
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
-	grants, err := readGrants(db, roleName)
+	builder := snowflake.NewRoleBuilder(db, grantID.ObjectName)
+	_, err = builder.Show()
+	if errors.Is(err, sql.ErrNoRows) {
+		// If not found, mark resource to be removed from statefile during apply or refresh
+		log.Printf("[DEBUG] role (%s) not found", grantID.ObjectName)
+		d.SetId("")
+		return nil
+	}
+
+	grants, err := readGrants(db, grantID.ObjectName)
 	if err != nil {
 		return err
 	}
@@ -134,13 +134,13 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	for _, grant := range grants {
 		switch grant.GrantedTo.String {
 		case "ROLE":
-			for _, tfRole := range tfRoles {
+			for _, tfRole := range grantID.Roles {
 				if tfRole == grant.GranteeName.String {
 					roles = append(roles, grant.GranteeName.String)
 				}
 			}
 		case "USER":
-			for _, tfUser := range tfUsers {
+			for _, tfUser := range grantID.Users {
 				if tfUser == grant.GranteeName.String {
 					users = append(users, grant.GranteeName.String)
 				}
@@ -150,7 +150,7 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("role_name", roleName); err != nil {
+	if err := d.Set("role_name", grantID.ObjectName); err != nil {
 		return err
 	}
 	if err := d.Set("roles", roles); err != nil {
@@ -220,6 +220,7 @@ func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
 func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 	rg := snowflake.RoleGrant(role1).Role(role2)
 	err := snowflake.Exec(db, rg.Revoke())
+	log.Printf("revokeRoleFromRole %v", err)
 	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
 		if driverErr.Number == 2003 {
 			// handling error if a role has been deleted prior to revoking a role
@@ -302,4 +303,49 @@ func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return ReadRoleGrants(d, meta)
+}
+
+type RoleGrantsID struct {
+	ObjectName string
+	Roles      []string
+	Users      []string
+	IsOldID    bool
+}
+
+func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
+	return &RoleGrantsID{
+		ObjectName: objectName,
+		Roles:      roles,
+		Users:      users,
+		IsOldID:    false,
+	}
+}
+
+func (v *RoleGrantsID) String() string {
+	roles := strings.Join(v.Roles, ",")
+	users := strings.Join(v.Users, ",")
+	return fmt.Sprintf("%v❄️%v❄️%v", v.ObjectName, roles, users)
+}
+
+func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
+	// is this an old ID format?
+	if !strings.Contains(s, "❄️") {
+		idParts := strings.Split(s, "|")
+		return &RoleGrantsID{
+			ObjectName: idParts[0],
+			Roles:      helpers.SplitStringToSlice(idParts[4], ","),
+			Users:      []string{},
+			IsOldID:    true,
+		}, nil
+	}
+	idParts := strings.Split(s, "❄️")
+	if len(idParts) != 3 {
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
+	}
+	return &RoleGrantsID{
+		ObjectName: idParts[0],
+		Roles:      helpers.SplitStringToSlice(idParts[1], ","),
+		Users:      helpers.SplitStringToSlice(idParts[2], ","),
+		IsOldID:    false,
+	}, nil
 }

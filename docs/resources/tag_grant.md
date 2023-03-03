@@ -48,6 +48,6 @@ resource "snowflake_tag_grant" "example" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | tag name | privilege | roles | true/false for with_grant_option
-terraform import snowflake_tag_grant.example 'dbName|schemaName|tagName|APPLY|ROLE1,ROLE2|false'
+# format is database_name ❄️ schema_name ❄️ tag_name ❄️ privilege ❄️ with_grant_option ❄️ roles
+terraform import snowflake_tag_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT❄️APPLY❄️false❄️role1,role2'
 ```
