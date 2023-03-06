@@ -43,7 +43,7 @@ var systemGetPrivateLinkConfigSchema = map[string]*schema.Schema{
 	"regionless_account_url": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "The regionless URL to connect to your Snowflake account using AWS PrivateLink, Azure Private Link, or Google Cloud Private Service Connect..",
+		Description: "The regionless URL to connect to your Snowflake account using AWS PrivateLink, Azure Private Link, or Google Cloud Private Service Connect.",
 	},
 
 	"regionless_snowsight_url": {
@@ -61,7 +61,7 @@ var systemGetPrivateLinkConfigSchema = map[string]*schema.Schema{
 	"internal_stage": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "The endpoint to connect to your Snowflake internal stage using AWS PrivateLink or Azure Private Link..",
+		Description: "The endpoint to connect to your Snowflake internal stage using AWS PrivateLink or Azure Private Link.",
 	},
 }
 
