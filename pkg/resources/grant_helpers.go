@@ -55,6 +55,18 @@ type futureGrant struct {
 	GrantOption bool      `db:"grant_option"`
 }
 
+// allGrant represents the columns in the response from `SHOW ALL GRANTS
+// IN SCHEMA...` and can be used in conjunction with sqlx.
+type allGrant struct {
+	CreatedOn   time.Time `db:"created_on"`
+	Privilege   string    `db:"privilege"`
+	GrantType   string    `db:"grant_on"`
+	GrantName   string    `db:"name"`
+	GranteeType string    `db:"grant_to"`
+	GranteeName string    `db:"grantee_name"`
+	GrantOption bool      `db:"grant_option"`
+}
+
 // grant is simply the least common denominator of fields in currentGrant and
 // futureGrant.
 type grant struct {
@@ -112,6 +124,7 @@ func readGenericGrant(
 	grantSchema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
+	existingObjects bool,
 	validPrivileges PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
@@ -119,6 +132,8 @@ func readGenericGrant(
 	var err error
 	if futureObjects {
 		grants, err = readGenericFutureGrants(db, builder)
+	} else if existingObjects {
+		grants, err = readGenericAllGrants(db, builder)
 	} else {
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
@@ -294,6 +309,37 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 			GranteeType: futureGrant.GranteeType,
 			GranteeName: futureGrant.GranteeName,
 			GrantOption: futureGrant.GrantOption,
+		}
+		grants = append(grants, grant)
+	}
+
+	return grants, nil
+}
+
+func readGenericAllGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
+	conn := sqlx.NewDb(db, "snowflake")
+
+	stmt := builder.Show()
+	rows, err := conn.Queryx(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var grants []*grant
+	for rows.Next() {
+		allGrant := &allGrant{}
+		if err := rows.StructScan(allGrant); err != nil {
+			return nil, err
+		}
+		grant := &grant{
+			CreatedOn:   allGrant.CreatedOn,
+			Privilege:   allGrant.Privilege,
+			GrantType:   allGrant.GrantType,
+			GrantName:   allGrant.GrantName,
+			GranteeType: allGrant.GranteeType,
+			GranteeName: allGrant.GranteeName,
+			GrantOption: allGrant.GrantOption,
 		}
 		grants = append(grants, grant)
 	}
