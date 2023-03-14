@@ -186,3 +186,16 @@ func TestParseSchemaGrantOldID(t *testing.T) {
 	r.Equal("role2", grantID.Roles[1])
 	r.Equal(0, len(grantID.Shares))
 }
+
+func TestParseSchemaGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseSchemaGrantID("test-db|test-schema||CREATE TABLE|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("test-schema", grantID.SchemaName)
+	r.Equal("CREATE TABLE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+	r.Equal(0, len(grantID.Shares))
+}

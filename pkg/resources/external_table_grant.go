@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -90,7 +91,34 @@ func ExternalTableGrant() *TerraformGrantResource {
 
 			Schema: externalTableGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseExternalTableGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("external_table_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validExternalTablePrivileges,
@@ -144,21 +172,6 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	if !grantID.IsOldID {
-		fmt.Printf("[DEBUG] id: %v\n", d.Id())
-		fmt.Printf("[DEBUG] reading external table grant: %v\n", grantID)
-		fmt.Printf("[DEBUG] reading external table grant shares: %v\n", grantID.Shares)
-		fmt.Printf("[DEBUG] len(external table grant shares): %v\n", len(grantID.Shares))
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
-
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}

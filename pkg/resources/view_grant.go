@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -90,7 +91,34 @@ func ViewGrant() *TerraformGrantResource {
 
 			Schema: viewGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseViewGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("view_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validViewPrivileges,
@@ -146,15 +174,6 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := ParseViewGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
 	}
 
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
