@@ -96,13 +96,27 @@ func ViewGrant() *TerraformGrantResource {
 					if err != nil {
 						return nil, err
 					}
-					d.Set("view_name", grantID.ObjectName)
-					d.Set("schema_name", grantID.SchemaName)
-					d.Set("database_name", grantID.DatabaseName)
-					d.Set("privilege", grantID.Privilege)
-					d.Set("with_grant_option", grantID.WithGrantOption)
-					d.Set("roles", grantID.Roles)
-					d.Set("shares", grantID.Shares)
+					if err := d.Set("view_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
 					return []*schema.ResourceData{d}, nil
 				},
 			},
