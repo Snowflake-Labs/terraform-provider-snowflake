@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -60,9 +61,26 @@ func UserGrant() *TerraformGrantResource {
 			Update: UpdateUserGrant,
 
 			Schema: userGrantSchema,
-			// FIXME - tests for this don't currently work
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseUserGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("user_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validUserPrivileges,
