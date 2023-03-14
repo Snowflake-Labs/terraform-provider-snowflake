@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -90,7 +91,20 @@ func ViewGrant() *TerraformGrantResource {
 
 			Schema: viewGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseViewGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					d.Set("view_name", grantID.ObjectName)
+					d.Set("schema_name", grantID.SchemaName)
+					d.Set("database_name", grantID.DatabaseName)
+					d.Set("privilege", grantID.Privilege)
+					d.Set("with_grant_option", grantID.WithGrantOption)
+					d.Set("roles", grantID.Roles)
+					d.Set("shares", grantID.Shares)
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validViewPrivileges,
