@@ -75,3 +75,14 @@ func TestParseWarehouseGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseWarehouseGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseWarehouseGrantID("test-db|||USAGE|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

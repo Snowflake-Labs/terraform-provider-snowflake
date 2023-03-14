@@ -302,16 +302,25 @@ func (v *SchemaGrantID) String() string {
 func ParseSchemaGrantID(s string) (*SchemaGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		withGrantOption := false
+		roles := []string{}
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &SchemaGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:           roles,
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}
+	// some old ids were also in
 	idParts := strings.Split(s, "|")
 	if len(idParts) < 6 {
 		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
