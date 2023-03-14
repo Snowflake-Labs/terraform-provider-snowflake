@@ -142,12 +142,6 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-	}
-
 	onFuture := (grantID.ObjectName == "")
 
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {

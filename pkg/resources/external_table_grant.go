@@ -144,21 +144,6 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	if !grantID.IsOldID {
-		fmt.Printf("[DEBUG] id: %v\n", d.Id())
-		fmt.Printf("[DEBUG] reading external table grant: %v\n", grantID)
-		fmt.Printf("[DEBUG] reading external table grant shares: %v\n", grantID.Shares)
-		fmt.Printf("[DEBUG] len(external table grant shares): %v\n", len(grantID.Shares))
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
-
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}

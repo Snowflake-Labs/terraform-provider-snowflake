@@ -117,11 +117,6 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
-	if !grantID.IsOldID {
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
 
 	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
 	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)

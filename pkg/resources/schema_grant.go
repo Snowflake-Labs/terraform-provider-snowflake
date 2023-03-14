@@ -212,15 +212,6 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}

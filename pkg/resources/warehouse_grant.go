@@ -99,20 +99,16 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-	}
-
 	err = d.Set("warehouse_name", grantID.ObjectName)
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("privilege", grantID.Privilege)
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("with_grant_option", grantID.WithGrantOption)
 	if err != nil {
 		return err
