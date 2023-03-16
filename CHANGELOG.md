@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.58.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.1...v0.58.2) (2023-03-16)
+
+
+### BugFixes
+
+* update 0.58.2 ([#1620](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1620)) ([f1eab04](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f1eab04dfdc839144057807953062b3591e6eaf0))
+
 ## [0.58.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.0...v0.58.1) (2023-03-16)
 
 
