@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -157,11 +158,11 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
-	if (schemaName == "") && (!onFuture || !onAll) {
+	if (schemaName == "") && !onFuture && !onAll {
 		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
-	if (tableName == "") && (!onFuture || !onAll) {
+	if (tableName == "") && !onFuture && !onAll {
 		return errors.New("table_name must be set unless on_future or on_all is true")
 	}
 
@@ -360,32 +361,68 @@ func ParseTableGrantID(s string) (*TableGrantID, error) {
 		} else {
 			withGrantOption = idParts[4] == "true"
 		}
+		isFuture := false
+		objectName := idParts[2]
+		if objectName == "" {
+			isFuture = true
+		}
 		return &TableGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
-			ObjectName:      idParts[2],
+			ObjectName:      objectName,
 			Privilege:       idParts[3],
 			Roles:           roles,
 			Shares:          []string{},
 			WithGrantOption: withGrantOption,
 			IsOldID:         true,
+			IsFuture:        isFuture,
+			IsAll:           false,
 		}, nil
 	}
 	idParts := strings.Split(s, "|")
 	if len(idParts) < 7 {
 		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 	}
-	if len(idParts) != 7 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+
+	if len(idParts) == 7 {
+		isFuture := false
+		objectName := idParts[2]
+		if objectName == "" {
+			isFuture = true
+		}
+
+		return &TableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      objectName,
+			Privilege:       idParts[3],
+			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+			Shares:          helpers.SplitStringToSlice(idParts[6], ","),
+			IsOldID:         false,
+			IsFuture:        isFuture,
+			IsAll:           false,
+		}, nil
 	}
-	return &TableGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
-		Privilege:       idParts[3],
-		WithGrantOption: idParts[4] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
-		Shares:          helpers.SplitStringToSlice(idParts[6], ","),
-		IsOldID:         false,
-	}, nil
+
+	if len(idParts) == 9 {
+		// TODO: add error handling
+		isFuture, _ := strconv.ParseBool(idParts[7])
+		isAll, _ := strconv.ParseBool(idParts[8])
+		return &TableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+			Shares:          helpers.SplitStringToSlice(idParts[6], ","),
+			IsOldID:         false,
+			IsFuture:        isFuture,
+			IsAll:           isAll,
+		}, nil
+	}
+
+	// idParts == 9 is for new TableGrantID with IsFuture and IsAll
+	return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7 or 9", len(idParts))
 }

@@ -133,7 +133,9 @@ func readGenericGrant(
 	if futureObjects {
 		grants, err = readGenericFutureGrants(db, builder)
 	} else if allObjects {
-		grants, err = readGenericAllGrants(db, builder)
+		// When running e.g. GRANT SELECT ON ALL TABLES IN ..., then Snowflake creates a grant to each individual existing table
+		// there is no way to attribute existing table grants to a GRANT SELECT ON ALL TABLES grant. Thus they cannot be checked (or removed).
+		return nil
 	} else {
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
@@ -309,37 +311,6 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 			GranteeType: futureGrant.GranteeType,
 			GranteeName: futureGrant.GranteeName,
 			GrantOption: futureGrant.GrantOption,
-		}
-		grants = append(grants, grant)
-	}
-
-	return grants, nil
-}
-
-func readGenericAllGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {
-	conn := sqlx.NewDb(db, "snowflake")
-
-	stmt := builder.Show()
-	rows, err := conn.Queryx(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var grants []*grant
-	for rows.Next() {
-		allGrant := &allGrant{}
-		if err := rows.StructScan(allGrant); err != nil {
-			return nil, err
-		}
-		grant := &grant{
-			CreatedOn:   allGrant.CreatedOn,
-			Privilege:   allGrant.Privilege,
-			GrantType:   allGrant.GrantType,
-			GrantName:   allGrant.GrantName,
-			GranteeType: allGrant.GranteeType,
-			GranteeName: allGrant.GranteeName,
-			GrantOption: allGrant.GrantOption,
 		}
 		grants = append(grants, grant)
 	}

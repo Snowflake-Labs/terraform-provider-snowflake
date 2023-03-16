@@ -236,10 +236,8 @@ func (fgb *AllGrantBuilder) Share(n string) GrantExecutable {
 func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if w {
-		// TODO: check if correct
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v" WITH GRANT OPTION`
 	} else {
-		// TODO: check if correct
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v"`
 	}
 	return fmt.Sprintf(template,
@@ -248,8 +246,8 @@ func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
 func (fge *ExistingGrantExecutable) Revoke(p string) []string {
+	// TODO: has no effect for ALL GRANTS
 	return []string{
-		// TODO: check if correct
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
 			p, fge.allGrantType, fge.allGrantTarget, fge.grantName, fge.granteeName),
 	}
@@ -257,6 +255,5 @@ func (fge *ExistingGrantExecutable) Revoke(p string) []string {
 
 // Show returns the SQL that will show all all grants on the schema.
 func (fge *ExistingGrantExecutable) Show() string {
-	// TODO: check if correct
 	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fge.allGrantTarget, fge.grantName)
 }
