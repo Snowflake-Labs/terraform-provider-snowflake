@@ -55,18 +55,6 @@ type futureGrant struct {
 	GrantOption bool      `db:"grant_option"`
 }
 
-// allGrant represents the columns in the response from `SHOW ALL GRANTS
-// IN SCHEMA...` and can be used in conjunction with sqlx.
-type allGrant struct {
-	CreatedOn   time.Time `db:"created_on"`
-	Privilege   string    `db:"privilege"`
-	GrantType   string    `db:"grant_on"`
-	GrantName   string    `db:"name"`
-	GranteeType string    `db:"grant_to"`
-	GranteeName string    `db:"grantee_name"`
-	GrantOption bool      `db:"grant_option"`
-}
-
 // grant is simply the least common denominator of fields in currentGrant and
 // futureGrant.
 type grant struct {
@@ -133,8 +121,8 @@ func readGenericGrant(
 	if futureObjects {
 		grants, err = readGenericFutureGrants(db, builder)
 	} else if allObjects {
-		// When running e.g. GRANT SELECT ON ALL TABLES IN ..., then Snowflake creates a grant to each individual existing table
-		// there is no way to attribute existing table grants to a GRANT SELECT ON ALL TABLES grant. Thus they cannot be checked (or removed).
+		// When running e.g. GRANT SELECT ON ALL TABLES IN ..., then Snowflake creates a grant for each individual existing table.
+		// There is no way to attribute existing table grants to a GRANT SELECT ON ALL TABLES grant. Thus they cannot be checked (or removed).
 		return nil
 	} else {
 		grants, err = readGenericCurrentGrants(db, builder)
