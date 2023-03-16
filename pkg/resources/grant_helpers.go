@@ -29,10 +29,6 @@ func (t TerraformGrantResources) GetTfSchemas() map[string]*schema.Resource {
 	return out
 }
 
-const (
-	grantIDDelimiter = '|'
-)
-
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
 // build a nice go representation of a grant.
