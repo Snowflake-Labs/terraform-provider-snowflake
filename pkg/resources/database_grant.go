@@ -140,6 +140,13 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
+	// that it is still there. However, it is needed to grant usage for the snowflake database to custom roles.
+	// Just exit for now
+	if grantID.Privilege == "IMPORTED PRIVILEGES" {
+		return nil
+	}
+
 	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
 	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
 }
