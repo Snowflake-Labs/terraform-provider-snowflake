@@ -261,8 +261,10 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.ProcedureGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, validProcedurePrivileges)
+	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, onAll, validProcedurePrivileges)
 }
 
 // DeleteProcedureGrant implements schema.DeleteFunc.

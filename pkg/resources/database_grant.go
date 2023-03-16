@@ -148,7 +148,7 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
-	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
+	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, false, validDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc.

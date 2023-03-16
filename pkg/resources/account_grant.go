@@ -200,7 +200,7 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
+	return readGenericGrant(d, meta, accountGrantSchema, builder, false, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc.

@@ -124,7 +124,7 @@ func readGenericGrant(
 	grantSchema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
-	existingObjects bool,
+	allObjects bool,
 	validPrivileges PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
@@ -132,7 +132,7 @@ func readGenericGrant(
 	var err error
 	if futureObjects {
 		grants, err = readGenericFutureGrants(db, builder)
-	} else if existingObjects {
+	} else if allObjects {
 		grants, err = readGenericAllGrants(db, builder)
 	} else {
 		grants, err = readGenericCurrentGrants(db, builder)

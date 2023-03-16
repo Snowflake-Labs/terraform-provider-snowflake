@@ -194,8 +194,10 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, validStagePrivileges)
+	return readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, onAll, validStagePrivileges)
 }
 
 // UpdateStageGrant implements schema.UpdateFunc.

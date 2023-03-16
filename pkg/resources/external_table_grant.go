@@ -203,8 +203,10 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.ExternalTableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, externalTableGrantSchema, builder, onFuture, validExternalTablePrivileges)
+	return readGenericGrant(d, meta, externalTableGrantSchema, builder, onFuture, onAll, validExternalTablePrivileges)
 }
 
 // DeleteExternalTableGrant implements schema.DeleteFunc.

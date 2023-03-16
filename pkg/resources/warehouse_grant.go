@@ -116,7 +116,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.WarehouseGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
+	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, false, validWarehousePrivileges)
 }
 
 // DeleteWarehouseGrant implements schema.DeleteFunc.
