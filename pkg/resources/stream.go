@@ -196,7 +196,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	onTable, onTableSet := d.GetOk("on_table")
 	onView, onViewSet := d.GetOk("on_view")
-	onStage, onStageSet := d.GetOk("on_stage")
+	// TODO removed for the time being as new code was buggy
+	//onStage, onStageSet := d.GetOk("on_stage")
 
 	if onTableSet {
 		id, err := streamOnObjectIDFromString(onTable.(string))
@@ -229,22 +230,23 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		builder.WithOnView(t.DatabaseName.String, t.SchemaName.String, t.Name.String)
-	} else if onStageSet {
-		id, err := streamOnObjectIDFromString(onStage.(string))
-		if err != nil {
-			return err
-		}
-
-		sq := snowflake.Stage(id.Name, id.DatabaseName, id.SchemaName).Describe()
-		d, err := snowflake.DescStage(db, sq)
-		if err != nil {
-			return err
-		}
-		if !strings.Contains(d.Directory, "ENABLE = true") {
-			return fmt.Errorf("directory must be enabled on stage")
-		}
-
-		builder.WithOnStage(id.DatabaseName, id.SchemaName, id.Name)
+		// TODO removed for the time being as new code was buggy
+		//} else if onStageSet {
+		//	id, err := streamOnObjectIDFromString(onStage.(string))
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	sq := snowflake.Stage(id.Name, id.DatabaseName, id.SchemaName).Describe()
+		//	d, err := snowflake.DescStage(db, sq)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	if !strings.Contains(d.Directory, "ENABLE = true") {
+		//		return fmt.Errorf("directory must be enabled on stage")
+		//	}
+		//
+		//	builder.WithOnStage(id.DatabaseName, id.SchemaName, id.Name)
 	}
 
 	builder.WithAppendOnly(appendOnly)
