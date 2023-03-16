@@ -242,7 +242,7 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "OAUTH_CLIENT_TYPE":
 			if err = d.Set("oauth_client_type", v.(string)); err != nil {
-				return errors.Wrap(err, "unable to set OAuth client type for security integration")
+				return fmt.Errorf("unable to set OAuth client type for security integration err = %w", err)
 			}
 		case "OAUTH_ENFORCE_PKCE":
 			// Only used for custom OAuth clients (not supported yet)
