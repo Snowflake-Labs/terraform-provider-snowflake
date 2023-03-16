@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.58.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.0...v0.58.1) (2023-03-16)
+
+
+### BugFixes
+
+* allow read of really old grant ids and add test cases ([#1615](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1615)) ([cda40ec](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cda40ece534cdc3f6849a7d24f2f8acea8476e69))
+* update packages ([#1619](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1619)) ([79a3acc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/79a3acc0e3d6a405593b5adf90a31afef81d700f))
+
 ## [0.58.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.57.0...v0.58.0) (2023-03-03)
 
 
