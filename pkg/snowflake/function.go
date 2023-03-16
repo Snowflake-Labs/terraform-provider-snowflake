@@ -28,6 +28,7 @@ type FunctionBuilder struct {
 	comment           string
 	statement         string
 	runtimeVersion    string // for Python runtime version
+	secure            bool
 }
 
 // QualifiedName prepends the db and schema and appends argument types.
@@ -117,6 +118,13 @@ func (pb *FunctionBuilder) WithTargetPath(s string) *FunctionBuilder {
 	return pb
 }
 
+// WithSecure sets the secure boolean to true
+// [Snowflake Reference](https://docs.snowflake.com/en/sql-reference/sql/create-function)
+func (pb *FunctionBuilder) WithSecure() *FunctionBuilder {
+	pb.secure = true
+	return pb
+}
+
 // WithComment adds a comment to the FunctionBuilder.
 func (pb *FunctionBuilder) WithComment(c string) *FunctionBuilder {
 	pb.comment = c
@@ -158,6 +166,10 @@ func (pb *FunctionBuilder) Create() (string, error) {
 	var q strings.Builder
 
 	q.WriteString("CREATE OR REPLACE")
+
+	if pb.secure {
+		q.WriteString(" SECURE")
+	}
 
 	qn, err := pb.QualifiedNameWithoutArguments()
 	if err != nil {
@@ -241,6 +253,24 @@ func (pb *FunctionBuilder) Rename(newName string) (string, error) {
 	return fmt.Sprintf(`ALTER FUNCTION %v RENAME TO %v`, oldName, qn), nil
 }
 
+// Secure returns the SQL query that will change the function to a secure function.
+func (pb *FunctionBuilder) Secure() (string, error) {
+	qn, err := pb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER FUNCTION %v SET SECURE`, qn), nil
+}
+
+// Unsecure returns the SQL query that will change the function to a normal (unsecured) function.
+func (pb *FunctionBuilder) Unsecure() (string, error) {
+	qn, err := pb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`ALTER FUNCTION %v UNSET SECURE`, qn), nil
+}
+
 // ChangeComment returns the SQL query that will update the comment on the function.
 func (pb *FunctionBuilder) ChangeComment(c string) (string, error) {
 	qn, err := pb.QualifiedName()
@@ -286,8 +316,8 @@ func (pb *FunctionBuilder) Drop() (string, error) {
 }
 
 type Function struct {
-	Comment sql.NullString `db:"description"`
-	// Snowflake returns is_secure in the show function output, but it is irrelevant
+	Comment      sql.NullString `db:"description"`
+	IsSecure     sql.NullString `db:"is_secure"`
 	Name         sql.NullString `db:"name"`
 	SchemaName   sql.NullString `db:"schema_name"`
 	Text         sql.NullString `db:"text"`
