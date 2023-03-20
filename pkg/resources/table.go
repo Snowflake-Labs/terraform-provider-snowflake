@@ -139,6 +139,7 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Masking policy to apply on column",
 				},
+				"tag": tagReferenceSchema,
 			},
 		},
 	},
@@ -308,6 +309,7 @@ type column struct {
 	identity      *columnIdentity
 	comment       string
 	maskingPolicy string
+	tags          []snowflake.TagValue
 }
 
 func (c column) toSnowflakeColumn() snowflake.Column {
@@ -319,6 +321,10 @@ func (c column) toSnowflakeColumn() snowflake.Column {
 
 	if c.identity != nil {
 		sC = sC.WithIdentity(c.identity.toSnowflakeColumnIdentity())
+	}
+
+	if c.tags != nil {
+		sC = sC.WithColumnTags(c.tags)
 	}
 
 	return *sC.WithName(c.name).
@@ -347,13 +353,14 @@ type changedColumn struct {
 	dropedDefault         bool
 	changedComment        bool
 	changedMaskingPolicy  bool
+	changedTags			  bool
 }
 
 func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range c {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
@@ -370,6 +377,10 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 
 			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
 				changeColumn.changedMaskingPolicy = true
+			}
+
+			if cO.name == cN.name && cO.tags != nil && cN.tags == nil {
+				changeColumn.changedTags = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -443,6 +454,7 @@ func getColumn(from interface{}) (to column) {
 		identity:      id,
 		comment:       c["comment"].(string),
 		maskingPolicy: c["masking_policy"].(string),
+		tags: 		   c["tag"].([]snowflake.TagValue),		
 	}
 }
 
@@ -666,15 +678,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			var q string
 
 			if cA.identity == nil && cA._default == nil { //nolint:gocritic  // todo: please fix this to pass gocritic
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy, cA.tags)
 			} else if cA.identity != nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy, cA.tags)
 			} else {
 				if cA._default._type() != "constant" {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
+				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy, cA.tags)
 			}
 
 			if err := snowflake.Exec(db, q); err != nil {
@@ -708,6 +720,12 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 			if cA.changedMaskingPolicy {
 				q := builder.ChangeColumnMaskingPolicy(cA.newColumn.name, cA.newColumn.maskingPolicy)
+				if err := snowflake.Exec(db, q); err != nil {
+					return fmt.Errorf("error changing property on %v", d.Id())
+				}
+			}
+			if cA.changedTags {
+				q := builder.ChangeColumnTags(cA.newColumn.name, cA.newColumn.tags)
 				if err := snowflake.Exec(db, q); err != nil {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}

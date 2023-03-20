@@ -45,6 +45,25 @@ func TestTableCreate(t *testing.T) {
 			nullable:      true,
 			maskingPolicy: "TEST_MP",
 		},
+		{
+			name:          "column7",
+			_type:         "VARCHAR",
+			nullable:      true,
+			tags: []TagValue{
+					{
+						Name:     "columnTag",
+						Database: "test_db",
+						Schema:   "test_schema",
+						Value:    "value",
+					},
+					{
+						Name:     "ColumnTag2",
+						Database: "test_db",
+						Schema:   "test_schema",
+						Value:    "value2",
+					},
+		         },
+		},
 	}
 
 	s.WithColumns(Columns(cols))
@@ -66,25 +85,25 @@ func TestTableCreate(t *testing.T) {
 
 	r.Equal(`"test_db"."test_schema"."test_table"`, s.QualifiedName())
 
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '') DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2")) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithComment("Test Comment")
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '') COMMENT = 'Test Comment' DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2")) COMMENT = 'Test Comment' DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithClustering([]string{"column1"})
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '') COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithPrimaryKey(PrimaryKey{name: "MY_KEY", keys: []string{"column1"}})
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2") ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 0 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithDataRetentionTimeInDays(10)
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = false`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2") ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = false`, s.Create())
 
 	s.WithChangeTracking(true)
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2") ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true`, s.Create())
 
 	s.WithTags(tags)
-	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true WITH TAG ("test_db"."test_schema"."tag" = "value", "test_db"."test_schema"."tag2" = "value2")`, s.Create())
+	r.Equal(`CREATE TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT COMMENT '', "column2" VARCHAR COMMENT 'only populated when data is available', "column3" NUMBER(38,0) NOT NULL DEFAULT "test_db"."test_schema"."test_seq".NEXTVAL COMMENT '', "column4" VARCHAR NOT NULL DEFAULT 'test default''s' COMMENT '', "column5" TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '', "column6" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column7" VARCHAR WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2") ,CONSTRAINT "MY_KEY" PRIMARY KEY("column1")) COMMENT = 'Test Comment' CLUSTER BY LINEAR(column1) DATA_RETENTION_TIME_IN_DAYS = 10 CHANGE_TRACKING = true WITH TAG ("test_db"."test_schema"."tag" = "value", "test_db"."test_schema"."tag2" = "value2")`, s.Create())
 }
 
 func TestTableCreateIdentity(t *testing.T) {
@@ -137,31 +156,37 @@ func TestTableRemoveComment(t *testing.T) {
 func TestTableAddColumn(t *testing.T) {
 	r := require.New(t)
 	s := NewTableBuilder("test_table", "test_db", "test_schema")
-	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "", ""))
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT ''`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "", "", nil))
 }
 
 func TestTableAddColumnWithComment(t *testing.T) {
 	r := require.New(t)
 	s := NewTableBuilder("test_table", "test_db", "test_schema")
-	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "some comment", ""))
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" VARIANT COMMENT 'some comment'`, s.AddColumn("new_column", "VARIANT", true, nil, nil, "some comment", "", nil))
 }
 
 func TestTableAddColumnWithDefault(t *testing.T) {
 	r := require.New(t)
 	s := NewTableBuilder("test_table", "test_db", "test_schema")
-	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) DEFAULT 1 COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, NewColumnDefaultWithConstant("1"), nil, "", ""))
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) DEFAULT 1 COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, NewColumnDefaultWithConstant("1"), nil, "", "", nil))
 }
 
 func TestTableAddColumnWithIdentity(t *testing.T) {
 	r := require.New(t)
 	s := NewTableBuilder("test_table", "test_db", "test_schema")
-	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", ""))
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", "", nil))
 }
 
 func TestTableAddColumnWithMaskingPolicy(t *testing.T) {
 	r := require.New(t)
 	s := NewTableBuilder("test_table", "test_db", "test_schema")
-	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) WITH MASKING POLICY TEST_MP COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", "TEST_MP"))
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) WITH MASKING POLICY TEST_MP COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", "TEST_MP", nil))
+}
+
+func TestTableAddColumnWithTags(t *testing.T) {
+	r := require.New(t)
+	s := NewTableBuilder("test_table", "test_db", "test_schema")
+	r.Equal(`ALTER TABLE "test_db"."test_schema"."test_table" ADD COLUMN "new_column" NUMBER(38,0) IDENTITY(1, 4) WITH TAG ("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2") COMMENT ''`, s.AddColumn("new_column", "NUMBER(38,0)", true, nil, &ColumnIdentity{1, 4}, "", "", nil))
 }
 
 func TestTableDropColumn(t *testing.T) {

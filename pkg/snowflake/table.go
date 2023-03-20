@@ -116,6 +116,7 @@ type Column struct {
 	identity      *ColumnIdentity
 	comment       string // pointer as value is nullable
 	maskingPolicy string
+	tags          []TagValue
 }
 
 // WithName set the column name.
@@ -152,6 +153,11 @@ func (c *Column) WithMaskingPolicy(maskingPolicy string) *Column {
 	return c
 }
 
+func (c *Column) WithColumnTags(tags []TagValue) *Column {
+	c.tags = tags
+	return c
+}
+
 func (c *Column) WithIdentity(id *ColumnIdentity) *Column {
 	c.identity = id
 	return c
@@ -180,6 +186,10 @@ func (c *Column) getColumnDefinition(withInlineConstraints bool, withComment boo
 
 	if strings.TrimSpace(c.maskingPolicy) != "" {
 		colDef.WriteString(fmt.Sprintf(` WITH MASKING POLICY %v`, EscapeString(c.maskingPolicy)))
+	}
+
+	if c.tags != nil {
+		colDef.WriteString(fmt.Sprintf(` WITH TAG (%v)`, GetColumnTagValueString(c.tags)))
 	}
 
 	if withComment {
@@ -245,6 +255,7 @@ func NewColumns(tds []TableDescription) Columns {
 			identity:      td.ColumnIdentity(),
 			comment:       td.Comment.String,
 			maskingPolicy: td.MaskingPolicy.String,
+			tags:          td.Tags,
 		})
 	}
 	return Columns(cs)
@@ -280,6 +291,11 @@ func (c Columns) Flatten() []interface{} {
 			id["step_num"] = col.identity.stepNum
 			flat["identity"] = []interface{}{id}
 		}
+
+		if col.tags != nil {
+			flat["tag"] = col.tags
+		}
+
 		flattened = append(flattened, flat)
 	}
 	return flattened
@@ -294,6 +310,36 @@ func (c Columns) getColumnDefinitions(withInlineConstraints bool, withComments b
 
 	// NOTE: intentionally blank leading space
 	return fmt.Sprintf(" (%s)", strings.Join(columnDefinitions, ", "))
+}
+
+func GetColumnTagNameString(tags []TagValue) string {
+	var q strings.Builder
+	for _, v := range tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v", `, v.Name))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
+}
+
+func GetColumnTagValueString(tags []TagValue) string {
+	var q strings.Builder
+	for _, v := range tags {
+		fmt.Println(v)
+		if v.Schema != "" {
+			if v.Database != "" {
+				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
+			}
+			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
+		}
+		q.WriteString(fmt.Sprintf(`"%v" = "'%v'", `, v.Name, v.Value))
+	}
+	return strings.TrimSuffix(q.String(), ", ")
 }
 
 // TableBuilder abstracts the creation of SQL queries for a Snowflake schema.
@@ -538,7 +584,7 @@ func (tb *TableBuilder) ChangeChangeTracking(changeTracking bool) string {
 }
 
 // AddColumn returns the SQL query that will add a new column to the table.
-func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string, maskingPolicy string) string {
+func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _default *ColumnDefault, identity *ColumnIdentity, comment string, maskingPolicy string, tags []TagValue) string {
 	col := Column{
 		name:          name,
 		_type:         dataType,
@@ -547,6 +593,7 @@ func (tb *TableBuilder) AddColumn(name string, dataType string, nullable bool, _
 		identity:      identity,
 		comment:       comment,
 		maskingPolicy: maskingPolicy,
+		tags:          tags,
 	}
 	return fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s`, tb.QualifiedName(), col.getColumnDefinition(true, true))
 }
@@ -575,6 +622,13 @@ func (tb *TableBuilder) ChangeColumnMaskingPolicy(name string, maskingPolicy str
 		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET MASKING POLICY`, tb.QualifiedName(), EscapeString(name))
 	}
 	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
+}
+
+func (tb *TableBuilder) ChangeColumnTags(name string, tags []TagValue) string {
+	if tags == nil {
+		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET TAG "%v"`, tb.QualifiedName(), EscapeString(name), EscapeString(GetColumnTagNameString(tags)))
+	}
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET TAG %v`, tb.QualifiedName(), EscapeString(name), GetColumnTagValueString(tags))
 }
 
 func (tb *TableBuilder) DropColumnDefault(name string) string {
@@ -667,6 +721,7 @@ type TableDescription struct {
 	Default       sql.NullString `db:"default"`
 	Comment       sql.NullString `db:"comment"`
 	MaskingPolicy sql.NullString `db:"policy name"`
+	Tags          []TagValue     `db:"tags"`
 }
 
 func (td *TableDescription) IsNullable() bool {
