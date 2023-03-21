@@ -122,3 +122,16 @@ func TestParseMaskingPolicyGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseMaskingPolicyGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseMaskingPolicyGrantID("test-db|PUBLIC|test-materialized-view|SELECT|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-materialized-view", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

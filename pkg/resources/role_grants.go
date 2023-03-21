@@ -113,7 +113,6 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
@@ -134,13 +133,13 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	for _, grant := range grants {
 		switch grant.GrantedTo.String {
 		case "ROLE":
-			for _, tfRole := range grantID.Roles {
+			for _, tfRole := range d.Get("roles").(*schema.Set).List() {
 				if tfRole == grant.GranteeName.String {
 					roles = append(roles, grant.GranteeName.String)
 				}
 			}
 		case "USER":
-			for _, tfUser := range grantID.Users {
+			for _, tfUser := range d.Get("users").(*schema.Set).List() {
 				if tfUser == grant.GranteeName.String {
 					users = append(users, grant.GranteeName.String)
 				}

@@ -3,12 +3,50 @@ package resources_test
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      stageStreamConfig(accName, false),
+				ExpectError: regexp.MustCompile("directory must be enabled on stage"),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamCreateOnStage(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: stageStreamConfig(accName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
+		},
+	})
+}
 
 func TestAcc_Stream(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
@@ -87,7 +125,7 @@ func TestAcc_Stream(t *testing.T) {
 				),
 			},
 			{
-				Config: stageStreamConfig(accName),
+				Config: stageStreamConfig(accName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
@@ -271,7 +309,7 @@ resource "snowflake_stream" "test_stream" {
 	return fmt.Sprintf(s, name, name, name, appendOnlyConfig)
 }
 
-func stageStreamConfig(name string) string {
+func stageStreamConfig(name string, directory bool) string {
 	s := `
 resource "snowflake_database" "test_database" {
 	name    = "%s"
@@ -286,9 +324,9 @@ resource "snowflake_schema" "test_schema" {
 
 resource "snowflake_stage" "test_stage" {
 	name	 = "%s"
-	database = snowflake_database.test_database.name"
+	database = snowflake_database.test_database.name
 	schema	 = snowflake_schema.test_schema.name
-	directory = "ENABLE = true"
+	directory = "ENABLE = %t"
 }
 
 resource "snowflake_stream" "test_stream" {
@@ -296,8 +334,8 @@ resource "snowflake_stream" "test_stream" {
 	schema      = snowflake_schema.test_schema.name
 	name        = "%s"
 	comment     = "Terraform acceptance test"
-	on_stage    = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_stage.test_stream_on_stage.name}"
+	on_stage    = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_stage.test_stage.name}"
 }
 `
-	return fmt.Sprintf(s, name, name, name, name)
+	return fmt.Sprintf(s, name, name, name, directory, name)
 }

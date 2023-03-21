@@ -196,3 +196,16 @@ func TestParseTaskGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseTaskGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseTaskGrantID("test-db|PUBLIC|test-task|OPERATE|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-task", grantID.ObjectName)
+	r.Equal("OPERATE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

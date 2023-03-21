@@ -132,3 +132,14 @@ func TestParseDatabaseGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseDatabaseGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseDatabaseGrantID("test-database|||USAGE|true")
+	r.NoError(err)
+	r.Equal("test-database", grantID.DatabaseName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

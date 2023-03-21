@@ -211,11 +211,19 @@ func (v *UserGrantID) String() string {
 func ParseUserGrantID(s string) (*UserGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &UserGrantID{
 			ObjectName:      idParts[0],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

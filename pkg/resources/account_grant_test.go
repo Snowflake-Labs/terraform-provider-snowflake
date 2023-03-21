@@ -158,3 +158,13 @@ func TestParseAccountGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseAccountGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseAccountGrantID("ACCOUNT|||MONITOR EXECUTION|true")
+	r.NoError(err)
+	r.Equal("MONITOR EXECUTION", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

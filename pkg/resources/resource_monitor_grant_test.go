@@ -110,3 +110,14 @@ func TestParseResourceMonitorGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseResourceMonitorGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseResourceMonitorGrantID("test-rm|||MONITOR|true")
+	r.NoError(err)
+	r.Equal("test-rm", grantID.ObjectName)
+	r.Equal("MONITOR", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}
