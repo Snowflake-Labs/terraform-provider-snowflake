@@ -234,8 +234,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-
-		sq := snowflake.Stage(id.Name, id.DatabaseName, id.SchemaName).Describe()
+		stageBuilder := snowflake.NewStageBuilder(id.Name, id.DatabaseName, id.SchemaName)
+		sq := stageBuilder.Describe()
 		d, err := snowflake.DescStage(db, sq)
 		if err != nil {
 			return err
