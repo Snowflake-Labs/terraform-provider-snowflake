@@ -26,6 +26,29 @@ func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 	})
 }
 
+func TestAcc_StreamCreateOnStage(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: stageStreamConfig(accName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+					checkBool("snowflake_stream.test_stream", "append_only", false),
+					checkBool("snowflake_stream.test_stream", "insert_only", false),
+					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+				),
+			},
+		},
+	})
+
+}
+
 func TestAcc_Stream(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
 		t.Skip("Skipping TestAccStream")
