@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -103,7 +104,31 @@ func SchemaGrant() *TerraformGrantResource {
 
 			Schema: schemaGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseSchemaGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validSchemaPrivileges,
@@ -163,7 +188,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -207,18 +232,9 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
 	}
 
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
@@ -252,7 +268,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	grantID, err := ParseSchemaGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -296,24 +312,35 @@ func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles [
 func (v *SchemaGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseSchemaGrantID(s string) (*SchemaGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		withGrantOption := false
+		roles := []string{}
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &SchemaGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:           roles,
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	// some old ids were also in
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

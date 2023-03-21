@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -83,7 +84,31 @@ func SequenceGrant() *TerraformGrantResource {
 
 			Schema: sequenceGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseSequenceGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("sequence_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validSequencePrivileges,
@@ -132,15 +157,9 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSequenceGrant implements schema.ReadFunc.
 func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
 	}
 
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
@@ -178,7 +197,7 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSequenceGrant implements schema.DeleteFunc.
 func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -209,7 +228,7 @@ func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseSequenceGrantID(d.Id())
+	grantID, err := ParseSequenceGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -264,24 +283,26 @@ func NewSequenceGrantID(databaseName string, schemaName, objectName, privilege s
 
 func (v *SequenceGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseSequenceGrantID(s string) (*SequenceGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseSequenceGrantID(s string) (*SequenceGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &SequenceGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

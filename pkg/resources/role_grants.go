@@ -109,7 +109,7 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	grantID, err := parseRoleGrantsID(d.Id())
+	grantID, err := ParseRoleGrantsID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -324,12 +324,11 @@ func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
 func (v *RoleGrantsID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	users := strings.Join(v.Users, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v", v.ObjectName, roles, users)
+	return fmt.Sprintf("%v|%v|%v", v.ObjectName, roles, users)
 }
 
-func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
@@ -338,9 +337,12 @@ func parseRoleGrantsID(s string) (*RoleGrantsID, error) {
 			IsOldID:    true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 3 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 3 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &RoleGrantsID{
 		ObjectName: idParts[0],

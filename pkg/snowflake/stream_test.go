@@ -29,6 +29,17 @@ func TestStreamCreate(t *testing.T) {
 	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON EXTERNAL TABLE "test_db"."test_schema"."test_target_table" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`, s.Create())
 }
 
+func TestStreamOnStageCreate(t *testing.T) {
+	r := require.New(t)
+	s := Stream("test_stream", "test_db", "test_schema")
+
+	s.WithOnStage("test_db", "test_schema", "test_target_stage")
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON STAGE "test_db"."test_schema"."test_target_stage"`, s.Create())
+
+	s.WithComment("Test Comment")
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON STAGE "test_db"."test_schema"."test_target_stage" COMMENT = 'Test Comment'`, s.Create())
+}
+
 func TestStreamChangeComment(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")

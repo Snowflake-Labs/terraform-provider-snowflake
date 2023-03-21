@@ -94,25 +94,21 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadWarehouseGrant implements schema.ReadFunc.
 func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseWarehouseGrantID(d.Id())
+	grantID, err := ParseWarehouseGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
 	}
 
 	err = d.Set("warehouse_name", grantID.ObjectName)
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("privilege", grantID.Privilege)
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("with_grant_option", grantID.WithGrantOption)
 	if err != nil {
 		return err
@@ -125,7 +121,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteWarehouseGrant implements schema.DeleteFunc.
 func DeleteWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseWarehouseGrantID(d.Id())
+	grantID, err := ParseWarehouseGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -145,7 +141,7 @@ func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseWarehouseGrantID(d.Id())
+	grantID, err := ParseWarehouseGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -200,22 +196,32 @@ func NewWarehouseGrantID(objectName string, privilege string, roles []string, wi
 
 func (v *WarehouseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		withGrantOption := false
+		roles := []string{}
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &WarehouseGrantID{
 			ObjectName:      idParts[0],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 4 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 4 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}

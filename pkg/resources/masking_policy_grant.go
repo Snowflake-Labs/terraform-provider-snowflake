@@ -107,7 +107,7 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadMaskingPolicyGrant implements schema.ReadFunc.
 func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaskingPolicyGrantID(d.Id())
+	grantID, err := ParseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteMaskingPolicyGrant implements schema.DeleteFunc.
 func DeleteMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaskingPolicyGrantID(d.Id())
+	grantID, err := ParseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func UpdateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseMaskingPolicyGrantID(d.Id())
+	grantID, err := ParseMaskingPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -211,12 +211,11 @@ func NewMaskingPolicyGrantID(databaseName string, schemaName, objectName, privil
 
 func (v *MaskingPolicyGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, roles, v.WithGrantOption)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &MaskingPolicyGrantID{
 			DatabaseName:    idParts[0],
@@ -228,7 +227,10 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
@@ -237,8 +239,8 @@ func parseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 		SchemaName:      idParts[1],
 		ObjectName:      idParts[2],
 		Privilege:       idParts[3],
-		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-		WithGrantOption: idParts[5] == "true",
+		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+		WithGrantOption: idParts[4] == "true",
 		IsOldID:         false,
 	}, nil
 }

@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.58.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.1...v0.58.2) (2023-03-16)
+
+
+### BugFixes
+
+* update 0.58.2 ([#1620](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1620)) ([f1eab04](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f1eab04dfdc839144057807953062b3591e6eaf0))
+
+## [0.58.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.0...v0.58.1) (2023-03-16)
+
+
+### BugFixes
+
+* allow read of really old grant ids and add test cases ([#1615](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1615)) ([cda40ec](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cda40ece534cdc3f6849a7d24f2f8acea8476e69))
+* update packages ([#1619](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1619)) ([79a3acc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/79a3acc0e3d6a405593b5adf90a31afef81d700f))
+
+## [0.58.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.57.0...v0.58.0) (2023-03-03)
+
+
+### Features
+
+* **integration:** add google api integration ([#1589](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1589)) ([56909cd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/56909cdc18245f38b0f58bceaf2aa9cbc013d212))
+* roles support numbers ([#1585](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1585)) ([d72dee8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d72dee82d0e0a4d8b484e5b204e156a13117cb76))
+
+
+### BugFixes
+
+* added force_new option to role grant when the role_name has been changed ([#1591](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1591)) ([4ec3613](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4ec3613de43d70f40a5d29ce5517af53e8ef0a06))
+* default_secondary_roles doc ([#1584](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1584)) ([23b64fa](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/23b64fa9abcafb59610a77cafbda11a7e2ad648c))
+* remove emojis, misc grant id fix ([#1598](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1598)) ([fdefbc3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fdefbc3f1cc5bc7063f1cb1cc922854e8f9914e6))
+* update read role grants to use new builder ([#1596](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1596)) ([e91860a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e91860ae794b034158b71ffb31097e73d8015c51))
+
 ## [0.57.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.56.5...v0.57.0) (2023-02-28)
 
 

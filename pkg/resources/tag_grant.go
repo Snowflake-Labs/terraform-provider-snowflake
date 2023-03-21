@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -75,7 +76,31 @@ func TagGrant() *TerraformGrantResource {
 
 			Schema: tagGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseTagGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("tag_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validTagPrivileges,
@@ -105,15 +130,9 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTagGrant implements schema.ReadFunc.
 func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
 	}
 
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
@@ -151,7 +170,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -187,7 +206,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTagGrant implements schema.DeleteFunc.
 func DeleteTagGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseTagGrantID(d.Id())
+	grantID, err := ParseTagGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -221,24 +240,26 @@ func NewTagGrantID(databaseName string, schemaName, objectName, privilege string
 
 func (v *TagGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseTagGrantID(s string) (*TagGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseTagGrantID(s string) (*TagGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &TagGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

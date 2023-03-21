@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -73,7 +74,28 @@ func DatabaseGrant() *TerraformGrantResource {
 
 			Schema: databaseGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseDatabaseGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validDatabasePrivileges,
@@ -101,7 +123,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadDatabaseGrant implements schema.ReadFunc.
 func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseDatabaseGrantID(d.Id())
+	grantID, err := ParseDatabaseGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -117,10 +139,12 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
-	if !grantID.IsOldID {
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
+
+	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
+	// that it is still there. However, it is needed to grant usage for the snowflake database to custom roles.
+	// Just exit for now
+	if grantID.Privilege == "IMPORTED PRIVILEGES" {
+		return nil
 	}
 
 	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
@@ -210,23 +234,25 @@ func NewDatabaseGrantID(databaseName string, privilege string, roles []string, s
 func (v *DatabaseGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v", v.DatabaseName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &DatabaseGrantID{
 			DatabaseName:    idParts[0],
 			Privilege:       idParts[3],
-			Roles:           []string{},
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
 			Shares:          []string{},
-			WithGrantOption: idParts[4] == "true",
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 5 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 5 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 5", len(idParts))
 	}

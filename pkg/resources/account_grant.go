@@ -138,21 +138,23 @@ func NewAccountGrantID(privilege string, roles []string, withGrantOption bool) *
 
 func (v *AccountGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v", v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v", v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseAccountGrantID(s string) (*AccountGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseAccountGrantID(s string) (*AccountGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &AccountGrantID{
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 3 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 3 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
 	}
@@ -184,7 +186,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 // ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
-	grantID, err := parseAccountGrantID(d.Id())
+	grantID, err := ParseAccountGrantID(d.Id())
 	if err != nil {
 		return err
 	}

@@ -96,6 +96,12 @@ var functionSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
 		Description:  "Specifies the behavior of the function when returning results",
 	},
+	"is_secure": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies that the function is secure.",
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -197,6 +203,11 @@ func CreateFunction(d *schema.ResourceData, meta interface{}) error {
 	// Set optionals, runtime version for Python
 	if v, ok := d.GetOk("runtime_version"); ok {
 		builder.WithRuntimeVersion(v.(string))
+	}
+
+	// Set optionals, default is false
+	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
+		builder.WithSecure()
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -388,9 +399,17 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	// iterate over and find the correct one
 	argSig, _ := funct.ArgumentsSignature()
 
+	functionIsSecure := map[string]bool{
+		"Y": true,
+		"N": false,
+	}
+
 	for _, v := range foundFunctions {
 		if v.Arguments.String == argSig {
 			if err := d.Set("comment", v.Comment.String); err != nil {
+				return err
+			}
+			if err = d.Set("is_secure", functionIsSecure[v.IsSecure.String]); err != nil {
 				return err
 			}
 		}
@@ -429,6 +448,27 @@ func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
 			ArgTypes:     pID.ArgTypes,
 		}
 		d.SetId(newID.String())
+	}
+	if d.HasChange("is_secure") {
+		secure := d.Get("is_secure")
+
+		if secure.(bool) {
+			q, err := builder.Secure()
+			if err != nil {
+				return err
+			}
+			if err = snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error setting secure for function %v", d.Id())
+			}
+		} else {
+			q, err := builder.Unsecure()
+			if err != nil {
+				return err
+			}
+			if err = snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error unsetting secure for function %v", d.Id())
+			}
+		}
 	}
 
 	if d.HasChange("comment") {

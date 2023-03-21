@@ -109,7 +109,7 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 
 // ReadRowAccessPolicyGrant implements schema.ReadFunc.
 func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteRowAccessPolicyGrant implements schema.DeleteFunc.
 func DeleteRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	grantID, err := ParseRowAccessPolicyGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -211,24 +211,26 @@ func NewRowAccessPolicyGrantID(databaseName string, schemaName, objectName, priv
 
 func (v *RowAccessPolicyGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &RowAccessPolicyGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			WithGrantOption: idParts[5] == "true",
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 6 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 6 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}

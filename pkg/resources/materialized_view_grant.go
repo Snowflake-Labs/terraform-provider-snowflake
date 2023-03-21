@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -96,7 +97,34 @@ func MaterializedViewGrant() *TerraformGrantResource {
 
 			Schema: materializedViewGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseMaterializedViewGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("materialized_view_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validMaterializedViewPrivileges,
@@ -147,14 +175,9 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 
 // ReadViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-	if !grantID.IsOldID {
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
 	}
 	if err := d.Set("roles", grantID.Roles); err != nil {
 		return err
@@ -195,7 +218,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -229,7 +252,7 @@ func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := parseMaterializedViewGrantID(d.Id())
+	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -288,12 +311,11 @@ func NewMaterializedViewGrantID(databaseName string, schemaName, objectName, pri
 func (v *MaterializedViewGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &MaterializedViewGrantID{
 			DatabaseName:    idParts[0],
@@ -306,9 +328,12 @@ func parseMaterializedViewGrantID(s string) (*MaterializedViewGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 7 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 7 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
 	}
 	return &MaterializedViewGrantID{
 		DatabaseName:    idParts[0],

@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -60,9 +61,26 @@ func UserGrant() *TerraformGrantResource {
 			Update: UpdateUserGrant,
 
 			Schema: userGrantSchema,
-			// FIXME - tests for this don't currently work
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseUserGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("user_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validUserPrivileges,
@@ -89,15 +107,9 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadUserGrant implements schema.ReadFunc.
 func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
-	}
-
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
 	}
 
 	if err := d.Set("user_name", grantID.ObjectName); err != nil {
@@ -119,7 +131,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteUserGrant implements schema.DeleteFunc.
 func DeleteUserGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,7 +151,7 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	rolesToAdd, rolesToRevoke := changeDiff(d, "roles")
 
-	grantID, err := parseUserGrantID(d.Id())
+	grantID, err := ParseUserGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -193,12 +205,11 @@ func NewUserGrantID(objectName string, privilege string, roles []string, withGra
 
 func (v *UserGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
+	return fmt.Sprintf("%v|%v|%v|%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
 }
 
-func parseUserGrantID(s string) (*UserGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseUserGrantID(s string) (*UserGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &UserGrantID{
 			ObjectName:      idParts[0],
@@ -208,7 +219,10 @@ func parseUserGrantID(s string) (*UserGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := helpers.SplitStringToSlice(s, "|")
+	if len(idParts) < 4 {
+		idParts = helpers.SplitStringToSlice(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 4 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
 	}

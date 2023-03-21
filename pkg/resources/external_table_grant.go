@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -90,7 +91,34 @@ func ExternalTableGrant() *TerraformGrantResource {
 
 			Schema: externalTableGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					grantID, err := ParseExternalTableGrantID(d.Id())
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("external_table_name", grantID.ObjectName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", grantID.Privilege); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", grantID.Roles); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", grantID.Shares); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validExternalTablePrivileges,
@@ -140,25 +168,10 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadExternalTableGrant implements schema.ReadFunc.
 func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-
-	if !grantID.IsOldID {
-		fmt.Printf("[DEBUG] id: %v\n", d.Id())
-		fmt.Printf("[DEBUG] reading external table grant: %v\n", grantID)
-		fmt.Printf("[DEBUG] reading external table grant shares: %v\n", grantID.Shares)
-		fmt.Printf("[DEBUG] len(external table grant shares): %v\n", len(grantID.Shares))
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
-
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -196,7 +209,7 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteExternalTableGrant implements schema.DeleteFunc.
 func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -230,7 +243,7 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseExternalTableGrant(d.Id())
+	grantID, err := ParseExternalTableGrantID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -290,12 +303,11 @@ func NewExternalTableGrantID(databaseName string, schemaName, objectName, privil
 func (v *ExternalTableGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
 }
 
-func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
+func ParseExternalTableGrantID(s string) (*ExternalTableGrantID, error) {
+	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
 		return &ExternalTableGrantID{
 			DatabaseName:    idParts[0],
@@ -308,7 +320,10 @@ func parseExternalTableGrant(s string) (*ExternalTableGrantID, error) {
 			IsOldID:         true,
 		}, nil
 	}
-	idParts := strings.Split(s, "❄️")
+	idParts := strings.Split(s, "|")
+	if len(idParts) < 7 {
+		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
+	}
 	if len(idParts) != 7 {
 		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
 	}
