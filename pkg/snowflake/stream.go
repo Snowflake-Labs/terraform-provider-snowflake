@@ -170,6 +170,7 @@ type DescStreamRow struct {
 	Type            sql.NullString `db:"type"`
 	Stale           sql.NullString `db:"stale"`
 	Mode            sql.NullString `db:"mode"`
+	SourceType      sql.NullString `db:"source_type"`
 }
 
 func ScanStream(row *sqlx.Row) (*DescStreamRow, error) {

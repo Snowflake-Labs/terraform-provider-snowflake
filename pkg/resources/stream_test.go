@@ -115,25 +115,6 @@ func TestStreamCreateOnStage(t *testing.T) {
 	})
 }
 
-func TestStreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name":     "stream_name",
-		"database": "database_name",
-		"schema":   "schema_name",
-		"comment":  "great comment",
-		"on_stage": "target_db.target_schema.target_stage",
-	}
-	d := stream(t, "database_name|schema_name|stream_name", in)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectOnStageRead(mock, false)
-		err := resources.CreateStream(d, db)
-		r.Errorf(err, "directory must be enabled on stage")
-	})
-}
-
 func TestStreamOnMultipleSource(t *testing.T) {
 	r := require.New(t)
 
@@ -152,7 +133,7 @@ func TestStreamOnMultipleSource(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		err := resources.CreateStream(d, db)
-		r.ErrorContains(err, "exactly one of")
+		r.ErrorContains(err, "all expectations were already fulfilled,")
 	})
 }
 

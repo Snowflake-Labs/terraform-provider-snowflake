@@ -62,6 +62,10 @@ var streamSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 		Description:  "Name of the stage the stream will monitor.",
 		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// Suppress diff if the stage name is the same, even if database and schema are not specifed
+			return strings.Trim(strings.Split(old, ".")[len(strings.Split(old, "."))-1], "\"") == strings.Trim(strings.Split(new, ".")[len(strings.Split(new, "."))-1], "\"")
+		},
 	},
 	"append_only": {
 		Type:        schema.TypeBool,
@@ -312,8 +316,14 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("on_table", stream.TableName.String); err != nil {
-		return err
+	if stream.SourceType.String == "Stage" {
+		if err := d.Set("on_stage", stream.TableName.String); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("on_table", stream.TableName.String); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("on_view", stream.ViewName.String); err != nil {
