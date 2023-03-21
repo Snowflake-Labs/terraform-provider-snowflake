@@ -202,7 +202,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	onView, onViewSet := d.GetOk("on_view")
 	onStage, onStageSet := d.GetOk("on_stage")
 
-	if onTableSet {
+	switch {
+	case onTableSet:
 		id, err := streamOnObjectIDFromString(onTable.(string))
 		if err != nil {
 			return err
@@ -218,7 +219,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 		builder.WithExternalTable(t.IsExternal.String == "Y")
 		builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
-	} else if onViewSet {
+	case onViewSet:
 		id, err := streamOnObjectIDFromString(onView.(string))
 		if err != nil {
 			return err
@@ -233,7 +234,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		builder.WithOnView(t.DatabaseName.String, t.SchemaName.String, t.Name.String)
-	} else if onStageSet {
+	case onStageSet:
 		id, err := streamOnObjectIDFromString(onStage.(string))
 		if err != nil {
 			return err
