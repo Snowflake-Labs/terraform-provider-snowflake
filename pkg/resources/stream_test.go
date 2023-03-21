@@ -180,7 +180,7 @@ func expectOnStageRead(mock sqlmock.Sqlmock, directoryEnabled bool) {
 	rowsShow := sqlmock.NewRows([]string{"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud", "notification_channel", "storage_integration"}).AddRow("", "target_stage", "target_db", "target_schema", "", "N", "N", "", "mock comment", nil, "INTERNAL", nil, nil, nil)
 	mock.ExpectQuery(`SHOW STAGES LIKE 'target_stage' IN SCHEMA "target_db"."target_schema"`).WillReturnRows(rowsShow)
 
-	var directoryEnabledStr = "false"
+	directoryEnabledStr := "false"
 	if directoryEnabled {
 		directoryEnabledStr = "true"
 	}

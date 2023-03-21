@@ -110,15 +110,15 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(` ON`)
 
-	if sb.onTable != "" {
+	switch {
+	case sb.onTable != "":
 		if sb.externalTable {
 			q.WriteString(` EXTERNAL`)
 		}
-
 		q.WriteString(fmt.Sprintf(` TABLE %v`, sb.onTable))
-	} else if sb.onView != "" {
+	case sb.onView != "":
 		q.WriteString(fmt.Sprintf(` VIEW %v`, sb.onView))
-	} else if sb.onStage != "" {
+	case sb.onStage != "":
 		q.WriteString(fmt.Sprintf(` STAGE %v`, sb.onStage))
 	}
 
