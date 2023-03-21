@@ -316,8 +316,8 @@ func (v *ViewGrantID) String() string {
 func ParseViewGrantID(s string) (*ViewGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
-		withGrantOption := false
-		roles := []string{}
+		var roles []string
+		var withGrantOption bool
 		if len(idParts) == 6 {
 			withGrantOption = idParts[5] == "true"
 			roles = helpers.SplitStringToSlice(idParts[4], ",")

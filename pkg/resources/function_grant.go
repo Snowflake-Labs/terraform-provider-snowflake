@@ -378,8 +378,8 @@ func ParseFunctionGrantID(s string) (*FunctionGrantID, error) {
 				argumentDataTypes[i] = parts[1]
 			}
 		}
-		withGrantOption := false
-		roles := []string{}
+		var roles []string
+		var withGrantOption bool
 		if len(idParts) == 6 {
 			withGrantOption = idParts[5] == "true"
 			roles = helpers.SplitStringToSlice(idParts[4], ",")

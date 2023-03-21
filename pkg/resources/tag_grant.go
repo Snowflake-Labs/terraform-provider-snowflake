@@ -246,8 +246,8 @@ func (v *TagGrantID) String() string {
 func ParseTagGrantID(s string) (*TagGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
-		withGrantOption := false
-		roles := []string{}
+		var roles []string
+		var withGrantOption bool
 		if len(idParts) == 6 {
 			withGrantOption = idParts[5] == "true"
 			roles = helpers.SplitStringToSlice(idParts[4], ",")
