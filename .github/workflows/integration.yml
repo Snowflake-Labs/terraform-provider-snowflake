@@ -43,7 +43,7 @@ jobs:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
 
       - name: setup-go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: '1.19'
 
