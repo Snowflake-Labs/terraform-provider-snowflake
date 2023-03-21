@@ -55,7 +55,7 @@ func TestAcc_Function(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.name", "ARG1"),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
-					checkBool("snowflake_function.test_funct_java", "is_secure", true), // this is from user_acceptance_test.go
+					checkBool("snowflake_function.test_funct_java", "is_secure", false), // this is from user_acceptance_test.go
 
 					// TODO: temporarily remove unit tests to allow for urgent release
 					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),

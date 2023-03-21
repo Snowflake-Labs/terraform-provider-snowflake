@@ -19,7 +19,7 @@ func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      stageStreamConfig(accName, true),
+				Config:      stageStreamConfig(accName, false),
 				ExpectError: regexp.MustCompile("directory must be enabled on stage"),
 			},
 		},
