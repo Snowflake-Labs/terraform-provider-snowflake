@@ -46,7 +46,6 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAcc_Stream(t *testing.T) {
