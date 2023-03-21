@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.59.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.2...v0.59.0) (2023-03-21)
+
+
+### Features
+
+* add ON STAGE support for Stream resource ([#1413](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1413)) ([447febf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/447febfef46ef89570108d3447998d6d379b7be7))
+* Add support for is_secure to snowflake_function resource ([#1575](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1575)) ([c41b6a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c41b6a35271f12c97f5a4da947eb433013f2aaf2))
+
+
+### BugFixes
+
+* 0.59 release fixes ([#1636](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1636)) ([0a0256e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0a0256ed3f0d56a6c7c22f810419636685094135))
+* integration errors ([#1623](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1623)) ([83a40d6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/83a40d6361be0685b3864a0f3994298f3991de21))
+* oauth integration ([#1315](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1315)) ([9087220](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9087220af85f08880f7ad453cbe9d13dd3bc11ec))
+* readded imported privileges special case for database grants ([#1597](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1597)) ([711ac0c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/711ac0cbc886bf8be6a5a2651234df778452b9df))
+
 ## [0.58.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.1...v0.58.2) (2023-03-16)
 
 
