@@ -19,11 +19,15 @@ type ProcedureBuilder struct {
 	args              []map[string]string
 	returnBehavior    string // VOLATILE, IMMUTABLE
 	nullInputBehavior string // "CALLED ON NULL INPUT" or "RETURNS NULL ON NULL INPUT"
-	language          string // SQL, JAVASCRIPT, JAVA, SCALA
 	returnType        string
+	language          string // SQL, JAVASCRIPT, JAVA, SCALA
+	packages          []string
+	imports           []string // for Java / Python imports
+	handler           string   // for Java / Python handler
 	executeAs         string
 	comment           string
 	statement         string
+	runtimeVersion    string // for Python runtime version
 }
 
 // QualifiedName prepends the db and schema and appends argument types.
@@ -86,6 +90,30 @@ func (pb *ProcedureBuilder) WithExecuteAs(s string) *ProcedureBuilder {
 // WithLanguage sets the language to SQL, JAVA, SCALA or JAVASCRIPT.
 func (pb *ProcedureBuilder) WithLanguage(s string) *ProcedureBuilder {
 	pb.language = s
+	return pb
+}
+
+// WithRuntimeVersion.
+func (pb *ProcedureBuilder) WithRuntimeVersion(r string) *ProcedureBuilder {
+	pb.runtimeVersion = r
+	return pb
+}
+
+// WithPackages.
+func (pb *ProcedureBuilder) WithPackages(s []string) *ProcedureBuilder {
+	pb.packages = s
+	return pb
+}
+
+// WithImports adds jar files to import for Java function or Python file for Python function.
+func (pb *ProcedureBuilder) WithImports(s []string) *ProcedureBuilder {
+	pb.imports = s
+	return pb
+}
+
+// WithHandler sets the handler method for Java / Python function.
+func (pb *ProcedureBuilder) WithHandler(s string) *ProcedureBuilder {
+	pb.handler = s
 	return pb
 }
 
@@ -155,6 +183,30 @@ func (pb *ProcedureBuilder) Create() (string, error) {
 	}
 	if pb.returnBehavior != "" {
 		q.WriteString(fmt.Sprintf(` %v`, EscapeString(pb.returnBehavior)))
+	}
+	if pb.runtimeVersion != "" {
+		q.WriteString(fmt.Sprintf(" RUNTIME_VERSION = '%v'", EscapeString(pb.runtimeVersion)))
+	}
+	if len(pb.packages) > 0 {
+		q.WriteString(` PACKAGES = (`)
+		packages := []string{}
+		for _, pack := range pb.packages {
+			packages = append(packages, fmt.Sprintf(`'%v'`, pack))
+		}
+		q.WriteString(strings.Join(packages, ", "))
+		q.WriteString(`)`)
+	}
+	if len(pb.imports) > 0 {
+		q.WriteString(` IMPORTS = (`)
+		imports := []string{}
+		for _, imp := range pb.imports {
+			imports = append(imports, fmt.Sprintf(`'%v'`, imp))
+		}
+		q.WriteString(strings.Join(imports, ", "))
+		q.WriteString(`)`)
+	}
+	if pb.handler != "" {
+		q.WriteString(fmt.Sprintf(" HANDLER = '%v'", pb.handler))
 	}
 	if pb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(pb.comment)))

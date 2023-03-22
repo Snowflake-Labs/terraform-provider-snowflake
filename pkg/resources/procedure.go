@@ -14,7 +14,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var procedureLanguages = []string{"javascript", "java", "scala", "SQL"}
+var procedureLanguages = []string{"javascript", "java", "scala", "SQL", "python"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
@@ -89,7 +89,7 @@ var procedureSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript code used to create the procedure.",
+		Description:      "Specifies the code used to create the procedure.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
@@ -131,6 +131,36 @@ var procedureSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     "user-defined procedure",
 		Description: "Specifies a comment for the procedure.",
+	},
+	"runtime_version": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Required for Python procedures. Specifies Python runtime version.",
+	},
+	"packages": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "List of package imports to use for Java / Python procedures. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').",
+	},
+	"imports": {
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Imports for Java / Python procedures. For Java this a list of jar files, for Python this is a list of Python files.",
+	},
+	"handler": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "The handler method for Java / Python procedures.",
 	},
 }
 
@@ -197,8 +227,36 @@ func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
 		builder.WithLanguage(strings.ToUpper(v.(string)))
 	}
 
+	// Set optionals, runtime version for Python
+	if v, ok := d.GetOk("runtime_version"); ok {
+		builder.WithRuntimeVersion(v.(string))
+	}
+
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
+	}
+
+	// Set optionals, packages for Java / Python
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []string{}
+		for _, pack := range d.Get("packages").([]interface{}) {
+			packages = append(packages, pack.(string))
+		}
+		builder.WithPackages(packages)
+	}
+
+	// Set optionals, imports for Java / Python
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []string{}
+		for _, imp := range d.Get("imports").([]interface{}) {
+			imports = append(imports, imp.(string))
+		}
+		builder.WithImports(imports)
+	}
+
+	// handler for Java / Python
+	if v, ok := d.GetOk("handler"); ok {
+		builder.WithHandler(v.(string))
 	}
 
 	q, err := builder.Create()
@@ -295,6 +353,30 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "language":
 			if err := d.Set("language", desc.Value.String); err != nil {
+				return err
+			}
+		case "runtime_version":
+			if err := d.Set("runtime_version", desc.Value.String); err != nil {
+				return err
+			}
+		case "packages":
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
+			if packagesString != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(packagesString, ",")
+				if err := d.Set("packages", packages); err != nil {
+					return err
+				}
+			}
+		case "imports":
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", ""), " ", "")
+			if importsString != "" { // Do nothing for Java functions without imports
+				imports := strings.Split(importsString, ",")
+				if err := d.Set("imports", imports); err != nil {
+					return err
+				}
+			}
+		case "handler":
+			if err := d.Set("handler", desc.Value.String); err != nil {
 				return err
 			}
 
