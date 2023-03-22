@@ -32,3 +32,19 @@ resource "snowflake_account_parameter" "p" {
 `
 	return fmt.Sprintf(s, key, value)
 }
+
+func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountParameterBasic("PREVENT_LOAD_FROM_INLINE_URL", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "PREVENT_LOAD_FROM_INLINE_URL"),
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				),
+			},
+		},
+	})
+}
