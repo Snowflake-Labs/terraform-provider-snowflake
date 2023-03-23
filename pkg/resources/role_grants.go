@@ -327,11 +327,15 @@ func (v *RoleGrantsID) String() string {
 }
 
 func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	if IsOldGrantID(s) {
+	if IsOldGrantID(s) || len(strings.Split(s, "|")) == 1 {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		if len(idParts) == 6 {
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		}
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
-			Roles:      helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:      roles,
 			Users:      []string{},
 			IsOldID:    true,
 		}, nil
