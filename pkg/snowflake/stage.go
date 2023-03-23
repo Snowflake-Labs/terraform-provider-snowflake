@@ -299,7 +299,7 @@ func DescStage(db *sql.DB, query string) (*DescStageResult, error) {
 				co = append(co, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
 			}
 		case "DIRECTORY":
-			if row.PropertyValue != row.PropertyDefault {
+			if row.PropertyValue != row.PropertyDefault && row.Property != "LAST_REFRESHED_ON" {
 				dir = append(dir, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
 			}
 		}

@@ -120,7 +120,7 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 
 	currentUsers, err := snowflake.ListUsers(userPattern, db)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] no users found in account (%s)", d.Id())
 		d.SetId("")
 		return nil

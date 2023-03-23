@@ -199,6 +199,11 @@ func (rcb *ResourceMonitorAlterBuilder) Statement() string {
 		sb.WriteString(fmt.Sprintf(" %s=%s", strings.ToUpper(k), formatStringList(v)))
 	}
 
+	// If the only change is the trigges, then we do not need to add the SET keyword
+	if strings.HasSuffix(sb.String(), "SET") {
+		sb.Reset()
+		sb.WriteString(fmt.Sprintf(`ALTER %v "%v"`, rcb.entityType, rcb.name))
+	}
 	if len(rcb.triggers) > 0 {
 		sb.WriteString(" TRIGGERS")
 	}

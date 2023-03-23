@@ -77,6 +77,10 @@ resource "aws_route53_record" "snowflake_private_link_ocsp_url" {
 - `aws_vpce_id` (String) The AWS VPCE ID for your account.
 - `azure_pls_id` (String) The Azure Private Link Service ID for your account.
 - `id` (String) The ID of this resource.
+- `internal_stage` (String) The endpoint to connect to your Snowflake internal stage using AWS PrivateLink or Azure Private Link.
 - `ocsp_url` (String) The OCSP URL corresponding to your Snowflake account that uses AWS PrivateLink or Azure Private Link.
+- `regionless_account_url` (String) The regionless URL to connect to your Snowflake account using AWS PrivateLink, Azure Private Link, or Google Cloud Private Service Connect.
+- `regionless_snowsight_url` (String) The URL for your organization to access Snowsight using Private Connectivity to the Snowflake Service.
+- `snowsight_url` (String) The URL containing the cloud region to access Snowsight and the Snowflake Marketplace using Private Connectivity to the Snowflake Service.
 
 

@@ -195,3 +195,16 @@ func TestParseFileFormatGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseFileFormatGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseFileFormatGrantID("test-db|PUBLIC|test-file-format|USAGE|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-file-format", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

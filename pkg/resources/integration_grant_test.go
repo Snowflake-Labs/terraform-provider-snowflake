@@ -110,3 +110,14 @@ func TestParseIntegrationGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseIntegrationGranReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseIntegrationGrantID("test-integration|||IMPORTED PRIVILEGES|true")
+	r.NoError(err)
+	r.Equal("test-integration", grantID.ObjectName)
+	r.Equal("IMPORTED PRIVILEGES", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

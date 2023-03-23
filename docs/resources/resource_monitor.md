@@ -21,9 +21,9 @@ resource "snowflake_resource_monitor" "monitor" {
   start_timestamp = "2020-12-07 00:00"
   end_timestamp   = "2021-12-07 00:00"
 
-  notify_triggers            = [40]
-  suspend_triggers           = [50]
-  suspend_immediate_triggers = [90]
+  notify_triggers            = [40, 50]
+  suspend_triggers           = 50
+  suspend_immediate_triggers = 90
 
   notify_users = ["USERONE", "USERTWO"]
 }
@@ -43,10 +43,12 @@ resource "snowflake_resource_monitor" "monitor" {
 - `frequency` (String) The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.
 - `notify_triggers` (Set of Number) A list of percentage thresholds at which to send an alert to subscribed users.
 - `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors.
-- `set_for_account` (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account.
+- `set_for_account` (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).
 - `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
-- `suspend_immediate_triggers` (Set of Number) A list of percentage thresholds at which to immediately suspend all warehouses.
-- `suspend_triggers` (Set of Number) A list of percentage thresholds at which to suspend all warehouses.
+- `suspend_immediate_trigger` (Number) The number that represents the percentage threshold at which to immediately suspend all warehouses.
+- `suspend_immediate_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
+- `suspend_trigger` (Number) The number that represents the percentage threshold at which to suspend all warehouses.
+- `suspend_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
 - `warehouses` (Set of String) A list of warehouses to apply the resource monitor to.
 
 ### Read-Only
@@ -58,5 +60,6 @@ resource "snowflake_resource_monitor" "monitor" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_resource_monitor.example
+# format is the resource monitor name
+terraform import snowflake_resource_monitor.example 'resourceMonitorName'
 ```

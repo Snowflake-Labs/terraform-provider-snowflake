@@ -267,13 +267,21 @@ func (v *FileFormatGrantID) String() string {
 func ParseFileFormatGrantID(s string) (*FileFormatGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &FileFormatGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 		}, nil
 	}
 	idParts := strings.Split(s, "|")

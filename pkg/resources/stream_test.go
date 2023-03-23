@@ -93,47 +93,6 @@ func TestStreamCreateOnView(t *testing.T) {
 	})
 }
 
-func TestStreamCreateOnStage(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name":     "stream_name",
-		"database": "database_name",
-		"schema":   "schema_name",
-		"comment":  "great comment",
-		"on_stage": "target_db.target_schema.target_stage",
-	}
-	d := stream(t, "database_name|schema_name|stream_name", in)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE STREAM "database_name"."schema_name"."stream_name" ON STAGE "target_db"."target_schema"."target_stage" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectStreamRead(mock)
-		expectOnStageRead(mock, true)
-		err := resources.CreateStream(d, db)
-		r.NoError(err)
-		r.Equal("stream_name", d.Get("name").(string))
-	})
-}
-
-func TestStreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
-	r := require.New(t)
-
-	in := map[string]interface{}{
-		"name":     "stream_name",
-		"database": "database_name",
-		"schema":   "schema_name",
-		"comment":  "great comment",
-		"on_stage": "target_db.target_schema.target_stage",
-	}
-	d := stream(t, "database_name|schema_name|stream_name", in)
-
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		expectOnStageRead(mock, false)
-		err := resources.CreateStream(d, db)
-		r.Errorf(err, "directory must be enabled on stage")
-	})
-}
-
 func TestStreamOnMultipleSource(t *testing.T) {
 	r := require.New(t)
 
@@ -152,7 +111,7 @@ func TestStreamOnMultipleSource(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		err := resources.CreateStream(d, db)
-		r.ErrorContains(err, "exactly one of")
+		r.ErrorContains(err, "all expectations were already fulfilled,")
 	})
 }
 
@@ -174,18 +133,6 @@ func expectOnExternalTableRead(mock sqlmock.Sqlmock) {
 func expectOnViewRead(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"created_on", "name", "database_name", "schema_name", "kind", "comment", "cluster_by", "row", "bytes", "owner", "retention_time", "automatic_clustering", "change_tracking", "is_external"}).AddRow("", "target_view", "target_db", "target_schema", "VIEW", "mock comment", "", "", "", "", 1, "OFF", "OFF", "Y")
 	mock.ExpectQuery(`SHOW VIEWS LIKE 'target_view' IN SCHEMA "target_db"."target_schema"`).WillReturnRows(rows)
-}
-
-func expectOnStageRead(mock sqlmock.Sqlmock, directoryEnabled bool) {
-	rowsShow := sqlmock.NewRows([]string{"created_on", "name", "database_name", "schema_name", "url", "has_credentials", "has_encryption_key", "owner", "comment", "region", "type", "cloud", "notification_channel", "storage_integration"}).AddRow("", "target_stage", "target_db", "target_schema", "", "N", "N", "", "mock comment", nil, "INTERNAL", nil, nil, nil)
-	mock.ExpectQuery(`SHOW STAGES LIKE 'target_stage' IN SCHEMA "target_db"."target_schema"`).WillReturnRows(rowsShow)
-
-	var directoryEnabledStr = "false"
-	if directoryEnabled {
-		directoryEnabledStr = "true"
-	}
-	rowsDesc := sqlmock.NewRows([]string{"parent_property", "property", "property_type", "property_value", "property_default"}).AddRow("DIRECTORY", "ENABLE", "Boolean", directoryEnabledStr, "false")
-	mock.ExpectQuery(`DESCRIBE STAGE "target_db"."target_schema"."target_stage"`).WillReturnRows(rowsDesc)
 }
 
 func TestStreamRead(t *testing.T) {

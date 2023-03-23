@@ -311,14 +311,22 @@ func (v *ExternalTableGrantID) String() string {
 func ParseExternalTableGrantID(s string) (*ExternalTableGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &ExternalTableGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:           roles,
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

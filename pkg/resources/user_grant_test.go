@@ -79,7 +79,7 @@ func TestParseUserGrantEmojiID(t *testing.T) {
 func TestParseUserGrantOldID(t *testing.T) {
 	r := require.New(t)
 
-	grantID, err := resources.ParseUserGrantID("test-user|||MONITOR|false|role1,role2")
+	grantID, err := resources.ParseUserGrantID("test-user|||MONITOR|role1,role2|false")
 	r.NoError(err)
 	r.Equal("test-user", grantID.ObjectName)
 	r.Equal("MONITOR", grantID.Privilege)
@@ -87,4 +87,15 @@ func TestParseUserGrantOldID(t *testing.T) {
 	r.Equal(2, len(grantID.Roles))
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseUserGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseUserGrantID("test-user|||MONITOR|false")
+	r.NoError(err)
+	r.Equal("test-user", grantID.ObjectName)
+	r.Equal("MONITOR", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
 }

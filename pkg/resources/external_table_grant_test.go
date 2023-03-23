@@ -231,3 +231,16 @@ func TestParseExternalTableGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseExternalTableGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseExternalTableGrantID("test-db|PUBLIC|test-external-table|SELECT|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-external-table", grantID.ObjectName)
+	r.Equal("SELECT", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

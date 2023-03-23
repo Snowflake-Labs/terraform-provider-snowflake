@@ -65,7 +65,7 @@ func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))
 }
 
-// DiffSuppressStatement will suppress diffs between statemens if they differ in only case or in
+// DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
 // runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully
 // round-trip queries so we cannot do a simple character-wise comparison to detect changes.
 //
@@ -210,7 +210,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil

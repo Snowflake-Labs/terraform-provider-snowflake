@@ -137,6 +137,11 @@ func ParameterDefaults() map[string]ParameterDefault {
 			DefaultValue: false,
 			Validate:     validateBoolFunc,
 		},
+		"PREVENT_LOAD_FROM_INLINE_URL": {
+			TypeSet:      []ParameterType{ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+		},
 		"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION": {
 			TypeSet:      []ParameterType{ParameterTypeAccount},
 			DefaultValue: false,
