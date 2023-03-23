@@ -82,7 +82,7 @@ func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	// If not found, mark resource to be removed from statefile during apply or refresh
+	// If not found, mark resource to be removed from state file during apply or refresh
 	if !exists {
 		d.SetId("")
 		return nil

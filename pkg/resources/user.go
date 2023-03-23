@@ -167,7 +167,7 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	rows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
-			// If not found, mark resource to be removed from statefile during apply or refresh
+			// If not found, mark resource to be removed from state file during apply or refresh
 			log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 			d.SetId("")
 			return nil

@@ -40,7 +40,7 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 
 	acc, err := snowflake.ReadCurrentAccount(db)
 	if err != nil {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		d.SetId("")
 		log.Println("[DEBUG] current_account failed to decode")
 		return fmt.Errorf("error current_account err = %w", err)
@@ -50,7 +50,7 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 
 	rawInfo, err := snowflake.ScanSnowflakePlatformInfo(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Println("[DEBUG] system_get_snowflake_platform_info not found")
 		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
 	}

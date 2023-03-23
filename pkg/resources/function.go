@@ -283,7 +283,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	}
 	rows, err := snowflake.Query(db, stmt)
 	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "Function") {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] function (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 		d.SetId("")
 		return nil
@@ -381,7 +381,7 @@ func ReadFunction(d *schema.ResourceData, meta interface{}) error {
 	q := funct.Show()
 	showRows, err := snowflake.Query(db, q)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] function (%s) not found", d.Id())
 		d.SetId("")
 		return nil

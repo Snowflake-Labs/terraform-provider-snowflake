@@ -115,7 +115,7 @@ func TestAcc_GrantRole(t *testing.T) {
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			// test settup + removing a role
+			// test setup + removing a role
 			baselineStep,
 			{
 				Config:       rgConfig2(role1, role2, role3, user1, user2),
