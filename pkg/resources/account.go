@@ -20,7 +20,7 @@ var accountSchema = map[string]*schema.Schema{
 		Required:     true,
 		Description:  "Specifies the identifier (i.e. name) for the account; must be unique within an organization, regardless of which Snowflake Region the account is in. In addition, the identifier must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 		ValidateFunc: snowflakeValidation.ValidateAccountIdentifier,
-		// Name is automatically uppercased by Snowflake
+		// Name is automatically uppercase by Snowflake
 		StateFunc: func(val interface{}) string {
 			return strings.ToUpper(val.(string))
 		},
@@ -30,7 +30,7 @@ var accountSchema = map[string]*schema.Schema{
 		Required:     true,
 		Description:  "Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.",
 		ValidateFunc: snowflakeValidation.ValidateAdminName,
-		// We have no way of assuming a role into this account to change the admin user name so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin user name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -48,7 +48,7 @@ var accountSchema = map[string]*schema.Schema{
 		Sensitive:    true,
 		Description:  "Password for the initial administrative user of the account. Optional if the `ADMIN_RSA_PUBLIC_KEY` parameter is specified. For more information about passwords in Snowflake, see [Snowflake-provided Password Policy](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=Snowflake%2Dprovided%20Password%20Policy).",
 		AtLeastOneOf: []string{"admin_password", "admin_rsa_public_key"},
-		// We have no way of assuming a role into this account to change the password so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the password so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -66,7 +66,7 @@ var accountSchema = map[string]*schema.Schema{
 		Sensitive:    true,
 		Description:  "Assigns a public key to the initial administrative user of the account in order to implement [key pair authentication](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=key%20pair%20authentication) for the user. Optional if the `ADMIN_PASSWORD` parameter is specified.",
 		AtLeastOneOf: []string{"admin_password", "admin_rsa_public_key"},
-		// We have no way of assuming a role into this account to change the admin rsa public key so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin rsa public key so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -83,7 +83,7 @@ var accountSchema = map[string]*schema.Schema{
 		Required:     true,
 		Description:  "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
 		ValidateFunc: snowflakeValidation.ValidateEmail,
-		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -106,7 +106,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "First name of the initial administrative user of the account",
-		// We have no way of assuming a role into this account to change the admin first name so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin first name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -122,7 +122,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Last name of the initial administrative user of the account",
-		// We have no way of assuming a role into this account to change the admin last name so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin last name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -139,7 +139,7 @@ var accountSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     false,
 		Description: "Specifies whether the new user created to administer the account is forced to change their password upon first login into the account.",
-		// We have no way of assuming a role into this account to change the admin password policy so this has to be ForceNew even though its not ideal
+		// We have no way of assuming a role into this account to change the admin password policy so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {

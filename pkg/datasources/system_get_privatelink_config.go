@@ -81,7 +81,7 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 	rawConfig, err := snowflake.ScanPrivateLinkConfig(row)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Println("[DEBUG] system_get_privatelink_config not found")
 		d.SetId("")
 		return nil

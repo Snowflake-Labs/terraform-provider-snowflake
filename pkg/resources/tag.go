@@ -232,7 +232,7 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 
 	t, err := snowflake.ScanTag(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] tag (%s) not found", d.Id())
 		d.SetId("")
 		return nil

@@ -214,7 +214,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	rm, err := snowflake.ScanResourceMonitor(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] resource monitor (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -313,7 +313,7 @@ func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullStr
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailling %s) into a slice of ints.
+// separated string with trailing %s) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
 	if !s.Valid {

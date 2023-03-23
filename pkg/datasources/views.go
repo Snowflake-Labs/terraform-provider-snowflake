@@ -63,7 +63,7 @@ func ReadViews(d *schema.ResourceData, meta interface{}) error {
 
 	currentViews, err := snowflake.ListViews(databaseName, schemaName, db)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] views in schema (%s) not found", d.Id())
 		d.SetId("")
 		return nil
