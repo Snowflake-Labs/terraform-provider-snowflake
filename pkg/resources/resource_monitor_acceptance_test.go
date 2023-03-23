@@ -26,6 +26,8 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "40"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "80"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "90"),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -36,6 +38,8 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
 				),
 			},
 			// IMPORT
@@ -61,6 +65,8 @@ resource "snowflake_resource_monitor" "test" {
 	credit_quota    = 100
 	set_for_account = false
   	notify_triggers = [40]
+	suspend_trigger = 80
+	suspend_immediate_trigger = 90
 	warehouses      = [snowflake_warehouse.warehouse.id]
 }
 `, accName)
@@ -80,6 +86,8 @@ resource "snowflake_resource_monitor" "test" {
 	set_for_account = true
 	notify_triggers = [50]
 	warehouses      = []
+	suspend_trigger = 75
+	suspend_immediate_trigger = 95
 }
 `, accName)
 }
