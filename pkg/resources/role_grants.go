@@ -327,7 +327,7 @@ func (v *RoleGrantsID) String() string {
 }
 
 func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	if IsOldGrantID(s) || len(strings.Split(s, "|")) == 1 {
+	if IsOldGrantID(s) || (len(strings.Split(s, "|")) == 1 && !strings.Contains(s, "❄️")) {
 		idParts := strings.Split(s, "|")
 		var roles []string
 		if len(idParts) == 6 {
