@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.60.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.59.0...v0.60.0) (2023-03-23)
+
+
+### Features
+
+* add missing PrivateLink URLs to datasource ([#1603](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1603)) ([78782b1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/78782b1b471b7fbd434de1803cd687f6866cada7))
+* add PREVENT_LOAD_FROM_INLINE_URL ([#1612](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1612)) ([4945a3a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4945a3ae62d887dae6332742edcde715751459b5))
+* Add support for `packages`, `imports`, `handler` and `runtimeVersion` to `snowflake_procedure` resource ([#1516](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1516)) ([a88f3ad](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a88f3ada75dad18b7b4b9024f664de8d687f54e0))
+
+
+### BugFixes
+
+* 0.60 misc bug fixes / linting ([#1643](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1643)) ([53da853](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53da853c213eec3afbdd2a47a8de3fba897c5d8a))
+* change resource monitor suspend properties to number ([#1545](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1545)) ([4bc59e2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4bc59e24677260dae94952bdbc5176ad177876dd))
+
+
+### Misc
+
+* **deps:** bump actions/setup-go from 3 to 4 ([#1634](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1634)) ([3f128c1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3f128c1ba887c377b7bd5f3d508d7b81676fdf90))
+* **deps:** bump github.com/hashicorp/terraform-plugin-sdk/v2 ([#1639](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1639)) ([330777e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/330777eb0ad93acede6ffef9d7571c0989540657))
+* **deps:** bump github.com/snowflakedb/gosnowflake ([#1638](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1638)) ([107bb4a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/107bb4abfb5de896acc1f224afae77b8100ffc02))
+
 ## [0.59.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.58.2...v0.59.0) (2023-03-21)
 
 
