@@ -166,3 +166,12 @@ func TestParseRoleGrantsOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseRoleGrantsReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRoleGrantsID("test-role")
+	r.NoError(err)
+	r.Equal("test-role", grantID.ObjectName)
+	r.Equal(0, len(grantID.Roles))
+}
