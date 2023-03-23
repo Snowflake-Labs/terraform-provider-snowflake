@@ -136,9 +136,6 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
