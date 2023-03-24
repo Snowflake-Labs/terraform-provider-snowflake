@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.60.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.0...v0.60.1) (2023-03-23)
+
+
+### BugFixes
+
+* openbsd build ([#1647](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1647)) ([6895a89](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6895a8958775e8e84a1457722f6c282d49458f3d))
+
 ## [0.60.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.59.0...v0.60.0) (2023-03-23)
 
 
