@@ -31,7 +31,7 @@ func TestAcc_Shares(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_shares.r", "shares.#"),
 					resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.#", "1"),
-					//resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.0.name", pattern), //TODO - name (NDDXXJK.VGB55177.S1) ending with (pattern)
+					//resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.0.name", pattern), // TODO - name (NDDXXJK.VGB55177.S1) ending with (pattern)
 					resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.0.kind", "OUTBOUND"),
 					resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.0.comment", comment),
 				),
