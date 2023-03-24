@@ -126,7 +126,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.UserGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, userGrantSchema, builder, false, validUserPrivileges)
+	return readGenericGrant(d, meta, userGrantSchema, builder, false, false, validUserPrivileges)
 }
 
 // DeleteUserGrant implements schema.DeleteFunc.

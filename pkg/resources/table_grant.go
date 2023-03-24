@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -27,7 +28,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"table_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the table on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the table on which to grant privileges immediately (only valid if on_future or on_all is unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -60,15 +61,25 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future or on_all is unset).",
 	},
 	"on_future": {
-		Type:          schema.TypeBool,
-		Optional:      true,
+		Type:     schema.TypeBool,
+		Optional: true,
+		// TODO add that on_all on on_future are mutual exclusive
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
 		Default:       false,
 		ForceNew:      true,
-		ConflictsWith: []string{"table_name", "shares"},
+		ConflictsWith: []string{"table_name", "shares", "on_all"},
+	},
+	"on_all": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		// TODO add that on_all on on_future are mutual exclusive
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all all tables in the given schema. When this is true and no schema_name is provided apply this grant on all all tables in the given database. The table_name and shares fields must be unset in order to use on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"table_name", "shares", "on_future"},
 	},
 	"with_grant_option": {
 		Type:        schema.TypeBool,
@@ -143,20 +154,23 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
-	if (tableName == "") && !onFuture {
-		return errors.New("table_name must be set unless on_future is true")
+	if (tableName == "") && !onFuture && !onAll {
+		return errors.New("table_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
 		builder = snowflake.FutureTableGrant(databaseName, schemaName)
+	} else if onAll {
+		builder = snowflake.AllTableGrant(databaseName, schemaName)
 	} else {
 		builder = snowflake.TableGrant(databaseName, schemaName, tableName)
 	}
@@ -165,7 +179,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewTableGrantID(databaseName, schemaName, tableName, privilege, roles, shares, withGrantOption)
+	grantID := NewTableGrantID(databaseName, schemaName, tableName, privilege, roles, shares, withGrantOption, onFuture, onAll)
 	d.SetId(grantID.String())
 	return ReadTableGrant(d, meta)
 }
@@ -183,14 +197,14 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
-	onFuture := false
-	if grantID.ObjectName == "" {
-		onFuture = true
-	}
+
 	if err := d.Set("table_name", grantID.ObjectName); err != nil {
 		return err
 	}
-	if err := d.Set("on_future", onFuture); err != nil {
+	if err := d.Set("on_future", grantID.IsFuture); err != nil {
+		return err
+	}
+	if err := d.Set("on_all", grantID.IsAll); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
@@ -201,13 +215,15 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	if grantID.IsFuture {
 		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
+	} else if grantID.IsAll {
+		builder = snowflake.AllTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
 		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
-	return readGenericGrant(d, meta, tableGrantSchema, builder, onFuture, validTablePrivileges)
+	return readGenericGrant(d, meta, tableGrantSchema, builder, grantID.IsFuture, grantID.IsAll, validTablePrivileges)
 }
 
 // DeleteTableGrant implements schema.DeleteFunc.
@@ -217,14 +233,11 @@ func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := false
-	if grantID.ObjectName == "" {
-		onFuture = true
-	}
-
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	if grantID.IsFuture {
 		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
+	} else if grantID.IsAll {
+		builder = snowflake.AllTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
 		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
@@ -265,12 +278,12 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := (grantID.ObjectName == "")
-
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	if grantID.IsFuture {
 		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
+	} else if grantID.IsAll {
+		builder = snowflake.AllTableGrant(grantID.DatabaseName, grantID.SchemaName)
 	} else {
 		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
@@ -311,9 +324,11 @@ type TableGrantID struct {
 	Shares          []string
 	WithGrantOption bool
 	IsOldID         bool
+	IsFuture        bool
+	IsAll           bool
 }
 
-func NewTableGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool) *TableGrantID {
+func NewTableGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, shares []string, withGrantOption bool, isFuture bool, isAll bool) *TableGrantID {
 	return &TableGrantID{
 		DatabaseName:    databaseName,
 		SchemaName:      schemaName,
@@ -323,15 +338,18 @@ func NewTableGrantID(databaseName string, schemaName, objectName, privilege stri
 		Shares:          shares,
 		WithGrantOption: withGrantOption,
 		IsOldID:         false,
+		IsFuture:        isFuture,
+		IsAll:           isAll,
 	}
 }
 
 func (v *TableGrantID) String() string {
 	roles := strings.Join(v.Roles, ",")
 	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares)
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles, shares, v.IsFuture, v.IsAll)
 }
 
+// TODO add logic for isFuture and isAll
 func ParseTableGrantID(s string) (*TableGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
@@ -343,32 +361,68 @@ func ParseTableGrantID(s string) (*TableGrantID, error) {
 		} else {
 			withGrantOption = idParts[4] == "true"
 		}
+		isFuture := false
+		objectName := idParts[2]
+		if objectName == "" {
+			isFuture = true
+		}
 		return &TableGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
-			ObjectName:      idParts[2],
+			ObjectName:      objectName,
 			Privilege:       idParts[3],
 			Roles:           roles,
 			Shares:          []string{},
 			WithGrantOption: withGrantOption,
 			IsOldID:         true,
+			IsFuture:        isFuture,
+			IsAll:           false,
 		}, nil
 	}
 	idParts := strings.Split(s, "|")
 	if len(idParts) < 7 {
 		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
 	}
-	if len(idParts) != 7 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7", len(idParts))
+
+	if len(idParts) == 7 {
+		isFuture := false
+		objectName := idParts[2]
+		if objectName == "" {
+			isFuture = true
+		}
+
+		return &TableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      objectName,
+			Privilege:       idParts[3],
+			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+			Shares:          helpers.SplitStringToSlice(idParts[6], ","),
+			IsOldID:         false,
+			IsFuture:        isFuture,
+			IsAll:           false,
+		}, nil
 	}
-	return &TableGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
-		Privilege:       idParts[3],
-		WithGrantOption: idParts[4] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
-		Shares:          helpers.SplitStringToSlice(idParts[6], ","),
-		IsOldID:         false,
-	}, nil
+
+	if len(idParts) == 9 {
+		// TODO: add error handling
+		isFuture, _ := strconv.ParseBool(idParts[7])
+		isAll, _ := strconv.ParseBool(idParts[8])
+		return &TableGrantID{
+			DatabaseName:    idParts[0],
+			SchemaName:      idParts[1],
+			ObjectName:      idParts[2],
+			Privilege:       idParts[3],
+			WithGrantOption: idParts[4] == "true",
+			Roles:           helpers.SplitStringToSlice(idParts[5], ","),
+			Shares:          helpers.SplitStringToSlice(idParts[6], ","),
+			IsOldID:         false,
+			IsFuture:        isFuture,
+			IsAll:           isAll,
+		}, nil
+	}
+
+	// idParts == 9 is for new TableGrantID with IsFuture and IsAll
+	return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 7 or 9", len(idParts))
 }

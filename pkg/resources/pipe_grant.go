@@ -166,8 +166,10 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.PipeGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, pipeGrantSchema, builder, onFuture, validPipePrivileges)
+	return readGenericGrant(d, meta, pipeGrantSchema, builder, onFuture, onAll, validPipePrivileges)
 }
 
 // DeletePipeGrant implements schema.DeleteFunc.

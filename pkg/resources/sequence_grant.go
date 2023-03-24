@@ -191,8 +191,10 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.SequenceGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, sequenceGrantSchema, builder, onFuture, validSequencePrivileges)
+	return readGenericGrant(d, meta, sequenceGrantSchema, builder, onFuture, onAll, validSequencePrivileges)
 }
 
 // DeleteSequenceGrant implements schema.DeleteFunc.

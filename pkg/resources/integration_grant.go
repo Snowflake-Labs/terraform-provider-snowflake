@@ -106,7 +106,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
+	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc.

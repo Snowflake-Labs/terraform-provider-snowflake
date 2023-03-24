@@ -211,8 +211,10 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.ViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
+	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, onAll, validViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc.
