@@ -50,7 +50,7 @@ var (
 		},
 	}
 
-	// Enables alert
+	// Changes: condition, action, comment, schedule.
 	alertStepOne = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
 		DatabaseName:  databaseName,
@@ -66,7 +66,7 @@ var (
 		},
 	}
 
-	// Changes comment
+	// Changes: condition, action, comment, schedule.
 	alertStepTwo = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
 		DatabaseName:  databaseName,
@@ -82,7 +82,7 @@ var (
 		},
 	}
 
-	// Changes both the condition and action
+	// Changes: condition, action, comment, schedule.
 	alertStepThree = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
 		DatabaseName:  databaseName,
