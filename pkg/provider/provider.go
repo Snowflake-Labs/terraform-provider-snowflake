@@ -212,6 +212,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_account_parameter":              resources.AccountParameter(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
+		"snowflake_database_role":                  resources.DatabaseRole(),
 		"snowflake_external_function":              resources.ExternalFunction(),
 		"snowflake_failover_group":                 resources.FailoverGroup(),
 		"snowflake_file_format":                    resources.FileFormat(),
