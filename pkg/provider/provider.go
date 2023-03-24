@@ -210,6 +210,7 @@ func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
 		"snowflake_account":                        resources.Account(),
 		"snowflake_account_parameter":              resources.AccountParameter(),
+		"snowflake_alert":                          resources.Alert(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
 		"snowflake_external_function":              resources.ExternalFunction(),
