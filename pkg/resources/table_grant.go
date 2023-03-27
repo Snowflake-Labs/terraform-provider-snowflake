@@ -211,11 +211,12 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 	onFuture := d.Get("on_future").(bool)
 	onAll := d.Get("on_all").(bool)
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTableGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else if onAll {
+	case onAll:
 		builder = snowflake.AllTableGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	default:
 		builder = snowflake.TableGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return readGenericGrant(d, meta, tableGrantSchema, builder, onFuture, onAll, validTablePrivileges)
