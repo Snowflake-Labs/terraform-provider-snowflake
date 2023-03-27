@@ -167,11 +167,12 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTableGrant(databaseName, schemaName)
-	} else if onAll {
+	case onAll:
 		builder = snowflake.AllTableGrant(databaseName, schemaName)
-	} else {
+	default:
 		builder = snowflake.TableGrant(databaseName, schemaName, tableName)
 	}
 
