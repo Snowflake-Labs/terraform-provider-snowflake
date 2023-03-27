@@ -337,7 +337,7 @@ func GetColumnTagValueString(tags []TagValue) string {
 			}
 			q.WriteString(fmt.Sprintf(`"%v".`, v.Schema))
 		}
-		q.WriteString(fmt.Sprintf(`"%v" = "'%v'", `, v.Name, v.Value))
+		q.WriteString(fmt.Sprintf(`"%v" = "%v", `, v.Name, v.Value))
 	}
 	return strings.TrimSuffix(q.String(), ", ")
 }
