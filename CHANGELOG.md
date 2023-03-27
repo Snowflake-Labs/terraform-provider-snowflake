@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.61.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.1...v0.61.0) (2023-03-27)
+
+
+### Features
+
+* add GRANT ... ON ALL TABLES IN ... ([#1626](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1626)) ([505a5f3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/505a5f35d9ea8388ca33e5117c545408243298ae))
+
+
+### BugFixes
+
+* all-grants ([#1658](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1658)) ([d5d59b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d5d59b4e85cd2e97ea0dc42b5ab2955ef35bbb88))
+
 ## [0.60.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.0...v0.60.1) (2023-03-23)
 
 
