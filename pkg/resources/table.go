@@ -44,6 +44,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
+
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,

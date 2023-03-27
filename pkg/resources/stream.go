@@ -200,8 +200,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	onTable, onTableSet := d.GetOk("on_table")
 	onView, onViewSet := d.GetOk("on_view")
-	// TODO removed for the time being as new code was buggy
-	//onStage, onStageSet := d.GetOk("on_stage")
+	onStage, onStageSet := d.GetOk("on_stage")
 
 	switch {
 	case onTableSet:

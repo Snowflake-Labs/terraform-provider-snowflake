@@ -40,6 +40,13 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
+	"copy_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		ForceNew:    true,
+		Description: "Overwrites the View if it exists.",
+	},
 	"is_secure": {
 		Type:        schema.TypeBool,
 		Optional:    true,

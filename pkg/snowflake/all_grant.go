@@ -5,51 +5,51 @@ import (
 )
 
 type (
-	allGrantType   string
-	allGrantTarget string
+	AllGrantType   string
+	AllGrantTarget string
 )
 
 const (
-	allSchemaType           allGrantType = "SCHEMA"
-	allTableType            allGrantType = "TABLE"
-	allViewType             allGrantType = "VIEW"
-	allMaterializedViewType allGrantType = "MATERIALIZED VIEW"
-	allStageType            allGrantType = "STAGE"
-	allExternalTableType    allGrantType = "EXTERNAL TABLE"
-	allFileFormatType       allGrantType = "FILE FORMAT"
-	allFunctionType         allGrantType = "FUNCTION"
-	allProcedureType        allGrantType = "PROCEDURE"
-	allSequenceType         allGrantType = "SEQUENCE"
-	allStreamType           allGrantType = "STREAM"
-	allPipeType             allGrantType = "PIPE"
-	allTaskType             allGrantType = "TASK"
+	AllGrantTypeSchema           AllGrantType = "SCHEMA"
+	AllGrantTypeTable            AllGrantType = "TABLE"
+	AllGrantTypeView             AllGrantType = "VIEW"
+	AllGrantTypeMaterializedView AllGrantType = "MATERIALIZED VIEW"
+	AllGrantTypeStage            AllGrantType = "STAGE"
+	AllGrantTypeExternalTable    AllGrantType = "EXTERNAL TABLE"
+	AllGrantTypeFileFormat       AllGrantType = "FILE FORMAT"
+	AllGrantTypeFunction         AllGrantType = "FUNCTION"
+	AllGrantTypeProcedure        AllGrantType = "PROCEDURE"
+	AllGrantTypeSequence         AllGrantType = "SEQUENCE"
+	AllGrantTypeStream           AllGrantType = "STREAM"
+	AllGrantTypePipe             AllGrantType = "PIPE"
+	AllGrantTypeTask             AllGrantType = "TASK"
 )
 
 const (
-	allSchemaTarget   allGrantTarget = "SCHEMA"
-	allDatabaseTarget allGrantTarget = "DATABASE"
+	AllGrantTargetSchema   AllGrantTarget = "SCHEMA"
+	AllGrantTargetDatabase AllGrantTarget = "DATABASE"
 )
 
 // AllGrantBuilder abstracts the creation of ExistingGrantExecutables.
 type AllGrantBuilder struct {
 	name           string
 	qualifiedName  string
-	allGrantType   allGrantType
-	allGrantTarget allGrantTarget
+	allGrantType   AllGrantType
+	allGrantTarget AllGrantTarget
 }
 
-func getNameAndQualifiedNameForAllGrants(db, schema string) (string, string, allGrantTarget) {
+func getNameAndQualifiedNameForAllGrants(db, schema string) (string, string, AllGrantTarget) {
 	name := schema
-	allTarget := allSchemaTarget
+	AllGrantTarget := AllGrantTargetSchema
 	qualifiedName := fmt.Sprintf(`"%v"."%v"`, db, schema)
 
 	if schema == "" {
 		name = db
-		allTarget = allDatabaseTarget
+		AllGrantTarget = AllGrantTargetDatabase
 		qualifiedName = fmt.Sprintf(`"%v"`, db)
 	}
 
-	return name, qualifiedName, allTarget
+	return name, qualifiedName, AllGrantTarget
 }
 
 // Name returns the object name for this FutureGrantBuilder.
@@ -66,140 +66,140 @@ func ExistingSchemaGrant(db string) GrantBuilder {
 	return &AllGrantBuilder{
 		name:           db,
 		qualifiedName:  fmt.Sprintf(`"%v"`, db),
-		allGrantType:   allSchemaType,
-		allGrantTarget: allDatabaseTarget,
+		allGrantType:   AllGrantTypeSchema,
+		allGrantTarget: AllGrantTargetDatabase,
 	}
 }
 
 // AllTableGrant returns a pointer to a AllGrantBuilder for a table.
 func AllTableGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allTableType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeTable,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingViewGrant returns a pointer to a AllGrantBuilder for a view.
 func ExistingViewGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allViewType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeView,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingMaterializedViewGrant returns a pointer to a AllGrantBuilder for a view.
 func ExistingMaterializedViewGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allMaterializedViewType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeMaterializedView,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingStageGrant returns a pointer to a AllGrantBuilder for a stage.
 func ExistingStageGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allStageType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeStage,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingExternalTableGrant returns a pointer to a AllGrantBuilder for a external table.
 func ExistingExternalTableGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allExternalTableType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeExternalTable,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingFileFormatGrant returns a pointer to a AllGrantBuilder for a file format.
 func ExistingFileFormatGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allFileFormatType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeFileFormat,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingFunctionGrant returns a pointer to a AllGrantBuilder for a function.
 func ExistingFunctionGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allFunctionType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeFunction,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingProcedureGrant returns a pointer to a AllGrantBuilder for a procedure.
 func ExistingProcedureGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allProcedureType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeProcedure,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingSequenceGrant returns a pointer to a AllGrantBuilder for a sequence.
 func ExistingSequenceGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allSequenceType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeSequence,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingStreamGrant returns a pointer to a AllGrantBuilder for a stream.
 func ExistingStreamGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allStreamType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeStream,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingPipeGrant returns a pointer to a AllGrantBuilder for a pipe.
 func ExistingPipeGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allPipeType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypePipe,
+		allGrantTarget: target,
 	}
 }
 
 // ExistingTaskGrant returns a pointer to a AllGrantBuilder for a task.
 func ExistingTaskGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, allTarget := getNameAndQualifiedNameForAllGrants(db, schema)
+	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
 		qualifiedName:  qualifiedName,
-		allGrantType:   allTaskType,
-		allGrantTarget: allTarget,
+		allGrantType:   AllGrantTypeTask,
+		allGrantTarget: target,
 	}
 }
 
@@ -208,16 +208,7 @@ func (fgb *AllGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fgb.allGrantTarget, fgb.qualifiedName)
 }
 
-// ExistingGrantExecutable abstracts the creation of SQL queries to build all grants for
-// different all grant types.
-type ExistingGrantExecutable struct {
-	grantName      string
-	granteeName    string
-	allGrantType   allGrantType
-	allGrantTarget allGrantTarget
-}
-
-// Role returns a pointer to a FutureGrantExecutable for a role.
+// Role returns a pointer to a ExistingGrantExecutable for a role.
 func (fgb *AllGrantBuilder) Role(n string) GrantExecutable {
 	return &ExistingGrantExecutable{
 		granteeName:    n,
@@ -230,6 +221,15 @@ func (fgb *AllGrantBuilder) Role(n string) GrantExecutable {
 // Share is not implemented because all objects cannot be granted to shares.
 func (fgb *AllGrantBuilder) Share(n string) GrantExecutable {
 	return nil
+}
+
+// ExistingGrantExecutable abstracts the creation of SQL queries to build all grants for
+// different all grant types.
+type ExistingGrantExecutable struct {
+	grantName      string
+	granteeName    string
+	allGrantType   AllGrantType
+	allGrantTarget AllGrantTarget
 }
 
 // Grant returns the SQL that will grant all privileges on the grant to the grantee.
