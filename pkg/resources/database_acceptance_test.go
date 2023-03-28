@@ -99,4 +99,3 @@ resource "snowflake_database" "db" {
 `
 	return fmt.Sprintf(s, prefix)
 }
-
