@@ -12,14 +12,15 @@ import (
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View.
 type ViewBuilder struct {
-	name      string
-	db        string
-	schema    string
-	secure    bool
-	replace   bool
-	comment   string
-	statement string
-	tags      []TagValue
+	name       string
+	db         string
+	schema     string
+	secure     bool
+	replace    bool
+	copyGrants bool
+	comment    string
+	statement  string
+	tags       []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely.
@@ -46,6 +47,12 @@ func (vb *ViewBuilder) WithDB(db string) *ViewBuilder {
 // WithReplace adds the "OR REPLACE" option to the ViewBuilder.
 func (vb *ViewBuilder) WithReplace() *ViewBuilder {
 	vb.replace = true
+	return vb
+}
+
+// WithCopyGrants adds the "COPY GRANTS" option to the ViewBuilder.
+func (vb *ViewBuilder) WithCopyGrants() *ViewBuilder {
+	vb.copyGrants = true
 	return vb
 }
 
@@ -128,6 +135,10 @@ func (vb *ViewBuilder) Create() (string, error) {
 	}
 
 	q.WriteString(fmt.Sprintf(` VIEW %v`, qn))
+
+	if vb.copyGrants {
+		q.WriteString(" COPY GRANTS")
+	}
 
 	if vb.comment != "" {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(vb.comment)))
@@ -241,4 +252,8 @@ func ListViews(databaseName string, schemaName string, db *sql.DB) ([]View, erro
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
 	return dbs, nil
+}
+
+func (v *View) CopyGrants() bool {
+	return strings.Contains(v.Text.String, " COPY GRANTS ")
 }
