@@ -235,7 +235,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("is_secure", v.IsSecure); err != nil {
 		return err
 	}
-	if err = d.Set("copy_grants", v.CopyGrants()); err != nil {
+	if err = d.Set("copy_grants", v.HasCopyGrants()); err != nil {
 		return err
 	}
 	if err = d.Set("comment", v.Comment.String); err != nil {

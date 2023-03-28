@@ -254,6 +254,6 @@ func ListViews(databaseName string, schemaName string, db *sql.DB) ([]View, erro
 	return dbs, nil
 }
 
-func (v *View) CopyGrants() bool {
+func (v *View) HasCopyGrants() bool {
 	return strings.Contains(v.Text.String, " COPY GRANTS ")
 }
