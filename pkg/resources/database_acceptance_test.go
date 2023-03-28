@@ -10,6 +10,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+func TestAcc_DatabaseWithUnderscore(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
+		t.Skip("Skipping TestAccDatabase")
+	}
+
+	prefix := "_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: dbConfig(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
+					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+				),
+			},
+		},
+	})
+}
 func TestAcc_Database(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
 		t.Skip("Skipping TestAccDatabase")
@@ -78,3 +99,4 @@ resource "snowflake_database" "db" {
 `
 	return fmt.Sprintf(s, prefix)
 }
+
