@@ -353,7 +353,7 @@ type changedColumn struct {
 	dropedDefault         bool
 	changedComment        bool
 	changedMaskingPolicy  bool
-	changedTags			  bool
+	changedTags           bool
 }
 
 func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
@@ -457,7 +457,7 @@ func getColumn(from interface{}) (to column) {
 		identity:      id,
 		comment:       c["comment"].(string),
 		maskingPolicy: c["masking_policy"].(string),
-		tags: 		   tags.toSnowflakeTagValues(),		
+		tags:          tags.toSnowflakeTagValues(),
 	}
 }
 

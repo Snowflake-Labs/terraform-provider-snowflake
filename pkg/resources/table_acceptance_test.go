@@ -1071,7 +1071,6 @@ func TestAcc_TableColumnTags(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.tag.1.schema", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "VARCHAR(16)"),
-
 				),
 			},
 		},
@@ -1091,7 +1090,7 @@ resource "snowflake_schema" "test_schema" {
 	comment  = "Terraform acceptance test"
 }
 
-resource "snowflake_tag" "test_tag" {
+resource "snowflake_tag" "test_ColumnTag" {
 	name     = "%[2]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
@@ -1099,7 +1098,7 @@ resource "snowflake_tag" "test_tag" {
 	comment  = "Terraform acceptance test"
 }
 
-resource "snowflake_tag" "test2_tag" {
+resource "snowflake_tag" "test2_ColumnTag" {
 	name     = "%[3]s"
 	database = snowflake_database.test_database.name
 	schema   = snowflake_schema.test_schema.name
@@ -1118,16 +1117,16 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 
 		tag {
-			name = snowflake_tag.test_tag.name
-			schema = snowflake_tag.test_tag.schema
-			database = snowflake_tag.test_tag.database
+			name = snowflake_tag.test_ColumnTag.name
+			schema = snowflake_tag.test_ColumnTag.schema
+			database = snowflake_tag.test_ColumnTag.database
 			value = "%[1]s"
 		}
 	
 		tag {
-			name = snowflake_tag.test2_tag.name
-			schema = snowflake_tag.test2_tag.schema
-			database = snowflake_tag.test2_tag.database
+			name = snowflake_tag.test2_ColumnTag.name
+			schema = snowflake_tag.test2_ColumnTag.schema
+			database = snowflake_tag.test2_ColumnTag.database
 			value = "%[1]s"
 		}
 	}

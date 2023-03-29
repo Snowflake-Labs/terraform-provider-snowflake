@@ -46,23 +46,23 @@ func TestTableCreate(t *testing.T) {
 			maskingPolicy: "TEST_MP",
 		},
 		{
-			name:          "column7",
-			_type:         "VARCHAR",
-			nullable:      true,
+			name:     "column7",
+			_type:    "VARCHAR",
+			nullable: true,
 			tags: []TagValue{
-					{
-						Name:     "columnTag",
-						Database: "test_db",
-						Schema:   "test_schema",
-						Value:    "value",
-					},
-					{
-						Name:     "columnTag2",
-						Database: "test_db",
-						Schema:   "test_schema",
-						Value:    "value2",
-					},
-		         },
+				{
+					Name:     "columnTag",
+					Database: "test_db",
+					Schema:   "test_schema",
+					Value:    "value",
+				},
+				{
+					Name:     "columnTag2",
+					Database: "test_db",
+					Schema:   "test_schema",
+					Value:    "value2",
+				},
+			},
 		},
 	}
 
@@ -134,23 +134,23 @@ func TestTableCreateIdentity(t *testing.T) {
 			maskingPolicy: "TEST_MP",
 		},
 		{
-			name:          "column5",
-			_type:         "VARCHAR",
-			nullable:      true,
+			name:     "column5",
+			_type:    "VARCHAR",
+			nullable: true,
 			tags: []TagValue{
-					{
-						Name:     "columnTag",
-						Database: "test_db",
-						Schema:   "test_schema",
-						Value:    "value",
-					},
-					{
-						Name:     "columnTag2",
-						Database: "test_db",
-						Schema:   "test_schema",
-						Value:    "value2",
-					},
-		         },
+				{
+					Name:     "columnTag",
+					Database: "test_db",
+					Schema:   "test_schema",
+					Value:    "value",
+				},
+				{
+					Name:     "columnTag2",
+					Database: "test_db",
+					Schema:   "test_schema",
+					Value:    "value2",
+				},
+			},
 		},
 	}
 

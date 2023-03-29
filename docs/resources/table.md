@@ -67,6 +67,18 @@ resource "snowflake_table" "table" {
   }
 
   column {
+    name    = "column_name"
+    type    = "VARIANT"
+    
+    tag {
+      database = snowflake_schema.schema.database
+      schema   = snowflake_schema.schema.name
+      name     = "tag_name"
+      value    = "value"
+    }
+  }
+
+  column {
     name    = "extra"
     type    = "VARIANT"
     comment = "extra data"
@@ -118,6 +130,7 @@ Optional:
 - `identity` (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
 - `masking_policy` (String) Masking policy to apply on column
 - `nullable` (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
+- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--column--tag))
 
 <a id="nestedblock--column--default"></a>
 ### Nested Schema for `column.default`
@@ -136,6 +149,20 @@ Optional:
 
 - `start_num` (Number) The number to start incrementing at.
 - `step_num` (Number) Step size to increment by.
+
+
+<a id="nestedblock--column--tag"></a>
+### Nested Schema for `column.tag`
+
+Required:
+
+- `name` (String) Tag name, e.g. department.
+- `value` (String) Tag value, e.g. marketing_info.
+
+Optional:
+
+- `database` (String) Name of the database that the tag was created in.
+- `schema` (String) Name of the schema that the tag was created in.
 
 
 
