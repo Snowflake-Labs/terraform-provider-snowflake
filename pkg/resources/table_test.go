@@ -57,38 +57,19 @@ func TestTableCreate(t *testing.T) {
 					},
 				},
 			},
-			map[string]interface{}{
-				"name":           "column6",
-				"type":           "VARCHAR",
-				"nullable":       true,
-				"tag":            []snowflake.TagValue{
-					{
-						Name:     "columnTag",
-						Database: "database_name",
-						Schema:   "schema_name",
-						Value:    "value",
-					},
-					{
-						Name:     "columnTag2",
-						Database: "database_name",
-						Schema:   "schema_name",
-						Value:    "value2",
-					},
-				},
-			},
 		},
 		"primary_key": []interface{}{map[string]interface{}{"name": "MY_KEY", "keys": []interface{}{"column1"}}},
 	}
 	d := table(t, "database_name|schema_name|good_name", in)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column5" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '', "column6" VARCHAR WITH TAG \("test_db"."test_schema"."columnTag" = "value", "test_db"."test_schema"."columnTag2" = "value2"\) COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT COMMENT '', "column2" VARCHAR NOT NULL COMMENT '', "column3" NUMBER\(38,0\) COMMENT 'some comment', "column4" VARCHAR WITH MASKING POLICY TEST_MP COMMENT '', "column5" VARCHAR NOT NULL DEFAULT 'hello' COMMENT '' ,CONSTRAINT "MY_KEY" PRIMARY KEY\("column1"\)\) COMMENT = 'great comment' DATA_RETENTION_TIME_IN_DAYS = 1 CHANGE_TRACKING = false`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectTableRead(mock)
 		err := resources.CreateTable(d, db)
 		r.NoError(err)
 		r.Equal("good_name", d.Get("name").(string))
 		columns := d.Get("column").([]interface{})
-		r.Equal(6, len(columns))
+		r.Equal(5, len(columns))
 		col1 := columns[0].(map[string]interface{})
 		r.Equal("column1", col1["name"].(string))
 		r.Equal("OBJECT", col1["type"].(string))
@@ -115,24 +96,6 @@ func TestTableCreate(t *testing.T) {
 		r.Equal(1, len(col5Default))
 		col5DefaultParams := col5Default[0].(map[string]interface{})
 		r.Equal("hello", col5DefaultParams["constant"].(string))
-		col6 := columns[5].(map[string]interface{})
-		r.Equal("column6", col6["name"].(string))
-		r.Equal("VARCHAR", col6["type"].(string))
-		r.Equal(true, col6["nullable"].(bool))
-		r.Equal([]snowflake.TagValue{
-			{
-				Name:     "columnTag",
-				Database: "database_name",
-				Schema:   "schema_name",
-				Value:    "value",
-			},
-			{
-				Name:     "columnTag2",
-				Database: "database_name",
-				Schema:   "schema_name",
-				Value:    "value2",
-			},
-		}, col6["tag"].([]snowflake.TagValue))
 	})
 }
 

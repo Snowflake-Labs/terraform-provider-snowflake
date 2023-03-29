@@ -323,7 +323,7 @@ func (c column) toSnowflakeColumn() snowflake.Column {
 		sC = sC.WithIdentity(c.identity.toSnowflakeColumnIdentity())
 	}
 
-	if c.tags != nil {
+	if len(c.tags) != 0 {
 		sC = sC.WithColumnTags(c.tags)
 	}
 
@@ -439,6 +439,9 @@ func getColumn(from interface{}) (to column) {
 	_default := c["default"].([]interface{})
 	identity := c["identity"].([]interface{})
 
+	t := c["tag"]
+	tags := getTags(t)
+
 	if len(_default) == 1 {
 		cd = getColumnDefault(_default[0].(map[string]interface{}))
 	}
@@ -454,7 +457,7 @@ func getColumn(from interface{}) (to column) {
 		identity:      id,
 		comment:       c["comment"].(string),
 		maskingPolicy: c["masking_policy"].(string),
-		tags: 		   c["tag"].([]snowflake.TagValue),		
+		tags: 		   tags.toSnowflakeTagValues(),		
 	}
 }
 
