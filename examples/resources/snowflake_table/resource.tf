@@ -52,6 +52,18 @@ resource "snowflake_table" "table" {
   }
 
   column {
+     name    = "column_name"
+     type    = "VARIANT"
+     
+     tag {
+       database = snowflake_schema.schema.database
+       schema   = snowflake_schema.schema.name
+       name     = "tag_name"
+       value    = "value"
+     }
+  }
+
+  column {
     name    = "extra"
     type    = "VARIANT"
     comment = "extra data"
