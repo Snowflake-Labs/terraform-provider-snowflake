@@ -187,6 +187,11 @@ var accountSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the account.",
 		ForceNew:    true, // Apparently there is no API to change comments on accounts. ALTER ACCOUNT and COMMENT commands do not work
 	},
+	"is_org_admin": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.",
+	},
 }
 
 func Account() *schema.Resource {
@@ -299,6 +304,10 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 	err = d.Set("comment", account.Comment.String)
 	if err != nil {
 		return fmt.Errorf("error setting comment: %w", err)
+	}
+	err = d.Set("is_org_admin", account.IsOrgAdmin.Bool)
+	if err != nil {
+		return fmt.Errorf("error setting is_org_admin: %w", err)
 	}
 
 	return nil

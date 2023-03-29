@@ -60,6 +60,7 @@ resource "snowflake_account" "ac1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `is_org_admin` (Boolean) Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.
 
 ## Import
 
