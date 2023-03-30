@@ -22,6 +22,7 @@ from bar;`
 
 	secure := "create secure view foo as select * from bar;"
 	replace := "create or replace view foo as select * from bar;"
+	grants := "create or replace view foo copy grants as select * from bar;"
 	recursive := "create recursive view foo as select * from bar;"
 	ine := "create view if not exists foo as select * from bar;"
 
@@ -47,6 +48,7 @@ from bar;`
 		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
 		{"secure", args{secure}, "select * from bar;", false},
 		{"replace", args{replace}, "select * from bar;", false},
+		{"grants", args{grants}, "select * from bar;", false},
 		{"recursive", args{recursive}, "select * from bar;", false},
 		{"ine", args{ine}, "select * from bar;", false},
 		{"comment", args{comment}, "select * from bar;", false},
