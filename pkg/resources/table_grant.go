@@ -27,7 +27,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"table_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the table on which to grant privileges immediately (only valid if on_future or on_all is unset).",
+		Description: "The name of the table on which to grant privileges immediately (only valid if on_future or on_all are unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -60,7 +60,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future or on_all is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future or on_all are unset).",
 	},
 	"on_future": {
 		Type:          schema.TypeBool,

@@ -42,8 +42,8 @@ resource "snowflake_table_grant" "grant" {
 - `privilege` (String) The privilege to grant on the current or future table.
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema containing the current or future tables on which to grant privileges.
-- `shares` (Set of String) Grants privilege to these shares (only valid if on_future or on_all is unset).
-- `table_name` (String) The name of the table on which to grant privileges immediately (only valid if on_future or on_all is unset).
+- `shares` (Set of String) Grants privilege to these shares (only valid if on_future or on_all are unset).
+- `table_name` (String) The name of the table on which to grant privileges immediately (only valid if on_future or on_all are unset).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only

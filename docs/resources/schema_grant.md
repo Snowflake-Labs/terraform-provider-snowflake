@@ -41,7 +41,7 @@ resource "snowflake_schema_grant" "grant" {
 - `privilege` (String) The privilege to grant on the current or future schema. Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema on which to grant privileges.
-- `shares` (Set of String) Grants privilege to these shares (only valid if on_future is unset).
+- `shares` (Set of String) Grants privilege to these shares (only valid if on_future and on_all are unset).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only

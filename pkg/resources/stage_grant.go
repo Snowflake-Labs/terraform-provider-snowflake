@@ -73,7 +73,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
 		Type:          schema.TypeString,
 		Optional:      true,
-		Description:   "The name of the stage on which to grant privilege (only valid if on_future is false).",
+		Description:   "The name of the stage on which to grant privilege (only valid if on_future and on_all are false).",
 		ForceNew:      true,
 		ConflictsWith: []string{"on_future"},
 	},
