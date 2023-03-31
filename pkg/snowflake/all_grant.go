@@ -82,8 +82,8 @@ func AllTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingViewGrant returns a pointer to a AllGrantBuilder for a view.
-func ExistingViewGrant(db, schema string) GrantBuilder {
+// AllViewGrant returns a pointer to a AllGrantBuilder for a view.
+func AllViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -246,14 +246,15 @@ func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
 func (fge *ExistingGrantExecutable) Revoke(p string) []string {
-	// TODO: has no effect for ALL GRANTS
+	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
 			p, fge.allGrantType, fge.allGrantTarget, fge.grantName, fge.granteeName),
 	}
 }
 
-// Show returns the SQL that will show all all grants on the schema.
+// Show returns the SQL that will show all grants on the schema.
 func (fge *ExistingGrantExecutable) Show() string {
-	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fge.allGrantTarget, fge.grantName)
+	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, there changed to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which does not break
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, fge.allGrantTarget, fge.grantName)
 }
