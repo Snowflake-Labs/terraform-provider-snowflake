@@ -683,52 +683,119 @@ func GetParameterDefault(key string) ParameterDefault {
 	return ParameterDefaults()[key]
 }
 
-// ParameterBuilder abstracts the creation of SQL queries for Snowflake parameters.
-type ParameterBuilder struct {
-	key              string
-	value            string
-	parameterType    ParameterType
-	objectType       ObjectType
-	objectIdentifier string
-	db               *sql.DB
+// AccountParameterBuilder abstracts the creation of SQL queries for Snowflake account parameters.
+type AccountParameterBuilder struct {
+	key   string
+	value string
+	db    *sql.DB
 }
 
-func NewParameter(key, value string, parameterType ParameterType, db *sql.DB) *ParameterBuilder {
-	return &ParameterBuilder{
-		key:           key,
-		value:         value,
-		parameterType: parameterType,
-		db:            db,
+func NewAccountParameter(key, value string, db *sql.DB) *AccountParameterBuilder {
+	return &AccountParameterBuilder{
+		key:   key,
+		value: value,
+		db:    db,
 	}
 }
 
-func (v *ParameterBuilder) WithObjectType(objectType ObjectType) *ParameterBuilder {
-	v.objectType = objectType
+func (v *AccountParameterBuilder) SetParameter() error {
+	stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
+	_, err := v.db.Exec(stmt)
+	return err
+}
+
+// SessionParameterBuilder abstracts the creation of SQL queries for Snowflake session parameters.
+type SessionParameterBuilder struct {
+	key       string
+	value     string
+	onAccount bool
+	user      string
+	db        *sql.DB
+}
+
+func NewSessionParameter(key, value string, db *sql.DB) *SessionParameterBuilder {
+	return &SessionParameterBuilder{
+		key:   key,
+		value: value,
+		db:    db,
+	}
+}
+
+func (v *SessionParameterBuilder) SetOnAccount(onAccount bool) *SessionParameterBuilder {
+	v.onAccount = onAccount
 	return v
 }
 
-func (v *ParameterBuilder) WithObjectIdentifier(objectIdentifier string) *ParameterBuilder {
-	v.objectIdentifier = objectIdentifier
+func (v *SessionParameterBuilder) SetUser(user string) *SessionParameterBuilder {
+	v.user = user
 	return v
 }
 
-func (v *ParameterBuilder) SetParameter() error {
-	// Should this be set on the account level?
-	setOnAccount := v.parameterType == ParameterTypeAccount || v.parameterType == ParameterTypeSession || v.parameterType == ParameterTypeObject && v.objectIdentifier == ""
-	if setOnAccount {
+func (v *SessionParameterBuilder) SetParameter() error {
+	if v.onAccount {
 		// prepared statements do not work here for some reason. We already validate inputs so its okay
 		stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
 		_, err := v.db.Exec(stmt)
 		return err
 	}
-	if v.parameterType == ParameterTypeObject {
-		stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectIdentifier, v.key, v.value)
-		_, err := v.db.Exec(stmt)
-		if err != nil {
-			return err
-		}
+	if v.user == "" {
+		return fmt.Errorf("user is required when setting session parameters on a user")
 	}
-	return nil
+	stmt := fmt.Sprintf("ALTER USER %s SET %s = %s", v.user, v.key, v.value)
+	_, err := v.db.Exec(stmt)
+	return err
+}
+
+// ObjectParameterBuilder abstracts the creation of SQL queries for Snowflake object parameters.
+type ObjectParameterBuilder struct {
+	key              string
+	value            string
+	onAccount        bool
+	objectType       ObjectType
+	objectIdentifier string
+	db               *sql.DB
+}
+
+func NewObjectParameter(key, value string, db *sql.DB) *ObjectParameterBuilder {
+	return &ObjectParameterBuilder{
+		key:   key,
+		value: value,
+		db:    db,
+	}
+}
+
+func (v *ObjectParameterBuilder) SetOnAccount(onAccount bool) *ObjectParameterBuilder {
+	v.onAccount = onAccount
+	return v
+}
+
+func (v *ObjectParameterBuilder) WithObjectType(objectType ObjectType) *ObjectParameterBuilder {
+	v.objectType = objectType
+	return v
+}
+
+func (v *ObjectParameterBuilder) WithObjectIdentifier(objectIdentifier string) *ObjectParameterBuilder {
+	v.objectIdentifier = objectIdentifier
+	return v
+}
+
+func (v *ObjectParameterBuilder) SetParameter() error {
+	if v.onAccount {
+		// prepared statements do not work here for some reason. We already validate inputs so its okay
+		stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
+		_, err := v.db.Exec(stmt)
+		return err
+	}
+	if v.objectType == "" {
+		return fmt.Errorf("object type is required when setting object parameters")
+	}
+	if v.objectIdentifier == "" {
+		return fmt.Errorf("object identifier is required when setting object parameters")
+	}
+
+	stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectIdentifier, v.key, v.value)
+	_, err := v.db.Exec(stmt)
+	return err
 }
 
 type Parameter struct {
@@ -743,6 +810,24 @@ type Parameter struct {
 func ShowAccountParameter(db *sql.DB, key string) (*Parameter, error) {
 	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", key)
 
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	params := []Parameter{}
+	if err := sqlx.StructScan(rows, &params); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+	}
+
+	return &params[0], nil
+}
+
+func ShowSessionParameter(db *sql.DB, key string, user string) (*Parameter, error) {
+	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN USER %s", key, user)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -779,16 +864,35 @@ func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectId
 	return &value, nil
 }
 
-func ListParameters(db *sql.DB, parameterType ParameterType, pattern string) ([]Parameter, error) {
+func ListAccountParameters(db *sql.DB, pattern string) ([]Parameter, error) {
 	var stmt string
-	if parameterType == ParameterTypeAccount || parameterType == ParameterTypeSession {
-		if pattern != "" {
-			stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %v", pattern, parameterType)
-		} else {
-			stmt = fmt.Sprintf("SHOW PARAMETERS IN %v", parameterType)
-		}
+	if pattern != "" {
+		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", pattern)
 	} else {
-		return nil, fmt.Errorf("unsupported parameter type %s", parameterType)
+		stmt = "SHOW PARAMETERS IN ACCOUNT"
+	}
+	log.Printf("[DEBUG] query = %s", stmt)
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	params := []Parameter{}
+	if err := sqlx.StructScan(rows, &params); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+	}
+	return params, nil
+}
+
+func ListSessionParameters(db *sql.DB, pattern string, user string) ([]Parameter, error) {
+	var stmt string
+	if pattern != "" {
+		stmt = fmt.Sprintf("SHOW PARAMETERS LIKE '%s' FOR USER %s", pattern, user)
+	} else {
+		stmt = fmt.Sprintf("SHOW PARAMETERS FOR USER %s", user)
 	}
 	log.Printf("[DEBUG] query = %s", stmt)
 	rows, err := db.Query(stmt)

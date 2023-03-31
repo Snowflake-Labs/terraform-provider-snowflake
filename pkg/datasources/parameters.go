@@ -3,6 +3,7 @@ package datasources
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -23,6 +24,11 @@ var parametersSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Allows limiting the list of parameters by name using LIKE clause. Refer to [Limiting the List of Parameters by Name](https://docs.snowflake.com/en/sql-reference/parameters.html#limiting-the-list-of-parameters-by-name)",
+	},
+	"user": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "If parameter_type is set to \"SESSION\" then user is the name of the user to display session parameters for.",
 	},
 	"object_type": {
 		Type:         schema.TypeString,
@@ -120,7 +126,18 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		}
 		return d.Set("parameters", params)
 	}
-	parameters, err := snowflake.ListParameters(db, parameterType, pattern)
+	var parameters []snowflake.Parameter
+	var err error
+	switch parameterType {
+	case snowflake.ParameterTypeAccount:
+		parameters, err = snowflake.ListAccountParameters(db, pattern)
+	case snowflake.ParameterTypeSession:
+		user := d.Get("user").(string)
+		if user == "" {
+			return fmt.Errorf("user is required when parameter_type is set to SESSION")
+		}
+		parameters, err = snowflake.ListSessionParameters(db, user, pattern)
+	}
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] parameters not found")
 		d.SetId("")

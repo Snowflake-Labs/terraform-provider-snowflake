@@ -24,6 +24,17 @@ var sessionParameterSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Value of session parameter, as a string. Constraints are the same as those for the parameters in Snowflake documentation.",
 	},
+	"on_account": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "If true, the session parameter will be set on the account level.",
+	},
+	"user": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The user to set the session parameter for. Required if on_account is false",
+	},
 }
 
 func SessionParameter() *schema.Resource {
@@ -59,17 +70,34 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
 	}
 
-	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeSession, db)
+	builder := snowflake.NewSessionParameter(key, value, db)
+
+	onAccount := d.Get("on_account").(bool)
+	user := d.Get("user").(string)
+
+	if onAccount {
+		builder.SetOnAccount(onAccount)
+	} else {
+		if user == "" {
+			return fmt.Errorf("user is required if on_account is false")
+		}
+		builder.SetUser(user)
+	}
+
 	err := builder.SetParameter()
 	if err != nil {
 		return fmt.Errorf("error creating session parameter err = %w", err)
 	}
 
 	d.SetId(key)
-	p, err := snowflake.ShowAccountParameter(db, key)
-	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %w", err)
+
+	var p *snowflake.Parameter
+	if onAccount {
+		p, err = snowflake.ShowAccountParameter(db, key)
+	} else {
+		p, err = snowflake.ShowSessionParameter(db, key, user)
 	}
+
 	err = d.Set("value", p.Value.String)
 	if err != nil {
 		return fmt.Errorf("error setting session parameter err = %w", err)
@@ -81,9 +109,21 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Id()
-	p, err := snowflake.ShowAccountParameter(db, key)
-	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %w", err)
+
+	onAccount := d.Get("on_account").(bool)
+	var p *snowflake.Parameter
+	var err error
+	if onAccount {
+		p, err = snowflake.ShowAccountParameter(db, key)
+		if err != nil {
+			return fmt.Errorf("error reading session parameter err = %w", err)
+		}
+	} else {
+		user := d.Get("user").(string)
+		p, err = snowflake.ShowSessionParameter(db, key, user)
+		if err != nil {
+			return fmt.Errorf("error reading session parameter err = %w", err)
+		}
 	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
@@ -111,16 +151,18 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
 		value = fmt.Sprintf("'%s'", value)
 	}
-	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeSession, db)
+	builder := snowflake.NewSessionParameter(key, value, db)
+	onAccount := d.Get("on_account").(bool)
+	if onAccount {
+		builder.SetOnAccount(onAccount)
+	} else {
+		user := d.Get("user").(string)
+		builder.SetUser(user)
+	}
 	err := builder.SetParameter()
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %w", err)
+		return fmt.Errorf("error resetting session parameter err = %w", err)
 	}
-	_, err = snowflake.ShowAccountParameter(db, key)
-	if err != nil {
-		return fmt.Errorf("error reading a parameter err = %w", err)
-	}
-
 	d.SetId("")
 	return nil
 }
