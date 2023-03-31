@@ -40,7 +40,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name field must be unset in order to use on_future. Cannot be used together with on_all.",
 		Default:       false,
 		ForceNew:      true,
-		ConflictsWith: []string{"schema_name", "shares"},
+		ConflictsWith: []string{"stage_name"},
 	},
 	"on_all": {
 		Type:          schema.TypeBool,
@@ -48,7 +48,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 		Description:   "When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:       false,
 		ForceNew:      true,
-		ConflictsWith: []string{"schema_name", "shares"},
+		ConflictsWith: []string{"stage_name"},
 	},
 	"privilege": {
 		Type:         schema.TypeString,
@@ -148,11 +148,11 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		stageName = name.(string)
 	}
 
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
-	if (stageName == "") && !onFuture {
-		return errors.New("stage_name must be set unless on_future is true")
+	if (stageName == "") && !onFuture && !onAll {
+		return errors.New("stage_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder

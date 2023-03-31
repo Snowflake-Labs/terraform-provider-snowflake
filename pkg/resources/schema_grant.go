@@ -160,8 +160,8 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
