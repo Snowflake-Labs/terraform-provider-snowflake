@@ -97,7 +97,9 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		p, err = snowflake.ShowSessionParameter(db, key, user)
 	}
-
+	if err != nil {
+		return fmt.Errorf("error reading session parameter err = %w", err)
+	}
 	err = d.Set("value", p.Value.String)
 	if err != nil {
 		return fmt.Errorf("error setting session parameter err = %w", err)
