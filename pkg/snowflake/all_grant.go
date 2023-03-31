@@ -61,8 +61,8 @@ func (fgb *AllGrantBuilder) GrantType() string {
 	return string(fgb.allGrantType)
 }
 
-// ExistingSchemaGrant returns a pointer to a AllGrantBuilder for a schema.
-func ExistingSchemaGrant(db string) GrantBuilder {
+// AllSchemaGrant returns a pointer to a AllGrantBuilder for a schema.
+func AllSchemaGrant(db string) GrantBuilder {
 	return &AllGrantBuilder{
 		name:           db,
 		qualifiedName:  fmt.Sprintf(`"%v"`, db),
@@ -104,8 +104,8 @@ func ExistingMaterializedViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingStageGrant returns a pointer to a AllGrantBuilder for a stage.
-func ExistingStageGrant(db, schema string) GrantBuilder {
+// AllStageGrant returns a pointer to a AllGrantBuilder for a stage.
+func AllStageGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,

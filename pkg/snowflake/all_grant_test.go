@@ -9,7 +9,7 @@ import (
 
 func TestExistingSchemaGrant(t *testing.T) {
 	r := require.New(t)
-	builder := snowflake.ExistingSchemaGrant("test_db")
+	builder := snowflake.AllSchemaGrant("test_db")
 
 	r.Equal("test_db", builder.Name())
 
