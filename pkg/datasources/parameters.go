@@ -16,7 +16,7 @@ var parametersSchema = map[string]*schema.Schema{
 	"parameter_type": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Default:      "SESSION",
+		Default:      "ACCOUNT",
 		Description:  "The type of parameter to filter by. Valid values are: \"ACCOUNT\", \"SESSION\", \"OBJECT\".",
 		ValidateFunc: validation.StringInSlice([]string{"ACCOUNT", "SESSION", "OBJECT"}, true),
 	},
@@ -96,38 +96,9 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 	if ok {
 		pattern = p.(string)
 	}
-	parameterType := snowflake.ParameterType(strings.ToUpper(d.Get("parameter_type").(string)))
-	if parameterType == snowflake.ParameterTypeObject {
-		oType := d.Get("object_type").(string)
-		objectType := snowflake.ObjectType(oType)
-		objectName := d.Get("object_name").(string)
-		parameters, err := snowflake.ListObjectParameters(db, objectType, objectName, pattern)
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Printf("[DEBUG] parameters not found")
-			d.SetId("")
-			return nil
-		} else if err != nil {
-			log.Printf("[DEBUG] error occurred during read: %v", err.Error())
-			return err
-		}
-		d.SetId("parameters")
-		params := []map[string]interface{}{}
-		for _, param := range parameters {
-			paramMap := map[string]interface{}{}
-
-			paramMap["key"] = param.Key.String
-			paramMap["value"] = param.Value.String
-			paramMap["default"] = param.Default.String
-			paramMap["level"] = param.Level.String
-			paramMap["description"] = param.Description.String
-			paramMap["type"] = param.PType.String
-
-			params = append(params, paramMap)
-		}
-		return d.Set("parameters", params)
-	}
 	var parameters []snowflake.Parameter
 	var err error
+	parameterType := snowflake.ParameterType(strings.ToUpper(d.Get("parameter_type").(string)))
 	switch parameterType {
 	case snowflake.ParameterTypeAccount:
 		parameters, err = snowflake.ListAccountParameters(db, pattern)
@@ -136,7 +107,12 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		if user == "" {
 			return fmt.Errorf("user is required when parameter_type is set to SESSION")
 		}
-		parameters, err = snowflake.ListSessionParameters(db, user, pattern)
+		parameters, err = snowflake.ListSessionParameters(db, pattern, user)
+	case snowflake.ParameterTypeObject:
+		oType := d.Get("object_type").(string)
+		objectType := snowflake.ObjectType(oType)
+		objectName := d.Get("object_name").(string)
+		parameters, err = snowflake.ListObjectParameters(db, objectType, objectName, pattern)
 	}
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] parameters not found")
