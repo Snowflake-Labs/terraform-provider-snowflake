@@ -392,10 +392,6 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		runSetStatement = true
 		ub.SuspendAt(d.Get("suspend_trigger").(int))
 	}
-	if d.HasChange("suspend_triggers") {
-		runSetStatement = true
-		ub.SuspendAt(d.Get("suspend_triggers").(int))
-	}
 	// Support deprecated suspend_triggers.
 	if d.HasChange("suspend_triggers") {
 		runSetStatement = true
@@ -404,11 +400,11 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 			ub.SuspendAt(t)
 		}
 	}
+
 	if d.HasChange("suspend_immediate_trigger") {
 		runSetStatement = true
 		ub.SuspendImmediatelyAt(d.Get("suspend_immediate_trigger").(int))
 	}
-
 	// Support deprecated suspend_immediate_trigger.
 	if d.HasChange("suspend_immediate_triggers") {
 		runSetStatement = true
