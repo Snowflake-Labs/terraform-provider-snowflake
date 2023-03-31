@@ -65,7 +65,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -73,7 +73,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all all tables in the given schema. When this is true and no schema_name is provided apply this grant on all all tables in the given database. The table_name and shares fields must be unset in order to use on_all.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all tables in the given schema. When this is true and no schema_name is provided apply this grant on all tables in the given database. The table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -247,7 +247,7 @@ func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 // UpdateTableGrant implements schema.UpdateFunc.
 func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
