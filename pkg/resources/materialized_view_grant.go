@@ -46,7 +46,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future materialized view view.",
+		Description:  "The privilege to grant on the current or future materialized view.",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,

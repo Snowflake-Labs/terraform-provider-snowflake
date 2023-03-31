@@ -42,7 +42,7 @@ resource "snowflake_stage_grant" "grant" {
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name field must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the stage.
 - `schema_name` (String) The name of the schema containing the current stage on which to grant privileges.
-- `stage_name` (String) The name of the stage on which to grant privilege (only valid if on_future on on_all are false).
+- `stage_name` (String) The name of the stage on which to grant privilege (only valid if on_future and on_all are false).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only
