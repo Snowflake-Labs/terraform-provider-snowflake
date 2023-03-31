@@ -36,7 +36,8 @@ resource "snowflake_schema_grant" "grant" {
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `on_future` (Boolean) When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.
+- `on_all` (Boolean) When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.
+- `on_future` (Boolean) When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future schema. Note that if "OWNERSHIP" is specified, ensure that the role that terraform is using is granted access.
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema on which to grant privileges.
