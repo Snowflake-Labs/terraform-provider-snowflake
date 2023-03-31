@@ -93,8 +93,8 @@ func AllViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingMaterializedViewGrant returns a pointer to a AllGrantBuilder for a view.
-func ExistingMaterializedViewGrant(db, schema string) GrantBuilder {
+// AllMaterializedViewGrant returns a pointer to a AllGrantBuilder for a view.
+func AllMaterializedViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
