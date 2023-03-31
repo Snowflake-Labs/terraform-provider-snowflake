@@ -161,7 +161,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		return errors.New("materialized_view_name must be set unless on_future or on_all is true")
 	}
 	if (materializedViewName != "") && onFuture && onAll {
-		return errors.New("materialized_view_name must be empty if on_future or on_all is true")
+		return errors.New("materialized_view_name must be empty if on_future and on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder

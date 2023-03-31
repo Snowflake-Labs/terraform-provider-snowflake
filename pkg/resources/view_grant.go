@@ -146,28 +146,28 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
-	onViews := d.Get("on_all").(bool)
-	if onFuture && onViews {
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
 		return errors.New("on_future and on_all cannot both be true")
 	}
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
-	if (schemaName == "") && !onFuture && !onViews {
+	if (schemaName == "") && !onFuture && !onAll {
 		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
-	if (viewName == "") && !onFuture && !onViews {
+	if (viewName == "") && !onFuture && !onAll {
 		return errors.New("view_name must be set unless on_future or on_all is true")
 	}
-	if (viewName != "") && onFuture {
-		return errors.New("view_name must be empty if on_future or on_all is true")
+	if (viewName != "") && onFuture && onAll {
+		return errors.New("view_name must be empty if on_future and on_all are true")
 	}
 
 	var builder snowflake.GrantBuilder
 	switch {
 	case onFuture:
 		builder = snowflake.FutureViewGrant(databaseName, schemaName)
-	case onViews:
+	case onAll:
 		builder = snowflake.AllViewGrant(databaseName, schemaName)
 	default:
 		builder = snowflake.ViewGrant(databaseName, schemaName, viewName)

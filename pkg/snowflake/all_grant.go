@@ -255,6 +255,6 @@ func (fge *ExistingGrantExecutable) Revoke(p string) []string {
 
 // Show returns the SQL that will show all grants on the schema.
 func (fge *ExistingGrantExecutable) Show() string {
-	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, there changed to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which does not break
+	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, therefore changed the query to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which runs in snowflake.
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, fge.allGrantTarget, fge.grantName)
 }
