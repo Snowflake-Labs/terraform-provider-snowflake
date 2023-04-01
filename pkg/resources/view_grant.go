@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -198,11 +199,31 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	//futureViewsEnabled := false
-	//if grantID.ObjectName == "" {
-	//	futureViewsEnabled = true
-	//}
-	//err = d.Set("on_future", futureViewsEnabled)
+	onFuture := false
+	onAll := false
+	if grantID.ObjectName == "" {
+		db := meta.(*sql.DB)
+		var grantDetails []snowflake.GrantDetail
+		if grantID.SchemaName == "" {
+			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", grantID.DatabaseName)
+			if err != nil {
+				return err
+			}
+		} else {
+			schemaName := grantID.DatabaseName + "." + grantID.SchemaName
+			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
+			if err != nil {
+				return err
+			}
+		}
+		if len(grantDetails) > 0 {
+			onFuture = true
+		} else {
+			onAll = true
+		}
+	}
+	err = d.Set("on_all", onAll)
+	err = d.Set("on_future", onFuture)
 	if err := d.Set("view_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -213,8 +234,6 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := d.Get("on_future").(bool)
-	onAll := d.Get("on_all").(bool)
 	var builder snowflake.GrantBuilder
 	switch {
 	case onFuture:
