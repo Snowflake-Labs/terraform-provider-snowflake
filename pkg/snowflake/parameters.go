@@ -714,9 +714,9 @@ func (v *ParameterExecutor) Query(stmt string) ([]Parameter, error) {
 }
 
 func (v *ParameterExecutor) QueryOne(stmt string) (*Parameter, error) {
-	params, error := v.Query(stmt)
-	if error != nil {
-		return nil, error
+	params, err := v.Query(stmt)
+	if err != nil {
+		return nil, err
 	}
 	if len(params) == 0 {
 		return nil, nil
