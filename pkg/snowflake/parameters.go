@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -683,25 +682,66 @@ func GetParameterDefault(key string) ParameterDefault {
 	return ParameterDefaults()[key]
 }
 
+type ParameterExecutor struct {
+	db *sql.DB
+}
+
+func NewParameterExecutor(db *sql.DB) *ParameterExecutor {
+	return &ParameterExecutor{
+		db: db,
+	}
+}
+
+func (v *ParameterExecutor) Execute(stmt string, args ...interface{}) error {
+	_, err := v.db.Exec(stmt, args...)
+	return err
+}
+
+func (v *ParameterExecutor) Query(stmt string) ([]Parameter, error) {
+	rows, err := v.db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	params := []Parameter{}
+	if err := sqlx.StructScan(rows, &params); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+	}
+	return params, nil
+}
+
+func (v *ParameterExecutor) QueryOne(stmt string) (*Parameter, error) {
+	params, error := v.Query(stmt)
+	if error != nil {
+		return nil, error
+	}
+	if len(params) == 0 {
+		return nil, nil
+	}
+	return &params[0], nil
+}
+
 // AccountParameterBuilder abstracts the creation of SQL queries for Snowflake account parameters.
 type AccountParameterBuilder struct {
-	key   string
-	value string
-	db    *sql.DB
+	key      string
+	value    string
+	executor *ParameterExecutor
 }
 
 func NewAccountParameter(key, value string, db *sql.DB) *AccountParameterBuilder {
 	return &AccountParameterBuilder{
-		key:   key,
-		value: value,
-		db:    db,
+		key:      key,
+		value:    value,
+		executor: NewParameterExecutor(db),
 	}
 }
 
 func (v *AccountParameterBuilder) SetParameter() error {
 	stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
-	_, err := v.db.Exec(stmt)
-	return err
+	return v.executor.Execute(stmt)
 }
 
 // SessionParameterBuilder abstracts the creation of SQL queries for Snowflake session parameters.
@@ -710,14 +750,14 @@ type SessionParameterBuilder struct {
 	value     string
 	onAccount bool
 	user      string
-	db        *sql.DB
+	executor  *ParameterExecutor
 }
 
 func NewSessionParameter(key, value string, db *sql.DB) *SessionParameterBuilder {
 	return &SessionParameterBuilder{
-		key:   key,
-		value: value,
-		db:    db,
+		key:      key,
+		value:    value,
+		executor: NewParameterExecutor(db),
 	}
 }
 
@@ -733,17 +773,14 @@ func (v *SessionParameterBuilder) SetUser(user string) *SessionParameterBuilder 
 
 func (v *SessionParameterBuilder) SetParameter() error {
 	if v.onAccount {
-		// prepared statements do not work here for some reason. We already validate inputs so its okay
 		stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
-		_, err := v.db.Exec(stmt)
-		return err
+		return v.executor.Execute(stmt)
 	}
 	if v.user == "" {
 		return fmt.Errorf("user is required when setting session parameters on a user")
 	}
 	stmt := fmt.Sprintf("ALTER USER %s SET %s = %s", v.user, v.key, v.value)
-	_, err := v.db.Exec(stmt)
-	return err
+	return v.executor.Execute(stmt)
 }
 
 // ObjectParameterBuilder abstracts the creation of SQL queries for Snowflake object parameters.
@@ -753,14 +790,14 @@ type ObjectParameterBuilder struct {
 	onAccount        bool
 	objectType       ObjectType
 	objectIdentifier string
-	db               *sql.DB
+	executor         *ParameterExecutor
 }
 
 func NewObjectParameter(key, value string, db *sql.DB) *ObjectParameterBuilder {
 	return &ObjectParameterBuilder{
-		key:   key,
-		value: value,
-		db:    db,
+		key:      key,
+		value:    value,
+		executor: NewParameterExecutor(db),
 	}
 }
 
@@ -781,10 +818,8 @@ func (v *ObjectParameterBuilder) WithObjectIdentifier(objectIdentifier string) *
 
 func (v *ObjectParameterBuilder) SetParameter() error {
 	if v.onAccount {
-		// prepared statements do not work here for some reason. We already validate inputs so its okay
 		stmt := fmt.Sprintf("ALTER ACCOUNT SET %s = %s", v.key, v.value)
-		_, err := v.db.Exec(stmt)
-		return err
+		return v.executor.Execute(stmt)
 	}
 	if v.objectType == "" {
 		return fmt.Errorf("object type is required when setting object parameters")
@@ -794,8 +829,7 @@ func (v *ObjectParameterBuilder) SetParameter() error {
 	}
 
 	stmt := fmt.Sprintf("ALTER %s %s SET %s = %s", v.objectType, v.objectIdentifier, v.key, v.value)
-	_, err := v.db.Exec(stmt)
-	return err
+	return v.executor.Execute(stmt)
 }
 
 type Parameter struct {
@@ -809,20 +843,14 @@ type Parameter struct {
 
 func ShowAccountParameter(db *sql.DB, key string) (*Parameter, error) {
 	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN ACCOUNT", key)
-
-	rows, err := db.Query(stmt)
+	executor := NewParameterExecutor(db)
+	params, err := executor.Query(stmt)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	params := []Parameter{}
-	if err := sqlx.StructScan(rows, &params); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+	if len(params) == 0 {
+		return nil, nil
 	}
-
 	return &params[0], nil
 }
 
@@ -845,23 +873,9 @@ func ShowSessionParameter(db *sql.DB, key string, user string) (*Parameter, erro
 }
 
 func ShowObjectParameter(db *sql.DB, key string, objectType ObjectType, objectIdentifier string) (*Parameter, error) {
-	var value Parameter
 	stmt := fmt.Sprintf("SHOW PARAMETERS LIKE '%s' IN %s %s", key, objectType.String(), objectIdentifier)
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	params := []Parameter{}
-	if err := sqlx.StructScan(rows, &params); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	value = params[0]
-
-	return &value, nil
+	executor := NewParameterExecutor(db)
+	return executor.QueryOne(stmt)
 }
 
 func ListAccountParameters(db *sql.DB, pattern string) ([]Parameter, error) {
@@ -871,20 +885,8 @@ func ListAccountParameters(db *sql.DB, pattern string) ([]Parameter, error) {
 	} else {
 		stmt = "SHOW PARAMETERS IN ACCOUNT"
 	}
-	log.Printf("[DEBUG] query = %s", stmt)
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	params := []Parameter{}
-	if err := sqlx.StructScan(rows, &params); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return params, nil
+	executor := NewParameterExecutor(db)
+	return executor.Query(stmt)
 }
 
 func ListSessionParameters(db *sql.DB, pattern string, user string) ([]Parameter, error) {
@@ -894,20 +896,8 @@ func ListSessionParameters(db *sql.DB, pattern string, user string) ([]Parameter
 	} else {
 		stmt = fmt.Sprintf("SHOW PARAMETERS FOR USER %s", user)
 	}
-	log.Printf("[DEBUG] query = %s", stmt)
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	params := []Parameter{}
-	if err := sqlx.StructScan(rows, &params); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return params, nil
+	executor := NewParameterExecutor(db)
+	return executor.Query(stmt)
 }
 
 func ListObjectParameters(db *sql.DB, objectType ObjectType, objectIdentifier, pattern string) ([]Parameter, error) {
@@ -917,18 +907,6 @@ func ListObjectParameters(db *sql.DB, objectType ObjectType, objectIdentifier, p
 	} else {
 		stmt = fmt.Sprintf("SHOW PARAMETERS IN %s %s", objectType.String(), objectIdentifier)
 	}
-	log.Printf("[DEBUG] query = %s", stmt)
-	rows, err := db.Query(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	params := []Parameter{}
-	if err := sqlx.StructScan(rows, &params); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return params, nil
+	executor := NewParameterExecutor(db)
+	return executor.Query(stmt)
 }
