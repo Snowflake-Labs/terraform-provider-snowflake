@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"text/template"
@@ -210,4 +211,70 @@ resource "snowflake_view_grant" "test" {
 	r.NoError(err)
 
 	return out.String()
+}
+
+func TestAccViewGrantOnAll(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: viewGrantConfigOnAll(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "on_all", "true"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "privilege", "SELECT"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "roles.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.g", "roles.0", name),
+
+					testRolesAndShares(t, "snowflake_view_grant.g", []string{name}),
+				),
+			},
+		},
+	})
+}
+
+func viewGrantConfigOnAll(name string) string {
+	return fmt.Sprintf(`
+
+resource snowflake_database d {
+	name = "%s"
+}
+
+resource snowflake_schema s {
+	name = "%s"
+	database = snowflake_database.d.name
+}
+
+resource snowflake_role r {
+  name = "%s"
+}
+
+resource snowflake_table t {
+	database = snowflake_database.d.name
+	schema   = snowflake_schema.s.name
+	name     = "%s"
+
+	column {
+		name = "id"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource snowflake_view_grant g {
+	database_name = snowflake_database.d.name
+	schema_name = snowflake_schema.s.name
+
+	roles = [
+		snowflake_role.r.name
+	]
+	privilege = "SELECT"
+	on_all = true
+}
+
+`, name, name, name, name)
 }
