@@ -197,13 +197,19 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
-	if err = d.Set("view_name", grantID.ObjectName); err != nil {
+
+	//futureViewsEnabled := false
+	//if grantID.ObjectName == "" {
+	//	futureViewsEnabled = true
+	//}
+	//err = d.Set("on_future", futureViewsEnabled)
+	if err := d.Set("view_name", grantID.ObjectName); err != nil {
 		return err
 	}
-	if err = d.Set("privilege", grantID.Privilege); err != nil {
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err = d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
