@@ -373,3 +373,50 @@ func IsOldGrantID(id string) bool {
 	}
 	return false
 }
+
+// determines if the grant is a "normal" one, a non_future grant or an on_all one
+func getOnFutureOnAll(grantID *ViewGrantID, meta interface{}, objectType string) (bool, bool, error) {
+	onFuture := false
+	onAll := false
+	if grantID.ObjectName == "" {
+		db := meta.(*sql.DB)
+		// Check if future grants can be found
+		builder := snowflake.FutureViewGrant(grantID.DatabaseName, grantID.SchemaName)
+		grants, err := readGenericFutureGrants(db, builder)
+		if err != nil {
+			return false, false, err
+		}
+		//if grantID.SchemaName == "" {
+		//	grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", grantID.DatabaseName)
+		//	if err != nil {
+		//		return false, false, err
+		//	}
+		//} else {
+		//	schemaName := grantID.DatabaseName + "." + grantID.SchemaName
+		//	grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
+		//	if err != nil {
+		//		return false, false, err
+		//	}
+		//}
+
+		// Filter future grants which fit the grantID details
+		var filteredGrants []*grant
+		for _, grant := range grants {
+			if grant.Privilege == grantID.Privilege && grant.GrantType == objectType && grant.GrantOption == grantID.WithGrantOption {
+				for _, role := range grantID.Roles {
+					if role == grant.GranteeName {
+						filteredGrants = append(filteredGrants, grant)
+					}
+				}
+			}
+		}
+
+		// if the amount of found future grants equals the amount of grantee roles, then it is an on_future grant, otherwise it must be an on_all grant
+		if len(filteredGrants) == len(grantID.Roles) {
+			onFuture = true
+		} else {
+			onAll = true
+		}
+	}
+	return onFuture, onAll, nil
+}

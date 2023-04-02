@@ -191,6 +191,7 @@ func TestFutureViewGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE VIEWS IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureViewDatabaseGrant(mock)
+		expectReadFutureViewDatabaseGrant(mock)
 		err := resources.CreateViewGrant(d, db)
 		b.NoError(err)
 	})
