@@ -402,7 +402,8 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok, err := getFormatTypeOption(d, formatType, "null_if"); ok && err == nil {
-		builder.WithNullIf(expandStringListAllowEmpty(v.([]interface{})))
+		expanded := expandStringListAllowEmpty(v.([]interface{}))
+		builder.WithNullIf(snowflake.EscapeAllString(expanded))
 	} else if err != nil {
 		return err
 	}
@@ -955,7 +956,8 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("null_if") {
 		change := d.Get("null_if")
-		q := builder.ChangeNullIf(expandStringListAllowEmpty(change.([]interface{})))
+		expanded := expandStringListAllowEmpty(change.([]interface{}))
+		q := builder.ChangeNullIf(snowflake.EscapeAllString(expanded))
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating file format null_if on %v err = %w", d.Id(), err)
 		}

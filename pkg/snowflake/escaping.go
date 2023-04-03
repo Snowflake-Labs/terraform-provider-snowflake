@@ -14,6 +14,14 @@ func EscapeString(in string) string {
 	return out
 }
 
+func EscapeAllString(in []string) []string {
+	out := make([]string, 0, len(in))
+	for _, v := range in {
+		out = append(out, EscapeString(v))
+	}
+	return out
+}
+
 // UnescapeString reverses EscapeString.
 func UnescapeString(in string) string {
 	out := strings.ReplaceAll(in, `\\`, `\`)
