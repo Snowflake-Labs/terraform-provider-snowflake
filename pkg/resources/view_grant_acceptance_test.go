@@ -12,14 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type GrantType int
-
-const (
-	Normal GrantType = iota
-	OnFuture
-	OnAll
-)
-
 func TestAcc_ViewGrantBasic(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -28,7 +20,7 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, Normal),
+				Config: viewGrantConfig(name, normal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
@@ -76,7 +68,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, Normal),
+				Config: viewGrantConfig(name, normal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "false"),
@@ -85,7 +77,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 			},
 			// CHANGE FROM CURRENT TO FUTURE VIEWS
 			{
-				Config: viewGrantConfig(name, OnFuture),
+				Config: viewGrantConfig(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", ""),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
@@ -172,14 +164,14 @@ resource "snowflake_view_grant" "test" {
 	return out.String()
 }
 
-func viewGrantConfig(name string, grantType GrantType) string {
+func viewGrantConfig(name string, grantType grantType) string {
 	var viewNameConfig string
 	switch grantType {
-	case Normal:
+	case normal:
 		viewNameConfig = "view_name = snowflake_view.test.name"
-	case OnFuture:
+	case onFuture:
 		viewNameConfig = "on_future = true"
-	case OnAll:
+	case onAll:
 		viewNameConfig = "on_all = true"
 	}
 
@@ -215,7 +207,7 @@ resource "snowflake_view_grant" "test" {
 `, name, name, name, name, viewNameConfig)
 }
 
-func TestAccViewGrant_OnAll(t *testing.T) {
+func TestAcc_ViewGrantOnAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -223,7 +215,7 @@ func TestAccViewGrant_OnAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, OnAll),
+				Config: viewGrantConfig(name, onAll),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "schema_name", name),

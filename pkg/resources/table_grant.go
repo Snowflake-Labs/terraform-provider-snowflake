@@ -209,8 +209,14 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := d.Get("on_future").(bool)
-	onAll := d.Get("on_all").(bool)
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && onAll == false {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
 	switch {
 	case onFuture:
