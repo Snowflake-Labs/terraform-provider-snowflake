@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.61.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.0...v0.61.0) (2023-04-03)
+
+
+### Features
+
+* Add COPY GRANTS arg to views resources. ([#1668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1668)) ([7225d93](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7225d93ef3e50c6810c0dd57cfd7079e882d443f))
+* add on_account to session and object params ([#1685](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1685)) ([1329430](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/13294304c7626c9d428682986669d2e97ab2c23b))
+* mark PII as sensitive in account and user resources. ([#1678](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1678)) ([caa461f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/caa461fea56df4f33f73e586b537802c01f1eb5d))
+* support is_org_admin column in SHOW ORGANIZATION ACCOUNTS ([#1673](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1673)) ([263c521](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/263c5215dedf70195c0c2c7d8e1505e4b9c0828c))
+
 ## [0.34.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.0...v0.34.0) (2023-03-28)
 
 
