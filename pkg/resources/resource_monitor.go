@@ -275,7 +275,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if _, ok := d.GetOk("suspend_triggers"); ok {
-		if err := d.Set("suspend__triggers", sTrig); err != nil {
+		if err := d.Set("suspend_triggers", sTrig); err != nil {
 			return err
 		}
 		setSuspendTrigger = true
