@@ -197,8 +197,10 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.TaskGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, taskGrantSchema, builder, onFuture, validTaskPrivileges)
+	return readGenericGrant(d, meta, taskGrantSchema, builder, onFuture, onAll, validTaskPrivileges)
 }
 
 // DeleteTaskGrant implements schema.DeleteFunc.
@@ -295,13 +297,21 @@ func (v *TaskGrantID) String() string {
 func ParseTaskGrantID(s string) (*TaskGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &TaskGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

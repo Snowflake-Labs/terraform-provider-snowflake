@@ -58,16 +58,20 @@ EOT
 - `name` (String) Specifies the identifier for the procedure; does not have to be unique for the schema in which the procedure is created. Don't use the | character.
 - `return_type` (String) The return type of the procedure
 - `schema` (String) The schema in which to create the procedure. Don't use the | character.
-- `statement` (String) Specifies the javascript code used to create the procedure.
+- `statement` (String) Specifies the code used to create the procedure.
 
 ### Optional
 
 - `arguments` (Block List) List of the arguments for the procedure (see [below for nested schema](#nestedblock--arguments))
 - `comment` (String) Specifies a comment for the procedure.
 - `execute_as` (String) Sets execute context - see caller's rights and owner's rights
+- `handler` (String) The handler method for Java / Python procedures.
+- `imports` (List of String) Imports for Java / Python procedures. For Java this a list of jar files, for Python this is a list of Python files.
 - `language` (String) Specifies the language of the stored procedure code.
 - `null_input_behavior` (String) Specifies the behavior of the procedure when called with null inputs.
+- `packages` (List of String) List of package imports to use for Java / Python procedures. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').
 - `return_behavior` (String) Specifies the behavior of the function when returning results
+- `runtime_version` (String) Required for Python procedures. Specifies Python runtime version.
 
 ### Read-Only
 

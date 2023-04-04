@@ -200,3 +200,16 @@ func TestParseStageGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseStageGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseStageGrantID("test-db|PUBLIC|test-stage|USAGE|false")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("PUBLIC", grantID.SchemaName)
+	r.Equal("test-stage", grantID.ObjectName)
+	r.Equal("USAGE", grantID.Privilege)
+	r.Equal(false, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

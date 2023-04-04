@@ -122,3 +122,16 @@ func TestParseRowAccessPolicyGrantOldID(t *testing.T) {
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
 }
+
+func TestParseRowAccessPolicyGrantReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRowAccessPolicyGrantID("test-db|test-schema|test-policy|APPLY|true")
+	r.NoError(err)
+	r.Equal("test-db", grantID.DatabaseName)
+	r.Equal("test-schema", grantID.SchemaName)
+	r.Equal("test-policy", grantID.ObjectName)
+	r.Equal("APPLY", grantID.Privilege)
+	r.Equal(true, grantID.WithGrantOption)
+	r.Equal(0, len(grantID.Roles))
+}

@@ -111,9 +111,6 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -132,7 +129,7 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
-	return readGenericGrant(d, meta, maskingPolicyGrantSchema, builder, false, validMaskingPoilcyPrivileges)
+	return readGenericGrant(d, meta, maskingPolicyGrantSchema, builder, false, false, validMaskingPoilcyPrivileges)
 }
 
 // DeleteMaskingPolicyGrant implements schema.DeleteFunc.
@@ -217,13 +214,21 @@ func (v *MaskingPolicyGrantID) String() string {
 func ParseMaskingPolicyGrantID(s string) (*MaskingPolicyGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &MaskingPolicyGrantID{
 			DatabaseName:    idParts[0],
 			SchemaName:      idParts[1],
 			ObjectName:      idParts[2],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

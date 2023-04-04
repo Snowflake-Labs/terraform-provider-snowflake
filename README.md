@@ -23,7 +23,7 @@ terraform {
   required_providers {
     snowflake = {
       source  = "Snowflake-Labs/snowflake"
-      version = "~> 0.56.0"
+      version = "~> 0.60"
     }
   }
 }
@@ -94,7 +94,7 @@ The following environment variables need to be set for acceptance tests to run:
 * `SNOWFLAKE_PASSWORD` - Password for that user.
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
 * `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
-* `TEST_ACC` - to enable acc tests.
+* `TF_ACC` - to enable acc tests.
 
 e.g.
 
@@ -104,7 +104,7 @@ export SNOWFLAKE_USER=TEST_USER
 export SNOWFLAKE_PASSWORD=hunter2
 export SNOWFLAKE_ROLE=ACCOUNTADMIN
 export SNOWFLAKE_REGION=us-west-2
-export TEST_ACC=true
+export TF_ACC=true
 ```
 
 **Note: PRs for new resources will not be accepted without passing acceptance tests.**

@@ -74,6 +74,19 @@ func TestFunctionCreate(t *testing.T) {
 	r.Equal(expected, createStmnt)
 }
 
+func TestFunctionCreateWithSecure(t *testing.T) {
+	r := require.New(t)
+	s := getJavaScriptFuction(true)
+	s.WithSecure()
+
+	r.Equal([]string{"VARCHAR", "DATE"}, s.ArgTypes())
+	createStmnt, _ := s.Create()
+	expected := `CREATE OR REPLACE SECURE FUNCTION "test_db"."test_schema"."test_func"` +
+		`(user VARCHAR, eventdt DATE) RETURNS VARCHAR AS $$` +
+		`var message = "Hi"` + "\nreturn message$$"
+	r.Equal(expected, createStmnt)
+}
+
 func TestFunctionCreateWithJavaScriptFunction(t *testing.T) {
 	r := require.New(t)
 	s := getJavaScriptFuction(true)
@@ -240,6 +253,24 @@ func TestFunctionRename(t *testing.T) {
 
 	stmnt, _ := s.Rename("new_func")
 	expected := `ALTER FUNCTION "test_db"."test_schema"."test_func"() RENAME TO "test_db"."test_schema"."new_func"`
+	r.Equal(expected, stmnt)
+}
+
+func TestFunctionSecure(t *testing.T) {
+	r := require.New(t)
+	s := getJavaScriptFuction(true)
+
+	stmnt, _ := s.Secure()
+	expected := `ALTER FUNCTION "test_db"."test_schema"."test_func"(VARCHAR, DATE) SET SECURE`
+	r.Equal(expected, stmnt)
+}
+
+func TestFunctionUnsecure(t *testing.T) {
+	r := require.New(t)
+	s := getJavaScriptFuction(true)
+
+	stmnt, _ := s.Unsecure()
+	expected := `ALTER FUNCTION "test_db"."test_schema"."test_func"(VARCHAR, DATE) UNSET SECURE`
 	r.Equal(expected, stmnt)
 }
 

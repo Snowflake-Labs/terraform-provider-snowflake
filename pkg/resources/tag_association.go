@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -122,15 +122,15 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	if !skipValidate {
 		log.Println("[DEBUG] validating tag creation")
 
-		if err := resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		if err := retry.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
 			resp, err := snowflake.ListTagAssociations(builder, db)
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error: %w", err))
+				return retry.NonRetryableError(fmt.Errorf("error: %w", err))
 			}
 
 			// if length of response is zero, tag association was not found. retry for up to 70 minutes
 			if len(resp) == 0 {
-				return resource.RetryableError(fmt.Errorf("expected tag association to be created but not yet created"))
+				return retry.RetryableError(fmt.Errorf("expected tag association to be created but not yet created"))
 			}
 			return nil
 		}); err != nil {

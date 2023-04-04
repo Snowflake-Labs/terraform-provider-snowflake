@@ -144,10 +144,18 @@ func (v *AccountGrantID) String() string {
 func ParseAccountGrantID(s string) (*AccountGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &AccountGrantID{
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}
@@ -193,14 +201,11 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
-	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
+	return readGenericGrant(d, meta, accountGrantSchema, builder, false, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc.

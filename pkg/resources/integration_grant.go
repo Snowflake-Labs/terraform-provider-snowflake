@@ -94,9 +94,6 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("integration_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -109,7 +106,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
+	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc.
@@ -191,11 +188,19 @@ func (v *IntegrationGrantID) String() string {
 func ParseIntegrationGrantID(s string) (*IntegrationGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &IntegrationGrantID{
 			ObjectName:      idParts[0],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

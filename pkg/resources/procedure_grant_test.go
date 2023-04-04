@@ -112,3 +112,19 @@ func TestParseProcedureGrantOldIDWithArgsAndNames(t *testing.T) {
 	r.Equal(0, len(grantID.Shares))
 	r.Equal(false, grantID.WithGrantOption)
 }
+
+func TestParseProcedureGrantReallyOldIDWithArgsAndNames(t *testing.T) {
+	r := require.New(t)
+	grantID, err := resources.ParseFunctionGrantID("MY_DATABASE|MY_SCHEMA|MY_PROCEDURE(A string, B string)|privilege_name|false")
+	r.NoError(err)
+	r.Equal("MY_DATABASE", grantID.DatabaseName)
+	r.Equal("MY_SCHEMA", grantID.SchemaName)
+	r.Equal("MY_PROCEDURE", grantID.ObjectName)
+	r.Equal(2, len(grantID.ArgumentDataTypes))
+	r.Equal("string", grantID.ArgumentDataTypes[0])
+	r.Equal("string", grantID.ArgumentDataTypes[1])
+	r.Equal("privilege_name", grantID.Privilege)
+	r.Equal(0, len(grantID.Roles))
+	r.Equal(0, len(grantID.Shares))
+	r.Equal(false, grantID.WithGrantOption)
+}

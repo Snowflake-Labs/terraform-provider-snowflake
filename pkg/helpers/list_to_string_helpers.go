@@ -36,7 +36,7 @@ func ListContentToString(listString string) string {
 func SplitStringToSlice(s, sep string) []string {
 	var v []string
 	for _, elem := range strings.Split(s, sep) {
-		if elem != "" {
+		if strings.TrimSpace(elem) != "" {
 			v = append(v, strings.TrimSpace(elem))
 		}
 	}

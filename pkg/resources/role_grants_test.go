@@ -68,7 +68,7 @@ func TestRoleGrantsRead(t *testing.T) {
 		err := resources.ReadRoleGrants(d, db)
 		r.NotEmpty(d.State())
 		r.NoError(err)
-		r.Len(d.Get("users").(*schema.Set).List(), 0)
+		r.Len(d.Get("users").(*schema.Set).List(), 2)
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
@@ -123,7 +123,7 @@ func TestIgnoreUnknownRoleGrants(t *testing.T) {
 		expectReadUnhandledRoleGrants(mock)
 		err := resources.ReadRoleGrants(d, db)
 		r.NoError(err)
-		r.Len(d.Get("users").(*schema.Set).List(), 0)
+		r.Len(d.Get("users").(*schema.Set).List(), 2)
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)
 	})
 }
@@ -165,4 +165,13 @@ func TestParseRoleGrantsOldID(t *testing.T) {
 	r.Equal(2, len(grantID.Roles))
 	r.Equal("role1", grantID.Roles[0])
 	r.Equal("role2", grantID.Roles[1])
+}
+
+func TestParseRoleGrantsReallyOldID(t *testing.T) {
+	r := require.New(t)
+
+	grantID, err := resources.ParseRoleGrantsID("test-role")
+	r.NoError(err)
+	r.Equal("test-role", grantID.ObjectName)
+	r.Equal(0, len(grantID.Roles))
 }

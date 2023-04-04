@@ -116,7 +116,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.WarehouseGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, validWarehousePrivileges)
+	return readGenericGrant(d, meta, warehouseGrantSchema, builder, false, false, validWarehousePrivileges)
 }
 
 // DeleteWarehouseGrant implements schema.DeleteFunc.
@@ -202,8 +202,8 @@ func (v *WarehouseGrantID) String() string {
 func ParseWarehouseGrantID(s string) (*WarehouseGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
-		withGrantOption := false
-		roles := []string{}
+		var roles []string
+		var withGrantOption bool
 		if len(idParts) == 6 {
 			withGrantOption = idParts[5] == "true"
 			roles = helpers.SplitStringToSlice(idParts[4], ",")

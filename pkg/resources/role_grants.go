@@ -113,14 +113,13 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
 	builder := snowflake.NewRoleBuilder(db, grantID.ObjectName)
 	_, err = builder.Show()
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] role (%s) not found", grantID.ObjectName)
 		d.SetId("")
 		return nil
@@ -134,13 +133,13 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	for _, grant := range grants {
 		switch grant.GrantedTo.String {
 		case "ROLE":
-			for _, tfRole := range grantID.Roles {
+			for _, tfRole := range d.Get("roles").(*schema.Set).List() {
 				if tfRole == grant.GranteeName.String {
 					roles = append(roles, grant.GranteeName.String)
 				}
 			}
 		case "USER":
-			for _, tfUser := range grantID.Users {
+			for _, tfUser := range d.Get("users").(*schema.Set).List() {
 				if tfUser == grant.GranteeName.String {
 					users = append(users, grant.GranteeName.String)
 				}
@@ -328,11 +327,15 @@ func (v *RoleGrantsID) String() string {
 }
 
 func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	if IsOldGrantID(s) {
+	if IsOldGrantID(s) || (len(strings.Split(s, "|")) == 1 && !strings.Contains(s, "❄️")) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		if len(idParts) == 6 {
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		}
 		return &RoleGrantsID{
 			ObjectName: idParts[0],
-			Roles:      helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:      roles,
 			Users:      []string{},
 			IsOldID:    true,
 		}, nil

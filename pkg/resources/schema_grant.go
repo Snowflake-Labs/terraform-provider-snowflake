@@ -263,7 +263,10 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
 	}
-	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
+	// TODO
+	onAll := false
+
+	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, onAll, validSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
@@ -318,8 +321,8 @@ func (v *SchemaGrantID) String() string {
 func ParseSchemaGrantID(s string) (*SchemaGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
-		withGrantOption := false
-		roles := []string{}
+		var roles []string
+		var withGrantOption bool
 		if len(idParts) == 6 {
 			withGrantOption = idParts[5] == "true"
 			roles = helpers.SplitStringToSlice(idParts[4], ",")

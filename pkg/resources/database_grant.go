@@ -133,15 +133,19 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
+	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
+	// that it is still there. However, it is needed to grant usage for the snowflake database to custom roles.
+	// Just exit for now
+	if grantID.Privilege == "IMPORTED PRIVILEGES" {
+		return nil
+	}
+
 	builder := snowflake.DatabaseGrant(grantID.DatabaseName)
-	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, validDatabasePrivileges)
+	return readGenericGrant(d, meta, databaseGrantSchema, builder, false, false, validDatabasePrivileges)
 }
 
 // DeleteDatabaseGrant implements schema.DeleteFunc.
@@ -233,12 +237,20 @@ func (v *DatabaseGrantID) String() string {
 func ParseDatabaseGrantID(s string) (*DatabaseGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &DatabaseGrantID{
 			DatabaseName:    idParts[0],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:           roles,
 			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

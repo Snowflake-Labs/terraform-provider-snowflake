@@ -261,8 +261,10 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.ProcedureGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, validProcedurePrivileges)
+	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, onAll, validProcedurePrivileges)
 }
 
 // DeleteProcedureGrant implements schema.DeleteFunc.
@@ -386,15 +388,23 @@ func ParseProcedureGrantID(s string) (*ProcedureGrantID, error) {
 				}
 			}
 		}
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &ProcedureGrantID{
 			DatabaseName:      idParts[0],
 			SchemaName:        idParts[1],
 			ObjectName:        objectNameParts[0],
 			ArgumentDataTypes: argumentDataTypes,
 			Privilege:         idParts[3],
-			Roles:             helpers.SplitStringToSlice(idParts[4], ","),
+			Roles:             roles,
 			Shares:            []string{},
-			WithGrantOption:   idParts[5] == "true",
+			WithGrantOption:   withGrantOption,
 			IsOldID:           true,
 		}, nil
 	}

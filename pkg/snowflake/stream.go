@@ -18,6 +18,7 @@ type StreamBuilder struct {
 	externalTable   bool
 	onTable         string
 	onView          string
+	onStage         string
 	appendOnly      bool
 	insertOnly      bool
 	showInitialRows bool
@@ -65,6 +66,11 @@ func (sb *StreamBuilder) WithOnView(d string, s string, t string) *StreamBuilder
 	return sb
 }
 
+func (sb *StreamBuilder) WithOnStage(d string, s string, t string) *StreamBuilder {
+	sb.onStage = fmt.Sprintf(`"%v"."%v"."%v"`, d, s, t)
+	return sb
+}
+
 func (sb *StreamBuilder) WithAppendOnly(b bool) *StreamBuilder {
 	sb.appendOnly = b
 	return sb
@@ -104,25 +110,29 @@ func (sb *StreamBuilder) Create() string {
 
 	q.WriteString(` ON`)
 
-	if sb.onTable != "" {
+	switch {
+	case sb.onTable != "":
 		if sb.externalTable {
 			q.WriteString(` EXTERNAL`)
 		}
-
 		q.WriteString(fmt.Sprintf(` TABLE %v`, sb.onTable))
-	} else if sb.onView != "" {
+	case sb.onView != "":
 		q.WriteString(fmt.Sprintf(` VIEW %v`, sb.onView))
+	case sb.onStage != "":
+		q.WriteString(fmt.Sprintf(` STAGE %v`, sb.onStage))
 	}
 
 	if sb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(sb.comment)))
 	}
 
-	q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
+	if sb.onStage == "" {
+		q.WriteString(fmt.Sprintf(` APPEND_ONLY = %v`, sb.appendOnly))
 
-	q.WriteString(fmt.Sprintf(` INSERT_ONLY = %v`, sb.insertOnly))
+		q.WriteString(fmt.Sprintf(` INSERT_ONLY = %v`, sb.insertOnly))
 
-	q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
+		q.WriteString(fmt.Sprintf(` SHOW_INITIAL_ROWS = %v`, sb.showInitialRows))
+	}
 
 	return q.String()
 }
@@ -160,6 +170,7 @@ type DescStreamRow struct {
 	Type            sql.NullString `db:"type"`
 	Stale           sql.NullString `db:"stale"`
 	Mode            sql.NullString `db:"mode"`
+	SourceType      sql.NullString `db:"source_type"`
 }
 
 func ScanStream(row *sqlx.Row) (*DescStreamRow, error) {

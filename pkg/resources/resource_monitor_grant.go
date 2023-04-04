@@ -93,9 +93,6 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("monitor_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -107,7 +104,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.ResourceMonitorGrant(grantID.ObjectName)
-	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
+	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, false, validResourceMonitorPrivileges)
 }
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc.
@@ -188,11 +185,19 @@ func (v *ResourceMonitorGrantID) String() string {
 func ParseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
 	if IsOldGrantID(s) {
 		idParts := strings.Split(s, "|")
+		var roles []string
+		var withGrantOption bool
+		if len(idParts) == 6 {
+			withGrantOption = idParts[5] == "true"
+			roles = helpers.SplitStringToSlice(idParts[4], ",")
+		} else {
+			withGrantOption = idParts[4] == "true"
+		}
 		return &ResourceMonitorGrantID{
 			ObjectName:      idParts[0],
 			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
+			Roles:           roles,
+			WithGrantOption: withGrantOption,
 			IsOldID:         true,
 		}, nil
 	}

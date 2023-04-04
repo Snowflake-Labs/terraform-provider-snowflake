@@ -177,6 +177,7 @@ type Account struct {
 	MarketplaceConsumerBillingEntityName sql.NullString `db:"marketplace_consumer_billing_entity_name"`
 	MarketplaceProviderBillingEntityName sql.NullString `db:"marketplace_provider_billing_entity_name"`
 	OldAccountURL                        sql.NullString `db:"old_account_url"`
+	IsOrgAdmin                           sql.NullBool   `db:"is_org_admin"`
 }
 
 // Show returns the SQL query that will show a specific account by pattern.

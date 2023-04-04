@@ -16,10 +16,11 @@ func TestAcc_ObjectParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterBasic(prefix, "ENABLE_STREAM_TASK_REPLICATION", "true"),
+				Config: objectParameterConfigBasic(prefix, "ENABLE_STREAM_TASK_REPLICATION", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_STREAM_TASK_REPLICATION"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "false"),
 				),
 			},
 		},
@@ -27,23 +28,34 @@ func TestAcc_ObjectParameter(t *testing.T) {
 }
 
 func TestAcc_ObjectParameterAccount(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterAccount(prefix, "ENABLE_STREAM_TASK_REPLICATION", "true"),
+				Config: objectParameterConfigOnAccount("DATA_RETENTION_TIME_IN_DAYS", "0"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_STREAM_TASK_REPLICATION"),
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "DATA_RETENTION_TIME_IN_DAYS"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "0"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "true"),
 				),
 			},
 		},
 	})
 }
 
-func objectParameterBasic(prefix, key, value string) string {
+func objectParameterConfigOnAccount(key, value string) string {
+	s := `
+resource "snowflake_object_parameter" "p" {
+	key = "%s"
+	value = "%s"
+	on_account = true
+}
+`
+	return fmt.Sprintf(s, key, value)
+}
+
+func objectParameterConfigBasic(prefix, key, value string) string {
 	s := `
 resource "snowflake_database" "d" {
 	name = "%s"
@@ -55,19 +67,6 @@ resource "snowflake_object_parameter" "p" {
 	object_identifier {
 		name = snowflake_database.d.name
 	}
-}
-`
-	return fmt.Sprintf(s, prefix, key, value)
-}
-
-func objectParameterAccount(prefix, key, value string) string {
-	s := `
-resource "snowflake_database" "d" {
-	name = "%s"
-}	
-resource "snowflake_object_parameter" "p" {
-	key = "%s"
-	value = "%s"
 }
 `
 	return fmt.Sprintf(s, prefix, key, value)

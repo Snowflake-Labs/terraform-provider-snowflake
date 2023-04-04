@@ -47,14 +47,25 @@ var streamSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ForceNew:     true,
 		Description:  "Name of the table the stream will monitor.",
-		ExactlyOneOf: []string{"on_table", "on_view"},
+		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
 	},
 	"on_view": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		ForceNew:     true,
 		Description:  "Name of the view the stream will monitor.",
-		ExactlyOneOf: []string{"on_table", "on_view"},
+		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
+	},
+	"on_stage": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  "Name of the stage the stream will monitor.",
+		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			// Suppress diff if the stage name is the same, even if database and schema are not specified
+			return strings.Trim(strings.Split(old, ".")[len(strings.Split(old, "."))-1], "\"") == strings.Trim(strings.Split(new, ".")[len(strings.Split(new, "."))-1], "\"")
+		},
 	},
 	"append_only": {
 		Type:        schema.TypeBool,
@@ -189,10 +200,10 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	onTable, onTableSet := d.GetOk("on_table")
 	onView, onViewSet := d.GetOk("on_view")
+	onStage, onStageSet := d.GetOk("on_stage")
 
-	if (onTableSet && onViewSet) || !(onTableSet || onViewSet) { //nolint:gocritic // todo: please fix this to pass gocritic
-		return fmt.Errorf("exactly one of 'on_table' or 'on_view' expected")
-	} else if onTableSet {
+	switch {
+	case onTableSet:
 		id, err := streamOnObjectIDFromString(onTable.(string))
 		if err != nil {
 			return err
@@ -208,7 +219,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 		builder.WithExternalTable(t.IsExternal.String == "Y")
 		builder.WithOnTable(t.DatabaseName.String, t.SchemaName.String, t.TableName.String)
-	} else if onViewSet {
+	case onViewSet:
 		id, err := streamOnObjectIDFromString(onView.(string))
 		if err != nil {
 			return err
@@ -223,6 +234,22 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		builder.WithOnView(t.DatabaseName.String, t.SchemaName.String, t.Name.String)
+	case onStageSet:
+		id, err := streamOnObjectIDFromString(onStage.(string))
+		if err != nil {
+			return err
+		}
+		stageBuilder := snowflake.NewStageBuilder(id.Name, id.DatabaseName, id.SchemaName)
+		sq := stageBuilder.Describe()
+		d, err := snowflake.DescStage(db, sq)
+		if err != nil {
+			return err
+		}
+		if !strings.Contains(d.Directory, "ENABLE = true") {
+			return fmt.Errorf("directory must be enabled on stage")
+		}
+
+		builder.WithOnStage(id.DatabaseName, id.SchemaName, id.Name)
 	}
 
 	builder.WithAppendOnly(appendOnly)
@@ -269,7 +296,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, stmt)
 	stream, err := snowflake.ScanStream(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -290,8 +317,14 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("on_table", stream.TableName.String); err != nil {
-		return err
+	if stream.SourceType.String == "Stage" {
+		if err := d.Set("on_stage", stream.TableName.String); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("on_table", stream.TableName.String); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("on_view", stream.ViewName.String); err != nil {
