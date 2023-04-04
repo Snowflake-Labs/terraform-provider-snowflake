@@ -157,7 +157,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.TagGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
-	return readGenericGrant(d, meta, tagGrantSchema, builder, false, validTagPrivileges)
+	return readGenericGrant(d, meta, tagGrantSchema, builder, false, false, validTagPrivileges)
 }
 
 // UpdateTagGrant implements schema.UpdateFunc.

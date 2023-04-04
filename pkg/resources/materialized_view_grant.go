@@ -86,7 +86,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	},
 }
 
-// ViewGrant returns a pointer to the resource representing a view grant.
+// MaterializedViewGrant returns a pointer to the resource representing a view grant.
 func MaterializedViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
@@ -131,7 +131,7 @@ func MaterializedViewGrant() *TerraformGrantResource {
 	}
 }
 
-// CreateViewGrant implements schema.CreateFunc.
+// CreateMaterializedViewGrant implements schema.CreateFunc.
 func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	var materializedViewName string
 	if name, ok := d.GetOk("materialized_view_name"); ok {
@@ -173,16 +173,12 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	return ReadMaterializedViewGrant(d, meta)
 }
 
-// ReadViewGrant implements schema.ReadFunc.
+// ReadMaterializedViewGrant implements schema.ReadFunc.
 func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -212,11 +208,13 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, validMaterializedViewPrivileges)
+	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, onAll, validMaterializedViewPrivileges)
 }
 
-// DeleteViewGrant implements schema.DeleteFunc.
+// DeleteMaterializedViewGrant implements schema.DeleteFunc.
 func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	grantID, err := ParseMaterializedViewGrantID(d.Id())
 	if err != nil {

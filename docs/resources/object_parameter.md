@@ -64,8 +64,9 @@ resource "snowflake_object_parameter" "o3" {
 
 // Setting object parameter at account level
 resource "snowflake_object_parameter" "o4" {
-  key   = "DATA_RETENTION_TIME_IN_DAYS"
-  value = "89"
+  key        = "DATA_RETENTION_TIME_IN_DAYS"
+  value      = "89"
+  on_account = true
 }
 ```
 
@@ -81,6 +82,7 @@ resource "snowflake_object_parameter" "o4" {
 
 - `object_identifier` (Block List) Specifies the object identifier for the object parameter. If no value is provided, then the resource will default to setting the object parameter at account level. (see [below for nested schema](#nestedblock--object_identifier))
 - `object_type` (String) Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types). If no value is provided, then the resource will default to setting the object parameter at account level.
+- `on_account` (Boolean) If true, the object parameter will be set on the account level.
 
 ### Read-Only
 

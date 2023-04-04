@@ -38,7 +38,7 @@ type FutureGrantBuilder struct {
 	futureGrantTarget futureGrantTarget
 }
 
-func getNameAndQualifiedName(db, schema string) (string, string, futureGrantTarget) {
+func getNameAndQualifiedNameForFutureGrants(db, schema string) (string, string, futureGrantTarget) {
 	name := schema
 	futureTarget := futureSchemaTarget
 	qualifiedName := fmt.Sprintf(`"%v"."%v"`, db, schema)
@@ -73,7 +73,7 @@ func FutureSchemaGrant(db string) GrantBuilder {
 
 // FutureTableGrant returns a pointer to a FutureGrantBuilder for a table.
 func FutureTableGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -84,7 +84,7 @@ func FutureTableGrant(db, schema string) GrantBuilder {
 
 // FutureViewGrant returns a pointer to a FutureGrantBuilder for a view.
 func FutureViewGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -95,7 +95,7 @@ func FutureViewGrant(db, schema string) GrantBuilder {
 
 // FutureMaterializedViewGrant returns a pointer to a FutureGrantBuilder for a view.
 func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -106,7 +106,7 @@ func FutureMaterializedViewGrant(db, schema string) GrantBuilder {
 
 // FutureStageGrant returns a pointer to a FutureGrantBuilder for a stage.
 func FutureStageGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -117,7 +117,7 @@ func FutureStageGrant(db, schema string) GrantBuilder {
 
 // FutureExternalTableGrant returns a pointer to a FutureGrantBuilder for a external table.
 func FutureExternalTableGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -128,7 +128,7 @@ func FutureExternalTableGrant(db, schema string) GrantBuilder {
 
 // FutureFileFormatGrant returns a pointer to a FutureGrantBuilder for a file format.
 func FutureFileFormatGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -139,7 +139,7 @@ func FutureFileFormatGrant(db, schema string) GrantBuilder {
 
 // FutureFunctionGrant returns a pointer to a FutureGrantBuilder for a function.
 func FutureFunctionGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -150,7 +150,7 @@ func FutureFunctionGrant(db, schema string) GrantBuilder {
 
 // FutureProcedureGrant returns a pointer to a FutureGrantBuilder for a procedure.
 func FutureProcedureGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -161,7 +161,7 @@ func FutureProcedureGrant(db, schema string) GrantBuilder {
 
 // FutureSequenceGrant returns a pointer to a FutureGrantBuilder for a sequence.
 func FutureSequenceGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -172,7 +172,7 @@ func FutureSequenceGrant(db, schema string) GrantBuilder {
 
 // FutureStreamGrant returns a pointer to a FutureGrantBuilder for a stream.
 func FutureStreamGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -183,7 +183,7 @@ func FutureStreamGrant(db, schema string) GrantBuilder {
 
 // FuturePipeGrant returns a pointer to a FutureGrantBuilder for a pipe.
 func FuturePipeGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,
@@ -194,7 +194,7 @@ func FuturePipeGrant(db, schema string) GrantBuilder {
 
 // FutureTaskGrant returns a pointer to a FutureGrantBuilder for a task.
 func FutureTaskGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, futureTarget := getNameAndQualifiedName(db, schema)
+	name, qualifiedName, futureTarget := getNameAndQualifiedNameForFutureGrants(db, schema)
 	return &FutureGrantBuilder{
 		name:              name,
 		qualifiedName:     qualifiedName,

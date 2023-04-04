@@ -136,9 +136,6 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -168,8 +165,10 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.FileFormatGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, fileFormatGrantSchema, builder, onFuture, validFileFormatPrivileges)
+	return readGenericGrant(d, meta, fileFormatGrantSchema, builder, onFuture, onAll, validFileFormatPrivileges)
 }
 
 // DeleteFileFormatGrant implements schema.DeleteFunc.

@@ -16,6 +16,13 @@ description: |-
 resource "snowflake_session_parameter" "s" {
   key   = "AUTOCOMMIT"
   value = "false"
+  user  = "TEST_USER"
+}
+
+resource "snowflake_session_parameter" "s2" {
+  key        = "BINARY_OUTPUT_FORMAT"
+  value      = "BASE64"
+  on_account = true
 }
 ```
 
@@ -26,6 +33,11 @@ resource "snowflake_session_parameter" "s" {
 
 - `key` (String) Name of session parameter. Valid values are those in [session parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#session-parameters).
 - `value` (String) Value of session parameter, as a string. Constraints are the same as those for the parameters in Snowflake documentation.
+
+### Optional
+
+- `on_account` (Boolean) If true, the session parameter will be set on the account level.
+- `user` (String) The user to set the session parameter for. Required if on_account is false
 
 ### Read-Only
 

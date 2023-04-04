@@ -171,8 +171,10 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.StreamGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, validStreamPrivileges)
+	return readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, onAll, validStreamPrivileges)
 }
 
 // DeleteStreamGrant implements schema.DeleteFunc.

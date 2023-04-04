@@ -44,6 +44,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
+
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -638,21 +639,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating table comment on %v", d.Id())
 		}
 	}
-	if d.HasChange("cluster_by") {
-		cb := expandStringList(d.Get("cluster_by").([]interface{}))
-
-		var q string
-		if len(cb) != 0 {
-			builder.WithClustering(cb)
-			q = builder.ChangeClusterBy(builder.GetClusterKeyString())
-		} else {
-			q = builder.DropClustering()
-		}
-
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating table clustering on %v", d.Id())
-		}
-	}
 	if d.HasChange("column") {
 		t, new := d.GetChange("column")
 		removed, added, changed := getColumns(t).diffs(getColumns(new))
@@ -712,6 +698,21 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error changing property on %v", d.Id())
 				}
 			}
+		}
+	}
+	if d.HasChange("cluster_by") {
+		cb := expandStringList(d.Get("cluster_by").([]interface{}))
+
+		var q string
+		if len(cb) != 0 {
+			builder.WithClustering(cb)
+			q = builder.ChangeClusterBy(builder.GetClusterKeyString())
+		} else {
+			q = builder.DropClustering()
+		}
+
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating table clustering on %v", d.Id())
 		}
 	}
 	if d.HasChange("primary_key") {
