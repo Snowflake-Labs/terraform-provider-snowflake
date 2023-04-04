@@ -260,43 +260,75 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if len(sTrig) > 0 {
-		// support deprecated suspend_triggers
-		if _, ok := d.GetOk("suspend_trigger"); ok {
+	var setSuspendTrigger bool
+	if _, ok := d.GetOk("suspend_trigger"); ok {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
+		} else {
+			if err := d.Set("suspend_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
+		}
+	}
+	if _, ok := d.GetOk("suspend_triggers"); ok {
+		if err := d.Set("suspend__triggers", sTrig); err != nil {
+			return err
+		}
+		setSuspendTrigger = true
+	}
+	if !setSuspendTrigger {
+		if len(sTrig) > 0 {
 			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
 				return err
 			}
 		} else {
-			if err := d.Set("suspend_triggers", sTrig); err != nil {
+			if err := d.Set("suspend_trigger", nil); err != nil {
 				return err
 			}
 		}
-	} else {
-		if err := d.Set("suspend_trigger", nil); err != nil {
-			return err
-		}
 	}
+
 	siTrig, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
 
-	if len(siTrig) > 0 {
-		// Support deprecated suspend_immediate_triggers
-		if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
+	var setSuspendImmediateTrigger bool
+	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		if len(siTrig) > 0 {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
+		} else {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
+		}
+	}
+	if _, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		if err := d.Set("suspend_immediate_triggers", siTrig); err != nil {
+			return err
+		}
+		setSuspendImmediateTrigger = true
+	}
+	if !setSuspendImmediateTrigger {
+		if len(sTrig) > 0 {
 			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
 				return err
 			}
 		} else {
-			if err := d.Set("suspend_immediate_triggers", siTrig); err != nil {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
 				return err
 			}
 		}
-	} else {
-		if err := d.Set("suspend_immediate_trigger", nil); err != nil {
-			return err
-		}
 	}
+
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
 	if err != nil {
 		return err
