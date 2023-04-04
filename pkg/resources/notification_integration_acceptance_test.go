@@ -60,6 +60,31 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 	})
 }
 
+func TestAcc_NotificationGCPPushIntegration(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_NotificationGCPPushIntegration")
+	}
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	gcpNotificationDirection := "OUTBOUND"
+
+	topicName := "projects/project-1234/subscriptions/sub2"
+	resource.Test(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: gcpNotificationPushIntegrationConfig(accName, topicName, gcpNotificationDirection),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_topic_name", topicName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", gcpNotificationDirection),
+				),
+			},
+		},
+	})
+}
+
 func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryURI string, azureTenantID string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
@@ -82,4 +107,16 @@ resource "snowflake_notification_integration" "test" {
 }
 `
 	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName, gcpNotificationDirection)
+}
+
+func gcpNotificationPushIntegrationConfig(name string, gcpPubsubTopicName string, gcpNotificationDirection string) string {
+	s := `
+resource "snowflake_notification_integration" "test" {
+  name                            = "%s"
+  notification_provider           = "%s"
+  gcp_pubsub_topic_name           = "%s"
+  direction                       = "%s"
+}
+`
+	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubTopicName, gcpNotificationDirection)
 }
