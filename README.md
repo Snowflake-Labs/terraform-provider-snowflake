@@ -30,7 +30,8 @@ terraform {
 ```
 
 ### Upgrading from CZI Provider
-As of (5/25/2022) to provider has been transferred from Chan Zuckerberg Initiative (CZI) to Snowflake-Labs. To upgrade from CZI, please run the following command:
+
+As of (5/25/2022) the provider has been transferred from Chan Zuckerberg Initiative (CZI) to Snowflake-Labs. To upgrade from CZI, please run the following command:
 
 ```shell
 terraform state replace-provider chanzuckerberg/snowflake Snowflake-Labs/snowflake
@@ -64,8 +65,9 @@ terraform {
 }
 ```
 
-If you are not pinning your provider versions, you may find it useful to forcefully upgrade providers using the command: 
-```
+If you are not pinning your provider versions, you may find it useful to forcefully upgrade providers using the command:
+
+```sh
 terraform init -upgrade
 ```
 
@@ -82,23 +84,25 @@ In-depth docs are available [on the Terraform registry](https://registry.terrafo
 If you do not have Go installed:
 
 1. Install Go `brew install golang`
-2. Ensure that your GOPATH is set correctly
+2. Ensure that your `GOPATH` is set correctly
 3. Fork this repo and clone it into `~/go/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
 4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
 5. Build provider with `go install`
 
 ## Testing
+
 The following environment variables need to be set for acceptance tests to run:
+
 * `SNOWFLAKE_ACCOUNT` - The account name
 * `SNOWFLAKE_USER` - A snowflake user for running tests.
 * `SNOWFLAKE_PASSWORD` - Password for that user.
 * `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
 * `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
-* `TF_ACC` - to enable acc tests.
+* `TF_ACC` - to enable acceptance tests.
 
-e.g.
+For example:
 
-```
+```sh
 export SNOWFLAKE_ACCOUNT=TESTACCOUNT
 export SNOWFLAKE_USER=TEST_USER
 export SNOWFLAKE_PASSWORD=hunter2
@@ -117,24 +121,25 @@ The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowf
 
 You can run these first two sets of tests with `make test`.
 
-The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity.
+The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity. You can create a new Snowflake Enterprise trial account and setup the environment variables for running acceptance tests.
 
 To run all tests, including the acceptance tests, run `make test-acceptance`.
 
-
-If you are making a PR from a forked repo, you can create a new Snowflake Enterprise trial account and set up Travis to build it by setting these environment variables:
-
 ## Advanced Debugging
+
 If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
 
 To debug the provider with a debugger:
+
 1. Launch the provider with the `-debug` command line argument in your debugger session. Once the provider starts, it will print instructions on setting the `TF_REATTACH_PROVIDERS` environment variable.
-   ```
+
+   ```sh
    Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
 
    Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
    PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
    ```
+
 2. Open a terminal where you will execute Terraform and set the `TF_REATTACH_PROVIDERS` environment variable using the command from the first step.
 3. Run Terraform as usual from this terminal. Any breakpoints you set will halt execution and you can troubleshoot the provider from your debugger.
 
@@ -144,10 +149,8 @@ For further instructions, please check the official [Terraform Plugin Developmen
 
 ## Contributing
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages formatting. Please try to adhere to the standard.
-Validation is done with this regular expression:
-
-https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/titleLint.yml#L17
+We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
+Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/titleLint.yml#L17) for PR title validation.
 
 ## Releasing
 

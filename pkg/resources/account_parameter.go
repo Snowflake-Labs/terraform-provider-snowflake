@@ -59,7 +59,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
 	}
 
-	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeAccount, db)
+	builder := snowflake.NewAccountParameter(key, value, db)
 	err := builder.SetParameter()
 	if err != nil {
 		return fmt.Errorf("error creating account parameter err = %w", err)
@@ -111,7 +111,7 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
 		value = fmt.Sprintf("'%s'", value)
 	}
-	builder := snowflake.NewParameter(key, value, snowflake.ParameterTypeAccount, db)
+	builder := snowflake.NewAccountParameter(key, value, db)
 	err := builder.SetParameter()
 	if err != nil {
 		return fmt.Errorf("error creating account parameter err = %w", err)
