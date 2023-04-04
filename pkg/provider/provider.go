@@ -273,6 +273,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_tables":                             datasources.Tables(),
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_shares":                             datasources.Shares(),
 		"snowflake_stages":                             datasources.Stages(),
 		"snowflake_file_formats":                       datasources.FileFormats(),
 		"snowflake_sequences":                          datasources.Sequences(),
