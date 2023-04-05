@@ -81,7 +81,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
+		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
@@ -269,8 +269,14 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := d.Get("on_future").(bool)
-	onAll := d.Get("on_all").(bool)
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.SchemaName == "" && onAll == false {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
 	switch {
 	case onFuture:
