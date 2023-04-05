@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -47,11 +48,42 @@ var alertSchema = map[string]*schema.Schema{
 		Description: "The warehouse the alert will use.",
 		ForceNew:    true,
 	},
-	"schedule": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schedule for periodically running the alert.",
-		ForceNew:    true,
+	"alert_schedule": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		MaxItems:    1,
+		Description: "The schedule for periodically running an alert.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cron": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"alert_schedule.interval"},
+					Description:   "Specifies the cron expression for the alert. The cron expression must be in the following format: \"minute hour day-of-month month day-of-week\". The following values are supported: minute: 0-59 hour: 0-23 day-of-month: 1-31 month: 1-12 day-of-week: 0-6 (0 is Sunday)",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"expression": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Specifies the cron expression for the alert. The cron expression must be in the following format: \"minute hour day-of-month month day-of-week\". The following values are supported: minute: 0-59 hour: 0-23 day-of-month: 1-31 month: 1-12 day-of-week: 0-6 (0 is Sunday)",
+							},
+							"time_zone": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Specifies the time zone for alert refresh.",
+							},
+						},
+					},
+				},
+				"interval": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"alert_schedule.cron"},
+					Description:   "Specifies the interval in minutes for the alert schedule. The interval must be greater than 0 and less than 1440 (24 hours).",
+				},
+			},
+		},
 	},
 	"condition": {
 		Type:             schema.TypeString,
@@ -181,8 +213,39 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("schedule", alert.Schedule); err != nil {
-		return err
+	alertSchedule := alert.Schedule
+	if alertSchedule != "" {
+		if strings.Contains(alertSchedule, "MINUTE") {
+			interval, err := strconv.Atoi(strings.TrimSuffix(alertSchedule, " MINUTE"))
+			if err != nil {
+				return err
+			}
+			err = d.Set("alert_schedule", []interface{}{
+				map[string]interface{}{
+					"interval": interval,
+				},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			repScheduleParts := strings.Split(alertSchedule, " ")
+			timeZone := repScheduleParts[len(repScheduleParts)-1]
+			expression := strings.TrimSuffix(strings.TrimPrefix(alertSchedule, "USING CRON "), " "+timeZone)
+			err = d.Set("alert_schedule", []interface{}{
+				map[string]interface{}{
+					"cron": []interface{}{
+						map[string]interface{}{
+							"expression": expression,
+							"time_zone":  timeZone,
+						},
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := d.Set("comment", alert.Comment); err != nil {
@@ -204,22 +267,48 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	db := meta.(*sql.DB)
+
 	database := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	warehouse := d.Get("warehouse").(string)
-	schedule := d.Get("schedule").(string)
-	condition := d.Get("condition").(string)
-	action := d.Get("action").(string)
-	enabled := d.Get("enabled").(bool)
 
 	builder := snowflake.NewAlertBuilder(name, database, schemaName)
+
+	if v, ok := d.GetOk("alert_schedule"); ok {
+		alertSchedule := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := alertSchedule["cron"]; ok {
+			c := v.([]interface{})
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+				builder.WithAlertScheduleCronExpression(cronExpression)
+				if v, ok := cron["time_zone"]; ok {
+					timeZone := v.(string)
+					builder.WithAlertScheduleTimeZone(timeZone)
+				}
+			}
+		}
+		if v, ok := alertSchedule["interval"]; ok {
+			interval := v.(int)
+			if interval > 0 {
+				builder.WithAlertScheduleInterval(interval)
+			}
+		}
+	}
+
+	enabled := d.Get("enabled").(bool)
+
+	warehouse := d.Get("warehouse").(string)
 	builder.WithWarehouse(warehouse)
-	builder.WithSchedule(schedule)
+
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
+
+	condition := d.Get("condition").(string)
 	builder.WithCondition(condition)
+
+	action := d.Get("action").(string)
 	builder.WithAction(action)
 
 	q := builder.Create()
@@ -261,13 +350,10 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewAlertBuilder(name, database, schemaName)
 
 	enabled := d.Get("enabled").(bool)
-	suspended := false
-	if enabled && d.HasChanges("warehouse", "schedule", "condition", "action", "comment") {
-		q := builder.Suspend()
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error suspending alert %v", d.Id())
+	if d.HasChanges("enabled", "warehouse", "alert_schedule", "condition", "action", "comment") {
+		if err := snowflake.WaitSuspendAlert(db, name, database, schemaName); err != nil {
+			log.Printf("[WARN] failed to suspend alert %s", name)
 		}
-		suspended = true
 	}
 
 	if d.HasChange("warehouse") {
@@ -280,12 +366,33 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("schedule") {
-		var q string
-		_, newVal := d.GetChange("schedule")
-		q = builder.ChangeSchedule(newVal.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating schedule on alert %v", d.Id())
+	if d.HasChange("alert_schedule") {
+		_, new := d.GetChange("alert_schedule")
+		alertSchedule := new.([]interface{})[0].(map[string]interface{})
+		log.Printf("[DEBUG] alertSchedule: %v", alertSchedule)
+		log.Printf("[DEBUG] alertSchedule[cron]: %v", alertSchedule["cron"])
+		c := alertSchedule["cron"].([]interface{})
+		if len(c) > 0 {
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+
+				timeZone := ""
+				if v, ok := cron["time_zone"]; ok {
+					timeZone = v.(string)
+				}
+				stmt := builder.ChangeAlertCronSchedule(cronExpression, timeZone)
+				if err := snowflake.Exec(db, stmt); err != nil {
+					return fmt.Errorf("error updating alert cron schedule %v err = %w", name, err)
+				}
+			}
+		} else {
+			log.Printf("[DEBUG] alertSchedule[interval]: %v", alertSchedule["interval"])
+			interval := alertSchedule["interval"].(int)
+			stmt := builder.ChangeAlertIntervalSchedule(interval)
+			if err := snowflake.Exec(db, stmt); err != nil {
+				return fmt.Errorf("error updating alert interval schedule %v err = %w", name, err)
+			}
 		}
 	}
 
@@ -314,14 +421,13 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if enabled || suspended {
+	if enabled {
 		if err := snowflake.WaitResumeAlert(db, name, database, schemaName); err != nil {
 			log.Printf("[WARN] failed to resume alert %s", name)
 		}
 	} else {
-		q := builder.Suspend()
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error suspending alert %v", d.Id())
+		if err := snowflake.WaitSuspendAlert(db, name, database, schemaName); err != nil {
+			log.Printf("[WARN] failed to suspend alert %s", name)
 		}
 	}
 	return ReadAlert(d, meta)

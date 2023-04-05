@@ -3,6 +3,7 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"text/template"
@@ -24,7 +25,7 @@ type (
 		Schema    string
 		Condition string
 		Action    string
-		Schedule  string
+		Schedule  int
 		Comment   string
 	}
 )
@@ -45,7 +46,7 @@ var (
 			Condition: "select 0 as c",
 			Action:    "select 0 as c",
 			Enabled:   true,
-			Schedule:  "5 MINUTE",
+			Schedule:  5,
 			Comment:   "dummy",
 		},
 	}
@@ -61,7 +62,7 @@ var (
 			Condition: "select 1 as c",
 			Action:    "select 1 as c",
 			Enabled:   true,
-			Schedule:  "15 MINUTE",
+			Schedule:  15,
 			Comment:   "test",
 		},
 	}
@@ -77,7 +78,7 @@ var (
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
 			Enabled:   true,
-			Schedule:  "25 MINUTE",
+			Schedule:  25,
 			Comment:   "text",
 		},
 	}
@@ -93,7 +94,7 @@ var (
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
 			Enabled:   false,
-			Schedule:  "5 MINUTE",
+			Schedule:  5,
 		},
 	}
 )
@@ -113,7 +114,7 @@ func TestAcc_Alert(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertInitialState.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertInitialState.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertInitialState.Alert.Comment),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schedule", alertInitialState.Alert.Schedule),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "alert_schedule.0.interval", strconv.Itoa(alertInitialState.Alert.Schedule)),
 				),
 			},
 			{
@@ -126,7 +127,7 @@ func TestAcc_Alert(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepOne.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepOne.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepOne.Alert.Comment),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schedule", alertStepOne.Alert.Schedule),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "alert_schedule.0.interval", strconv.Itoa(alertStepOne.Alert.Schedule)),
 				),
 			},
 			{
@@ -139,7 +140,7 @@ func TestAcc_Alert(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepTwo.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepTwo.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepTwo.Alert.Comment),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schedule", alertStepTwo.Alert.Schedule),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "alert_schedule.0.interval", strconv.Itoa(alertStepTwo.Alert.Schedule)),
 				),
 			},
 			{
@@ -152,7 +153,7 @@ func TestAcc_Alert(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepThree.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepThree.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepThree.Alert.Comment),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schedule", alertStepThree.Alert.Schedule),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "alert_schedule.0.interval", strconv.Itoa(alertStepThree.Alert.Schedule)),
 				),
 			},
 			{
@@ -165,7 +166,7 @@ func TestAcc_Alert(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertInitialState.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertInitialState.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertInitialState.Alert.Comment),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schedule", alertInitialState.Alert.Schedule),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "alert_schedule.0.interval", strconv.Itoa(alertInitialState.Alert.Schedule)),
 				),
 			},
 		},
@@ -181,15 +182,17 @@ resource "snowflake_database" "test_db" {
 	name = "{{ .DatabaseName }}"
 }
 resource "snowflake_alert" "test_alert" {
-	name     	  = "{{ .Alert.Name }}"
-	database  	  = snowflake_database.test_db.name
-	schema   	  = "{{ .Alert.Schema }}"
-	warehouse 	  = snowflake_warehouse.test_wh.name
-	schedule 	  = "{{ .Alert.Schedule }}"	
-	condition     = "{{ .Alert.Condition }}"
-	action        = "{{ .Alert.Action }}"
-	enabled  	  = {{ .Alert.Enabled }}
-	comment       = "{{ .Alert.Comment }}"
+	name     	      = "{{ .Alert.Name }}"
+	database  	      = snowflake_database.test_db.name
+	schema   	      = "{{ .Alert.Schema }}"
+	warehouse 	      = snowflake_warehouse.test_wh.name
+	alert_schedule 	  {
+		interval = "{{ .Alert.Schedule }}"
+	}
+	condition         = "{{ .Alert.Condition }}"
+	action            = "{{ .Alert.Action }}"
+	enabled  	      = {{ .Alert.Enabled }}
+	comment           = "{{ .Alert.Comment }}"
 }
 	`)
 	if err != nil {
