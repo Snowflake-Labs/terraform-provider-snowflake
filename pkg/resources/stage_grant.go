@@ -45,7 +45,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"stage_name"},
@@ -198,9 +198,15 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && onAll == false {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
-	onFuture := d.Get("on_future").(bool)
-	onAll := d.Get("on_all").(bool)
 	switch {
 	case onFuture:
 		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
