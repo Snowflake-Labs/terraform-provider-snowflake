@@ -68,7 +68,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all views in the given schema. When this is true and no schema_name is provided apply this grant on all views in the given database. The view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all views in the given schema. When this is true and no schema_name is provided apply this grant on all views in the given database. The view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the option on_all=true is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
@@ -206,12 +206,15 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
-	onFuture, onAll, err := getOnFutureOnAll(grantID, meta, "VIEW")
-	if err != nil {
+
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && onAll == false {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
 		return err
 	}
-	err = d.Set("on_all", onAll)
-	err = d.Set("on_future", onFuture)
 
 	var builder snowflake.GrantBuilder
 	switch {
