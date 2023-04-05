@@ -209,7 +209,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
 	onFuture := false
-	if grantID.ObjectName == "" && onAll == false {
+	if grantID.ObjectName == "" && !onAll {
 		onFuture = true
 	}
 	if err = d.Set("on_future", onFuture); err != nil {
