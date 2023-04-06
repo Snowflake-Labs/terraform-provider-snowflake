@@ -138,11 +138,6 @@ func (builder *AlertBuilder) ChangeWarehouse(newWh string) string {
 	return fmt.Sprintf(`ALTER alert %v SET WAREHOUSE = "%v"`, builder.QualifiedName(), EscapeString(newWh))
 }
 
-//// ChangeSchedule returns the sql that will change the schedule for the alert.
-//func (builder *AlertBuilder) ChangeSchedule(newSchedule string) string {
-//	return fmt.Sprintf(`ALTER alert %v SET SCHEDULE = '%v'`, builder.QualifiedName(), EscapeString(newSchedule))
-//}
-
 // RemoveSchedule returns the sql that will remove the schedule for the alert.
 func (builder *AlertBuilder) RemoveSchedule() string {
 	return fmt.Sprintf(`ALTER ALERT %v UNSET SCHEDULE`, builder.QualifiedName())
