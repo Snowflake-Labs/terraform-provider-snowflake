@@ -10,7 +10,7 @@ import (
 )
 
 var sharesSchema = map[string]*schema.Schema{
-	pattern: {
+	"pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Filters the command output by object name.",
