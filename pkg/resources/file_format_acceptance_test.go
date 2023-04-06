@@ -38,7 +38,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "field_optionally_enclosed_by", "'"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "null_if.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "null_if.0", "NULL"),
-					resource.TestCheckResourceAttr("snowflake_file_format.test", "null_if.0", ""),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "null_if.1", ""),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "error_on_column_count_mismatch", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "empty_field_as_null", "false"),

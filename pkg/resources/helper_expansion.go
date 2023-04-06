@@ -32,6 +32,8 @@ func expandStringListAllowEmpty(configured []interface{}) []string {
 		val, ok := v.(string)
 		if ok {
 			vs = append(vs, val)
+		} else {
+			vs = append(vs, "")
 		}
 	}
 	return vs

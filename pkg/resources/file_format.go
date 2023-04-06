@@ -402,6 +402,8 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok, err := getFormatTypeOption(d, formatType, "null_if"); ok && err == nil {
+		log.Printf("[DEBUG] null_if: %#v", v.([]interface{}))
+		log.Printf("[DEBUG] null_if expanded: %#v", expandStringListAllowEmpty(v.([]interface{})))
 		builder.WithNullIf(expandStringListAllowEmpty(v.([]interface{})))
 	} else if err != nil {
 		return err
@@ -502,7 +504,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-
+	log.Printf("[DEBUG] create file format %v\n", q)
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		return fmt.Errorf("error creating file format %v err = %w", fileFormatName, err)
@@ -625,6 +627,7 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	log.Printf("[DEBUG] format options: %v\n", opts.NullIf)
 	if err := d.Set("null_if", opts.NullIf); err != nil {
 		return err
 	}
