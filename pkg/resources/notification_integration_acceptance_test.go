@@ -67,7 +67,7 @@ func TestAcc_NotificationGCPPushIntegration(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	gcpNotificationDirection := "OUTBOUND"
 
-	topicName := "projects/project-1234/subscriptions/sub2"
+	topicName := "projects/project-1234/topics/topic1"
 	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
