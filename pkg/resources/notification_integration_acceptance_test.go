@@ -59,6 +59,7 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 		},
 	})
 }
+
 /*
 Failing due to the following error:
  Error: error creating notification integration: 001422 (22023): SQL compilation error:
