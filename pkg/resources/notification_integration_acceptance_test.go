@@ -60,6 +60,11 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 	})
 }
 /*
+Failing due to the following error:
+ Error: error creating notification integration: 001422 (22023): SQL compilation error:
+        invalid value 'OUTBOUND' for property 'Direction'
+Need to investigate this further.
+
 func TestAcc_NotificationGCPPushIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAcc_NotificationGCPPushIntegration")
