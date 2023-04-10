@@ -123,9 +123,8 @@ func (b *AccountBuilder) Create() (*Account, error) {
 		q.WriteString(fmt.Sprintf(` LAST_NAME ='%s'`, EscapeString(b.lastName)))
 	}
 	q.WriteString(fmt.Sprintf(` EMAIL = '%s'`, b.email))
-	if b.mustChangePassword {
-		q.WriteString(fmt.Sprintf(` MUST_CHANGE_PASSWORD = %t`, b.mustChangePassword))
-	}
+	
+	q.WriteString(fmt.Sprintf(` MUST_CHANGE_PASSWORD = %t`, b.mustChangePassword))
 
 	q.WriteString(fmt.Sprintf(` EDITION = %s`, b.edition))
 
