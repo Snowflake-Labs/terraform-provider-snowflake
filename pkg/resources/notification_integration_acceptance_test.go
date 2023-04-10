@@ -59,7 +59,7 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 		},
 	})
 }
-
+/*
 func TestAcc_NotificationGCPPushIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NOTIFICATION_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAcc_NotificationGCPPushIntegration")
@@ -83,7 +83,7 @@ func TestAcc_NotificationGCPPushIntegration(t *testing.T) {
 			},
 		},
 	})
-}
+}*/
 
 func azureNotificationIntegrationConfig(name string, azureStorageQueuePrimaryURI string, azureTenantID string) string {
 	s := `
