@@ -214,40 +214,31 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed to parse result of describe: %w", err)
 	}
 
-	err = d.Set("min_length", output.MinLength)
-	if err != nil {
+	if err = d.Set("min_length", output.MinLength); err != nil {
 		return fmt.Errorf("error setting min_length: %w", err)
 	}
-	err = d.Set("max_length", output.MaxLength)
-	if err != nil {
+	if err = d.Set("max_length", output.MaxLength); err != nil {
 		return fmt.Errorf("error setting max_length: %w", err)
 	}
-	err = d.Set("min_upper_case_chars", output.MinUpperCaseChars)
-	if err != nil {
+	if err = d.Set("min_upper_case_chars", output.MinUpperCaseChars); err != nil {
 		return fmt.Errorf("error setting min_upper_case_chars: %w", err)
 	}
-	err = d.Set("min_lower_case_chars", output.MinLowerCaseChars)
-	if err != nil {
+	if err = d.Set("min_lower_case_chars", output.MinLowerCaseChars); err != nil {
 		return fmt.Errorf("error setting min_lower_case_chars: %w", err)
 	}
-	err = d.Set("min_numeric_chars", output.MinNumericChars)
-	if err != nil {
+	if err = d.Set("min_numeric_chars", output.MinNumericChars); err != nil {
 		return fmt.Errorf("error setting min_numeric_chars: %w", err)
 	}
-	err = d.Set("min_special_chars", output.MinSpecialChars)
-	if err != nil {
+	if err = d.Set("min_special_chars", output.MinSpecialChars); err != nil {
 		return fmt.Errorf("error setting min_special_chars: %w", err)
 	}
-	err = d.Set("max_age_days", output.MaxAgeDays)
-	if err != nil {
+	if err = d.Set("max_age_days", output.MaxAgeDays); err != nil {
 		return fmt.Errorf("error setting max_age_days: %w", err)
 	}
-	err = d.Set("max_retries", output.MaxRetries)
-	if err != nil {
+	if err = d.Set("max_retries", output.MaxRetries); err != nil {
 		return fmt.Errorf("error setting max_retries: %w", err)
 	}
-	err = d.Set("lockout_time_mins", output.LockoutTimeMins)
-	if err != nil {
+	if err = d.Set("lockout_time_mins", output.LockoutTimeMins); err != nil {
 		return fmt.Errorf("error setting lockout_time_mins: %w", err)
 	}
 

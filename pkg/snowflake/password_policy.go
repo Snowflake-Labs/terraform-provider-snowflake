@@ -69,8 +69,10 @@ func (m *PasswordPolicyManager) Create(x *PasswordPolicyCreateInput) (string, er
 	return m.genericBuilder.Create(x)
 }
 
-type PasswordPolicyReadInput = SchemaObjectIdentifier
-type PasswordPolicyReadOutput = PasswordPolicy
+type (
+	PasswordPolicyReadInput  = SchemaObjectIdentifier
+	PasswordPolicyReadOutput = PasswordPolicy
+)
 
 func (m *PasswordPolicyManager) Read(x *PasswordPolicyReadInput) (string, error) {
 	return m.genericBuilder.Describe(x)
@@ -95,6 +97,7 @@ type PasswordPolicyUpdateInput struct {
 func (m *PasswordPolicyManager) Update(x *PasswordPolicyUpdateInput) (string, error) {
 	return m.genericBuilder.Alter(x)
 }
+
 func (m *PasswordPolicyManager) Unset(x *PasswordPolicyUpdateInput) (string, error) {
 	return m.genericBuilder.Unset(x)
 }

@@ -16,7 +16,7 @@ var (
 	StringList ParamType = "stringlist"
 )
 
-type Param struct {
+type SQLParameter struct {
 	name      string
 	paramType ParamType
 }
@@ -24,7 +24,7 @@ type Param struct {
 type BuilderConfig struct {
 	beforeObjectType map[string]string
 	afterObjectType  map[string]string
-	parameters       map[string]*Param
+	parameters       map[string]*SQLParameter
 }
 
 type NewBuilder struct {
@@ -57,7 +57,7 @@ func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
 	config := &BuilderConfig{
 		beforeObjectType: map[string]string{},
 		afterObjectType:  map[string]string{},
-		parameters:       map[string]*Param{},
+		parameters:       map[string]*SQLParameter{},
 	}
 
 	for i := 0; i < t.NumField(); i++ {
@@ -100,7 +100,7 @@ func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
 				paramType = StringList
 			}
 
-			config.parameters[f.Name] = &Param{
+			config.parameters[f.Name] = &SQLParameter{
 				name:      f.Tag.Get("db"),
 				paramType: paramType,
 			}
@@ -167,7 +167,7 @@ func (b *NewBuilder) renderKeywords(obj Identifier, kwConf map[string]string) (s
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) renderParameters(obj Identifier, paramConf map[string]*Param, withValues bool) (string, error) {
+func (b *NewBuilder) renderParameters(obj Identifier, paramConf map[string]*SQLParameter, withValues bool) (string, error) {
 	sb := strings.Builder{}
 
 	for key := range paramConf {
