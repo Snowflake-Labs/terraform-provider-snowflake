@@ -64,7 +64,7 @@ func TestDSN(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "",false)
+			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "", false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
