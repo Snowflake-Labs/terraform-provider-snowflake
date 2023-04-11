@@ -129,7 +129,7 @@ func PasswordPolicy() *schema.Resource {
 func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	manager, err := snowflake.NewPasswordPolicyManager()
 	if err != nil {
-		return fmt.Errorf("couldn't create password policy builder: %w", err)
+		return fmt.Errorf("couldn't create password policy manager: %w", err)
 	}
 
 	input := &snowflake.PasswordPolicyCreateInput{
