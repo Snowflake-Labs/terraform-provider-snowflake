@@ -166,7 +166,7 @@ func Provider() *schema.Provider {
 			},
 			"insecure_mode": {
 				Type:        schema.TypeBool,
-				Description: "If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only..",
+				Description: "If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_INSECURE_MODE", false),
 			},
