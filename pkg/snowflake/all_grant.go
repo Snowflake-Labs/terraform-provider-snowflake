@@ -61,8 +61,8 @@ func (fgb *AllGrantBuilder) GrantType() string {
 	return string(fgb.allGrantType)
 }
 
-// ExistingSchemaGrant returns a pointer to a AllGrantBuilder for a schema.
-func ExistingSchemaGrant(db string) GrantBuilder {
+// AllSchemaGrant returns a pointer to a AllGrantBuilder for a schema.
+func AllSchemaGrant(db string) GrantBuilder {
 	return &AllGrantBuilder{
 		name:           db,
 		qualifiedName:  fmt.Sprintf(`"%v"`, db),
@@ -82,8 +82,8 @@ func AllTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingViewGrant returns a pointer to a AllGrantBuilder for a view.
-func ExistingViewGrant(db, schema string) GrantBuilder {
+// AllViewGrant returns a pointer to a AllGrantBuilder for a view.
+func AllViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -93,8 +93,8 @@ func ExistingViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingMaterializedViewGrant returns a pointer to a AllGrantBuilder for a view.
-func ExistingMaterializedViewGrant(db, schema string) GrantBuilder {
+// AllMaterializedViewGrant returns a pointer to a AllGrantBuilder for a view.
+func AllMaterializedViewGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -104,8 +104,8 @@ func ExistingMaterializedViewGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingStageGrant returns a pointer to a AllGrantBuilder for a stage.
-func ExistingStageGrant(db, schema string) GrantBuilder {
+// AllStageGrant returns a pointer to a AllGrantBuilder for a stage.
+func AllStageGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -246,14 +246,15 @@ func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
 func (fge *ExistingGrantExecutable) Revoke(p string) []string {
-	// TODO: has no effect for ALL GRANTS
+	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
 			p, fge.allGrantType, fge.allGrantTarget, fge.grantName, fge.granteeName),
 	}
 }
 
-// Show returns the SQL that will show all all grants on the schema.
+// Show returns the SQL that will show all grants on the schema.
 func (fge *ExistingGrantExecutable) Show() string {
-	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fge.allGrantTarget, fge.grantName)
+	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, therefore changed the query to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which runs in snowflake.
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, fge.allGrantTarget, fge.grantName)
 }

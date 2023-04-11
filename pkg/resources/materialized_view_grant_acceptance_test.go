@@ -1,33 +1,61 @@
 package resources_test
 
 import (
-	"bytes"
+	"fmt"
 	"strings"
 	"testing"
-	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewGrantConfigFuture(t, databaseName, schemaName, roleName),
+				Config: materializedViewGrantConfigFuture(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", databaseName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", schemaName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name", ""),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_future", "true"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_materialized_view_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+					"on_all",                 // not defined in Snowflake, can't be imported
+				},
+			},
+		},
+	})
+}
+
+func TestAcc_MaterializedViewAllGrant(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: materializedViewGrantConfigFuture(name, onAll),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name", ""),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "privilege", "SELECT"),
 				),
 			},
@@ -35,41 +63,35 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 	})
 }
 
-func materializedViewGrantConfigFuture(t *testing.T, databaseName, schemaName, role string) string {
-	t.Helper()
-	r := require.New(t)
+func materializedViewGrantConfigFuture(name string, grantType grantType) string {
+	var materializedViewNameConfig string
+	switch grantType {
+	case onFuture:
+		materializedViewNameConfig = "on_future = true"
+	case onAll:
+		materializedViewNameConfig = "on_all = true"
+	}
 
-	config := `
+	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
-  name = "{{ .database_name }}"
+  name = "%s"
 }
 
 resource "snowflake_schema" "test" {
-	name = "{{ .schema_name }}"
+	name = "%s"
 	database = snowflake_database.test.name
 }
 
 resource "snowflake_role" "test" {
-  name = "{{.role_name}}"
+  name = "%s"
 }
 
 resource "snowflake_materialized_view_grant" "test" {
     database_name = snowflake_database.test.name	
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
-	on_future = true
+	%s
 	privilege = "SELECT"
 }
-`
-
-	out := bytes.NewBuffer(nil)
-	tmpl := template.Must(template.New("view)").Parse(config))
-	err := tmpl.Execute(out, map[string]string{
-		"database_name": databaseName,
-		"schema_name":   schemaName,
-		"role_name":     role,
-	})
-	r.NoError(err)
-
-	return out.String()
+`, name, name, name, materializedViewNameConfig)
 }

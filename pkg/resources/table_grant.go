@@ -27,7 +27,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"table_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the table on which to grant privileges immediately (only valid if on_future or on_all is unset).",
+		Description: "The name of the table on which to grant privileges immediately (only valid if on_future or on_all are unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -60,12 +60,12 @@ var tableGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future or on_all is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future or on_all are unset).",
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -73,7 +73,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all all tables in the given schema. When this is true and no schema_name is provided apply this grant on all all tables in the given database. The table_name and shares fields must be unset in order to use on_all.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all tables in the given schema. When this is true and no schema_name is provided apply this grant on all tables in the given database. The table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -209,8 +209,14 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := d.Get("on_future").(bool)
-	onAll := d.Get("on_all").(bool)
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && !onAll {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
 	switch {
 	case onFuture:
@@ -247,7 +253,7 @@ func DeleteTableGrant(d *schema.ResourceData, meta interface{}) error {
 // UpdateTableGrant implements schema.UpdateFunc.
 func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
