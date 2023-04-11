@@ -10,21 +10,25 @@ import (
 func TestCreatePasswordPolicy(t *testing.T) {
 	r := require.New(t)
 
-	props := &snowflake.PasswordPolicyProps{
-		Database:      "testdb",
-		Schema:        "testschema",
-		Name:          "testres",
+	input := &snowflake.PasswordPolicyCreateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   "testdb",
+				Schema:     "testschema",
+				ObjectName: "testres",
+			},
+			MinLength:   10,
+			MinLengthOk: true,
+		},
 		OrReplace:     true,
 		OrReplaceOk:   true,
 		IfNotExists:   false,
 		IfNotExistsOk: true,
-		MinLength:     10,
-		MinLengthOk:   true,
 	}
 
-	mb, err := snowflake.NewPasswordPolicyBuilder()
+	mb, err := snowflake.NewPasswordPolicyManager()
 	r.Nil(err)
-	createStmt, err := mb.Create(props)
+	createStmt, err := mb.Create(input)
 	r.Nil(err)
 	r.Equal(`CREATE OR REPLACE PASSWORD POLICY testdb.testschema.testres PASSWORD_MIN_LENGTH = 10;`, createStmt)
 }
@@ -32,19 +36,23 @@ func TestCreatePasswordPolicy(t *testing.T) {
 func TestAlterPasswordPolicy(t *testing.T) {
 	r := require.New(t)
 
-	props := &snowflake.PasswordPolicyProps{
-		Database:          "testdb",
-		Schema:            "testschema",
-		Name:              "passpol",
-		MinNumericChars:   16,
-		MinNumericCharsOk: true,
-		LockoutTimeMins:   50,
-		LockoutTimeMinsOk: true,
+	input := &snowflake.PasswordPolicyUpdateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   "testdb",
+				Schema:     "testschema",
+				ObjectName: "passpol",
+			},
+			MinNumericChars:   16,
+			MinNumericCharsOk: true,
+			LockoutTimeMins:   50,
+			LockoutTimeMinsOk: true,
+		},
 	}
 
-	mb, err := snowflake.NewPasswordPolicyBuilder()
+	mb, err := snowflake.NewPasswordPolicyManager()
 	r.Nil(err)
-	alterStmt, err := mb.Alter(props)
+	alterStmt, err := mb.Update(input)
 	r.Nil(err)
 	// Order of parameters is not guaranteed
 	r.Contains(
@@ -59,17 +67,21 @@ func TestAlterPasswordPolicy(t *testing.T) {
 func TestUnsetPasswordPolicy(t *testing.T) {
 	r := require.New(t)
 
-	props := &snowflake.PasswordPolicyProps{
-		Database:          "testdb",
-		Schema:            "testschema",
-		Name:              "passpol",
-		MinNumericCharsOk: true,
-		CommentOk:         true,
+	input := &snowflake.PasswordPolicyUpdateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   "testdb",
+				Schema:     "testschema",
+				ObjectName: "passpol",
+			},
+			MinNumericCharsOk: true,
+			CommentOk:         true,
+		},
 	}
 
-	mb, err := snowflake.NewPasswordPolicyBuilder()
+	mb, err := snowflake.NewPasswordPolicyManager()
 	r.Nil(err)
-	unsetStmt, err := mb.Unset(props)
+	unsetStmt, err := mb.Unset(input)
 	r.Nil(err)
 	// Order of parameters is not guaranteed
 	r.Contains(
@@ -81,34 +93,36 @@ func TestUnsetPasswordPolicy(t *testing.T) {
 	)
 }
 
-func TestDropPasswordPolicy(t *testing.T) {
+func TestDeletePasswordPolicy(t *testing.T) {
 	r := require.New(t)
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: "testdb",
-		Schema:   "testschema",
-		Name:     "passpol",
+	input := &snowflake.PasswordPolicyDeleteInput{
+		SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+			Database:   "testdb",
+			Schema:     "testschema",
+			ObjectName: "passpol",
+		},
 	}
 
-	mb, err := snowflake.NewPasswordPolicyBuilder()
+	mb, err := snowflake.NewPasswordPolicyManager()
 	r.Nil(err)
-	dropStmt, err := mb.Drop(props)
+	dropStmt, err := mb.Delete(input)
 	r.Nil(err)
 	r.Equal(`DROP PASSWORD POLICY testdb.testschema.passpol;`, dropStmt)
 }
 
-func TestDescribePasswordPolicy(t *testing.T) {
+func TestReadPasswordPolicy(t *testing.T) {
 	r := require.New(t)
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: "testdb",
-		Schema:   "testschema",
-		Name:     "passpol",
+	input := &snowflake.PasswordPolicyReadInput{
+		Database:   "testdb",
+		Schema:     "testschema",
+		ObjectName: "passpol",
 	}
 
-	mb, err := snowflake.NewPasswordPolicyBuilder()
+	mb, err := snowflake.NewPasswordPolicyManager()
 	r.Nil(err)
-	describeStmt, err := mb.Describe(props)
+	describeStmt, err := mb.Read(input)
 	r.Nil(err)
 	r.Equal(`DESCRIBE PASSWORD POLICY testdb.testschema.passpol;`, describeStmt)
 }
