@@ -331,6 +331,10 @@ func (b *NewBuilder) ParseDescribe(rows *sql.Rows, props Props) error {
 	return nil
 }
 
+func (b *NewBuilder) Ok(x interface{}, ok bool) bool {
+	return ok
+}
+
 func getFieldValue(props Props, fieldName string) (*reflect.Value, error) {
 	pointToStruct := reflect.ValueOf(props)
 	curStruct := pointToStruct.Elem()
