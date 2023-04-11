@@ -502,7 +502,6 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		return fmt.Errorf("error creating file format %v err = %w", fileFormatName, err)
