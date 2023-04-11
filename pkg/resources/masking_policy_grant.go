@@ -111,9 +111,6 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
@@ -132,7 +129,7 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.MaskingPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
-	return readGenericGrant(d, meta, maskingPolicyGrantSchema, builder, false, validMaskingPoilcyPrivileges)
+	return readGenericGrant(d, meta, maskingPolicyGrantSchema, builder, false, false, validMaskingPoilcyPrivileges)
 }
 
 // DeleteMaskingPolicyGrant implements schema.DeleteFunc.

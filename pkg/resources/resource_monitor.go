@@ -55,30 +55,33 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
 	},
 	"suspend_trigger": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "The number that represents the percentage threshold at which to suspend all warehouses.",
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Description:   "The number that represents the percentage threshold at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_triggers"},
 	},
 	"suspend_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
-		Optional:    true,
-		Description: "A list of percentage thresholds at which to suspend all warehouses.",
-		Deprecated:  "Use suspend_trigger instead",
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeInt},
+		Optional:      true,
+		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_trigger"},
+		Deprecated:    "Use suspend_trigger instead",
 	},
 	"suspend_immediate_trigger": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "The number that represents the percentage threshold at which to immediately suspend all warehouses.",
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Description:   "The number that represents the percentage threshold at which to immediately suspend all warehouses.",
+		ConflictsWith: []string{"suspend_immediate_triggers"},
 	},
 	"suspend_immediate_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
-		Optional:    true,
-		Description: "A list of percentage thresholds at which to suspend all warehouses.",
-		Deprecated:  "Use suspend_immediate_trigger instead",
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeInt},
+		Optional:      true,
+		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_immediate_trigger"},
+		Deprecated:    "Use suspend_immediate_trigger instead",
 	},
-
 	"notify_triggers": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -159,7 +162,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("suspend_triggers"); ok {
 		siTrigs := expandIntList(v.(*schema.Set).List())
 		for _, t := range siTrigs {
-			cb.SuspendImmediatelyAt(t)
+			cb.SuspendAt(t)
 		}
 	}
 	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
@@ -169,7 +172,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
 		sTrigs := expandIntList(v.(*schema.Set).List())
 		for _, t := range sTrigs {
-			cb.SuspendAt(t)
+			cb.SuspendImmediatelyAt(t)
 		}
 	}
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
@@ -257,29 +260,75 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if len(sTrig) > 0 {
-		if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("suspend_trigger", nil); err != nil {
-			return err
+	var setSuspendTrigger bool
+	if _, ok := d.GetOk("suspend_trigger"); ok {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
+		} else {
+			if err := d.Set("suspend_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
 		}
 	}
+	if _, ok := d.GetOk("suspend_triggers"); ok {
+		if err := d.Set("suspend_triggers", sTrig); err != nil {
+			return err
+		}
+		setSuspendTrigger = true
+	}
+	if !setSuspendTrigger {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+				return err
+			}
+		} else {
+			if err := d.Set("suspend_trigger", nil); err != nil {
+				return err
+			}
+		}
+	}
+
 	siTrig, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
 
-	if len(siTrig) > 0 {
-		if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("suspend_immediate_trigger", nil); err != nil {
-			return err
+	var setSuspendImmediateTrigger bool
+	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		if len(siTrig) > 0 {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
+		} else {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
 		}
 	}
+	if _, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		if err := d.Set("suspend_immediate_triggers", siTrig); err != nil {
+			return err
+		}
+		setSuspendImmediateTrigger = true
+	}
+	if !setSuspendImmediateTrigger {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+				return err
+			}
+		} else {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+				return err
+			}
+		}
+	}
+
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
 	if err != nil {
 		return err
@@ -375,10 +424,6 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		runSetStatement = true
 		ub.SuspendAt(d.Get("suspend_trigger").(int))
 	}
-	if d.HasChange("suspend_triggers") {
-		runSetStatement = true
-		ub.SuspendAt(d.Get("suspend_triggers").(int))
-	}
 	// Support deprecated suspend_triggers.
 	if d.HasChange("suspend_triggers") {
 		runSetStatement = true
@@ -387,11 +432,11 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 			ub.SuspendAt(t)
 		}
 	}
+
 	if d.HasChange("suspend_immediate_trigger") {
 		runSetStatement = true
 		ub.SuspendImmediatelyAt(d.Get("suspend_immediate_trigger").(int))
 	}
-
 	// Support deprecated suspend_immediate_trigger.
 	if d.HasChange("suspend_immediate_triggers") {
 		runSetStatement = true

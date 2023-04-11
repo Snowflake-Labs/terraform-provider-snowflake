@@ -201,14 +201,11 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
 		return err
 	}
 
-	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
+	return readGenericGrant(d, meta, accountGrantSchema, builder, false, false, validAccountPrivileges)
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc.

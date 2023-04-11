@@ -255,8 +255,10 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
 	}
+	// TODO
+	onAll := false
 
-	return readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, validFunctionPrivileges)
+	return readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, onAll, validFunctionPrivileges)
 }
 
 // DeleteFunctionGrant implements schema.DeleteFunc.

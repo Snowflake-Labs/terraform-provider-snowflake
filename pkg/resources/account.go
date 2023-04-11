@@ -81,6 +81,7 @@ var accountSchema = map[string]*schema.Schema{
 	"email": {
 		Type:         schema.TypeString,
 		Required:     true,
+		Sensitive:    true,
 		Description:  "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
 		ValidateFunc: snowflakeValidation.ValidateEmail,
 		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though it's not ideal
@@ -105,6 +106,7 @@ var accountSchema = map[string]*schema.Schema{
 	"first_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "First name of the initial administrative user of the account",
 		// We have no way of assuming a role into this account to change the admin first name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
@@ -121,6 +123,7 @@ var accountSchema = map[string]*schema.Schema{
 	"last_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "Last name of the initial administrative user of the account",
 		// We have no way of assuming a role into this account to change the admin last name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
@@ -186,6 +189,11 @@ var accountSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the account.",
 		ForceNew:    true, // Apparently there is no API to change comments on accounts. ALTER ACCOUNT and COMMENT commands do not work
+	},
+	"is_org_admin": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.",
 	},
 }
 
@@ -299,6 +307,10 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 	err = d.Set("comment", account.Comment.String)
 	if err != nil {
 		return fmt.Errorf("error setting comment: %w", err)
+	}
+	err = d.Set("is_org_admin", account.IsOrgAdmin.Bool)
+	if err != nil {
+		return fmt.Errorf("error setting is_org_admin: %w", err)
 	}
 
 	return nil

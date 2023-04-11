@@ -112,14 +112,20 @@ func readGenericGrant(
 	grantSchema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
+	allObjects bool,
 	validPrivileges PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
-	if futureObjects {
+	switch {
+	case futureObjects:
 		grants, err = readGenericFutureGrants(db, builder)
-	} else {
+	case allObjects:
+		// When running e.g. GRANT SELECT ON ALL TABLES IN ..., then Snowflake creates a grant for each individual existing table.
+		// There is no way to attribute existing table grants to a GRANT SELECT ON ALL TABLES grant. Thus they cannot be checked (or removed).
+		return nil
+	default:
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
 	if err != nil {
