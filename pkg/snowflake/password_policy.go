@@ -43,7 +43,7 @@ func (pp *PasswordPolicyProps) QualifiedName() string {
 	return fmt.Sprintf("%v.%v.%v", pp.Database, pp.Schema, pp.Name)
 }
 
-func (pp *PasswordPolicyProps) Id() string {
+func (pp *PasswordPolicyProps) ID() string {
 	return pp.QualifiedName()
 }
 

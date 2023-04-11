@@ -35,7 +35,7 @@ type NewBuilder struct {
 
 type Props interface {
 	QualifiedName() string
-	Id() string
+	ID() string
 }
 
 type StatementPosition = string
@@ -322,7 +322,10 @@ func (b *NewBuilder) ParseDescribe(rows *sql.Rows, props Props) error {
 
 		for field := range b.config.parameters {
 			if b.config.parameters[field].name == property {
-				setFieldValue(props, field, value)
+				err := setFieldValue(props, field, value)
+				if err != nil {
+					return err
+				}
 				break
 			}
 		}
@@ -331,7 +334,7 @@ func (b *NewBuilder) ParseDescribe(rows *sql.Rows, props Props) error {
 	return nil
 }
 
-func (b *NewBuilder) Ok(x interface{}, ok bool) bool {
+func (b *NewBuilder) Ok(_ interface{}, ok bool) bool {
 	return ok
 }
 

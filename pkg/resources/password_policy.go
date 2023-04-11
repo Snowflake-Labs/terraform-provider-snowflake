@@ -174,7 +174,7 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error executing create statement: %w", err)
 	}
 
-	d.SetId(props.Id())
+	d.SetId(props.ID())
 
 	return nil
 }
