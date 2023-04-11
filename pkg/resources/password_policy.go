@@ -127,43 +127,48 @@ func PasswordPolicy() *schema.Resource {
 
 // CreatePasswordPolicy implements schema.CreateFunc.
 func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	builder, err := snowflake.NewPasswordPolicyBuilder()
+	manager, err := snowflake.NewPasswordPolicyManager()
 	if err != nil {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: d.Get("database").(string),
-		Schema:   d.Get("schema").(string),
-		Name:     d.Get("name").(string),
+	input := &snowflake.PasswordPolicyCreateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   d.Get("database").(string),
+				Schema:     d.Get("schema").(string),
+				ObjectName: d.Get("name").(string),
+			},
 
-		OrReplace:           d.Get("or_replace").(bool),
-		OrReplaceOk:         builder.Ok(d.GetOk("or_replace")),
-		IfNotExists:         d.Get("if_not_exists").(bool),
-		IfNotExistsOk:       builder.Ok(d.GetOk("if_not_exists")),
-		MinLength:           d.Get("min_length").(int),
-		MinLengthOk:         builder.Ok(d.GetOk("min_length")),
-		MaxLength:           d.Get("max_length").(int),
-		MaxLengthOk:         builder.Ok(d.GetOk("max_length")),
-		MinUpperCaseChars:   d.Get("min_upper_case_chars").(int),
-		MinUpperCaseCharsOk: builder.Ok(d.GetOk("min_upper_case_chars")),
-		MinLowerCaseChars:   d.Get("min_lower_case_chars").(int),
-		MinLowerCaseCharsOk: builder.Ok(d.GetOk("min_lower_case_chars")),
-		MinNumericChars:     d.Get("min_numeric_chars").(int),
-		MinNumericCharsOk:   builder.Ok(d.GetOk("min_numeric_chars")),
-		MinSpecialChars:     d.Get("min_special_chars").(int),
-		MinSpecialCharsOk:   builder.Ok(d.GetOk("min_special_chars")),
-		MaxAgeDays:          d.Get("max_age_days").(int),
-		MaxAgeDaysOk:        builder.Ok(d.GetOk("max_age_days")),
-		MaxRetries:          d.Get("max_retries").(int),
-		MaxRetriesOk:        builder.Ok(d.GetOk("max_retries")),
-		LockoutTimeMins:     d.Get("lockout_time_mins").(int),
-		LockoutTimeMinsOk:   builder.Ok(d.GetOk("lockout_time_mins")),
-		Comment:             d.Get("comment").(string),
-		CommentOk:           builder.Ok(d.GetOk("comment")),
+			MinLength:           d.Get("min_length").(int),
+			MinLengthOk:         manager.Ok(d.GetOk("min_length")),
+			MaxLength:           d.Get("max_length").(int),
+			MaxLengthOk:         manager.Ok(d.GetOk("max_length")),
+			MinUpperCaseChars:   d.Get("min_upper_case_chars").(int),
+			MinUpperCaseCharsOk: manager.Ok(d.GetOk("min_upper_case_chars")),
+			MinLowerCaseChars:   d.Get("min_lower_case_chars").(int),
+			MinLowerCaseCharsOk: manager.Ok(d.GetOk("min_lower_case_chars")),
+			MinNumericChars:     d.Get("min_numeric_chars").(int),
+			MinNumericCharsOk:   manager.Ok(d.GetOk("min_numeric_chars")),
+			MinSpecialChars:     d.Get("min_special_chars").(int),
+			MinSpecialCharsOk:   manager.Ok(d.GetOk("min_special_chars")),
+			MaxAgeDays:          d.Get("max_age_days").(int),
+			MaxAgeDaysOk:        manager.Ok(d.GetOk("max_age_days")),
+			MaxRetries:          d.Get("max_retries").(int),
+			MaxRetriesOk:        manager.Ok(d.GetOk("max_retries")),
+			LockoutTimeMins:     d.Get("lockout_time_mins").(int),
+			LockoutTimeMinsOk:   manager.Ok(d.GetOk("lockout_time_mins")),
+			Comment:             d.Get("comment").(string),
+			CommentOk:           manager.Ok(d.GetOk("comment")),
+		},
+
+		OrReplace:     d.Get("or_replace").(bool),
+		OrReplaceOk:   manager.Ok(d.GetOk("or_replace")),
+		IfNotExists:   d.Get("if_not_exists").(bool),
+		IfNotExistsOk: manager.Ok(d.GetOk("if_not_exists")),
 	}
 
-	stmt, err := builder.Create(props)
+	stmt, err := manager.Create(input)
 	if err != nil {
 		return fmt.Errorf("couldn't generate create statement: %w", err)
 	}
@@ -174,25 +179,25 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error executing create statement: %w", err)
 	}
 
-	d.SetId(props.ID())
+	d.SetId(PasswordPolicyID(&input.PasswordPolicy))
 
 	return nil
 }
 
 // ReadPasswordPolicy implements schema.ReadFunc.
 func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	builder, err := snowflake.NewPasswordPolicyBuilder()
+	manager, err := snowflake.NewPasswordPolicyManager()
 	if err != nil {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: d.Get("database").(string),
-		Schema:   d.Get("schema").(string),
-		Name:     d.Get("name").(string),
+	input := &snowflake.PasswordPolicyReadInput{
+		Database:   d.Get("database").(string),
+		Schema:     d.Get("schema").(string),
+		ObjectName: d.Get("name").(string),
 	}
 
-	stmt, err := builder.Describe(props)
+	stmt, err := manager.Read(input)
 	if err != nil {
 		return fmt.Errorf("couldn't generate describe statement: %w", err)
 	}
@@ -204,44 +209,44 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	defer rows.Close()
-	err = builder.ParseDescribe(rows, props)
+	output, err := manager.Parse(rows)
 	if err != nil {
 		return fmt.Errorf("failed to parse result of describe: %w", err)
 	}
 
-	err = d.Set("min_length", props.MinLength)
+	err = d.Set("min_length", output.MinLength)
 	if err != nil {
 		return fmt.Errorf("error setting min_length: %w", err)
 	}
-	err = d.Set("max_length", props.MaxLength)
+	err = d.Set("max_length", output.MaxLength)
 	if err != nil {
 		return fmt.Errorf("error setting max_length: %w", err)
 	}
-	err = d.Set("min_upper_case_chars", props.MinUpperCaseChars)
+	err = d.Set("min_upper_case_chars", output.MinUpperCaseChars)
 	if err != nil {
 		return fmt.Errorf("error setting min_upper_case_chars: %w", err)
 	}
-	err = d.Set("min_lower_case_chars", props.MinLowerCaseChars)
+	err = d.Set("min_lower_case_chars", output.MinLowerCaseChars)
 	if err != nil {
 		return fmt.Errorf("error setting min_lower_case_chars: %w", err)
 	}
-	err = d.Set("min_numeric_chars", props.MinNumericChars)
+	err = d.Set("min_numeric_chars", output.MinNumericChars)
 	if err != nil {
 		return fmt.Errorf("error setting min_numeric_chars: %w", err)
 	}
-	err = d.Set("min_special_chars", props.MinSpecialChars)
+	err = d.Set("min_special_chars", output.MinSpecialChars)
 	if err != nil {
 		return fmt.Errorf("error setting min_special_chars: %w", err)
 	}
-	err = d.Set("max_age_days", props.MaxAgeDays)
+	err = d.Set("max_age_days", output.MaxAgeDays)
 	if err != nil {
 		return fmt.Errorf("error setting max_age_days: %w", err)
 	}
-	err = d.Set("max_retries", props.MaxRetries)
+	err = d.Set("max_retries", output.MaxRetries)
 	if err != nil {
 		return fmt.Errorf("error setting max_retries: %w", err)
 	}
-	err = d.Set("lockout_time_mins", props.LockoutTimeMins)
+	err = d.Set("lockout_time_mins", output.LockoutTimeMins)
 	if err != nil {
 		return fmt.Errorf("error setting lockout_time_mins: %w", err)
 	}
@@ -251,67 +256,167 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePasswordPolicy implements schema.UpdateFunc.
 func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	builder, err := snowflake.NewPasswordPolicyBuilder()
+	manager, err := snowflake.NewPasswordPolicyManager()
 	if err != nil {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: d.Get("database").(string),
-		Schema:   d.Get("schema").(string),
-		Name:     d.Get("name").(string),
+	runAlter := false
+	alterInput := &snowflake.PasswordPolicyUpdateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   d.Get("database").(string),
+				Schema:     d.Get("schema").(string),
+				ObjectName: d.Get("name").(string),
+			},
+		},
+	}
+	runUnset := false
+	unsetInput := &snowflake.PasswordPolicyUpdateInput{
+		PasswordPolicy: snowflake.PasswordPolicy{
+			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+				Database:   d.Get("database").(string),
+				Schema:     d.Get("schema").(string),
+				ObjectName: d.Get("name").(string),
+			},
+		},
 	}
 
 	if d.HasChange("min_length") {
-		props.MinLength = d.Get("min_length").(int)
-		props.MinLengthOk = true
+		val, ok := d.GetOk("min_length")
+		if ok {
+			alterInput.MinLength = val.(int)
+			alterInput.MinLengthOk = true
+			runAlter = true
+		} else {
+			unsetInput.MinLengthOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("max_length") {
-		props.MaxLength = d.Get("max_length").(int)
-		props.MaxLengthOk = true
+		val, ok := d.GetOk("max_length")
+		if ok {
+			alterInput.MaxLength = val.(int)
+			alterInput.MaxLengthOk = true
+			runAlter = true
+		} else {
+			unsetInput.MaxLengthOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("min_upper_case_chars") {
-		props.MinUpperCaseChars = d.Get("min_upper_case_chars").(int)
-		props.MinUpperCaseCharsOk = true
+		val, ok := d.GetOk("min_upper_case_chars")
+		if ok {
+			alterInput.MinUpperCaseChars = val.(int)
+			alterInput.MinUpperCaseCharsOk = true
+			runAlter = true
+		} else {
+			unsetInput.MinUpperCaseCharsOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("min_lower_case_chars") {
-		props.MinLowerCaseChars = d.Get("min_lower_case_chars").(int)
-		props.MinLowerCaseCharsOk = true
+		val, ok := d.GetOk("min_lower_case_chars")
+		if ok {
+			alterInput.MinLowerCaseChars = val.(int)
+			alterInput.MinLowerCaseCharsOk = true
+			runAlter = true
+		} else {
+			unsetInput.MinLowerCaseCharsOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("min_numeric_chars") {
-		props.MinNumericChars = d.Get("min_numeric_chars").(int)
-		props.MinNumericCharsOk = true
+		val, ok := d.GetOk("min_numeric_chars")
+		if ok {
+			alterInput.MinNumericChars = val.(int)
+			alterInput.MinNumericCharsOk = true
+			runAlter = true
+		} else {
+			unsetInput.MinNumericCharsOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("min_special_chars") {
-		props.MinSpecialChars = d.Get("min_special_chars").(int)
-		props.MinSpecialCharsOk = true
+		val, ok := d.GetOk("min_special_chars")
+		if ok {
+			alterInput.MinSpecialChars = val.(int)
+			alterInput.MinSpecialCharsOk = true
+			runAlter = true
+		} else {
+			unsetInput.MinSpecialCharsOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("max_age_days") {
-		props.MaxAgeDays = d.Get("max_age_days").(int)
-		props.MaxAgeDaysOk = true
+		val, ok := d.GetOk("max_age_days")
+		if ok {
+			alterInput.MaxAgeDays = val.(int)
+			alterInput.MaxAgeDaysOk = true
+			runAlter = true
+		} else {
+			unsetInput.MaxAgeDaysOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("max_retries") {
-		props.MaxRetries = d.Get("max_retries").(int)
-		props.MaxRetriesOk = true
+		val, ok := d.GetOk("max_retries")
+		if ok {
+			alterInput.MaxRetries = val.(int)
+			alterInput.MaxRetriesOk = true
+			runAlter = true
+		} else {
+			unsetInput.MaxRetriesOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("lockout_time_mins") {
-		props.LockoutTimeMins = d.Get("lockout_time_mins").(int)
-		props.LockoutTimeMinsOk = true
+		val, ok := d.GetOk("lockout_time_mins")
+		if ok {
+			alterInput.LockoutTimeMins = val.(int)
+			alterInput.LockoutTimeMinsOk = true
+			runAlter = true
+		} else {
+			unsetInput.LockoutTimeMinsOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("comment") {
-		props.Comment = d.Get("comment").(string)
-		props.CommentOk = true
-	}
-
-	stmt, err := builder.Alter(props)
-	if err != nil {
-		return fmt.Errorf("couldn't generate alter statement for password policy: %w", err)
+		val, ok := d.GetOk("comment")
+		if ok {
+			alterInput.Comment = val.(string)
+			alterInput.CommentOk = true
+			runAlter = true
+		} else {
+			unsetInput.CommentOk = true
+			runUnset = true
+		}
 	}
 
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
-	if err != nil {
-		return fmt.Errorf("error executing alter statement: %w", err)
+
+	if runAlter {
+		stmt, err := manager.Update(alterInput)
+		if err != nil {
+			return fmt.Errorf("couldn't generate alter statement for password policy: %w", err)
+		}
+
+		_, err = db.Exec(stmt)
+		if err != nil {
+			return fmt.Errorf("error executing alter statement: %w", err)
+		}
+	}
+
+	if runUnset {
+		stmt, err := manager.Unset(unsetInput)
+		if err != nil {
+			return fmt.Errorf("couldn't generate unset statement for password policy: %w", err)
+		}
+
+		_, err = db.Exec(stmt)
+		if err != nil {
+			return fmt.Errorf("error executing unset statement: %w", err)
+		}
 	}
 
 	return nil
@@ -319,18 +424,20 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePasswordPolicy implements schema.DeleteFunc.
 func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	builder, err := snowflake.NewPasswordPolicyBuilder()
+	manager, err := snowflake.NewPasswordPolicyManager()
 	if err != nil {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	props := &snowflake.PasswordPolicyProps{
-		Database: d.Get("database").(string),
-		Schema:   d.Get("schema").(string),
-		Name:     d.Get("name").(string),
+	input := &snowflake.PasswordPolicyDeleteInput{
+		SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
+			Database:   d.Get("database").(string),
+			Schema:     d.Get("schema").(string),
+			ObjectName: d.Get("name").(string),
+		},
 	}
 
-	stmt, err := builder.Drop(props)
+	stmt, err := manager.Delete(input)
 	if err != nil {
 		return fmt.Errorf("couldn't generate drop statement: %w", err)
 	}
@@ -342,4 +449,8 @@ func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func PasswordPolicyID(pp *snowflake.PasswordPolicy) string {
+	return pp.QualifiedName()
 }
