@@ -1,7 +1,7 @@
 package snowflake
 
 type BaseManager struct {
-	genericBuilder NewBuilder
+	sqlBuilder SQLBuilder
 }
 
 func (m *BaseManager) Ok(_ interface{}, ok bool) bool {

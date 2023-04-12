@@ -17,24 +17,25 @@ var (
 )
 
 type SQLParameter struct {
-	name      string
-	paramType ParamType
+	structName string
+	sqlName    string
+	paramType  ParamType
 }
 
-type BuilderConfig struct {
+type SQLBuilderConfig struct {
 	beforeObjectType map[string]string
 	afterObjectType  map[string]string
-	parameters       map[string]*SQLParameter
+	parameters       []*SQLParameter
 }
 
-type NewBuilder struct {
+type SQLBuilder struct {
 	objectType       string
 	objectTypePlural string
-	createConfig     *BuilderConfig
-	alterConfig      *BuilderConfig
-	unsetConfig      *BuilderConfig
-	dropConfig       *BuilderConfig
-	readOutputConfig *BuilderConfig
+	createConfig     *SQLBuilderConfig
+	alterConfig      *SQLBuilderConfig
+	unsetConfig      *SQLBuilderConfig
+	dropConfig       *SQLBuilderConfig
+	readOutputConfig *SQLBuilderConfig
 }
 
 type KeywordPosition = string
@@ -45,7 +46,7 @@ const (
 	PosParameter     KeywordPosition = "parameter"
 )
 
-func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
+func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -54,10 +55,10 @@ func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
 		return nil, fmt.Errorf("type %v is not a struct", t.Name())
 	}
 
-	config := &BuilderConfig{
+	config := &SQLBuilderConfig{
 		beforeObjectType: map[string]string{},
 		afterObjectType:  map[string]string{},
-		parameters:       map[string]*SQLParameter{},
+		parameters:       []*SQLParameter{},
 	}
 
 	for i := 0; i < t.NumField(); i++ {
@@ -75,9 +76,7 @@ func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
 			for key := range subconf.afterObjectType {
 				config.afterObjectType[key] = subconf.afterObjectType[key]
 			}
-			for key := range subconf.parameters {
-				config.parameters[key] = subconf.parameters[key]
-			}
+			config.parameters = append(config.parameters, subconf.parameters...)
 
 			continue
 		}
@@ -100,10 +99,11 @@ func parseConfigFromType(t reflect.Type) (*BuilderConfig, error) {
 				paramType = StringList
 			}
 
-			config.parameters[f.Name] = &SQLParameter{
-				name:      f.Tag.Get("db"),
-				paramType: paramType,
-			}
+			config.parameters = append(config.parameters, &SQLParameter{
+				structName: f.Name,
+				sqlName:    f.Tag.Get("db"),
+				paramType:  paramType,
+			})
 		}
 	}
 
@@ -114,7 +114,7 @@ func newBuilder(
 	objectType string,
 	objectTypePlural string,
 	createInputType, alterInputType, unsetInputType, dropInputType, readOutputType reflect.Type,
-) (*NewBuilder, error) {
+) (*SQLBuilder, error) {
 	createConfig, err := parseConfigFromType(createInputType)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func newBuilder(
 		return nil, err
 	}
 
-	return &NewBuilder{
+	return &SQLBuilder{
 		objectType:       objectType,
 		objectTypePlural: objectTypePlural,
 		createConfig:     createConfig,
@@ -147,7 +147,7 @@ func newBuilder(
 	}, nil
 }
 
-func (b *NewBuilder) renderKeywords(obj Identifier, kwConf map[string]string) (string, error) {
+func (b *SQLBuilder) renderKeywords(obj Identifier, kwConf map[string]string) (string, error) {
 	sb := strings.Builder{}
 
 	for key := range kwConf {
@@ -167,52 +167,53 @@ func (b *NewBuilder) renderKeywords(obj Identifier, kwConf map[string]string) (s
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) renderParameters(obj Identifier, paramConf map[string]*SQLParameter, withValues bool) (string, error) {
+func (b *SQLBuilder) renderParameters(obj Identifier, paramConf []*SQLParameter, withValues bool) (string, error) {
 	sb := strings.Builder{}
 
-	for key := range paramConf {
-		name := paramConf[key].name
-		rv, err := getFieldValue(obj, key)
+	for i := range paramConf {
+		param := paramConf[i]
+
+		rv, err := getFieldValue(obj, param.structName)
 		if err != nil {
 			return "", err
 		}
 
-		switch paramConf[key].paramType {
+		switch paramConf[i].paramType {
 		case Integer:
-			ok, err := getFieldValue(obj, key+"Ok")
+			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
 				return "", err
 			}
 			if ok.Bool() {
 				if withValues {
-					sb.WriteString(fmt.Sprintf(` %v = %v`, name, rv.Int()))
+					sb.WriteString(fmt.Sprintf(` %v = %v`, param.sqlName, rv.Int()))
 				} else {
-					sb.WriteString(fmt.Sprintf(` %v`, name))
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
 				}
 			}
 		case String:
-			ok, err := getFieldValue(obj, key+"Ok")
+			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
 				return "", err
 			}
 			if ok.Bool() {
 				if withValues {
-					sb.WriteString(fmt.Sprintf(` %v = '%v'`, name, rv.String()))
+					sb.WriteString(fmt.Sprintf(` %v = '%v'`, param.sqlName, rv.String()))
 				} else {
-					sb.WriteString(fmt.Sprintf(` %v`, name))
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
 				}
 			}
 		case StringList:
-			ok, err := getFieldValue(obj, key+"Ok")
+			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
 				return "", err
 			}
 			if ok.Bool() {
 				if withValues {
 					slice, _ := rv.Interface().([]string)
-					sb.WriteString(fmt.Sprintf(` %v = ('%v')`, name, strings.Join(slice, "', '")))
+					sb.WriteString(fmt.Sprintf(` %v = ('%v')`, param.sqlName, strings.Join(slice, "', '")))
 				} else {
-					sb.WriteString(fmt.Sprintf(` %v`, name))
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
 				}
 			}
 		}
@@ -221,7 +222,7 @@ func (b *NewBuilder) renderParameters(obj Identifier, paramConf map[string]*SQLP
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) Create(obj Identifier) (string, error) {
+func (b *SQLBuilder) Create(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("CREATE")
 
@@ -257,7 +258,7 @@ func (b *NewBuilder) Create(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) Alter(obj Identifier) (string, error) {
+func (b *SQLBuilder) Alter(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("ALTER")
 
@@ -288,7 +289,7 @@ func (b *NewBuilder) Alter(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) Unset(obj Identifier) (string, error) {
+func (b *SQLBuilder) Unset(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("ALTER")
 
@@ -319,7 +320,7 @@ func (b *NewBuilder) Unset(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) Drop(obj Identifier) (string, error) {
+func (b *SQLBuilder) Drop(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("DROP")
 
@@ -341,7 +342,7 @@ func (b *NewBuilder) Drop(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) Describe(obj Identifier) (string, error) {
+func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("DESCRIBE")
 
@@ -356,7 +357,7 @@ func (b *NewBuilder) Describe(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
-func (b *NewBuilder) ParseDescribe(rows *sql.Rows, obj Identifier) error {
+func (b *SQLBuilder) ParseDescribe(rows *sql.Rows, obj Identifier) error {
 	var property, value, defaultValue, desc string
 
 	for rows.Next() {
@@ -364,9 +365,11 @@ func (b *NewBuilder) ParseDescribe(rows *sql.Rows, obj Identifier) error {
 			return err
 		}
 
-		for field := range b.readOutputConfig.parameters {
-			if b.readOutputConfig.parameters[field].name == property {
-				err := setFieldValue(obj, field, value)
+		for i := range b.readOutputConfig.parameters {
+			param := b.readOutputConfig.parameters[i]
+
+			if param.sqlName == property {
+				err := setFieldValue(obj, param.structName, value)
 				if err != nil {
 					return err
 				}

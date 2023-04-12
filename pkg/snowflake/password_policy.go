@@ -51,7 +51,7 @@ func NewPasswordPolicyManager() (*PasswordPolicyManager, error) {
 
 	return &PasswordPolicyManager{
 		BaseManager: BaseManager{
-			genericBuilder: *builder,
+			sqlBuilder: *builder,
 		},
 	}, nil
 }
@@ -66,7 +66,7 @@ type PasswordPolicyCreateInput struct {
 }
 
 func (m *PasswordPolicyManager) Create(x *PasswordPolicyCreateInput) (string, error) {
-	return m.genericBuilder.Create(x)
+	return m.sqlBuilder.Create(x)
 }
 
 type (
@@ -75,12 +75,12 @@ type (
 )
 
 func (m *PasswordPolicyManager) Read(x *PasswordPolicyReadInput) (string, error) {
-	return m.genericBuilder.Describe(x)
+	return m.sqlBuilder.Describe(x)
 }
 
 func (m *PasswordPolicyManager) Parse(rows *sql.Rows) (*PasswordPolicyReadOutput, error) {
 	output := &PasswordPolicyReadOutput{}
-	err := m.genericBuilder.ParseDescribe(rows, output)
+	err := m.sqlBuilder.ParseDescribe(rows, output)
 	if err != nil {
 		return nil, err
 	}
@@ -95,11 +95,11 @@ type PasswordPolicyUpdateInput struct {
 }
 
 func (m *PasswordPolicyManager) Update(x *PasswordPolicyUpdateInput) (string, error) {
-	return m.genericBuilder.Alter(x)
+	return m.sqlBuilder.Alter(x)
 }
 
 func (m *PasswordPolicyManager) Unset(x *PasswordPolicyUpdateInput) (string, error) {
-	return m.genericBuilder.Unset(x)
+	return m.sqlBuilder.Unset(x)
 }
 
 type PasswordPolicyDeleteInput struct {
@@ -110,5 +110,5 @@ type PasswordPolicyDeleteInput struct {
 }
 
 func (m *PasswordPolicyManager) Delete(x *PasswordPolicyDeleteInput) (string, error) {
-	return m.genericBuilder.Drop(x)
+	return m.sqlBuilder.Drop(x)
 }

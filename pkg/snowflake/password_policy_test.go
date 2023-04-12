@@ -55,11 +55,8 @@ func TestAlterPasswordPolicy(t *testing.T) {
 	alterStmt, err := mb.Update(input)
 	r.Nil(err)
 	// Order of parameters is not guaranteed
-	r.Contains(
-		[2]string{
-			`ALTER PASSWORD POLICY testdb.testschema.passpol SET PASSWORD_MIN_NUMERIC_CHARS = 16 PASSWORD_LOCKOUT_TIME_MINS = 50;`,
-			`ALTER PASSWORD POLICY testdb.testschema.passpol SET PASSWORD_LOCKOUT_TIME_MINS = 50 PASSWORD_MIN_NUMERIC_CHARS = 16;`,
-		},
+	r.Equal(
+		`ALTER PASSWORD POLICY testdb.testschema.passpol SET PASSWORD_MIN_NUMERIC_CHARS = 16 PASSWORD_LOCKOUT_TIME_MINS = 50;`,
 		alterStmt,
 	)
 }
@@ -84,11 +81,8 @@ func TestUnsetPasswordPolicy(t *testing.T) {
 	unsetStmt, err := mb.Unset(input)
 	r.Nil(err)
 	// Order of parameters is not guaranteed
-	r.Contains(
-		[2]string{
-			`ALTER PASSWORD POLICY testdb.testschema.passpol UNSET PASSWORD_MIN_NUMERIC_CHARS COMMENT;`,
-			`ALTER PASSWORD POLICY testdb.testschema.passpol UNSET COMMENT PASSWORD_MIN_NUMERIC_CHARS;`,
-		},
+	r.Equal(
+		`ALTER PASSWORD POLICY testdb.testschema.passpol UNSET PASSWORD_MIN_NUMERIC_CHARS COMMENT;`,
 		unsetStmt,
 	)
 }
