@@ -189,7 +189,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-		return fmt.Errorf("error creating security integration" + stmt.Statement())
+		return fmt.Errorf("error creating security integration (%v): %w", stmt.Statement(), err)
 	}
 
 	d.SetId(name)
