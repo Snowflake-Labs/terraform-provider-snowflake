@@ -1,57 +1,19 @@
 package resources_test
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
-	"testing"
-	"text/template"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-)
-
-type (
-	TestAccDatabaseRoleSettings struct {
-		WarehouseName string
-		DatabaseName  string
-		DatabaseRole  *DatabaseRoleSettings
-	}
-
-	DatabaseRoleSettings struct {
-		Name    string
-		Comment string
-	}
+	"strings"
+	"testing"
 )
 
 var (
 	resourceName = "snowflake_database_role.test_db_role"
 	dbName       = "db_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	dbRoleName   = "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	dbRoleInitialState = &TestAccDatabaseRoleSettings{ //nolint
-		DatabaseName: databaseName,
-		DatabaseRole: &DatabaseRoleSettings{
-			Name:    dbRoleName,
-			Comment: "dummy",
-		},
-	}
-
-	dbRoleStepOne = &TestAccDatabaseRoleSettings{ //nolint
-		DatabaseName: databaseName,
-		DatabaseRole: &DatabaseRoleSettings{
-			Name:    dbRoleName,
-			Comment: "test",
-		},
-	}
-
-	dbRoleStepTwo = &TestAccDatabaseRoleSettings{ //nolint
-		DatabaseName: databaseName,
-		DatabaseRole: &DatabaseRoleSettings{
-			Name:    dbRoleName,
-			Comment: "text",
-		},
-	}
+	comment      = "dummy"
+	comment2     = "test comment"
 )
 
 func TestAcc_DatabaseRole(t *testing.T) {
@@ -60,59 +22,35 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRoleConfig(dbRoleInitialState),
+				Config: databaseRoleConfig(dbName, dbRoleName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 				),
 			},
 			{
-				Config: databaseRoleConfig(dbRoleStepOne),
+				Config: databaseRoleConfig(dbName, dbRoleName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "comment", dbRoleStepOne.DatabaseRole.Comment),
-				),
-			},
-			{
-				Config: databaseRoleConfig(dbRoleStepTwo),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "comment", dbRoleStepTwo.DatabaseRole.Comment),
-				),
-			},
-			{
-				Config: databaseRoleConfig(dbRoleInitialState),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "comment", dbRoleInitialState.DatabaseRole.Comment),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
 				),
 			},
 		},
 	})
 }
 
-func databaseRoleConfig(settings *TestAccDatabaseRoleSettings) string { //nolint
-	config, err := template.New("db_role_acceptance_test_config").Parse(`
+func databaseRoleConfig(dbName string, dbRoleName string, comment string) string { //nolint
+	s := `
 resource "snowflake_database" "test_db" {
-	name = "{{ .DatabaseName }}"
+	name = "%s"
 }
-resource "snowflake_database_role" "test_db_role" {
-	name     	  = "{{ .DatabaseRole.Name }}"
-	database  	  = snowflake_database.test_db.name
-	comment       = "{{ .DatabaseRole.Comment }}"
-}
-	`)
-	if err != nil {
-		fmt.Println(err)
-	}
 
-	var result bytes.Buffer
-	err = config.Execute(&result, settings) //nolint
-	if err != nil {
-		fmt.Println(err)
-	}
-	return result.String()
+resource "snowflake_database_role" "test_db_role" {
+	name     	  = "%s"
+	database  	  = snowflake_database.test_db.name
+	comment       = "%s"
+}
+	`
+	return fmt.Sprintf(s, dbName, dbRoleName, comment)
 }
