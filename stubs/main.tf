@@ -7,8 +7,28 @@ terraform {
   }
 }
 
+variable "snowflake_account" {
+  type = string
+}
+
+variable "snowflake_username" {
+  type = string
+}
+
+variable "snowflake_private_key" {
+  type = string
+}
+
+variable "snowflake_region" {
+  type = string
+}
+
 provider "snowflake" {
-  role = "SYSADMIN"
+  account     = var.snowflake_account
+  username    = var.snowflake_username
+  private_key = var.snowflake_private_key
+  region      = var.snowflake_region
+  role        = "SYSADMIN"
 }
 
 resource "snowflake_database" "db" {
