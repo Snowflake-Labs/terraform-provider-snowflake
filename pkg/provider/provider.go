@@ -225,6 +225,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_oauth_integration":              resources.OAuthIntegration(),
 		"snowflake_object_parameter":               resources.ObjectParameter(),
 		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
+		"snowflake_password_policy":                resources.PasswordPolicy(),
 		"snowflake_pipe":                           resources.Pipe(),
 		"snowflake_procedure":                      resources.Procedure(),
 		"snowflake_resource_monitor":               resources.ResourceMonitor(),
