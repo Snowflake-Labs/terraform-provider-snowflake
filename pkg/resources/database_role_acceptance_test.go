@@ -26,7 +26,7 @@ type (
 
 var (
 	resourceName = "snowflake_database_role.test_db_role"
-	databaseName = "db_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dbName       = "db_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	dbRoleName   = "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	dbRoleInitialState = &TestAccDatabaseRoleSettings{ //nolint
