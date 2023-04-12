@@ -19,4 +19,5 @@ data "snowflake_parameters" "p2" {
 data "snowflake_parameters" "p3" {
   parameter_type = "SESSION"
   pattern        = "ROWS_PER_RESULTSET"
+  user           = "TEST_USER"
 }

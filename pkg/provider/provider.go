@@ -210,6 +210,7 @@ func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
 		"snowflake_account":                        resources.Account(),
 		"snowflake_account_parameter":              resources.AccountParameter(),
+		"snowflake_alert":                          resources.Alert(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
 		"snowflake_database_role":                  resources.DatabaseRole(),
@@ -274,6 +275,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_tables":                             datasources.Tables(),
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_shares":                             datasources.Shares(),
 		"snowflake_stages":                             datasources.Stages(),
 		"snowflake_file_formats":                       datasources.FileFormats(),
 		"snowflake_sequences":                          datasources.Sequences(),

@@ -94,9 +94,6 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("integration_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -109,7 +106,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.IntegrationGrant(grantID.ObjectName)
 
-	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, validIntegrationPrivileges)
+	return readGenericGrant(d, meta, integrationGrantSchema, builder, false, false, validIntegrationPrivileges)
 }
 
 // DeleteIntegrationGrant implements schema.DeleteFunc.

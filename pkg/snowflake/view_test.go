@@ -13,66 +13,69 @@ func TestView(t *testing.T) {
 	schema := "some_schema"
 	view := "test"
 
-	v := NewViewBuilder(view).WithDB(db).WithSchema(schema)
-	r.NotNil(v)
-	r.False(v.secure)
-	qn, err := v.QualifiedName()
+	vb := NewViewBuilder(view).WithDB(db).WithSchema(schema)
+	r.NotNil(vb)
+	r.False(vb.secure)
+	qn, err := vb.QualifiedName()
 	r.NoError(err)
 	r.Equal(fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, view), qn)
 
-	v.WithSecure()
-	r.True(v.secure)
+	vb.WithSecure()
+	r.True(vb.secure)
 
-	v.WithComment("great' comment")
-	v.WithStatement("SELECT * FROM DUMMY LIMIT 1")
-	r.Equal("SELECT * FROM DUMMY LIMIT 1", v.statement)
+	vb.WithComment("great' comment")
+	vb.WithStatement("SELECT * FROM DUMMY LIMIT 1")
+	r.Equal("SELECT * FROM DUMMY LIMIT 1", vb.statement)
 
-	v.WithStatement("SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1")
+	vb.WithCopyGrants()
+	r.True(vb.copyGrants)
 
-	q, err := v.Create()
+	vb.WithStatement("SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1")
+
+	q, err := vb.Create()
 	r.NoError(err)
-	r.Equal(`CREATE SECURE VIEW "some_database"."some_schema"."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "some_database"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
-	q, err = v.Secure()
+	q, err = vb.Secure()
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" SET SECURE`, q)
 
-	q, err = v.Unsecure()
+	q, err = vb.Unsecure()
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" UNSET SECURE`, q)
 
-	q, err = v.ChangeComment("bad' comment")
+	q, err = vb.ChangeComment("bad' comment")
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" SET COMMENT = 'bad\' comment'`, q)
 
-	q, err = v.RemoveComment()
+	q, err = vb.RemoveComment()
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "some_database"."some_schema"."test" UNSET COMMENT`, q)
 
-	q, err = v.Drop()
+	q, err = vb.Drop()
 	r.NoError(err)
 	r.Equal(`DROP VIEW "some_database"."some_schema"."test"`, q)
 
-	q = v.Show()
+	q = vb.Show()
 	r.Equal(`SHOW VIEWS LIKE 'test' IN SCHEMA "some_database"."some_schema"`, q)
 
-	v.WithDB("mydb")
-	qn, err = v.QualifiedName()
+	vb.WithDB("mydb")
+	qn, err = vb.QualifiedName()
 	r.NoError(err)
 	r.Equal(`"mydb"."some_schema"."test"`, qn)
 
-	q, err = v.Create()
+	q, err = vb.Create()
 	r.NoError(err)
-	r.Equal(`CREATE SECURE VIEW "mydb"."some_schema"."test" COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "mydb"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
-	q, err = v.Secure()
+	q, err = vb.Secure()
 	r.NoError(err)
 	r.Equal(`ALTER VIEW "mydb"."some_schema"."test" SET SECURE`, q)
 
-	q = v.Show()
+	q = vb.Show()
 	r.Equal(`SHOW VIEWS LIKE 'test' IN SCHEMA "mydb"."some_schema"`, q)
 
-	q, err = v.Drop()
+	q, err = vb.Drop()
 	r.NoError(err)
 	r.Equal(`DROP VIEW "mydb"."some_schema"."test"`, q)
 }

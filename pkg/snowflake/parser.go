@@ -41,7 +41,8 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeSpace()
 	e.consumeIdentifier()
 	// TODO column list
-	// TODO copy grants
+	e.consumeSpace()
+	e.consumeToken("copy grants")
 	e.consumeComment()
 	e.consumeSpace()
 	e.consumeComment()

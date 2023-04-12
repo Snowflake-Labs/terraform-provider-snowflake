@@ -22,7 +22,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 	"view_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the view on which to grant privileges immediately (only valid if on_future is unset).",
+		Description: "The name of the view on which to grant privileges immediately (only valid if on_future and on_all are unset).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -55,12 +55,20 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future and on_all are unset).",
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"view_name", "shares"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all views in the given schema. When this is true and no schema_name is provided apply this grant on all views in the given database. The view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"view_name", "shares"},
@@ -137,24 +145,31 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
-	futureViews := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
+		return errors.New("on_future and on_all cannot both be true")
+	}
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
-	if (schemaName == "") && !futureViews {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
-	if (viewName == "") && !futureViews {
-		return errors.New("view_name must be set unless on_future is true")
+	if (viewName == "") && !onFuture && !onAll {
+		return errors.New("view_name must be set unless on_future or on_all is true")
 	}
-	if (viewName != "") && futureViews {
-		return errors.New("view_name must be empty if on_future is true")
+	if (viewName != "") && onFuture && onAll {
+		return errors.New("view_name must be empty if on_future and on_all are true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureViewGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllViewGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.ViewGrant(databaseName, schemaName, viewName)
 	}
 
@@ -179,40 +194,39 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
 		return err
 	}
-
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
+	if err := d.Set("view_name", grantID.ObjectName); err != nil {
+		return err
+	}
+	if err := d.Set("privilege", grantID.Privilege); err != nil {
+		return err
+	}
+	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+		return err
+	}
 
-	futureViewsEnabled := false
-	if grantID.ObjectName == "" {
-		futureViewsEnabled = true
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && !onAll {
+		onFuture = true
 	}
-	err = d.Set("view_name", grantID.ObjectName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("on_future", futureViewsEnabled)
-	if err != nil {
-		return err
-	}
-	err = d.Set("privilege", grantID.Privilege)
-	if err != nil {
-		return err
-	}
-	err = d.Set("with_grant_option", grantID.WithGrantOption)
-	if err != nil {
+	if err = d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureViewsEnabled {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.ViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
-	return readGenericGrant(d, meta, viewGrantSchema, builder, futureViewsEnabled, validViewPrivileges)
+	return readGenericGrant(d, meta, viewGrantSchema, builder, onFuture, onAll, validViewPrivileges)
 }
 
 // DeleteViewGrant implements schema.DeleteFunc.
@@ -222,21 +236,26 @@ func DeleteViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	futureViews := (grantID.ObjectName == "")
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.ViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
+
 	return deleteGenericGrant(d, meta, builder)
 }
 
 // UpdateViewGrant implements schema.UpdateFunc.
 func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
@@ -256,13 +275,16 @@ func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	futureViews := (grantID.ObjectName == "")
-
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if futureViews {
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	switch {
+	case onFuture:
 		builder = snowflake.FutureViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.ViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 

@@ -93,9 +93,6 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
 	if err := d.Set("monitor_name", grantID.ObjectName); err != nil {
 		return err
 	}
@@ -107,7 +104,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.ResourceMonitorGrant(grantID.ObjectName)
-	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
+	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, false, validResourceMonitorPrivileges)
 }
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc.

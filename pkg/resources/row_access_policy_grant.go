@@ -132,7 +132,7 @@ func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.RowAccessPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 
-	return readGenericGrant(d, meta, rowAccessPolicyGrantSchema, builder, false, validRowAccessPoilcyPrivileges)
+	return readGenericGrant(d, meta, rowAccessPolicyGrantSchema, builder, false, false, validRowAccessPoilcyPrivileges)
 }
 
 // DeleteRowAccessPolicyGrant implements schema.DeleteFunc.

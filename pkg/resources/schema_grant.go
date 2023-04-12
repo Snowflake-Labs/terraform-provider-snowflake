@@ -68,12 +68,20 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future and on_all are unset).",
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"schema_name", "shares"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
@@ -144,18 +152,25 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
+		return errors.New("on_future and on_all cannot both be true")
+	}
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSchemaGrant(databaseName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSchemaGrant(databaseName)
+	default:
 		builder = snowflake.SchemaGrant(databaseName, schemaName)
 	}
 
@@ -172,7 +187,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 // UpdateSchemaGrant implements schema.UpdateFunc.
 func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
@@ -194,12 +209,16 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSchemaGrant(grantID.DatabaseName)
+	default:
 		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
 	}
 
@@ -243,13 +262,6 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
-	onFuture := false
-	if grantID.SchemaName == "" {
-		onFuture = true
-	}
-	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
 		return err
 	}
@@ -257,13 +269,25 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.SchemaName == "" && !onAll {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSchemaGrant(grantID.DatabaseName)
+	default:
 		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
 	}
-	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
+
+	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, onAll, validSchemaPrivileges)
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
@@ -273,15 +297,15 @@ func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := false
-	if grantID.SchemaName == "" {
-		onFuture = true
-	}
-
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSchemaGrant(grantID.DatabaseName)
+	default:
 		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
 	}
 	return deleteGenericGrant(d, meta, builder)
