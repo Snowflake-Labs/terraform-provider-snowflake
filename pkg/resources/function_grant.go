@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -18,27 +17,6 @@ var validFunctionPrivileges = NewPrivilegeSet(
 )
 
 var functionGrantSchema = map[string]*schema.Schema{
-	"arguments": {
-		Type: schema.TypeList,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The argument name",
-				},
-				"type": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The argument type",
-				},
-			},
-		},
-		Optional:    true,
-		Description: "List of the arguments for the function (must be present if function has arguments and function_name is present)",
-		ForceNew:    true,
-		Deprecated:  "Use argument_data_types instead",
-	},
 	"argument_data_types": {
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
@@ -80,13 +58,6 @@ var functionGrantSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.ToList(), true),
 		ForceNew:     true,
 	},
-	"return_type": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The return type of the function (must be present if function_name is present)",
-		ForceNew:    true,
-		Deprecated:  "Not used anymore",
-	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Required:    true,
@@ -126,34 +97,38 @@ func FunctionGrant() *TerraformGrantResource {
 			Schema: functionGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-					grantID, err := ParseFunctionGrantID(d.Id())
-					if err != nil {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 9 {
+						return nil, errors.New("function grant ID must be specified as database_name|schema_name|function_name|argument_data_types|privilege|with_grant_option|on_future|roles|shares")
+					}
+					if err := d.Set("database_name", parts[0]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("argument_data_types", grantID.ArgumentDataTypes); err != nil {
+					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("function_name", grantID.ObjectName); err != nil {
+					if err := d.Set("function_name", parts[2]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+					if err := d.Set("argument_data_types", helpers.StringListToList(parts[3])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+					if err := d.Set("privilege", parts[4]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("privilege", grantID.Privilege); err != nil {
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+					if err := d.Set("on_future", helpers.StringToBool(parts[6])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", grantID.Roles); err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("shares", grantID.Shares); err != nil {
+					if err := d.Set("shares", helpers.StringListToList(parts[8])); err != nil {
 						return nil, err
 					}
+
 					return []*schema.ResourceData{d}, nil
 				},
 			},
@@ -210,71 +185,56 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-
-	grantID := NewFunctionGrantID(databaseName, schemaName, functionName, argumentDataTypes, privilege, roles, shares, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, roles, shares)
+	d.SetId(grantID)
 	return ReadFunctionGrant(d, meta)
 }
 
 // ReadFunctionGrant implements schema.ReadFunc.
 func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := ParseFunctionGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
-	}
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
-	onFuture := false
-	if grantID.ObjectName == "" {
-		onFuture = true
-	}
-	if err := d.Set("function_name", grantID.ObjectName); err != nil {
-		return err
-	}
-	if err := d.Set("argument_data_types", grantID.ArgumentDataTypes); err != nil {
-		return err
-	}
-	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	functionName := d.Get("function_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	onFuture := d.Get("on_future").(bool)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureFunctionGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureFunctionGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.FunctionGrant(databaseName, schemaName, functionName, argumentDataTypes)
 	}
 	// TODO
 	onAll := false
 
-	return readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, onAll, validFunctionPrivileges)
+	err := readGenericGrant(d, meta, functionGrantSchema, builder, onFuture, onAll, validFunctionPrivileges)
+	if err != nil {
+		return err
+	}
+	grantID := helpers.SnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, roles, shares)
+	if grantID != d.Id() {
+		d.SetId(grantID)
+	}
+	return nil
 }
 
 // DeleteFunctionGrant implements schema.DeleteFunc.
 func DeleteFunctionGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := ParseFunctionGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	onFuture := (grantID.ObjectName == "")
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	functionName := d.Get("function_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	onFuture := d.Get("on_future").(bool)
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureFunctionGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureFunctionGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.FunctionGrant(databaseName, schemaName, functionName, argumentDataTypes)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -297,125 +257,35 @@ func UpdateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := ParseFunctionGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-	onFuture := (grantID.ObjectName == "")
 
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	functionName := d.Get("function_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	onFuture := d.Get("on_future").(bool)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureFunctionGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureFunctionGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.FunctionGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.FunctionGrant(databaseName, schemaName, functionName, argumentDataTypes)
 	}
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke,
+		meta, builder, privilege, rolesToRevoke, sharesToRevoke,
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, sharesToAdd,
+		meta, builder, privilege, withGrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadFunctionGrant(d, meta)
-}
-
-type FunctionGrantID struct {
-	DatabaseName      string
-	SchemaName        string
-	ObjectName        string
-	ArgumentDataTypes []string
-	Privilege         string
-	Roles             []string
-	Shares            []string
-	WithGrantOption   bool
-	IsOldID           bool
-}
-
-func NewFunctionGrantID(databaseName string, schemaName, objectName string, argumentDataTypes []string, privilege string, roles []string, shares []string, withGrantOption bool) *FunctionGrantID {
-	return &FunctionGrantID{
-		DatabaseName:      databaseName,
-		SchemaName:        schemaName,
-		ObjectName:        objectName,
-		ArgumentDataTypes: argumentDataTypes,
-		Privilege:         privilege,
-		Roles:             roles,
-		Shares:            shares,
-		WithGrantOption:   withGrantOption,
-		IsOldID:           false,
-	}
-}
-
-func (v *FunctionGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	shares := strings.Join(v.Shares, ",")
-	argumentDataTypes := strings.Join(v.ArgumentDataTypes, ",")
-	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
-}
-
-func ParseFunctionGrantID(s string) (*FunctionGrantID, error) {
-	if IsOldGrantID(s) {
-		idParts := strings.Split(s, "|")
-		objectIdentifier := idParts[2]
-		if idx := strings.Index(objectIdentifier, ")"); idx != -1 {
-			objectIdentifier = objectIdentifier[0:idx]
-		}
-		objectNameParts := strings.Split(objectIdentifier, "(")
-		argumentDataTypes := []string{}
-		if len(objectNameParts) > 1 {
-			argumentDataTypes = helpers.SplitStringToSlice(objectNameParts[1], ",")
-		}
-		// remove the param names from the argument (if present)
-		for i, argumentDataType := range argumentDataTypes {
-			parts := strings.Split(argumentDataType, " ")
-			if len(parts) > 1 {
-				argumentDataTypes[i] = parts[1]
-			}
-		}
-		var roles []string
-		var withGrantOption bool
-		if len(idParts) == 6 {
-			withGrantOption = idParts[5] == "true"
-			roles = helpers.SplitStringToSlice(idParts[4], ",")
-		} else {
-			withGrantOption = idParts[4] == "true"
-		}
-		return &FunctionGrantID{
-			DatabaseName:      idParts[0],
-			SchemaName:        idParts[1],
-			ObjectName:        objectNameParts[0],
-			ArgumentDataTypes: argumentDataTypes,
-			Privilege:         idParts[3],
-			Roles:             roles,
-			Shares:            []string{},
-			WithGrantOption:   withGrantOption,
-			IsOldID:           true,
-		}, nil
-	}
-	idParts := strings.Split(s, "|")
-	if len(idParts) < 8 {
-		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
-	}
-	if len(idParts) != 8 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
-	}
-	return &FunctionGrantID{
-		DatabaseName:      idParts[0],
-		SchemaName:        idParts[1],
-		ObjectName:        idParts[2],
-		ArgumentDataTypes: helpers.SplitStringToSlice(idParts[3], ","),
-		Privilege:         idParts[4],
-		WithGrantOption:   idParts[5] == "true",
-		Roles:             helpers.SplitStringToSlice(idParts[6], ","),
-		Shares:            helpers.SplitStringToSlice(idParts[7], ","),
-		IsOldID:           false,
-	}, nil
 }

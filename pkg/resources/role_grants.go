@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -54,7 +55,22 @@ func RoleGrants() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), helpers.IDDelimiter)
+				if len(parts) != 3 {
+					return nil, fmt.Errorf("invalid ID specified for role grants, expected {role_name}|{roles}|{users}, got %v", d.Id())
+				}
+				if err := d.Set("role_name", parts[0]); err != nil {
+					return nil, err
+				}
+				if err := d.Set("roles", helpers.StringListToList(parts[1])); err != nil {
+					return nil, err
+				}
+				if err := d.Set("users", helpers.StringListToList(parts[2])); err != nil {
+					return nil, err
+				}
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }
@@ -69,8 +85,8 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
-	grantID := NewRoleGrantsID(roleName, roles, users)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(roleName, roles, users)
+	d.SetId(grantID)
 
 	for _, role := range roles {
 		if err := grantRoleToRole(db, roleName, role); err != nil {
@@ -109,23 +125,21 @@ type roleGrant struct {
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	grantID, err := ParseRoleGrantsID(d.Id())
-	if err != nil {
-		return err
-	}
+	roleName := d.Get("role_name").(string)
+
 	roles := make([]string, 0)
 	users := make([]string, 0)
 
-	builder := snowflake.NewRoleBuilder(db, grantID.ObjectName)
-	_, err = builder.Show()
+	builder := snowflake.NewRoleBuilder(db, roleName)
+	_, err := builder.Show()
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] role (%s) not found", grantID.ObjectName)
+		log.Printf("[DEBUG] role (%s) not found", roleName)
 		d.SetId("")
 		return nil
 	}
 
-	grants, err := readGrants(db, grantID.ObjectName)
+	grants, err := readGrants(db, roleName)
 	if err != nil {
 		return err
 	}
@@ -149,9 +163,6 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("role_name", grantID.ObjectName); err != nil {
-		return err
-	}
 	if err := d.Set("roles", roles); err != nil {
 		return err
 	}
@@ -159,6 +170,10 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	grantID := helpers.SnowflakeID(roleName, roles, users)
+	if grantID != d.Id() {
+		d.SetId(grantID)
+	}
 	return nil
 }
 
@@ -302,55 +317,4 @@ func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return ReadRoleGrants(d, meta)
-}
-
-type RoleGrantsID struct {
-	ObjectName string
-	Roles      []string
-	Users      []string
-	IsOldID    bool
-}
-
-func NewRoleGrantsID(objectName string, roles, users []string) *RoleGrantsID {
-	return &RoleGrantsID{
-		ObjectName: objectName,
-		Roles:      roles,
-		Users:      users,
-		IsOldID:    false,
-	}
-}
-
-func (v *RoleGrantsID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	users := strings.Join(v.Users, ",")
-	return fmt.Sprintf("%v|%v|%v", v.ObjectName, roles, users)
-}
-
-func ParseRoleGrantsID(s string) (*RoleGrantsID, error) {
-	if IsOldGrantID(s) || (len(strings.Split(s, "|")) == 1 && !strings.Contains(s, "❄️")) {
-		idParts := strings.Split(s, "|")
-		var roles []string
-		if len(idParts) == 6 {
-			roles = helpers.SplitStringToSlice(idParts[4], ",")
-		}
-		return &RoleGrantsID{
-			ObjectName: idParts[0],
-			Roles:      roles,
-			Users:      []string{},
-			IsOldID:    true,
-		}, nil
-	}
-	idParts := strings.Split(s, "|")
-	if len(idParts) < 3 {
-		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
-	}
-	if len(idParts) != 3 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
-	}
-	return &RoleGrantsID{
-		ObjectName: idParts[0],
-		Roles:      helpers.SplitStringToSlice(idParts[1], ","),
-		Users:      helpers.SplitStringToSlice(idParts[2], ","),
-		IsOldID:    false,
-	}, nil
 }
