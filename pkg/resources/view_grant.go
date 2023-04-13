@@ -144,6 +144,9 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("view_name"); ok {
 		viewName = d.Get("view_name").(string)
 	}
+	if err := d.Set("view_name", viewName); err != nil {
+		return err
+	}
 	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
 		schemaName = d.Get("schema_name").(string)

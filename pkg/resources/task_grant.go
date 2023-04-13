@@ -125,6 +125,9 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("task_name"); ok {
 		taskName = name.(string)
 	}
+	if err := d.Set("task_name", taskName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

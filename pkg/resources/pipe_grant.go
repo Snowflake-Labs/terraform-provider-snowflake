@@ -124,6 +124,9 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("pipe_name"); ok {
 		pipeName = name.(string)
 	}
+	if err := d.Set("pipe_name", pipeName); err != nil {
+		return err
+	}
 	var schemaName string
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)

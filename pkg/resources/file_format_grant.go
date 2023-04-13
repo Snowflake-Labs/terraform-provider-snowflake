@@ -124,6 +124,9 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("file_format_name"); ok {
 		fileFormatName = name.(string)
 	}
+	if err := d.Set("file_format_name", fileFormatName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

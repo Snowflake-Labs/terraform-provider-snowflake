@@ -152,7 +152,9 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("stage_name"); ok {
 		stageName = name.(string)
 	}
-
+	if err := d.Set("stage_name", stageName); err != nil {
+		return err
+	}
 	if (schemaName == "") && !onFuture && !onAll {
 		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}

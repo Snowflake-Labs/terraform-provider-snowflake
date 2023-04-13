@@ -143,7 +143,9 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("function_name"); ok {
 		functionName = name.(string)
 	}
-
+	if err := d.Set("function_name", functionName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

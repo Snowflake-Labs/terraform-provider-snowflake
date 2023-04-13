@@ -149,6 +149,9 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("table_name"); ok {
 		tableName = d.Get("table_name").(string)
 	}
+	if err := d.Set("table_name", tableName); err != nil {
+		return err
+	}
 	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
 		schemaName = d.Get("schema_name").(string)

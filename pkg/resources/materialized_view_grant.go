@@ -150,6 +150,9 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	if name, ok := d.GetOk("materialized_view_name"); ok {
 		materializedViewName = name.(string)
 	}
+	if err := d.Set("materialized_view_name", materializedViewName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

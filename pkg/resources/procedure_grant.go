@@ -142,6 +142,9 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("procedure_name"); ok {
 		procedureName = name.(string)
 	}
+	if err := d.Set("procedure_name", procedureName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

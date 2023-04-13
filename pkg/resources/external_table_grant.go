@@ -134,6 +134,9 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("external_table_name"); ok {
 		externalTableName = name.(string)
 	}
+	if err := d.Set("external_table_name", externalTableName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
