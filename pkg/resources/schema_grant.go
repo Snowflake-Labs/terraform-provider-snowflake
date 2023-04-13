@@ -156,6 +156,9 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("schema_name"); ok {
 		schemaName = d.Get("schema_name").(string)
 	}
+	if err := d.Set("schema_name", schemaName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
