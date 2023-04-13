@@ -32,7 +32,6 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},
@@ -55,6 +54,14 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
 				),
+			},
+			{
+				ResourceName:      "snowflake_view_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
@@ -91,7 +98,6 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},

@@ -90,7 +90,7 @@ func MaskingPolicyGrant() *TerraformGrantResource {
 					if err := d.Set("masking_policy_name", parts[2]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("privilege", helpers.StringToBool(parts[3])); err != nil {
+					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
 					}
 					if err := d.Set("with_grant_option", helpers.StringToBool(parts[4])); err != nil {

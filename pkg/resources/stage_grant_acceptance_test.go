@@ -36,7 +36,6 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},

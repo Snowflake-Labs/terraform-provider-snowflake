@@ -136,10 +136,10 @@ func SchemaGrant() *TerraformGrantResource {
 					if err := d.Set("on_all", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[4])); err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("shares", helpers.StringListToList(parts[5])); err != nil {
+					if err := d.Set("shares", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil

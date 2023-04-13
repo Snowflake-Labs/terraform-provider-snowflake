@@ -31,6 +31,15 @@ func TestAcc_FunctionFutureGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "privilege", "USAGE"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_function_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }

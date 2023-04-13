@@ -31,6 +31,14 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "privilege", "APPLY"),
 				),
 			},
+			{
+				ResourceName:      "snowflake_row_access_policy_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }
