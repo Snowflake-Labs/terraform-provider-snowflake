@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -26,14 +26,15 @@ func TestAcc_DatabaseRole(t *testing.T) {
 				Config: databaseRoleConfig(dbName, dbRoleName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "database", dbName),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
 				Config: databaseRoleConfig(dbName, dbRoleName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "database", dbName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
 				),
 			},

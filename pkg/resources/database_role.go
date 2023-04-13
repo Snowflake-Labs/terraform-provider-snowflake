@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -37,14 +36,14 @@ var databaseRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-type dbRoleID struct {
+type databaseRoleID struct {
 	DatabaseName string
 	RoleName     string
 }
 
-// String() takes in a dbRoleID object and returns a pipe-delimited string:
+// String() takes in a databaseRoleID object and returns a pipe-delimited string:
 // DatabaseName|RoleName.
-func (id *dbRoleID) String() (string, error) {
+func (id *databaseRoleID) String() (string, error) {
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	csvWriter.Comma = databaseRoleIDDelimiter
@@ -57,8 +56,8 @@ func (id *dbRoleID) String() (string, error) {
 }
 
 // databaseRoleIDFromString() takes in a pipe-delimited string: DatabaseName|RoleName
-// and returns a dbRoleID object.
-func databaseRoleIDFromString(stringID string) (*dbRoleID, error) {
+// and returns a databaseRoleID object.
+func databaseRoleIDFromString(stringID string) (*databaseRoleID, error) {
 	reader := csv.NewReader(strings.NewReader(stringID))
 	reader.Comma = pipeIDDelimiter
 	lines, err := reader.ReadAll()
@@ -72,7 +71,7 @@ func databaseRoleIDFromString(stringID string) (*dbRoleID, error) {
 		return nil, fmt.Errorf("2 fields allowed")
 	}
 
-	dbRoleResult := &dbRoleID{
+	dbRoleResult := &databaseRoleID{
 		DatabaseName: lines[0][0],
 		RoleName:     lines[0][1],
 	}
@@ -102,23 +101,28 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	database := dbRoleID.DatabaseName
-	name := dbRoleID.RoleName
+	databaseName := dbRoleID.DatabaseName
+	roleName := dbRoleID.RoleName
 
-	builder := snowflake.NewDatabaseRoleBuilder(name, database)
-	qry := builder.Show()
-	row := snowflake.QueryRow(db, qry)
-	// FIXME scan for name as there is LIKE pattern syntax
-	databaseRole, err := snowflake.ScanDatabaseRole(row)
-	databaseRole.DatabaseName = database // Nasty.
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] database role (%s) not found", d.Id())
+	roles, err := snowflake.ListDatabaseRoles(databaseName, db)
+	if err != nil {
+		return fmt.Errorf("error listing database roles err = %w", err)
+	}
+
+	var databaseRole snowflake.DatabaseRole
+	// find the db role we are looking for by matching the name and db name
+	for _, dbRole := range roles {
+		if strings.EqualFold(dbRole.Name, roleName) {
+			databaseRole = dbRole
+			databaseRole.DatabaseName = databaseName // needs to be set as it's not included in the SHOW stmt results
+			break
+		}
+	}
+
+	if databaseRole.Name == "" {
+		log.Printf("[DEBUG] database role (%v) not found when listing all database roles in database (%v)", roleName, databaseName)
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
-		return err
 	}
 
 	if err := d.Set("name", databaseRole.Name); err != nil {
@@ -140,24 +144,24 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	db := meta.(*sql.DB)
-	database := d.Get("database").(string)
-	name := d.Get("name").(string)
+	databaseName := d.Get("database").(string)
+	roleName := d.Get("name").(string)
 
-	builder := snowflake.NewDatabaseRoleBuilder(name, database)
+	builder := snowflake.NewDatabaseRoleBuilder(roleName, databaseName)
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
 
-	q := builder.Create()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating database role %v err = %w", name, err)
+	qry := builder.Create()
+	if err := snowflake.Exec(db, qry); err != nil {
+		return fmt.Errorf("error creating database role %v err = %w", roleName, err)
 	}
 
-	dbRoleID := &dbRoleID{
-		DatabaseName: database,
-		RoleName:     name,
+	dbRoleId := &databaseRoleID{
+		DatabaseName: databaseName,
+		RoleName:     roleName,
 	}
-	dataIDInput, err := dbRoleID.String()
+	dataIDInput, err := dbRoleId.String()
 	if err != nil {
 		return err
 	}
@@ -174,9 +178,9 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	db := meta.(*sql.DB)
-	database := dbRoleID.DatabaseName
-	name := dbRoleID.RoleName
-	builder := snowflake.NewDatabaseRoleBuilder(name, database)
+	databaseName := dbRoleID.DatabaseName
+	roleName := dbRoleID.RoleName
+	builder := snowflake.NewDatabaseRoleBuilder(roleName, databaseName)
 
 	if d.HasChange("comment") {
 		var q string
@@ -198,10 +202,10 @@ func DeleteDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	database := dbRoleID.DatabaseName
-	name := dbRoleID.RoleName
+	roleName := dbRoleID.RoleName
+	databaseName := dbRoleID.DatabaseName
 
-	q := snowflake.NewDatabaseRoleBuilder(name, database).Drop()
+	q := snowflake.NewDatabaseRoleBuilder(roleName, databaseName).Drop()
 	if err := snowflake.Exec(db, q); err != nil {
 		return fmt.Errorf("error deleting database role %v err = %w", d.Id(), err)
 	}

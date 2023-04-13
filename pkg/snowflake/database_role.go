@@ -51,10 +51,10 @@ func (builder *DatabaseRoleBuilder) WithComment(c string) *DatabaseRoleBuilder {
 //
 // [Snowflake Reference](https://docs.snowflake.com/en/user-guide/security-access-control-considerations#label-access-control-considerations-database-roles)
 
-func NewDatabaseRoleBuilder(name, db string) *DatabaseRoleBuilder {
+func NewDatabaseRoleBuilder(roleName, dbName string) *DatabaseRoleBuilder {
 	return &DatabaseRoleBuilder{
-		name: name,
-		db:   db,
+		name: roleName,
+		db:   dbName,
 	}
 }
 
