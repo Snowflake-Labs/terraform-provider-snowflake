@@ -114,9 +114,10 @@ func SchemaGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 6 {
-						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|privilege|with_grant_option|roles|shares", d.Id())
+					if len(parts) != 8 {
+						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|privilege|with_grant_option|on_future|on_all|roles|shares", d.Id())
 					}
+
 					if err := d.Set("database_name", parts[0]); err != nil {
 						return nil, err
 					}
@@ -126,7 +127,13 @@ func SchemaGrant() *TerraformGrantResource {
 					if err := d.Set("privilege", parts[2]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("with_grant_option", helpers.StringListToList(parts[3])); err != nil {
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[3])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_future", helpers.StringToBool(parts[4])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_all", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
 					if err := d.Set("roles", helpers.StringListToList(parts[4])); err != nil {
@@ -178,7 +185,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, roles, shares)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadSchemaGrant(d, meta)
@@ -274,7 +281,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, roles, shares)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

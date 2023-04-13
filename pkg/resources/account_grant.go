@@ -90,15 +90,15 @@ func AccountGrant() *TerraformGrantResource {
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
 					if len(parts) != 3 {
-						return nil, errors.New("invalid ID specified for account grant. Expecting {privilege}|{roles}|{with_grant_option}")
+						return nil, errors.New("id should be in the format 'privilege|with_grant_option|roles'")
 					}
 					if err := d.Set("privilege", parts[0]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[1])); err != nil {
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[1])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("with_grant_option", helpers.StringToBool(parts[2])); err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[2])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -120,7 +120,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	privilege := d.Get("privilege").(string)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
-	grantID := helpers.SnowflakeID(privilege, roles, withGrantOption)
+	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadAccountGrant(d, meta)
@@ -138,7 +138,7 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(privilege, roles, withGrantOption)
+	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
 	// if the ID is not in the new format, rewrite it
 	if grantID != d.Id() {
 		d.SetId(grantID)

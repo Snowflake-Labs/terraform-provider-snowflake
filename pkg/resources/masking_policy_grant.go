@@ -79,7 +79,7 @@ func MaskingPolicyGrant() *TerraformGrantResource {
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
 					if len(parts) != 6 {
-						return nil, fmt.Errorf("Unexpected format of ID (%q), expected database_name|schema_name|masking_policy_name|privilege|with_grant_option|roles", d.Id())
+						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|masking_policy_name|privilege|with_grant_option|roles", d.Id())
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
 						return nil, err
