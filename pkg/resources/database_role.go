@@ -157,11 +157,11 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating database role %v err = %w", roleName, err)
 	}
 
-	dbRoleId := &databaseRoleID{
+	dbRoleID := &databaseRoleID{
 		DatabaseName: databaseName,
 		RoleName:     roleName,
 	}
-	dataIDInput, err := dbRoleId.String()
+	dataIDInput, err := dbRoleID.String()
 	if err != nil {
 		return err
 	}
