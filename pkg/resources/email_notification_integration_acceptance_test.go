@@ -1,0 +1,44 @@
+package resources_test
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+func TestAcc_EmailNotificationIntegration(t *testing.T) {
+	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: emailNotificationIntegrationConfig(emailIntegrationName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
+				),
+			},
+		},
+	})
+}
+
+func emailNotificationIntegrationConfig(name string) string {
+	s := `
+resource "snowflake_email_notification_integration" "test" {
+  name               = "%s"
+  enabled            = true
+  allowed_recipients = ["joe@domain.com"] # Verified Email Addresses is required
+  comment            = "test"
+  /* 
+Error: error creating notification integration: 394209 (22023): 
+Email recipients in the given list at indexes [1] are not allowed. 
+Either these email addresses are not yet validated or do not belong to any user in the current account.
+  */
+}
+`
+	return fmt.Sprintf(s, name)
+}

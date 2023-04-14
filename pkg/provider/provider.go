@@ -242,6 +242,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_stage":                          resources.Stage(),
 		"snowflake_storage_integration":            resources.StorageIntegration(),
 		"snowflake_notification_integration":       resources.NotificationIntegration(),
+		"snowflake_email_notification_integration": resources.EmailNotificationIntegration(),
 		"snowflake_stream":                         resources.Stream(),
 		"snowflake_table":                          resources.Table(),
 		"snowflake_table_constraint":               resources.TableConstraint(),
