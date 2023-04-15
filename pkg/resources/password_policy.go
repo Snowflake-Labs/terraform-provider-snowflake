@@ -191,10 +191,16 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	input := &snowflake.PasswordPolicyReadInput{
-		Database:   d.Get("database").(string),
-		Schema:     d.Get("schema").(string),
-		ObjectName: d.Get("name").(string),
+	input := PasswordPolicyIdentifier(d.Id())
+
+	if err := d.Set("database", input.Database); err != nil {
+		return fmt.Errorf("error setting database: %w", err)
+	}
+	if err := d.Set("schema", input.Schema); err != nil {
+		return fmt.Errorf("error setting schema: %w", err)
+	}
+	if err := d.Set("name", input.ObjectName); err != nil {
+		return fmt.Errorf("error setting name: %w", err)
 	}
 
 	stmt, err := manager.Read(input)
@@ -444,4 +450,8 @@ func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 func PasswordPolicyID(pp *snowflake.PasswordPolicy) string {
 	return pp.QualifiedName()
+}
+
+func PasswordPolicyIdentifier(id string) *snowflake.SchemaObjectIdentifier {
+	return snowflake.SchemaObjectIdentifierFromQualifiedName(id)
 }
