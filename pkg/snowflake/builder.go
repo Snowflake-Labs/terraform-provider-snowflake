@@ -373,10 +373,29 @@ func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 }
 
 func (b *SQLBuilder) ParseDescribe(rows *sql.Rows, obj Identifier) error {
-	var property, value, defaultValue, desc string
+	var property, value, defaultValue, devnull string
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+
+	vars := []interface{}{}
+	for i := range cols {
+		switch cols[i] {
+		case "property":
+			vars = append(vars, &property)
+		case "value", "property_value":
+			vars = append(vars, &value)
+		case "default", "property_default":
+			vars = append(vars, &defaultValue)
+		default:
+			vars = append(vars, &devnull)
+		}
+	}
 
 	for rows.Next() {
-		if err := rows.Scan(&property, &value, &defaultValue, &desc); err != nil {
+		if err := rows.Scan(vars...); err != nil {
 			return err
 		}
 
