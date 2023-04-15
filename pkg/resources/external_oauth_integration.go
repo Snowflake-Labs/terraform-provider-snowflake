@@ -50,6 +50,11 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.",
 	},
+	"scope_mapping_attribute": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the access token claim to map the access token to an account role.",
+	},
 	"snowflake_user_mapping_attribute": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -191,6 +196,8 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			ExternalOauthAnyRoleModeOk:                   isOk(d.GetOk("any_role_mode")),
 			ExternalOauthScopeDelimiter:                  d.Get("scope_delimiter").(string),
 			ExternalOauthScopeDelimiterOk:                isOk(d.GetOk("scope_delimiter")),
+			ExternalOauthScopeMappingAttribute:           d.Get("scope_mapping_attribute").(string),
+			ExternalOauthScopeMappingAttributeOk:         isOk(d.GetOk("scope_mapping_attribute")),
 
 			Comment:   d.Get("comment").(string),
 			CommentOk: isOk(d.GetOk("comment")),
@@ -312,6 +319,9 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	}
 	if err := d.Set("snowflake_user_mapping_attribute", describeOutput.ExternalOauthSnowflakeUserMappingAttribute); err != nil {
 		return fmt.Errorf("error setting snowflake_user_mapping_attribute: %w", err)
+	}
+	if err := d.Set("scope_mapping_attribute", describeOutput.ExternalOauthScopeMappingAttribute); err != nil {
+		return fmt.Errorf("error setting scope_mapping_attribute: %w", err)
 	}
 
 	return err
@@ -481,6 +491,17 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			runAlter = true
 		} else {
 			unsetInput.ExternalOauthScopeDelimiterOk = true
+			runUnset = true
+		}
+	}
+	if d.HasChange("scope_mapping_attribute") {
+		val, ok := d.GetOk("scope_mapping_attribute")
+		if ok {
+			alterInput.ExternalOauthScopeMappingAttribute = val.(string)
+			alterInput.ExternalOauthScopeMappingAttributeOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthScopeMappingAttributeOk = true
 			runUnset = true
 		}
 	}
