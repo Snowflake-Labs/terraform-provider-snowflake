@@ -110,7 +110,7 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 	return config, nil
 }
 
-func newBuilder(
+func newSQLBuilder(
 	objectType string,
 	objectTypePlural string,
 	createInputType, alterInputType, unsetInputType, dropInputType, readOutputType reflect.Type,

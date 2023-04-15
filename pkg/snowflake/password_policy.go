@@ -36,7 +36,7 @@ type PasswordPolicyManager struct {
 }
 
 func NewPasswordPolicyManager() (*PasswordPolicyManager, error) {
-	builder, err := newBuilder(
+	builder, err := newSQLBuilder(
 		"PASSWORD POLICY",
 		"PASSWORD POLICIES",
 		reflect.TypeOf(PasswordPolicyCreateInput{}),
