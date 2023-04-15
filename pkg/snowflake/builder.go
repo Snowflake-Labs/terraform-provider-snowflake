@@ -14,6 +14,7 @@ var (
 	Integer    ParamType = "int"
 	String     ParamType = "string"
 	StringList ParamType = "stringlist"
+	Bool       ParamType = "bool"
 )
 
 type SQLParameter struct {
@@ -97,6 +98,8 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 				paramType = String
 			case reflect.SliceOf(reflect.TypeOf("")):
 				paramType = StringList
+			case reflect.TypeOf(true):
+				paramType = Bool
 			}
 
 			config.parameters = append(config.parameters, &SQLParameter{
@@ -179,6 +182,18 @@ func (b *SQLBuilder) renderParameters(obj Identifier, paramConf []*SQLParameter,
 		}
 
 		switch paramConf[i].paramType {
+		case Bool:
+			ok, err := getFieldValue(obj, param.structName+"Ok")
+			if err != nil {
+				return "", err
+			}
+			if ok.Bool() {
+				if withValues {
+					sb.WriteString(fmt.Sprintf(` %v = %t`, param.sqlName, rv.Bool()))
+				} else {
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
+				}
+			}
 		case Integer:
 			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
@@ -417,6 +432,8 @@ func setFieldValue(obj Identifier, fieldName string, value string) error {
 		} else {
 			curField.SetString(value)
 		}
+	case reflect.Bool:
+		curField.SetBool(strings.ToLower(value) == "true")
 	}
 	return nil
 }
