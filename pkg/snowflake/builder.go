@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -453,6 +454,21 @@ func setFieldValue(obj Identifier, fieldName string, value string) error {
 		}
 	case reflect.Bool:
 		curField.SetBool(strings.ToLower(value) == "true")
+	case reflect.Slice:
+		if len(value) == 0 {
+			curField.Set(reflect.ValueOf(make([]string, 0)))
+		} else if matched, err := regexp.MatchString(`^\[('.+'(,\s*'.+')*)?\]$`, value); err == nil && matched { // parse object types
+			trimmed := strings.Trim(value, "[]")
+			split := strings.Split(trimmed, ",")
+			values := make([]string, 0)
+			for i := range split {
+				values = append(values, strings.Trim(strings.Trim(split[i], " "), "'"))
+			}
+			curField.Set(reflect.ValueOf(values))
+		} else {
+			split := strings.Split(value, ",")
+			curField.Set(reflect.ValueOf(split))
+		}
 	}
 	return nil
 }
