@@ -358,6 +358,23 @@ func (b *SQLBuilder) Drop(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
+func (b *SQLBuilder) ShowLike(obj Identifier) (string, error) {
+	sb := strings.Builder{}
+	sb.WriteString("SHOW")
+
+	// eg. "TABLES"
+	sb.WriteString(fmt.Sprintf(" %v", b.objectTypePlural))
+
+	sb.WriteString(" LIKE")
+
+	// eg. "my_table"
+	sb.WriteString(fmt.Sprintf(` '%v'`, obj.QualifiedName()))
+
+	sb.WriteString(";")
+
+	return sb.String(), nil
+}
+
 func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("DESCRIBE")
