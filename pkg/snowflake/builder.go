@@ -101,6 +101,13 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 				paramType = StringList
 			case reflect.TypeOf(true):
 				paramType = Bool
+			default:
+				switch f.Type.Kind() {
+				case reflect.String:
+					paramType = String
+				default:
+					return nil, fmt.Errorf("unsupported field type: %v", f.Type)
+				}
 			}
 
 			config.parameters = append(config.parameters, &SQLParameter{
