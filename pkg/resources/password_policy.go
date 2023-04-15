@@ -29,16 +29,24 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Description: "Identifier for the password policy; must be unique for your account.",
 	},
 	"or_replace": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Whether to override a previous password policy with the same name.",
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Whether to override a previous password policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
 	},
 	"if_not_exists": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Prevent overwriting a previous password policy with the same name.",
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Prevent overwriting a previous password policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
 	},
 	"min_length": {
 		Type:         schema.TypeInt,
@@ -246,6 +254,9 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err = d.Set("lockout_time_mins", output.LockoutTimeMins); err != nil {
 		return fmt.Errorf("error setting lockout_time_mins: %w", err)
+	}
+	if err = d.Set("comment", output.Comment); err != nil {
+		return fmt.Errorf("error setting comment: %w", err)
 	}
 
 	return nil
