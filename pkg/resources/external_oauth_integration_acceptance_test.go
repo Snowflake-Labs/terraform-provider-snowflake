@@ -28,8 +28,9 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "issuer", issuer),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "snowflake_user_mapping_attribute", "LOGIN_NAME"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.0", "upn"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.0", "test"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.1", "upn"),
 				),
 			},
 			{
@@ -51,7 +52,8 @@ func externalOauthIntegrationConfig(name, integrationType, issuer string) string
   		snowflake_user_mapping_attribute = "LOGIN_NAME"
 		jws_keys_urls = ["https://login.windows.net/common/discovery/keys"]
 		audience_urls = ["https://analysis.windows.net/powerbi/connector/Snowflake"]
-  		token_user_mapping_claims = ["upn"]
+  		token_user_mapping_claims = ["upn", "test"]
+		comment = "hey"
 	}
 	`, name, integrationType, issuer)
 }
