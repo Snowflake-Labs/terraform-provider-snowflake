@@ -52,6 +52,6 @@ resource "snowflake_task_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database_name ❄️ schema_name | task_name | privilege | with_grant_option | roles
-terraform import snowflake_task_grant.example 'MY_DATABASE|MY_SCHEMA|MY_OBJECT|OPERATE|false|role1,role2'
+# format is database_name|schema_name|task_name|privilege|with_grant_option|on_future|roles"
+terraform import snowflake_task_grant.example "MY_DATABASE|MY_SCHEMA|MY_TASK|OPERATE|false|false|role1,role2"
 ```

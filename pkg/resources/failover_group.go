@@ -338,7 +338,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	objectTypes := helpers.SplitStringToSlice(failoverGroup.ObjectTypes.String, ",")
+	objectTypes := helpers.StringListToList(failoverGroup.ObjectTypes.String)
 
 	// this is basically a hack to get around the fact that the API returns the object types in a different order than what is set
 	// this logic could also be put in the diff suppress function, but I think it is better to do it here.
