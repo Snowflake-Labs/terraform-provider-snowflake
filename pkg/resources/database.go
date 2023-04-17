@@ -220,17 +220,26 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbx := sqlx.NewDb(db, "snowflake")
-	database, err := snowflake.ListDatabase(dbx, d.Id())
+	name := d.Id()
+
+	stmt := snowflake.NewDatabaseBuilder(name).Show()
+	row := snowflake.QueryRow(db, stmt)
+	_, err := snowflake.ScanDatabase(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// If not found, mark resource to be removed from statefile during apply or refresh
-			log.Printf("[DEBUG] database (%s) not found", d.Id())
+			log.Printf("[DEBUG] database (%s) not found", name)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("unable to scan row for SHOW DATABASES, err = %w", err)
+		return fmt.Errorf("unable to scan row for SHOW DATABASES")
 	}
-	fmt.Printf("[DEBUG] database (%+v) found", database)
+
+	// there may be more than one database found, so we need to filter. this could probably be combined with the above query
+	database, err := snowflake.ListDatabase(dbx, name)
+	if err != nil {
+		return err
+	}
 	if err := d.Set("name", database.DBName.String); err != nil {
 		return err
 	}
@@ -240,7 +249,6 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	i, err := strconv.ParseInt(database.RetentionTime.String, 10, 64)
 	if err != nil {
-		fmt.Printf("[WARN] unable to parse data_retention_time_in_days (%s) as int64, err = %v", database.RetentionTime.String, err)
 		return err
 	}
 	if err := d.Set("data_retention_time_in_days", i); err != nil {
