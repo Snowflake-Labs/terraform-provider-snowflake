@@ -87,8 +87,10 @@ func MaskingPolicyGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("masking_policy_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("masking_policy_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -109,10 +111,7 @@ func MaskingPolicyGrant() *TerraformGrantResource {
 
 // CreateMaskingPolicyGrant implements schema.CreateFunc.
 func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	var maskingPolicyName string
-	if name, ok := d.GetOk("masking_policy_name"); ok {
-		maskingPolicyName = name.(string)
-	}
+	maskingPolicyName := d.Get("masking_policy_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

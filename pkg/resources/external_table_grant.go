@@ -101,8 +101,10 @@ func ExternalTableGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("external_table_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("external_table_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -130,13 +132,7 @@ func ExternalTableGrant() *TerraformGrantResource {
 
 // CreateExternalTableGrant implements schema.CreateFunc.
 func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
-	var externalTableName string
-	if name, ok := d.GetOk("external_table_name"); ok {
-		externalTableName = name.(string)
-	}
-	if err := d.Set("external_table_name", externalTableName); err != nil {
-		return err
-	}
+	externalTableName := d.Get("external_table_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

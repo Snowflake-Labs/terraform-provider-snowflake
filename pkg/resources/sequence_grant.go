@@ -95,8 +95,10 @@ func SequenceGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("sequence_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("sequence_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -120,13 +122,7 @@ func SequenceGrant() *TerraformGrantResource {
 
 // CreateSequenceGrant implements schema.CreateFunc.
 func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
-	var sequenceName string
-	if name, ok := d.GetOk("sequence_name"); ok {
-		sequenceName = name.(string)
-	}
-	if err := d.Set("sequence_name", sequenceName); err != nil {
-		return err
-	}
+	sequenceName := d.Get("sequence_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

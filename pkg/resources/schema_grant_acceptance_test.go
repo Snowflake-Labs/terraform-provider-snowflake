@@ -29,7 +29,7 @@ func TestAcc_SchemaGrant(t *testing.T) {
 			{
 				Config: schemaGrantConfig(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_schema_grant.test", "schema_name"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "false"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),

@@ -86,7 +86,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 			{
 				Config: viewGrantConfig(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_view_grant.test", "view_name"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
 				),

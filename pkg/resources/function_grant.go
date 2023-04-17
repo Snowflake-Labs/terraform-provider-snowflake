@@ -107,8 +107,10 @@ func FunctionGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("function_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("function_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("argument_data_types", helpers.StringListToList(parts[3])); err != nil {
 						return nil, err
@@ -139,13 +141,7 @@ func FunctionGrant() *TerraformGrantResource {
 
 // CreateFunctionGrant implements schema.CreateFunc.
 func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
-	var functionName string
-	if name, ok := d.GetOk("function_name"); ok {
-		functionName = name.(string)
-	}
-	if err := d.Set("function_name", functionName); err != nil {
-		return err
-	}
+	functionName := d.Get("function_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

@@ -107,8 +107,10 @@ func ProcedureGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("procedure_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("procedure_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("argument_data_types", helpers.StringListToList(parts[3])); err != nil {
 						return nil, err
@@ -138,13 +140,7 @@ func ProcedureGrant() *TerraformGrantResource {
 
 // CreateProcedureGrant implements schema.CreateFunc.
 func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	var procedureName string
-	if name, ok := d.GetOk("procedure_name"); ok {
-		procedureName = name.(string)
-	}
-	if err := d.Set("procedure_name", procedureName); err != nil {
-		return err
-	}
+	procedureName := d.Get("procedure_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

@@ -109,8 +109,10 @@ func ViewGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("view_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("view_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -140,13 +142,7 @@ func ViewGrant() *TerraformGrantResource {
 
 // CreateViewGrant implements schema.CreateFunc.
 func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
-	var viewName string
-	if _, ok := d.GetOk("view_name"); ok {
-		viewName = d.Get("view_name").(string)
-	}
-	if err := d.Set("view_name", viewName); err != nil {
-		return err
-	}
+	viewName := d.Get("view_name").(string)
 	var schemaName string
 	if _, ok := d.GetOk("schema_name"); ok {
 		schemaName = d.Get("schema_name").(string)

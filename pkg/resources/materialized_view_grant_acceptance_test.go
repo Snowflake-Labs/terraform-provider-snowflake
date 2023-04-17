@@ -21,7 +21,7 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "privilege", "SELECT"),
@@ -52,7 +52,7 @@ func TestAcc_MaterializedViewAllGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "privilege", "SELECT"),

@@ -95,8 +95,10 @@ func PipeGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("pipe_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("pipe_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -120,13 +122,7 @@ func PipeGrant() *TerraformGrantResource {
 
 // CreatePipeGrant implements schema.CreateFunc.
 func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
-	var pipeName string
-	if name, ok := d.GetOk("pipe_name"); ok {
-		pipeName = name.(string)
-	}
-	if err := d.Set("pipe_name", pipeName); err != nil {
-		return err
-	}
+	pipeName := d.Get("pipe_name").(string)
 	var schemaName string
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)

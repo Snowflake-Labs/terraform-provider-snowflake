@@ -114,8 +114,10 @@ func MaterializedViewGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("materialized_view_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("materialized_view_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -146,13 +148,7 @@ func MaterializedViewGrant() *TerraformGrantResource {
 
 // CreateMaterializedViewGrant implements schema.CreateFunc.
 func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
-	var materializedViewName string
-	if name, ok := d.GetOk("materialized_view_name"); ok {
-		materializedViewName = name.(string)
-	}
-	if err := d.Set("materialized_view_name", materializedViewName); err != nil {
-		return err
-	}
+	materializedViewName := d.Get("materialized_view_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

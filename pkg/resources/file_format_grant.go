@@ -95,8 +95,10 @@ func FileFormatGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("file_format_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("file_format_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -120,13 +122,7 @@ func FileFormatGrant() *TerraformGrantResource {
 
 // CreateFileFormatGrant implements schema.CreateFunc.
 func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
-	var fileFormatName string
-	if name, ok := d.GetOk("file_format_name"); ok {
-		fileFormatName = name.(string)
-	}
-	if err := d.Set("file_format_name", fileFormatName); err != nil {
-		return err
-	}
+	fileFormatName := d.Get("file_format_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)

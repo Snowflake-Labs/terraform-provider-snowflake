@@ -107,8 +107,10 @@ func StageGrant() *TerraformGrantResource {
 					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("stage_name", parts[2]); err != nil {
-						return nil, err
+					if parts[2] != "" {
+						if err := d.Set("stage_name", parts[2]); err != nil {
+							return nil, err
+						}
 					}
 					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
@@ -148,13 +150,7 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)
 	}
-	var stageName string
-	if name, ok := d.GetOk("stage_name"); ok {
-		stageName = name.(string)
-	}
-	if err := d.Set("stage_name", stageName); err != nil {
-		return err
-	}
+	stageName := d.Get("stage_name").(string)
 	if (schemaName == "") && !onFuture && !onAll {
 		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
