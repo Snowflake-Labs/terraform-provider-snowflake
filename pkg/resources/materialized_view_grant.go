@@ -13,7 +13,7 @@ import (
 )
 
 /*
-NewPriviligeSet creates a set of privileges that are allowed
+NewPrivilegeSet creates a set of privileges that are allowed
 They are used for validation in the schema object below.
 */
 
@@ -28,7 +28,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"materialized_view_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the materialized view on which to grant privileges immediately (only valid if on_future is false).",
+		Description: "The name of the materialized view on which to grant privileges immediately (only valid if on_future and on_all are false).",
 		ForceNew:    true,
 	},
 	"schema_name": {
@@ -46,7 +46,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future materialized view view.",
+		Description:  "The privilege to grant on the current or future materialized view.",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -61,12 +61,19 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is false).",
+		Description: "Grants privilege to these shares (only valid if on_future and on_all are false).",
 	},
 	"on_future": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all future materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_future.",
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all future materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:     false,
+		ForceNew:    true,
+	},
+	"on_all": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:     false,
 		ForceNew:    true,
 	},
@@ -140,26 +147,30 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
-	futureMaterializedViews := d.Get("on_future").(bool)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
-	if (schemaName == "") && !futureMaterializedViews {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
-	if (materializedViewName == "") && !futureMaterializedViews {
-		return errors.New("materialized_view_name must be set unless on_future is true")
+	if (materializedViewName == "") && !onFuture && !onAll {
+		return errors.New("materialized_view_name must be set unless on_future or on_all is true")
 	}
-	if (materializedViewName != "") && futureMaterializedViews {
-		return errors.New("materialized_view_name must be empty if on_future is true")
+	if (materializedViewName != "") && onFuture && onAll {
+		return errors.New("materialized_view_name must be empty if on_future and on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if futureMaterializedViews {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureMaterializedViewGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllMaterializedViewGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.MaterializedViewGrant(databaseName, schemaName, materializedViewName)
 	}
 
@@ -185,14 +196,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
 		return err
 	}
-	futureMaterializedViewsEnabled := false
-	if grantID.ObjectName == "" {
-		futureMaterializedViewsEnabled = true
-	}
 	if err := d.Set("materialized_view_name", grantID.ObjectName); err != nil {
-		return err
-	}
-	if err := d.Set("on_future", futureMaterializedViewsEnabled); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
@@ -202,16 +206,25 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && !onAll {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
-	if futureMaterializedViewsEnabled {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
-	// TODO
-	onAll := false
 
-	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, futureMaterializedViewsEnabled, onAll, validMaterializedViewPrivileges)
+	return readGenericGrant(d, meta, materializedViewGrantSchema, builder, onFuture, onAll, validMaterializedViewPrivileges)
 }
 
 // DeleteMaterializedViewGrant implements schema.DeleteFunc.
@@ -221,12 +234,16 @@ func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	futureMaterializedViews := (grantID.ObjectName == "")
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if futureMaterializedViews {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -235,7 +252,7 @@ func DeleteMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 // UpdateMaterializedViewGrant implements schema.UpdateFunc.
 func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
@@ -255,13 +272,17 @@ func UpdateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	futureMaterializedViews := (grantID.ObjectName == "")
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if futureMaterializedViews {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllMaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.MaterializedViewGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 

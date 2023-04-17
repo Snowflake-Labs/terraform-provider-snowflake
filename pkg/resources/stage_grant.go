@@ -37,7 +37,15 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name field must be unset in order to use on_future.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name field must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stage_name"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"stage_name"},
@@ -65,7 +73,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"stage_name": {
 		Type:          schema.TypeString,
 		Optional:      true,
-		Description:   "The name of the stage on which to grant privilege (only valid if on_future is false).",
+		Description:   "The name of the stage on which to grant privilege (only valid if on_future and on_all are false).",
 		ForceNew:      true,
 		ConflictsWith: []string{"on_future"},
 	},
@@ -124,6 +132,10 @@ func StageGrant() *TerraformGrantResource {
 func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
+		return errors.New("on_future and on_all cannot both be true")
+	}
 	privilege := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 
@@ -136,17 +148,20 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		stageName = name.(string)
 	}
 
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
-	if (stageName == "") && !onFuture {
-		return errors.New("stage_name must be set unless on_future is true")
+	if (stageName == "") && !onFuture && !onAll {
+		return errors.New("stage_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStageGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStageGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.StageGrant(databaseName, schemaName, stageName)
 	}
 
@@ -167,12 +182,7 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := (grantID.ObjectName == "")
-
 	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
-	}
-	if err := d.Set("on_future", onFuture); err != nil {
 		return err
 	}
 	if err := d.Set("privilege", grantID.Privilege); err != nil {
@@ -188,14 +198,23 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
+	onFuture := false
+	if grantID.ObjectName == "" && !onAll {
+		onFuture = true
+	}
+	if err = d.Set("on_future", onFuture); err != nil {
+		return err
+	}
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
-	// TODO
-	onAll := false
 
 	return readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, onAll, validStagePrivileges)
 }
@@ -203,7 +222,7 @@ func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
 // UpdateStageGrant implements schema.UpdateFunc.
 func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles") {
 		return nil
 	}
@@ -213,8 +232,6 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := (grantID.ObjectName == "")
-
 	rolesToAdd := []string{}
 	rolesToRevoke := []string{}
 
@@ -223,9 +240,14 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 
@@ -253,12 +275,15 @@ func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	onFuture := (grantID.ObjectName == "")
-
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
+	default:
 		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
 	}
 

@@ -12,7 +12,6 @@
 coverage.txt
 *.out
 
-.vscode
 terraform-provider-snowflake*
 
 .DS_Store
@@ -27,3 +26,6 @@ dist
 .idea/
 *.iml
 dist/
+
+# Test environment variables
+test.env

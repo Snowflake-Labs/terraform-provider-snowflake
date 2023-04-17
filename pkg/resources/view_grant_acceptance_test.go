@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"text/template"
@@ -12,20 +13,27 @@ import (
 )
 
 func TestAcc_ViewGrantBasic(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),
+				Config: viewGrantConfig(name, normal),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
 				),
+			},
+			{
+				ResourceName:      "snowflake_view_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+					"on_all",                 // not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
@@ -53,25 +61,23 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 }
 
 func TestAcc_FutureViewGrantChange(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, false),
+				Config: viewGrantConfig(name, normal),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "false"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
 				),
 			},
 			// CHANGE FROM CURRENT TO FUTURE VIEWS
 			{
-				Config: viewGrantConfigFuture(t, databaseName, viewName, roleName, true),
+				Config: viewGrantConfig(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", ""),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
@@ -85,6 +91,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},
@@ -157,57 +164,69 @@ resource "snowflake_view_grant" "test" {
 	return out.String()
 }
 
-func viewGrantConfigFuture(t *testing.T, databaseName, viewName string, role string, future bool) string {
-	t.Helper()
-	r := require.New(t)
-
-	viewNameConfig := "view_name = snowflake_view.test.name"
-	if future {
+func viewGrantConfig(name string, grantType grantType) string {
+	var viewNameConfig string
+	switch grantType {
+	case normal:
+		viewNameConfig = "view_name = snowflake_view.test.name"
+	case onFuture:
 		viewNameConfig = "on_future = true"
+	case onAll:
+		viewNameConfig = "on_all = true"
 	}
 
-	config := `
+	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
-  name = "{{ .database_name }}"
+  name = "%s"
 }
 
 resource "snowflake_schema" "test" {
-	name = "{{ .schema_name }}"
+	name = "%s"
 	database = snowflake_database.test.name
 }
 
 resource "snowflake_view" "test" {
-  name      = "{{.view_name}}"
-	database  = snowflake_database.test.name
-	schema    = snowflake_schema.test.name
+  name      = "%s"
+  database  = snowflake_database.test.name
+  schema    = snowflake_schema.test.name
   statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
   is_secure = true
 }
 
 resource "snowflake_role" "test" {
-  name = "{{.role_name}}"
+  name = "%s"
 }
 
 resource "snowflake_view_grant" "test" {
-  {{.view_name_config}}
+  %s
   database_name = snowflake_view.test.database
-	roles         = ["{{.role_name}}"]
-	schema_name   = snowflake_schema.test.name
-	depends_on = [snowflake_role.test]
-	privilege = "SELECT"
+  roles         = [snowflake_role.test.name]
+  schema_name   = snowflake_schema.test.name
+  privilege = "SELECT"
 }
-`
+`, name, name, name, name, viewNameConfig)
+}
 
-	out := bytes.NewBuffer(nil)
-	tmpl := template.Must(template.New("view)").Parse(config))
-	err := tmpl.Execute(out, map[string]string{
-		"database_name":    databaseName,
-		"schema_name":      databaseName,
-		"view_name":        viewName,
-		"role_name":        role,
-		"view_name_config": viewNameConfig,
+func TestAcc_ViewGrantOnAll(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: viewGrantConfig(name, onAll),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_all", "true"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "roles.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "roles.0", name),
+					testRolesAndShares(t, "snowflake_view_grant.test", []string{name}),
+				),
+			},
+		},
 	})
-	r.NoError(err)
-
-	return out.String()
 }

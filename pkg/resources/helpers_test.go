@@ -10,6 +10,14 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
+type grantType int
+
+const (
+	normal grantType = iota
+	onFuture
+	onAll
+)
+
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
