@@ -49,4 +49,4 @@ Some links that might help you:
 
 ## Contributing
 
-Cf. [Contributing](./CONTRIBUTING).
+Cf. [Contributing](./CONTRIBUTING.md).
