@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,7 +18,6 @@ var databaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
-		ForceNew: false,
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -37,7 +35,7 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database, schema, or table. For more information, see Understanding & Using Time Travel.",
-		Computed:    true,
+		Default:     1,
 	},
 	"from_share": {
 		Type:          schema.TypeMap,
@@ -95,12 +93,7 @@ func Database() *schema.Resource {
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				if err := d.Set("name", d.Id()); err != nil {
-					return nil, err
-				}
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -227,12 +220,17 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbx := sqlx.NewDb(db, "snowflake")
-	database, err := snowflake.ListDatabase(dbx, d.Get("name").(string))
+	database, err := snowflake.ListDatabase(dbx, d.Id())
 	if err != nil {
-		log.Println("[DEBUG] list database failed to decode")
-		d.SetId("")
-		return nil
+		if errors.Is(err, sql.ErrNoRows) {
+			// If not found, mark resource to be removed from statefile during apply or refresh
+			log.Printf("[DEBUG] database (%s) not found", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("unable to scan row for SHOW DATABASES, err = %w", err)
 	}
+	fmt.Printf("[DEBUG] database (%+v) found", database)
 	if err := d.Set("name", database.DBName.String); err != nil {
 		return err
 	}
@@ -242,6 +240,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	i, err := strconv.ParseInt(database.RetentionTime.String, 10, 64)
 	if err != nil {
+		fmt.Printf("[WARN] unable to parse data_retention_time_in_days (%s) as int64, err = %v", database.RetentionTime.String, err)
+		return err
+	}
+	if err := d.Set("data_retention_time_in_days", i); err != nil {
 		return err
 	}
 
@@ -260,7 +262,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return d.Set("data_retention_time_in_days", i)
+	return nil
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
@@ -307,7 +309,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
 		}
-		d.SetId(fmt.Sprintf("%v", name.(string)))
+		d.SetId(name.(string))
 	}
 
 	if d.HasChange("comment") {
