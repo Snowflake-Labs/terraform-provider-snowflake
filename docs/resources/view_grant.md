@@ -69,6 +69,6 @@ resource "snowflake_schema_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database_name | schema_name | view_name | privilege | with_grant_option | roles | shares
-terraform import snowflake_view_grant.example 'MY_DATABASE|MY_SCHEMA|MY_OBJECT|USAGE|false|role1,role2|share1,share2'
+# format is database_name|schema_name|view_name|privilege|with_grant_option|on_future|on_all|roles|shares
+terraform import snowflake_view_grant.example "MY_DATABASE|MY_SCHEMA|MY_VIEW|USAGE|false|false|false|role1,role2|share1,share2"
 ```

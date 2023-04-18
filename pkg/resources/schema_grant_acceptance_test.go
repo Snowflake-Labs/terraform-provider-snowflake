@@ -29,7 +29,7 @@ func TestAcc_SchemaGrant(t *testing.T) {
 			{
 				Config: schemaGrantConfig(name, onFuture),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_schema_grant.test", "schema_name"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "false"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
@@ -42,7 +42,6 @@ func TestAcc_SchemaGrant(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},
@@ -59,7 +58,7 @@ func TestAcc_SchemaGrantOnAll(t *testing.T) {
 			{
 				Config: schemaGrantConfig(name, onAll),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_schema_grant.test", "schema_name"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_future", "false"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "privilege", "USAGE"),
