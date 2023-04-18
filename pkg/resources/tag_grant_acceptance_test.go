@@ -26,6 +26,14 @@ func TestAccTagGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "APPLY"),
 				),
 			},
+			{
+				ResourceName:      "snowflake_tag_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }
@@ -51,7 +59,7 @@ func tagGrantConfig(name string) string {
 		name = "%v"
 		database = snowflake_database.test.name
 		schema = snowflake_schema.test.name
-		allowed_values = [""]
+		allowed_values = []
 	}
 
 	resource "snowflake_tag_grant" "test" {

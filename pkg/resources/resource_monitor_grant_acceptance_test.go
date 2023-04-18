@@ -23,6 +23,15 @@ func TestAccResourceMonitor_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor_grant.test", "privilege", "MONITOR"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_resource_monitor_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }

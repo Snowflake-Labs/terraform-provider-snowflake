@@ -1,7 +1,8 @@
 package resources
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -75,7 +76,31 @@ func RowAccessPolicyGrant() *TerraformGrantResource {
 
 			Schema: rowAccessPolicyGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 6 {
+						return nil, errors.New("invalid row access policy grant ID format. ID must be in the format database_name|schema_name|row_access_policy_name|privilege|with_grant_option|roles")
+					}
+					if err := d.Set("database_name", parts[0]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", parts[1]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("row_access_policy_name", parts[2]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", parts[3]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[4])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[5])); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validRowAccessPoilcyPrivileges,
@@ -88,10 +113,13 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 	if name, ok := d.GetOk("row_access_policy_name"); ok {
 		rowAccessPolicyName = name.(string)
 	}
+	if err := d.Set("row_access_policy_name", rowAccessPolicyName); err != nil {
+		return err
+	}
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	builder := snowflake.RowAccessPolicyGrant(databaseName, schemaName, rowAccessPolicyName)
@@ -100,49 +128,42 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := NewRowAccessPolicyGrantID(databaseName, schemaName, rowAccessPolicyName, privilege, roles, grantOption)
-
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
+	d.SetId(grantID)
 
 	return ReadRowAccessPolicyGrant(d, meta)
 }
 
 // ReadRowAccessPolicyGrant implements schema.ReadFunc.
 func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	rowAccessPolicyName := d.Get("row_access_policy_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+
+	builder := snowflake.RowAccessPolicyGrant(databaseName, schemaName, rowAccessPolicyName)
+
+	err := readGenericGrant(d, meta, rowAccessPolicyGrantSchema, builder, false, false, validRowAccessPoilcyPrivileges)
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
+	grantID := helpers.SnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
+	if grantID != d.Id() {
+		d.SetId(grantID)
 	}
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	if err := d.Set("row_access_policy_name", grantID.ObjectName); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
-
-	builder := snowflake.RowAccessPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
-
-	return readGenericGrant(d, meta, rowAccessPolicyGrantSchema, builder, false, validRowAccessPoilcyPrivileges)
+	return nil
 }
 
 // DeleteRowAccessPolicyGrant implements schema.DeleteFunc.
 func DeleteRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
-	if err != nil {
-		return err
-	}
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	rowAccessPolicyName := d.Get("row_access_policy_name").(string)
 
-	builder := snowflake.RowAccessPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+	builder := snowflake.RowAccessPolicyGrant(databaseName, schemaName, rowAccessPolicyName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -162,83 +183,28 @@ func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseRowAccessPolicyGrantID(d.Id())
-	if err != nil {
-		return err
-	}
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	rowAccessPolicyName := d.Get("row_access_policy_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
-	builder := snowflake.RowAccessPolicyGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+	builder := snowflake.RowAccessPolicyGrant(databaseName, schemaName, rowAccessPolicyName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
+		meta, builder, privilege, withGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadRowAccessPolicyGrant(d, meta)
-}
-
-type RowAccessPolicyGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	ObjectName      string
-	Privilege       string
-	Roles           []string
-	WithGrantOption bool
-	IsOldID         bool
-}
-
-func NewRowAccessPolicyGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *RowAccessPolicyGrantID {
-	return &RowAccessPolicyGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		ObjectName:      objectName,
-		Privilege:       privilege,
-		Roles:           roles,
-		WithGrantOption: withGrantOption,
-		IsOldID:         false,
-	}
-}
-
-func (v *RowAccessPolicyGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
-}
-
-func parseRowAccessPolicyGrantID(s string) (*RowAccessPolicyGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		return &RowAccessPolicyGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			ObjectName:      idParts[2],
-			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
-			IsOldID:         true,
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 6 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
-	}
-	return &RowAccessPolicyGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
-		Privilege:       idParts[3],
-		WithGrantOption: idParts[4] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
-		IsOldID:         false,
-	}, nil
 }

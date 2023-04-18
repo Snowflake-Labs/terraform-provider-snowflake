@@ -177,12 +177,21 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	dbName := schemaID.DatabaseName
 	schema := schemaID.SchemaName
 
-	q := snowflake.NewSchemaBuilder(schema).WithDB(dbName).Show()
+	// Checks if the corresponding database still exists; if not, than the schema also cannot exist
+	q := snowflake.NewDatabaseBuilder(dbName).Show()
 	row := snowflake.QueryRow(db, q)
+	_, err = snowflake.ScanDatabase(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		d.SetId("")
+		return nil
+	}
+
+	q = snowflake.NewSchemaBuilder(schema).WithDB(dbName).Show()
+	row = snowflake.QueryRow(db, q)
 
 	s, err := snowflake.ScanSchema(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] schema (%s) not found", d.Id())
 		d.SetId("")
 		return nil

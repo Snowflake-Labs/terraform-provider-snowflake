@@ -76,7 +76,7 @@ func TestTableGrantUpdate(t *testing.T) {
 func TestTableGrantRead(t *testing.T) {
 	r := require.New(t)
 
-	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT|false", map[string]interface{}{
+	d := tableGrant(t, "test-db|PUBLIC|test-table|SELECT||false", map[string]interface{}{
 		"table_name":        "test-table",
 		"schema_name":       "PUBLIC",
 		"database_name":     "test-db",

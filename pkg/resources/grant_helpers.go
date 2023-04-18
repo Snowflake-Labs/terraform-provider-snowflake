@@ -29,10 +29,6 @@ func (t TerraformGrantResources) GetTfSchemas() map[string]*schema.Resource {
 	return out
 }
 
-const (
-	grantIDDelimiter = '|'
-)
-
 // currentGrant represents a generic grant of a privilege from a grant (the target) to a
 // grantee. This type can be used in conjunction with github.com/jmoiron/sqlx to
 // build a nice go representation of a grant.
@@ -116,14 +112,20 @@ func readGenericGrant(
 	grantSchema map[string]*schema.Schema,
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
+	allObjects bool,
 	validPrivileges PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
-	if futureObjects {
+	switch {
+	case futureObjects:
 		grants, err = readGenericFutureGrants(db, builder)
-	} else {
+	case allObjects:
+		// When running e.g. GRANT SELECT ON ALL TABLES IN ..., then Snowflake creates a grant for each individual existing table.
+		// There is no way to attribute existing table grants to a GRANT SELECT ON ALL TABLES grant. Thus they cannot be checked (or removed).
+		return nil
+	default:
 		grants, err = readGenericCurrentGrants(db, builder)
 	}
 	if err != nil {
@@ -193,7 +195,7 @@ func readGenericGrant(
 		if privileges.hasString(priv) {
 			// CASE A: Whatever role we were already managing, continue to do so.
 			caseA := existingRoles.Contains(roleName)
-			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what roles have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what roles have privilege unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
 			caseB := !multipleGrantFeatureFlag && !futureObjects
 			if caseA || caseB {
 				roles = append(roles, roleName)
@@ -210,7 +212,7 @@ func readGenericGrant(
 		if privileges.hasString(priv) {
 			// CASE A: Whatever share we were already managing, continue to do so.
 			caseA := existingShares.Contains(shareName)
-			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what shares have privilige unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
+			// CASE B : If multiple grants is not enabled (meaning this is an authoritative resource) then we care about what shares have privilege unless on_future is enabled in which case we don't care (because we will get flooded with diffs)
 			caseB := !multipleGrantFeatureFlag && !futureObjects
 			if caseA || caseB {
 				shares = append(shares, shareName)

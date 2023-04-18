@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -83,7 +84,36 @@ func StreamGrant() *TerraformGrantResource {
 
 			Schema: streamGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 7 {
+						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|stream_name|privilege|with_grant_option|on_future|roles", d.Id())
+					}
+					if err := d.Set("database_name", parts[0]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", parts[1]); err != nil {
+						return nil, err
+					}
+					if parts[2] != "" {
+						if err := d.Set("stream_name", parts[2]); err != nil {
+							return nil, err
+						}
+					}
+					if err := d.Set("privilege", parts[3]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[4])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validStreamPrivileges,
@@ -92,10 +122,7 @@ func StreamGrant() *TerraformGrantResource {
 
 // CreateStreamGrant implements schema.CreateFunc.
 func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	var streamName string
-	if name, ok := d.GetOk("stream_name"); ok {
-		streamName = name.(string)
-	}
+	streamName := d.Get("stream_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
@@ -124,71 +151,55 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewStreamGrantID(databaseName, schemaName, streamName, privilege, roles, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, roles)
+	d.SetId(grantID)
 
 	return ReadStreamGrant(d, meta)
 }
 
 // ReadStreamGrant implements schema.ReadFunc.
 func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseStreamGrantID(d.Id())
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	streamName := d.Get("stream_name").(string)
+	privilege := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+
+	var builder snowflake.GrantBuilder
+	if onFuture {
+		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
+	} else {
+		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
+	}
+	// TODO
+	onAll := false
+
+	err := readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, onAll, validStreamPrivileges)
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
+	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, roles)
+	if grantID != d.Id() {
+		d.SetId(grantID)
 	}
-
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	onFuture := false
-	if grantID.ObjectName == "" {
-		onFuture = true
-	}
-
-	if err := d.Set("stream_name", grantID.ObjectName); err != nil {
-		return err
-	}
-
-	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
-
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
-
-	var builder snowflake.GrantBuilder
-	if onFuture {
-		builder = snowflake.FutureStreamGrant(grantID.DatabaseName, grantID.SchemaName)
-	} else {
-		builder = snowflake.StreamGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
-	}
-
-	return readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, validStreamPrivileges)
+	return nil
 }
 
 // DeleteStreamGrant implements schema.DeleteFunc.
 func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseStreamGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	onFuture := (grantID.ObjectName == "")
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	streamName := d.Get("stream_name").(string)
+	onFuture := d.Get("on_future").(bool)
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureStreamGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.StreamGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -208,85 +219,33 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseStreamGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	onFuture := (grantID.ObjectName == "")
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	streamName := d.Get("stream_name").(string)
+	onFuture := d.Get("on_future").(bool)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureStreamGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.StreamGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
+		meta, builder, privilege, withGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadStreamGrant(d, meta)
-}
-
-type StreamGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	ObjectName      string
-	Privilege       string
-	Roles           []string
-	WithGrantOption bool
-}
-
-func NewStreamGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *StreamGrantID {
-	return &StreamGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		ObjectName:      objectName,
-		Privilege:       privilege,
-		Roles:           roles,
-		WithGrantOption: withGrantOption,
-	}
-}
-
-func (v *StreamGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
-}
-
-func parseStreamGrantID(s string) (*StreamGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		return &StreamGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			ObjectName:      idParts[2],
-			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 6 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
-	}
-	return &StreamGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
-		Privilege:       idParts[3],
-		WithGrantOption: idParts[4] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
-	}, nil
 }

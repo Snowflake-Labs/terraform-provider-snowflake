@@ -168,7 +168,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] attached policy (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -214,19 +214,19 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 // DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.
 func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	attachementID, err := attachedPolicyIDFromString(d.Id())
+	attachmentID, err := attachedPolicyIDFromString(d.Id())
 	if err != nil {
 		return err
 	}
 
-	tagDBName := attachementID.TagDatabaseName
-	tagSchemaName := attachementID.TagSchemaName
-	tagName := attachementID.TagName
-	mpDBName := attachementID.MaskingPolicyDatabaseName
-	mpSchameName := attachementID.MaskingPolicySchemaName
-	mpName := attachementID.MaskingPolicyName
+	tagDBName := attachmentID.TagDatabaseName
+	tagSchemaName := attachmentID.TagSchemaName
+	tagName := attachmentID.TagName
+	mpDBName := attachmentID.MaskingPolicyDatabaseName
+	mpSchemaName := attachmentID.MaskingPolicySchemaName
+	mpName := attachmentID.MaskingPolicyName
 
-	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
+	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchemaName)
 
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 

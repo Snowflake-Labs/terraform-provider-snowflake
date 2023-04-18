@@ -21,6 +21,11 @@ type privateLinkConfigInternal struct {
 	AccountURL                string `json:"privatelink-account-url"`
 	OCSPURL                   string `json:"privatelink-ocsp-url,omitempty"`
 	TypodOCSPURL              string `json:"privatelink_ocsp-url,omitempty"` // because snowflake returns this for AWS, but don't have an Azure account to verify against
+	InternalStage             string `json:"privatelink-internal-stage,omitempty"`
+	SnowsightURL              string `json:"snowsight-privatelink-url,omitempty"`
+	RegionlessSnowsightURL    string `json:"regionless-snowsight-privatelink-url,omitempty"`
+	RegionlessAccountURL      string `json:"regionless-privatelink-account-url,omitempty"`
+	ConnectionURLs            string `json:"privatelink-connection-urls,omitempty"`
 }
 
 type PrivateLinkConfig struct {
@@ -29,6 +34,11 @@ type PrivateLinkConfig struct {
 	AzurePrivateLinkServiceID string
 	AccountURL                string
 	OCSPURL                   string
+	InternalStage             string
+	SnowsightURL              string
+	RegionlessSnowsightURL    string
+	RegionlessAccountURL      string
+	ConnectionURLs            string
 }
 
 func ScanPrivateLinkConfig(row *sqlx.Row) (*RawPrivateLinkConfig, error) {
@@ -54,6 +64,11 @@ func (i *privateLinkConfigInternal) getPrivateLinkConfig() (*PrivateLinkConfig, 
 		i.AzurePrivateLinkServiceID,
 		i.AccountURL,
 		i.OCSPURL,
+		i.InternalStage,
+		i.SnowsightURL,
+		i.RegionlessSnowsightURL,
+		i.RegionlessAccountURL,
+		i.ConnectionURLs,
 	}
 
 	if i.TypodOCSPURL != "" {

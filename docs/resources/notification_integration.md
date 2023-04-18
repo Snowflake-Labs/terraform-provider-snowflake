@@ -57,6 +57,7 @@ resource "snowflake_notification_integration" "integration" {
 - `direction` (String) Direction of the cloud messaging with respect to Snowflake (required only for error notifications)
 - `enabled` (Boolean)
 - `gcp_pubsub_subscription_name` (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
+- `gcp_pubsub_topic_name` (String) The topic id that Snowflake will use to push notifications.
 - `notification_provider` (String) The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)
 - `type` (String) A type of integration
 

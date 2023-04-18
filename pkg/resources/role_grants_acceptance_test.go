@@ -115,7 +115,7 @@ func TestAcc_GrantRole(t *testing.T) {
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			// test settup + removing a role
+			// test setup + removing a role
 			baselineStep,
 			{
 				Config:       rgConfig2(role1, role2, role3, user1, user2),
@@ -151,12 +151,13 @@ func TestAcc_GrantRole(t *testing.T) {
 					},
 				),
 			},
+			baselineStep,
 			// IMPORT
 			{
 				ResourceName:            "snowflake_role_grants.w",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"roles", "users", "enable_multiple_grants"},
+				ImportStateVerifyIgnore: []string{"enable_multiple_grants"},
 			},
 		},
 	})

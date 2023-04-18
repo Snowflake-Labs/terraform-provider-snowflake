@@ -51,12 +51,13 @@ resource "snowflake_schema_grant" "grant" {
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future.
+- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all views in the given schema. When this is true and no schema_name is provided apply this grant on all views in the given database. The view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future views in the given schema. When this is true and no schema_name is provided apply this grant on all future views in the given database. The view_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future view.
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema containing the current or future views on which to grant privileges.
-- `shares` (Set of String) Grants privilege to these shares (only valid if on_future is unset).
-- `view_name` (String) The name of the view on which to grant privileges immediately (only valid if on_future is unset).
+- `shares` (Set of String) Grants privilege to these shares (only valid if on_future and on_all are unset).
+- `view_name` (String) The name of the view on which to grant privileges immediately (only valid if on_future and on_all are unset).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only
@@ -68,6 +69,6 @@ resource "snowflake_schema_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database_name ❄️ schema_name ❄️ view_name ❄️ privilege ❄️ with_grant_option ❄️ roles ❄️ shares
-terraform import snowflake_view_grant.example 'MY_DATABASE❄️MY_SCHEMA❄️MY_OBJECT❄️USAGE❄️false❄️role1,role2❄️share1,share2'
+# format is database_name|schema_name|view_name|privilege|with_grant_option|on_future|on_all|roles|shares
+terraform import snowflake_view_grant.example "MY_DATABASE|MY_SCHEMA|MY_VIEW|USAGE|false|false|false|role1,role2|share1,share2"
 ```

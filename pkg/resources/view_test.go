@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +34,7 @@ func TestViewCreate(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
 	r.NotNil(d)
 
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
 			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -61,7 +60,7 @@ func TestViewCreateOrReplace(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
 	r.NotNil(d)
 
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
 			`^CREATE OR REPLACE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -86,7 +85,7 @@ func TestViewCreateAmpersand(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resources.View().Schema, in)
 	r.NotNil(d)
 
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
 			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -142,7 +141,7 @@ func TestViewRead(t *testing.T) {
 
 	d := view(t, "test_db|test_schema|good_name", in)
 
-	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
 		q := snowflake.NewViewBuilder("good_name").WithDB("test_db").WithSchema("test_schema").Show()

@@ -1,8 +1,8 @@
 package resources
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -17,27 +17,6 @@ var validProcedurePrivileges = NewPrivilegeSet(
 )
 
 var procedureGrantSchema = map[string]*schema.Schema{
-	"arguments": {
-		Type: schema.TypeList,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The argument name",
-				},
-				"type": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The argument type",
-				},
-			},
-		},
-		Optional:    true,
-		Description: "List of the arguments for the procedure (must be present if procedure has arguments and procedure_name is present)",
-		ForceNew:    true,
-		Deprecated:  "use argument_data_types instead.",
-	},
 	"argument_data_types": {
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
@@ -79,13 +58,6 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Description: "The name of the procedure on which to grant privileges immediately (only valid if on_future is false).",
 		ForceNew:    true,
 	},
-	"return_type": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The return type of the procedure (must be present if procedure_name is present)",
-		ForceNew:    true,
-		Deprecated:  "return_type is no longer required. It will be removed in a future release.",
-	},
 	"roles": {
 		Type:        schema.TypeSet,
 		Required:    true,
@@ -124,7 +96,42 @@ func ProcedureGrant() *TerraformGrantResource {
 
 			Schema: procedureGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 9 {
+						return nil, errors.New("incorrect ID format (expecting database_name|schema_name|procedure_name|argument_data_types|privilege|with_grant_option|on_future|roles|shares)")
+					}
+					if err := d.Set("database_name", parts[0]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("schema_name", parts[1]); err != nil {
+						return nil, err
+					}
+					if parts[2] != "" {
+						if err := d.Set("procedure_name", parts[2]); err != nil {
+							return nil, err
+						}
+					}
+					if err := d.Set("argument_data_types", helpers.StringListToList(parts[3])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", parts[4]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[5])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_future", helpers.StringToBool(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", helpers.StringListToList(parts[8])); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validProcedurePrivileges,
@@ -133,10 +140,7 @@ func ProcedureGrant() *TerraformGrantResource {
 
 // CreateProcedureGrant implements schema.CreateFunc.
 func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	var procedureName string
-	if name, ok := d.GetOk("procedure_name"); ok {
-		procedureName = name.(string)
-	}
+	procedureName := d.Get("procedure_name").(string)
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
@@ -180,84 +184,57 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewProcedureGrantID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, roles, shares, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, roles, shares)
+	d.SetId(grantID)
 	return ReadProcedureGrant(d, meta)
 }
 
 // ReadProcedureGrant implements schema.ReadFunc.
 func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseProcedureGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-	if !grantID.IsOldID {
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
-	}
-
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
-	}
-
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	onFuture := false
-	if grantID.ObjectName == "" {
-		onFuture = true
-	}
-
-	if err := d.Set("procedure_name", grantID.ObjectName); err != nil {
-		return err
-	}
-
-	if err := d.Set("argument_data_types", grantID.ArgumentDataTypes); err != nil {
-		return err
-	}
-
-	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
-
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	procedureName := d.Get("procedure_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	privilege := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureProcedureGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureProcedureGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.ProcedureGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.ProcedureGrant(databaseName, schemaName, procedureName, argumentDataTypes)
+	}
+	// TODO
+	onAll := false
+
+	err := readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, onAll, validProcedurePrivileges)
+	if err != nil {
+		return err
 	}
 
-	return readGenericGrant(d, meta, procedureGrantSchema, builder, onFuture, validProcedurePrivileges)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, roles, shares)
+	if grantID != d.Id() {
+		d.SetId(grantID)
+	}
+	return nil
 }
 
 // DeleteProcedureGrant implements schema.DeleteFunc.
 func DeleteProcedureGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseProcedureGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	procedureObjectName := grantID.ObjectName
-	onFuture := (procedureObjectName == "")
+	procedureObjectName := d.Get("procedure_name").(string)
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	onFuture := d.Get("on_future").(bool)
 
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureProcedureGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureProcedureGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.ProcedureGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.ProcedureGrant(databaseName, schemaName, procedureObjectName, argumentDataTypes)
 	}
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -280,106 +257,36 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("shares") {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
-	grantID, err := parseProcedureGrantID(d.Id())
-	if err != nil {
-		return err
-	}
 
-	onFuture := (grantID.ObjectName == "")
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	onFuture := d.Get("on_future").(bool)
+	procedureName := d.Get("procedure_name").(string)
+	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
 	var builder snowflake.GrantBuilder
 	if onFuture {
-		builder = snowflake.FutureProcedureGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureProcedureGrant(databaseName, schemaName)
 	} else {
-		builder = snowflake.ProcedureGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName, grantID.ArgumentDataTypes)
+		builder = snowflake.ProcedureGrant(databaseName, schemaName, procedureName, argumentDataTypes)
 	}
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, sharesToRevoke,
+		meta, builder, privilege, rolesToRevoke, sharesToRevoke,
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, sharesToAdd,
+		meta, builder, privilege, withGrantOption, rolesToAdd, sharesToAdd,
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadProcedureGrant(d, meta)
-}
-
-type ProcedureGrantID struct {
-	DatabaseName      string
-	SchemaName        string
-	ObjectName        string
-	ArgumentDataTypes []string
-	Privilege         string
-	Roles             []string
-	Shares            []string
-	WithGrantOption   bool
-	IsOldID           bool
-}
-
-func NewProcedureGrantID(databaseName string, schemaName, objectName string, argumentDataTypes []string, privilege string, roles []string, shares []string, withGrantOption bool) *ProcedureGrantID {
-	return &ProcedureGrantID{
-		DatabaseName:      databaseName,
-		SchemaName:        schemaName,
-		ObjectName:        objectName,
-		ArgumentDataTypes: argumentDataTypes,
-		Privilege:         privilege,
-		Roles:             roles,
-		Shares:            shares,
-		WithGrantOption:   withGrantOption,
-		IsOldID:           false,
-	}
-}
-
-func (v *ProcedureGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	shares := strings.Join(v.Shares, ",")
-	argumentDataTypes := strings.Join(v.ArgumentDataTypes, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.ObjectName, argumentDataTypes, v.Privilege, v.WithGrantOption, roles, shares)
-}
-
-func parseProcedureGrantID(s string) (*ProcedureGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		objectIdentifier := idParts[2]
-		if idx := strings.Index(objectIdentifier, ")"); idx != -1 {
-			objectIdentifier = objectIdentifier[0:idx]
-		}
-		objectNameParts := strings.Split(objectIdentifier, "(")
-
-		return &ProcedureGrantID{
-			DatabaseName:      idParts[0],
-			SchemaName:        idParts[1],
-			ObjectName:        objectNameParts[0],
-			ArgumentDataTypes: helpers.SplitStringToSlice(objectNameParts[1], ","),
-			Privilege:         idParts[3],
-			Roles:             helpers.SplitStringToSlice(idParts[4], ","),
-			Shares:            []string{},
-			WithGrantOption:   idParts[5] == "true",
-			IsOldID:           true,
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 8 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 8", len(idParts))
-	}
-	return &ProcedureGrantID{
-		DatabaseName:      idParts[0],
-		SchemaName:        idParts[1],
-		ObjectName:        idParts[2],
-		ArgumentDataTypes: helpers.SplitStringToSlice(idParts[3], ","),
-		Privilege:         idParts[4],
-		WithGrantOption:   idParts[5] == "true",
-		Roles:             helpers.SplitStringToSlice(idParts[6], ","),
-		Shares:            helpers.SplitStringToSlice(idParts[7], ","),
-		IsOldID:           false,
-	}, nil
 }

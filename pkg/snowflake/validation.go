@@ -49,7 +49,8 @@ func isInitialIdentifierRune(r rune) bool {
 		r == '[' ||
 		r == ']' ||
 		(r >= 'A' && r <= 'Z') ||
-		(r >= 'a' && r <= 'z'))
+		(r >= 'a' && r <= 'z')) ||
+		(r >= 48 && r <= 57) // 0-9
 }
 
 type DateFormat string

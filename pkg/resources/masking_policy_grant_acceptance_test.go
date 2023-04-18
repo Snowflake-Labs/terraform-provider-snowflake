@@ -30,6 +30,15 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "APPLY"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_masking_policy_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }

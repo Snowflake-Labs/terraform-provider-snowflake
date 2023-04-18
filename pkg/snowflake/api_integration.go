@@ -28,6 +28,7 @@ type APIIntegration struct {
 	Category        sql.NullString `db:"category"`
 	IntegrationType sql.NullString `db:"type"`
 	CreatedOn       sql.NullString `db:"created_on"`
+	Comment         sql.NullString `db:"comment"`
 	Enabled         sql.NullBool   `db:"enabled"`
 }
 

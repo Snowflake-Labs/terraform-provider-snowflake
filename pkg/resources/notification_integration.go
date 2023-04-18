@@ -111,6 +111,11 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
 	},
+	"gcp_pubsub_topic_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The topic id that Snowflake will use to push notifications.",
+	},
 	"gcp_pubsub_service_account": {
 		Type:        schema.TypeString,
 		Computed:    true,
@@ -177,6 +182,9 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	}
 	if v, ok := d.GetOk("gcp_pubsub_subscription_name"); ok {
 		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
+	}
+	if v, ok := d.GetOk("gcp_pubsub_topic_name"); ok {
+		stmt.SetString(`GCP_PUBSUB_TOPIC_NAME`, v.(string))
 	}
 
 	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
@@ -297,6 +305,10 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 			if err := d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
 				return err
 			}
+		case "GCP_PUBSUB_TOPIC_NAME":
+			if err := d.Set("gcp_pubsub_topic_name", v.(string)); err != nil {
+				return err
+			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
 			if err := d.Set("gcp_pubsub_service_account", v.(string)); err != nil {
 				return err
@@ -378,6 +390,11 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("gcp_pubsub_subscription_name") {
 		runSetStatement = true
 		stmt.SetString("GCP_PUBSUB_SUBSCRIPTION_NAME", d.Get("gcp_pubsub_subscription_name").(string))
+	}
+
+	if d.HasChange("gcp_pubsub_topic_name") {
+		runSetStatement = true
+		stmt.SetString("GCP_PUBSUB_TOPIC_NAME", d.Get("gcp_pubsub_topic_name").(string))
 	}
 
 	if runSetStatement {

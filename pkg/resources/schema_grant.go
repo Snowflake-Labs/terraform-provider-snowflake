@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -67,12 +68,20 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Grants privilege to these shares (only valid if on_future is unset).",
+		Description: "Grants privilege to these shares (only valid if on_future and on_all are unset).",
 	},
 	"on_future": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future.",
+		Description:   "When this is set to true, apply this grant on all future schemas in the given database. The schema_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"schema_name", "shares"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},
@@ -103,7 +112,40 @@ func SchemaGrant() *TerraformGrantResource {
 
 			Schema: schemaGrantSchema,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 8 {
+						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|privilege|with_grant_option|on_future|on_all|roles|shares", d.Id())
+					}
+
+					if err := d.Set("database_name", parts[0]); err != nil {
+						return nil, err
+					}
+					if parts[1] != "" {
+						if err := d.Set("schema_name", parts[1]); err != nil {
+							return nil, err
+						}
+					}
+					if err := d.Set("privilege", parts[2]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[3])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_future", helpers.StringToBool(parts[4])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("on_all", helpers.StringToBool(parts[5])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", helpers.StringListToList(parts[7])); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 		},
 		ValidPrivs: validSchemaPrivileges,
@@ -112,25 +154,29 @@ func SchemaGrant() *TerraformGrantResource {
 
 // CreateSchemaGrant implements schema.CreateFunc.
 func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	var schemaName string
-	if _, ok := d.GetOk("schema_name"); ok {
-		schemaName = d.Get("schema_name").(string)
-	}
+	schemaName := d.Get("schema_name").(string)
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
+		return errors.New("on_future and on_all cannot both be true")
+	}
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSchemaGrant(databaseName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSchemaGrant(databaseName)
+	default:
 		builder = snowflake.SchemaGrant(databaseName, schemaName)
 	}
 
@@ -138,8 +184,8 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := NewSchemaGrantID(databaseName, schemaName, privilege, roles, shares, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	d.SetId(grantID)
 
 	return ReadSchemaGrant(d, meta)
 }
@@ -147,7 +193,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 // UpdateSchemaGrant implements schema.UpdateFunc.
 func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	// for now the only thing we can update are roles or shares
-	// if nothing changed, nothing to update and we're done
+	// if nothing changed, nothing to update, and we're done
 	if !d.HasChanges("roles", "shares") {
 		return nil
 	}
@@ -163,26 +209,29 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		sharesToAdd, sharesToRevoke = changeDiff(d, "shares")
 	}
 
-	grantID, err := parseSchemaGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if onFuture {
-		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
-		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
+	switch {
+	case onFuture:
+		builder = snowflake.FutureSchemaGrant(databaseName)
+	case onAll:
+		builder = snowflake.AllSchemaGrant(databaseName)
+	default:
+		builder = snowflake.SchemaGrant(databaseName, schemaName)
 	}
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
+		privilege,
 		rolesToRevoke,
 		sharesToRevoke,
 	); err != nil {
@@ -193,8 +242,8 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrantRolesAndShares(
 		meta,
 		builder,
-		grantID.Privilege,
-		grantID.WithGrantOption,
+		privilege,
+		withGrantOption,
 		rolesToAdd,
 		sharesToAdd,
 	); err != nil {
@@ -207,123 +256,51 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchemaGrant implements schema.ReadFunc.
 func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	privilege := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	shares := expandStringList(d.Get("shares").(*schema.Set).List())
+
+	var builder snowflake.GrantBuilder
+	switch {
+	case onFuture:
+		builder = snowflake.FutureSchemaGrant(databaseName)
+	case onAll:
+		builder = snowflake.AllSchemaGrant(databaseName)
+	default:
+		builder = snowflake.SchemaGrant(databaseName, schemaName)
+	}
+
+	err := readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, onAll, validSchemaPrivileges)
 	if err != nil {
 		return err
 	}
 
-	if !grantID.IsOldID {
-		if err := d.Set("roles", grantID.Roles); err != nil {
-			return err
-		}
-		if err := d.Set("shares", grantID.Shares); err != nil {
-			return err
-		}
+	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	if grantID != d.Id() {
+		d.SetId(grantID)
 	}
-
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
-	}
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	onFuture := false
-	if grantID.SchemaName == "" {
-		onFuture = true
-	}
-	if err := d.Set("on_future", onFuture); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
-
-	var builder snowflake.GrantBuilder
-	if onFuture {
-		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
-		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
-	}
-	return readGenericGrant(d, meta, schemaGrantSchema, builder, onFuture, validSchemaPrivileges)
+	return nil
 }
 
 // DeleteSchemaGrant implements schema.DeleteFunc.
 func DeleteSchemaGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseSchemaGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	onFuture := false
-	if grantID.SchemaName == "" {
-		onFuture = true
-	}
-
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	var builder snowflake.GrantBuilder
-	if onFuture {
-		builder = snowflake.FutureSchemaGrant(grantID.DatabaseName)
-	} else {
-		builder = snowflake.SchemaGrant(grantID.DatabaseName, grantID.SchemaName)
+	switch {
+	case onFuture:
+		builder = snowflake.FutureSchemaGrant(databaseName)
+	case onAll:
+		builder = snowflake.AllSchemaGrant(databaseName)
+	default:
+		builder = snowflake.SchemaGrant(databaseName, schemaName)
 	}
 	return deleteGenericGrant(d, meta, builder)
-}
-
-type SchemaGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	Privilege       string
-	Roles           []string
-	Shares          []string
-	WithGrantOption bool
-	IsOldID         bool
-}
-
-func NewSchemaGrantID(databaseName string, schemaName, privilege string, roles []string, shares []string, withGrantOption bool) *SchemaGrantID {
-	return &SchemaGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		Privilege:       privilege,
-		Roles:           roles,
-		Shares:          shares,
-		WithGrantOption: withGrantOption,
-		IsOldID:         false,
-	}
-}
-
-func (v *SchemaGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	shares := strings.Join(v.Shares, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v❄️%v❄️%v", v.DatabaseName, v.SchemaName, v.Privilege, v.WithGrantOption, roles, shares)
-}
-
-func parseSchemaGrantID(s string) (*SchemaGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		return &SchemaGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			Shares:          []string{},
-			WithGrantOption: idParts[5] == "true",
-			IsOldID:         true,
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 6 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
-	}
-	return &SchemaGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		Privilege:       idParts[2],
-		WithGrantOption: idParts[3] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-		Shares:          helpers.SplitStringToSlice(idParts[5], ","),
-		IsOldID:         false,
-	}, nil
 }

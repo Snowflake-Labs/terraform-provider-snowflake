@@ -1,0 +1,9 @@
+{
+    "files.insertFinalNewline": true,
+    "go.testEnvFile": "${workspaceFolder}/test.env",
+    "go.formatTool": "gofumpt",
+    "gopls": {
+        "formatting.gofumpt": true
+    },
+    "go.testFlags": ["-v"],
+}

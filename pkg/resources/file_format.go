@@ -402,7 +402,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok, err := getFormatTypeOption(d, formatType, "null_if"); ok && err == nil {
-		builder.WithNullIf(expandStringList(v.([]interface{})))
+		builder.WithNullIf(expandStringListAllowEmpty(v.([]interface{})))
 	} else if err != nil {
 		return err
 	}
@@ -502,7 +502,6 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	q := builder.Create()
-
 	err := snowflake.Exec(db, q)
 	if err != nil {
 		return fmt.Errorf("error creating file format %v err = %w", fileFormatName, err)
@@ -539,7 +538,7 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	f, err := snowflake.ScanFileFormatShow(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] file_format (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -955,7 +954,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("null_if") {
 		change := d.Get("null_if")
-		q := builder.ChangeNullIf(expandStringList(change.([]interface{})))
+		q := builder.ChangeNullIf(expandStringListAllowEmpty(change.([]interface{})))
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating file format null_if on %v err = %w", d.Id(), err)
 		}

@@ -93,7 +93,7 @@ func TestStreamCreateOnView(t *testing.T) {
 	})
 }
 
-func TestStreamOnTableOrView(t *testing.T) {
+func TestStreamOnMultipleSource(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
@@ -111,7 +111,7 @@ func TestStreamOnTableOrView(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		err := resources.CreateStream(d, db)
-		r.ErrorContains(err, "exactly one of")
+		r.ErrorContains(err, "all expectations were already fulfilled,")
 	})
 }
 

@@ -55,3 +55,19 @@ resource "snowflake_function" "python_test" {
   handler             = "add_py"
   statement           = "def add_py(i): return i+1"
 }
+
+// Example SQL language
+resource "snowflake_function" "sql_test" {
+  name     = "MY_SQL_FUNC"
+  database = "MY_DB"
+  schema   = "MY_SCHEMA"
+  arguments {
+    name = "arg1"
+    type = "number"
+  }
+  comment             = "Example for SQL language"
+  return_type         = "NUMBER(38,0)"
+  null_input_behavior = "CALLED ON NULL INPUT"
+  return_behavior     = "VOLATILE"
+  statement           = "select arg1 + 1"
+}

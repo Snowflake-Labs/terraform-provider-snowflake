@@ -36,12 +36,14 @@ var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
+		Sensitive:   true,
 		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
 	},
 	"login_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
+		Sensitive:   true,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
 		DiffSuppressFunc: diffCaseInsensitive,
@@ -84,7 +86,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the set of secondary roles that are active for the user’s session upon login.",
+		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)",
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
@@ -109,22 +111,26 @@ var userSchema = map[string]*schema.Schema{
 	"email": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "Email address for the user.",
 	},
 	"display_name": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "Name displayed for the user in the Snowflake web interface.",
 	},
 	"first_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "First name of the user.",
 	},
 	"last_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Sensitive:   true,
 		Description: "Last name of the user.",
 	},
 	"tag": tagReferenceSchema,
@@ -167,7 +173,7 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	rows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
-			// If not found, mark resource to be removed from statefile during apply or refresh
+			// If not found, mark resource to be removed from state file during apply or refresh
 			log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 			d.SetId("")
 			return nil

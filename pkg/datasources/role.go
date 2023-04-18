@@ -3,7 +3,6 @@ package datasources
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -38,9 +37,7 @@ func Role() *schema.Resource {
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	roleName := d.Get("name").(string)
-
-	row := snowflake.QueryRow(db, fmt.Sprintf("SHOW ROLES LIKE '%s'", roleName))
-	role, err := snowflake.ScanRole(row)
+	role, err := snowflake.NewRoleBuilder(db, roleName).Show()
 
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("[DEBUG] role (%s) not found", roleName)

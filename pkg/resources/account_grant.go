@@ -2,7 +2,7 @@ package resources
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -88,80 +88,25 @@ func AccountGrant() *TerraformGrantResource {
 			Schema: accountGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-					v, err := helpers.DecodeSnowflakeImportID(d.Id(), AccountGrantImporter{})
-					if err != nil {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 3 {
+						return nil, errors.New("id should be in the format 'privilege|with_grant_option|roles'")
+					}
+					if err := d.Set("privilege", parts[0]); err != nil {
 						return nil, err
 					}
-					importer := v.(AccountGrantImporter)
-					err = d.Set("privilege", importer.Privilege)
-					if err != nil {
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[1])); err != nil {
 						return nil, err
 					}
-					err = d.Set("roles", importer.Roles)
-					if err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[2])); err != nil {
 						return nil, err
 					}
-					err = d.Set("with_grant_option", importer.WithGrantOption)
-					if err != nil {
-						return nil, err
-					}
-					d.SetId(helpers.RandomSnowflakeID())
 					return []*schema.ResourceData{d}, nil
 				},
 			},
 		},
 		ValidPrivs: validAccountPrivileges,
 	}
-}
-
-type AccountGrantImporter struct {
-	Privilege       string   `tf:"privilege"`
-	Roles           []string `tf:"roles"`
-	WithGrantOption bool     `tf:"with_grant_option"`
-}
-
-type AccountGrantID struct {
-	Privilege       string
-	Roles           []string
-	WithGrantOption bool
-	IsOldID         bool
-}
-
-func NewAccountGrantID(privilege string, roles []string, withGrantOption bool) *AccountGrantID {
-	return &AccountGrantID{
-		Privilege:       privilege,
-		Roles:           roles,
-		WithGrantOption: withGrantOption,
-		IsOldID:         false,
-	}
-}
-
-func (v *AccountGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v", v.Privilege, v.WithGrantOption, roles)
-}
-
-func parseAccountGrantID(s string) (*AccountGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		return &AccountGrantID{
-			Privilege:       idParts[3],
-			Roles:           []string{},
-			WithGrantOption: idParts[4] == "true",
-			IsOldID:         true,
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 3 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 3", len(idParts))
-	}
-	return &AccountGrantID{
-		Privilege:       idParts[0],
-		WithGrantOption: idParts[1] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[2], ","),
-		IsOldID:         false,
-	}, nil
 }
 
 // CreateAccountGrant implements schema.CreateFunc.
@@ -175,36 +120,35 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	privilege := d.Get("privilege").(string)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
-	grantID := NewAccountGrantID(privilege, roles, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	d.SetId(grantID)
 
 	return ReadAccountGrant(d, meta)
 }
 
 // ReadAccountGrant implements schema.ReadFunc.
 func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
+	privilege := d.Get("privilege").(string)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+	withGrantOption := d.Get("with_grant_option").(bool)
+
 	builder := snowflake.AccountGrant()
-	grantID, err := parseAccountGrantID(d.Id())
+	err := readGenericGrant(d, meta, accountGrantSchema, builder, false, false, validAccountPrivileges)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
 
-	return readGenericGrant(d, meta, accountGrantSchema, builder, false, validAccountPrivileges)
+	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	// if the ID is not in the new format, rewrite it
+	if grantID != d.Id() {
+		d.SetId(grantID)
+	}
+	return nil
 }
 
 // DeleteAccountGrant implements schema.DeleteFunc.
 func DeleteAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.AccountGrant()
-
 	return deleteGenericGrant(d, meta, builder)
 }
 

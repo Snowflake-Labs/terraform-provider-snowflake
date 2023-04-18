@@ -2,7 +2,9 @@ package helpers
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -32,13 +34,39 @@ func ListContentToString(listString string) string {
 	return re.ReplaceAllString(listString, "")
 }
 
-// SplitStringToSlice splits a string into a slice of strings, separated by a separator. It also removes empty strings.
-func SplitStringToSlice(s, sep string) []string {
+// StringListToList splits a string into a slice of strings, separated by a separator. It also removes empty strings and trims whitespace.
+func StringListToList(s string) []string {
 	var v []string
-	for _, elem := range strings.Split(s, sep) {
-		if elem != "" {
-			v = append(v, elem)
+	for _, elem := range strings.Split(s, ",") {
+		if strings.TrimSpace(elem) != "" {
+			v = append(v, strings.TrimSpace(elem))
 		}
 	}
 	return v
 }
+
+// StringToBool converts a string to a bool.
+func StringToBool(s string) bool {
+	return strings.ToLower(s) == "true"
+}
+
+// SnowflakeID generates a unique ID for a resource.
+func SnowflakeID(attributes ...interface{}) string {
+	var parts []string
+	for i, attr := range attributes {
+		if attr == nil {
+			attributes[i] = ""
+		}
+		switch reflect.TypeOf(attr).Kind() {
+		case reflect.String:
+			parts = append(parts, attr.(string))
+		case reflect.Bool:
+			parts = append(parts, strconv.FormatBool(attr.(bool)))
+		case reflect.Slice:
+			parts = append(parts, strings.Join(attr.([]string), ","))
+		}
+	}
+	return strings.Join(parts, "|")
+}
+
+const IDDelimiter = "|"

@@ -10,6 +10,14 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
+type grantType int
+
+const (
+	normal grantType = iota
+	onFuture
+	onAll
+)
+
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
@@ -197,15 +205,6 @@ func providers() map[string]*schema.Provider {
 	}
 }
 
-func role(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.Role().Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
 func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
@@ -332,15 +331,6 @@ func externalTable(t *testing.T, id string, params map[string]interface{}) *sche
 	return d
 }
 
-func task(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.Task().Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
 func user(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
@@ -408,24 +398,6 @@ func streamGrant(t *testing.T, id string, params map[string]interface{}) *schema
 	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.StreamGrant().Resource.Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
-func functionGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.FunctionGrant().Resource.Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
-func procedureGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.ProcedureGrant().Resource.Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -93,7 +95,12 @@ func Database() *schema.Resource {
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				if err := d.Set("name", d.Id()); err != nil {
+					return nil, err
+				}
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }
@@ -219,22 +226,13 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := d.Id()
-
-	stmt := snowflake.NewDatabaseBuilder(name).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	database, err := snowflake.ScanDatabase(row)
+	dbx := sqlx.NewDb(db, "snowflake")
+	database, err := snowflake.ListDatabase(dbx, d.Get("name").(string))
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// If not found, mark resource to be removed from statefile during apply or refresh
-			log.Printf("[DEBUG] database (%s) not found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("unable to scan row for SHOW DATABASES")
+		log.Println("[DEBUG] list database failed to decode")
+		d.SetId("")
+		return nil
 	}
-
 	if err := d.Set("name", database.DBName.String); err != nil {
 		return err
 	}

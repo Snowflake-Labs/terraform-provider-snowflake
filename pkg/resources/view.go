@@ -40,6 +40,13 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
+	"copy_grants": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
+		ForceNew:    true,
+	},
 	"is_secure": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -65,7 +72,7 @@ func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))
 }
 
-// DiffSuppressStatement will suppress diffs between statemens if they differ in only case or in
+// DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
 // runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully
 // round-trip queries so we cannot do a simple character-wise comparison to detect changes.
 //
@@ -163,6 +170,10 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		builder.WithSecure()
 	}
 
+	if v, ok := d.GetOk("copy_grants"); ok && v.(bool) {
+		builder.WithCopyGrants()
+	}
+
 	if v, ok := d.GetOk("comment"); ok {
 		builder.WithComment(v.(string))
 	}
@@ -210,7 +221,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	row := snowflake.QueryRow(db, q)
 	v, err := snowflake.ScanView(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -222,6 +233,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err = d.Set("is_secure", v.IsSecure); err != nil {
+		return err
+	}
+	if err = d.Set("copy_grants", v.HasCopyGrants()); err != nil {
 		return err
 	}
 	if err = d.Set("comment", v.Comment.String); err != nil {

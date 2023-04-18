@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -61,7 +62,25 @@ func ResourceMonitorGrant() *TerraformGrantResource {
 			Delete: DeleteResourceMonitorGrant,
 			Update: UpdateResourceMonitorGrant,
 			Importer: &schema.ResourceImporter{
-				StateContext: schema.ImportStatePassthroughContext,
+				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 4 {
+						return nil, fmt.Errorf("incorrect ID %v: expected monitor_name|privilege|with_grant_option|roles", d.Id())
+					}
+					if err := d.Set("monitor_name", parts[0]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("privilege", parts[1]); err != nil {
+						return nil, err
+					}
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[2])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[3])); err != nil {
+						return nil, err
+					}
+					return []*schema.ResourceData{d}, nil
+				},
 			},
 			Schema: resourceMonitorGrantSchema,
 		},
@@ -81,43 +100,37 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := NewResourceMonitorGrantID(monitorName, privilege, roles, withGrantOption)
-	d.SetId(grantID.String())
+	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	d.SetId(grantID)
 
 	return ReadResourceMonitorGrant(d, meta)
 }
 
 // ReadResourceMonitorGrant implements schema.ReadFunc.
 func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
+	monitorName := d.Get("monitor_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+
+	builder := snowflake.ResourceMonitorGrant(monitorName)
+	err := readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, false, validResourceMonitorPrivileges)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("roles", grantID.Roles); err != nil {
-		return err
-	}
-	if err := d.Set("monitor_name", grantID.ObjectName); err != nil {
-		return err
-	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
 
-	builder := snowflake.ResourceMonitorGrant(grantID.ObjectName)
-	return readGenericGrant(d, meta, resourceMonitorGrantSchema, builder, false, validResourceMonitorPrivileges)
+	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	if grantID != d.Id() {
+		d.SetId(grantID)
+	}
+	return nil
 }
 
 // DeleteResourceMonitorGrant implements schema.DeleteFunc.
 func DeleteResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := parseResourceMonitorGrantID(d.Id())
-	if err != nil {
-		return err
-	}
+	monitorName := d.Get("monitor_name").(string)
 
-	builder := snowflake.ResourceMonitorGrant(grantID.ObjectName)
+	builder := snowflake.ResourceMonitorGrant(monitorName)
 
 	return deleteGenericGrant(d, meta, builder)
 }
@@ -137,75 +150,25 @@ func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		rolesToAdd, rolesToRevoke = changeDiff(d, "roles")
 	}
 
-	grantID, err := parseResourceMonitorGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
+	monitorName := d.Get("monitor_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
-	builder := snowflake.ResourceMonitorGrant(grantID.ObjectName)
+	builder := snowflake.ResourceMonitorGrant(monitorName)
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
+		meta, builder, privilege, withGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
 
 	// Done, refresh state
 	return ReadResourceMonitorGrant(d, meta)
-}
-
-type ResourceMonitorGrantID struct {
-	ObjectName      string
-	Privilege       string
-	Roles           []string
-	WithGrantOption bool
-	IsOldID         bool
-}
-
-func NewResourceMonitorGrantID(objectName string, privilege string, roles []string, withGrantOption bool) *ResourceMonitorGrantID {
-	return &ResourceMonitorGrantID{
-		ObjectName:      objectName,
-		Privilege:       privilege,
-		Roles:           roles,
-		WithGrantOption: withGrantOption,
-		IsOldID:         false,
-	}
-}
-
-func (v *ResourceMonitorGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v❄️%v❄️%v❄️%v", v.ObjectName, v.Privilege, v.WithGrantOption, roles)
-}
-
-func parseResourceMonitorGrantID(s string) (*ResourceMonitorGrantID, error) {
-	// is this an old ID format?
-	if !strings.Contains(s, "❄️") {
-		idParts := strings.Split(s, "|")
-		return &ResourceMonitorGrantID{
-			ObjectName:      idParts[0],
-			Privilege:       idParts[3],
-			Roles:           helpers.SplitStringToSlice(idParts[4], ","),
-			WithGrantOption: idParts[5] == "true",
-			IsOldID:         true,
-		}, nil
-	}
-	idParts := strings.Split(s, "❄️")
-	if len(idParts) != 4 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 4", len(idParts))
-	}
-	return &ResourceMonitorGrantID{
-		ObjectName:      idParts[0],
-		Privilege:       idParts[1],
-		WithGrantOption: idParts[2] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[3], ","),
-		IsOldID:         false,
-	}, nil
 }

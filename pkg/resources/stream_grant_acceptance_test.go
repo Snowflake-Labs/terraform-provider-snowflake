@@ -33,6 +33,14 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "SELECT"),
 				),
 			},
+			{
+				ResourceName:      "snowflake_stream_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }
@@ -51,11 +59,19 @@ func TestAcc_StreamGrant_future(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", schemaName),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "stream_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_stream_grant.test", "stream_name"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "SELECT"),
 				),
+			},
+			{
+				ResourceName:      "snowflake_stream_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

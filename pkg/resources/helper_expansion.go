@@ -25,6 +25,20 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
+func expandStringListAllowEmpty(configured []interface{}) []string {
+	// Allow empty values during expansion
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok {
+			vs = append(vs, val)
+		} else {
+			vs = append(vs, "")
+		}
+	}
+	return vs
+}
+
 func expandObjectIdentifier(objectIdentifier interface{}) (string, string, string) {
 	objectIdentifierMap := objectIdentifier.([]interface{})[0].(map[string]interface{})
 	objectName := objectIdentifierMap["name"].(string)

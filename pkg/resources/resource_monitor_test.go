@@ -24,13 +24,13 @@ func TestResourceMonitorCreate(t *testing.T) {
 	r := require.New(t)
 
 	in := map[string]interface{}{
-		"name":                       "good_name",
-		"notify_users":               []interface{}{"USERONE", "USERTWO"},
-		"credit_quota":               100,
-		"notify_triggers":            []interface{}{75, 88},
-		"suspend_triggers":           []interface{}{99},
-		"suspend_immediate_triggers": []interface{}{105},
-		"set_for_account":            true,
+		"name":                      "good_name",
+		"notify_users":              []interface{}{"USERONE", "USERTWO"},
+		"credit_quota":              100,
+		"notify_triggers":           []interface{}{75, 88},
+		"suspend_trigger":           99,
+		"suspend_immediate_trigger": 105,
+		"set_for_account":           true,
 	}
 
 	d := schema.TestResourceDataRaw(t, resources.ResourceMonitor().Schema, in)

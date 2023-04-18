@@ -164,6 +164,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", "https"),
 			},
+			"insecure_mode": {
+				Type:        schema.TypeBool,
+				Description: "If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_INSECURE_MODE", false),
+			},
 			"warehouse": {
 				Type:        schema.TypeString,
 				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
@@ -210,8 +216,10 @@ func getResources() map[string]*schema.Resource {
 	others := map[string]*schema.Resource{
 		"snowflake_account":                        resources.Account(),
 		"snowflake_account_parameter":              resources.AccountParameter(),
+		"snowflake_alert":                          resources.Alert(),
 		"snowflake_api_integration":                resources.APIIntegration(),
 		"snowflake_database":                       resources.Database(),
+		"snowflake_database_role":                  resources.DatabaseRole(),
 		"snowflake_external_function":              resources.ExternalFunction(),
 		"snowflake_failover_group":                 resources.FailoverGroup(),
 		"snowflake_file_format":                    resources.FileFormat(),
@@ -224,6 +232,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_oauth_integration":              resources.OAuthIntegration(),
 		"snowflake_object_parameter":               resources.ObjectParameter(),
 		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
+		"snowflake_password_policy":                resources.PasswordPolicy(),
 		"snowflake_pipe":                           resources.Pipe(),
 		"snowflake_procedure":                      resources.Procedure(),
 		"snowflake_resource_monitor":               resources.ResourceMonitor(),
@@ -273,6 +282,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_tables":                             datasources.Tables(),
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_shares":                             datasources.Shares(),
 		"snowflake_stages":                             datasources.Stages(),
 		"snowflake_file_formats":                       datasources.FileFormats(),
 		"snowflake_sequences":                          datasources.Sequences(),
@@ -320,6 +330,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	protocol := s.Get("protocol").(string)
 	port := s.Get("port").(int)
 	warehouse := s.Get("warehouse").(string)
+	insecureMode := s.Get("insecure_mode").(bool)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -344,6 +355,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		protocol,
 		port,
 		warehouse,
+		insecureMode,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -372,6 +384,7 @@ func DSN(
 	protocol string,
 	port int,
 	warehouse string,
+	insecureMode bool,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -380,13 +393,14 @@ func DSN(
 	}
 
 	config := gosnowflake.Config{
-		Account:     account,
-		User:        user,
-		Region:      region,
-		Role:        role,
-		Application: "terraform-provider-snowflake",
-		Port:        port,
-		Protocol:    protocol,
+		Account:      account,
+		User:         user,
+		Region:       region,
+		Role:         role,
+		Application:  "terraform-provider-snowflake",
+		Port:         port,
+		Protocol:     protocol,
+		InsecureMode: insecureMode,
 	}
 
 	// If host is set trust it and do not use the region value
@@ -569,6 +583,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		protocol,
 		port,
 		warehouse,
+		false,
 	)
 	if err != nil {
 		return nil, err

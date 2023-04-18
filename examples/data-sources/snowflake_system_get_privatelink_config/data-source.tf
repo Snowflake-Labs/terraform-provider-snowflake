@@ -44,7 +44,7 @@ resource "aws_route53_record" "snowflake_private_link_url" {
 }
 
 resource "aws_route53_record" "snowflake_private_link_ocsp_url" {
-  zone_id = aws_route53_zone.snowflake_private_link_url.zone_id
+  zone_id = aws_route53_zone.snowflake_private_link.zone_id
   name    = data.snowflake_system_get_privatelink_config.snowflake_private_link.ocsp_url
   type    = "CNAME"
   ttl     = "300"

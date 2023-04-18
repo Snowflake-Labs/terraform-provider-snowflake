@@ -62,7 +62,6 @@ func Database() *schema.Resource {
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	dbx := sqlx.NewDb(db, "snowflake")
-	log.Printf("[DEBUG] database: %v", d.Get("name"))
 	dbData, err := snowflake.ListDatabase(dbx, d.Get("name").(string))
 	if err != nil {
 		log.Println("[DEBUG] list database failed to decode")

@@ -123,9 +123,8 @@ func (b *AccountBuilder) Create() (*Account, error) {
 		q.WriteString(fmt.Sprintf(` LAST_NAME ='%s'`, EscapeString(b.lastName)))
 	}
 	q.WriteString(fmt.Sprintf(` EMAIL = '%s'`, b.email))
-	if b.mustChangePassword {
-		q.WriteString(fmt.Sprintf(` MUST_CHANGE_PASSWORD = %t`, b.mustChangePassword))
-	}
+
+	q.WriteString(fmt.Sprintf(` MUST_CHANGE_PASSWORD = %t`, b.mustChangePassword))
 
 	q.WriteString(fmt.Sprintf(` EDITION = %s`, b.edition))
 
@@ -177,6 +176,7 @@ type Account struct {
 	MarketplaceConsumerBillingEntityName sql.NullString `db:"marketplace_consumer_billing_entity_name"`
 	MarketplaceProviderBillingEntityName sql.NullString `db:"marketplace_provider_billing_entity_name"`
 	OldAccountURL                        sql.NullString `db:"old_account_url"`
+	IsOrgAdmin                           sql.NullBool   `db:"is_org_admin"`
 }
 
 // Show returns the SQL query that will show a specific account by pattern.

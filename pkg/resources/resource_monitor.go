@@ -54,17 +54,33 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The date and time when the resource monitor suspends the assigned warehouses.",
 	},
+	"suspend_trigger": {
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Description:   "The number that represents the percentage threshold at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_triggers"},
+	},
 	"suspend_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
-		Optional:    true,
-		Description: "A list of percentage thresholds at which to suspend all warehouses.",
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeInt},
+		Optional:      true,
+		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_trigger"},
+		Deprecated:    "Use suspend_trigger instead",
+	},
+	"suspend_immediate_trigger": {
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Description:   "The number that represents the percentage threshold at which to immediately suspend all warehouses.",
+		ConflictsWith: []string{"suspend_immediate_triggers"},
 	},
 	"suspend_immediate_triggers": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeInt},
-		Optional:    true,
-		Description: "A list of percentage thresholds at which to immediately suspend all warehouses.",
+		Type:          schema.TypeSet,
+		Elem:          &schema.Schema{Type: schema.TypeInt},
+		Optional:      true,
+		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		ConflictsWith: []string{"suspend_immediate_trigger"},
+		Deprecated:    "Use suspend_immediate_trigger instead",
 	},
 	"notify_triggers": {
 		Type:        schema.TypeSet,
@@ -75,7 +91,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"set_for_account": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account.",
+		Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).",
 		Default:     false,
 	},
 	"warehouses": {
@@ -123,7 +139,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	cb := snowflake.NewResourceMonitorBuilder(name).Create()
-	// Set optionals
+	// Set optionals.
 	if v, ok := d.GetOk("notify_users"); ok {
 		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
 	}
@@ -139,14 +155,25 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("end_timestamp"); ok {
 		cb.SetString("end_timestamp", v.(string))
 	}
-	// Set triggers
-	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
-	for _, t := range sTrigs {
-		cb.SuspendAt(t)
+	if v, ok := d.GetOk("suspend_trigger"); ok {
+		cb.SuspendAt(v.(int))
 	}
-	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
-	for _, t := range siTrigs {
-		cb.SuspendImmediatelyAt(t)
+	// Support deprecated suspend_triggers.
+	if v, ok := d.GetOk("suspend_triggers"); ok {
+		siTrigs := expandIntList(v.(*schema.Set).List())
+		for _, t := range siTrigs {
+			cb.SuspendAt(t)
+		}
+	}
+	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		cb.SuspendImmediatelyAt(v.(int))
+	}
+	// Support deprecated suspend_immediate_triggers.
+	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		sTrigs := expandIntList(v.(*schema.Set).List())
+		for _, t := range sTrigs {
+			cb.SuspendImmediatelyAt(t)
+		}
 	}
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
@@ -190,7 +217,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	rm, err := snowflake.ScanResourceMonitor(row)
 	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from statefile during apply or refresh
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] resource monitor (%s) not found", d.Id())
 		d.SetId("")
 		return nil
@@ -228,20 +255,80 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Triggers
-	sTrigs, err := extractTriggerInts(rm.SuspendAt)
+	sTrig, err := extractTriggerInts(rm.SuspendAt)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("suspend_triggers", sTrigs); err != nil {
-		return err
+
+	var setSuspendTrigger bool
+	if _, ok := d.GetOk("suspend_trigger"); ok {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
+		} else {
+			if err := d.Set("suspend_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendTrigger = true
+		}
 	}
-	siTrigs, err := extractTriggerInts(rm.SuspendImmediatelyAt)
+	if _, ok := d.GetOk("suspend_triggers"); ok {
+		if err := d.Set("suspend_triggers", sTrig); err != nil {
+			return err
+		}
+		setSuspendTrigger = true
+	}
+	if !setSuspendTrigger {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+				return err
+			}
+		} else {
+			if err := d.Set("suspend_trigger", nil); err != nil {
+				return err
+			}
+		}
+	}
+
+	siTrig, err := extractTriggerInts(rm.SuspendImmediatelyAt)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("suspend_immediate_triggers", siTrigs); err != nil {
-		return err
+
+	var setSuspendImmediateTrigger bool
+	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		if len(siTrig) > 0 {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
+		} else {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+				return err
+			}
+			setSuspendImmediateTrigger = true
+		}
 	}
+	if _, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		if err := d.Set("suspend_immediate_triggers", siTrig); err != nil {
+			return err
+		}
+		setSuspendImmediateTrigger = true
+	}
+	if !setSuspendImmediateTrigger {
+		if len(sTrig) > 0 {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+				return err
+			}
+		} else {
+			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+				return err
+			}
+		}
+	}
+
 	nTrigs, err := extractTriggerInts(rm.NotifyAt)
 	if err != nil {
 		return err
@@ -275,7 +362,7 @@ func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullStr
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailling %s) into a slice of ints.
+// separated string with trailing %s) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
 	if !s.Valid {
@@ -333,16 +420,32 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Set triggers
-	sTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
-	for _, t := range sTrigs {
+	if d.HasChange("suspend_trigger") {
 		runSetStatement = true
-		ub.SuspendAt(t)
+		ub.SuspendAt(d.Get("suspend_trigger").(int))
 	}
-	siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
-	for _, t := range siTrigs {
+	// Support deprecated suspend_triggers.
+	if d.HasChange("suspend_triggers") {
 		runSetStatement = true
-		ub.SuspendImmediatelyAt(t)
+		siTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
+		for _, t := range siTrigs {
+			ub.SuspendAt(t)
+		}
 	}
+
+	if d.HasChange("suspend_immediate_trigger") {
+		runSetStatement = true
+		ub.SuspendImmediatelyAt(d.Get("suspend_immediate_trigger").(int))
+	}
+	// Support deprecated suspend_immediate_trigger.
+	if d.HasChange("suspend_immediate_triggers") {
+		runSetStatement = true
+		siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
+		for _, t := range siTrigs {
+			ub.SuspendImmediatelyAt(t)
+		}
+	}
+
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
 		runSetStatement = true
