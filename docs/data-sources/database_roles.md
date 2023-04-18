@@ -17,7 +17,7 @@ description: |-
 
 ### Optional
 
-- `database` (String) Filters the command output by object name.
+- `database` (String) The database from which to return the database roles from.
 
 ### Read-Only
 
