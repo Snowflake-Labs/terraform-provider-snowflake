@@ -29,16 +29,24 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Description: "Identifier for the password policy; must be unique for your account.",
 	},
 	"or_replace": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Whether to override a previous password policy with the same name.",
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Whether to override a previous password policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
 	},
 	"if_not_exists": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Prevent overwriting a previous password policy with the same name.",
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Prevent overwriting a previous password policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
 	},
 	"min_length": {
 		Type:         schema.TypeInt,
@@ -191,10 +199,16 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("couldn't create password policy builder: %w", err)
 	}
 
-	input := &snowflake.PasswordPolicyReadInput{
-		Database:   d.Get("database").(string),
-		Schema:     d.Get("schema").(string),
-		ObjectName: d.Get("name").(string),
+	input := PasswordPolicyIdentifier(d.Id())
+
+	if err := d.Set("database", input.Database); err != nil {
+		return fmt.Errorf("error setting database: %w", err)
+	}
+	if err := d.Set("schema", input.Schema); err != nil {
+		return fmt.Errorf("error setting schema: %w", err)
+	}
+	if err := d.Set("name", input.ObjectName); err != nil {
+		return fmt.Errorf("error setting name: %w", err)
 	}
 
 	stmt, err := manager.Read(input)
@@ -240,6 +254,9 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err = d.Set("lockout_time_mins", output.LockoutTimeMins); err != nil {
 		return fmt.Errorf("error setting lockout_time_mins: %w", err)
+	}
+	if err = d.Set("comment", output.Comment); err != nil {
+		return fmt.Errorf("error setting comment: %w", err)
 	}
 
 	return nil
@@ -444,4 +461,8 @@ func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 func PasswordPolicyID(pp *snowflake.PasswordPolicy) string {
 	return pp.QualifiedName()
+}
+
+func PasswordPolicyIdentifier(id string) *snowflake.SchemaObjectIdentifier {
+	return snowflake.SchemaObjectIdentifierFromQualifiedName(id)
 }

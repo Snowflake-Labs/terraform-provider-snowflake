@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -14,6 +15,7 @@ var (
 	Integer    ParamType = "int"
 	String     ParamType = "string"
 	StringList ParamType = "stringlist"
+	Bool       ParamType = "bool"
 )
 
 type SQLParameter struct {
@@ -97,6 +99,15 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 				paramType = String
 			case reflect.SliceOf(reflect.TypeOf("")):
 				paramType = StringList
+			case reflect.TypeOf(true):
+				paramType = Bool
+			default:
+				switch f.Type.Kind() {
+				case reflect.String:
+					paramType = String
+				default:
+					return nil, fmt.Errorf("unsupported field type: %v", f.Type)
+				}
 			}
 
 			config.parameters = append(config.parameters, &SQLParameter{
@@ -110,7 +121,7 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 	return config, nil
 }
 
-func newBuilder(
+func newSQLBuilder(
 	objectType string,
 	objectTypePlural string,
 	createInputType, alterInputType, unsetInputType, dropInputType, readOutputType reflect.Type,
@@ -179,6 +190,18 @@ func (b *SQLBuilder) renderParameters(obj Identifier, paramConf []*SQLParameter,
 		}
 
 		switch paramConf[i].paramType {
+		case Bool:
+			ok, err := getFieldValue(obj, param.structName+"Ok")
+			if err != nil {
+				return "", err
+			}
+			if ok.Bool() {
+				if withValues {
+					sb.WriteString(fmt.Sprintf(` %v = %t`, param.sqlName, rv.Bool()))
+				} else {
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
+				}
+			}
 		case Integer:
 			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
@@ -342,6 +365,23 @@ func (b *SQLBuilder) Drop(obj Identifier) (string, error) {
 	return sb.String(), nil
 }
 
+func (b *SQLBuilder) ShowLike(obj Identifier) (string, error) {
+	sb := strings.Builder{}
+	sb.WriteString("SHOW")
+
+	// eg. "TABLES"
+	sb.WriteString(fmt.Sprintf(" %v", b.objectTypePlural))
+
+	sb.WriteString(" LIKE")
+
+	// eg. "my_table"
+	sb.WriteString(fmt.Sprintf(` '%v'`, obj.QualifiedName()))
+
+	sb.WriteString(";")
+
+	return sb.String(), nil
+}
+
 func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 	sb := strings.Builder{}
 	sb.WriteString("DESCRIBE")
@@ -358,10 +398,29 @@ func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 }
 
 func (b *SQLBuilder) ParseDescribe(rows *sql.Rows, obj Identifier) error {
-	var property, value, defaultValue, desc string
+	var property, value, defaultValue, devnull string
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+
+	vars := []interface{}{}
+	for i := range cols {
+		switch cols[i] {
+		case "property":
+			vars = append(vars, &property)
+		case "value", "property_value":
+			vars = append(vars, &value)
+		case "default", "property_default":
+			vars = append(vars, &defaultValue)
+		default:
+			vars = append(vars, &devnull)
+		}
+	}
 
 	for rows.Next() {
-		if err := rows.Scan(&property, &value, &defaultValue, &desc); err != nil {
+		if err := rows.Scan(vars...); err != nil {
 			return err
 		}
 
@@ -416,6 +475,23 @@ func setFieldValue(obj Identifier, fieldName string, value string) error {
 			curField.SetString("")
 		} else {
 			curField.SetString(value)
+		}
+	case reflect.Bool:
+		curField.SetBool(strings.ToLower(value) == "true")
+	case reflect.Slice:
+		if len(value) == 0 {
+			curField.Set(reflect.ValueOf(make([]string, 0)))
+		} else if matched, err := regexp.MatchString(`^\[('.+'(,\s*'.+')*)?\]$`, value); err == nil && matched { // parse object types
+			trimmed := strings.Trim(value, "[]")
+			split := strings.Split(trimmed, ",")
+			values := make([]string, 0)
+			for i := range split {
+				values = append(values, strings.Trim(strings.Trim(split[i], " "), "'"))
+			}
+			curField.Set(reflect.ValueOf(values))
+		} else {
+			split := strings.Split(value, ",")
+			curField.Set(reflect.ValueOf(split))
 		}
 	}
 	return nil
