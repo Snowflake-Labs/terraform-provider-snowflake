@@ -89,7 +89,7 @@ func NewTagAssociationBuilder(tagID string) *TagAssociationBuilder {
 func (tb *TagAssociationBuilder) Create() string {
 	if strings.ToUpper(tb.objectType) == "COLUMN" {
 		tableName, columnName := tb.GetTableAndColumnName()
-		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN %v SET TAG "%v"."%v"."%v" = '%v'`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
+		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN "%v" SET TAG "%v"."%v"."%v" = '%v'`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 	}
 	return fmt.Sprintf(`ALTER %v %v SET TAG "%v"."%v"."%v" = '%v'`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName, EscapeString(tb.tagValue))
 }
@@ -98,7 +98,7 @@ func (tb *TagAssociationBuilder) Create() string {
 func (tb *TagAssociationBuilder) Drop() string {
 	if strings.ToUpper(tb.objectType) == "COLUMN" {
 		tableName, columnName := tb.GetTableAndColumnName()
-		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN %v UNSET TAG "%v"."%v"."%v"`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName)
+		return fmt.Sprintf(`ALTER TABLE %v MODIFY COLUMN "%v" UNSET TAG "%v"."%v"."%v"`, tableName, columnName, tb.databaseName, tb.schemaName, tb.tagName)
 	}
 	return fmt.Sprintf(`ALTER %v %v UNSET TAG "%v"."%v"."%v"`, tb.objectType, tb.objectIdentifier, tb.databaseName, tb.schemaName, tb.tagName)
 }
