@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -98,26 +97,34 @@ func StageGrant() *TerraformGrantResource {
 			Schema: stageGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-					grantID, err := ParseStageGrantID(d.Id())
-					if err != nil {
+					parts := strings.Split(d.Id(), helpers.IDDelimiter)
+					if len(parts) != 8 {
+						return nil, errors.New("incorrect ID format (expecting database_name|schema_name|stage_name|privilege|with_grant_option|on_future|on_all|roles")
+					}
+					if err := d.Set("database_name", parts[0]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("stage_name", grantID.ObjectName); err != nil {
+					if err := d.Set("schema_name", parts[1]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("schema_name", grantID.SchemaName); err != nil {
+					if parts[2] != "" {
+						if err := d.Set("stage_name", parts[2]); err != nil {
+							return nil, err
+						}
+					}
+					if err := d.Set("privilege", parts[3]); err != nil {
 						return nil, err
 					}
-					if err := d.Set("database_name", grantID.DatabaseName); err != nil {
+					if err := d.Set("with_grant_option", helpers.StringToBool(parts[4])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("privilege", grantID.Privilege); err != nil {
+					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", grantID.Roles); err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -137,17 +144,13 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return errors.New("on_future and on_all cannot both be true")
 	}
 	privilege := d.Get("privilege").(string)
-	grantOption := d.Get("with_grant_option").(bool)
+	withGrantOption := d.Get("with_grant_option").(bool)
 
 	var schemaName string
 	if name, ok := d.GetOk("schema_name"); ok {
 		schemaName = name.(string)
 	}
-	var stageName string
-	if name, ok := d.GetOk("stage_name"); ok {
-		stageName = name.(string)
-	}
-
+	stageName := d.Get("stage_name").(string)
 	if (schemaName == "") && !onFuture && !onAll {
 		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
@@ -169,54 +172,44 @@ func CreateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
-	grantID := NewStageGrantID(databaseName, schemaName, stageName, privilege, roles, grantOption)
-	d.SetId(grantID.String())
+
+	grantID := helpers.SnowflakeID(databaseName, schemaName, stageName, privilege, withGrantOption, onFuture, onAll, roles)
+	d.SetId(grantID)
 
 	return ReadStageGrant(d, meta)
 }
 
 // ReadStageGrant implements schema.ReadFunc.
 func ReadStageGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := ParseStageGrantID(d.Id())
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	stageName := d.Get("stage_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	roles := expandStringList(d.Get("roles").(*schema.Set).List())
+
+	var builder snowflake.GrantBuilder
+	switch {
+	case onFuture:
+		builder = snowflake.FutureStageGrant(databaseName, schemaName)
+	case onAll:
+		builder = snowflake.AllStageGrant(databaseName, schemaName)
+	default:
+		builder = snowflake.StageGrant(databaseName, schemaName, stageName)
+	}
+
+	err := readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, onAll, validStagePrivileges)
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("database_name", grantID.DatabaseName); err != nil {
-		return err
+	grantID := helpers.SnowflakeID(databaseName, schemaName, stageName, privilege, withGrantOption, onFuture, onAll, roles)
+	if grantID != d.Id() {
+		d.SetId(grantID)
 	}
-	if err := d.Set("privilege", grantID.Privilege); err != nil {
-		return err
-	}
-	if err := d.Set("schema_name", grantID.SchemaName); err != nil {
-		return err
-	}
-	if err := d.Set("stage_name", grantID.ObjectName); err != nil {
-		return err
-	}
-	if err := d.Set("with_grant_option", grantID.WithGrantOption); err != nil {
-		return err
-	}
-
-	onAll := d.Get("on_all").(bool) // importing on_all is not supported as there is no way to determine on_all state in snowflake
-	onFuture := false
-	if grantID.ObjectName == "" && !onAll {
-		onFuture = true
-	}
-	if err = d.Set("on_future", onFuture); err != nil {
-		return err
-	}
-	var builder snowflake.GrantBuilder
-	switch {
-	case onFuture:
-		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
-	case onAll:
-		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
-	default:
-		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
-	}
-
-	return readGenericGrant(d, meta, stageGrantSchema, builder, onFuture, onAll, validStagePrivileges)
+	return nil
 }
 
 // UpdateStageGrant implements schema.UpdateFunc.
@@ -227,11 +220,6 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	grantID, err := ParseStageGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
 	rolesToAdd := []string{}
 	rolesToRevoke := []string{}
 
@@ -240,26 +228,31 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var builder snowflake.GrantBuilder
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	stageName := d.Get("stage_name").(string)
+	privilege := d.Get("privilege").(string)
+	withGrantOption := d.Get("with_grant_option").(bool)
 	onFuture := d.Get("on_future").(bool)
 	onAll := d.Get("on_all").(bool)
 	switch {
 	case onFuture:
-		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureStageGrant(databaseName, schemaName)
 	case onAll:
-		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.AllStageGrant(databaseName, schemaName)
 	default:
-		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.StageGrant(databaseName, schemaName, stageName)
 	}
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}
 	// then add
 	if err := createGenericGrantRolesAndShares(
-		meta, builder, grantID.Privilege, grantID.WithGrantOption, rolesToAdd, []string{},
+		meta, builder, privilege, withGrantOption, rolesToAdd, []string{},
 	); err != nil {
 		return err
 	}
@@ -270,88 +263,20 @@ func UpdateStageGrant(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteStageGrant implements schema.DeleteFunc.
 func DeleteStageGrant(d *schema.ResourceData, meta interface{}) error {
-	grantID, err := ParseStageGrantID(d.Id())
-	if err != nil {
-		return err
-	}
-
 	var builder snowflake.GrantBuilder
+	databaseName := d.Get("database_name").(string)
+	schemaName := d.Get("schema_name").(string)
+	stageName := d.Get("stage_name").(string)
 	onFuture := d.Get("on_future").(bool)
 	onAll := d.Get("on_all").(bool)
 	switch {
 	case onFuture:
-		builder = snowflake.FutureStageGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.FutureStageGrant(databaseName, schemaName)
 	case onAll:
-		builder = snowflake.AllStageGrant(grantID.DatabaseName, grantID.SchemaName)
+		builder = snowflake.AllStageGrant(databaseName, schemaName)
 	default:
-		builder = snowflake.StageGrant(grantID.DatabaseName, grantID.SchemaName, grantID.ObjectName)
+		builder = snowflake.StageGrant(databaseName, schemaName, stageName)
 	}
 
 	return deleteGenericGrant(d, meta, builder)
-}
-
-type StageGrantID struct {
-	DatabaseName    string
-	SchemaName      string
-	ObjectName      string
-	Privilege       string
-	Roles           []string
-	WithGrantOption bool
-	IsOldID         bool
-}
-
-func NewStageGrantID(databaseName string, schemaName, objectName, privilege string, roles []string, withGrantOption bool) *StageGrantID {
-	return &StageGrantID{
-		DatabaseName:    databaseName,
-		SchemaName:      schemaName,
-		ObjectName:      objectName,
-		Privilege:       privilege,
-		Roles:           roles,
-		WithGrantOption: withGrantOption,
-		IsOldID:         false,
-	}
-}
-
-func (v *StageGrantID) String() string {
-	roles := strings.Join(v.Roles, ",")
-	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", v.DatabaseName, v.SchemaName, v.ObjectName, v.Privilege, v.WithGrantOption, roles)
-}
-
-func ParseStageGrantID(s string) (*StageGrantID, error) {
-	if IsOldGrantID(s) {
-		idParts := strings.Split(s, "|")
-		var roles []string
-		var withGrantOption bool
-		if len(idParts) == 6 {
-			withGrantOption = idParts[5] == "true"
-			roles = helpers.SplitStringToSlice(idParts[4], ",")
-		} else {
-			withGrantOption = idParts[4] == "true"
-		}
-		return &StageGrantID{
-			DatabaseName:    idParts[0],
-			SchemaName:      idParts[1],
-			ObjectName:      idParts[2],
-			Privilege:       idParts[3],
-			Roles:           roles,
-			WithGrantOption: withGrantOption,
-			IsOldID:         true,
-		}, nil
-	}
-	idParts := strings.Split(s, "|")
-	if len(idParts) < 6 {
-		idParts = strings.Split(s, "❄️") // for that time in 0.56/0.57 when we used ❄️ as a separator
-	}
-	if len(idParts) != 6 {
-		return nil, fmt.Errorf("unexpected number of ID parts (%d), expected 6", len(idParts))
-	}
-	return &StageGrantID{
-		DatabaseName:    idParts[0],
-		SchemaName:      idParts[1],
-		ObjectName:      idParts[2],
-		Privilege:       idParts[3],
-		WithGrantOption: idParts[4] == "true",
-		Roles:           helpers.SplitStringToSlice(idParts[5], ","),
-		IsOldID:         false,
-	}, nil
 }

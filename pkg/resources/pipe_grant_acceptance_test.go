@@ -26,6 +26,14 @@ func TestAcc_PipeGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "privilege", "OPERATE"),
 				),
 			},
+			{
+				ResourceName:      "snowflake_pipe_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }

@@ -115,6 +115,7 @@ resource "snowflake_notification_integration" "test" {
 	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName, gcpNotificationDirection)
 }
 
+/*
 func gcpNotificationPushIntegrationConfig(name string, gcpPubsubTopicName string, gcpNotificationDirection string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
@@ -126,3 +127,4 @@ resource "snowflake_notification_integration" "test" {
 `
 	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubTopicName, gcpNotificationDirection)
 }
+*/

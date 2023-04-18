@@ -4,5 +4,6 @@
     "go.formatTool": "gofumpt",
     "gopls": {
         "formatting.gofumpt": true
-    }
+    },
+    "go.testFlags": ["-v"],
 }

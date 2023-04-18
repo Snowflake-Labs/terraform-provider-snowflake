@@ -31,6 +31,14 @@ func TestAccTableGrant_onAll(t *testing.T) {
 					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
 				),
 			},
+			{
+				ResourceName:      "snowflake_table_grant.g",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }
@@ -64,7 +72,6 @@ func TestAccTableGrant_onFuture(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},
@@ -100,7 +107,6 @@ func TestAccTableGrant_defaults(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-					"on_all",                 // not defined in Snowflake, can't be imported
 				},
 			},
 		},

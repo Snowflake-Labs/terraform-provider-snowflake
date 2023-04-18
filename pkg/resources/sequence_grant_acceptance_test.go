@@ -25,11 +25,19 @@ func TestAcc_SequenceFutureGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "schema_name", schemaName),
-					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "sequence_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_sequence_grant.test", "sequence_name"),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "privilege", "USAGE"),
 				),
+			},
+			{
+				ResourceName:      "snowflake_sequence_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})
