@@ -160,21 +160,16 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 func (c *Client) query(ctx context.Context, sql string) (*sqlx.Rows, error) {
 	return sqlx.NewDb(c.conn, "snowflake-instrumented").Unsafe().QueryxContext(ctx, sql)
 }
-/*
-type createOptions struct {
-	objectType ObjectType
-	name       string
 
-	// generic create DDL options
-	// orReplace   bool
-	// ifNotExists bool
-	// comment string
-
-	// object specific DDL options
-	// ddlPreKeyword []ddlKeyword
-	ddlProperties []ddlProperty
+func (c *Client) scanRows(rows *sqlx.Rows, dest interface{}) ([]error {
+	defer rows.Close()
+	if !rows.Next() {
+		return ErrNoRecord
+	}
+	rows.SliceScan()
+	return rows.StructScan(dest)
 }
-*/
+
 type ddlClause interface {
 	String() string
 }
@@ -196,11 +191,13 @@ func (v ddlClauseParameter) String() string {
 
 type ddlClauseIdentifier struct {
 	objectType ObjectType
-	identifier string
+	name string
 }
 
+type ddlClauseIn 
+
 func (v ddlClauseIdentifier) String() string {
-	return fmt.Sprintf("%s %s", v.objectType, v.identifier)
+	return fmt.Sprintf("%s %s", v.objectType, v.name)
 }
 
 type SQLOperation string

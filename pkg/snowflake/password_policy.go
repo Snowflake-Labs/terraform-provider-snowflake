@@ -26,7 +26,7 @@ type PasswordPolicies interface {
 	// Update attributes of an existing role.
 	// Alter(ctx context.Context, role string, options PasswordPolicyAlterOptions) (*Role, error)
 	// Drop a role by its name.
-	// Drop(ctx context.Context, role string) error
+	 Drop(ctx context.Context, opts PasswordPolicyDropOptions) error
 	// Show lists all the roles by pattern.
 	// Show(ctx context.Context, options PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
 	// Describe an password policy by its name.
@@ -61,9 +61,11 @@ func (v *passwordPolicyDB) toPasswordPolicy() *PasswordPolicy {
 	}
 }
 
-func ddlClausesFromStruct(opts interface{}) ([]ddlClause, error) {
+
+
+func ddlClausesForObject(objectType ObjectType, s interface{}) ([]ddlClause, error) {
 	clauses := []ddlClause{}
-	v := reflect.ValueOf(opts)
+	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
@@ -78,7 +80,7 @@ func ddlClausesFromStruct(opts interface{}) ([]ddlClause, error) {
 			continue
 		}
 		if field.Type.Kind() == reflect.Struct {
-			innerClauses, err := ddlClausesFromStruct(value.Interface())
+			innerClauses, err := ddlClausesForObject(objectType, value.Interface())
 			if err != nil {
 				return nil, err
 			}
@@ -94,8 +96,14 @@ func ddlClausesFromStruct(opts interface{}) ([]ddlClause, error) {
 		tagParts := strings.Split(field.Tag.Get("ddl"), ",")
 		ddlType := tagParts[0]
 		switch ddlType {
+	
+
 		case "identifier":
-			clauses = append(clauses, ddlClauseIdentifier(value.Interface().(string)))
+			clauses = append(clauses, ddlClauseIdentifier{
+				objectType: objectType,
+				name : 	value.Interface().(string),
+			})
+			
 		case "keyword":
 			useKeyword := value.Interface().(bool)
 			if !useKeyword {
@@ -114,7 +122,7 @@ func ddlClausesFromStruct(opts interface{}) ([]ddlClause, error) {
 				value: value.Interface(),
 			}
 			clauses = append(clauses, clause)
-		default: 
+		default:
 			return nil, fmt.Errorf("unknown ddl type %s", ddlType)
 		}
 	}
@@ -139,6 +147,18 @@ type PasswordPolicyCreateOptions struct {
 	Comment string `ddl:"parameter,COMMENT"`
 }
 
+type PasswordPolicyAlterOptions struct {
+	PasswordMinLength         *int `ddl:"param,PASSWORD_MIN_LENGTH"`
+	PasswordMaxLength         int  `ddl:"param,PASSWORD_MAX_LENGTH"`
+	PasswordMinUpperCaseChars int  `ddl:"param,PASSWORD_MIN_UPPERCASE_CHARS"`
+	PasswordMinLowerCaseChars int  `ddl:"param,PASSWORD_MIN_LOWERCASE_CHARS"`
+	PasswordMinNumericChars   int  `ddl:"param,PASSWORD_MIN_NUMERIC_CHARS"`
+	PasswordMinSpecialChars   int  `ddl:"param,PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMaxAgeDays        int  `ddl:"param,PASSWORD_MAX_AGE_DAYS"`
+	PasswordMaxRetries        int  `ddl:"param,PASSWORD_MAX_RETRIES"`
+	PasswordLockoutTimeMins   int  `ddl:"param,PASSWORD_LOCKOUT_TIME_MINS"`
+}
+
 func (opts *PasswordPolicyCreateOptions) validate() error {
 	if opts.Name == "" {
 		return errors.New("name must not be empty")
@@ -146,92 +166,55 @@ func (opts *PasswordPolicyCreateOptions) validate() error {
 	return nil
 }
 
-func (v *passwordPolicies) Create(ctx context.Context, opts PasswordPolicyCreateOptions) (error) {
+func (v *passwordPolicies) Create(ctx context.Context, opts *PasswordPolicyCreateOptions) error {
 	if err := opts.validate(); err != nil {
-		return nil, fmt.Errorf("validate create options: %w", err)
+		return fmt.Errorf("validate create options: %w", err)
 	}
-	ddlClauses, err := ddlClausesFromStruct(opts)
+	ddlClauses, err := ddlClausesForObject(ObjectTypePasswordPolicy, opts)
 	if err != nil {
-		return nil, err
+		return  err
 	}
-	stmt := v.client.sql(sqlOperationCreate, ObjectTypePasswordPolicy, ddlClauses...)
-	_, err := v.client.exec(ctx, stmt)
-	return err 
+	stmt := v.client.sql(sqlOperationCreate, ddlClauses...)
+	_, err = v.client.exec(ctx, stmt)
+	return err
 }
 
 type PasswordPolicyDropOptions struct {
-	Name        string `ddl:"identifier"`
-	IfExists    bool   `ddl:"keyword,IF EXISTS"`
+	Name     string `ddl:"identifier"`
+	IfExists bool   `ddl:"keyword,IF EXISTS"`
 }
 
-func (v *passwordPolicies) Drop(ctx context.Context, name string) (error) {
-	stmt := v.client.sql(sqlOperationDrop, ObjectTypePasswordPolicy, name)
+func (opts *PasswordPolicyDropOptions) validate() error {
+	if opts.Name == "" {
+		return errors.New("name must not be empty")
+	}
+	return nil
+}
 
-	props := []ddlProperty{}
-
-	v.client.sql(sqlOperationCreate, ObjectTypePasswordPolicy, opts.Name, opts)
-	sql := fmt.Sprintf("CREATE %s %s", ObjectTypePasswordPolicy, opts.Name)
-	if opts.OrReplace {
-		sql += " OR REPLACE"
+func (v *passwordPolicies) Drop(ctx context.Context, opts *PasswordPolicyDropOptions) error {
+	if err := opts.validate(); err != nil {
+		return fmt.Errorf("validate drop options: %w", err)
 	}
-	if opts.IfNotExists {
-		sql += " IF NOT EXISTS"
-	}
-	if opts.Comment != "" {
-		sql += fmt.Sprintf(" COMMENT = '%s'", opts.Comment)
-	}
-	if opts.PasswordMinLength != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MIN_LENGTH = %d", opts.PasswordMinLength)
-	}
-	if opts.PasswordMaxLength != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MAX_LENGTH = %d", opts.PasswordMaxLength)
-	}
-	if opts.PasswordMinUpperCaseChars != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MIN_UPPERCASE_CHARS = %d", opts.PasswordMinUpperCaseChars)
-	}
-	if opts.PasswordMinLowerCaseChars != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MIN_LOWERCASE_CHARS = %d", opts.PasswordMinLowerCaseChars)
-	}
-	if opts.PasswordMinNumericChars != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MIN_NUMERIC_CHARS = %d", opts.PasswordMinNumericChars)
-	}
-	if opts.PasswordMinSpecialChars != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MIN_SPECIAL_CHARS = %d", opts.PasswordMinSpecialChars)
-	}
-	if opts.PasswordMaxAgeDays != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MAX_AGE_DAYS = %d", opts.PasswordMaxAgeDays)
-	}
-	if opts.PasswordMaxRetries != 0 {
-		sql += fmt.Sprintf(" PASSWORD_MAX_RETRIES = %d", opts.PasswordMaxRetries)
-	}
-	if opts.PasswordLockoutTimeMins != 0 {
-		sql += fmt.Sprintf(" PASSWORD_LOCKOUT_TIME_MINS = %d", opts.PasswordLockoutTimeMins)
-	}
-
-	_, err := v.client.exec(ctx, sql)
+	ddlClauses, err := ddlClausesForObject(ObjectTypePasswordPolicy, opts)
 	if err != nil {
-		return nil, fmt.Errorf("do exec: %w", err)
+		return  err
 	}
-
-	return &PasswordPolicy{
-		Name: opts.Name,
-	}, nil
+	stmt := v.client.sql(sqlOperationDrop, ddlClauses...)
+	_, err = v.client.exec(ctx, stmt)
+	return err
 }
 
-/*
 // PasswordPolicyShowOptions represents the options for listing password policies.
 type PasswordPolicyShowOptions struct {
 	// Required: Filters the command output by object name
-	Pattern string
+	Pattern *string `ddl:"param,LIKE"`
 
-	// Optional: Returns records for the entire account.
-	InAccount bool
-
-	// Optional: Returns records for the specified database
-	InDatabase string
-
-	// Optional: Returns records for the specified schema
-	InSchema string
+	In *struct  {
+		// Optional: Returns records for the specified database
+		Account *bool `ddl:"keyword,ACCOUNT"`
+		Database *string `ddl:"command,DATABASE"`
+		Schema *string `ddl:"command,SCHEMA"`
+	}
 
 	// Optional: Limits the maximum number of rows returned
 	Limit *int
@@ -250,22 +233,37 @@ func (v *passwordPolicies) Show(ctx context.Context, opts PasswordPolicyShowOpti
 		return nil, fmt.Errorf("validate list options: %w", err)
 	}
 
-	sql := fmt.Sprintf("SHOW %s LIKE '%s'", ResourceRoles, options.Pattern)
-	rows, err := r.client.query(ctx, sql)
+	ddlClauses, err := ddlClausesForObject(ObjectTypePasswordPolicies, opts)
 	if err != nil {
-		return nil, fmt.Errorf("do query: %w", err)
+		return nil, err
+	}
+	stmt := v.client.sql(sqlOperationShow, ddlClauses...)
+	rows, err := v.client.query(ctx, stmt)
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
 
-	entities := []*Role{}
+	var passwordPolicies []*PasswordPolicy
 	for rows.Next() {
-		var entity roleEntity
-		if err := rows.StructScan(&entity); err != nil {
-			return nil, fmt.Errorf("rows scan: %w", err)
+		var passwordPolicy PasswordPolicy
+		if err := rows.Scan(
+			&passwordPolicy.Name,
+			&passwordPolicy.Owner,
+			&passwordPolicy.PasswordMinLength,
+			&passwordPolicy.PasswordMaxLength,
+			&passwordPolicy.PasswordMinUpperCaseChars,
+			&passwordPolicy.PasswordMinLowerCaseChars,
+			&passwordPolicy.PasswordMinNumericChars,
+			&passwordPolicy.PasswordMinSpecialChars,
+			&passwordPolicy.PasswordMaxAgeDays,
+			&passwordPolicy.PasswordMaxRetries,
+			&passwordPolicy.PasswordLockoutTimeMins,
+		); err != nil {
+			return nil, err
 		}
-		entities = append(entities, entity.toRole())
+		passwordPolicies = append(passwordPolicies, &passwordPolicy)
 	}
-	return entities, nil
 }
 
 // PasswordPolicyShowOptions represents the options for listing password policies.
