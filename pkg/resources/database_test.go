@@ -30,7 +30,8 @@ func TestDatabaseCreate(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" DATA_RETENTION_TIME_IN_DAYS = 1 COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
@@ -52,8 +53,9 @@ func TestDatabase_Create_WithValidReplicationConfiguration(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" DATA_RETENTION_TIME_IN_DAYS = 1 COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`ALTER DATABASE "tst-terraform-good_name" ENABLE REPLICATION TO ACCOUNTS account1, account2`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		expectRead(mock)
 
 		err := resources.CreateDatabase(d, db)
@@ -95,6 +97,7 @@ func TestDatabaseRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectRead(mock)
+		expectRead(mock)
 		err := resources.ReadDatabase(d, db)
 		r.NoError(err)
 		r.Equal("tst-terraform-good_name", d.Get("name").(string))
@@ -131,6 +134,7 @@ func TestDatabaseCreateFromShare(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" FROM SHARE "abc123"."my_share"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
+		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
 	})
@@ -148,6 +152,7 @@ func TestDatabaseCreateFromDatabase(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
@@ -167,6 +172,7 @@ func TestDatabaseCreateFromReplica(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE DATABASE "tst-terraform-good_name" AS REPLICA OF "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectRead(mock)
+		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
 	})
@@ -184,7 +190,8 @@ func TestDatabaseCreateTransient(t *testing.T) {
 	r.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		mock.ExpectExec(`CREATE TRANSIENT DATABASE "tst-terraform-good_name" COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`CREATE TRANSIENT DATABASE "tst-terraform-good_name" DATA_RETENTION_TIME_IN_DAYS = 1 COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
@@ -204,6 +211,7 @@ func TestDatabaseCreateTransientFromDatabase(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE TRANSIENT DATABASE "tst-terraform-good_name" CLONE "abc123"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectRead(mock)
 		expectRead(mock)
 		err := resources.CreateDatabase(d, db)
 		r.NoError(err)
