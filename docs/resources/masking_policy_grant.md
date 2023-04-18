@@ -49,6 +49,6 @@ resource "snowflake_masking_policy_grant" "example" {
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | masking policy name | privilege | true/false for with_grant_option
-terraform import snowflake_masking_policy_grant.example 'dbName|schemaName|maskingPolicyName|USAGE|false'
+# format is database_name|schema_name|masking_policy_name|privilege|with_grant_option|roles
+terraform import snowflake_masking_policy_grant.example "dbName|schemaName|maskingPolicyName|USAGE|false|role1,role2"
 ```

@@ -26,6 +26,14 @@ func TestAccTagGrant(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "APPLY"),
 				),
 			},
+			{
+				ResourceName:      "snowflake_tag_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }

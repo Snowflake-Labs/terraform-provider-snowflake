@@ -47,6 +47,15 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "comment", "Terraform acceptance test"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
 		},
 	})
 }
