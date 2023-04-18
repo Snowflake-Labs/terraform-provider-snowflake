@@ -20,7 +20,7 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:     schema.TypeBool,
 		Required: true,
-		// Default:  true,
+		Default:  true,
 	},
 	"allowed_recipients": {
 		Type:        schema.TypeSet,
@@ -115,12 +115,6 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 		switch k {
-		case "ENABLED":
-		case "COMMENT":
-		case "TYPE":
-			{
-				// We set this using the SHOW INTEGRATION call so let's ignore it here
-			}
 		case "ALLOWED_RECIPIENTS":
 			if err := d.Set("allowed_recipients", strings.Split(v.(string), ",")); err != nil {
 				return err
@@ -146,6 +140,10 @@ func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("enabled") {
 		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
+	}
+
+	if d.HasChange("allowed_recipients") {
+		stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(d.Get("allowed_recipients").(*schema.Set).List()))
 	}
 
 	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
