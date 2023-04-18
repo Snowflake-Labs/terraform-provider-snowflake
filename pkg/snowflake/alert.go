@@ -290,7 +290,7 @@ func ListAlerts(databaseName, schemaName, pattern string, db *sql.DB) ([]Alert, 
 			log.Println("[DEBUG] no alerts found")
 			return nil, nil
 		}
-		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt.String(), err)
 	}
 	return dbs, nil
 }
