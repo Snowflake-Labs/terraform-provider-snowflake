@@ -22,6 +22,11 @@ func TestAcc_EmailNotificationIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
 				),
 			},
+			{
+				ResourceName:      "snowflake_email_notification_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

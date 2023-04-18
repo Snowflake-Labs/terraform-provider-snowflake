@@ -20,7 +20,6 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:     schema.TypeBool,
 		Required: true,
-		Default:  true,
 	},
 	"allowed_recipients": {
 		Type:        schema.TypeSet,
