@@ -222,6 +222,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	dbx := sqlx.NewDb(db, "snowflake")
 	name := d.Id()
 
+        // perform a "show database" command to ensure that the database is actually there.
 	stmt := snowflake.NewDatabaseBuilder(name).Show()
 	row := snowflake.QueryRow(db, stmt)
 	_, err := snowflake.ScanDatabase(row)
