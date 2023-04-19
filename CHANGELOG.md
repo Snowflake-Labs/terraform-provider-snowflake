@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.62.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.61.0...v0.62.0) (2023-04-19)
+
+
+### Features
+
+* Add gcp_pubsub_topic_name parameter for gcp notification integration ([#1687](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1687)) ([a30d0cb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a30d0cb756a2281a4d880af9e32651c04409028e))
+* added on_all grants for view, stage, schema and materialized view resource ([#1686](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1686)) ([f27a9e4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f27a9e454102709e1134d796f1594b4932670ae8))
+* alert resource ([#1653](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1653)) ([4a84eb9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4a84eb91af6201330a2ec60de306db5ed3b5ab38))
+* data source shares ([#1651](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1651)) ([5dd447f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5dd447fc79c153f025e420052a23b90751cdaa9f))
+* database role resource ([#1654](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1654)) ([9f4a516](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9f4a5165d6b7e1fa63ad06450ffc55689be66356))
+* external_oauth_integration.scope_mapping_attribute ([#1722](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1722)) ([66d88bd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/66d88bd29b6aa78dbc2acd11cf729fa9380b011d))
+* Password policy resource ([#1702](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1702)) ([7ee293b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7ee293b52262170a1d53811f9beb6fc3772ae913))
+* provider config support insecureMode ([#1703](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1703)) ([e269925](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e269925e0f54ca9bbd742e5c60eaebad5f9b1f04))
+
+
+### BugFixes
+
+* Adding double quotes to the column names ([#1729](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1729)) ([791dd0b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/791dd0b3a613d0ada95d4af7153a7b0a2bbee219))
+* be more cautious when setting db id to empty ([#1725](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1725)) ([e78e0c8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e78e0c816270779a78d839f78debc519fd53f5bf))
+* change incorrect select privilege to usage ([#1681](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1681)) ([3d8f5b5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3d8f5b5ad417d2ebcf171024fc3217440267586b))
+* don't ignore MUST_CHANGE_PASSWORD on account creation ([#1699](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1699)) ([7fcacfa](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7fcacfa59995766fb8c474b2984b9c9d3092d9ad))
+* fmt / linting fix ([#1694](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1694)) ([d7d910e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d7d910edc95069f6f01bc350c3319eb36f75c127))
+* grant imports ([#1713](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1713)) ([19a4156](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/19a415654f198a68e823b9ef62326992feba64df))
+* resource monitor import test ([#1690](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1690)) ([a4e58bf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a4e58bfa0d5d4f90668784980fea7e2cc443f25d))
+* resource_monitor suspend triggers conflict ([#1682](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1682)) ([14d1200](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/14d120008d6d987dd2c0773ad9815eaac17a2c3c))
+
 ## [0.61.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.60.0...v0.61.0) (2023-04-03)
 
 
