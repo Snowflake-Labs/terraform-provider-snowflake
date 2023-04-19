@@ -52,6 +52,7 @@ resource "snowflake_api_integration" "gcp" {
 
 - `api_aws_role_arn` (String) ARN of a cloud platform role.
 - `api_blocked_prefixes` (List of String) Lists the endpoints and resources in the HTTPS proxy service that are not allowed to be called from Snowflake.
+- `api_gcp_service_account` (String) The service account used for communication with the Google API Gateway.
 - `api_key` (String, Sensitive) The API key (also called a “subscription key”).
 - `azure_ad_application_id` (String) The 'Application (client) id' of the Azure AD app for your remote service.
 - `azure_tenant_id` (String) Specifies the ID for your Office 365 tenant that all Azure API Management instances belong to.

@@ -70,6 +70,12 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Default:     "",
 		Description: "The audience claim when generating the JWT (JSON Web Token) to authenticate to the Google API Gateway.",
 	},
+	"api_gcp_service_account": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The service account used for communication with the Google API Gateway.",
+		Computed:    true,
+	},
 	"api_allowed_prefixes": {
 		Type:        schema.TypeList,
 		Elem:        &schema.Schema{Type: schema.TypeString},
@@ -250,6 +256,10 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 			}
 		case "GOOGLE_AUDIENCE":
 			if err := d.Set("google_audience", v.(string)); err != nil {
+				return err
+			}
+		case "API_GCP_SERVICE_ACCOUNT":
+			if err := d.Set("api_gcp_service_account", v.(string)); err != nil {
 				return err
 			}
 		default:
