@@ -26,6 +26,8 @@ type ExternalFunctionBuilder struct {
 	contextHeaders        []string
 	maxBatchRows          int
 	compression           string
+	requestTranslator     string
+	responseTranslator    string
 	urlOfProxyAndResource string
 	comment               string
 }
@@ -125,6 +127,18 @@ func (fb *ExternalFunctionBuilder) WithCompression(compression string) *External
 	return fb
 }
 
+// WithRequestTranslator adds a request translator to the ExternalFunctionBuilder.
+func (fb *ExternalFunctionBuilder) WithRequestTranslator(requestTranslator string) *ExternalFunctionBuilder {
+	fb.requestTranslator = requestTranslator
+	return fb
+}
+
+// WithResponseTranslator adds a response translator to the ExternalFunctionBuilder.
+func (fb *ExternalFunctionBuilder) WithResponseTranslator(responseTranslator string) *ExternalFunctionBuilder {
+	fb.responseTranslator = responseTranslator
+	return fb
+}
+
 // WithURLOfProxyAndResource adds a urlOfProxyAndResource to the ExternalFunctionBuilder.
 func (fb *ExternalFunctionBuilder) WithURLOfProxyAndResource(urlOfProxyAndResource string) *ExternalFunctionBuilder {
 	fb.urlOfProxyAndResource = urlOfProxyAndResource
@@ -210,6 +224,14 @@ func (fb *ExternalFunctionBuilder) Create() string {
 
 	if fb.compression != "" {
 		q.WriteString(fmt.Sprintf(` COMPRESSION = '%v'`, EscapeString(fb.compression)))
+	}
+
+	if fb.requestTranslator != "" {
+		q.WriteString(fmt.Sprintf(` REQUEST_TRANSLATOR = '%v'`, EscapeString(fb.requestTranslator)))
+	}
+
+	if fb.responseTranslator != "" {
+		q.WriteString(fmt.Sprintf(` RESPONSE_TRANSLATOR = '%v'`, EscapeString(fb.responseTranslator)))
 	}
 
 	q.WriteString(fmt.Sprintf(` AS '%v'`, EscapeString(fb.urlOfProxyAndResource)))
