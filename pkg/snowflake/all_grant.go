@@ -115,8 +115,8 @@ func AllStageGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingExternalTableGrant returns a pointer to a AllGrantBuilder for a external table.
-func ExistingExternalTableGrant(db, schema string) GrantBuilder {
+// AllExternalTableGrant returns a pointer to a AllGrantBuilder for a external table.
+func AllExternalTableGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -126,8 +126,8 @@ func ExistingExternalTableGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingFileFormatGrant returns a pointer to a AllGrantBuilder for a file format.
-func ExistingFileFormatGrant(db, schema string) GrantBuilder {
+// AllFileFormatGrant returns a pointer to a AllGrantBuilder for a file format.
+func AllFileFormatGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -137,8 +137,8 @@ func ExistingFileFormatGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingFunctionGrant returns a pointer to a AllGrantBuilder for a function.
-func ExistingFunctionGrant(db, schema string) GrantBuilder {
+// AllFunctionGrant returns a pointer to a AllGrantBuilder for a function.
+func AllFunctionGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -148,8 +148,8 @@ func ExistingFunctionGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingProcedureGrant returns a pointer to a AllGrantBuilder for a procedure.
-func ExistingProcedureGrant(db, schema string) GrantBuilder {
+// AllProcedureGrant returns a pointer to a AllGrantBuilder for a procedure.
+func AllProcedureGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -159,8 +159,8 @@ func ExistingProcedureGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingSequenceGrant returns a pointer to a AllGrantBuilder for a sequence.
-func ExistingSequenceGrant(db, schema string) GrantBuilder {
+// AllSequenceGrant returns a pointer to a AllGrantBuilder for a sequence.
+func AllSequenceGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -170,8 +170,8 @@ func ExistingSequenceGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingStreamGrant returns a pointer to a AllGrantBuilder for a stream.
-func ExistingStreamGrant(db, schema string) GrantBuilder {
+// AllStreamGrant returns a pointer to a AllGrantBuilder for a stream.
+func AllStreamGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -181,8 +181,8 @@ func ExistingStreamGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingPipeGrant returns a pointer to a AllGrantBuilder for a pipe.
-func ExistingPipeGrant(db, schema string) GrantBuilder {
+// AllPipeGrant returns a pointer to a AllGrantBuilder for a pipe.
+func AllPipeGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -192,8 +192,8 @@ func ExistingPipeGrant(db, schema string) GrantBuilder {
 	}
 }
 
-// ExistingTaskGrant returns a pointer to a AllGrantBuilder for a task.
-func ExistingTaskGrant(db, schema string) GrantBuilder {
+// AllTaskGrant returns a pointer to a AllGrantBuilder for a task.
+func AllTaskGrant(db, schema string) GrantBuilder {
 	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
 	return &AllGrantBuilder{
 		name:           name,
@@ -208,9 +208,9 @@ func (fgb *AllGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fgb.allGrantTarget, fgb.qualifiedName)
 }
 
-// Role returns a pointer to a ExistingGrantExecutable for a role.
+// Role returns a pointer to a AllGrantExecutable for a role.
 func (fgb *AllGrantBuilder) Role(n string) GrantExecutable {
-	return &ExistingGrantExecutable{
+	return &AllGrantExecutable{
 		granteeName:    n,
 		grantName:      fgb.qualifiedName,
 		allGrantType:   fgb.allGrantType,
@@ -223,9 +223,9 @@ func (fgb *AllGrantBuilder) Share(n string) GrantExecutable {
 	return nil
 }
 
-// ExistingGrantExecutable abstracts the creation of SQL queries to build all grants for
+// AllGrantExecutable abstracts the creation of SQL queries to build all grants for
 // different all grant types.
-type ExistingGrantExecutable struct {
+type AllGrantExecutable struct {
 	grantName      string
 	granteeName    string
 	allGrantType   AllGrantType
@@ -233,7 +233,7 @@ type ExistingGrantExecutable struct {
 }
 
 // Grant returns the SQL that will grant all privileges on the grant to the grantee.
-func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
+func (fge *AllGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if w {
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v" WITH GRANT OPTION`
@@ -245,7 +245,7 @@ func (fge *ExistingGrantExecutable) Grant(p string, w bool) string {
 }
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
-func (fge *ExistingGrantExecutable) Revoke(p string) []string {
+func (fge *AllGrantExecutable) Revoke(p string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
@@ -254,7 +254,7 @@ func (fge *ExistingGrantExecutable) Revoke(p string) []string {
 }
 
 // Show returns the SQL that will show all grants on the schema.
-func (fge *ExistingGrantExecutable) Show() string {
+func (fge *AllGrantExecutable) Show() string {
 	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, therefore changed the query to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which runs in snowflake.
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, fge.allGrantTarget, fge.grantName)
 }
