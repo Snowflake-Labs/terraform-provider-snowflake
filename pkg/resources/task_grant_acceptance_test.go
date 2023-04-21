@@ -12,7 +12,7 @@ import (
 func TestAcc_TaskGrant(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 func TestAcc_TaskGrant_onAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAcc_TaskGrant_onAll(t *testing.T) {
 func TestAcc_TaskGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

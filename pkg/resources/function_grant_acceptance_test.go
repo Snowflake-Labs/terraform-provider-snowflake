@@ -11,7 +11,7 @@ import (
 func TestAccFunctionGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccFunctionGrant_onFuture(t *testing.T) {
 func TestAccFunctionGrant_onAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
