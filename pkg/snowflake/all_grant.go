@@ -23,7 +23,7 @@ const (
 	AllGrantTypeStream           AllGrantType = "STREAM"
 	AllGrantTypeTask             AllGrantType = "TASK"
 	// AllPipeGrants are not allowed by snowflake ("Note that bulk grants on pipes are not allowed.", see https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters)
-	// AllGrantTypePipe             AllGrantType = "PIPE"
+	// AllGrantTypePipe             AllGrantType = "PIPE".
 )
 
 const (
