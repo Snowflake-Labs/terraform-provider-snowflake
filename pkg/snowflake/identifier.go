@@ -29,14 +29,14 @@ type SchemaIdentifier struct {
 }
 
 func (i *SchemaIdentifier) QualifiedName() string {
-	return fmt.Sprintf("%v.%v", i.Database, i.Schema)
+	return fmt.Sprintf(`"%v"."%v"`, i.Database, i.Schema)
 }
 
 func SchemaIdentifierFromQualifiedName(name string) *SchemaIdentifier {
 	parts := strings.Split(name, ".")
 	return &SchemaIdentifier{
-		Database: parts[0],
-		Schema:   parts[1],
+		Database: strings.Trim(parts[0], `"`),
+		Schema:   strings.Trim(parts[1], `"`),
 	}
 }
 
@@ -47,14 +47,35 @@ type SchemaObjectIdentifier struct {
 }
 
 func (i *SchemaObjectIdentifier) QualifiedName() string {
-	return fmt.Sprintf("%v.%v.%v", i.Database, i.Schema, i.ObjectName)
+	return fmt.Sprintf(`"%v"."%v"."%v"`, i.Database, i.Schema, i.ObjectName)
 }
 
 func SchemaObjectIdentifierFromQualifiedName(name string) *SchemaObjectIdentifier {
 	parts := strings.Split(name, ".")
 	return &SchemaObjectIdentifier{
-		Database:   parts[0],
-		Schema:     parts[1],
-		ObjectName: parts[2],
+		Database:   strings.Trim(parts[0], `"`),
+		Schema:     strings.Trim(parts[1], `"`),
+		ObjectName: strings.Trim(parts[2], `"`),
+	}
+}
+
+type ColumnIdentifier struct {
+	Database   string
+	Schema     string
+	ObjectName string `db:"NAME"`
+	Column     string
+}
+
+func (i *ColumnIdentifier) QualifiedName() string {
+	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.Database, i.Schema, i.ObjectName, i.Column)
+}
+
+func ColumnIdentifierFromQualifiedName(name string) *ColumnIdentifier {
+	parts := strings.Split(name, ".")
+	return &ColumnIdentifier{
+		Database:   strings.Trim(parts[0], `"`),
+		Schema:     strings.Trim(parts[1], `"`),
+		ObjectName: strings.Trim(parts[2], `"`),
+		Column:     strings.Trim(parts[3], `"`),
 	}
 }
