@@ -21,8 +21,9 @@ const (
 	AllGrantTypeProcedure        AllGrantType = "PROCEDURE"
 	AllGrantTypeSequence         AllGrantType = "SEQUENCE"
 	AllGrantTypeStream           AllGrantType = "STREAM"
-	AllGrantTypePipe             AllGrantType = "PIPE"
 	AllGrantTypeTask             AllGrantType = "TASK"
+	// AllPipeGrants are not allowed by snowflake ("Note that bulk grants on pipes are not allowed.", see https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters)
+	// AllGrantTypePipe             AllGrantType = "PIPE"
 )
 
 const (
@@ -177,17 +178,6 @@ func AllStreamGrant(db, schema string) GrantBuilder {
 		name:           name,
 		qualifiedName:  qualifiedName,
 		allGrantType:   AllGrantTypeStream,
-		allGrantTarget: target,
-	}
-}
-
-// AllPipeGrant returns a pointer to a AllGrantBuilder for a pipe.
-func AllPipeGrant(db, schema string) GrantBuilder {
-	name, qualifiedName, target := getNameAndQualifiedNameForAllGrants(db, schema)
-	return &AllGrantBuilder{
-		name:           name,
-		qualifiedName:  qualifiedName,
-		allGrantType:   AllGrantTypePipe,
 		allGrantTarget: target,
 	}
 }
