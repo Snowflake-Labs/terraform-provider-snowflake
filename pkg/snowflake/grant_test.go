@@ -24,7 +24,10 @@ func TestDatabaseGrant(t *testing.T) {
 	s = dg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON DATABASE "testDB" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = dg.Role("bob").Revoke("OWNERSHIP")
+	revoke = dg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON DATABASE "testDB" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = dg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON DATABASE "testDB" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 
 	s = dg.Share("bob").Grant("USAGE", false)
@@ -57,7 +60,10 @@ func TestSchemaGrant(t *testing.T) {
 	s = sg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON SCHEMA "test_db"."testSchema" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = sg.Role("bob").Revoke("OWNERSHIP")
+	revoke = sg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON SCHEMA "test_db"."testSchema" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = sg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON SCHEMA "test_db"."testSchema" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -84,7 +90,10 @@ func TestViewGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testView" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -111,7 +120,10 @@ func TestMaterializedViewGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON VIEW "test_db"."PUBLIC"."testMaterializedView" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -138,7 +150,10 @@ func TestExternalTableGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON EXTERNAL TABLE "test_db"."PUBLIC"."testExternalTable" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -165,7 +180,10 @@ func TestFileFormatGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON FILE FORMAT "test_db"."PUBLIC"."testFileFormat" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -192,7 +210,10 @@ func TestFunctionGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON FUNCTION "test_db"."PUBLIC"."testFunction"(ARRAY, STRING) TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -219,7 +240,10 @@ func TestProcedureGrant(t *testing.T) {
 	s = vg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = vg.Role("bob").Revoke("OWNERSHIP")
+	revoke = vg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = vg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON PROCEDURE "test_db"."PUBLIC"."testProcedure"(ARRAY, STRING) TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -240,7 +264,10 @@ func TestWarehouseGrant(t *testing.T) {
 	s = wg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = wg.Role("bob").Revoke("OWNERSHIP")
+	revoke = wg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = wg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON WAREHOUSE "test_warehouse" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -283,7 +310,10 @@ func TestIntegrationGrant(t *testing.T) {
 	s = wg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON INTEGRATION "test_integration" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = wg.Role("bob").Revoke("OWNERSHIP")
+	revoke = wg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON INTEGRATION "test_integration" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = wg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON INTEGRATION "test_integration" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 
@@ -304,7 +334,10 @@ func TestResourceMonitorGrant(t *testing.T) {
 	s = wg.Role("bob").Grant("OWNERSHIP", false)
 	r.Equal(`GRANT OWNERSHIP ON RESOURCE MONITOR "test_monitor" TO ROLE "bob" COPY CURRENT GRANTS`, s)
 
-	revoke = wg.Role("bob").Revoke("OWNERSHIP")
+	revoke = wg.Role("bob").RevokeOwnership("revertBob")
+	r.Equal([]string{`GRANT OWNERSHIP ON RESOURCE MONITOR "test_monitor" TO ROLE "revertBob" COPY CURRENT GRANTS`}, revoke)
+
+	revoke = wg.Role("bob").RevokeOwnership("")
 	r.Equal([]string{`SET currentRole=CURRENT_ROLE()`, `GRANT OWNERSHIP ON RESOURCE MONITOR "test_monitor" TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`}, revoke)
 }
 

@@ -13,7 +13,6 @@ import (
 
 var validUserPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
-	privilegeOwnership,
 )
 
 var userGrantSchema = map[string]*schema.Schema{
@@ -156,6 +155,7 @@ func UpdateUserGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		privilege,
+		"",
 		rolesToRevoke,
 		nil,
 	); err != nil {

@@ -42,6 +42,7 @@ const (
 type GrantExecutable interface {
 	Grant(p string, w bool) string
 	Revoke(p string) []string
+	RevokeOwnership(r string) []string
 	Show() string
 }
 
@@ -370,17 +371,26 @@ func (ge *CurrentGrantExecutable) Grant(p string, w bool) string {
 
 // Revoke returns the SQL that will revoke privileges on the grant from the grantee.
 func (ge *CurrentGrantExecutable) Revoke(p string) []string {
-	// Since 10/2020 Snowflake dropped support for REVOKE OWNERSHIP.
-	// It's only possible to transfer it to another role now, so we grant it to Terraform's role.
-	if p == `OWNERSHIP` {
-		return []string{
-			"SET currentRole=CURRENT_ROLE()",
-			fmt.Sprintf(`GRANT %v ON %v %v TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`, p, ge.grantType, ge.grantName),
-		}
-	}
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON %v %v FROM %v "%v"`,
 			p, ge.grantType, ge.grantName, ge.granteeType, ge.granteeName),
+	}
+}
+
+// Revoke returns the SQL that will revoke ownership privileges on the grant from the grantee.
+// Since 10/2020 Snowflake dropped support for REVOKE OWNERSHIP.
+// It's only possible to transfer it to another role now, so we grant it to role r.
+func (ge *CurrentGrantExecutable) RevokeOwnership(r string) []string {
+	// early exit in the event reversion owner is left blank (default)
+	// default to Terraform's role in this case
+	if r == "" {
+		return []string{
+			"SET currentRole=CURRENT_ROLE()",
+			fmt.Sprintf(`GRANT OWNERSHIP ON %v %v TO ROLE IDENTIFIER($currentRole) COPY CURRENT GRANTS`, ge.grantType, ge.grantName),
+		}
+	}
+	return []string{
+		fmt.Sprintf(`GRANT OWNERSHIP ON %v %v TO ROLE "%v" COPY CURRENT GRANTS`, ge.grantType, ge.grantName, r),
 	}
 }
 
