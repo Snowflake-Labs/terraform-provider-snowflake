@@ -32,11 +32,20 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future sequences in the given schema. When this is true and no schema_name is provided apply this grant on all future sequences in the given database. The sequence_name field must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future sequences in the given schema. When this is true and no schema_name is provided apply this grant on all future sequences in the given database. The sequence_name field must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"sequence_name"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all sequences in the given schema. When this is true and no schema_name is provided apply this grant on all sequences in the given database. The sequence_name field must be unset in order to use on_all. Cannot be used together with on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"sequence_name"},
 	},
 	"privilege": {
 		Type:         schema.TypeString,
@@ -86,7 +95,7 @@ func SequenceGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 7 {
+					if len(parts) != 8 {
 						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|sequence_name|privilege|with_grant_option|on_future|roles", d.Id())
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
@@ -109,7 +118,10 @@ func SequenceGrant() *TerraformGrantResource {
 					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -127,23 +139,24 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (sequenceName == "") && !onFuture {
-		return errors.New("sequence_name must be set unless on_future is true")
+	if (sequenceName == "") && !onFuture && !onAll {
+		return errors.New("sequence_name must be set unless on_future or on_all is true")
 	}
-	if (sequenceName != "") && onFuture {
-		return errors.New("sequence_name must be empty if on_future is true")
-	}
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSequenceGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSequenceGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.SequenceGrant(databaseName, schemaName, sequenceName)
 	}
 
@@ -151,7 +164,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadSequenceGrant(d, meta)
@@ -164,24 +177,26 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	sequenceName := d.Get("sequence_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSequenceGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSequenceGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.SequenceGrant(databaseName, schemaName, sequenceName)
 	}
-	// TODO
-	onAll := false
 
 	err := readGenericGrant(d, meta, sequenceGrantSchema, builder, onFuture, onAll, validSequencePrivileges)
 	if err != nil {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
@@ -194,11 +209,15 @@ func DeleteSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	sequenceName := d.Get("sequence_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSequenceGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSequenceGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.SequenceGrant(databaseName, schemaName, sequenceName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -224,12 +243,16 @@ func UpdateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 	sequenceName := d.Get("sequence_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureSequenceGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllSequenceGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.SequenceGrant(databaseName, schemaName, sequenceName)
 	}
 
