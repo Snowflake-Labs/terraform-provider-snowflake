@@ -40,6 +40,26 @@ func TestStreamOnStageCreate(t *testing.T) {
 	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON STAGE "test_db"."test_schema"."test_target_stage" COMMENT = 'Test Comment'`, s.Create())
 }
 
+func TestStreamOnViewCreate(t *testing.T) {
+	r := require.New(t)
+	s := Stream("test_stream", "test_db", "test_schema")
+
+	s.WithOnView("test_db", "test_schema", "test_target_view")
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON VIEW "test_db"."test_schema"."test_target_view" APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`, s.Create())
+
+	s.WithComment("Test Comment")
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON VIEW "test_db"."test_schema"."test_target_view" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = false`, s.Create())
+
+	s.WithShowInitialRows(true)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON VIEW "test_db"."test_schema"."test_target_view" COMMENT = 'Test Comment' APPEND_ONLY = false INSERT_ONLY = false SHOW_INITIAL_ROWS = true`, s.Create())
+
+	s.WithAppendOnly(true)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON VIEW "test_db"."test_schema"."test_target_view" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = false SHOW_INITIAL_ROWS = true`, s.Create())
+
+	s.WithInsertOnly(true)
+	r.Equal(`CREATE STREAM "test_db"."test_schema"."test_stream" ON VIEW "test_db"."test_schema"."test_target_view" COMMENT = 'Test Comment' APPEND_ONLY = true INSERT_ONLY = true SHOW_INITIAL_ROWS = true`, s.Create())
+}
+
 func TestStreamChangeComment(t *testing.T) {
 	r := require.New(t)
 	s := Stream("test_stream", "test_db", "test_schema")
