@@ -38,7 +38,8 @@ resource "snowflake_file_format_grant" "grant" {
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - `file_format_name` (String) The name of the file format on which to grant privileges immediately (only valid if on_future is false).
-- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.
+- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all file formats in the given schema. When this is true and no schema_name is provided apply this grant on all file formats in the given database. The file_format_name field must be unset in order to use on_all. Cannot be used together with on_future.
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future file format.
 - `schema_name` (String) The name of the schema containing the current or future file formats on which to grant privileges.
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
