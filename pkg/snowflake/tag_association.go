@@ -63,9 +63,11 @@ func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
 		return tb.objectIdentifier, ""
 	}
 	splObjIdentifier := strings.Split(tb.objectIdentifier, ".")
+	tableDatabase := strings.ReplaceAll(splObjIdentifier[0], "\"", "")
+	tableSchema := strings.ReplaceAll(splObjIdentifier[1], "\"", "")
 	tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
 	columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
-	return fmt.Sprintf(`"%s"."%s"."%s"`, tb.databaseName, tb.schemaName, tableName), columnName
+	return fmt.Sprintf(`"%s"."%s"."%s"`, tableDatabase, tableSchema, tableName), columnName
 }
 
 // TagAssociation returns a pointer to a Builder that abstracts the DDL operations for a tag sssociation.
