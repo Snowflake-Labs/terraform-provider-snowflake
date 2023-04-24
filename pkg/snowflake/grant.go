@@ -381,7 +381,7 @@ func (ge *CurrentGrantExecutable) Revoke(p string) []string {
 // Since 10/2020 Snowflake dropped support for REVOKE OWNERSHIP.
 // It's only possible to transfer it to another role now, so we grant it to role r.
 func (ge *CurrentGrantExecutable) RevokeOwnership(r string) []string {
-	// early exit in the event reversion owner is left blank (default)
+	// early return in the event reversion owner is left blank (default)
 	// default to Terraform's role in this case
 	if r == "" {
 		return []string{
