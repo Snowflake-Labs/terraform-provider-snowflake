@@ -181,9 +181,9 @@ func (c *Client) sql(sqlOperation SQLOperation, clause ...ddlClause) string {
 	return sb.String()
 }
 
-// misc helper functions
+// misc helper functions.
 func pSlice[T any](a []T) []*T {
-	var b []*T
+	b := make([]*T, len(a))
 	for i := range a {
 		b = append(b, &a[i])
 	}
@@ -257,7 +257,7 @@ func getExportedClause(field reflect.StructField, value reflect.Value) ddlClause
 			value: value.Interface(),
 			qt:    getQuoteTypeFromTag(field.Tag.Get("ddl")),
 		}
-	case "list": // comma separated list of strings
+	case "list":
 		clause = ddlClauseList{
 			key:   dbTag,
 			value: value.Interface().([]string),
@@ -282,7 +282,7 @@ func ddlClausesForObject(s interface{}) ([]ddlClause, error) {
 		field := t.Field(i)
 		value := v.Field(i)
 
-		// unexported fields need to be handled separately
+		// unexported fields need to be handled separately.
 		if !value.CanInterface() {
 			clause := getUnexportedClause(field, value)
 			if clause != nil {
@@ -292,7 +292,7 @@ func ddlClausesForObject(s interface{}) ([]ddlClause, error) {
 		}
 
 		if value.Kind() == reflect.Ptr {
-			// skip nil pointers for attributes, since they are not set
+			// skip nil pointers for attributes, since they are not set.
 			if value.IsNil() {
 				continue
 			}

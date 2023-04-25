@@ -30,7 +30,7 @@ type PasswordPolicies interface {
 	Describe(ctx context.Context, name string) (*PasswordPolicyDetails, error)
 }
 
-// passwordPolicies implements PasswordPolicies
+// passwordPolicies implements PasswordPolicies.
 type passwordPolicies struct {
 	client *Client
 }
@@ -48,7 +48,6 @@ type PasswordPolicy struct {
 	Options       string    `db:"options"`
 }
 
-// PasswordPolicyDetails
 type passwordPolicyDetailsRow struct {
 	Property     string `db:"property"`
 	Value        string `db:"value"`
@@ -233,7 +232,7 @@ type PasswordPolicyShowOptions struct {
 	Pattern    *string               `ddl:"command_param,single_quotes" db:"LIKE"`
 	In         *PasswordPolicyShowIn `ddl:"keyword" db:"IN"`
 
-	// Optional: Limits the maximum number of rows returned
+	// Optional: Limits the maximum number of rows returned.
 	Limit *int `ddl:"command_param,single_quotes" db:"LIMIT"`
 }
 
@@ -243,7 +242,7 @@ type PasswordPolicyShowIn struct {
 	Schema   *string `ddl:"command_param,no_quotes" db:"SCHEMA"`
 }
 
-// todo: implement this function to validate that the combination of options is valid
+// todo: implement this function to validate that the combination of options is valid.
 func (opts *PasswordPolicyShowOptions) validate() error {
 	return nil
 }

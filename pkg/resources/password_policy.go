@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -185,7 +186,7 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		},
 	})
 	if err != nil {
-		if err == sdk.ErrNoRecord {
+		if errors.Is(err, sdk.ErrNoRecord) {
 			d.SetId("")
 			return nil
 		}

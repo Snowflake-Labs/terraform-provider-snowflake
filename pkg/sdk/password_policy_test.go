@@ -36,7 +36,7 @@ func TestCompletePasswordPolicy(t *testing.T) {
 	})
 	r.Nil(err)
 
-	client.PasswordPolicies.Alter(context.Background(), name, &PasswordPolicyAlterOptions{
+	err = client.PasswordPolicies.Alter(context.Background(), name, &PasswordPolicyAlterOptions{
 		Set: &PasswordPolicyAlterSet{
 			PasswordMinLength: Int(8),
 			Comment:           String("test22"),
