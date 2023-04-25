@@ -153,10 +153,24 @@ type PasswordPolicyAlterOptions struct {
 	IfExists   *bool                   `ddl:"keyword" db:"IF EXISTS"`
 	name       string                  `ddl:"name"`
 	Set        *PasswordPolicyAlterSet `ddl:"keyword" db:"SET"`
+	Unset      *PasswordPolicyAlterSet `ddl:"keyword" db:"UNSET"`
 }
 
 type PasswordPolicyAlterSet struct {
 	Name                      *string `ddl:"param"`
+	PasswordMinLength         *int    `ddl:"param" db:"PASSWORD_MIN_LENGTH"`
+	PasswordMaxLength         *int    `ddl:"param" db:"PASSWORD_MAX_LENGTH"`
+	PasswordMinUpperCaseChars *int    `ddl:"param" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
+	PasswordMinLowerCaseChars *int    `ddl:"param" db:"PASSWORD_MIN_LOWER_CASE_CHARS"`
+	PasswordMinNumericChars   *int    `ddl:"param" db:"PASSWORD_MIN_NUMERIC_CHARS"`
+	PasswordMinSpecialChars   *int    `ddl:"param" db:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMaxAgeDays        *int    `ddl:"param" db:"PASSWORD_MAX_AGE_DAYS"`
+	PasswordMaxRetries        *int    `ddl:"param" db:"PASSWORD_MAX_RETRIES"`
+	PasswordLockoutTimeMins   *int    `ddl:"param" db:"PASSWORD_LOCKOUT_TIME_MINS"`
+	Comment                   *string `ddl:"param,single_quotes" db:"COMMENT"`
+}
+
+type PasswordPolicyAlterUnset struct {
 	PasswordMinLength         *int    `ddl:"param" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *int    `ddl:"param" db:"PASSWORD_MAX_LENGTH"`
 	PasswordMinUpperCaseChars *int    `ddl:"param" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
