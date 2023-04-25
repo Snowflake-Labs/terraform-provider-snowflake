@@ -9,8 +9,8 @@ import (
 )
 
 func TestCompletePasswordPolicy(t *testing.T) {
-	// Secrets are required to run this test, so it is skipped by default.  To run it, set SKIP_SDK_TEST=false
-	if os.Getenv("SKIP_SDK_TEST") != "false" {
+	// Secrets are required to run this test.  To disable it, set SKIP_SDK_TEST=true
+	if os.Getenv("SKIP_SDK_TEST") == "true" {
 		t.Skip("SKIP_SDK_TEST")
 	}
 	r := require.New(t)
@@ -34,8 +34,10 @@ func TestCompletePasswordPolicy(t *testing.T) {
 	r.Nil(err)
 
 	_, err = client.PasswordPolicies.Show(context.Background(), &PasswordPolicyShowOptions{
-		Pattern: String(objectIdentifier.Name),
-		In: &PasswordPolicyShowIn{
+		Like: &Like{
+			Pattern: String("test_policy"),
+		},
+		In: &In{
 			Database: String(objectIdentifier.DatabaseName),
 		},
 	})
@@ -49,8 +51,9 @@ func TestCompletePasswordPolicy(t *testing.T) {
 	})
 	r.Nil(err)
 
-	_, err = client.PasswordPolicies.Describe(context.Background(), name)
+	d, err := client.PasswordPolicies.Describe(context.Background(), name)
 	r.Nil(err)
+	r.Equal("test22", d.Comment)
 
 	err = client.PasswordPolicies.Drop(context.Background(), name, &PasswordPolicyDropOptions{
 		IfExists: Bool(true),

@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
-	"strconv"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
@@ -44,6 +41,7 @@ func DefaultConfig() *gosnowflake.Config {
 type Client struct {
 	db     *sqlx.DB
 	dryRun bool
+	sqlBuilder
 
 	PasswordPolicies PasswordPolicies
 }
@@ -111,284 +109,26 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) execContext(ctx context.Context, sql string) (sql.Result, error) {
+// Exec executes a query that does not return rows.W
+func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if !c.dryRun {
 		return c.db.ExecContext(ctx, sql)
 	}
 	return nil, nil
 }
 
-func (c *Client) selectContext(ctx context.Context, dest interface{}, query string) error {
+// query runs a query and returns the rows. dest is expected to be a slice of structs.
+func (c *Client) query(ctx context.Context, dest interface{}, sql string) error {
 	if !c.dryRun {
-		return c.db.SelectContext(ctx, dest, query)
+		return c.db.SelectContext(ctx, dest, sql)
 	}
 	return nil
 }
 
-/*
-func (c *Client) getContext(ctx context.Context, dest interface{}, query string) error {
+// queryOne runs a query and returns one row. dest is expected to be a pointer to a struct.
+func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) error {
 	if !c.dryRun {
-		return c.db.GetContext(ctx, dest, query)
+		return c.db.GetContext(ctx, dest, sql)
 	}
 	return nil
-}*/
-
-type SQLOperation string
-
-const (
-	sqlOperationCreate   SQLOperation = "CREATE"
-	sqlOperationAlter    SQLOperation = "ALTER"
-	sqlOperationDrop     SQLOperation = "DROP"
-	sqlOperationShow     SQLOperation = "SHOW"
-	sqlOperationDescribe SQLOperation = "DESCRIBE"
-)
-
-func (v SQLOperation) String() string {
-	return string(v)
-}
-
-func (c *Client) sql(sqlOperation SQLOperation, clause ...ddlClause) string {
-	sb := strings.Builder{}
-	sb.WriteString(sqlOperation.String())
-	for _, c := range clause {
-		sb.WriteString(fmt.Sprintf(" %s", c.String()))
-	}
-	return sb.String()
-}
-
-// misc helper functions.
-func pSlice[T any](a []T) []*T {
-	b := make([]*T, len(a))
-	for i := range a {
-		b[i] = &a[i]
-	}
-	return b
-}
-
-func toInt(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-	return i
-}
-
-func getUnexportedClause(field reflect.StructField, value reflect.Value) ddlClause {
-	if field.Tag.Get("ddl") == "" {
-		return nil
-	}
-	tagParts := strings.Split(field.Tag.Get("ddl"), ",")
-	ddlType := tagParts[0]
-	dbTag := field.Tag.Get("db")
-	switch ddlType {
-	case "object_type":
-		return ddlClauseObjectType(ObjectType(value.String()))
-	case "name":
-		return ddlClauseName(value.String())
-	case "keyword":
-		if value.Kind() == reflect.Bool {
-			useKeyword := value.Bool()
-			if useKeyword {
-				return ddlClauseKeyword(dbTag)
-			}
-		}
-		return ddlClauseKeyword(value.String())
-	}
-
-	return nil
-}
-
-func getExportedClause(field reflect.StructField, value reflect.Value) ddlClause {
-	if field.Tag.Get("ddl") == "" {
-		return nil
-	}
-	if field.Tag.Get("db") == "" {
-		return nil
-	}
-
-	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
-	dbTag := field.Tag.Get("db")
-
-	var clause ddlClause
-	switch ddlTag {
-	case "keyword":
-		if value.Kind() == reflect.Bool {
-			useKeyword := value.Interface().(bool)
-			if useKeyword {
-				clause = ddlClauseKeyword(dbTag)
-			}
-		} else {
-			clause = ddlClauseKeyword(value.Interface().(string))
-		}
-	case "command_param":
-		clause = ddlClauseCommandParameter{
-			key:   dbTag,
-			value: value.Interface().(string),
-			qt:    getQuoteTypeFromTag(field.Tag.Get("ddl")),
-		}
-	case "param":
-		clause = ddlClauseParameter{
-			key:   dbTag,
-			value: value.Interface(),
-			qt:    getQuoteTypeFromTag(field.Tag.Get("ddl")),
-		}
-	case "list":
-		clause = ddlClauseList{
-			key:   dbTag,
-			value: value.Interface().([]string),
-		}
-	default:
-		return nil
-	}
-	return clause
-}
-
-func ddlClausesForObject(s interface{}) ([]ddlClause, error) {
-	clauses := make([]ddlClause, 0)
-	v := reflect.ValueOf(s)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("expected struct, got %s", v.Kind())
-	}
-	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		value := v.Field(i)
-
-		// unexported fields need to be handled separately.
-		if !value.CanInterface() {
-			clause := getUnexportedClause(field, value)
-			if clause != nil {
-				clauses = append(clauses, clause)
-			}
-			continue
-		}
-
-		if value.Kind() == reflect.Ptr {
-			// skip nil pointers for attributes, since they are not set.
-			if value.IsNil() {
-				continue
-			}
-			value = value.Elem()
-		}
-
-		if value.Kind() == reflect.Struct {
-			// check if there is any keyword on the struct
-			// if there is, then we need to add it to the clause
-			// if there is not, then we need to recurse into the struct
-			// and get the clauses from there
-			ddlTag := field.Tag.Get("ddl")
-			if ddlTag != "" {
-				ddlTagParts := strings.Split(ddlTag, ",")
-				if ddlTagParts[0] == "keyword" {
-					clauses = append(clauses, ddlClauseKeyword(field.Tag.Get("db")))
-				}
-			}
-			innerClauses, err := ddlClausesForObject(value.Interface())
-			if err != nil {
-				return nil, err
-			}
-			clauses = append(clauses, innerClauses...)
-			continue
-		}
-		clause := getExportedClause(field, value)
-		if clause != nil {
-			clauses = append(clauses, clause)
-		}
-	}
-	return clauses, nil
-}
-
-func getQuoteTypeFromTag(t string) quoteType {
-	parts := strings.Split(t, ",")
-	for _, part := range parts {
-		if strings.Contains(part, "quote") {
-			return quoteType(part)
-		}
-	}
-	return NoQuotes
-}
-
-type ddlClause interface {
-	String() string
-}
-
-type ddlClauseKeyword string
-
-func (v ddlClauseKeyword) String() string {
-	return string(v)
-}
-
-type ddlClauseObjectType ObjectType
-
-func (v ddlClauseObjectType) String() string {
-	return string(v)
-}
-
-type ddlClauseName string
-
-func (v ddlClauseName) String() string {
-	return string(v)
-}
-
-type ddlClauseParameter struct {
-	key   string
-	value interface{} // string list, string, string literal, bool, int
-	qt    quoteType
-}
-
-func (v ddlClauseParameter) String() string {
-	vType := reflect.TypeOf(v.value)
-	var result string
-	if v.key != "" {
-		result = fmt.Sprintf("%s = ", v.key)
-	}
-	if vType.Kind() == reflect.String {
-		result += fmt.Sprintf("%s%s%s", v.qt.String(), v.value, v.qt.String())
-	} else {
-		result += fmt.Sprintf("%v", v.value)
-	}
-
-	return result
-}
-
-type ddlClauseCommandParameter struct {
-	key   string
-	value string
-	qt    quoteType
-}
-
-func (v ddlClauseCommandParameter) String() string {
-	return fmt.Sprintf("%s %s%s%s", v.key, v.qt.String(), v.value, v.qt.String())
-}
-
-type ddlClauseList struct {
-	key   string
-	value []string
-}
-
-func (v ddlClauseList) String() string {
-	return fmt.Sprintf("%s = %s", v.key, strings.Join(v.value, ","))
-}
-
-type quoteType string
-
-const (
-	NoQuotes     quoteType = "no_quotes"
-	DoubleQuotes quoteType = "double_quotes"
-	SingleQuotes quoteType = "single_quotes"
-)
-
-func (v quoteType) String() string {
-	switch v {
-	case NoQuotes:
-		return ""
-	case DoubleQuotes:
-		return "\""
-	case SingleQuotes:
-		return "'"
-	}
-	return ""
 }

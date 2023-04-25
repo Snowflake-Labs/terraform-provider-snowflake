@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -180,17 +179,19 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	schemaIdentifier := sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName, objectIdentifier.SchemaName)
 	fqn := objectIdentifier.FullyQualifiedName()
 	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, &sdk.PasswordPolicyShowOptions{
-		Pattern: sdk.String(objectIdentifier.Name),
-		In: &sdk.PasswordPolicyShowIn{
+		Like: &sdk.Like{
+			Pattern: sdk.String(objectIdentifier.Name),
+		},
+		In: &sdk.In{
 			Schema: sdk.String(schemaIdentifier.FullyQualifiedName()),
 		},
 	})
 	if err != nil {
-		if errors.Is(err, sdk.ErrNoRecord) {
-			d.SetId("")
-			return nil
-		}
 		return err
+	}
+	if len(passwordPolicyList) == 0 {
+		d.SetId("")
+		return nil
 	}
 	passwordPolicy := passwordPolicyList[0]
 
@@ -210,31 +211,31 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("min_length", passwordPolicyDetails.PasswordMinLength); err != nil {
+	if err := d.Set("min_length", passwordPolicyDetails.PasswordMinLength.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_length", passwordPolicyDetails.PasswordMaxLength); err != nil {
+	if err := d.Set("max_length", passwordPolicyDetails.PasswordMaxLength.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars); err != nil {
+	if err := d.Set("min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars); err != nil {
+	if err := d.Set("min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars); err != nil {
+	if err := d.Set("min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars); err != nil {
+	if err := d.Set("min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_age_days", passwordPolicyDetails.PasswordMaxAgeDays); err != nil {
+	if err := d.Set("max_age_days", passwordPolicyDetails.PasswordMaxAgeDays.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_retries", passwordPolicyDetails.PasswordMaxRetries); err != nil {
+	if err := d.Set("max_retries", passwordPolicyDetails.PasswordMaxRetries.Value); err != nil {
 		return err
 	}
-	if err := d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins); err != nil {
+	if err := d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins.Value); err != nil {
 		return err
 	}
 

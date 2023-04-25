@@ -80,6 +80,8 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 		return sdk.NewSchemaIdentifier(parts[0], parts[1])
 	case 3:
 		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+	case 4:
+		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
 	default:
 		return nil
 	}
