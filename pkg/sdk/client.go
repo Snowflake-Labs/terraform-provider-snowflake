@@ -185,7 +185,7 @@ func (c *Client) sql(sqlOperation SQLOperation, clause ...ddlClause) string {
 func pSlice[T any](a []T) []*T {
 	b := make([]*T, len(a))
 	for i := range a {
-		b = append(b, &a[i])
+		b[i] = &a[i]
 	}
 	return b
 }
