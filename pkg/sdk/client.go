@@ -53,36 +53,11 @@ func NewDefaultClient() (*Client, error) {
 }
 
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
-	config := DefaultConfig()
-	if cfg != nil {
-		if cfg.Account != "" {
-			config.Account = cfg.Account
-		}
-		if cfg.User != "" {
-			config.User = cfg.User
-		}
-		if cfg.Password != "" {
-			config.Password = cfg.Password
-		}
-		// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
-		//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
-		if cfg.Region != "" && cfg.Region != "us-west-2" {
-			config.Region = cfg.Region
-		}
-		if cfg.Role != "" {
-			config.Role = cfg.Role
-		}
-		if cfg.Host != "" {
-			config.Host = cfg.Host
-			// if host is set trust it and do not use the region
-			config.Region = ""
-		}
-		if cfg.Warehouse != "" {
-			config.Warehouse = cfg.Warehouse
-		}
+	if cfg == nil {
+		cfg = DefaultConfig()
 	}
 
-	dsn, err := gosnowflake.DSN(config)
+	dsn, err := gosnowflake.DSN(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("build dsn for snowflake connection: %w", err)
 	}
