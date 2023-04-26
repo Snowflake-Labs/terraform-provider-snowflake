@@ -191,6 +191,11 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
+	"qualified_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Qualified name of the table.",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -591,6 +596,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		// "primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
 		"data_retention_days": table.RetentionTime.Int32,
 		"change_tracking":     (table.ChangeTracking.String == "ON"),
+		"qualified_name":      fmt.Sprintf(`"%s"."%s"."%s"`, tableID.DatabaseName, tableID.SchemaName, table.TableName.String),
 	}
 
 	for key, val := range toSet {

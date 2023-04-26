@@ -16,10 +16,10 @@ func TestAcc_ObjectParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterConfigBasic(prefix, "ENABLE_STREAM_TASK_REPLICATION", "true"),
+				Config: objectParameterConfigBasic(prefix, "USER_TASK_TIMEOUT_MS", "1000"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_STREAM_TASK_REPLICATION"),
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "USER_TASK_TIMEOUT_MS"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "1000"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "false"),
 				),
 			},

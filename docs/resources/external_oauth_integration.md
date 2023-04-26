@@ -3,12 +3,12 @@
 page_title: "snowflake_external_oauth_integration Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  An External OAuth security integration allows a client to use a third-party authorization server to obtain the access tokens needed to interact with Snowflake.
 ---
 
 # snowflake_external_oauth_integration (Resource)
 
-
+An External OAuth security integration allows a client to use a third-party authorization server to obtain the access tokens needed to interact with Snowflake.
 
 ## Example Usage
 
@@ -48,6 +48,7 @@ resource "snowflake_external_oauth_integration" "azure" {
 - `rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
 - `rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
 - `scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
+- `scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role.
 
 ### Read-Only
 
