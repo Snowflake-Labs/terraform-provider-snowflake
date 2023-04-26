@@ -254,7 +254,7 @@ func (ege *ExistingGrantExecutable) Revoke(p string) []string {
 }
 
 // Revoke returns the SQL that will revoke ownership privileges on the grant from the grantee.
-// Note: returns the same SQL as Revoke
+// Note: returns the same SQL as Revoke.
 func (ege *ExistingGrantExecutable) RevokeOwnership(r string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{

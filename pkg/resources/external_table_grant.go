@@ -80,7 +80,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	"revert_ownership_to_role_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The name of the role to revert ownership to on destroy.",
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
 		Default:     "",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
