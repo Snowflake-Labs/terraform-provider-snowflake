@@ -30,7 +30,7 @@ func TestCreatePasswordPolicy(t *testing.T) {
 	r.Nil(err)
 	createStmt, err := mb.Create(input)
 	r.Nil(err)
-	r.Equal(`CREATE OR REPLACE PASSWORD POLICY testdb.testschema.testres PASSWORD_MIN_LENGTH = 10;`, createStmt)
+	r.Equal(`CREATE OR REPLACE PASSWORD POLICY "testdb"."testschema"."testres" PASSWORD_MIN_LENGTH = 10;`, createStmt)
 }
 
 func TestAlterPasswordPolicy(t *testing.T) {
@@ -54,9 +54,8 @@ func TestAlterPasswordPolicy(t *testing.T) {
 	r.Nil(err)
 	alterStmt, err := mb.Update(input)
 	r.Nil(err)
-	// Order of parameters is not guaranteed
 	r.Equal(
-		`ALTER PASSWORD POLICY testdb.testschema.passpol SET PASSWORD_MIN_NUMERIC_CHARS = 16 PASSWORD_LOCKOUT_TIME_MINS = 50;`,
+		`ALTER PASSWORD POLICY "testdb"."testschema"."passpol" SET PASSWORD_MIN_NUMERIC_CHARS = 16 PASSWORD_LOCKOUT_TIME_MINS = 50;`,
 		alterStmt,
 	)
 }
@@ -80,9 +79,8 @@ func TestUnsetPasswordPolicy(t *testing.T) {
 	r.Nil(err)
 	unsetStmt, err := mb.Unset(input)
 	r.Nil(err)
-	// Order of parameters is not guaranteed
 	r.Equal(
-		`ALTER PASSWORD POLICY testdb.testschema.passpol UNSET PASSWORD_MIN_NUMERIC_CHARS COMMENT;`,
+		`ALTER PASSWORD POLICY "testdb"."testschema"."passpol" UNSET PASSWORD_MIN_NUMERIC_CHARS COMMENT;`,
 		unsetStmt,
 	)
 }
@@ -102,7 +100,7 @@ func TestDeletePasswordPolicy(t *testing.T) {
 	r.Nil(err)
 	dropStmt, err := mb.Delete(input)
 	r.Nil(err)
-	r.Equal(`DROP PASSWORD POLICY testdb.testschema.passpol;`, dropStmt)
+	r.Equal(`DROP PASSWORD POLICY "testdb"."testschema"."passpol";`, dropStmt)
 }
 
 func TestReadPasswordPolicy(t *testing.T) {
@@ -118,5 +116,5 @@ func TestReadPasswordPolicy(t *testing.T) {
 	r.Nil(err)
 	describeStmt, err := mb.Read(input)
 	r.Nil(err)
-	r.Equal(`DESCRIBE PASSWORD POLICY testdb.testschema.passpol;`, describeStmt)
+	r.Equal(`DESCRIBE PASSWORD POLICY "testdb"."testschema"."passpol";`, describeStmt)
 }

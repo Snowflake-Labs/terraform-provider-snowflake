@@ -19,6 +19,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 					name       = "mypolicy"
 					min_length = 10
 					comment    = "this is a test resource"
+					or_replace = true
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
@@ -52,6 +53,11 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
 				),
+			},
+			{
+				ResourceName:      "snowflake_password_policy.pa",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

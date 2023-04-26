@@ -318,7 +318,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		setSuspendImmediateTrigger = true
 	}
 	if !setSuspendImmediateTrigger {
-		if len(sTrig) > 0 {
+		if len(siTrig) > 0 {
 			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
 				return err
 			}
