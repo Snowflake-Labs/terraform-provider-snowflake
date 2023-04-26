@@ -60,7 +60,7 @@ resource "snowflake_table_column_masking_view_application" "application" {
   provider = snowflake.masking # Apply masking policy with masking_admin role
 
   table          = snowflake_table.table.qualified_name
-  column         = "age"
+  column         = "secret"
   masking_policy = snowflake_masking_policy.policy.qualified_name
 }
 ```
