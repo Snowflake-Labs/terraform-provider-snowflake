@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.63.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.62.0...v0.63.0) (2023-04-25)
+
+
+### Features
+
+* masking policy application resource ([#1739](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1739)) ([ce80f57](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ce80f57225d6019765a50da6eb74619e401db622))
+
+
+### Misc
+
+* fix parameters datasource acceptance test ([#1749](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1749)) ([338a19d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/338a19de373525087372cc319aa065f2cddbb724))
+
 ## [0.62.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.61.0...v0.62.0) (2023-04-19)
 
 
