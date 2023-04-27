@@ -6,8 +6,10 @@ import (
 	"strings"
 )
 
-var ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
-var ErrAccountIsEmpty = errors.New("account is empty")
+var (
+	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
+	ErrAccountIsEmpty             = errors.New("account is empty")
+)
 
 func decodeDriverError(err error) error {
 	if err == nil {
