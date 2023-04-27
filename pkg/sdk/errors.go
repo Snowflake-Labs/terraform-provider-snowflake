@@ -2,17 +2,21 @@ package sdk
 
 import (
 	"errors"
+	"log"
 	"strings"
 )
 
 var ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
+var ErrAccountIsEmpty = errors.New("account is empty")
 
-func decodeError(err error) error {
+func decodeDriverError(err error) error {
 	if err == nil {
 		return nil
 	}
+	log.Printf("[DEBUG] err: %v\n", err)
 	m := map[string]error{
 		"does not exist or not authorized": ErrObjectNotExistOrAuthorized,
+		"account is empty":                 ErrAccountIsEmpty,
 	}
 	for k, v := range m {
 		if strings.Contains(err.Error(), k) {

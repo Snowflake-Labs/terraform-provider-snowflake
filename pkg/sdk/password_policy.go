@@ -249,7 +249,7 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	stmt := v.client.sql(clauses...)
 	_, err = v.client.exec(ctx, stmt)
 	if err != nil {
-		return decodeError(err)
+		return decodeDriverError(err)
 	}
 	return err
 }
@@ -324,7 +324,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 
 	err = v.client.query(ctx, &dest, stmt)
 	if err != nil {
-		return nil, decodeError(err)
+		return nil, decodeDriverError(err)
 	}
 	resultList := make([]*PasswordPolicy, len(dest))
 	for i, row := range dest {
@@ -411,7 +411,7 @@ func (v *passwordPolicies) Describe(ctx context.Context, id SchemaObjectIdentifi
 	dest := []propertyRow{}
 	err = v.client.query(ctx, &dest, stmt)
 	if err != nil {
-		return nil, decodeError(err)
+		return nil, decodeDriverError(err)
 	}
 
 	return passwordPolicyDetailsFromRows(dest), nil

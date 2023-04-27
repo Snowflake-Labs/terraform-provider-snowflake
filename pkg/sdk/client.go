@@ -43,6 +43,7 @@ type Client struct {
 	dryRun bool
 	sqlBuilder
 
+	ContextFunctions ContextFunctions
 	PasswordPolicies PasswordPolicies
 }
 
@@ -57,13 +58,13 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	dsn, err := gosnowflake.DSN(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("build dsn for snowflake connection: %w", err)
+		return nil, decodeDriverError(err)
 	}
 
 	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
 		switch s {
 		case "sql-conn-query", "sql-conn-exec":
-			log.Printf("[DEBUG] %s: %v", s, kv)
+			log.Printf("[DEBUG] %s: %v\n", s, kv)
 		default:
 			return
 		}
@@ -79,6 +80,17 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	}
 	client.initialize()
 
+	err = client.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("ping snowflake: %w", err)
+	}
+	ctx := context.Background()
+	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current session: %w", err)
+	}
+	log.Printf("[DEBUG] connection success! Session identifier: %s\n", sessionID)
+
 	return client, nil
 }
 
@@ -93,6 +105,7 @@ func NewClientFromDB(db *sql.DB) *Client {
 
 func (c *Client) initialize() {
 	c.PasswordPolicies = &passwordPolicies{client: c}
+	c.ContextFunctions = &contextFunctions{client: c}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {

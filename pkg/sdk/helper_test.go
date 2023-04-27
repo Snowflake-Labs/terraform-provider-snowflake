@@ -10,6 +10,7 @@ import (
 )
 
 func testClient(t *testing.T) *Client {
+	t.Helper()
 	client, err := NewDefaultClient()
 	if err != nil {
 		t.Fatal(err)
@@ -18,7 +19,7 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
-// mock structs until we have more of the SDK implemented
+// mock structs until we have more of the SDK implemented.
 type DatabaseCreateOptions struct{}
 
 type Database struct {
@@ -39,16 +40,19 @@ func (v *Schema) Identifier() SchemaIdentifier {
 }
 
 func randomString(t *testing.T) string {
+	t.Helper()
 	v, err := uuid.GenerateUUID()
 	require.NoError(t, err)
 	return v
 }
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
+	t.Helper()
 	return createDatabaseWithOptions(t, client, &DatabaseCreateOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, opts *DatabaseCreateOptions) (*Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOptions) (*Database, func()) {
+	t.Helper()
 	name := randomString(t)
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE DATABASE \"%s\"", name))
@@ -62,6 +66,7 @@ func createDatabaseWithOptions(t *testing.T, client *Client, opts *DatabaseCreat
 }
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
+	t.Helper()
 	name := randomString(t)
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
@@ -76,6 +81,7 @@ func createSchema(t *testing.T, client *Client, database *Database) (*Schema, fu
 }
 
 func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *PasswordPolicyCreateOptions) (*PasswordPolicy, func()) {
+	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
 		database, databaseCleanup = createDatabase(t, client)
@@ -114,5 +120,6 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 }
 
 func createPasswordPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*PasswordPolicy, func()) {
+	t.Helper()
 	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
 }

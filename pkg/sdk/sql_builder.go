@@ -15,8 +15,17 @@ const (
 	SingleQuotes quoteType = "single_quotes"
 )
 
-func (v quoteType) String() string {
-	switch v {
+func (qt quoteType) Quote(v interface{}) string {
+	if qt == NoQuotes {
+		return fmt.Sprintf("%v", v)
+	}
+	s := fmt.Sprintf("%v", v)
+	escapedString := strings.ReplaceAll(s, qt.String(), fmt.Sprintf(`\%v`, qt.String()))
+	return fmt.Sprintf(`%v%v%v`, qt.String(), escapedString, qt.String())
+}
+
+func (qt quoteType) String() string {
+	switch qt {
 	case NoQuotes:
 		return ""
 	case DoubleQuotes:
@@ -239,9 +248,7 @@ type sqlClauseKeyword struct {
 }
 
 func (v sqlClauseKeyword) String() string {
-	// make sure we dont double quote the keyword
-	trimmedValue := strings.Trim(v.value, v.qt.String())
-	return fmt.Sprintf("%s%s%s", v.qt.String(), trimmedValue, v.qt.String())
+	return v.qt.Quote(v.value)
 }
 
 type sqlClauseIdentifier struct {
@@ -269,9 +276,7 @@ func (v sqlClauseParameter) String() string {
 		result = fmt.Sprintf("%s = ", v.key)
 	}
 	if vType.Kind() == reflect.String {
-		// make sure we dont double quote the parameter
-		trimmedValue := strings.Trim(v.value.(string), v.qt.String())
-		result += fmt.Sprintf("%s%s%s", v.qt.String(), trimmedValue, v.qt.String())
+		result += v.qt.Quote(v.value.(string))
 	} else {
 		result += fmt.Sprintf("%v", v.value)
 	}
@@ -286,8 +291,5 @@ type sqlClauseCommand struct {
 }
 
 func (v sqlClauseCommand) String() string {
-	s := fmt.Sprintf("%v", v.value)
-	// make sure we dont double quote the command
-	trimmedValue := strings.Trim(s, v.qt.String())
-	return fmt.Sprintf("%s %s%s%s", v.key, v.qt.String(), trimmedValue, v.qt.String())
+	return fmt.Sprintf("%s %s", v.key, v.qt.Quote(v.value))
 }

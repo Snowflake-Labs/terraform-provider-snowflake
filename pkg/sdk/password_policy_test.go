@@ -221,23 +221,23 @@ func TestPasswordPolicyAlter(t *testing.T) {
 
 	t.Run("when renaming", func(t *testing.T) {
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-		oldId := passwordPolicy.Identifier()
+		oldID := passwordPolicy.Identifier()
 		t.Cleanup(passwordPolicyCleanup)
 		newName := randomString(t)
-		newId := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
+		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
 		alterOptions := &PasswordPolicyAlterOptions{
-			NewName: newId,
+			NewName: newID,
 		}
-		err := client.PasswordPolicies.Alter(ctx, oldId, alterOptions)
+		err := client.PasswordPolicies.Alter(ctx, oldID, alterOptions)
 		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, newId)
+		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, newID)
 		require.NoError(t, err)
 		// rename back to original name so it can be cleaned up
 		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
 		alterOptions = &PasswordPolicyAlterOptions{
-			NewName: oldId,
+			NewName: oldID,
 		}
-		err = client.PasswordPolicies.Alter(ctx, newId, alterOptions)
+		err = client.PasswordPolicies.Alter(ctx, newID, alterOptions)
 		require.NoError(t, err)
 	})
 
