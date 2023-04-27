@@ -17,20 +17,22 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: passwordPolicyConfig(accName, 10, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 10, 30, "this is a test resource"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "10"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "30"),
 				),
 			},
 			{
-				Config: passwordPolicyConfig(accName, 20, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 20, 50, "this is a test resource"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "50"),
 				),
 			},
 			{
-				Config: passwordPolicyConfig(accName, 20, ""),
+				Config: passwordPolicyConfig(accName, 20, 50, ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
 				),
@@ -44,7 +46,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 	})
 }
 
-func passwordPolicyConfig(s string, minLength int, comment string) string {
+func passwordPolicyConfig(s string, minLength int, maxLength int, comment string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test" {
 		name = "%v"
@@ -62,8 +64,9 @@ func passwordPolicyConfig(s string, minLength int, comment string) string {
 		schema     = snowflake_schema.test.name
 		name       = "%v"
 		min_length = %d
+		max_length = %d
 		comment    = "%s"
 		or_replace = true
 	}
-	`, s, s, s, minLength, comment)
+	`, s, s, s, minLength, maxLength, comment)
 }

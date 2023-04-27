@@ -54,8 +54,11 @@ coverage: ## run the go coverage tool, reading file coverage.out
 	go tool cover -html=coverage.txt
 .PHONY: coverage
 
-test:  ## run the tests
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+test:  ## run the tests (except sdk tests)
+	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/resources/...
+	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/provider/...
+	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/snowflake/...
+
 .PHONY: test
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources

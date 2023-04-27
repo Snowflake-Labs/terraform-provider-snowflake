@@ -60,10 +60,10 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		return nil, fmt.Errorf("build dsn for snowflake connection: %w", err)
 	}
 
-	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, fn string, kv ...interface{}) {
-		switch fn {
+	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
+		switch s {
 		case "sql-conn-query", "sql-conn-exec":
-			log.Printf("[DEBUG] %s: %v", fn, kv)
+			log.Printf("[DEBUG] %s: %v", s, kv)
 		default:
 			return
 		}
@@ -109,7 +109,7 @@ func (c *Client) Close() {
 	}
 }
 
-// Exec executes a query that does not return rows.W
+// Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if !c.dryRun {
 		return c.db.ExecContext(ctx, sql)

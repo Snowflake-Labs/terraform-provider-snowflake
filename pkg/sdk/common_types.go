@@ -1,44 +1,50 @@
 package sdk
 
 type In struct {
-	Account  *bool   `ddl:"keyword"`
-	Database *string `ddl:"command,double_quotes" db:"DATABASE"`
-	Schema   *string `ddl:"command,double_quotes" db:"SCHEMA"`
+	Account  *bool                   `ddl:"keyword"`
+	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
+	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
 }
 
 type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
 }
 
-type DescribeStringProperty struct {
+type StringProperty struct {
 	Value        string
 	DefaultValue string
 	Description  string
 }
 
-type DescribeIntProperty struct {
+type IntProperty struct {
 	Value        int
 	DefaultValue int
 	Description  string
 }
 
-type describePropertyRow struct {
+type propertyRow struct {
 	Property     string `db:"property"`
 	Value        string `db:"value"`
 	DefaultValue string `db:"default"`
 	Description  string `db:"description"`
 }
 
-func (row *describePropertyRow) toDescribeStringProperty() *DescribeStringProperty {
-	return &DescribeStringProperty{
+func (row *propertyRow) toStringProperty() *StringProperty {
+	if row.Value == "null" {
+		row.Value = ""
+	}
+	if row.DefaultValue == "null" {
+		row.DefaultValue = ""
+	}
+	return &StringProperty{
 		Value:        row.Value,
 		DefaultValue: row.DefaultValue,
 		Description:  row.Description,
 	}
 }
 
-func (row *describePropertyRow) toDescribeIntProperty() *DescribeIntProperty {
-	return &DescribeIntProperty{
+func (row *propertyRow) toIntProperty() *IntProperty {
+	return &IntProperty{
 		Value:        toInt(row.Value),
 		DefaultValue: toInt(row.DefaultValue),
 		Description:  row.Description,

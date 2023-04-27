@@ -147,21 +147,57 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		SchemaName:   schema,
 		Name:         name,
 	}
-	fqn := objectIdentifier.FullyQualifiedName()
-	err := client.PasswordPolicies.Create(ctx, fqn, &sdk.PasswordPolicyCreateOptions{
-		OrReplace:                 sdk.Bool(d.Get("or_replace").(bool)),
-		IfNotExists:               sdk.Bool(d.Get("if_not_exists").(bool)),
-		PasswordMinLength:         sdk.Int(d.Get("min_length").(int)),
-		PasswordMaxLength:         sdk.Int(d.Get("max_length").(int)),
-		PasswordMinUpperCaseChars: sdk.Int(d.Get("min_upper_case_chars").(int)),
-		PasswordMinLowerCaseChars: sdk.Int(d.Get("min_lower_case_chars").(int)),
-		PasswordMinNumericChars:   sdk.Int(d.Get("min_numeric_chars").(int)),
-		PasswordMinSpecialChars:   sdk.Int(d.Get("min_special_chars").(int)),
-		PasswordMaxAgeDays:        sdk.Int(d.Get("max_age_days").(int)),
-		PasswordMaxRetries:        sdk.Int(d.Get("max_retries").(int)),
-		PasswordLockoutTimeMins:   sdk.Int(d.Get("lockout_time_mins").(int)),
-		Comment:                   sdk.String(d.Get("comment").(string)),
-	})
+	createOptions := &sdk.PasswordPolicyCreateOptions{}
+
+	if v, ok := d.GetOk("or_replace"); ok {
+		createOptions.OrReplace = sdk.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("if_not_exists"); ok {
+		createOptions.IfNotExists = sdk.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("min_length"); ok {
+		createOptions.PasswordMinLength = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_length"); ok {
+		createOptions.PasswordMaxLength = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_upper_case_chars"); ok {
+		createOptions.PasswordMinUpperCaseChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_lower_case_chars"); ok {
+		createOptions.PasswordMinLowerCaseChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_numeric_chars"); ok {
+		createOptions.PasswordMinNumericChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_special_chars"); ok {
+		createOptions.PasswordMinSpecialChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_age_days"); ok {
+		createOptions.PasswordMaxAgeDays = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_retries"); ok {
+		createOptions.PasswordMaxRetries = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("lockout_time_mins"); ok {
+		createOptions.PasswordLockoutTimeMins = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		createOptions.Comment = sdk.String(v.(string))
+	}
+
+	err := client.PasswordPolicies.Create(ctx, objectIdentifier, createOptions)
 	if err != nil {
 		return err
 	}
@@ -177,13 +213,12 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	schemaIdentifier := sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName, objectIdentifier.SchemaName)
-	fqn := objectIdentifier.FullyQualifiedName()
 	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, &sdk.PasswordPolicyShowOptions{
 		Like: &sdk.Like{
 			Pattern: sdk.String(objectIdentifier.Name),
 		},
 		In: &sdk.In{
-			Schema: sdk.String(schemaIdentifier.FullyQualifiedName()),
+			Schema: schemaIdentifier,
 		},
 	})
 	if err != nil {
@@ -207,7 +242,7 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("comment", passwordPolicy.Comment); err != nil {
 		return err
 	}
-	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, fqn)
+	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
@@ -248,51 +283,187 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	alterOptions := &sdk.PasswordPolicyAlterOptions{
-		Set: &sdk.PasswordPolicyAlterSet{},
-	}
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
-		alterOptions.Set.Name = sdk.String(n.(string))
+		databaseName := d.Get("database").(string)
+		schemaName := d.Get("schema").(string)
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			NewName: sdk.NewSchemaObjectIdentifier(databaseName, schemaName, n.(string)),
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("min_length") {
-		alterOptions.Set.PasswordMinLength = sdk.Int(d.Get("min_length").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_length"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinLength: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinLength: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 	if d.HasChange("max_length") {
-		alterOptions.Set.PasswordMaxLength = sdk.Int(d.Get("max_length").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_length"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxLength: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxLength: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 	if d.HasChange("min_upper_case_chars") {
-		alterOptions.Set.PasswordMinUpperCaseChars = sdk.Int(d.Get("min_upper_case_chars").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_upper_case_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinUpperCaseChars: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinUpperCaseChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 	if d.HasChange("min_lower_case_chars") {
-		alterOptions.Set.PasswordMinLowerCaseChars = sdk.Int(d.Get("min_lower_case_chars").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_lower_case_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinLowerCaseChars: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinLowerCaseChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
+
 	if d.HasChange("min_numeric_chars") {
-		alterOptions.Set.PasswordMinNumericChars = sdk.Int(d.Get("min_numeric_chars").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_numeric_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinNumericChars: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinNumericChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
+
 	if d.HasChange("min_special_chars") {
-		alterOptions.Set.PasswordMinSpecialChars = sdk.Int(d.Get("min_special_chars").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_special_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinSpecialChars: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinSpecialChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
+
 	if d.HasChange("max_age_days") {
-		alterOptions.Set.PasswordMaxAgeDays = sdk.Int(d.Get("max_age_days").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_age_days"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxAgeDays: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxAgeDays: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
+
 	if d.HasChange("max_retries") {
-		alterOptions.Set.PasswordMaxRetries = sdk.Int(d.Get("max_retries").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_retries"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxRetries: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxRetries: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 	if d.HasChange("lockout_time_mins") {
-		alterOptions.Set.PasswordLockoutTimeMins = sdk.Int(d.Get("lockout_time_mins").(int))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("lockout_time_mins"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordLockoutTimeMins: sdk.Int(v.(int)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordLockoutTimeMins: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
+
 	if d.HasChange("comment") {
-		alterOptions.Set.Comment = sdk.String(d.Get("comment").(string))
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("comment"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				Comment: sdk.String(v.(string)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				Comment: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	name := objectIdentifier.FullyQualifiedName()
-	err := client.PasswordPolicies.Alter(ctx, name, alterOptions)
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -302,8 +473,7 @@ func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	name := objectIdentifier.FullyQualifiedName()
-	err := client.PasswordPolicies.Drop(ctx, name, nil)
+	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)
 	if err != nil {
 		return err
 	}
