@@ -269,6 +269,24 @@ func TestPasswordPolicyAlter(t *testing.T) {
 		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
 		assert.Equal(t, passwordPolicyDetails.PasswordMaxRetries.Value, passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
 	})
+
+	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
+		createOptions := &PasswordPolicyCreateOptions{
+			Comment:            String("test comment"),
+			PasswordMaxRetries: Int(10),
+		}
+		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
+		id := passwordPolicy.Identifier()
+		t.Cleanup(passwordPolicyCleanup)
+		alterOptions := &PasswordPolicyAlterOptions{
+			Unset: &PasswordPolicyAlterUnset{
+				Comment:            Bool(true),
+				PasswordMaxRetries: Bool(true),
+			},
+		}
+		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
+		require.Error(t, err)
+	})
 }
 
 func TestPasswordPolicyDrop(t *testing.T) {

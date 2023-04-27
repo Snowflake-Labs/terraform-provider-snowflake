@@ -42,7 +42,6 @@ func TestClient_exec(t *testing.T) {
 	ctx := context.Background()
 	_, err := client.exec(ctx, "SELECT 1")
 	require.NoError(t, err)
-
 }
 
 func TestClient_query(t *testing.T) {

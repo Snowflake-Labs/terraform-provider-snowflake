@@ -16,12 +16,19 @@ const (
 )
 
 func (qt quoteType) Quote(v interface{}) string {
-	if qt == NoQuotes {
-		return fmt.Sprintf("%v", v)
-	}
 	s := fmt.Sprintf("%v", v)
-	escapedString := strings.ReplaceAll(s, qt.String(), fmt.Sprintf(`\%v`, qt.String()))
-	return fmt.Sprintf(`%v%v%v`, qt.String(), escapedString, qt.String())
+	switch qt {
+	case NoQuotes:
+		return s
+	case DoubleQuotes:
+		escapedString := strings.ReplaceAll(s, qt.String(), qt.String()+qt.String())
+		return fmt.Sprintf(`%v%v%v`, qt.String(), escapedString, qt.String())
+	case SingleQuotes:
+		escapedString := strings.Trim(s, qt.String())
+		return fmt.Sprintf(`%v%v%v`, qt.String(), escapedString, qt.String())
+	default:
+		return s
+	}
 }
 
 func (qt quoteType) String() string {

@@ -169,6 +169,9 @@ func (opts *PasswordPolicyAlterOptions) validate() error {
 		if opts.Unset.Comment != nil {
 			count++
 		}
+		if count > 1 {
+			return errors.New("only one parameter can be unset at a time")
+		}
 		if count == 0 {
 			return errors.New("at least one parameter must be unset")
 		}
