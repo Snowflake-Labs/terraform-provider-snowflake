@@ -129,6 +129,9 @@ func (opts *PasswordPolicyAlterOptions) validate() error {
 		if opts.Set.PasswordLockoutTimeMins != nil {
 			count++
 		}
+		if opts.Set.Comment != nil {
+			count++
+		}
 		if count == 0 {
 			return errors.New("at least one parameter must be set")
 		}
@@ -164,6 +167,9 @@ func (opts *PasswordPolicyAlterOptions) validate() error {
 			count++
 		}
 		if opts.Unset.PasswordLockoutTimeMins != nil {
+			count++
+		}
+		if opts.Unset.Comment != nil {
 			count++
 		}
 		if count == 0 {
