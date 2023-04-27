@@ -9,6 +9,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
+	"golang.org/x/exp/slices"
 
 	"github.com/snowflakedb/gosnowflake"
 )
@@ -56,24 +57,29 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		cfg = DefaultConfig()
 	}
 
+	// register the snowflake driver if it hasn't been registered yet
+	if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
+		logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
+			switch s {
+			case "sql-conn-query", "sql-conn-exec":
+				log.Printf("[DEBUG] %s: %v\n", s, kv)
+			default:
+				return
+			}
+		})
+		sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(gosnowflake.SnowflakeDriver{}, instrumentedsql.WithLogger(logger)))
+	}
+
 	dsn, err := gosnowflake.DSN(cfg)
 	if err != nil {
 		return nil, decodeDriverError(err)
 	}
 
-	logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
-		switch s {
-		case "sql-conn-query", "sql-conn-exec":
-			log.Printf("[DEBUG] %s: %v\n", s, kv)
-		default:
-			return
-		}
-	})
-	sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(&gosnowflake.SnowflakeDriver{}, instrumentedsql.WithLogger(logger)))
 	db, err := sqlx.Connect("snowflake-instrumented", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open snowflake connection: %w", err)
 	}
+
 	client := &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe
 		db: db.Unsafe(),
@@ -116,10 +122,11 @@ func (c *Client) Ping() error {
 	return c.db.Ping()
 }
 
-func (c *Client) Close() {
+func (c *Client) Close() error {
 	if c.db != nil {
-		c.db.Close()
+		return c.db.Close()
 	}
+	return nil
 }
 
 // Exec executes a query that does not return rows.
