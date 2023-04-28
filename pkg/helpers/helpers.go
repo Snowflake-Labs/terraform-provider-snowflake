@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // ToDo: We can merge these two functions together and also add more functions here with similar functionality
@@ -67,6 +69,22 @@ func SnowflakeID(attributes ...interface{}) string {
 		}
 	}
 	return strings.Join(parts, "|")
+}
+
+func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
+	parts := strings.Split(id, IDDelimiter)
+	switch len(parts) {
+	case 1:
+		return sdk.NewAccountObjectIdentifier(parts[0])
+	case 2:
+		return sdk.NewSchemaIdentifier(parts[0], parts[1])
+	case 3:
+		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+	case 4:
+		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
+	default:
+		return nil
+	}
 }
 
 const IDDelimiter = "|"
