@@ -9,6 +9,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+	t.Helper()
+	return NewSchemaObjectIdentifier(randomString(t), randomString(t), randomString(t))
+}
+
+func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
+	t.Helper()
+	return NewSchemaIdentifier(randomString(t), randomString(t))
+}
+
+func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+	t.Helper()
+	return NewAccountObjectIdentifier(randomString(t))
+}
+
+func testBuilder(t *testing.T) *sqlBuilder {
+	t.Helper()
+	return &sqlBuilder{}
+}
+
 func testClient(t *testing.T) *Client {
 	t.Helper()
 	client, err := NewDefaultClient()

@@ -27,7 +27,8 @@ type PasswordPolicies interface {
 
 // passwordPolicies implements PasswordPolicies.
 type passwordPolicies struct {
-	client *Client
+	client  *Client
+	builder *sqlBuilder
 }
 
 type PasswordPolicyCreateOptions struct {
@@ -66,11 +67,11 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.client.parseStruct(opts)
+	clauses, err := v.builder.parseStruct(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.client.sql(clauses...)
+	stmt := v.builder.sql(clauses...)
 	_, err = v.client.exec(ctx, stmt)
 	return err
 }
@@ -214,11 +215,11 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.client.parseStruct(opts)
+	clauses, err := v.builder.parseStruct(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.client.sql(clauses...)
+	stmt := v.builder.sql(clauses...)
 	_, err = v.client.exec(ctx, stmt)
 	return err
 }
@@ -245,11 +246,11 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
-	clauses, err := v.client.parseStruct(opts)
+	clauses, err := v.builder.parseStruct(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.client.sql(clauses...)
+	stmt := v.builder.sql(clauses...)
 	_, err = v.client.exec(ctx, stmt)
 	if err != nil {
 		return decodeDriverError(err)
@@ -318,11 +319,11 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := v.client.parseStruct(opts)
+	clauses, err := v.builder.parseStruct(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.client.sql(clauses...)
+	stmt := v.builder.sql(clauses...)
 	dest := []passwordPolicyDBRow{}
 
 	err = v.client.query(ctx, &dest, stmt)
@@ -337,13 +338,13 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	return resultList, nil
 }
 
-type passwordPolicyDetailsOptions struct {
-	show           bool                   `ddl:"static" db:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
+type passwordPolicyDescribeOptions struct {
+	describe       bool                   `ddl:"static" db:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
 	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *passwordPolicyDetailsOptions) validate() error {
+func (v *passwordPolicyDescribeOptions) validate() error {
 	if v.name.FullyQualifiedName() == "" {
 		return fmt.Errorf("name is required")
 	}
@@ -399,18 +400,18 @@ func passwordPolicyDetailsFromRows(rows []propertyRow) *PasswordPolicyDetails {
 }
 
 func (v *passwordPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error) {
-	opts := &passwordPolicyDetailsOptions{
+	opts := &passwordPolicyDescribeOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
 
-	clauses, err := v.client.parseStruct(opts)
+	clauses, err := v.builder.parseStruct(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.client.sql(clauses...)
+	stmt := v.builder.sql(clauses...)
 	dest := []propertyRow{}
 	err = v.client.query(ctx, &dest, stmt)
 	if err != nil {

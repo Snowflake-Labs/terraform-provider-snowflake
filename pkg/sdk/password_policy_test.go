@@ -1,101 +1,43 @@
 package sdk
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/stretchr/testify/require"
 )
 
-func TestPasswordPoliciesShow(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
+func TestBuilder_passwordPolicyCreate(t *testing.T) {
+	builder := testBuilder(t)
+	id := randomSchemaObjectIdentifier(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
-
-	passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-	t.Cleanup(passwordPolicyCleanup)
-
-	passwordPolicy2Test, passwordPolicy2Cleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-	t.Cleanup(passwordPolicy2Cleanup)
-
-	t.Run("without show options", func(t *testing.T) {
-		passwordPolicies, err := client.PasswordPolicies.Show(ctx, nil)
+	t.Run("empty options", func(t *testing.T) {
+		opts := &PasswordPolicyCreateOptions{}
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		assert.LessOrEqual(t, 2, len(passwordPolicies))
+		actual := builder.sql(clauses...)
+		expected := "CREATE PASSWORD POLICY"
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("with show options", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
-			In: &In{
-				Schema: schemaTest.Identifier(),
-			},
+	t.Run("only name", func(t *testing.T) {
+		opts := &PasswordPolicyCreateOptions{
+			name: id,
 		}
-		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
-		assert.Contains(t, passwordPolicies, passwordPolicy2Test)
-		assert.Equal(t, 2, len(passwordPolicies))
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("CREATE PASSWORD POLICY %s", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
-			Like: &Like{
-				Pattern: String(passwordPolicyTest.Name),
-			},
-			In: &In{
-				Database: databaseTest.Identifier(),
-			},
-		}
-		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
-		assert.Equal(t, 1, len(passwordPolicies))
-	})
-
-	t.Run("when searching a non-existent password policy", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
-			},
-		}
-		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Equal(t, 0, len(passwordPolicies))
-	})
-
-	/* there appears to be a bug in the Snowflake API. LIMIT is not actually limiting the number of results
-	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
-			In: &In{
-				Schema: String(schemaTest.FullyQualifiedName()),
-			},
-			Limit: Int(1),
-		}
-		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(passwordPolicies))
-	})*/
-}
-
-func TestPasswordPolicyCreate(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
-
-	t.Run("test complete case", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &PasswordPolicyCreateOptions{
+	t.Run("with complete options", func(t *testing.T) {
+		opts := &PasswordPolicyCreateOptions{
 			OrReplace:                 Bool(true),
+			name:                      id,
+			IfNotExists:               Bool(true),
 			PasswordMinLength:         Int(10),
 			PasswordMaxLength:         Int(20),
 			PasswordMinUpperCaseChars: Int(1),
@@ -106,221 +48,229 @@ func TestPasswordPolicyCreate(t *testing.T) {
 			PasswordMaxRetries:        Int(5),
 			PasswordLockoutTimeMins:   Int(30),
 			Comment:                   String("test comment"),
-		})
+		}
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinLowerCaseChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinNumericChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinSpecialChars.Value)
-		assert.Equal(t, 30, passwordPolicyDetails.PasswordMaxAgeDays.Value)
-		assert.Equal(t, 5, passwordPolicyDetails.PasswordMaxRetries.Value)
-		assert.Equal(t, 30, passwordPolicyDetails.PasswordLockoutTimeMins.Value)
-	})
-
-	t.Run("test no on_on replace", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &PasswordPolicyCreateOptions{
-			OrReplace:                 Bool(false),
-			PasswordMinLength:         Int(10),
-			PasswordMaxLength:         Int(20),
-			PasswordMinUpperCaseChars: Int(5),
-			Comment:                   String("test comment"),
-		})
-		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
-		assert.Equal(t, 5, passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
-	})
-
-	t.Run("test no options", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, nil)
-		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinLength.Value, passwordPolicyDetails.PasswordMinLength.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxLength.Value, passwordPolicyDetails.PasswordMaxLength.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinUpperCaseChars.Value, passwordPolicyDetails.PasswordMinUpperCaseChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinLowerCaseChars.Value, passwordPolicyDetails.PasswordMinLowerCaseChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinNumericChars.Value, passwordPolicyDetails.PasswordMinNumericChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinSpecialChars.Value, passwordPolicyDetails.PasswordMinSpecialChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxAgeDays.Value, passwordPolicyDetails.PasswordMaxAgeDays.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxRetries.Value, passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordLockoutTimeMins.Value, passwordPolicyDetails.PasswordLockoutTimeMins.DefaultValue)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf(`CREATE OR REPLACE PASSWORD POLICY %s IF NOT EXISTS PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyDescribe(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
+func TestBuilder_passwordPolicyAlter(t *testing.T) {
+	builder := testBuilder(t)
+	id := randomSchemaObjectIdentifier(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
-
-	passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-	t.Cleanup(passwordPolicyCleanup)
-
-	t.Run("when password policy exists", func(t *testing.T) {
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, passwordPolicy.Identifier())
+	t.Run("empty options", func(t *testing.T) {
+		opts := &PasswordPolicyAlterOptions{}
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, passwordPolicy.Comment, passwordPolicyDetails.Comment.Value)
+		actual := builder.sql(clauses...)
+		expected := "ALTER PASSWORD POLICY"
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
-		_, err := client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+	t.Run("only name", func(t *testing.T) {
+		opts := &PasswordPolicyAlterOptions{
+			name: id,
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
-}
 
-func TestPasswordPolicyAlter(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
-
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
-
-	t.Run("when setting new values", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
+	t.Run("with set", func(t *testing.T) {
+		opts := &PasswordPolicyAlterOptions{
+			name: id,
 			Set: &PasswordPolicyAlterSet{
-				PasswordMinLength: Int(10),
-				PasswordMaxLength: Int(20),
+				PasswordMinLength:         Int(10),
+				PasswordMaxLength:         Int(20),
+				PasswordMinUpperCaseChars: Int(1),
 			},
 		}
-		err := client.PasswordPolicies.Alter(ctx, passwordPolicy.Identifier(), alterOptions)
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, passwordPolicy.Identifier())
-		require.NoError(t, err)
-		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s SET PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("when renaming", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
-		oldID := passwordPolicy.Identifier()
-		t.Cleanup(passwordPolicyCleanup)
-		newName := randomString(t)
-		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
-		alterOptions := &PasswordPolicyAlterOptions{
+	t.Run("with unset", func(t *testing.T) {
+		opts := &PasswordPolicyAlterOptions{
+			name: id,
+			Unset: &PasswordPolicyAlterUnset{
+				PasswordMinLength: Bool(true),
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s UNSET PASSWORD_MIN_LENGTH", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("rename", func(t *testing.T) {
+		newID := NewSchemaObjectIdentifier(id.DatabaseName, id.SchemaName, randomString(t))
+		opts := &PasswordPolicyAlterOptions{
+			name:    id,
 			NewName: newID,
 		}
-		err := client.PasswordPolicies.Alter(ctx, oldID, alterOptions)
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, newID)
-		require.NoError(t, err)
-		// rename back to original name so it can be cleaned up
-		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
-		alterOptions = &PasswordPolicyAlterOptions{
-			NewName: oldID,
-		}
-		err = client.PasswordPolicies.Alter(ctx, newID, alterOptions)
-		require.NoError(t, err)
-	})
-
-	t.Run("when unsetting values", func(t *testing.T) {
-		createOptions := &PasswordPolicyCreateOptions{
-			Comment:            String("test comment"),
-			PasswordMaxRetries: Int(10),
-		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
-		id := passwordPolicy.Identifier()
-		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
-			Unset: &PasswordPolicyAlterUnset{
-				PasswordMaxRetries: Bool(true),
-			},
-		}
-		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		alterOptions = &PasswordPolicyAlterOptions{
-			Unset: &PasswordPolicyAlterUnset{
-				Comment: Bool(true),
-			},
-		}
-		err = client.PasswordPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxRetries.Value, passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
-	})
-
-	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
-		createOptions := &PasswordPolicyCreateOptions{
-			Comment:            String("test comment"),
-			PasswordMaxRetries: Int(10),
-		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
-		id := passwordPolicy.Identifier()
-		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
-			Unset: &PasswordPolicyAlterUnset{
-				Comment:            Bool(true),
-				PasswordMaxRetries: Bool(true),
-			},
-		}
-		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
-		require.Error(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyDrop(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
+func TestBuilder_passwordPolicyDrop(t *testing.T) {
+	builder := testBuilder(t)
+	id := randomSchemaObjectIdentifier(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
-
-	t.Run("when password policy exists", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, databaseTest, schemaTest)
-		id := passwordPolicy.Identifier()
-		err := client.PasswordPolicies.Drop(ctx, id, nil)
+	t.Run("empty options", func(t *testing.T) {
+		opts := &PasswordPolicyDropOptions{}
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		actual := builder.sql(clauses...)
+		expected := "DROP PASSWORD POLICY"
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
-		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+	t.Run("only name", func(t *testing.T) {
+		opts := &PasswordPolicyDropOptions{
+			name: id,
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("DROP PASSWORD POLICY %s", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, databaseTest, schemaTest)
-		id := passwordPolicy.Identifier()
-		dropOptions := &PasswordPolicyDropOptions{IfExists: Bool(true)}
-		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
+	t.Run("with if exists", func(t *testing.T) {
+		opts := &PasswordPolicyDropOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
-		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("DROP PASSWORD POLICY IF EXISTS %s", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
+	})
+}
+
+func TestBuilder_passwordPolicyShow(t *testing.T) {
+	builder := testBuilder(t)
+	id := randomSchemaObjectIdentifier(t)
+
+	t.Run("empty options", func(t *testing.T) {
+		opts := &PasswordPolicyShowOptions{}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := "SHOW PASSWORD POLICIES"
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with like", func(t *testing.T) {
+		opts := &PasswordPolicyShowOptions{
+			Like: &Like{
+				Pattern: String(id.Name),
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s'", id.Name)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with like and in account", func(t *testing.T) {
+		opts := &PasswordPolicyShowOptions{
+			Like: &Like{
+				Pattern: String(id.Name),
+			},
+			In: &In{
+				Account: Bool(true),
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN ACCOUNT", id.Name)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with like and in database", func(t *testing.T) {
+		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName)
+		opts := &PasswordPolicyShowOptions{
+			Like: &Like{
+				Pattern: String(id.Name),
+			},
+			In: &In{
+				Database: databaseIdentifier,
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN DATABASE %s", id.Name, databaseIdentifier.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with like and in schema", func(t *testing.T) {
+		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName, id.SchemaName)
+		opts := &PasswordPolicyShowOptions{
+			Like: &Like{
+				Pattern: String(id.Name),
+			},
+			In: &In{
+				Schema: schemaIdentifier,
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name, schemaIdentifier.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with limit", func(t *testing.T) {
+		opts := &PasswordPolicyShowOptions{
+			Limit: Int(10),
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := "SHOW PASSWORD POLICIES LIMIT 10"
+		assert.Equal(t, expected, actual)
+	})
+}
+
+func TestBuilder_passwordPolicyDescribe(t *testing.T) {
+	builder := testBuilder(t)
+	id := randomSchemaObjectIdentifier(t)
+
+	t.Run("empty options", func(t *testing.T) {
+		opts := &passwordPolicyDescribeOptions{}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := "DESCRIBE PASSWORD POLICY"
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("only name", func(t *testing.T) {
+		opts := &passwordPolicyDescribeOptions{
+			name: id,
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		actual := builder.sql(clauses...)
+		expected := fmt.Sprintf("DESCRIBE PASSWORD POLICY %s", id.FullyQualifiedName())
+		assert.Equal(t, expected, actual)
 	})
 }

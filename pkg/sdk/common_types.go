@@ -1,7 +1,7 @@
 package sdk
 
 type In struct {
-	Account  *bool                   `ddl:"keyword"`
+	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
 	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
 }

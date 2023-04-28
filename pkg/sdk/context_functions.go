@@ -9,7 +9,8 @@ type ContextFunctions interface {
 var _ ContextFunctions = (*contextFunctions)(nil)
 
 type contextFunctions struct {
-	client *Client
+	client  *Client
+	builder *sqlBuilder
 }
 
 func (c *contextFunctions) CurrentSession(ctx context.Context) (string, error) {

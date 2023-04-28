@@ -69,12 +69,8 @@ func (b *sqlBuilder) sql(clauses ...sqlClause) string {
 			sList[i] = c.String()
 		}
 	}
-	return strings.Join(sList, " ")
-}
 
-// getUnexportedField returns the value of an unexported field.
-func (b *sqlBuilder) getUnexportedField(field reflect.Value) interface{} {
-	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
+	return strings.Trim(strings.Join(sList, " "), " ")
 }
 
 // parseStruct parses a struct and returns a slice of sqlClauses.
@@ -163,13 +159,27 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 		return nil, nil
 	}
 
+	// dereference any pointers
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+
 	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
 	dbTag := field.Tag.Get("db")
 	clauses := make([]sqlClause, 0)
 	var clause sqlClause
+
+	// static must be applied no matter what
+	if ddlTag == "static" {
+		clauses = append(clauses, sqlClauseStatic(dbTag))
+		return clauses, nil
+	}
+
+	if value.Kind() == 0 {
+		return nil, nil
+	}
+
 	switch ddlTag {
-	case "static":
-		clause = sqlClauseStatic(dbTag)
 	case "keyword":
 		if value.Kind() == reflect.Bool {
 			useKeyword := value.Interface().(bool)
@@ -178,6 +188,8 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 					value: dbTag,
 					qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 				}
+			} else {
+				return nil, nil
 			}
 		} else {
 			clause = sqlClauseKeyword{
@@ -191,6 +203,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 			value: value.Interface(),
 			qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 		}
+
 	case "parameter":
 		clause = sqlClauseParameter{
 			key:   dbTag,
@@ -201,6 +214,11 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 		return nil, nil
 	}
 	return append(clauses, clause), nil
+}
+
+// getUnexportedField returns the value of an unexported field.
+func (b *sqlBuilder) getUnexportedField(field reflect.Value) interface{} {
+	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
 }
 
 // parseUnexportedField parses an unexported struct field and returns a sqlClause.
@@ -224,17 +242,6 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 		}
 	case "static":
 		clause = sqlClauseStatic(dbTag)
-	case "keyword":
-		if value.Kind() == reflect.Bool {
-			useKeyword := value.Bool()
-			if !useKeyword {
-				return clauses, nil
-			}
-		}
-		clause = sqlClauseKeyword{
-			value: value.String(),
-			qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
-		}
 	}
 	return append(clauses, clause), nil
 }

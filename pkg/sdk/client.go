@@ -42,7 +42,6 @@ func DefaultConfig() *gosnowflake.Config {
 type Client struct {
 	db     *sqlx.DB
 	dryRun bool
-	sqlBuilder
 
 	ContextFunctions ContextFunctions
 	PasswordPolicies PasswordPolicies
@@ -110,8 +109,9 @@ func NewClientFromDB(db *sql.DB) *Client {
 }
 
 func (c *Client) initialize() {
-	c.PasswordPolicies = &passwordPolicies{client: c}
-	c.ContextFunctions = &contextFunctions{client: c}
+	b := &sqlBuilder{}
+	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
+	c.ContextFunctions = &contextFunctions{client: c, builder: b}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {
