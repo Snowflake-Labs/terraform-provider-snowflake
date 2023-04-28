@@ -53,3 +53,43 @@ func oauthIntegrationConfig(name, oauthClient, clientType string) string {
 	}
 	`, name, oauthClient, clientType)
 }
+
+func TestAcc_OAuthIntegrationTableau(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthClient := "TABLEAU_DESKTOP"
+	clientType := "PUBLIC" // not used, but left to fail the test
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: oauthIntegrationConfigTableau(name, oauthClient, clientType),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", oauthClient),
+					// resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client_type", clientType),
+				),
+			},
+			{
+				ResourceName:      "snowflake_oauth_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func oauthIntegrationConfigTableau(name, oauthClient, clientType string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_oauth_integration" "test" {
+		name                         = "%s"
+		oauth_client                 = "%s"
+	#	oauth_client_type            = "%s" # this cannot be set for TABLEAU
+		enabled                      = true
+        oauth_refresh_token_validity = 36000
+        oauth_issue_refresh_tokens   = true
+        blocked_roles_list           = ["SYSADMIN"]
+	}
+	`, name, oauthClient, clientType)
+}

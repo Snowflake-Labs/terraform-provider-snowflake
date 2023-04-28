@@ -3,7 +3,6 @@ package resources
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -23,7 +22,10 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"OKTA", "AZURE", "PING_FEDERATE", "CUSTOM",
+			string(snowflake.Okta),
+			string(snowflake.Azure),
+			string(snowflake.PingFederate),
+			string(snowflake.Custom),
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -48,12 +50,18 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.",
 	},
+	"scope_mapping_attribute": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the access token claim to map the access token to an account role.",
+	},
 	"snowflake_user_mapping_attribute": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"LOGIN_NAME", "EMAIL_ADDRESS",
+			string(snowflake.LoginName),
+			string(snowflake.EmailAddress),
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -100,10 +108,12 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 	"any_role_mode": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Default:     "DISABLE",
+		Default:     string(snowflake.Disable),
 		Description: "Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.",
 		ValidateFunc: validation.StringInSlice([]string{
-			"DISABLE", "ENABLE", "ENABLE_FOR_PRIVILEGE",
+			string(snowflake.Disable),
+			string(snowflake.Enable),
+			string(snowflake.EnableForPrivilege),
 		}, true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -132,10 +142,11 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 // ExternalOauthIntegration returns a pointer to the resource representing a network policy.
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateExternalOauthIntegration,
-		Read:   ReadExternalOauthIntegration,
-		Update: UpdateExternalOauthIntegration,
-		Delete: DeleteExternalOauthIntegration,
+		Description: "An External OAuth security integration allows a client to use a third-party authorization server to obtain the access tokens needed to interact with Snowflake.",
+		Create:      CreateExternalOauthIntegration,
+		Read:        ReadExternalOauthIntegration,
+		Update:      UpdateExternalOauthIntegration,
+		Delete:      DeleteExternalOauthIntegration,
 
 		Schema: oauthExternalIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -146,189 +157,171 @@ func ExternalOauthIntegration() *schema.Resource {
 
 // CreateExternalOauthIntegration implements schema.CreateFunc.
 func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
+	manager, err := snowflake.NewExternalOauthIntegration3Manager()
+	if err != nil {
+		return fmt.Errorf("couldn't create external oauth integration manager: %w", err)
+	}
+
+	input := &snowflake.ExternalOauthIntegration3CreateInput{
+		ExternalOauthIntegration3: snowflake.ExternalOauthIntegration3{
+			TopLevelIdentifier: snowflake.TopLevelIdentifier{
+				Name: d.Get("name").(string),
+			},
+
+			Type:                                 "EXTERNAL_OAUTH",
+			TypeOk:                               true,
+			Enabled:                              d.Get("enabled").(bool),
+			EnabledOk:                            isOk(d.GetOk("enabled")),
+			ExternalOauthType:                    snowflake.ExternalOauthType(d.Get("type").(string)),
+			ExternalOauthTypeOk:                  isOk(d.GetOk("type")),
+			ExternalOauthIssuer:                  d.Get("issuer").(string),
+			ExternalOauthIssuerOk:                isOk(d.GetOk("issuer")),
+			ExternalOauthTokenUserMappingClaim:   expandStringList(d.Get("token_user_mapping_claims").(*schema.Set).List()),
+			ExternalOauthTokenUserMappingClaimOk: isOk(d.GetOk("token_user_mapping_claims")),
+			ExternalOauthSnowflakeUserMappingAttribute:   snowflake.SFUserMappingAttribute(d.Get("snowflake_user_mapping_attribute").(string)),
+			ExternalOauthSnowflakeUserMappingAttributeOk: isOk(d.GetOk("snowflake_user_mapping_attribute")),
+			ExternalOauthJwsKeysURL:                      expandStringList(d.Get("jws_keys_urls").(*schema.Set).List()),
+			ExternalOauthJwsKeysURLOk:                    isOk(d.GetOk("jws_keys_urls")),
+			ExternalOauthBlockedRolesList:                expandStringList(d.Get("blocked_roles").(*schema.Set).List()),
+			ExternalOauthBlockedRolesListOk:              isOk(d.GetOk("blocked_roles")),
+			ExternalOauthAllowedRolesList:                expandStringList(d.Get("allowed_roles").(*schema.Set).List()),
+			ExternalOauthAllowedRolesListOk:              isOk(d.GetOk("allowed_roles")),
+			ExternalOauthRsaPublicKey:                    d.Get("rsa_public_key").(string),
+			ExternalOauthRsaPublicKeyOk:                  isOk(d.GetOk("rsa_public_key")),
+			ExternalOauthRsaPublicKey2:                   d.Get("rsa_public_key_2").(string),
+			ExternalOauthRsaPublicKey2Ok:                 isOk(d.GetOk("rsa_public_key_2")),
+			ExternalOauthAudienceList:                    expandStringList(d.Get("audience_urls").(*schema.Set).List()),
+			ExternalOauthAudienceListOk:                  isOk(d.GetOk("audience_urls")),
+			ExternalOauthAnyRoleMode:                     snowflake.AnyRoleMode(d.Get("any_role_mode").(string)),
+			ExternalOauthAnyRoleModeOk:                   isOk(d.GetOk("any_role_mode")),
+			ExternalOauthScopeDelimiter:                  d.Get("scope_delimiter").(string),
+			ExternalOauthScopeDelimiterOk:                isOk(d.GetOk("scope_delimiter")),
+			ExternalOauthScopeMappingAttribute:           d.Get("scope_mapping_attribute").(string),
+			ExternalOauthScopeMappingAttributeOk:         isOk(d.GetOk("scope_mapping_attribute")),
+
+			Comment:   d.Get("comment").(string),
+			CommentOk: isOk(d.GetOk("comment")),
+		},
+	}
+
+	stmt, err := manager.Create(input)
+	if err != nil {
+		return fmt.Errorf("couldn't generate create statement: %w", err)
+	}
+
 	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-
-	stmt := snowflake.NewExternalOauthIntegrationBuilder(name).Create()
-
-	// Set required fields
-	stmt.SetRaw(`TYPE=EXTERNAL_OAUTH`)
-	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-	stmt.SetString(`EXTERNAL_OAUTH_TYPE`, d.Get("type").(string))
-	stmt.SetString(`EXTERNAL_OAUTH_ISSUER`, d.Get("issuer").(string))
-	stmt.SetStringList(`EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM`, expandStringList(d.Get("token_user_mapping_claims").(*schema.Set).List()))
-	stmt.SetString(`EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE`, d.Get("snowflake_user_mapping_attribute").(string))
-
-	// Set optional fields
-	if _, ok := d.GetOk("jws_keys_urls"); ok {
-		stmt.SetStringList(`EXTERNAL_OAUTH_JWS_KEYS_URL`, expandStringList(d.Get("jws_keys_urls").(*schema.Set).List()))
-	}
-	if _, ok := d.GetOk("rsa_public_key"); ok {
-		stmt.SetString(`EXTERNAL_OAUTH_RSA_PUBLIC_KEY`, d.Get("rsa_public_key").(string))
-	}
-	if _, ok := d.GetOk("rsa_public_key_2"); ok {
-		stmt.SetString(`EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2`, d.Get("rsa_public_key_2").(string))
-	}
-	if _, ok := d.GetOk("blocked_roles"); ok {
-		stmt.SetStringList(`EXTERNAL_OAUTH_BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles").(*schema.Set).List()))
-	}
-	if _, ok := d.GetOk("allowed_roles"); ok {
-		stmt.SetStringList(`EXTERNAL_OAUTH_ALLOWED_ROLES_LIST`, expandStringList(d.Get("allowed_roles").(*schema.Set).List()))
-	}
-	if _, ok := d.GetOk("audience_urls"); ok {
-		stmt.SetStringList(`EXTERNAL_OAUTH_AUDIENCE_LIST`, expandStringList(d.Get("audience_urls").(*schema.Set).List()))
-	}
-	if _, ok := d.GetOk("any_role_mode"); ok {
-		stmt.SetString(`EXTERNAL_OAUTH_ANY_ROLE_MODE`, d.Get("any_role_mode").(string))
-	}
-	if _, ok := d.GetOk("scope_delimiter"); ok {
-		stmt.SetString(`EXTERNAL_OAUTH_SCOPE_DELIMITER`, d.Get("scope_delimiter").(string))
-	}
-	if _, ok := d.GetOk("comment"); ok {
-		stmt.SetString(`COMMENT`, d.Get("comment").(string))
+	_, err = db.Exec(stmt)
+	if err != nil {
+		return fmt.Errorf("error executing create statement: %w", err)
 	}
 
-	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-		return fmt.Errorf("error creating security integration" + stmt.Statement())
-	}
+	d.SetId(ExternalOauthIntegrationID(&input.ExternalOauthIntegration3))
 
-	d.SetId(name)
-
-	return ReadExternalOauthIntegration(d, meta)
+	return nil
 }
 
 // ReadExternalOauthIntegration implements schema.ReadFunc.
 func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.NewExternalOauthIntegrationBuilder(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	// Some properties can come from the SHOW INTEGRATION call
-
-	s, err := snowflake.ScanExternalOauthIntegration(row)
+	manager, err := snowflake.NewExternalOauthIntegration3Manager()
 	if err != nil {
-		return fmt.Errorf("could not show security integration")
+		return fmt.Errorf("couldn't create external oauth integration builder: %w", err)
 	}
 
-	// Note: category must be Security or something is broken
-	if c := s.Category.String; c != "SECURITY" {
-		return fmt.Errorf("expected %v to be an Security integration, got %v", id, c)
+	input := ExternalOauthIntegrationIdentifier(d.Id())
+
+	db := meta.(*sql.DB)
+
+	// This resource needs a SHOW and a DESCRIBE
+
+	// SHOW
+	stmt, err := manager.ReadShow(input)
+	if err != nil {
+		return fmt.Errorf("couldn't generate show statement: %w", err)
 	}
 
-	if err := d.Set("type", strings.TrimPrefix(s.IntegrationType.String, "EXTERNAL_OAUTH - ")); err != nil {
-		return err
+	row := snowflake.QueryRow(db, stmt)
+	if err != nil {
+		return fmt.Errorf("error querying external oauth integration: %w", err)
 	}
 
-	if err := d.Set("name", s.Name.String); err != nil {
-		return err
+	showOutput, err := manager.ParseShow(row)
+	if err != nil {
+		return fmt.Errorf("error parsing show result: %w", err)
 	}
 
-	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
-		return err
+	if err := d.Set("type", strings.TrimPrefix(showOutput.Type, "EXTERNAL_OAUTH - ")); err != nil {
+		return fmt.Errorf("error setting type: %w", err)
+	}
+	if err := d.Set("name", showOutput.Name); err != nil {
+		return fmt.Errorf("error setting name: %w", err)
+	}
+	if err := d.Set("enabled", showOutput.Enabled); err != nil {
+		return fmt.Errorf("error setting enabled: %w", err)
+	}
+	if err := d.Set("comment", showOutput.Comment); err != nil {
+		return fmt.Errorf("error setting comment: %w", err)
+	}
+	// if err := d.Set("created_on", showOutput.CreatedOn.String); err != nil {
+	// 	return fmt.Errorf("error setting created_on: %w", err)
+	// }
+
+	// DESCRIBE
+	stmt, err = manager.ReadDescribe(input)
+	if err != nil {
+		return fmt.Errorf("couldn't generate describe statement: %w", err)
 	}
 
-	if err := d.Set("comment", s.Comment.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
-		return err
-	}
-
-	// Some properties come from the DESCRIBE INTEGRATION call
-	// We need to grab them in a loop
-	var k, pType string
-	var v, unused interface{}
-	stmt = snowflake.NewExternalOauthIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("could not describe security integration err = %w", err)
+		return fmt.Errorf("error querying external oauth integration: %w", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return fmt.Errorf("unable to parse security integration rows err = %w", err)
-		}
-		switch k {
-		case "ENABLED":
-			// We set this using the SHOW INTEGRATION call so let's ignore it here
-		case "COMMENT":
-			// We set this using the SHOW INTEGRATION call so let's ignore it here
-		case "EXTERNAL_OAUTH_ISSUER":
-			if err := d.Set("issuer", v.(string)); err != nil {
-				return fmt.Errorf("unable to set issuer for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_JWS_KEYS_URL":
-			list := []string{}
-			list = append(list, strings.Split(v.(string), ",")...)
-			if err := d.Set("jws_keys_urls", list); err != nil {
-				return fmt.Errorf("unable to set jws keys urls for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_ANY_ROLE_MODE":
-			if err := d.Set("any_role_mode", v.(string)); err != nil {
-				return fmt.Errorf("unable to set any role mode for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY":
-			if err := d.Set("rsa_public_key", v.(string)); err != nil {
-				return fmt.Errorf("unable to set rsa public key for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2":
-			if err := d.Set("rsa_public_key_2", v.(string)); err != nil {
-				return fmt.Errorf("unable to set rsa public key 2 for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST":
-			blockedRolesAll := strings.Split(v.(string), ",")
-			// Only roles other than ACCOUNTADMIN, ORGADMIN and SECURITYADMIN can be specified custom,
-			// those three are enforced with no option to remove them
-			blockedRolesCustom := []string{}
-			for _, role := range blockedRolesAll {
-				if role != "ACCOUNTADMIN" && role != "ORGADMIN" && role != "SECURITYADMIN" && role != "" {
-					blockedRolesCustom = append(blockedRolesCustom, role)
-				}
-			}
 
-			if err := d.Set("blocked_roles", blockedRolesCustom); err != nil {
-				return fmt.Errorf("unable to set blocked roles for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST":
-			list := []string{}
-			for _, item := range strings.Split(v.(string), ",") {
-				if item != "" {
-					list = append(list, item)
-				}
-			}
-			if err := d.Set("allowed_roles", list); err != nil {
-				return fmt.Errorf("unable to set allowed roles for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_AUDIENCE_LIST":
-			list := []string{}
-			for _, item := range strings.Split(v.(string), ",") {
-				if item != "" {
-					list = append(list, item)
-				}
-			}
-			if err := d.Set("audience_urls", list); err != nil {
-				return fmt.Errorf("unable to set audience urls for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM":
-			list := []string{}
-			for _, item := range strings.Split(strings.Replace(strings.Replace(v.(string), "[", "", 1), "]", "", 1), ",") {
-				if item != "" {
-					list = append(list, strings.Replace(item, "'", "", 2))
-				}
-			}
-			if err := d.Set("token_user_mapping_claims", list); err != nil {
-				return fmt.Errorf("unable to set token user mapping claims for security integration err = %w", err)
-			}
-		case "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE":
-			if err := d.Set("snowflake_user_mapping_attribute", v.(string)); err != nil {
-				return fmt.Errorf("unable to set snowflake mapping attribute for security integration err = %w", err)
-			}
-		default:
-			log.Printf("[WARN] unexpected security integration property %v returned from Snowflake", k)
+	defer rows.Close()
+	describeOutput, err := manager.ParseDescribe(rows)
+	if err != nil {
+		return fmt.Errorf("failed to parse result of describe: %w", err)
+	}
+
+	if err := d.Set("issuer", describeOutput.ExternalOauthIssuer); err != nil {
+		return fmt.Errorf("error setting issuer: %w", err)
+	}
+	if err := d.Set("jws_keys_urls", describeOutput.ExternalOauthJwsKeysURL); err != nil {
+		return fmt.Errorf("error setting jws_keys_urls: %w", err)
+	}
+	if err := d.Set("any_role_mode", describeOutput.ExternalOauthAnyRoleMode); err != nil {
+		return fmt.Errorf("error setting any_role_mode: %w", err)
+	}
+	if err := d.Set("rsa_public_key", describeOutput.ExternalOauthRsaPublicKey); err != nil {
+		return fmt.Errorf("error setting rsa_public_key: %w", err)
+	}
+	if err := d.Set("rsa_public_key_2", describeOutput.ExternalOauthRsaPublicKey2); err != nil {
+		return fmt.Errorf("error setting rsa_public_key_2: %w", err)
+	}
+	// Filter out default roles
+	blockedRoles := []string{}
+	for i := range describeOutput.ExternalOauthBlockedRolesList {
+		role := describeOutput.ExternalOauthBlockedRolesList[i]
+		if role != "ACCOUNTADMIN" && role != "SECURITYADMIN" {
+			blockedRoles = append(blockedRoles, role)
 		}
+	}
+	if err := d.Set("blocked_roles", blockedRoles); err != nil {
+		return fmt.Errorf("error setting blocked_roles: %w", err)
+	}
+	if err := d.Set("allowed_roles", describeOutput.ExternalOauthAllowedRolesList); err != nil {
+		return fmt.Errorf("error setting allowed_roles: %w", err)
+	}
+	if err := d.Set("audience_urls", describeOutput.ExternalOauthAudienceList); err != nil {
+		return fmt.Errorf("error setting audience_urls: %w", err)
+	}
+	if err := d.Set("token_user_mapping_claims", describeOutput.ExternalOauthTokenUserMappingClaim); err != nil {
+		return fmt.Errorf("error setting token_user_mapping_claims: %w", err)
+	}
+	if err := d.Set("snowflake_user_mapping_attribute", describeOutput.ExternalOauthSnowflakeUserMappingAttribute); err != nil {
+		return fmt.Errorf("error setting snowflake_user_mapping_attribute: %w", err)
+	}
+	if err := d.Set("scope_mapping_attribute", describeOutput.ExternalOauthScopeMappingAttribute); err != nil {
+		return fmt.Errorf("error setting scope_mapping_attribute: %w", err)
 	}
 
 	return err
@@ -336,80 +329,254 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 
 // UpdateExternalOauthIntegration implements schema.UpdateFunc.
 func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	id := d.Id()
+	manager, err := snowflake.NewExternalOauthIntegration3Manager()
+	if err != nil {
+		return fmt.Errorf("couldn't create external oauth integration builder: %w", err)
+	}
 
-	stmt := snowflake.NewExternalOauthIntegrationBuilder(id).Alter()
-
-	var runSetStatement bool
+	runAlter := false
+	alterInput := &snowflake.ExternalOauthIntegration3UpdateInput{
+		ExternalOauthIntegration3: snowflake.ExternalOauthIntegration3{
+			TopLevelIdentifier: snowflake.TopLevelIdentifier{
+				Name: d.Get("name").(string),
+			},
+		},
+	}
+	runUnset := false
+	unsetInput := &snowflake.ExternalOauthIntegration3UpdateInput{
+		ExternalOauthIntegration3: snowflake.ExternalOauthIntegration3{
+			TopLevelIdentifier: snowflake.TopLevelIdentifier{
+				Name: d.Get("name").(string),
+			},
+		},
+	}
 
 	if d.HasChange("enabled") {
-		runSetStatement = true
-		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
+		val, ok := d.GetOk("enabled")
+		if ok {
+			alterInput.Enabled = val.(bool)
+			alterInput.EnabledOk = true
+			runAlter = true
+		} else {
+			unsetInput.EnabledOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("type") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_TYPE`, d.Get("type").(string))
+		val, ok := d.GetOk("type")
+		if ok {
+			alterInput.Type = val.(string)
+			alterInput.TypeOk = true
+			runAlter = true
+		} else {
+			unsetInput.TypeOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("issuer") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_ISSUER`, d.Get("issuer").(string))
+		val, ok := d.GetOk("issuer")
+		if ok {
+			alterInput.ExternalOauthIssuer = val.(string)
+			alterInput.ExternalOauthIssuerOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthIssuerOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("token_user_mapping_claims") {
-		runSetStatement = true
-		stmt.SetStringList(`EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM`, expandStringList(d.Get("token_user_mapping_claims").(*schema.Set).List()))
+		val, ok := d.GetOk("token_user_mapping_claims")
+		if ok {
+			alterInput.ExternalOauthTokenUserMappingClaim = expandStringList(val.(*schema.Set).List())
+			alterInput.ExternalOauthTokenUserMappingClaimOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthTokenUserMappingClaimOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("snowflake_user_mapping_attribute") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE`, d.Get("snowflake_user_mapping_attribute").(string))
+		val, ok := d.GetOk("snowflake_user_mapping_attribute")
+		if ok {
+			alterInput.ExternalOauthSnowflakeUserMappingAttribute = val.(snowflake.SFUserMappingAttribute)
+			alterInput.ExternalOauthSnowflakeUserMappingAttributeOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthSnowflakeUserMappingAttributeOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("jws_keys_urls") {
-		runSetStatement = true
-		stmt.SetStringList(`EXTERNAL_OAUTH_JWS_KEYS_URL`, expandStringList(d.Get("jws_keys_urls").(*schema.Set).List()))
+		val, ok := d.GetOk("jws_keys_urls")
+		if ok {
+			alterInput.ExternalOauthJwsKeysURL = expandStringList(val.(*schema.Set).List())
+			alterInput.ExternalOauthJwsKeysURLOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthJwsKeysURLOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("rsa_public_key") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_RSA_PUBLIC_KEY`, d.Get("rsa_public_key").(string))
+		val, ok := d.GetOk("rsa_public_key")
+		if ok {
+			alterInput.ExternalOauthRsaPublicKey = val.(string)
+			alterInput.ExternalOauthRsaPublicKeyOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthRsaPublicKeyOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("rsa_public_key_2") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2`, d.Get("rsa_public_key_2").(string))
+		val, ok := d.GetOk("rsa_public_key_2")
+		if ok {
+			alterInput.ExternalOauthRsaPublicKey2 = val.(string)
+			alterInput.ExternalOauthRsaPublicKey2Ok = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthRsaPublicKey2Ok = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("blocked_roles") {
-		runSetStatement = true
-		stmt.SetStringList(`EXTERNAL_OAUTH_BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles").(*schema.Set).List()))
+		val, ok := d.GetOk("blocked_roles")
+		if ok {
+			alterInput.ExternalOauthBlockedRolesList = expandStringList(val.(*schema.Set).List())
+			alterInput.ExternalOauthBlockedRolesListOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthBlockedRolesListOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("allowed_roles") {
-		runSetStatement = true
-		stmt.SetStringList(`EXTERNAL_OAUTH_ALLOWED_ROLES_LIST`, expandStringList(d.Get("allowed_roles").(*schema.Set).List()))
+		val, ok := d.GetOk("allowed_roles")
+		if ok {
+			alterInput.ExternalOauthAllowedRolesList = expandStringList(val.(*schema.Set).List())
+			alterInput.ExternalOauthAllowedRolesListOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthAllowedRolesListOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("audience_urls") {
-		runSetStatement = true
-		stmt.SetStringList(`EXTERNAL_OAUTH_AUDIENCE_LIST`, expandStringList(d.Get("audience_urls").(*schema.Set).List()))
+		val, ok := d.GetOk("audience_urls")
+		if ok {
+			alterInput.ExternalOauthAudienceList = expandStringList(val.(*schema.Set).List())
+			alterInput.ExternalOauthAudienceListOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthAudienceListOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("any_role_mode") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_ANY_ROLE_MODE`, d.Get("any_role_mode").(string))
+		val, ok := d.GetOk("any_role_mode")
+		if ok {
+			alterInput.ExternalOauthAnyRoleMode = val.(snowflake.AnyRoleMode)
+			alterInput.ExternalOauthAnyRoleModeOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthAnyRoleModeOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("scope_delimiter") {
-		runSetStatement = true
-		stmt.SetString(`EXTERNAL_OAUTH_SCOPE_DELIMITER`, d.Get("scope_delimiter").(string))
+		val, ok := d.GetOk("scope_delimiter")
+		if ok {
+			alterInput.ExternalOauthScopeDelimiter = val.(string)
+			alterInput.ExternalOauthScopeDelimiterOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthScopeDelimiterOk = true
+			runUnset = true
+		}
+	}
+	if d.HasChange("scope_mapping_attribute") {
+		val, ok := d.GetOk("scope_mapping_attribute")
+		if ok {
+			alterInput.ExternalOauthScopeMappingAttribute = val.(string)
+			alterInput.ExternalOauthScopeMappingAttributeOk = true
+			runAlter = true
+		} else {
+			unsetInput.ExternalOauthScopeMappingAttributeOk = true
+			runUnset = true
+		}
 	}
 	if d.HasChange("comment") {
-		runSetStatement = true
-		stmt.SetString(`COMMENT`, d.Get("comment").(string))
-	}
-
-	if runSetStatement {
-		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return fmt.Errorf("error updating security integration err = %w", err)
+		val, ok := d.GetOk("comment")
+		if ok {
+			alterInput.Comment = val.(string)
+			alterInput.CommentOk = true
+			runAlter = true
+		} else {
+			unsetInput.CommentOk = true
+			runUnset = true
 		}
 	}
 
-	return ReadExternalOauthIntegration(d, meta)
+	db := meta.(*sql.DB)
+
+	if runAlter {
+		stmt, err := manager.Update(alterInput)
+		if err != nil {
+			return fmt.Errorf("couldn't generate alter statement for external oauth integration: %w", err)
+		}
+
+		_, err = db.Exec(stmt)
+		if err != nil {
+			return fmt.Errorf("error executing alter statement: %w", err)
+		}
+	}
+
+	if runUnset {
+		stmt, err := manager.Unset(unsetInput)
+		if err != nil {
+			return fmt.Errorf("couldn't generate unset statement for external oauth integration: %w", err)
+		}
+
+		_, err = db.Exec(stmt)
+		if err != nil {
+			return fmt.Errorf("error executing unset statement: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // DeleteExternalOauthIntegration implements schema.DeleteFunc.
 func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewExternalOauthIntegrationBuilder)(d, meta)
+	manager, err := snowflake.NewExternalOauthIntegration3Manager()
+	if err != nil {
+		return fmt.Errorf("couldn't create external oauth integration builder: %w", err)
+	}
+
+	input := &snowflake.ExternalOauthIntegration3DeleteInput{
+		TopLevelIdentifier: snowflake.TopLevelIdentifier{
+			Name: d.Get("name").(string),
+		},
+	}
+
+	stmt, err := manager.Delete(input)
+	if err != nil {
+		return fmt.Errorf("couldn't generate drop statement: %w", err)
+	}
+
+	db := meta.(*sql.DB)
+	_, err = db.Exec(stmt)
+	if err != nil {
+		return fmt.Errorf("error executing drop statement: %w", err)
+	}
+
+	return nil
+}
+
+func ExternalOauthIntegrationID(eoi *snowflake.ExternalOauthIntegration3) string {
+	return eoi.QualifiedName()
+}
+
+func ExternalOauthIntegrationIdentifier(id string) *snowflake.TopLevelIdentifier {
+	return snowflake.TopLevelIdentifierFromQualifiedName(id)
 }

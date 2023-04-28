@@ -241,8 +241,12 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("unable to set OAuth redirect URI for security integration err = %w", err)
 			}
 		case "OAUTH_CLIENT_TYPE":
-			if err = d.Set("oauth_client_type", v.(string)); err != nil {
-				return fmt.Errorf("unable to set OAuth client type for security integration err = %w", err)
+			isTableau := strings.HasSuffix(s.IntegrationType.String, "TABLEAU_DESKTOP") ||
+				strings.HasSuffix(s.IntegrationType.String, "TABLEAU_SERVER")
+			if !isTableau {
+				if err = d.Set("oauth_client_type", v.(string)); err != nil {
+					return fmt.Errorf("unable to set OAuth client type for security integration err = %w", err)
+				}
 			}
 		case "OAUTH_ENFORCE_PKCE":
 			// Only used for custom OAuth clients (not supported yet)

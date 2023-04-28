@@ -25,11 +25,20 @@ func TestAcc_FileFormatGrantFutureGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", databaseName),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", schemaName),
-					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "file_format_name", ""),
+					resource.TestCheckNoResourceAttr("snowflake_file_format_grant.test", "file_format_name"),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "privilege", "USAGE"),
 				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_file_format_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
 			},
 		},
 	})

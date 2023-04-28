@@ -164,6 +164,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", "https"),
 			},
+			"insecure_mode": {
+				Type:        schema.TypeBool,
+				Description: "If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_INSECURE_MODE", false),
+			},
 			"warehouse": {
 				Type:        schema.TypeString,
 				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
@@ -198,9 +204,9 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_table_grant":             resources.TableGrant(),
 		"snowflake_tag_grant":               resources.TagGrant(),
 		"snowflake_task_grant":              resources.TaskGrant(),
+		"snowflake_user_grant":              resources.UserGrant(),
 		"snowflake_view_grant":              resources.ViewGrant(),
 		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
-		"snowflake_user_grant":              resources.UserGrant(),
 	}
 	return grants
 }
@@ -208,54 +214,55 @@ func GetGrantResources() resources.TerraformGrantResources {
 func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
-		"snowflake_account":                        resources.Account(),
-		"snowflake_account_parameter":              resources.AccountParameter(),
-		"snowflake_alert":                          resources.Alert(),
-		"snowflake_api_integration":                resources.APIIntegration(),
-		"snowflake_database":                       resources.Database(),
-		"snowflake_database_role":                  resources.DatabaseRole(),
-		"snowflake_external_function":              resources.ExternalFunction(),
-		"snowflake_failover_group":                 resources.FailoverGroup(),
-		"snowflake_file_format":                    resources.FileFormat(),
-		"snowflake_function":                       resources.Function(),
-		"snowflake_managed_account":                resources.ManagedAccount(),
-		"snowflake_masking_policy":                 resources.MaskingPolicy(),
-		"snowflake_materialized_view":              resources.MaterializedView(),
-		"snowflake_network_policy_attachment":      resources.NetworkPolicyAttachment(),
-		"snowflake_network_policy":                 resources.NetworkPolicy(),
-		"snowflake_oauth_integration":              resources.OAuthIntegration(),
-		"snowflake_object_parameter":               resources.ObjectParameter(),
-		"snowflake_external_oauth_integration":     resources.ExternalOauthIntegration(),
-		"snowflake_password_policy":                resources.PasswordPolicy(),
-		"snowflake_pipe":                           resources.Pipe(),
-		"snowflake_procedure":                      resources.Procedure(),
-		"snowflake_resource_monitor":               resources.ResourceMonitor(),
-		"snowflake_role":                           resources.Role(),
-		"snowflake_role_grants":                    resources.RoleGrants(),
-		"snowflake_role_ownership_grant":           resources.RoleOwnershipGrant(),
-		"snowflake_row_access_policy":              resources.RowAccessPolicy(),
-		"snowflake_saml_integration":               resources.SAMLIntegration(),
-		"snowflake_schema":                         resources.Schema(),
-		"snowflake_scim_integration":               resources.SCIMIntegration(),
-		"snowflake_sequence":                       resources.Sequence(),
-		"snowflake_session_parameter":              resources.SessionParameter(),
-		"snowflake_share":                          resources.Share(),
-		"snowflake_stage":                          resources.Stage(),
-		"snowflake_storage_integration":            resources.StorageIntegration(),
-		"snowflake_notification_integration":       resources.NotificationIntegration(),
-		"snowflake_stream":                         resources.Stream(),
-		"snowflake_table":                          resources.Table(),
-		"snowflake_table_constraint":               resources.TableConstraint(),
-		"snowflake_external_table":                 resources.ExternalTable(),
-		"snowflake_tag":                            resources.Tag(),
-		"snowflake_tag_association":                resources.TagAssociation(),
-		"snowflake_tag_masking_policy_association": resources.TagMaskingPolicyAssociation(),
-		"snowflake_task":                           resources.Task(),
-		"snowflake_user":                           resources.User(),
-		"snowflake_user_ownership_grant":           resources.UserOwnershipGrant(),
-		"snowflake_user_public_keys":               resources.UserPublicKeys(),
-		"snowflake_view":                           resources.View(),
-		"snowflake_warehouse":                      resources.Warehouse(),
+		"snowflake_account":                                 resources.Account(),
+		"snowflake_account_parameter":                       resources.AccountParameter(),
+		"snowflake_alert":                                   resources.Alert(),
+		"snowflake_api_integration":                         resources.APIIntegration(),
+		"snowflake_database":                                resources.Database(),
+		"snowflake_database_role":                           resources.DatabaseRole(),
+		"snowflake_external_function":                       resources.ExternalFunction(),
+		"snowflake_external_oauth_integration":              resources.ExternalOauthIntegration(),
+		"snowflake_external_table":                          resources.ExternalTable(),
+		"snowflake_failover_group":                          resources.FailoverGroup(),
+		"snowflake_file_format":                             resources.FileFormat(),
+		"snowflake_function":                                resources.Function(),
+		"snowflake_managed_account":                         resources.ManagedAccount(),
+		"snowflake_masking_policy":                          resources.MaskingPolicy(),
+		"snowflake_materialized_view":                       resources.MaterializedView(),
+		"snowflake_network_policy":                          resources.NetworkPolicy(),
+		"snowflake_network_policy_attachment":               resources.NetworkPolicyAttachment(),
+		"snowflake_notification_integration":                resources.NotificationIntegration(),
+		"snowflake_oauth_integration":                       resources.OAuthIntegration(),
+		"snowflake_object_parameter":                        resources.ObjectParameter(),
+		"snowflake_password_policy":                         resources.PasswordPolicy(),
+		"snowflake_pipe":                                    resources.Pipe(),
+		"snowflake_procedure":                               resources.Procedure(),
+		"snowflake_resource_monitor":                        resources.ResourceMonitor(),
+		"snowflake_role":                                    resources.Role(),
+		"snowflake_role_grants":                             resources.RoleGrants(),
+		"snowflake_role_ownership_grant":                    resources.RoleOwnershipGrant(),
+		"snowflake_row_access_policy":                       resources.RowAccessPolicy(),
+		"snowflake_saml_integration":                        resources.SAMLIntegration(),
+		"snowflake_schema":                                  resources.Schema(),
+		"snowflake_scim_integration":                        resources.SCIMIntegration(),
+		"snowflake_sequence":                                resources.Sequence(),
+		"snowflake_session_parameter":                       resources.SessionParameter(),
+		"snowflake_share":                                   resources.Share(),
+		"snowflake_stage":                                   resources.Stage(),
+		"snowflake_storage_integration":                     resources.StorageIntegration(),
+		"snowflake_stream":                                  resources.Stream(),
+		"snowflake_table":                                   resources.Table(),
+		"snowflake_table_column_masking_policy_application": resources.TableColumnMaskingPolicyApplication(),
+		"snowflake_table_constraint":                        resources.TableConstraint(),
+		"snowflake_tag":                                     resources.Tag(),
+		"snowflake_tag_association":                         resources.TagAssociation(),
+		"snowflake_tag_masking_policy_association":          resources.TagMaskingPolicyAssociation(),
+		"snowflake_task":                                    resources.Task(),
+		"snowflake_user":                                    resources.User(),
+		"snowflake_user_ownership_grant":                    resources.UserOwnershipGrant(),
+		"snowflake_user_public_keys":                        resources.UserPublicKeys(),
+		"snowflake_view":                                    resources.View(),
+		"snowflake_warehouse":                               resources.Warehouse(),
 	}
 
 	return mergeSchemas(
@@ -324,6 +331,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	protocol := s.Get("protocol").(string)
 	port := s.Get("port").(int)
 	warehouse := s.Get("warehouse").(string)
+	insecureMode := s.Get("insecure_mode").(bool)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -348,6 +356,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		protocol,
 		port,
 		warehouse,
+		insecureMode,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -376,6 +385,7 @@ func DSN(
 	protocol string,
 	port int,
 	warehouse string,
+	insecureMode bool,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -384,13 +394,14 @@ func DSN(
 	}
 
 	config := gosnowflake.Config{
-		Account:     account,
-		User:        user,
-		Region:      region,
-		Role:        role,
-		Application: "terraform-provider-snowflake",
-		Port:        port,
-		Protocol:    protocol,
+		Account:      account,
+		User:         user,
+		Region:       region,
+		Role:         role,
+		Application:  "terraform-provider-snowflake",
+		Port:         port,
+		Protocol:     protocol,
+		InsecureMode: insecureMode,
 	}
 
 	// If host is set trust it and do not use the region value
@@ -573,6 +584,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		protocol,
 		port,
 		warehouse,
+		false,
 	)
 	if err != nil {
 		return nil, err
