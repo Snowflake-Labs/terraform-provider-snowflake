@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuilder_passwordPolicyCreate(t *testing.T) {
+func TestPasswordPolicyCreate(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
@@ -57,7 +57,7 @@ func TestBuilder_passwordPolicyCreate(t *testing.T) {
 	})
 }
 
-func TestBuilder_passwordPolicyAlter(t *testing.T) {
+func TestPasswordPolicyAlter(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
@@ -125,7 +125,7 @@ func TestBuilder_passwordPolicyAlter(t *testing.T) {
 	})
 }
 
-func TestBuilder_passwordPolicyDrop(t *testing.T) {
+func TestPasswordPolicyDrop(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
@@ -162,7 +162,7 @@ func TestBuilder_passwordPolicyDrop(t *testing.T) {
 	})
 }
 
-func TestBuilder_passwordPolicyShow(t *testing.T) {
+func TestPasswordPolicyShow(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
@@ -250,7 +250,7 @@ func TestBuilder_passwordPolicyShow(t *testing.T) {
 	})
 }
 
-func TestBuilder_passwordPolicyDescribe(t *testing.T) {
+func TestPasswordPolicyDescribe(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPasswordPoliciesShow(t *testing.T) {
+func TestInt_PasswordPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := createDatabase(t, client)
@@ -82,7 +82,7 @@ func TestPasswordPoliciesShow(t *testing.T) {
 	})*/
 }
 
-func TestPasswordPolicyCreate(t *testing.T) {
+func TestInt_PasswordPolicyCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := createDatabase(t, client)
@@ -164,7 +164,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 	})
 }
 
-func TestPasswordPolicyDescribe(t *testing.T) {
+func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
@@ -191,7 +191,7 @@ func TestPasswordPolicyDescribe(t *testing.T) {
 	})
 }
 
-func TestPasswordPolicyAlter(t *testing.T) {
+func TestInt_PasswordPolicyAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
@@ -289,7 +289,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 }
 
-func TestPasswordPolicyDrop(t *testing.T) {
+func TestInt_PasswordPolicyDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 

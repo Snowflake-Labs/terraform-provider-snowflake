@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCurrentSession(t *testing.T) {
+func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
