@@ -54,6 +54,8 @@ resource "snowflake_external_function" "test_ext_func" {
 - `header` (Block Set) Allows users to specify key-value metadata that is sent with every request as HTTP headers. (see [below for nested schema](#nestedblock--header))
 - `max_batch_rows` (Number) This specifies the maximum number of rows in each batch sent to the proxy service.
 - `null_input_behavior` (String) Specifies the behavior of the external function when called with null inputs.
+- `request_translator` (String) This specifies the name of the request translator function
+- `response_translator` (String) This specifies the name of the response translator function.
 - `return_null_allowed` (Boolean) Indicates whether the function can return NULL values or must return only NON-NULL values.
 
 ### Read-Only
