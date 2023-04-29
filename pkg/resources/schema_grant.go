@@ -81,7 +81,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
+		Description:   "When this is set to true, apply this grant on all schemas in the given database. The schema_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"schema_name", "shares"},

@@ -150,6 +150,18 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{"NONE", "AUTO", "GZIP", "DEFLATE"}, false),
 		Description:  "If specified, the JSON payload is compressed when sent from Snowflake to the proxy service, and when sent back from the proxy service to Snowflake.",
 	},
+	"request_translator": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "This specifies the name of the request translator function",
+	},
+	"response_translator": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "This specifies the name of the response translator function.",
+	},
 	"url_of_proxy_and_resource": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -300,6 +312,12 @@ func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("compression"); ok {
 		builder.WithCompression(v.(string))
 	}
+	if v, ok := d.GetOk("request_translator"); ok {
+		builder.WithRequestTranslator(v.(string))
+	}
+	if v, ok := d.GetOk("response_translator"); ok {
+		builder.WithResponseTranslator(v.(string))
+	}
 
 	stmt := builder.Create()
 	if err := snowflake.Exec(db, stmt); err != nil {
@@ -410,6 +428,11 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 			returnType := desc.Value.String
 			// We first check for VARIANT
 			if returnType == "VARIANT" {
+				if err := d.Set("return_type", returnType); err != nil {
+					return err
+				}
+				break
+			} else if returnType == "OBJECT" {
 				if err := d.Set("return_type", returnType); err != nil {
 					return err
 				}

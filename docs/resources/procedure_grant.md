@@ -38,7 +38,8 @@ resource "snowflake_procedure_grant" "grant" {
 
 - `argument_data_types` (List of String) List of the argument data types for the procedure (must be present if procedure has arguments and procedure_name is present)
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future.
+- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all procedures in the given schema. When this is true and no schema_name is provided apply this grant on all procedures in the given database. The procedure_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future procedure.
 - `procedure_name` (String) The name of the procedure on which to grant privileges immediately (only valid if on_future is false).
 - `schema_name` (String) The name of the schema containing the current or future procedures on which to grant privileges.
