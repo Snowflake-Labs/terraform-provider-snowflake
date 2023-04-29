@@ -27,6 +27,8 @@ func TestAcc_ExternalFunction(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_function.test_func", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_external_function.test_func", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttrSet("snowflake_external_function.test_func", "created_on"),
+					resource.TestCheckResourceAttr("snowflake_external_function.test_func_2", "request_translator", fmt.Sprintf("%s.%s.TEST_FUNC_REQ_TRANSLATOR", accName, accName)),
+					resource.TestCheckResourceAttr("snowflake_external_function.test_func_2", "response_translator", fmt.Sprintf("%s.%s.TEST_FUNC_RES_TRANSLATOR", accName, accName)),
 				),
 			},
 		},
@@ -53,6 +55,40 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		api_allowed_prefixes = %q
 		enabled = true
 	}
+
+	resource "snowflake_function" "test_func_req_translator" {
+	  	name     =  upper("test_func_req_translator")
+	  	database = snowflake_database.test_database.name
+	  	schema   = snowflake_schema.test_schema.name
+	  	arguments {
+			name = "EVENT"
+			type = "OBJECT"
+	  	}
+	  	comment             = "Terraform acceptance test"
+	  	return_type         = "OBJECT"
+	  	language            = "javascript"
+	  	statement           = <<EOH
+		  	let exeprimentName = EVENT.body.data[0][1]
+		  	return { "body": { "name": test }}
+	  	EOH
+	}
+		
+		
+		resource "snowflake_function" "test_func_res_translator" {
+		  name     =  upper("test_func_res_translator")
+		  database = snowflake_database.test_database.name
+          schema   = snowflake_schema.test_schema.name
+		  arguments {
+			name = "EVENT"
+			type = "OBJECT"
+		  }
+		  comment             = "Terraform acceptance test"
+		  return_type         = "OBJECT"
+		  language            = "javascript"
+		  statement           = <<EOH
+			  return { "body": { "data" :  [[0, EVENT]] } };
+		  EOH
+		}
 
 	resource "snowflake_external_function" "test_func" {
 		name = "%s"
@@ -86,6 +122,8 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 			value = "snowflake"
 		}
 		max_batch_rows = 500
+		request_translator = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_function.test_func_req_translator.name}"
+		response_translator = "${snowflake_database.test_database.name}.${snowflake_schema.test_schema.name}.${snowflake_function.test_func_res_translator.name}"
 		url_of_proxy_and_resource = "%s"
 	}
 	`, name, name, name, prefixes, name, url, name, url+"_2")

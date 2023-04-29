@@ -1,10 +1,11 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -135,128 +136,142 @@ func PasswordPolicy() *schema.Resource {
 
 // CreatePasswordPolicy implements schema.CreateFunc.
 func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	manager, err := snowflake.NewPasswordPolicyManager()
-	if err != nil {
-		return fmt.Errorf("couldn't create password policy manager: %w", err)
-	}
-
-	input := &snowflake.PasswordPolicyCreateInput{
-		PasswordPolicy: snowflake.PasswordPolicy{
-			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
-				Database:   d.Get("database").(string),
-				Schema:     d.Get("schema").(string),
-				ObjectName: d.Get("name").(string),
-			},
-
-			MinLength:           d.Get("min_length").(int),
-			MinLengthOk:         isOk(d.GetOk("min_length")),
-			MaxLength:           d.Get("max_length").(int),
-			MaxLengthOk:         isOk(d.GetOk("max_length")),
-			MinUpperCaseChars:   d.Get("min_upper_case_chars").(int),
-			MinUpperCaseCharsOk: isOk(d.GetOk("min_upper_case_chars")),
-			MinLowerCaseChars:   d.Get("min_lower_case_chars").(int),
-			MinLowerCaseCharsOk: isOk(d.GetOk("min_lower_case_chars")),
-			MinNumericChars:     d.Get("min_numeric_chars").(int),
-			MinNumericCharsOk:   isOk(d.GetOk("min_numeric_chars")),
-			MinSpecialChars:     d.Get("min_special_chars").(int),
-			MinSpecialCharsOk:   isOk(d.GetOk("min_special_chars")),
-			MaxAgeDays:          d.Get("max_age_days").(int),
-			MaxAgeDaysOk:        isOk(d.GetOk("max_age_days")),
-			MaxRetries:          d.Get("max_retries").(int),
-			MaxRetriesOk:        isOk(d.GetOk("max_retries")),
-			LockoutTimeMins:     d.Get("lockout_time_mins").(int),
-			LockoutTimeMinsOk:   isOk(d.GetOk("lockout_time_mins")),
-			Comment:             d.Get("comment").(string),
-			CommentOk:           isOk(d.GetOk("comment")),
-		},
-
-		OrReplace:     d.Get("or_replace").(bool),
-		OrReplaceOk:   isOk(d.GetOk("or_replace")),
-		IfNotExists:   d.Get("if_not_exists").(bool),
-		IfNotExistsOk: isOk(d.GetOk("if_not_exists")),
-	}
-
-	stmt, err := manager.Create(input)
-	if err != nil {
-		return fmt.Errorf("couldn't generate create statement: %w", err)
-	}
-
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
-	if err != nil {
-		return fmt.Errorf("error executing create statement: %w", err)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	name := d.Get("name").(string)
+	database := d.Get("database").(string)
+	schema := d.Get("schema").(string)
+	objectIdentifier := sdk.SchemaObjectIdentifier{
+		DatabaseName: database,
+		SchemaName:   schema,
+		Name:         name,
+	}
+	createOptions := &sdk.PasswordPolicyCreateOptions{}
+
+	if v, ok := d.GetOk("or_replace"); ok {
+		createOptions.OrReplace = sdk.Bool(v.(bool))
 	}
 
-	d.SetId(PasswordPolicyID(&input.PasswordPolicy))
+	if v, ok := d.GetOk("if_not_exists"); ok {
+		createOptions.IfNotExists = sdk.Bool(v.(bool))
+	}
 
-	return nil
+	if v, ok := d.GetOk("min_length"); ok {
+		createOptions.PasswordMinLength = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_length"); ok {
+		createOptions.PasswordMaxLength = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_upper_case_chars"); ok {
+		createOptions.PasswordMinUpperCaseChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_lower_case_chars"); ok {
+		createOptions.PasswordMinLowerCaseChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_numeric_chars"); ok {
+		createOptions.PasswordMinNumericChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("min_special_chars"); ok {
+		createOptions.PasswordMinSpecialChars = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_age_days"); ok {
+		createOptions.PasswordMaxAgeDays = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("max_retries"); ok {
+		createOptions.PasswordMaxRetries = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("lockout_time_mins"); ok {
+		createOptions.PasswordLockoutTimeMins = sdk.Int(v.(int))
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		createOptions.Comment = sdk.String(v.(string))
+	}
+
+	err := client.PasswordPolicies.Create(ctx, objectIdentifier, createOptions)
+	if err != nil {
+		return err
+	}
+	id := helpers.SnowflakeID(database, schema, name)
+	d.SetId(id)
+	return ReadPasswordPolicy(d, meta)
 }
 
 // ReadPasswordPolicy implements schema.ReadFunc.
 func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	manager, err := snowflake.NewPasswordPolicyManager()
-	if err != nil {
-		return fmt.Errorf("couldn't create password policy builder: %w", err)
-	}
-
-	input := PasswordPolicyIdentifier(d.Id())
-
-	if err := d.Set("database", input.Database); err != nil {
-		return fmt.Errorf("error setting database: %w", err)
-	}
-	if err := d.Set("schema", input.Schema); err != nil {
-		return fmt.Errorf("error setting schema: %w", err)
-	}
-	if err := d.Set("name", input.ObjectName); err != nil {
-		return fmt.Errorf("error setting name: %w", err)
-	}
-
-	stmt, err := manager.Read(input)
-	if err != nil {
-		return fmt.Errorf("couldn't generate describe statement: %w", err)
-	}
-
 	db := meta.(*sql.DB)
-	rows, err := db.Query(stmt)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	schemaIdentifier := sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName, objectIdentifier.SchemaName)
+	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, &sdk.PasswordPolicyShowOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(objectIdentifier.Name),
+		},
+		In: &sdk.In{
+			Schema: schemaIdentifier,
+		},
+	})
 	if err != nil {
-		return fmt.Errorf("error querying password policy: %w", err)
+		return err
 	}
+	if len(passwordPolicyList) == 0 {
+		d.SetId("")
+		return nil
+	}
+	passwordPolicy := passwordPolicyList[0]
 
-	defer rows.Close()
-	output, err := manager.Parse(rows)
+	if err := d.Set("database", passwordPolicy.DatabaseName); err != nil {
+		return err
+	}
+	if err := d.Set("schema", passwordPolicy.SchemaName); err != nil {
+		return err
+	}
+	if err := d.Set("name", passwordPolicy.Name); err != nil {
+		return err
+	}
+	if err := d.Set("comment", passwordPolicy.Comment); err != nil {
+		return err
+	}
+	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, objectIdentifier)
 	if err != nil {
-		return fmt.Errorf("failed to parse result of describe: %w", err)
+		return err
 	}
-
-	if err = d.Set("min_length", output.MinLength); err != nil {
-		return fmt.Errorf("error setting min_length: %w", err)
+	if err := d.Set("min_length", passwordPolicyDetails.PasswordMinLength.Value); err != nil {
+		return err
 	}
-	if err = d.Set("max_length", output.MaxLength); err != nil {
-		return fmt.Errorf("error setting max_length: %w", err)
+	if err := d.Set("max_length", passwordPolicyDetails.PasswordMaxLength.Value); err != nil {
+		return err
 	}
-	if err = d.Set("min_upper_case_chars", output.MinUpperCaseChars); err != nil {
-		return fmt.Errorf("error setting min_upper_case_chars: %w", err)
+	if err := d.Set("min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars.Value); err != nil {
+		return err
 	}
-	if err = d.Set("min_lower_case_chars", output.MinLowerCaseChars); err != nil {
-		return fmt.Errorf("error setting min_lower_case_chars: %w", err)
+	if err := d.Set("min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars.Value); err != nil {
+		return err
 	}
-	if err = d.Set("min_numeric_chars", output.MinNumericChars); err != nil {
-		return fmt.Errorf("error setting min_numeric_chars: %w", err)
+	if err := d.Set("min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars.Value); err != nil {
+		return err
 	}
-	if err = d.Set("min_special_chars", output.MinSpecialChars); err != nil {
-		return fmt.Errorf("error setting min_special_chars: %w", err)
+	if err := d.Set("min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars.Value); err != nil {
+		return err
 	}
-	if err = d.Set("max_age_days", output.MaxAgeDays); err != nil {
-		return fmt.Errorf("error setting max_age_days: %w", err)
+	if err := d.Set("max_age_days", passwordPolicyDetails.PasswordMaxAgeDays.Value); err != nil {
+		return err
 	}
-	if err = d.Set("max_retries", output.MaxRetries); err != nil {
-		return fmt.Errorf("error setting max_retries: %w", err)
+	if err := d.Set("max_retries", passwordPolicyDetails.PasswordMaxRetries.Value); err != nil {
+		return err
 	}
-	if err = d.Set("lockout_time_mins", output.LockoutTimeMins); err != nil {
-		return fmt.Errorf("error setting lockout_time_mins: %w", err)
-	}
-	if err = d.Set("comment", output.Comment); err != nil {
-		return fmt.Errorf("error setting comment: %w", err)
+	if err := d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins.Value); err != nil {
+		return err
 	}
 
 	return nil
@@ -264,166 +279,188 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePasswordPolicy implements schema.UpdateFunc.
 func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	manager, err := snowflake.NewPasswordPolicyManager()
-	if err != nil {
-		return fmt.Errorf("couldn't create password policy builder: %w", err)
-	}
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	runAlter := false
-	alterInput := &snowflake.PasswordPolicyUpdateInput{
-		PasswordPolicy: snowflake.PasswordPolicy{
-			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
-				Database:   d.Get("database").(string),
-				Schema:     d.Get("schema").(string),
-				ObjectName: d.Get("name").(string),
-			},
-		},
-	}
-	runUnset := false
-	unsetInput := &snowflake.PasswordPolicyUpdateInput{
-		PasswordPolicy: snowflake.PasswordPolicy{
-			SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
-				Database:   d.Get("database").(string),
-				Schema:     d.Get("schema").(string),
-				ObjectName: d.Get("name").(string),
-			},
-		},
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	if d.HasChange("name") {
+		_, n := d.GetChange("name")
+		databaseName := d.Get("database").(string)
+		schemaName := d.Get("schema").(string)
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			NewName: sdk.NewSchemaObjectIdentifier(databaseName, schemaName, n.(string)),
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("min_length") {
-		val, ok := d.GetOk("min_length")
-		if ok {
-			alterInput.MinLength = val.(int)
-			alterInput.MinLengthOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_length"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinLength: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MinLengthOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinLength: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
 	if d.HasChange("max_length") {
-		val, ok := d.GetOk("max_length")
-		if ok {
-			alterInput.MaxLength = val.(int)
-			alterInput.MaxLengthOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_length"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxLength: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MaxLengthOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxLength: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
 	if d.HasChange("min_upper_case_chars") {
-		val, ok := d.GetOk("min_upper_case_chars")
-		if ok {
-			alterInput.MinUpperCaseChars = val.(int)
-			alterInput.MinUpperCaseCharsOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_upper_case_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinUpperCaseChars: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MinUpperCaseCharsOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinUpperCaseChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
 	if d.HasChange("min_lower_case_chars") {
-		val, ok := d.GetOk("min_lower_case_chars")
-		if ok {
-			alterInput.MinLowerCaseChars = val.(int)
-			alterInput.MinLowerCaseCharsOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_lower_case_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinLowerCaseChars: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MinLowerCaseCharsOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinLowerCaseChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
+
 	if d.HasChange("min_numeric_chars") {
-		val, ok := d.GetOk("min_numeric_chars")
-		if ok {
-			alterInput.MinNumericChars = val.(int)
-			alterInput.MinNumericCharsOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_numeric_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinNumericChars: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MinNumericCharsOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinNumericChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
+
 	if d.HasChange("min_special_chars") {
-		val, ok := d.GetOk("min_special_chars")
-		if ok {
-			alterInput.MinSpecialChars = val.(int)
-			alterInput.MinSpecialCharsOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("min_special_chars"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMinSpecialChars: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MinSpecialCharsOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMinSpecialChars: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
+
 	if d.HasChange("max_age_days") {
-		val, ok := d.GetOk("max_age_days")
-		if ok {
-			alterInput.MaxAgeDays = val.(int)
-			alterInput.MaxAgeDaysOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_age_days"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxAgeDays: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MaxAgeDaysOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxAgeDays: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
+
 	if d.HasChange("max_retries") {
-		val, ok := d.GetOk("max_retries")
-		if ok {
-			alterInput.MaxRetries = val.(int)
-			alterInput.MaxRetriesOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("max_retries"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordMaxRetries: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.MaxRetriesOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordMaxRetries: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
 	if d.HasChange("lockout_time_mins") {
-		val, ok := d.GetOk("lockout_time_mins")
-		if ok {
-			alterInput.LockoutTimeMins = val.(int)
-			alterInput.LockoutTimeMinsOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("lockout_time_mins"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				PasswordLockoutTimeMins: sdk.Int(v.(int)),
+			}
 		} else {
-			unsetInput.LockoutTimeMinsOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				PasswordLockoutTimeMins: sdk.Bool(true),
+			}
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
 		}
 	}
+
 	if d.HasChange("comment") {
-		val, ok := d.GetOk("comment")
-		if ok {
-			alterInput.Comment = val.(string)
-			alterInput.CommentOk = true
-			runAlter = true
+		alterOptions := &sdk.PasswordPolicyAlterOptions{}
+		if v, ok := d.GetOk("comment"); ok {
+			alterOptions.Set = &sdk.PasswordPolicyAlterSet{
+				Comment: sdk.String(v.(string)),
+			}
 		} else {
-			unsetInput.CommentOk = true
-			runUnset = true
+			alterOptions.Unset = &sdk.PasswordPolicyAlterUnset{
+				Comment: sdk.Bool(true),
+			}
 		}
-	}
-
-	db := meta.(*sql.DB)
-
-	if runAlter {
-		stmt, err := manager.Update(alterInput)
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return fmt.Errorf("couldn't generate alter statement for password policy: %w", err)
-		}
-
-		_, err = db.Exec(stmt)
-		if err != nil {
-			return fmt.Errorf("error executing alter statement: %w", err)
-		}
-	}
-
-	if runUnset {
-		stmt, err := manager.Unset(unsetInput)
-		if err != nil {
-			return fmt.Errorf("couldn't generate unset statement for password policy: %w", err)
-		}
-
-		_, err = db.Exec(stmt)
-		if err != nil {
-			return fmt.Errorf("error executing unset statement: %w", err)
+			return err
 		}
 	}
 
@@ -432,37 +469,14 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePasswordPolicy implements schema.DeleteFunc.
 func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	manager, err := snowflake.NewPasswordPolicyManager()
-	if err != nil {
-		return fmt.Errorf("couldn't create password policy builder: %w", err)
-	}
-
-	input := &snowflake.PasswordPolicyDeleteInput{
-		SchemaObjectIdentifier: snowflake.SchemaObjectIdentifier{
-			Database:   d.Get("database").(string),
-			Schema:     d.Get("schema").(string),
-			ObjectName: d.Get("name").(string),
-		},
-	}
-
-	stmt, err := manager.Delete(input)
-	if err != nil {
-		return fmt.Errorf("couldn't generate drop statement: %w", err)
-	}
-
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)
 	if err != nil {
-		return fmt.Errorf("error executing drop statement: %w", err)
+		return err
 	}
 
 	return nil
-}
-
-func PasswordPolicyID(pp *snowflake.PasswordPolicy) string {
-	return pp.QualifiedName()
-}
-
-func PasswordPolicyIdentifier(id string) *snowflake.SchemaObjectIdentifier {
-	return snowflake.SchemaObjectIdentifierFromQualifiedName(id)
 }
