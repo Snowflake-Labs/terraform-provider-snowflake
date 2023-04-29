@@ -125,7 +125,6 @@ func tableGrantConfig(name string, grantType grantType) string {
 	}
 
 	return fmt.Sprintf(`
-
 resource snowflake_database d {
 	name = "%s"
 }
