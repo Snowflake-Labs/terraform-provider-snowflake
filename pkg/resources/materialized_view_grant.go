@@ -72,7 +72,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:     false,
 		ForceNew:    true,
 	},

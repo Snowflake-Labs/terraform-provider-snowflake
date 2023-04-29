@@ -321,14 +321,14 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("on_stage", stream.TableName.String); err != nil {
 			return err
 		}
+	} else if stream.SourceType.String == "View" {
+		if err := d.Set("on_view", stream.TableName.String); err != nil {
+			return err
+		}
 	} else {
 		if err := d.Set("on_table", stream.TableName.String); err != nil {
 			return err
 		}
-	}
-
-	if err := d.Set("on_view", stream.ViewName.String); err != nil {
-		return err
 	}
 
 	if err := d.Set("append_only", stream.Mode.String == "APPEND_ONLY"); err != nil {
