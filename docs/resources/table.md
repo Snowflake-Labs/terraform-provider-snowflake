@@ -102,6 +102,7 @@ resource "snowflake_table" "table" {
 
 - `id` (String) The ID of this resource.
 - `owner` (String) Name of the role that owns the table.
+- `qualified_name` (String) Qualified name of the table.
 
 <a id="nestedblock--column"></a>
 ### Nested Schema for `column`
