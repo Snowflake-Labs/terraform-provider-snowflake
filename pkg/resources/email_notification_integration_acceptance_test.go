@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -11,7 +12,9 @@ import (
 
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
 	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
+	if os.Getenv("SKIP_EMAIL_INTEGRATION_TESTS") != "" {
+		t.Skip("Skipping TestAcc_EmailNotificationIntegration")
+	}
 	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
