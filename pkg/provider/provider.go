@@ -276,6 +276,7 @@ func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
+		"snowflake_database_roles":                     datasources.DatabaseRoles(),
 		"snowflake_system_generate_scim_access_token":  datasources.SystemGenerateSCIMAccessToken(),
 		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
