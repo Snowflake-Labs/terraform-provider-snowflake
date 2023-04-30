@@ -32,11 +32,20 @@ var streamGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future streams in the given schema. When this is true and no schema_name is provided apply this grant on all future streams in the given database. The stream_name field must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future streams in the given schema. When this is true and no schema_name is provided apply this grant on all future streams in the given database. The stream_name field must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stream_name"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all streams in the given schema. When this is true and no schema_name is provided apply this grant on all streams in the given database. The stream_name field must be unset in order to use on_all. Cannot be used together with on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"stream_name"},
 	},
 	"privilege": {
 		Type:         schema.TypeString,
@@ -96,7 +105,7 @@ func StreamGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 7 {
+					if len(parts) != 8 {
 						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|stream_name|privilege|with_grant_option|on_future|roles", d.Id())
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
@@ -119,7 +128,10 @@ func StreamGrant() *TerraformGrantResource {
 					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -137,23 +149,24 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (streamName == "") && !onFuture {
-		return errors.New("stream_name must be set unless on_future is true")
+	if (streamName == "") && !onFuture && !onAll {
+		return errors.New("stream_name must be set unless on_future or on_all is true")
 	}
-	if (streamName != "") && onFuture {
-		return errors.New("stream_name must be empty if on_future is true")
-	}
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStreamGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
 
@@ -161,7 +174,7 @@ func CreateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadStreamGrant(d, meta)
@@ -174,24 +187,26 @@ func ReadStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	streamName := d.Get("stream_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStreamGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
-	// TODO
-	onAll := false
 
 	err := readGenericGrant(d, meta, streamGrantSchema, builder, onFuture, onAll, validStreamPrivileges)
 	if err != nil {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, streamName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
@@ -204,11 +219,15 @@ func DeleteStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	streamName := d.Get("stream_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStreamGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -233,14 +252,18 @@ func UpdateStreamGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	streamName := d.Get("stream_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	privilege := d.Get("privilege").(string)
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureStreamGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllStreamGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.StreamGrant(databaseName, schemaName, streamName)
 	}
 

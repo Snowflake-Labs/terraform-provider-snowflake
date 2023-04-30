@@ -40,7 +40,8 @@ resource "snowflake_external_table_grant" "grant" {
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
 - `external_table_name` (String) The name of the external table on which to grant privileges immediately (only valid if on_future is false).
-- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.
+- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all external tables in the given schema. When this is true and no schema_name is provided apply this grant on all external tables in the given database. The external_table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.
+- `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future external table.
 - `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`
 - `schema_name` (String) The name of the schema containing the current or future external tables on which to grant privileges.

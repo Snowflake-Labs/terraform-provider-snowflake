@@ -38,11 +38,20 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future file formats in the given schema. When this is true and no schema_name is provided apply this grant on all future file formats in the given database. The file_format_name field must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"file_format_name"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all file formats in the given schema. When this is true and no schema_name is provided apply this grant on all file formats in the given database. The file_format_name field must be unset in order to use on_all. Cannot be used together with on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"file_format_name"},
 	},
 	"privilege": {
 		Type:         schema.TypeString,
@@ -96,7 +105,7 @@ func FileFormatGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 7 {
+					if len(parts) != 8 {
 						return nil, fmt.Errorf("unexpected format of ID (%q), expected database_name|schema_name|file_format_name|privilege|with_grant_option|on_future|roles", d.Id())
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
@@ -119,7 +128,10 @@ func FileFormatGrant() *TerraformGrantResource {
 					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -137,23 +149,24 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (fileFormatName == "") && !onFuture {
-		return errors.New("file_format_name must be set unless on_future is true")
+	if (fileFormatName == "") && !onFuture && !onAll {
+		return errors.New("file_format_name must be set unless on_future or on_all is true")
 	}
-	if (fileFormatName != "") && onFuture {
-		return errors.New("file_format_name must be empty if on_future is true")
-	}
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureFileFormatGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllFileFormatGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.FileFormatGrant(databaseName, schemaName, fileFormatName)
 	}
 
@@ -161,7 +174,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadFileFormatGrant(d, meta)
@@ -172,33 +185,28 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	fileFormatName := d.Get("file_format_name").(string)
-	onFuture := d.Get("on_future").(bool)
-	if fileFormatName == "" && !onFuture {
-		return errors.New("file_format_name must be set unless on_future is true")
-	}
-	if fileFormatName != "" && onFuture {
-		return errors.New("file_format_name must be empty if on_future is true")
-	}
-
 	privilege := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureFileFormatGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllFileFormatGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.FileFormatGrant(databaseName, schemaName, fileFormatName)
 	}
-	// TODO
-	onAll := false
 
 	err := readGenericGrant(d, meta, fileFormatGrantSchema, builder, onFuture, onAll, validFileFormatPrivileges)
 	if err != nil {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	if d.Id() != grantID {
 		d.SetId(grantID)
 	}
@@ -211,11 +219,15 @@ func DeleteFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	fileFormatName := d.Get("file_format_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureFileFormatGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllFileFormatGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.FileFormatGrant(databaseName, schemaName, fileFormatName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -241,13 +253,17 @@ func UpdateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 	privilege := d.Get("privilege").(string)
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureFileFormatGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllFileFormatGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.FileFormatGrant(databaseName, schemaName, fileFormatName)
 	}
 

@@ -206,7 +206,20 @@ func (dsb *DatabaseShareBuilder) WithComment(comment string) *DatabaseShareBuild
 // Create returns the SQL statement required to create a database from a share.
 func (dsb *DatabaseShareBuilder) Create() string {
 	var q strings.Builder
-	q.WriteString(fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, dsb.provider, dsb.share))
+
+	provider := strings.Split(dsb.provider, ".")
+
+	// <organization>.<account>
+	if len(provider) == 2 {
+		// backwards compatible to support "organization\".\"account"
+		organization, account := strings.ReplaceAll(provider[0], `"`, ""), strings.ReplaceAll(provider[1], `"`, "")
+
+		q.WriteString(fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"."%v"`, dsb.name, organization, account, dsb.share))
+	} else {
+		account := provider[0]
+
+		q.WriteString(fmt.Sprintf(`CREATE DATABASE "%v" FROM SHARE "%v"."%v"`, dsb.name, account, dsb.share))
+	}
 
 	if dsb.comment != "" {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, dsb.comment))
@@ -261,6 +274,7 @@ type Database struct {
 	Comment       sql.NullString `db:"comment"`
 	Options       sql.NullString `db:"options"`
 	RetentionTime sql.NullString `db:"retention_time"`
+	ResourceGroup sql.NullString `db:"resource_group"`
 }
 
 func ScanDatabase(row *sqlx.Row) (*Database, error) {
