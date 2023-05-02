@@ -26,6 +26,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeCreateSessionPolicy,
 	privilegeCreateStage,
 	privilegeCreateStream,
+	privilegeCreateStreamlit,
 	privilegeCreateTable,
 	privilegeCreateTag,
 	privilegeCreateTask,

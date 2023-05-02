@@ -39,6 +39,7 @@ const (
 	privilegeCreateShare                 Privilege = "CREATE SHARE"
 	privilegeCreateStage                 Privilege = "CREATE STAGE"
 	privilegeCreateStream                Privilege = "CREATE STREAM"
+	privilegeCreateStreamlit             Privilege = "CREATE STREAMLIT"
 	privilegeCreateTable                 Privilege = "CREATE TABLE"
 	privilegeCreateTag                   Privilege = "CREATE TAG"
 	privilegeCreateTask                  Privilege = "CREATE TASK"
