@@ -6,7 +6,6 @@ import (
 )
 
 type ObjectIdentifier interface {
-	Literal() string
 	Name() string
 	FullyQualifiedName() string
 }
@@ -17,10 +16,6 @@ type AccountObjectIdentifier struct {
 
 func NewAccountObjectIdentifier(name string) AccountObjectIdentifier {
 	return AccountObjectIdentifier{name: name}
-}
-
-func (i AccountObjectIdentifier) Literal() string {
-	return i.name
 }
 
 func (i AccountObjectIdentifier) Name() string {
@@ -52,10 +47,6 @@ func NewSchemaIdentifierFromFullyQualifiedName(fullyQualifiedName string) Schema
 		databaseName: strings.Trim(parts[0], `"`),
 		schemaName:   strings.Trim(parts[1], `"`),
 	}
-}
-
-func (i SchemaIdentifier) Literal() string {
-	return fmt.Sprintf(`%v.%v`, i.databaseName, i.schemaName)
 }
 
 func (i SchemaIdentifier) DatabaseName() string {
@@ -96,10 +87,6 @@ func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) 
 	}
 }
 
-func (i SchemaObjectIdentifier) Literal() string {
-	return fmt.Sprintf(`%v.%v.%v`, i.databaseName, i.schemaName, i.name)
-}
-
 func (i SchemaObjectIdentifier) DatabaseName() string {
 	return i.databaseName
 }
@@ -138,10 +125,6 @@ func NewTableColumnIdentifierFromFullyQualifiedName(fullyQualifiedName string) T
 		tableName:    strings.Trim(parts[2], `"`),
 		columnName:   strings.Trim(parts[3], `"`),
 	}
-}
-
-func (i TableColumnIdentifier) Literal() string {
-	return fmt.Sprintf(`%v.%v.%v.%v`, i.databaseName, i.schemaName, i.tableName, i.columnName)
 }
 
 func (i TableColumnIdentifier) DatabaseName() string {

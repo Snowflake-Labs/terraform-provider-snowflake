@@ -32,6 +32,7 @@ type Client struct {
 	ContextFunctions ContextFunctions
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
+	Sessions         Sessions
 	SystemFunctions  SystemFunctions
 }
 
@@ -102,6 +103,7 @@ func (c *Client) initialize() {
 	c.ContextFunctions = &contextFunctions{client: c, builder: b}
 	c.MaskingPolicies = &maskingPolicies{client: c, builder: b}
 	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
+	c.Sessions = &sessions{client: c, builder: b}
 	c.SystemFunctions = &systemFunctions{client: c, builder: b}
 }
 

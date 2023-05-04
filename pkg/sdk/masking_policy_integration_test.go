@@ -25,9 +25,14 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	t.Cleanup(maskingPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
+		useDatabaseCleanup := useDatabase(t, client, databaseTest.ID())
+		t.Cleanup(useDatabaseCleanup)
+		useSchemaCleanup := useSchema(t, client, schemaTest.ID())
+		t.Cleanup(useSchemaCleanup)
+
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, nil)
 		require.NoError(t, err)
-		assert.LessOrEqual(t, 2, len(maskingPolicies))
+		assert.Equal(t, 2, len(maskingPolicies))
 	})
 
 	t.Run("with show options", func(t *testing.T) {
@@ -283,13 +288,13 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	t.Run("when setting new values", func(t *testing.T) {
+	t.Run("when setting and unsetting a value", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
-		newComment := String(randomComment(t))
+		comment := randomComment(t)
 		alterOptions := &MaskingPolicyAlterOptions{
 			Set: &MaskingPolicySet{
-				Comment: newComment,
+				Comment: String(comment),
 			},
 		}
 		err := client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
@@ -304,7 +309,28 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(maskingPolicies))
-		assert.Equal(t, newComment, maskingPolicies[0].Comment)
+		assert.Equal(t, comment, maskingPolicies[0].Comment)
+
+		err = client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
+		require.NoError(t, err)
+		alterOptions = &MaskingPolicyAlterOptions{
+			Unset: &MaskingPolicyUnset{
+				Comment: Bool(true),
+			},
+		}
+		err = client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
+		require.NoError(t, err)
+		maskingPolicies, err = client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+			Like: &Like{
+				Pattern: String(maskingPolicy.Name),
+			},
+			In: &In{
+				Schema: schemaTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(maskingPolicies))
+		assert.Equal(t, "", maskingPolicies[0].Comment)
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
@@ -365,37 +391,6 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeMaskingPolicy)
 		assert.Error(t, err)
-	})
-
-	t.Run("when unsetting values", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
-		id := maskingPolicy.ID()
-		t.Cleanup(maskingPolicyCleanup)
-		alterOptions := &MaskingPolicyAlterOptions{
-			Unset: &MaskingPolicyUnset{
-				Comment: Bool(true),
-			},
-		}
-		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		alterOptions = &MaskingPolicyAlterOptions{
-			Unset: &MaskingPolicyUnset{
-				Comment: Bool(true),
-			},
-		}
-		err = client.MaskingPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		maskingPolicies, err := client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
-			Like: &Like{
-				Pattern: String(maskingPolicy.Name),
-			},
-			In: &In{
-				Schema: schemaTest.ID(),
-			},
-		})
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(maskingPolicies))
-		assert.Equal(t, "", maskingPolicies[0].Comment)
 	})
 }
 

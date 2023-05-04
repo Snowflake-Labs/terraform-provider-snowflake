@@ -25,6 +25,34 @@ func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(randomStringRange(t, 8, 12))
 }
 
+func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseDatabase(ctx, databaseID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseDatabase(ctx, NewAccountObjectIdentifier(orgDB))
+		require.NoError(t, err)
+	}
+}
+
+func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+	require.NoError(t, err)
+	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseSchema(ctx, schemaID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseSchema(ctx, NewSchemaIdentifier(orgDB, orgSchema))
+		require.NoError(t, err)
+	}
+}
+
 func testBuilder(t *testing.T) *sqlBuilder {
 	t.Helper()
 	return &sqlBuilder{}
@@ -38,38 +66,6 @@ func testClient(t *testing.T) *Client {
 	}
 
 	return client
-}
-
-// mock structs until we have more of the SDK implemented.
-type DatabaseCreateOptions struct{}
-
-type Database struct {
-	Name string
-}
-
-func (v *Database) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
-}
-
-type Schema struct {
-	DatabaseName string
-	Name         string
-}
-
-func (v *Schema) ID() SchemaIdentifier {
-	return NewSchemaIdentifier(v.DatabaseName, v.Name)
-}
-
-type TagCreateOptions struct{}
-
-type Tag struct {
-	DatabaseName string
-	SchemaName   string
-	Name         string
-}
-
-func (v *Tag) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 func randomUUID(t *testing.T) string {
@@ -109,29 +105,6 @@ func randomIntRange(t *testing.T, min, max int) int {
 	}
 	return gofakeit.IntRange(min, max)
 }
-
-/*
-func randomDataType(t *testing.T) DataType {
-	t.Helper()
-	dataTypeList := []DataType{
-		DataTypeNumber,
-		DataTypeFloat,
-		DataTypeVARCHAR,
-		DataTypeBinary,
-		DataTypeBoolean,
-		DataTypeDate,
-		DataTypeTime,
-		DataTypeTimestampLTZ,
-		DataTypeTimestampNTZ,
-		DataTypeTimestampTZ,
-		DataTypeVariant,
-		DataTypeObject,
-		DataTypeArray,
-		DataTypeGeography,
-		DataTypeGeometry,
-	}
-	return dataTypeList[randomIntN(t, 0, len(dataTypeList))]
-}*/
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	t.Helper()
