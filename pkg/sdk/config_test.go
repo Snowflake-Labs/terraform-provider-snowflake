@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,14 +27,24 @@ func TestLoadConfigFile(t *testing.T) {
 	setupEnvVars(t, "", "", "", "", configPath)
 	m, err := loadConfigFile()
 	require.NoError(t, err)
-	require.Equal(t, "TEST_ACCOUNT", m["default"].Account)
-	require.Equal(t, "TEST_USER", m["default"].User)
-	require.Equal(t, "abcd1234", m["default"].Password)
-	require.Equal(t, "ACCOUNTADMIN", m["default"].Role)
-	require.Equal(t, "TEST_ACCOUNT", m["securityadmin"].Account)
-	require.Equal(t, "TEST_USER", m["securityadmin"].User)
-	require.Equal(t, "abcd1234", m["securityadmin"].Password)
-	require.Equal(t, "SECURITYADMIN", m["securityadmin"].Role)
+	assert.Equal(t, "TEST_ACCOUNT", m["default"].Account)
+	assert.Equal(t, "TEST_USER", m["default"].User)
+	assert.Equal(t, "abcd1234", m["default"].Password)
+	assert.Equal(t, "ACCOUNTADMIN", m["default"].Role)
+	assert.Equal(t, "TEST_ACCOUNT", m["securityadmin"].Account)
+	assert.Equal(t, "TEST_USER", m["securityadmin"].User)
+	assert.Equal(t, "abcd1234", m["securityadmin"].Password)
+	assert.Equal(t, "SECURITYADMIN", m["securityadmin"].Role)
+}
+
+func TestEnvConfig(t *testing.T) {
+	cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
+	t.Cleanup(cleanupEnvVars)
+	config := EnvConfig()
+	assert.Equal(t, "TEST_ACCOUNT", config.Account)
+	assert.Equal(t, "TEST_USER", config.User)
+	assert.Equal(t, "abcd1234", config.Password)
+	assert.Equal(t, "ACCOUNTADMIN", config.Role)
 }
 
 func TestProfileConfig(t *testing.T) {
@@ -48,10 +59,10 @@ func TestProfileConfig(t *testing.T) {
 	setupEnvVars(t, "", "", "", "", configPath)
 	config, err := ProfileConfig("securityadmin")
 	require.NoError(t, err)
-	require.Equal(t, "TEST_ACCOUNT", config.Account)
-	require.Equal(t, "TEST_USER", config.User)
-	require.Equal(t, "abcd1234", config.Password)
-	require.Equal(t, "SECURITYADMIN", config.Role)
+	assert.Equal(t, "TEST_ACCOUNT", config.Account)
+	assert.Equal(t, "TEST_USER", config.User)
+	assert.Equal(t, "abcd1234", config.Password)
+	assert.Equal(t, "SECURITYADMIN", config.Role)
 }
 
 func TestDefaultConfig(t *testing.T) {
@@ -59,29 +70,29 @@ func TestDefaultConfig(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "", "", "", "", "")
 		t.Cleanup(cleanupEnvVars)
 		config, err := DefaultConfig()
-		require.NoError(t, err)
-		require.Equal(t, "", config.Account)
-		require.Equal(t, "", config.User)
-		require.Equal(t, "", config.Password)
-		require.Equal(t, "", config.Role)
+		assert.NoError(t, err)
+		assert.Equal(t, "", config.Account)
+		assert.Equal(t, "", config.User)
+		assert.Equal(t, "", config.Password)
+		assert.Equal(t, "", config.Role)
 	})
 
 	t.Run("with environment variables", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
 		config, err := DefaultConfig()
-		require.NoError(t, err)
-		require.Equal(t, "TEST_ACCOUNT", config.Account)
-		require.Equal(t, "TEST_USER", config.User)
-		require.Equal(t, "abcd1234", config.Password)
-		require.Equal(t, "ACCOUNTADMIN", config.Role)
+		assert.NoError(t, err)
+		assert.Equal(t, "TEST_ACCOUNT", config.Account)
+		assert.Equal(t, "TEST_USER", config.User)
+		assert.Equal(t, "abcd1234", config.Password)
+		assert.Equal(t, "ACCOUNTADMIN", config.Role)
 	})
 }
 
 func testFile(t *testing.T, filename string, dat []byte) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), filename)
-	err := os.WriteFile(path, dat, 0o644)
+	err := os.WriteFile(path, dat, 0o600)
 	require.NoError(t, err)
 	return path
 }

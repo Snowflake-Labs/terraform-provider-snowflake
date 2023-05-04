@@ -107,12 +107,13 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := randomString(t)
+		comment := randomComment(t)
+		exemptOtherPolicies := randomBool(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{
 			OrReplace:           Bool(true),
 			IfNotExists:         Bool(false),
 			Comment:             String(comment),
-			ExemptOtherPolicies: Bool(true),
+			ExemptOtherPolicies: Bool(exemptOtherPolicies),
 		})
 		require.NoError(t, err)
 		maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, id)
@@ -134,7 +135,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		assert.Equal(t, 1, len(maskingPolicy))
 		assert.Equal(t, name, maskingPolicy[0].Name)
 		assert.Equal(t, comment, maskingPolicy[0].Comment)
-		assert.Equal(t, true, maskingPolicy[0].ExemptOtherPolicies)
+		assert.Equal(t, exemptOtherPolicies, maskingPolicy[0].ExemptOtherPolicies)
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
@@ -151,7 +152,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := randomString(t)
+		comment := randomComment(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{
 			OrReplace:           Bool(false),
 			IfNotExists:         Bool(true),
@@ -255,7 +256,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	t.Run("when setting new values", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
-		newComment := String(randomString(t))
+		newComment := String(randomComment(t))
 		alterOptions := &MaskingPolicyAlterOptions{
 			Set: &MaskingPolicySet{
 				Comment: newComment,

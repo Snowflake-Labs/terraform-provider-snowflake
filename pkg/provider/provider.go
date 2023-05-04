@@ -32,13 +32,13 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"account": {
 				Type:        schema.TypeString,
-				Description: "The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable.",
+				Description: "The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using profile.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: "Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable.",
+				Description: "Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable. Required unless using profile.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
 			},
@@ -457,7 +457,7 @@ func DSN(
 		if err != nil {
 			return "", errors.New("no authentication method provided")
 		}
-		config = profileConfig
+		config = sdk.MergeConfig(profileConfig, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
 	return gosnowflake.DSN(config)
@@ -581,6 +581,10 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	host := os.Getenv("SNOWFLAKE_HOST")
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
 	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
+	profile := os.Getenv("SNOWFLAKE_PROFILE")
+	if profile == "" {
+		profile = "default"
+	}
 	port, err := strconv.Atoi(os.Getenv("SNOWFLAKE_PORT"))
 	if err != nil {
 		port = 443
@@ -601,7 +605,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		port,
 		warehouse,
 		false,
-		"default",
+		profile,
 	)
 	if err != nil {
 		return nil, err

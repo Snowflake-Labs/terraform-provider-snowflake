@@ -11,7 +11,7 @@ func isOk(_ interface{}, ok bool) bool {
 	return ok
 }
 
-func dataTypeValidateFunc(val interface{}, key string) (warns []string, errs []error) {
+func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []error) {
 	if ok := sdk.IsValidDataType(val.(string)); !ok {
 		errs = append(errs, fmt.Errorf("%v is not a valid data type", val))
 	}
@@ -19,13 +19,7 @@ func dataTypeValidateFunc(val interface{}, key string) (warns []string, errs []e
 }
 
 func dataTypeDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	old_dt, err := sdk.DataTypeFromString(old)
-	if err != nil {
-		return false
-	}
-	new_dt, err := sdk.DataTypeFromString(new)
-	if err != nil {
-		return false
-	}
-	return old_dt == new_dt
+	oldDT := sdk.DataTypeFromString(old)
+	newDT := sdk.DataTypeFromString(new)
+	return oldDT == newDT
 }

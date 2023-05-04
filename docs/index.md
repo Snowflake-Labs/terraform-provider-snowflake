@@ -46,7 +46,7 @@ provider "snowflake" {
 
 ### Optional
 
-- `account` (String) The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable.
+- `account` (String) The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using profile.
 - `browser_auth` (Boolean) Required when `oauth_refresh_token` is used. Can be sourced from `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.
 - `host` (String) Supports passing in a custom host value to the snowflake go driver for use with privatelink.
 - `insecure_mode` (Boolean) If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only.
@@ -65,7 +65,7 @@ provider "snowflake" {
 - `protocol` (String) Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.
 - `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.
 - `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.
-- `username` (String) Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable.
+- `username` (String) Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable. Required unless using profile.
 - `warehouse` (String) Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.
 
 ## Authentication
@@ -77,8 +77,9 @@ The Snowflake provider support multiple ways to authenticate:
 * OAuth Refresh Token
 * Browser Auth
 * Private Key
+* Config File
 
-In all cases account and region are required.
+In all cases account and username are required.
 
 ### Keypair Authentication Environment Variables
 
@@ -154,3 +155,28 @@ If you choose to use Username and Password Authentication, export these credenti
 export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
+
+### Config File
+
+If you choose to use a config file, the optional `profile` attribute speecifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config`. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
+
+```shell
+[default]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='ACCOUNTADMIN'
+
+[securityadmin]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='SECURITYADMIN'
+```
+
+## Order Precedence
+
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File

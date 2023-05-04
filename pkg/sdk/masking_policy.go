@@ -312,10 +312,7 @@ type maskingPolicyDetailsRow struct {
 }
 
 func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetails {
-	dataType, err := DataTypeFromString(row.ReturnType)
-	if err != nil {
-		return nil
-	}
+	dataType := DataTypeFromString(row.ReturnType)
 	v := &MaskingPolicyDetails{
 		Name:       row.Name,
 		Signature:  []TableColumnSignature{},
@@ -329,10 +326,7 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 		if len(p) != 2 {
 			continue
 		}
-		dType, err := DataTypeFromString(p[1])
-		if err != nil {
-			continue
-		}
+		dType := DataTypeFromString(p[1])
 		v.Signature = append(v.Signature, TableColumnSignature{
 			Name: p[0],
 			Type: dType,

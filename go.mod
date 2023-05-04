@@ -49,6 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.6 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/brianvoe/gofakeit/v6 v6.21.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect

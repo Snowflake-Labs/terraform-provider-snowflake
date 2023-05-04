@@ -3,27 +3,26 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"strings"
 	"testing"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
 	"github.com/stretchr/testify/require"
 )
 
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringN(t, 1, 12), randomStringN(t, 1, 12), randomStringN(t, 1, 12))
+	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
 }
 
 func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomStringN(t, 1, 12), randomStringN(t, 1, 12))
+	return NewSchemaIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
 }
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
-	return NewAccountObjectIdentifier(randomStringN(t, 1, 12))
+	return NewAccountObjectIdentifier(randomStringRange(t, 8, 12))
 }
 
 func testBuilder(t *testing.T) *sqlBuilder {
@@ -80,31 +79,35 @@ func randomUUID(t *testing.T) string {
 	return v
 }
 
+func randomComment(t *testing.T) string {
+	t.Helper()
+	return gofakeit.Sentence(10)
+}
+
+func randomBool(t *testing.T) bool {
+	t.Helper()
+	return gofakeit.Bool()
+}
+
 func randomString(t *testing.T) string {
 	t.Helper()
-	s := randomUUID(t)
-	i := randomIntN(t, 1, 28)
-	return strings.ReplaceAll(s, "-", "")[:i]
+	return gofakeit.Password(true, true, true, true, false, 28)
 }
 
-func randomStringN(t *testing.T, min, max int) string {
+func randomStringRange(t *testing.T, min, max int) string {
 	t.Helper()
 	if min > max {
-		panic(fmt.Sprintf("min %d is greater than max %d", min, max))
+		t.Errorf("min %d is greater than max %d", min, max)
 	}
-	s := randomString(t)
-	for len(s) <= max {
-		s += randomString(t)
-	}
-	return s[min:max]
+	return gofakeit.Password(true, true, true, true, false, randomIntRange(t, min, max))
 }
 
-func randomIntN(t *testing.T, min, max int) int {
+func randomIntRange(t *testing.T, min, max int) int {
 	t.Helper()
 	if min > max {
-		panic(fmt.Sprintf("min %d is greater than max %d", min, max))
+		t.Errorf("min %d is greater than max %d", min, max)
 	}
-	return rand.Intn(max-min) + min
+	return gofakeit.IntRange(min, max)
 }
 
 /*
@@ -137,7 +140,7 @@ func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 
 func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOptions) (*Database, func()) {
 	t.Helper()
-	name := randomStringN(t, 1, 28)
+	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE DATABASE \"%s\"", name))
 	require.NoError(t, err)
@@ -151,7 +154,7 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOp
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
 	t.Helper()
-	name := randomStringN(t, 1, 28)
+	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
 	require.NoError(t, err)
@@ -171,7 +174,7 @@ func createTag(t *testing.T, client *Client, database *Database, schema *Schema)
 
 func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *TagCreateOptions) (*Tag, func()) {
 	t.Helper()
-	name := randomStringN(t, 1, 28)
+	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 	require.NoError(t, err)
@@ -276,7 +279,7 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 			Type: DataTypeVARCHAR,
 		},
 	}
-	n := randomIntN(t, 0, 5)
+	n := randomIntRange(t, 0, 5)
 	for i := 0; i < n; i++ {
 		signature = append(signature, TableColumnSignature{
 			Name: randomString(t),

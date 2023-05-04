@@ -1,10 +1,8 @@
 package sdk
 
 import (
-	"errors"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
@@ -30,7 +28,7 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 		config = cfg
 	}
 
-	if envConfig := envConfig(); envConfig != nil {
+	if envConfig := EnvConfig(); envConfig != nil {
 		// envConfig takes precedence
 		config = MergeConfig(config, envConfig)
 	}
@@ -68,7 +66,7 @@ func configFile() (string, error) {
 	if configPath, ok := os.LookupEnv("SNOWFLAKE_CONFIG_PATH"); ok {
 		return configPath, nil
 	}
-	dir, err := homeDir()
+	dir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +74,7 @@ func configFile() (string, error) {
 	return filepath.Join(dir, ".snowflake", "config"), nil
 }
 
-func envConfig() *gosnowflake.Config {
+func EnvConfig() *gosnowflake.Config {
 	config := &gosnowflake.Config{}
 
 	if account, ok := os.LookupEnv("SNOWFLAKE_ACCOUNT"); ok {
@@ -96,6 +94,9 @@ func envConfig() *gosnowflake.Config {
 	}
 	if host, ok := os.LookupEnv("SNOWFLAKE_HOST"); ok {
 		config.Host = host
+	}
+	if warehouse, ok := os.LookupEnv("SNOWFLAKE_WAREHOUSE"); ok {
+		config.Warehouse = warehouse
 	}
 
 	return config
@@ -117,32 +118,4 @@ func loadConfigFile() (map[string]*gosnowflake.Config, error) {
 		return nil, nil
 	}
 	return s, nil
-}
-
-func configDir() (string, error) {
-	dir, err := homeDir()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(dir, ".snowflake"), nil
-}
-
-func homeDir() (string, error) {
-	// First prefer the HOME environmental variable
-	if home := os.Getenv("HOME"); home != "" {
-		return home, nil
-	}
-
-	// If that fails, try build-in module
-	user, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	if user.HomeDir == "" {
-		return "", errors.New("blank output")
-	}
-
-	return user.HomeDir, nil
 }

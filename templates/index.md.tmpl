@@ -28,8 +28,9 @@ The Snowflake provider support multiple ways to authenticate:
 * OAuth Refresh Token
 * Browser Auth
 * Private Key
+* Config File
 
-In all cases account and region are required.
+In all cases account and username are required.
 
 ### Keypair Authentication Environment Variables
 
@@ -105,3 +106,28 @@ If you choose to use Username and Password Authentication, export these credenti
 export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
+
+### Config File
+
+If you choose to use a config file, the optional `profile` attribute speecifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config`. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
+
+```shell
+[default]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='ACCOUNTADMIN'
+
+[securityadmin]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='SECURITYADMIN'
+```
+
+## Order Precedence
+
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File

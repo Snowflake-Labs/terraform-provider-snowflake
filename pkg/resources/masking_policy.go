@@ -152,10 +152,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		columns := m["column"].([]interface{})
 		for _, c := range columns {
 			cm := c.(map[string]interface{})
-			dt, err := sdk.DataTypeFromString(cm["type"].(string))
-			if err != nil {
-				return err
-			}
+			dt := sdk.DataTypeFromString(cm["type"].(string))
 			signature = append(signature, sdk.TableColumnSignature{
 				Name: cm["name"].(string),
 				Type: dt,
@@ -163,10 +160,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	returns, err := sdk.DataTypeFromString(returnDataType)
-	if err != nil {
-		return err
-	}
+	returns := sdk.DataTypeFromString(returnDataType)
 
 	opts := &sdk.MaskingPolicyCreateOptions{}
 	if comment, ok := d.Get("comment").(string); ok {
@@ -176,7 +170,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		opts.ExemptOtherPolicies = sdk.Bool(exemptOtherPolicies)
 	}
 
-	client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
+	err := client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
 	if err != nil {
 		return err
 	}
@@ -208,23 +202,23 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("masking policy %v not found", d.Id())
 	}
 	maskingPolicy := maskingPolicies[0]
-	if d.Set("name", maskingPolicy.Name); err != nil {
+	if err := d.Set("name", maskingPolicy.Name); err != nil {
 		return err
 	}
 
-	if d.Set("database", maskingPolicy.DatabaseName); err != nil {
+	if err := d.Set("database", maskingPolicy.DatabaseName); err != nil {
 		return err
 	}
 
-	if d.Set("schema", maskingPolicy.SchemaName); err != nil {
+	if err := d.Set("schema", maskingPolicy.SchemaName); err != nil {
 		return err
 	}
 
-	if d.Set("exempt_other_policies", maskingPolicy.ExemptOtherPolicies); err != nil {
+	if err := d.Set("exempt_other_policies", maskingPolicy.ExemptOtherPolicies); err != nil {
 		return err
 	}
 
-	if d.Set("comment", maskingPolicy.Comment); err != nil {
+	if err := d.Set("comment", maskingPolicy.Comment); err != nil {
 		return err
 	}
 
@@ -233,11 +227,11 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if d.Set("masking_expression", maskingPolicyDetails.Body); err != nil {
+	if err := d.Set("masking_expression", maskingPolicyDetails.Body); err != nil {
 		return err
 	}
 
-	if d.Set("return_data_type", maskingPolicyDetails.ReturnType); err != nil {
+	if err := d.Set("return_data_type", maskingPolicyDetails.ReturnType); err != nil {
 		return err
 	}
 
