@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -455,6 +456,88 @@ func TestBuilder_parseStruct(t *testing.T) {
 		assert.Equal(t, "EXAMPLE_PARAMETER = example", clauses[2].String())
 		assert.Equal(t, "EXAMPLE_COMMAND example", clauses[3].String())
 	})
+
+	t.Run("struct with a slice field using ddl: tag (one tag)", func(t *testing.T) {
+		tagName := randomSchemaObjectIdentifier(t)
+		tagValue := randomString(t)
+		s := &struct {
+			Tag []TagAssociation `ddl:"tag" db:"TAG"`
+		}{
+			Tag: []TagAssociation{{Name: tagName, Value: tagValue}},
+		}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, fmt.Sprintf("TAG %s = '%s'", tagName.FullyQualifiedName(), tagValue), clauses[0].String())
+	})
+
+	t.Run("struct with a slice field using ddl: tag (multiple tags)", func(t *testing.T) {
+		tagName := randomSchemaObjectIdentifier(t)
+		tagValue := randomString(t)
+		tagName2 := randomSchemaObjectIdentifier(t)
+		tagValue2 := randomString(t)
+		s := &struct {
+			Tag []TagAssociation `ddl:"tag" db:"TAG"`
+		}{
+			Tag: []TagAssociation{{Name: tagName, Value: tagValue}, {Name: tagName2, Value: tagValue2}},
+		}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, fmt.Sprintf("TAG %s = '%s',%s = '%s'", tagName.FullyQualifiedName(), tagValue, tagName2.FullyQualifiedName(), tagValue2), clauses[0].String())
+	})
+
+	t.Run("struct with a slice field using ddl: tag (no tags)", func(t *testing.T) {
+		s := &struct {
+			Tag []TagAssociation `ddl:"tag" db:"TAG"`
+		}{}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 0)
+	})
+
+	t.Run("struct with a slice field using ddl: list", func(t *testing.T) {
+		type testListElement struct {
+			K  *string `ddl:"parameter,single_quotes" db:"KEY"`
+			K2 *string `ddl:"parameter,single_quotes" db:"KEY2"`
+		}
+		s := &struct {
+			List []testListElement `ddl:"list" db:"LIST"`
+		}{
+			List: []testListElement{{K: String("abc"), K2: String("def")}, {K: String("123"), K2: String("456")}},
+		}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 2)
+		assert.Equal(t, "(KEY = 'abc' KEY2 = 'def',KEY = '123' KEY2 = '456')", clauses[0].String())
+	})
+
+	t.Run("struct with a slice field using ddl: list (no elements)", func(t *testing.T) {
+		type testListElement struct {
+			K *string `ddl:"parameter,single_quotes" db:"KEY"`
+		}
+		s := &struct {
+			List []testListElement `ddl:"list"`
+		}{}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 0)
+	})
+
+	t.Run("struct with a slice field using ddl: list (no parentheses)", func(t *testing.T) {
+		type testListElement struct {
+			K *string `ddl:"parameter,single_quotes" db:"KEY"`
+		}
+		s := &struct {
+			List []testListElement `ddl:"list,no_parentheses" db:"LIST"`
+		}{
+			List: []testListElement{{K: String("abc")}, {K: String("123")}},
+		}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "KEY = 'abc',KEY = '123'", clauses[0].String())
+	})
 }
 
 func TestBuilder_sql(t *testing.T) {
@@ -467,8 +550,8 @@ func TestBuilder_sql(t *testing.T) {
 
 	t.Run("test sql with clauses", func(t *testing.T) {
 		clauses := []sqlClause{
-			sqlClauseStatic("EXAMPLE_STATIC"),
-			sqlClauseParameter{
+			sqlStaticClause("EXAMPLE_STATIC"),
+			sqlParameterClause{
 				key:   "EXAMPLE_KEYWORD",
 				value: "example",
 			},

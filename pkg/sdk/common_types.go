@@ -10,6 +10,16 @@ type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
 }
 
+type TagAssociation struct {
+	Name  ObjectIdentifier
+	Value string
+}
+
+type TableColumnSignature struct {
+	Name string   `ddl:"keyword,double_quotes"`
+	Type DataType `ddl:"keyword"`
+}
+
 type StringProperty struct {
 	Value        string
 	DefaultValue string

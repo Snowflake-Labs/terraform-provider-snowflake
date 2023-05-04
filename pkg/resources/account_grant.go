@@ -120,7 +120,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	privilege := d.Get("privilege").(string)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
-	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadAccountGrant(d, meta)
@@ -138,7 +138,7 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(privilege, withGrantOption, roles)
 	// if the ID is not in the new format, rewrite it
 	if grantID != d.Id() {
 		d.SetId(grantID)

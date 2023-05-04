@@ -104,7 +104,7 @@ func CreateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(warehouseName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(warehouseName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadWarehouseGrant(d, meta)
@@ -124,7 +124,7 @@ func ReadWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(warehouseName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(warehouseName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

@@ -121,7 +121,7 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadTagGrant(d, meta)
@@ -143,7 +143,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

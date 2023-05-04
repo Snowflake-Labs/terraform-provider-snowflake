@@ -1,22 +1,36 @@
 package resources
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
-	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"golang.org/x/exp/slices"
-)
-
-const (
-	maskingPolicyIDDelimiter = '|'
 )
 
 var maskingPolicySchema = map[string]*schema.Schema{
+	"or_replace": {
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Whether to override a previous masking policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
+	},
+	"if_not_exists": {
+		Type:                  schema.TypeBool,
+		Optional:              true,
+		Default:               false,
+		Description:           "Prevent overwriting a previous masking policy with the same name.",
+		DiffSuppressOnRefresh: true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return old != new
+		},
+	},
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -35,15 +49,37 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Description: "The schema in which to create the masking policy.",
 		ForceNew:    true,
 	},
-	"value_data_type": {
-		Type:        schema.TypeString,
+	"signature": {
+		Type:        schema.TypeList,
 		Required:    true,
-		Description: "Specifies the data type to mask.",
-		ForceNew:    true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
-			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
-			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
+		Description: "The signature for the masking policy; specifies the input columns and data types to evaluate at query runtime.",
+		MinItems:    1,
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Specifies the column name to mask.",
+							},
+							"type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								Description:      "Specifies the column type to mask.",
+								ForceNew:         true,
+								ValidateFunc:     dataTypeValidateFunc,
+								DiffSuppressFunc: dataTypeDiffSuppressFunc,
+							},
+						},
+					},
+				},
+			},
 		},
 	},
 	"masking_expression": {
@@ -52,15 +88,18 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Description: "Specifies the SQL expression that transforms the data.",
 	},
 	"return_data_type": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the data type to return.",
-		ForceNew:    true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
-			varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
-			return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
-		},
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the data type to return.",
+		ForceNew:         true,
+		ValidateFunc:     dataTypeValidateFunc,
+		DiffSuppressFunc: dataTypeDiffSuppressFunc,
+	},
+	"exempt_other_policies": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy.",
+		Default:     false,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -74,50 +113,7 @@ var maskingPolicySchema = map[string]*schema.Schema{
 	},
 }
 
-type maskingPolicyID struct {
-	DatabaseName      string
-	SchemaName        string
-	MaskingPolicyName string
-}
-
-// String() takes in a maskingPolicyID object and returns a pipe-delimited string:
 // DatabaseName|SchemaName|MaskingPolicyName.
-func (mpi *maskingPolicyID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = maskingPolicyIDDelimiter
-	dataIdentifiers := [][]string{{mpi.DatabaseName, mpi.SchemaName, mpi.MaskingPolicyName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strMaskingPolicyID := strings.TrimSpace(buf.String())
-	return strMaskingPolicyID, nil
-}
-
-// / maskingPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaskingPolicyName
-// and returns a maskingPolicyID object.
-func maskingPolicyIDFromString(stringID string) (*maskingPolicyID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = maskingPolicyIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per masking policy")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	maskingPolicyResult := &maskingPolicyID{
-		DatabaseName:      lines[0][0],
-		SchemaName:        lines[0][1],
-		MaskingPolicyName: lines[0][2],
-	}
-	return maskingPolicyResult, nil
-}
 
 // MaskingPolicy returns a pointer to the resource representing a masking policy.
 func MaskingPolicy() *schema.Resource {
@@ -137,39 +133,54 @@ func MaskingPolicy() *schema.Resource {
 // CreateMaskingPolicy implements schema.CreateFunc.
 func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
 	name := d.Get("name").(string)
-	database := d.Get("database").(string)
-	schema := d.Get("schema").(string)
-	valueDataType := d.Get("value_data_type").(string)
-	maskingExpression := d.Get("masking_expression").(string)
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
+
+	expression := d.Get("masking_expression").(string)
 	returnDataType := d.Get("return_data_type").(string)
 
-	builder := snowflake.MaskingPolicy(name, database, schema)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	builder.WithValueDataType(valueDataType)
-	builder.WithMaskingExpression(maskingExpression)
-	builder.WithReturnDataType(returnDataType)
-
-	// Set optionals
-	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+	signatureList := d.Get("signature").([]interface{})
+	signature := []sdk.TableColumnSignature{}
+	for _, s := range signatureList {
+		m := s.(map[string]interface{})
+		columns := m["column"].([]interface{})
+		for _, c := range columns {
+			cm := c.(map[string]interface{})
+			dt, err := sdk.DataTypeFromString(cm["type"].(string))
+			if err != nil {
+				return err
+			}
+			signature = append(signature, sdk.TableColumnSignature{
+				Name: cm["name"].(string),
+				Type: dt,
+			})
+		}
 	}
 
-	stmt := builder.Create()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error creating masking policy %v err = %w", name, err)
-	}
-
-	maskingPolicyID := &maskingPolicyID{
-		DatabaseName:      database,
-		SchemaName:        schema,
-		MaskingPolicyName: name,
-	}
-	dataIDInput, err := maskingPolicyID.String()
+	returns, err := sdk.DataTypeFromString(returnDataType)
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
+
+	opts := &sdk.MaskingPolicyCreateOptions{}
+	if comment, ok := d.Get("comment").(string); ok {
+		opts.Comment = sdk.String(comment)
+	}
+	if exemptOtherPolicies := d.Get("exempt_other_policies").(bool); exemptOtherPolicies {
+		opts.ExemptOtherPolicies = sdk.Bool(exemptOtherPolicies)
+	}
+
+	client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
+	if err != nil {
+		return err
+	}
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
 	return ReadMaskingPolicy(d, meta)
 }
@@ -177,76 +188,75 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // ReadMaskingPolicy implements schema.ReadFunc.
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	ctx := context.Background()
+	opts := &sdk.MaskingPolicyShowOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(objectIdentifier.Name()),
+		},
+		In: &sdk.In{
+			Schema: sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName()),
+		},
+	}
+	maskingPolicies, err := client.MaskingPolicies.Show(ctx, opts)
+	if err != nil {
+		return err
+	}
+	if len(maskingPolicies) == 0 {
+		return fmt.Errorf("masking policy %v not found", d.Id())
+	}
+	maskingPolicy := maskingPolicies[0]
+	if d.Set("name", maskingPolicy.Name); err != nil {
+		return err
+	}
+
+	if d.Set("database", maskingPolicy.DatabaseName); err != nil {
+		return err
+	}
+
+	if d.Set("schema", maskingPolicy.SchemaName); err != nil {
+		return err
+	}
+
+	if d.Set("exempt_other_policies", maskingPolicy.ExemptOtherPolicies); err != nil {
+		return err
+	}
+
+	if d.Set("comment", maskingPolicy.Comment); err != nil {
+		return err
+	}
+
+	maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
 
-	dbName := maskingPolicyID.DatabaseName
-	schema := maskingPolicyID.SchemaName
-	policyName := maskingPolicyID.MaskingPolicyName
-
-	builder := snowflake.MaskingPolicy(policyName, dbName, schema)
-
-	showSQL := builder.Show()
-
-	row := snowflake.QueryRow(db, showSQL)
-
-	s, err := snowflake.ScanMaskingPolicies(row)
-	if err != nil {
+	if d.Set("masking_expression", maskingPolicyDetails.Body); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", s.Name.String); err != nil {
+	if d.Set("return_data_type", maskingPolicyDetails.ReturnType); err != nil {
 		return err
 	}
 
-	if err := d.Set("database", s.DatabaseName.String); err != nil {
+	signature := []map[string]interface{}{}
+	for _, s := range maskingPolicyDetails.Signature {
+		signature = append(signature, map[string]interface{}{
+			"column": []map[string]interface{}{
+				{
+					"name": s.Name,
+					"type": s.Type,
+				},
+			},
+		})
+	}
+	if err := d.Set("signature", signature); err != nil {
 		return err
 	}
-
-	if err := d.Set("schema", s.SchemaName.String); err != nil {
+	if err := d.Set("qualified_name", objectIdentifier.FullyQualifiedName()); err != nil {
 		return err
-	}
-
-	if err := d.Set("comment", s.Comment.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("qualified_name", builder.QualifiedName()); err != nil {
-		return err
-	}
-
-	descSQL := builder.Describe()
-	rows, err := snowflake.Query(db, descSQL)
-	if err != nil {
-		return err
-	}
-
-	var (
-		name       string
-		signature  string
-		returnType string
-		body       string
-	)
-	for rows.Next() {
-		if err := rows.Scan(&name, &signature, &returnType, &body); err != nil {
-			return err
-		}
-
-		if err := d.Set("masking_expression", body); err != nil {
-			return err
-		}
-
-		if err := d.Set("return_data_type", returnType); err != nil {
-			return err
-		}
-
-		// format in database is `(VAL <data_type>)`
-		valueDataType := strings.TrimSuffix(strings.Split(signature, " ")[1], ")")
-		if err := d.Set("value_data_type", valueDataType); err != nil {
-			return err
-		}
 	}
 
 	return err
@@ -255,39 +265,51 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // UpdateMaskingPolicy implements schema.UpdateFunc.
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-
-	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := maskingPolicyID.DatabaseName
-	schema := maskingPolicyID.SchemaName
-	policyName := maskingPolicyID.MaskingPolicyName
-
-	builder := snowflake.MaskingPolicy(policyName, dbName, schema)
-
-	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		if c := comment.(string); c == "" {
-			q := builder.RemoveComment()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting comment for masking policy on %v err = %w", d.Id(), err)
-			}
-		} else {
-			q := builder.ChangeComment(c)
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating comment for masking policy on %v err = %w", d.Id(), err)
-			}
-		}
-	}
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	ctx := context.Background()
 
 	if d.HasChange("masking_expression") {
-		maskingExpression := d.Get("masking_expression")
-		q := builder.ChangeMaskingExpression(maskingExpression.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating masking policy expression on %v err = %w", d.Id(), err)
+		alterOptions := &sdk.MaskingPolicyAlterOptions{}
+		_, n := d.GetChange("masking_expression")
+		alterOptions.Set = &sdk.MaskingPolicySet{
+			Body: sdk.String(n.(string)),
 		}
+		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("comment") {
+		alterOptions := &sdk.MaskingPolicyAlterOptions{}
+		if v, ok := d.GetOk("comment"); ok {
+			alterOptions.Set = &sdk.MaskingPolicySet{
+				Comment: sdk.String(v.(string)),
+			}
+		} else {
+			alterOptions.Unset = &sdk.MaskingPolicyUnset{
+				Comment: sdk.Bool(true),
+			}
+		}
+		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("name") {
+		_, n := d.GetChange("name")
+		newName := n.(string)
+		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
+		alterOptions := &sdk.MaskingPolicyAlterOptions{
+			NewName: newID,
+		}
+		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
 	return ReadMaskingPolicy(d, meta)
@@ -296,21 +318,15 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // DeleteMaskingPolicy implements schema.DeleteFunc.
 func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	maskingPolicyID, err := maskingPolicyIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.MaskingPolicies.Drop(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
 
-	dbName := maskingPolicyID.DatabaseName
-	schema := maskingPolicyID.SchemaName
-	policyName := maskingPolicyID.MaskingPolicyName
-
-	q := snowflake.MaskingPolicy(policyName, dbName, schema).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting masking policy %v err = %w", d.Id(), err)
-	}
-
 	d.SetId("")
-
 	return nil
 }

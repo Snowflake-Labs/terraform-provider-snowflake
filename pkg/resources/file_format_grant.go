@@ -164,7 +164,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadFileFormatGrant(d, meta)
@@ -196,7 +196,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	if d.Id() != grantID {
 		d.SetId(grantID)
 	}

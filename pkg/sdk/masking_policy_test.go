@@ -9,174 +9,159 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPasswordPolicyCreate(t *testing.T) {
+func TestMaskingPolicyCreate(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{}
+		opts := &MaskingPolicyCreateOptions{}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "CREATE PASSWORD POLICY"
-		assert.Equal(t, expected, actual)
-	})
-
-	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{
-			name: id,
-		}
-		clauses, err := builder.parseStruct(opts)
-		require.NoError(t, err)
-		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("CREATE PASSWORD POLICY %s", id.FullyQualifiedName())
+		expected := "CREATE MASKING POLICY  AS  RETURNS  ->"
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{
-			OrReplace:                 Bool(true),
-			name:                      id,
-			IfNotExists:               Bool(true),
-			PasswordMinLength:         Int(10),
-			PasswordMaxLength:         Int(20),
-			PasswordMinUpperCaseChars: Int(1),
-			PasswordMinLowerCaseChars: Int(1),
-			PasswordMinNumericChars:   Int(1),
-			PasswordMinSpecialChars:   Int(1),
-			PasswordMaxAgeDays:        Int(30),
-			PasswordMaxRetries:        Int(5),
-			PasswordLockoutTimeMins:   Int(30),
-			Comment:                   String("test comment"),
+		signature := []TableColumnSignature{
+			{
+				Name: "col1",
+				Type: DataTypeVARCHAR,
+			},
+			{
+				Name: "col2",
+				Type: DataTypeVARCHAR,
+			},
 		}
+		expression := "REPLACE('X', 1, 2)"
+		comment := randomString(t)
+
+		opts := &MaskingPolicyCreateOptions{
+			OrReplace:           Bool(true),
+			name:                id,
+			IfNotExists:         Bool(true),
+			signature:           signature,
+			body:                expression,
+			returns:             DataTypeVARCHAR,
+			Comment:             String(comment),
+			ExemptOtherPolicies: Bool(true),
+		}
+
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf(`CREATE OR REPLACE PASSWORD POLICY %s IF NOT EXISTS PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
+		expected := fmt.Sprintf(`CREATE OR REPLACE MASKING POLICY IF NOT EXISTS %s AS ("col1" VARCHAR,"col2" VARCHAR) RETURNS %s -> %s COMMENT = '%s' EXEMPT_OTHER_POLICIES = %t`, id.FullyQualifiedName(), DataTypeVARCHAR, expression, comment, true)
 		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyAlter(t *testing.T) {
+func TestMaskingPolicyAlter(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{}
+		opts := &MaskingPolicyAlterOptions{}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "ALTER PASSWORD POLICY"
+		expected := "ALTER MASKING POLICY"
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		opts := &MaskingPolicyAlterOptions{
 			name: id,
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s", id.FullyQualifiedName())
+		expected := fmt.Sprintf("ALTER MASKING POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		newComment := randomString(t)
+		opts := &MaskingPolicyAlterOptions{
 			name: id,
-			Set: &PasswordPolicySet{
-				PasswordMinLength:         Int(10),
-				PasswordMaxLength:         Int(20),
-				PasswordMinUpperCaseChars: Int(1),
+			Set: &MaskingPolicySet{
+				Comment: String(newComment),
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s SET PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1", id.FullyQualifiedName())
+		expected := fmt.Sprintf("ALTER MASKING POLICY %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with unset", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		opts := &MaskingPolicyAlterOptions{
 			name: id,
-			Unset: &PasswordPolicyUnset{
-				PasswordMinLength: Bool(true),
+			Unset: &MaskingPolicyUnset{
+				Comment: Bool(true),
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s UNSET PASSWORD_MIN_LENGTH", id.FullyQualifiedName())
+		expected := fmt.Sprintf("ALTER MASKING POLICY %s UNSET COMMENT", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("rename", func(t *testing.T) {
 		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
-		opts := &PasswordPolicyAlterOptions{
+		opts := &MaskingPolicyAlterOptions{
 			name:    id,
 			NewName: newID,
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
+		expected := fmt.Sprintf("ALTER MASKING POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyDrop(t *testing.T) {
+func TestMaskingPolicyDrop(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{}
+		opts := &MaskingPolicyDropOptions{}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "DROP PASSWORD POLICY"
+		expected := "DROP MASKING POLICY"
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{
+		opts := &MaskingPolicyDropOptions{
 			name: id,
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("DROP PASSWORD POLICY %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
-	})
-
-	t.Run("with if exists", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{
-			name:     id,
-			IfExists: Bool(true),
-		}
-		clauses, err := builder.parseStruct(opts)
-		require.NoError(t, err)
-		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("DROP PASSWORD POLICY IF EXISTS %s", id.FullyQualifiedName())
+		expected := fmt.Sprintf("DROP MASKING POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyShow(t *testing.T) {
+func TestMaskingPolicyShow(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{}
+		opts := &MaskingPolicyShowOptions{}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "SHOW PASSWORD POLICIES"
+		expected := "SHOW MASKING POLICIES"
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &MaskingPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -184,12 +169,12 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s'", id.Name())
+		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s'", id.Name())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &MaskingPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -200,13 +185,13 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN ACCOUNT", id.Name())
+		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN ACCOUNT", id.Name())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
 		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
-		opts := &PasswordPolicyShowOptions{
+		opts := &MaskingPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -217,13 +202,13 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
+		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
 		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
-		opts := &PasswordPolicyShowOptions{
+		opts := &MaskingPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -234,43 +219,43 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
+		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with limit", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &MaskingPolicyShowOptions{
 			Limit: Int(10),
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "SHOW PASSWORD POLICIES LIMIT 10"
+		expected := "SHOW MASKING POLICIES LIMIT 10"
 		assert.Equal(t, expected, actual)
 	})
 }
 
-func TestPasswordPolicyDescribe(t *testing.T) {
+func TestMaskingPolicyDescribe(t *testing.T) {
 	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &passwordPolicyDescribeOptions{}
+		opts := &maskingPolicyDescribeOptions{}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "DESCRIBE PASSWORD POLICY"
+		expected := "DESCRIBE MASKING POLICY"
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &passwordPolicyDescribeOptions{
+		opts := &maskingPolicyDescribeOptions{
 			name: id,
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("DESCRIBE PASSWORD POLICY %s", id.FullyQualifiedName())
+		expected := fmt.Sprintf("DESCRIBE MASKING POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }

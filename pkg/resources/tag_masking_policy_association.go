@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
@@ -113,13 +115,10 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	tagName := tagIDStruct.TagName
 
 	mpID := d.Get("masking_policy_id").(string)
-	mpIDStruct, mpIDErr := maskingPolicyIDFromString(mpID)
-	if mpIDErr != nil {
-		return mpIDErr
-	}
-	mpDB := mpIDStruct.DatabaseName
-	mpSchema := mpIDStruct.SchemaName
-	mpName := mpIDStruct.MaskingPolicyName
+	mpIDStruct := helpers.DecodeSnowflakeID(mpID).(sdk.SchemaObjectIdentifier)
+	mpDB := mpIDStruct.DatabaseName()
+	mpSchema := mpIDStruct.SchemaName()
+	mpName := mpIDStruct.Name()
 
 	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
@@ -189,16 +188,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	mpID := maskingPolicyID{
-		DatabaseName:      t.PolicyDB.String,
-		SchemaName:        t.PolicySchema.String,
-		MaskingPolicyName: t.PolicyName.String,
-	}
-
-	mpIDString, err := mpID.String()
-	if err != nil {
-		return err
-	}
+	mpIDString := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
 
 	if err := d.Set("tag_id", tagIDString); err != nil {
 		return err

@@ -26,29 +26,54 @@ const (
 	DataTypeGeometry     DataType = "GEOMETRY"
 )
 
-func NewDataType(s string) DataType {
+func DataTypeFromString(s string) (DataType, error) {
 	dType := strings.ToUpper(s)
 	numberSynonyms := []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 	if slices.ContainsFunc(numberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeNumber
+		return DataTypeNumber, nil
 	}
 
 	floatSynonyms := []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
 	if slices.ContainsFunc(floatSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeFloat
+		return DataTypeFloat, nil
 	}
 	varcharSynonyms := []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
 	if slices.ContainsFunc(varcharSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeVARCHAR
+		return DataTypeVARCHAR, nil
 	}
 	binarySynonyms := []string{"BINARY", "VARBINARY"}
 	if slices.ContainsFunc(binarySynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeBinary
+		return DataTypeBinary, nil
 	}
 	booleanSynonyms := []string{"BOOLEAN", "BOOL"}
 	if slices.Contains(booleanSynonyms, dType) {
-		return DataTypeBoolean
+		return DataTypeBoolean, nil
 	}
-	// todo: date, time, timestamp, variant, object, array, geography, geometry
-	return DataType(dType)
+	switch dType {
+	case "DATE":
+		return DataTypeDate, nil
+	case "DATETIME":
+		return DataTypeTimestampNTZ, nil
+	case "TIME":
+		return DataTypeTime, nil
+	case "TIMESTAMP":
+		return DataTypeTimestampNTZ, nil
+	case "TIMESTAMP_LTZ":
+		return DataTypeTimestampLTZ, nil
+	case "TIMESTAMP_NTZ":
+		return DataTypeTimestampNTZ, nil
+	case "TIMESTAMP_TZ":
+		return DataTypeTimestampTZ, nil
+	case "VARIANT":
+		return DataTypeVariant, nil
+	case "OBJECT":
+		return DataTypeObject, nil
+	case "ARRAY":
+		return DataTypeArray, nil
+	case "GEOGRAPHY":
+		return DataTypeGeography, nil
+	case "GEOMETRY":
+		return DataTypeGeometry, nil
+	}
+	return "", ErrInvalidDataType
 }

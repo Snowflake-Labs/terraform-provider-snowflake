@@ -128,7 +128,7 @@ func CreateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadRowAccessPolicyGrant(d, meta)
@@ -150,7 +150,7 @@ func ReadRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, rowAccessPolicyName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
