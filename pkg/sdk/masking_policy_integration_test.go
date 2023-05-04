@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -214,6 +215,35 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		assert.Equal(t, name, maskingPolicy[0].Name)
 		assert.Equal(t, "", maskingPolicy[0].Comment)
 		assert.Equal(t, false, maskingPolicy[0].ExemptOtherPolicies)
+	})
+
+	t.Run("test multiline expression", func(t *testing.T) {
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		signature := []TableColumnSignature{
+			{
+				Name: "val",
+				Type: DataTypeVARCHAR,
+			},
+		}
+		expression := `
+		case 
+			when current_role() in ('ROLE_A') then 
+				val 
+			when is_role_in_session( 'ROLE_B' ) then 
+				'ABC123'
+			else
+				'******'
+		end
+		`
+		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, nil)
+		require.NoError(t, err)
+		maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, name, maskingPolicyDetails.Name)
+		assert.Equal(t, signature, maskingPolicyDetails.Signature)
+		assert.Equal(t, DataTypeVARCHAR, maskingPolicyDetails.ReturnType)
+		assert.Equal(t, strings.TrimSpace(expression), maskingPolicyDetails.Body)
 	})
 }
 

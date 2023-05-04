@@ -69,8 +69,7 @@ func TestDefaultConfig(t *testing.T) {
 	t.Run("with no environment variables", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "", "", "", "", "")
 		t.Cleanup(cleanupEnvVars)
-		config, err := DefaultConfig()
-		assert.NoError(t, err)
+		config := DefaultConfig()
 		assert.Equal(t, "", config.Account)
 		assert.Equal(t, "", config.User)
 		assert.Equal(t, "", config.Password)
@@ -80,8 +79,7 @@ func TestDefaultConfig(t *testing.T) {
 	t.Run("with environment variables", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
-		config, err := DefaultConfig()
-		assert.NoError(t, err)
+		config := DefaultConfig()
 		assert.Equal(t, "TEST_ACCOUNT", config.Account)
 		assert.Equal(t, "TEST_USER", config.User)
 		assert.Equal(t, "abcd1234", config.Password)

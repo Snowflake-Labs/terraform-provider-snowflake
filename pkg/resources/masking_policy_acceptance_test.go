@@ -43,12 +43,19 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 			},
 			// rename
 			{
-				Config: maskingPolicyConfig(accName2, accName2, comment2),
+				Config: maskingPolicyConfig(accName, accName2, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName2),
 				),
 			},
-
+			// change body and unset comment
+			{
+				Config: maskingPolicyConfigMultiline(accName, accName2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case \n\twhen current_role() in ('ROLE_A') then \n\t\tval \n\twhen is_role_in_session( 'ROLE_B' ) then \n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", ""),
+				),
+			},
 			// IMPORT
 			{
 				ResourceName:      "snowflake_masking_policy.test",
@@ -87,4 +94,42 @@ resource "snowflake_masking_policy" "test" {
 	comment = "%s"
 }
 `, n, n, name, comment)
+}
+
+func maskingPolicyConfigMultiline(n string, name string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_database" "test" {
+		name = "%v"
+		comment = "Terraform acceptance test"
+	}
+	
+	resource "snowflake_schema" "test" {
+		name = "%v"
+		database = snowflake_database.test.name
+		comment = "Terraform acceptance test"
+	}
+	
+	resource "snowflake_masking_policy" "test" {
+		name = "%s"
+		database = snowflake_database.test.name
+		schema = snowflake_schema.test.name
+		signature {
+			column {
+				name = "val"
+				type = "VARCHAR"
+			}
+		}
+		masking_expression = <<-EOF
+			case 
+				when current_role() in ('ROLE_A') then 
+					val 
+				when is_role_in_session( 'ROLE_B' ) then 
+					'ABC123'
+				else
+					'******'
+			end
+    	EOF
+		return_data_type = "VARCHAR"
+	}
+	`, n, n, name)
 }

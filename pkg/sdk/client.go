@@ -42,10 +42,7 @@ func NewDefaultClient() (*Client, error) {
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
-		cfg, err = DefaultConfig()
-		if err != nil {
-			return nil, fmt.Errorf("[DEBUG] could not find valid config: %w", err)
-		}
+		cfg = DefaultConfig()
 	}
 
 	// register the snowflake driver if it hasn't been registered yet

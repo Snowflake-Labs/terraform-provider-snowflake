@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,4 +23,8 @@ func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	oldDT := sdk.DataTypeFromString(old)
 	newDT := sdk.DataTypeFromString(new)
 	return oldDT == newDT
+}
+
+func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }

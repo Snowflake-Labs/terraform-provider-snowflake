@@ -9,8 +9,12 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-func DefaultConfig() (*gosnowflake.Config, error) {
-	return ProfileConfig("default")
+func DefaultConfig() *gosnowflake.Config {
+	config, err := ProfileConfig("default")
+	if err != nil {
+		return EnvConfig()
+	}
+	return config
 }
 
 func ProfileConfig(profile string) (*gosnowflake.Config, error) {

@@ -83,9 +83,10 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		},
 	},
 	"masking_expression": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the SQL expression that transforms the data.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the SQL expression that transforms the data.",
+		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
 	},
 	"return_data_type": {
 		Type:             schema.TypeString,

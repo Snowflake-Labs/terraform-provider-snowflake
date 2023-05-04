@@ -4,24 +4,22 @@ import (
 	"context"
 	"testing"
 
-	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClient_newClient(t *testing.T) {
-	config := &gosnowflake.Config{}
+	t.Run("with default config", func(t *testing.T) {
+		config := DefaultConfig()
+		_, err := NewClient(config)
+		require.NoError(t, err)
+	})
+
 	t.Run("uses env vars if values are missing", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
+		config := EnvConfig()
 		_, err := NewClient(config)
-		require.ErrorIs(t, err, ErrAccountIsEmpty)
-	})
-
-	t.Run("with default config", func(t *testing.T) {
-		config, err := DefaultConfig()
-		require.NoError(t, err)
-		_, err = NewClient(config)
-		require.NoError(t, err)
+		require.Error(t, err)
 	})
 }
 
