@@ -161,7 +161,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	returns := sdk.DataTypeFromString(returnDataType)
-
+	
 	opts := &sdk.MaskingPolicyCreateOptions{}
 	if comment, ok := d.Get("comment").(string); ok {
 		opts.Comment = sdk.String(comment)
