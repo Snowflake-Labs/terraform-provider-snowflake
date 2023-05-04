@@ -13,11 +13,8 @@ Coverage is focused on part of Snowflake related to access control.
 
 ```terraform
 provider "snowflake" {
-  // required
-  username = "..."
-  account  = "..." # the Snowflake account identifier
-
-  // optional, exactly one must be set
+  account  = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
+  username = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
   password               = "..."
   oauth_access_token     = "..."
   private_key_path       = "..."
@@ -34,6 +31,11 @@ provider "snowflake" {
   role      = "..."
   host      = "..."
   warehouse = "..."
+}
+
+
+provider snowflake {
+  profile = "securityadmin"
 }
 ```
 
@@ -158,7 +160,7 @@ export SNOWFLAKE_PASSWORD='...'
 
 ### Config File
 
-If you choose to use a config file, the optional `profile` attribute speecifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config`. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
+If you choose to use a config file, the optional `profile` attribute speecifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config` and uses [TOML](https://toml.io/) format. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
 
 ```shell
 [default]
