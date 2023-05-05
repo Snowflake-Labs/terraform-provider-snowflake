@@ -43,6 +43,7 @@ func NewDefaultClient() (*Client, error) {
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
+		log.Printf("[DEBUG] Searching for default credentials...\n")
 		cfg = DefaultConfig()
 	}
 

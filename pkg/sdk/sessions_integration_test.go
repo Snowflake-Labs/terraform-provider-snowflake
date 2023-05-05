@@ -11,7 +11,6 @@ import (
 func TestInt_UseDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())

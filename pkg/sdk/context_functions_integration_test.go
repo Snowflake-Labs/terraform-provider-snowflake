@@ -20,7 +20,10 @@ func TestInt_CurrentSession(t *testing.T) {
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
+	databaseTest, databaseCleanup := createDatabase(t, client)
+	t.Cleanup(databaseCleanup)
+	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
+	require.NoError(t, err)
 	db, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, db)
@@ -30,6 +33,12 @@ func TestInt_CurrentSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
+	databaseTest, databaseCleanup := createDatabase(t, client)
+	t.Cleanup(databaseCleanup)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	t.Cleanup(schemaCleanup)
+	err := client.Sessions.UseSchema(ctx, schemaTest.ID())
+	require.NoError(t, err)
 	schema, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, schema)

@@ -11,7 +11,8 @@ import (
 
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
-	if err != nil {
+	if err != nil || config == nil {
+		log.Printf("[DEBUG] No Snowflake config file found, falling back to environment variables: %v\n", err)
 		return EnvConfig()
 	}
 	return config
@@ -34,6 +35,7 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 
 	if envConfig := EnvConfig(); envConfig != nil {
 		// envConfig takes precedence
+		log.Printf("[DEBUG] overriding config with any environment variables\n")
 		config = MergeConfig(config, envConfig)
 	}
 
