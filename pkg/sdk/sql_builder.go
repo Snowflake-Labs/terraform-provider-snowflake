@@ -12,10 +12,6 @@ func parentheses(s string) string {
 	return fmt.Sprintf("(%s)", s)
 }
 
-func quote(s string, qt quoteType) string {
-	return qt.Quote(s)
-}
-
 type quoteType string
 
 const (
@@ -145,22 +141,6 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						value: field.Tag.Get("db"),
 						qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 					})
-
-				case "tag":
-					// tags is not a pointer so it could be empty. don't want to add an extra token in that case
-					if value.Len() == 0 {
-						continue
-					}
-					tags := make([]TagAssociation, 0)
-					// loop through the slice call parseStruct on each element (since the elements could be structs)
-					for i := 0; i < value.Len(); i++ {
-						tag := value.Index(i).Interface().(TagAssociation)
-						tags = append(tags, tag)
-					}
-					clauses = append(clauses, sqlTagsClause{
-						tags:           tags,
-						useParentheses: getUseParenthesesFromTag(field.Tag, "ddl", false),
-					})
 				case "list":
 					listClauses := make([]sqlClause, 0)
 					// loop through the slice call parseStruct on each element (since the elements could be structs)
@@ -169,9 +149,6 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						// test if v is an ObjectIdentifier. If it is it needs to be handled separately
 						objectIdentifer, ok := v.(ObjectIdentifier)
 						if ok {
-							if len(listClauses) < 1 {
-								clauses = append(clauses, sqlStaticClause("TAG"))
-							}
 							listClauses = append(listClauses, sqlIdentifierClause{
 								value: objectIdentifer,
 							})
@@ -184,7 +161,7 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						// each element of the slice needs to be pre-rendered before the commas are added
 						renderedStructClauses := b.sql(structClauses...)
 						sClause := sqlStaticClause(renderedStructClauses)
-						listClauses = append(listClauses, []sqlClause{sClause}...)
+						listClauses = append(listClauses, sClause)
 					}
 					if len(listClauses) < 1 {
 						continue
@@ -193,6 +170,7 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						clauses:        listClauses,
 						sep:            ",",
 						useParentheses: getUseParenthesesFromTag(field.Tag, "ddl", true),
+						keyword:        field.Tag.Get("db"),
 					})
 				}
 			}
@@ -295,7 +273,11 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 			value: value.Interface(),
 			qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 		}
-
+	case "identifier":
+		clause = sqlIdentifierClause{
+			key:   dbTag,
+			value: value.Interface().(ObjectIdentifier),
+		}
 	case "parameter":
 		clause = sqlParameterClause{
 			key:   dbTag,
@@ -330,12 +312,6 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 		if f == nil {
 			return nil, nil
 		}
-		if dbTag != "" {
-			clauses = append(clauses, sqlKeywordClause{
-				value: dbTag,
-				qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
-			})
-		}
 
 		listClauses := make([]sqlClause, 0)
 		// loop through the slice call parseStruct on each element (since the elements could be structs)
@@ -348,11 +324,12 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 			// each element of the slice needs to be pre-rendered before the commas are added
 			renderedStructClauses := b.sql(structClauses...)
 			sClause := sqlStaticClause(renderedStructClauses)
-			listClauses = append(listClauses, []sqlClause{sClause}...)
+			listClauses = append(listClauses, sClause)
 		}
 		clauses = append(clauses, sqlListClause{
 			clauses:        listClauses,
 			sep:            ",",
+			keyword:        field.Tag.Get("db"),
 			useParentheses: getUseParenthesesFromTag(field.Tag, "ddl", true),
 		})
 		return clauses, nil
@@ -382,49 +359,34 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 }
 
 type sqlListClause struct {
+	keyword        string
 	clauses        []sqlClause
 	sep            string
 	useParentheses bool
 }
 
 func (v sqlListClause) String() string {
+	var s string
+	// unclear if we should return parentheses at all.
 	if len(v.clauses) == 0 {
-		return ""
+		return s
 	}
 	clauseStrings := make([]string, len(v.clauses))
 	for i, clause := range v.clauses {
 		clauseStrings[i] = clause.String()
 	}
-	s := strings.Join(clauseStrings, v.sep)
+	s = strings.Join(clauseStrings, v.sep)
 	if v.useParentheses {
 		s = parentheses(s)
+	}
+	if v.keyword != "" {
+		s = fmt.Sprintf("%s %s", v.keyword, s)
 	}
 	return s
 }
 
 type sqlClause interface {
 	String() string
-}
-
-type sqlTagsClause struct {
-	tags           []TagAssociation
-	useParentheses bool
-}
-
-func (v sqlTagsClause) String() string {
-	if len(v.tags) < 1 {
-		return ""
-	}
-	var s string
-	for _, tag := range v.tags {
-		s += tag.Name.FullyQualifiedName() + " = " + quote(tag.Value, SingleQuotes) + ","
-	}
-	s = strings.TrimSuffix(s, ",")
-	if v.useParentheses {
-		s = parentheses(s)
-	}
-	s = "TAG " + s
-	return s
 }
 
 type sqlStaticClause string

@@ -139,7 +139,7 @@ func (opts *MaskingPolicyAlterOptions) validate() error {
 
 type MaskingPolicySet struct {
 	Body    *string          `ddl:"command" db:"BODY ->"`
-	Tag     []TagAssociation `ddl:"tag" db:"TAG"`
+	Tag     []TagAssociation `ddl:"list,no_parentheses" db:"TAG"`
 	Comment *string          `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
