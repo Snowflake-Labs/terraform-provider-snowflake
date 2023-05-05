@@ -24,7 +24,8 @@ func TestLoadConfigFile(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testFile(t, "config", []byte(c))
-	setupEnvVars(t, "", "", "", "", configPath)
+	cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
+	t.Cleanup(cleanupEnvVars)
 	m, err := loadConfigFile()
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", m["default"].Account)
@@ -56,7 +57,8 @@ func TestProfileConfig(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testFile(t, "config", []byte(c))
-	setupEnvVars(t, "", "", "", "", configPath)
+	cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
+	t.Cleanup(cleanupEnvVars)
 	config, err := ProfileConfig("securityadmin")
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", config.Account)

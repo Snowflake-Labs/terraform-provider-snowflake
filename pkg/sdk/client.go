@@ -26,6 +26,7 @@ func (o ObjectType) String() string {
 }
 
 type Client struct {
+	config *gosnowflake.Config
 	db     *sqlx.DB
 	dryRun bool
 
@@ -43,7 +44,7 @@ func NewDefaultClient() (*Client, error) {
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
-		log.Printf("[DEBUG] Searching for default credentials...\n")
+		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
 		cfg = DefaultConfig()
 	}
 
@@ -72,7 +73,8 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	client := &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe
-		db: db.Unsafe(),
+		db:     db.Unsafe(),
+		config: cfg,
 	}
 	client.initialize()
 

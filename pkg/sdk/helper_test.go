@@ -60,6 +60,7 @@ func testBuilder(t *testing.T) *sqlBuilder {
 
 func testClient(t *testing.T) *Client {
 	t.Helper()
+
 	client, err := NewDefaultClient()
 	if err != nil {
 		t.Fatal(err)
