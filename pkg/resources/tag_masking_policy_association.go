@@ -194,11 +194,8 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("masking_policy_id", mpIDString); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("masking_policy_id", mpIDString)
+	return err
 }
 
 // DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.

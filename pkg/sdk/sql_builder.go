@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// couple of helper functions
+// couple of helper functions.
 func parentheses(s string) string {
 	return fmt.Sprintf("(%s)", s)
 }

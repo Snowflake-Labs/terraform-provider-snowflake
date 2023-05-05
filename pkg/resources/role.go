@@ -80,10 +80,8 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("name", role.Name.String); err != nil {
 		return err
 	}
-	if err := d.Set("comment", role.Comment.String); err != nil {
-		return err
-	}
-	return nil
+	err = d.Set("comment", role.Comment.String)
+	return err
 }
 
 func UpdateRole(d *schema.ResourceData, meta interface{}) error {
@@ -118,8 +116,8 @@ func UpdateRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tag") {
-		old, new := d.GetChange("tag")
-		removed, added, changed := getTags(old).diffs(getTags(new))
+		o, n := d.GetChange("tag")
+		removed, added, changed := getTags(o).diffs(getTags(n))
 		for _, tA := range removed {
 			err := builder.UnsetTag(tA.toSnowflakeTagValue())
 			if err != nil {

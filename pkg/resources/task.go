@@ -405,12 +405,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 					// resume the task after modifications are complete as long as it is not a standalone task
 					if !(rootTask.Name == name) {
-						defer func() {
-							q = rootTask.Resume()
-							if err := snowflake.Exec(db, q); err != nil {
-								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-							}
-						}()
+						defer resumeTask(db, rootTask)
 					}
 				}
 			}
@@ -448,6 +443,13 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	return ReadTask(d, meta)
 }
 
+func resumeTask(db *sql.DB, rootTask *snowflake.Task) {
+	q := rootTask.Resume()
+	if err := snowflake.Exec(db, q); err != nil {
+		log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+	}
+}
+
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
@@ -475,12 +477,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer func() {
-					q = rootTask.Resume()
-					if err := snowflake.Exec(db, q); err != nil {
-						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-					}
-				}()
+				defer resumeTask(db, rootTask)
 			}
 		}
 	}
@@ -587,12 +584,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 						if !(rootTask.Name == name) {
 							// resume the task after modifications are complete, as long as it is not a standalone task
-							defer func() {
-								q = rootTask.Resume()
-								if err := snowflake.Exec(db, q); err != nil {
-									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-								}
-							}()
+							defer resumeTask(db, rootTask)
 						}
 					}
 				}
@@ -747,12 +739,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer func() {
-					q = rootTask.Resume()
-					if err := snowflake.Exec(db, q); err != nil {
-						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-					}
-				}()
+				defer resumeTask(db, rootTask)
 			}
 		}
 	}

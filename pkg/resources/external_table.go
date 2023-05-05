@@ -285,11 +285,8 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("owner", externalTable.Owner.String); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("owner", externalTable.Owner.String)
+	return err
 }
 
 // UpdateExternalTable implements schema.UpdateFunc.

@@ -82,7 +82,7 @@ func normalizeQuery(str string) string {
 // If we can find a sql parser that can handle the snowflake dialect then we should switch to parsing
 // queries and either comparing ASTs or emitting a canonical serialization for comparison. I couldn't
 // find such a library.
-func DiffSuppressStatement(_, old, new string, d *schema.ResourceData) bool {
+func DiffSuppressStatement(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
 }
 
@@ -255,10 +255,8 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
-	if err = d.Set("database", v.DatabaseName.String); err != nil {
-		return err
-	}
-	return nil
+	err = d.Set("database", v.DatabaseName.String)
+	return err
 }
 
 // UpdateView implements schema.UpdateFunc.
@@ -343,8 +341,8 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		return tagChangeErr
 	}
 	if d.HasChange("tag") {
-		old, new := d.GetChange("tag")
-		removed, added, changed := getTags(old).diffs(getTags(new))
+		o, n := d.GetChange("tag")
+		removed, added, changed := getTags(o).diffs(getTags(n))
 		for _, tA := range removed {
 			q := builder.UnsetTag(tA.toSnowflakeTagValue())
 			if err := snowflake.Exec(db, q); err != nil {

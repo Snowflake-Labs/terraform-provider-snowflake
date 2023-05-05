@@ -175,11 +175,8 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tag associations")
 	}
 
-	if err := d.Set("tag_value", ta.TagValue.String); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("tag_value", ta.TagValue.String)
+	return err
 }
 
 func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
@@ -193,8 +190,8 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewTagAssociationBuilder(tagID).WithObjectIdentifier(fullyQualifierObjectIdentifier).WithObjectType(objectType)
 
 	if d.HasChange("skip_validation") {
-		old, new := d.GetChange("skip_validation")
-		log.Printf("[DEBUG] skip_validation changed from %v to %v", old, new)
+		o, n := d.GetChange("skip_validation")
+		log.Printf("[DEBUG] skip_validation changed from %v to %v", o, n)
 	}
 
 	if d.HasChange("tag_value") {

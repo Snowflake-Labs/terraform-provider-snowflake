@@ -251,9 +251,9 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// difference calculates roles/shares to add/revoke
 	difference := func(key string) (toAdd []string, toRevoke []string) {
-		old, new := d.GetChange(key)
-		oldSet := old.(*schema.Set)
-		newSet := new.(*schema.Set)
+		o, n := d.GetChange(key)
+		oldSet := o.(*schema.Set)
+		newSet := n.(*schema.Set)
 		toAdd = expandStringList(newSet.Difference(oldSet).List())
 		toRevoke = expandStringList(oldSet.Difference(newSet).List())
 		return
