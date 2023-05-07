@@ -33,12 +33,6 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 		config = cfg
 	}
 
-	if envConfig := EnvConfig(); envConfig != nil {
-		// envConfig takes precedence
-		log.Printf("[DEBUG] overriding config with any environment variables\n")
-		config = MergeConfig(config, envConfig)
-	}
-
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
 	if config.Region == "us-west-2" {
