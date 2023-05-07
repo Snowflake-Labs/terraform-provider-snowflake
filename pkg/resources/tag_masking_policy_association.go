@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -168,15 +167,19 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 
 	// create temp warehouse to query the tag, and make sure to clean it up
 	client := sdk.NewClientFromDB(db)
-	randomNumbers := rand.Intn(1000)
-	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", randomNumbers)
+	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
 	tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
 	ctx := context.Background()
 	err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
 	if err != nil {
 		return err
 	}
-	defer client.Warehouses.Drop(ctx, tempWarehouseID, nil)
+	defer func() {
+		err := client.Warehouses.Drop(ctx, tempWarehouseID, nil)
+		if err != nil {
+			log.Printf("[WARN] error cleaning up temp warehouse %v", err)
+		}
+	}()
 	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	if err != nil {
 		return err
@@ -185,7 +188,12 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	defer client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+	defer func() {
+		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+		if err != nil {
+			log.Printf("[WARN] error resetting warehouse %v", err)
+		}
+	}()
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)

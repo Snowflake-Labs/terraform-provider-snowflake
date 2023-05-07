@@ -128,13 +128,14 @@ func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
+	id := NewAccountObjectIdentifier(name)
 	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE WAREHOUSE \"%s\"", name))
+	err := client.Warehouses.Create(ctx, id, nil)
 	require.NoError(t, err)
 	return &Warehouse{
 			Name: name,
 		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP WAREHOUSE \"%s\"", name))
+			err := client.Warehouses.Drop(ctx, id, nil)
 			require.NoError(t, err)
 		}
 }

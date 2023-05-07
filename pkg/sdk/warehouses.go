@@ -32,7 +32,7 @@ type Warehouse struct {
 // placeholder for the real implementation.
 type WarehouseCreateOptions struct{}
 
-func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseCreateOptions) error {
+func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, _ *WarehouseCreateOptions) error {
 	sql := fmt.Sprintf(`CREATE WAREHOUSE %s`, id.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
@@ -41,7 +41,7 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 // placeholder for the real implementation.
 type WarehouseAlterOptions struct{}
 
-func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseAlterOptions) error {
+func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, _ *WarehouseAlterOptions) error {
 	sql := fmt.Sprintf(`ALTER WAREHOUSE %s`, id.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
@@ -50,7 +50,7 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 // placeholder for the real implementation.
 type WarehouseDropOptions struct{}
 
-func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error {
+func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, _ *WarehouseDropOptions) error {
 	sql := fmt.Sprintf(`DROP WAREHOUSE %s`, id.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
@@ -59,8 +59,8 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 // placeholder for the real implementation.
 type WarehouseShowOptions struct{}
 
-func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error) {
-	sql := fmt.Sprintf(`SHOW WAREHOUSES`)
+func (c *warehouses) Show(ctx context.Context, _ *WarehouseShowOptions) ([]*Warehouse, error) {
+	sql := `SHOW WAREHOUSES`
 	var warehouses []*Warehouse
 	err := c.client.query(ctx, &warehouses, sql)
 	return warehouses, err
