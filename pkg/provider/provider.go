@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"crypto/rsa"
 	"database/sql"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -377,6 +379,20 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
+	log.Printf("[INFO] account: %s\n", account)
+	log.Printf("[INFO] user: %s\n", user)
+	log.Printf("[INFO] role: %s\n", role)
+	log.Printf("[INFO] warehouse: %s\n", warehouse)
+	log.Printf("[INFO] dsn: %s\n", dsn)
+	client := sdk.NewClientFromDB(db)
+	sessionID, err := client.ContextFunctions.CurrentSession(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve session id err = %w", err)
+	}
+	log.Printf("[INFO] Snowflake DB connection opened, session ID : %s\n", sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
+	}
 
 	return db, nil
 }
@@ -453,11 +469,12 @@ func DSN(
 		config.Password = password
 	} else if account == "" && user == "" {
 		// If account and user are empty then we need to fall back on using profile config
+		log.Printf("[DEBUG] No account or user provided, falling back to profile %s\n", profile)
 		profileConfig, err := sdk.ProfileConfig(profile)
 		if err != nil {
 			return "", errors.New("no authentication method provided")
 		}
-		config = sdk.MergeConfig(profileConfig, profileConfig)
+		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
 	return gosnowflake.DSN(config)

@@ -43,3 +43,16 @@ func TestInt_CurrentSchema(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, schema)
 }
+
+func TestInt_CurrentWarehouse(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	t.Cleanup(warehouseCleanup)
+	err := client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
+	require.NoError(t, err)
+	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, warehouse)
+}

@@ -6,6 +6,8 @@ import (
 )
 
 type Sessions interface {
+	// Context functions.
+	UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error
 	UseDatabase(ctx context.Context, database AccountObjectIdentifier) error
 	UseSchema(ctx context.Context, schema SchemaIdentifier) error
 }
@@ -15,6 +17,12 @@ var _ Sessions = (*sessions)(nil)
 type sessions struct {
 	client  *Client
 	builder *sqlBuilder
+}
+
+func (c *sessions) UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error {
+	sql := fmt.Sprintf(`USE WAREHOUSE %s`, warehouse.FullyQualifiedName())
+	_, err := c.client.exec(ctx, sql)
+	return err
 }
 
 func (c *sessions) UseDatabase(ctx context.Context, database AccountObjectIdentifier) error {

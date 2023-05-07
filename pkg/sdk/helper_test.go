@@ -53,6 +53,19 @@ func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
 	}
 }
 
+func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
+		require.NoError(t, err)
+	}
+}
+
 func testBuilder(t *testing.T) *sqlBuilder {
 	t.Helper()
 	return &sqlBuilder{}
@@ -105,6 +118,25 @@ func randomIntRange(t *testing.T, min, max int) int {
 		t.Errorf("min %d is greater than max %d", min, max)
 	}
 	return gofakeit.IntRange(min, max)
+}
+
+func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
+	t.Helper()
+	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
+}
+
+func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE WAREHOUSE \"%s\"", name))
+	require.NoError(t, err)
+	return &Warehouse{
+			Name: name,
+		}, func() {
+			_, err := client.exec(ctx, fmt.Sprintf("DROP WAREHOUSE \"%s\"", name))
+			require.NoError(t, err)
+		}
 }
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {

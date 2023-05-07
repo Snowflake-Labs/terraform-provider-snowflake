@@ -35,6 +35,7 @@ type Client struct {
 	PasswordPolicies PasswordPolicies
 	Sessions         Sessions
 	SystemFunctions  SystemFunctions
+	Warehouses       Warehouses
 }
 
 func NewDefaultClient() (*Client, error) {
@@ -108,6 +109,7 @@ func (c *Client) initialize() {
 	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
 	c.Sessions = &sessions{client: c, builder: b}
 	c.SystemFunctions = &systemFunctions{client: c, builder: b}
+	c.Warehouses = &warehouses{client: c, builder: b}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {

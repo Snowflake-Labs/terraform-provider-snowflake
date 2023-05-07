@@ -2,11 +2,13 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -163,6 +165,27 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
+
+	// create temp warehouse to query the tag, and make sure to clean it up
+	client := sdk.NewClientFromDB(db)
+	randomNumbers := rand.Intn(1000)
+	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", randomNumbers)
+	tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+	ctx := context.Background()
+	err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
+	if err != nil {
+		return err
+	}
+	defer client.Warehouses.Drop(ctx, tempWarehouseID, nil)
+	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	if err != nil {
+		return err
+	}
+	err = client.Sessions.UseWarehouse(ctx, tempWarehouseID)
+	if err != nil {
+		return err
+	}
+	defer client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
 
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
