@@ -39,21 +39,6 @@ resource "snowflake_account_grant" "test" {
 }
 `, role)
 }
-/*
-// try commenting this out, since test is mysteriously failing
-https://github.com/Snowflake-Labs/terraform-provider-snowflake/actions/runs/4906105061/jobs/8760528078?pr=1779
-
-panic: test timed out after 10m0s
-
-goroutine 103803 [running]:
-testing.(*M).startAlarm.func1()
-	/opt/hostedtoolcache/go/1.19.8/x64/src/testing/testing.go:2036 +0x8e
-created by time.goFunc
-	/opt/hostedtoolcache/go/1.19.8/x64/src/time/sleep.go:176 +0x32
-	....
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource.ParallelTest({0x1b70360, 0xc000530820}, {0x0, 0x0, 0x0, 0x0, 0x0, 0xc000652c00, 0x0, 0x0, ...})
-	/home/runner/go/pkg/mod/github.com/hashicorp/terraform-plugin-sdk/v2@v2.26.1/helper/resource/testing.go:678 +0x55
-github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test.TestAcc_AccountGrantManagedTask(0x0?)
 
 func TestAcc_AccountGrantManagedTask(t *testing.T) {
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -71,7 +56,7 @@ func TestAcc_AccountGrantManagedTask(t *testing.T) {
 		},
 	})
 }
-*/
+
 func accountGrantManagedTaskConfig(role string) string {
 	return fmt.Sprintf(`
 
