@@ -36,7 +36,7 @@ func TestInt_GetTag(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), ObjectTypeMaskingPolicy)
+		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID())
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, s)
 	})
@@ -45,7 +45,7 @@ func TestInt_GetTag(t *testing.T) {
 		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
 
-		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), ObjectTypeMaskingPolicy)
+		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID())
 		require.Error(t, err)
 		assert.Equal(t, "", s)
 	})

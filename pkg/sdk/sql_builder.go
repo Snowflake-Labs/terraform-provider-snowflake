@@ -147,7 +147,7 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 					for i := 0; i < value.Len(); i++ {
 						v := value.Index(i).Interface()
 						// test if v is an ObjectIdentifier. If it is it needs to be handled separately
-						objectIdentifer, ok := v.(ObjectIdentifier)
+						objectIdentifer, ok := v.(Identifier)
 						if ok {
 							listClauses = append(listClauses, sqlIdentifierClause{
 								value: objectIdentifer,
@@ -192,12 +192,12 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 					})
 				case "identifier":
-					if value.Interface().(ObjectIdentifier).FullyQualifiedName() == "" {
+					if value.Interface().(Identifier).FullyQualifiedName() == "" {
 						continue
 					}
 					clauses = append(clauses, sqlIdentifierClause{
 						key:   field.Tag.Get("db"),
-						value: value.Interface().(ObjectIdentifier),
+						value: value.Interface().(Identifier),
 					})
 				}
 			}
@@ -276,7 +276,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 	case "identifier":
 		clause = sqlIdentifierClause{
 			key:   dbTag,
-			value: value.Interface().(ObjectIdentifier),
+			value: value.Interface().(Identifier),
 		}
 	case "parameter":
 		clause = sqlParameterClause{
@@ -334,7 +334,7 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 		})
 		return clauses, nil
 	case "identifier":
-		id := b.getUnexportedField(value).(ObjectIdentifier)
+		id := b.getUnexportedField(value).(Identifier)
 		if id.FullyQualifiedName() != "" {
 			clause = sqlIdentifierClause{
 				key:   dbTag,
@@ -406,7 +406,7 @@ func (v sqlKeywordClause) String() string {
 
 type sqlIdentifierClause struct {
 	key   string
-	value ObjectIdentifier
+	value Identifier
 }
 
 func (v sqlIdentifierClause) String() string {

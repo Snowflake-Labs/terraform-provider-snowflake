@@ -56,7 +56,7 @@ func StringToBool(s string) bool {
 func EncodeSnowflakeID(attributes ...interface{}) string {
 	// is attribute already an object identifier?
 	if len(attributes) == 1 {
-		if id, ok := attributes[0].(sdk.ObjectIdentifier); ok {
+		if id, ok := attributes[0].(sdk.Identifier); ok {
 			// remove quotes and replace dots with pipes
 			parts := strings.Split(id.FullyQualifiedName(), ".")
 			for i, part := range parts {
@@ -82,11 +82,11 @@ func EncodeSnowflakeID(attributes ...interface{}) string {
 	return strings.Join(parts, "|")
 }
 
-func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
+func DecodeSnowflakeID(id string) sdk.Identifier {
 	parts := strings.Split(id, IDDelimiter)
 	switch len(parts) {
 	case 1:
-		return sdk.NewAccountObjectIdentifier(parts[0])
+		return sdk.NewAccountLevelIdentifier(parts[0])
 	case 2:
 		return sdk.NewSchemaIdentifier(parts[0], parts[1])
 	case 3:

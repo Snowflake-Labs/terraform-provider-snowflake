@@ -168,7 +168,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	// create temp warehouse to query the tag, and make sure to clean it up
 	client := sdk.NewClientFromDB(db)
 	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
-	tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+	tempWarehouseID := sdk.NewAccountLevelIdentifier(randomWarehouseName)
 	ctx := context.Background()
 	err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
 	if err != nil {
@@ -189,7 +189,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	defer func() {
-		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountLevelIdentifier(originalWarehouse))
 		if err != nil {
 			log.Printf("[WARN] error resetting warehouse %v", err)
 		}

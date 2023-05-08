@@ -337,16 +337,16 @@ func TestBuilder_parseField(t *testing.T) {
 }
 
 type unexportedTestHelper struct {
-	accountObjectIdentifier AccountObjectIdentifier `ddl:"identifier"`
-	schemaIdentifier        SchemaIdentifier        `ddl:"identifier"`
-	schemaObjectIdentifier  SchemaObjectIdentifier  `ddl:"identifier"`
-	static                  bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
+	accountObjectIdentifier AccountLevelIdentifier `ddl:"identifier"`
+	schemaIdentifier        SchemaIdentifier       `ddl:"identifier"`
+	schemaObjectIdentifier  SchemaObjectIdentifier `ddl:"identifier"`
+	static                  bool                   `ddl:"static" db:"EXAMPLE_STATIC"`
 }
 
 func TestBuilder_parseUnexportedField(t *testing.T) {
 	builder := testBuilder(t)
 	t.Run("test unexported account object identifier", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := randomAccountLevelIdentifier(t, ObjectTypeDatabase)
 		s := &unexportedTestHelper{
 			accountObjectIdentifier: id,
 		}
@@ -378,7 +378,7 @@ func TestBuilder_parseUnexportedField(t *testing.T) {
 	})
 
 	t.Run("test unexported schema object identifier", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
+		id := randomSchemaObjectIdentifier(t, ObjectTypeTable)
 		s := &unexportedTestHelper{
 			schemaObjectIdentifier: id,
 		}
@@ -425,10 +425,10 @@ func TestBuilder_parseUnexportedField(t *testing.T) {
 }
 
 type structTestHelper struct {
-	static  bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
-	name    AccountObjectIdentifier `ddl:"identifier"`
-	Param   *string                 `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
-	Command *string                 `ddl:"command" db:"EXAMPLE_COMMAND"`
+	static  bool                   `ddl:"static" db:"EXAMPLE_STATIC"`
+	name    AccountLevelIdentifier `ddl:"identifier"`
+	Param   *string                `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
+	Command *string                `ddl:"command" db:"EXAMPLE_COMMAND"`
 }
 
 func TestBuilder_parseStruct(t *testing.T) {
@@ -443,7 +443,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 	t.Run("test struct with all fields", func(t *testing.T) {
 		s := &structTestHelper{
 			static:  true,
-			name:    randomAccountObjectIdentifier(t),
+			name:    randomAccountLevelIdentifier(t, ObjectTypeDatabase),
 			Param:   String("example"),
 			Command: String("example"),
 		}

@@ -10,5 +10,5 @@ type Tag struct {
 }
 
 func (v *Tag) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name, ObjectTypeTag)
 }

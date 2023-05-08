@@ -11,7 +11,7 @@ import (
 
 func TestMaskingPolicyCreate(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypeMaskingPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &MaskingPolicyCreateOptions{}
@@ -57,7 +57,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 
 func TestMaskingPolicyAlter(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypeMaskingPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &MaskingPolicyAlterOptions{}
@@ -109,7 +109,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t), ObjectTypeMaskingPolicy)
 		opts := &MaskingPolicyAlterOptions{
 			name:    id,
 			NewName: newID,
@@ -124,7 +124,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 
 func TestMaskingPolicyDrop(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypeMaskingPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &MaskingPolicyDropOptions{}
@@ -149,7 +149,7 @@ func TestMaskingPolicyDrop(t *testing.T) {
 
 func TestMaskingPolicyShow(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypeMaskingPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &MaskingPolicyShowOptions{}
@@ -190,7 +190,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
-		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
+		databaseIdentifier := NewAccountLevelIdentifier(id.DatabaseName(), ObjectTypeDatabase)
 		opts := &MaskingPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
@@ -237,7 +237,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 
 func TestMaskingPolicyDescribe(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypeMaskingPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &maskingPolicyDescribeOptions{}

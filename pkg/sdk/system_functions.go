@@ -6,7 +6,7 @@ import (
 )
 
 type SystemFunctions interface {
-	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, typ ObjectType) (string, error)
+	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier) (string, error)
 }
 
 var _ SystemFunctions = (*systemFunctions)(nil)
@@ -16,11 +16,11 @@ type systemFunctions struct {
 	builder *sqlBuilder
 }
 
-func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {
+func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier) (string, error) {
 	s := &struct {
 		Tag string `db:"TAG"`
 	}{}
-	sql := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('%s', '%s', '%v') AS "TAG"`, tagID.FullyQualifiedName(), objectID.FullyQualifiedName(), objectType)
+	sql := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('%s', '%s', '%v') AS "TAG"`, tagID.FullyQualifiedName(), objectID.FullyQualifiedName(), objectID.ObjectType)
 	err := c.client.queryOne(ctx, s, sql)
 	if err != nil {
 		return "", err

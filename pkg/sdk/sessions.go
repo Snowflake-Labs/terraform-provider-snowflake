@@ -7,8 +7,8 @@ import (
 
 type Sessions interface {
 	// Context functions.
-	UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error
-	UseDatabase(ctx context.Context, database AccountObjectIdentifier) error
+	UseWarehouse(ctx context.Context, warehouse AccountLevelIdentifier) error
+	UseDatabase(ctx context.Context, database AccountLevelIdentifier) error
 	UseSchema(ctx context.Context, schema SchemaIdentifier) error
 }
 
@@ -19,13 +19,13 @@ type sessions struct {
 	builder *sqlBuilder
 }
 
-func (c *sessions) UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error {
+func (c *sessions) UseWarehouse(ctx context.Context, warehouse AccountLevelIdentifier) error {
 	sql := fmt.Sprintf(`USE WAREHOUSE %s`, warehouse.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
 }
 
-func (c *sessions) UseDatabase(ctx context.Context, database AccountObjectIdentifier) error {
+func (c *sessions) UseDatabase(ctx context.Context, database AccountLevelIdentifier) error {
 	sql := fmt.Sprintf(`USE DATABASE %s`, database.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err

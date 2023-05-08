@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+func randomSchemaObjectIdentifier(t *testing.T, objectType ObjectType) SchemaObjectIdentifier {
 	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
+	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), objectType)
 }
 
 func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
@@ -20,12 +20,12 @@ func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	return NewSchemaIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
 }
 
-func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+func randomAccountLevelIdentifier(t *testing.T, objectType ObjectType) AccountLevelIdentifier {
 	t.Helper()
-	return NewAccountObjectIdentifier(randomStringRange(t, 8, 12))
+	return NewAccountLevelIdentifier(randomStringRange(t, 8, 12), objectType)
 }
 
-func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
+func useDatabase(t *testing.T, client *Client, databaseID AccountLevelIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
@@ -33,7 +33,7 @@ func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifie
 	err = client.Sessions.UseDatabase(ctx, databaseID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseDatabase(ctx, NewAccountObjectIdentifier(orgDB))
+		err := client.Sessions.UseDatabase(ctx, NewAccountLevelIdentifier(orgDB, ObjectTypeDatabase))
 		require.NoError(t, err)
 	}
 }
@@ -53,7 +53,7 @@ func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
 	}
 }
 
-func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
+func useWarehouse(t *testing.T, client *Client, warehouseID AccountLevelIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
@@ -61,7 +61,7 @@ func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentif
 	err = client.Sessions.UseWarehouse(ctx, warehouseID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
+		err := client.Sessions.UseWarehouse(ctx, NewAccountLevelIdentifier(orgWarehouse, ObjectTypeWarehouse))
 		require.NoError(t, err)
 	}
 }
@@ -128,7 +128,7 @@ func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
-	id := NewAccountObjectIdentifier(name)
+	id := NewAccountLevelIdentifier(name, ObjectTypeWarehouse)
 	ctx := context.Background()
 	err := client.Warehouses.Create(ctx, id, nil)
 	require.NoError(t, err)
@@ -206,7 +206,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 		schema, schemaCleanup = createSchema(t, client, database)
 	}
 	name := randomUUID(t)
-	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name, ObjectTypePasswordPolicy)
 	ctx := context.Background()
 	err := client.PasswordPolicies.Create(ctx, id, options)
 	require.NoError(t, err)
@@ -250,7 +250,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 		schema, schemaCleanup = createSchema(t, client, database)
 	}
 	name := randomString(t)
-	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name, ObjectTypeMaskingPolicy)
 	ctx := context.Background()
 	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
 	require.NoError(t, err)
