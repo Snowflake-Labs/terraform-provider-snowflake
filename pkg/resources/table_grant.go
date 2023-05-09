@@ -20,6 +20,7 @@ var validTablePrivileges = NewPrivilegeSet(
 	privilegeReferences,
 	privilegeRebuild,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var tableGrantSchema = map[string]*schema.Schema{
@@ -44,7 +45,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future table.",
+		Description:  "The privilege to grant on the current or future table. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeSelect.String(),
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),

@@ -10,6 +10,7 @@ type (
 )
 
 const (
+	AllAccountGrantAccount       AllGrantType = "ACCOUNT"
 	AllGrantTypeSchema           AllGrantType = "SCHEMA"
 	AllGrantTypeTable            AllGrantType = "TABLE"
 	AllGrantTypeView             AllGrantType = "VIEW"

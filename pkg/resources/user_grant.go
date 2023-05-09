@@ -14,6 +14,7 @@ import (
 var validUserPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var userGrantSchema = map[string]*schema.Schema{
@@ -26,7 +27,7 @@ var userGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "The privilege to grant on the user.",
+		Description:  "The privilege to grant on the user. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validUserPrivileges.ToList(), true),
 	},

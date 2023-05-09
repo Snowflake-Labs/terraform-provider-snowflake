@@ -15,6 +15,7 @@ import (
 var validFileFormatPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var fileFormatGrantSchema = map[string]*schema.Schema{
@@ -56,7 +57,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future file format.",
+		Description:  "The privilege to grant on the current or future file format. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.ToList(), true),
 		ForceNew:     true,

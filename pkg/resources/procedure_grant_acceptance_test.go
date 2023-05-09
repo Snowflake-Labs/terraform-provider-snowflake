@@ -17,7 +17,7 @@ func TestAccProcedureGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: procedureGrantConfig(name, onAll),
+				Config: procedureGrantConfig(name, onAll, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", name),
@@ -47,7 +47,7 @@ func TestAccProcedureGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: procedureGrantConfig(name, onFuture),
+				Config: procedureGrantConfig(name, onFuture, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", name),
@@ -69,7 +69,7 @@ func TestAccProcedureGrant_onFuture(t *testing.T) {
 	})
 }
 
-func procedureGrantConfig(name string, grantType grantType) string {
+func procedureGrantConfig(name string, grantType grantType, privilege string) string {
 	var procedureNameConfig string
 	switch grantType {
 	case onFuture:
@@ -97,7 +97,7 @@ resource snowflake_procedure_grant test {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-	privilege = "USAGE"
+	privilege = "%s"
 }
-`, name, name, name, procedureNameConfig)
+`, name, name, name, procedureNameConfig, privilege)
 }

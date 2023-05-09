@@ -14,6 +14,7 @@ import (
 var validMaskingPoilcyPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeApply,
+	privilegeAllPrivileges,
 )
 
 var maskingPolicyGrantSchema = map[string]*schema.Schema{
@@ -32,7 +33,7 @@ var maskingPolicyGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the masking policy.",
+		Description:  "The privilege to grant on the masking policy. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "APPLY",
 		ValidateFunc: validation.StringInSlice(validMaskingPoilcyPrivileges.ToList(), true),
 		ForceNew:     true,

@@ -14,6 +14,7 @@ import (
 var validStagePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 	// These privileges are only valid for internal stages
 	privilegeRead,
 	privilegeWrite,
@@ -52,7 +53,7 @@ var stageGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the stage.",
+		Description:  "The privilege to grant on the stage. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validStagePrivileges.ToList(), true),
 		ForceNew:     true,

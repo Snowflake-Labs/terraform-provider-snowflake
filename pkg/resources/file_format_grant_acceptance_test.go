@@ -17,13 +17,24 @@ func TestAcc_FileFormatGrant_defaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatGrantConfig(name, normal),
+				Config: fileFormatGrantConfig(name, normal, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", name),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "file_format_name", name),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "privilege", "USAGE"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: fileFormatGrantConfig(name, normal, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "file_format_name", name),
+					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			// IMPORT
@@ -47,7 +58,7 @@ func TestAcc_FileFormatGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatGrantConfig(name, onAll),
+				Config: fileFormatGrantConfig(name, onAll, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", name),
@@ -78,7 +89,7 @@ func TestAcc_FileFormatGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatGrantConfig(name, onFuture),
+				Config: fileFormatGrantConfig(name, onFuture, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_file_format_grant.test", "schema_name", name),
@@ -101,7 +112,7 @@ func TestAcc_FileFormatGrant_onFuture(t *testing.T) {
 	})
 }
 
-func fileFormatGrantConfig(name string, grantType grantType) string {
+func fileFormatGrantConfig(name string, grantType grantType, privilege string) string {
 	var fileFormatNameConfig string
 	switch grantType {
 	case normal:
@@ -140,11 +151,11 @@ resource snowflake_file_format_grant test {
     %s
 	database_name = snowflake_database.test.name
 	schema_name = snowflake_schema.test.name
-	privilege = "USAGE"
+	privilege = "%s"
 	roles = [
 		snowflake_role.test.name
 	]
 }
 
-`, name, name, name, name, fileFormatNameConfig)
+`, name, name, name, name, fileFormatNameConfig, privilege)
 }

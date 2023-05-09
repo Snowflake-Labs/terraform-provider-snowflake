@@ -17,7 +17,7 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewGrantConfigFuture(name, onFuture),
+				Config: materializedViewGrantConfigFuture(name, onFuture, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
@@ -48,7 +48,7 @@ func TestAcc_MaterializedViewAllGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewGrantConfigFuture(name, onAll),
+				Config: materializedViewGrantConfigFuture(name, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
@@ -70,7 +70,7 @@ func TestAcc_MaterializedViewAllGrant(t *testing.T) {
 	})
 }
 
-func materializedViewGrantConfigFuture(name string, grantType grantType) string {
+func materializedViewGrantConfigFuture(name string, grantType grantType, privilege string) string {
 	var materializedViewNameConfig string
 	switch grantType {
 	case onFuture:
@@ -98,7 +98,7 @@ resource "snowflake_materialized_view_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-	privilege = "SELECT"
+	privilege = "%s"
 }
-`, name, name, name, materializedViewNameConfig)
+`, name, name, name, materializedViewNameConfig, privilege)
 }

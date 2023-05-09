@@ -14,6 +14,7 @@ import (
 var validRowAccessPoilcyPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeApply,
+	privilegeAllPrivileges,
 )
 
 var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
@@ -32,7 +33,7 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the row access policy.",
+		Description:  "The privilege to grant on the row access policy. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "APPLY",
 		ValidateFunc: validation.StringInSlice(validRowAccessPoilcyPrivileges.ToList(), true),
 		ForceNew:     true,

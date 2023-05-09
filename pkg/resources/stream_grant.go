@@ -15,6 +15,7 @@ import (
 var validStreamPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 var streamGrantSchema = map[string]*schema.Schema{
@@ -50,7 +51,7 @@ var streamGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future stream.",
+		Description:  "The privilege to grant on the current or future stream. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validStreamPrivileges.ToList(), true),
 		ForceNew:     true,
