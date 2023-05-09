@@ -47,7 +47,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", name),
-					resource.TestCheckNoResourceAttr("snowflake_task_grant.test", "task_name"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "task_name", name),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
