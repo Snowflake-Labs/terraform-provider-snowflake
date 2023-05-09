@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.64.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.63.0...v0.64.0) (2023-05-09)
+
+
+### Features
+
+* Add external functions translators ([#1735](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1735)) ([1f67286](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1f672862adb29a658f5e81e940f9afb994347f2f))
+* addition of the on_all option for all remaining resources ([#1742](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1742)) ([e3a7710](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e3a771000fa527fc8420b892450031ba39394fcf))
+* database roles datasource ([#1726](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1726)) ([f1cb7f3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f1cb7f3b368c0a7fa6a0a08784d53b0e92efda81))
+* email notification integration ([#1720](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1720)) ([5d21fe1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d21fe19f0da9ed4939e9bd6dc66237685c5a327))
+* masking policy in v2 sdk ([#1777](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1777)) ([6978c42](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6978c42b304bd8c5429c88bcd7d6ed20ac3fd98a))
+
+
+### Misc
+
+* sdk v2 implemented for password policy ([#1752](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1752)) ([0cb1164](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0cb1164414607ce2e4ac7f6fb2da1c563b22da7b))
+
+
+### BugFixes
+
+* add missing reference for email_notification ([#1768](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1768)) ([6feeb9c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6feeb9c09f56df0fb222bd0664508defb7c5af6e))
+* database from_share handles organization ([#1711](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1711)) ([9e71eb6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9e71eb6b4b69ed7fe1d42febe30fb166ea00812a))
+* get `on_view` from `table_name` for `stream` ([#1740](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1740)) ([21fc2b9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/21fc2b9ad9ddf02a241fbf2d1c3297d98cfa26c9))
+
 ## [0.63.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.62.0...v0.63.0) (2023-04-25)
 
 
