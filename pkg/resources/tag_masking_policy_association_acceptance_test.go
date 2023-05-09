@@ -52,7 +52,12 @@ resource "snowflake_masking_policy" "test" {
 	name = "%[1]v"
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
-	value_data_type = "VARCHAR"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
 	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 	return_data_type = "VARCHAR(16777216)"
 	comment = "Terraform acceptance test"

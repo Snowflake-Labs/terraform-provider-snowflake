@@ -181,7 +181,7 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 	return ReadViewGrant(d, meta)
 }
@@ -212,7 +212,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

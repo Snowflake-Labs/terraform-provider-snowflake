@@ -13,13 +13,28 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_masking_policy" "example_masking_policy" {
-  name               = "EXAMPLE_MASKING_POLICY"
+resource "snowflake_masking_policy" "test" {
+ name               = "EXAMPLE_MASKING_POLICY"
   database           = "EXAMPLE_DB"
   schema             = "EXAMPLE_SCHEMA"
-  value_data_type    = "string"
-  masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-  return_data_type   = "string"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+  masking_expression = <<-EOF
+    case 
+      when current_role() in ('ROLE_A') then 
+        val 
+      when is_role_in_session( 'ROLE_B' ) then 
+        'ABC123'
+      else
+        '******'
+    end
+  EOF
+
+  return_data_type = "VARCHAR"
 }
 ```
 
@@ -33,16 +48,34 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 - `name` (String) Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.
 - `return_data_type` (String) Specifies the data type to return.
 - `schema` (String) The schema in which to create the masking policy.
-- `value_data_type` (String) Specifies the data type to mask.
+- `signature` (Block List, Min: 1, Max: 1) The signature for the masking policy; specifies the input columns and data types to evaluate at query runtime. (see [below for nested schema](#nestedblock--signature))
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the masking policy.
+- `exempt_other_policies` (Boolean) Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy.
+- `if_not_exists` (Boolean) Prevent overwriting a previous masking policy with the same name.
+- `or_replace` (Boolean) Whether to override a previous masking policy with the same name.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `qualified_name` (String) Specifies the qualified identifier for the masking policy.
+
+<a id="nestedblock--signature"></a>
+### Nested Schema for `signature`
+
+Required:
+
+- `column` (Block List, Min: 1) (see [below for nested schema](#nestedblock--signature--column))
+
+<a id="nestedblock--signature--column"></a>
+### Nested Schema for `signature.column`
+
+Required:
+
+- `name` (String) Specifies the column name to mask.
+- `type` (String) Specifies the column type to mask.
 
 ## Import
 

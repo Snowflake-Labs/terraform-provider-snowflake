@@ -97,8 +97,8 @@ type TagBuilder interface {
 
 func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) error {
 	if d.HasChange("tag") {
-		old, new := d.GetChange("tag")
-		removed, added, changed := getTags(old).diffs(getTags(new))
+		o, n := d.GetChange("tag")
+		removed, added, changed := getTags(o).diffs(getTags(n))
 		for _, tA := range removed {
 			q := builder.UnsetTag(tA.toSnowflakeTagValue())
 			if err := snowflake.Exec(db, q); err != nil {
@@ -260,11 +260,8 @@ func ReadTag(d *schema.ResourceData, meta interface{}) error {
 	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
 	av = strings.TrimPrefix(av, "[")
 	av = strings.TrimSuffix(av, "]")
-	if err := d.Set("allowed_values", helpers.StringListToList(av)); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("allowed_values", helpers.StringListToList(av))
+	return err
 }
 
 // UpdateTag implements schema.UpdateFunc.

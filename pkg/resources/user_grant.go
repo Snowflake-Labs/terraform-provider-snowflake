@@ -98,7 +98,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(userName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(userName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadUserGrant(d, meta)
@@ -118,7 +118,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(userName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(userName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

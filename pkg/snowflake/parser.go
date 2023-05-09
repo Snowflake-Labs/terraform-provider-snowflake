@@ -39,7 +39,7 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeSpace()
 	e.consumeToken("if not exists")
 	e.consumeSpace()
-	e.consumeIdentifier()
+	e.consumeID()
 	// TODO column list
 	e.consumeSpace()
 	e.consumeToken("copy grants")
@@ -70,7 +70,7 @@ func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error)
 	e.consumeSpace()
 	e.consumeToken("if not exists")
 	e.consumeSpace()
-	e.consumeIdentifier()
+	e.consumeID()
 	// TODO copy grants
 	// TODO column list
 	e.consumeComment()
@@ -118,7 +118,7 @@ func (e *ViewSelectStatementExtractor) consumeSpace() {
 	e.pos += found
 }
 
-func (e *ViewSelectStatementExtractor) consumeIdentifier() {
+func (e *ViewSelectStatementExtractor) consumeID() {
 	e.consumeNonSpace()
 }
 

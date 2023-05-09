@@ -113,7 +113,7 @@ func readGenericGrant(
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
 	allObjects bool,
-	validPrivileges PrivilegeSet,
+	_ PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
@@ -236,7 +236,6 @@ func readGenericGrant(
 	if err := d.Set("with_grant_option", grantOption); err != nil {
 		return err
 	}
-
 	return nil
 }
 

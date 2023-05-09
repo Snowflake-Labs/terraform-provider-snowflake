@@ -164,7 +164,7 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadTaskGrant(d, meta)
@@ -196,7 +196,7 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

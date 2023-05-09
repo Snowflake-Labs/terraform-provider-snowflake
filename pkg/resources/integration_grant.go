@@ -100,7 +100,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(integrationName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(integrationName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadIntegrationGrant(d, meta)
@@ -120,7 +120,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(integrationName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(integrationName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

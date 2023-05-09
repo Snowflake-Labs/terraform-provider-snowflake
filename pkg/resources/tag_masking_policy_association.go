@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
@@ -97,6 +100,7 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.",
 	}
 }
 
@@ -113,13 +117,10 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	tagName := tagIDStruct.TagName
 
 	mpID := d.Get("masking_policy_id").(string)
-	mpIDStruct, mpIDErr := maskingPolicyIDFromString(mpID)
-	if mpIDErr != nil {
-		return mpIDErr
-	}
-	mpDB := mpIDStruct.DatabaseName
-	mpSchema := mpIDStruct.SchemaName
-	mpName := mpIDStruct.MaskingPolicyName
+	mpIDStruct := helpers.DecodeSnowflakeID(mpID).(sdk.SchemaObjectIdentifier)
+	mpDB := mpIDStruct.DatabaseName()
+	mpSchema := mpIDStruct.SchemaName()
+	mpName := mpIDStruct.Name()
 
 	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
@@ -165,6 +166,36 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
+	// create temp warehouse to query the tag, and make sure to clean it up
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	if err != nil {
+		return err
+	}
+	if originalWarehouse == "" {
+		log.Printf("[DEBUG] no current warehouse set, creating a temporary warehouse")
+		randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
+		tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+		err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err := client.Warehouses.Drop(ctx, tempWarehouseID, nil)
+			if err != nil {
+				log.Printf("[WARN] error cleaning up temp warehouse %v", err)
+			}
+			err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+			if err != nil {
+				log.Printf("[WARN] error resetting warehouse %v", err)
+			}
+		}()
+		err = client.Sessions.UseWarehouse(ctx, tempWarehouseID)
+		if err != nil {
+			return err
+		}
+	}
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -189,16 +220,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	mpID := maskingPolicyID{
-		DatabaseName:      t.PolicyDB.String,
-		SchemaName:        t.PolicySchema.String,
-		MaskingPolicyName: t.PolicyName.String,
-	}
-
-	mpIDString, err := mpID.String()
-	if err != nil {
-		return err
-	}
+	mpIDString := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
 
 	if err := d.Set("tag_id", tagIDString); err != nil {
 		return err
@@ -207,7 +229,6 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("masking_policy_id", mpIDString); err != nil {
 		return err
 	}
-
 	return nil
 }
 

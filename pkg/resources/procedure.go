@@ -164,8 +164,8 @@ var procedureSchema = map[string]*schema.Schema{
 	},
 }
 
-func DiffTypes(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(strings.ToUpper(old), strings.ToUpper(new))
+func DiffTypes(_, o, n string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(strings.ToUpper(o), strings.ToUpper(n))
 }
 
 // Procedure returns a pointer to the resource representing a stored procedure.

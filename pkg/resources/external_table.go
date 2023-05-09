@@ -288,7 +288,6 @@ func ReadExternalTable(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("owner", externalTable.Owner.String); err != nil {
 		return err
 	}
-
 	return nil
 }
 

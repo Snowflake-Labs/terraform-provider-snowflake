@@ -433,7 +433,6 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("allowed_shares", nil); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -444,8 +443,8 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewFailoverGroupBuilder(name)
 
 	if d.HasChange("object_types") {
-		_, new := d.GetChange("object_types")
-		newObjectTypes := new.(*schema.Set).List()
+		_, n := d.GetChange("object_types")
+		newObjectTypes := n.(*schema.Set).List()
 
 		var objectTypes []string
 		for _, v := range newObjectTypes {
@@ -458,13 +457,13 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("allowed_databases") {
-		old, new := d.GetChange("allowed_databases")
-		oad := old.(*schema.Set).List()
+		o, n := d.GetChange("allowed_databases")
+		oad := o.(*schema.Set).List()
 		oldAllowedDatabases := make([]string, len(oad))
 		for i, v := range oad {
 			oldAllowedDatabases[i] = v.(string)
 		}
-		nad := new.(*schema.Set).List()
+		nad := n.(*schema.Set).List()
 		newAllowedDatabases := make([]string, len(nad))
 		for i, v := range nad {
 			newAllowedDatabases[i] = v.(string)
@@ -499,13 +498,13 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("allowed_shares") {
-		old, new := d.GetChange("allowed_shares")
-		oad := old.(*schema.Set).List()
+		o, n := d.GetChange("allowed_shares")
+		oad := o.(*schema.Set).List()
 		oldAllowedShares := make([]string, len(oad))
 		for i, v := range oad {
 			oldAllowedShares[i] = v.(string)
 		}
-		nad := new.(*schema.Set).List()
+		nad := n.(*schema.Set).List()
 		newAllowedShares := make([]string, len(nad))
 		for i, v := range nad {
 			newAllowedShares[i] = v.(string)
@@ -552,13 +551,13 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("allowed_accounts") {
-		old, new := d.GetChange("allowed_accounts")
-		oad := old.(*schema.Set).List()
+		o, n := d.GetChange("allowed_accounts")
+		oad := o.(*schema.Set).List()
 		oldAllowedAccounts := make([]string, len(oad))
 		for i, v := range oad {
 			oldAllowedAccounts[i] = v.(string)
 		}
-		nad := new.(*schema.Set).List()
+		nad := n.(*schema.Set).List()
 		newAllowedAccounts := make([]string, len(nad))
 		for i, v := range nad {
 			newAllowedAccounts[i] = v.(string)
@@ -595,8 +594,8 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_schedule") {
-		_, new := d.GetChange("replication_schedule")
-		replicationSchedule := new.([]interface{})[0].(map[string]interface{})
+		_, n := d.GetChange("replication_schedule")
+		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] replicationSchedule: %v", replicationSchedule)
 		log.Printf("[DEBUG] replicationSchedule[cron]: %v", replicationSchedule["cron"])
 		c := replicationSchedule["cron"].([]interface{})

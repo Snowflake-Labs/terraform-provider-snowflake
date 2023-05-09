@@ -286,7 +286,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 }
 
 // ReadTableConstraint implements schema.ReadFunc.
-func ReadTableConstraint(d *schema.ResourceData, meta interface{}) error {
+func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 	// commenting this out since it requires an active warehouse to be set which may not be intuitive.
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
 	// step like in tag association. People don't like waiting 40 minutes for Terraform to run.
@@ -324,8 +324,8 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	}*/
 
 	if d.HasChange("name") {
-		_, new := d.GetChange("name")
-		_, err := db.Exec(builder.Rename(new.(string)))
+		_, n := d.GetChange("name")
+		_, err := db.Exec(builder.Rename(n.(string)))
 		if err != nil {
 			return fmt.Errorf("error renaming table constraint %v err = %w", tc.name, err)
 		}
