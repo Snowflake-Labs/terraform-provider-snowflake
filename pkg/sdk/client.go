@@ -26,6 +26,7 @@ func (o ObjectType) String() string {
 }
 
 type Client struct {
+	config *gosnowflake.Config
 	db     *sqlx.DB
 	dryRun bool
 
@@ -34,6 +35,7 @@ type Client struct {
 	PasswordPolicies PasswordPolicies
 	Sessions         Sessions
 	SystemFunctions  SystemFunctions
+	Warehouses       Warehouses
 }
 
 func NewDefaultClient() (*Client, error) {
@@ -43,6 +45,7 @@ func NewDefaultClient() (*Client, error) {
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
+		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
 		cfg = DefaultConfig()
 	}
 
@@ -71,7 +74,8 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	client := &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe
-		db: db.Unsafe(),
+		db:     db.Unsafe(),
+		config: cfg,
 	}
 	client.initialize()
 
@@ -105,6 +109,7 @@ func (c *Client) initialize() {
 	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
 	c.Sessions = &sessions{client: c, builder: b}
 	c.SystemFunctions = &systemFunctions{client: c, builder: b}
+	c.Warehouses = &warehouses{client: c, builder: b}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {

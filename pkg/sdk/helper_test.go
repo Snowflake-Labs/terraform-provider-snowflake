@@ -53,6 +53,19 @@ func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
 	}
 }
 
+func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
+		require.NoError(t, err)
+	}
+}
+
 func testBuilder(t *testing.T) *sqlBuilder {
 	t.Helper()
 	return &sqlBuilder{}
@@ -60,6 +73,7 @@ func testBuilder(t *testing.T) *sqlBuilder {
 
 func testClient(t *testing.T) *Client {
 	t.Helper()
+
 	client, err := NewDefaultClient()
 	if err != nil {
 		t.Fatal(err)
@@ -104,6 +118,26 @@ func randomIntRange(t *testing.T, min, max int) int {
 		t.Errorf("min %d is greater than max %d", min, max)
 	}
 	return gofakeit.IntRange(min, max)
+}
+
+func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
+	t.Helper()
+	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
+}
+
+func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := NewAccountObjectIdentifier(name)
+	ctx := context.Background()
+	err := client.Warehouses.Create(ctx, id, nil)
+	require.NoError(t, err)
+	return &Warehouse{
+			Name: name,
+		}, func() {
+			err := client.Warehouses.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
 }
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {

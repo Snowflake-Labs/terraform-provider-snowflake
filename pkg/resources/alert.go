@@ -256,11 +256,8 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("action", alert.Action); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("action", alert.Action)
+	return err
 }
 
 // CreateAlert implements schema.CreateFunc.
@@ -367,8 +364,8 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("alert_schedule") {
-		_, new := d.GetChange("alert_schedule")
-		alertSchedule := new.([]interface{})[0].(map[string]interface{})
+		_, n := d.GetChange("alert_schedule")
+		alertSchedule := n.([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] alertSchedule: %v", alertSchedule)
 		log.Printf("[DEBUG] alertSchedule[cron]: %v", alertSchedule["cron"])
 		c := alertSchedule["cron"].([]interface{})

@@ -35,8 +35,8 @@ type PasswordPolicyCreateOptions struct {
 	create         bool                   `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace      *bool                  `ddl:"keyword" db:"OR REPLACE"`
 	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	name           SchemaObjectIdentifier `ddl:"identifier"`
 	IfNotExists    *bool                  `ddl:"keyword" db:"IF NOT EXISTS"`
+	name           SchemaObjectIdentifier `ddl:"identifier"`
 
 	PasswordMinLength         *int `ddl:"parameter" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *int `ddl:"parameter" db:"PASSWORD_MAX_LENGTH"`

@@ -78,8 +78,6 @@ func ReadDatabaseRoles(d *schema.ResourceData, meta interface{}) error {
 		roles = append(roles, roleMap)
 	}
 
-	if err := d.Set("database_roles", roles); err != nil {
-		return err
-	}
-	return nil
+	err = d.Set("database_roles", roles)
+	return err
 }

@@ -11,7 +11,8 @@ import (
 
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
-	if err != nil {
+	if err != nil || config == nil {
+		log.Printf("[DEBUG] No Snowflake config file found, falling back to environment variables: %v\n", err)
 		return EnvConfig()
 	}
 	return config
@@ -30,11 +31,6 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 	if cfg, ok := configs[profile]; ok {
 		log.Printf("[DEBUG] loading config for profile: \"%s\"", profile)
 		config = cfg
-	}
-
-	if envConfig := EnvConfig(); envConfig != nil {
-		// envConfig takes precedence
-		config = MergeConfig(config, envConfig)
 	}
 
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code

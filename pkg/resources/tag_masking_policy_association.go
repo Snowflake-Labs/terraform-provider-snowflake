@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -164,6 +165,36 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
+	// create temp warehouse to query the tag, and make sure to clean it up
+	client := sdk.NewClientFromDB(db)
+	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
+	tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+	ctx := context.Background()
+	err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err := client.Warehouses.Drop(ctx, tempWarehouseID, nil)
+		if err != nil {
+			log.Printf("[WARN] error cleaning up temp warehouse %v", err)
+		}
+	}()
+	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	if err != nil {
+		return err
+	}
+	err = client.Sessions.UseWarehouse(ctx, tempWarehouseID)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+		if err != nil {
+			log.Printf("[WARN] error resetting warehouse %v", err)
+		}
+	}()
+
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -194,11 +225,8 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("masking_policy_id", mpIDString); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("masking_policy_id", mpIDString)
+	return err
 }
 
 // DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.

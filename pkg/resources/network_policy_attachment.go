@@ -116,11 +116,8 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		isSetOnAccount = true
 	}
 
-	if err := d.Set("set_for_account", isSetOnAccount); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("set_for_account", isSetOnAccount)
+	return err
 }
 
 // UpdateNetworkPolicyAttachment implements schema.UpdateFunc.
@@ -139,9 +136,9 @@ func UpdateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("users") {
-		old, new := d.GetChange("users")
-		oldUsersSet := old.(*schema.Set)
-		newUsersSet := new.(*schema.Set)
+		o, n := d.GetChange("users")
+		oldUsersSet := o.(*schema.Set)
+		newUsersSet := n.(*schema.Set)
 
 		removedUsers := expandStringList(oldUsersSet.Difference(newUsersSet).List())
 		addedUsers := expandStringList(newUsersSet.Difference(oldUsersSet).List())

@@ -8,10 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInt_UseWarehouse(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	t.Cleanup(warehouseCleanup)
+	err := client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
+	require.NoError(t, err)
+	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, warehouseTest.Name, warehouse)
+}
+
 func TestInt_UseDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())

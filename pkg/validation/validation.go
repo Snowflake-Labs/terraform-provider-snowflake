@@ -137,7 +137,7 @@ func ValidateAdminName(i interface{}, k string) (s []string, errors []error) {
 	return
 }
 
-func ValidateFullyQualifiedObjectID(i interface{}, k string) (s []string, errors []error) {
+func ValidateFullyQualifiedObjectID(i interface{}, _ string) (s []string, errors []error) {
 	v, _ := i.(string)
 	if strings.Contains(v, ".") { //nolint:gocritic // todo: please fix this
 		tagArray := strings.Split(v, ".")
