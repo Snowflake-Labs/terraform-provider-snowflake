@@ -26,7 +26,6 @@ var passwordPolicySchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		ForceNew:    true,
 		Description: "Identifier for the password policy; must be unique for your account.",
 	},
 	"or_replace": {
