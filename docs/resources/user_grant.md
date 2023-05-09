@@ -28,7 +28,7 @@ resource "snowflake_user_grant" "grant" {
 
 ### Required
 
-- `privilege` (String) The privilege to grant on the user.
+- `privilege` (String) The privilege to grant on the user. To grant all privileges, use the value `ALL PRIVILEGES`.
 - `user_name` (String) The name of the user on which to grant privileges.
 
 ### Optional

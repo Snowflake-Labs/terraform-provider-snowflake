@@ -14,6 +14,7 @@ import (
 var validResourceMonitorPrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
+	privilegeAllPrivileges,
 )
 
 var resourceMonitorGrantSchema = map[string]*schema.Schema{
@@ -26,7 +27,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the resource monitor.",
+		Description:  "The privilege to grant on the resource monitor. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "MONITOR",
 		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.ToList(), true),
 		ForceNew:     true,

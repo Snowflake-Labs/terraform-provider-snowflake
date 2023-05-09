@@ -17,6 +17,7 @@ var validWarehousePrivileges = NewPrivilegeSet(
 	privilegeOperate,
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var warehouseGrantSchema = map[string]*schema.Schema{
@@ -29,7 +30,7 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the warehouse.",
+		Description:  "The privilege to grant on the warehouse. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeUsage.String(),
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validWarehousePrivileges.ToList(), true),

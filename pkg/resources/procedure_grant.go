@@ -14,6 +14,7 @@ import (
 var validProcedurePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var procedureGrantSchema = map[string]*schema.Schema{
@@ -56,7 +57,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future procedure.",
+		Description:  "The privilege to grant on the current or future procedure. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validProcedurePrivileges.ToList(), true),
 		ForceNew:     true,

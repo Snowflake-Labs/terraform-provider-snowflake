@@ -18,7 +18,7 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, normal),
+				Config: streamGrantConfig(name, streamName, normal, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
@@ -27,6 +27,17 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_future", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_all", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: streamGrantConfig(name, streamName, normal, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
+					resource.TestCheckNoResourceAttr("snowflake_stream_grant.test", "stream_name"),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			{
@@ -50,7 +61,7 @@ func TestAcc_StreamGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, onAll),
+				Config: streamGrantConfig(name, streamName, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
@@ -81,7 +92,7 @@ func TestAcc_StreamGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, onFuture),
+				Config: streamGrantConfig(name, streamName, onFuture, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
@@ -103,7 +114,7 @@ func TestAcc_StreamGrant_onFuture(t *testing.T) {
 	})
 }
 
-func streamGrantConfig(name string, streamName string, grantType grantType) string {
+func streamGrantConfig(name string, streamName string, grantType grantType, privilege string) string {
 	var streamNameConfig string
 	switch grantType {
 	case normal:
@@ -157,7 +168,7 @@ resource "snowflake_stream_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-    privilege = "SELECT"
+    privilege = "%s"
 }
-`, name, name, name, name, streamName, streamNameConfig)
+`, name, name, name, name, streamName, streamNameConfig, privilege)
 }

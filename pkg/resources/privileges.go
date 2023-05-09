@@ -7,6 +7,7 @@ func (p Privilege) String() string {
 }
 
 const (
+	privilegeAllPrivileges               Privilege = "ALL PRIVILEGES"
 	privilegeAccountSupportCases         Privilege = "MANAGE ACCOUNT SUPPORT CASES"
 	privilegeAddSearchOptimization       Privilege = "ADD SEARCH OPTIMIZATION"
 	privilegeApply                       Privilege = "APPLY"

@@ -17,7 +17,7 @@ func TestAcc_SequenceGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: sequenceGrantConfig(name, onFuture),
+				Config: sequenceGrantConfig(name, onFuture, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "schema_name", name),
@@ -47,7 +47,7 @@ func TestAcc_SequenceGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: sequenceGrantConfig(name, onAll),
+				Config: sequenceGrantConfig(name, onAll, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_sequence_grant.test", "schema_name", name),
@@ -69,7 +69,7 @@ func TestAcc_SequenceGrant_onAll(t *testing.T) {
 	})
 }
 
-func sequenceGrantConfig(name string, grantType grantType) string {
+func sequenceGrantConfig(name string, grantType grantType, privilege string) string {
 	var sequenceNameConfig string
 	switch grantType {
 	case onFuture:
@@ -97,7 +97,7 @@ resource "snowflake_sequence_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-	privilege = "USAGE"
+	privilege = "%s"
 }
-`, name, name, name, sequenceNameConfig)
+`, name, name, name, sequenceNameConfig, privilege)
 }

@@ -20,10 +20,18 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, normal),
+				Config: viewGrantConfig(name, normal, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: viewGrantConfig(name, normal, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			{
@@ -75,7 +83,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, normal),
+				Config: viewGrantConfig(name, normal, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "false"),
@@ -84,7 +92,7 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 			},
 			// CHANGE FROM CURRENT TO FUTURE VIEWS
 			{
-				Config: viewGrantConfig(name, onFuture),
+				Config: viewGrantConfig(name, onFuture, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("snowflake_view_grant.test", "view_name"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_future", "true"),
@@ -170,7 +178,7 @@ resource "snowflake_view_grant" "test" {
 	return out.String()
 }
 
-func viewGrantConfig(name string, grantType grantType) string {
+func viewGrantConfig(name string, grantType grantType, privilege string) string {
 	var viewNameConfig string
 	switch grantType {
 	case normal:
@@ -208,9 +216,9 @@ resource "snowflake_view_grant" "test" {
   database_name = snowflake_view.test.database
   roles         = [snowflake_role.test.name]
   schema_name   = snowflake_schema.test.name
-  privilege = "SELECT"
+  privilege = "%s"
 }
-`, name, name, name, name, viewNameConfig)
+`, name, name, name, name, viewNameConfig, privilege)
 }
 
 func TestAcc_ViewGrantOnAll(t *testing.T) {
@@ -221,7 +229,7 @@ func TestAcc_ViewGrantOnAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfig(name, onAll),
+				Config: viewGrantConfig(name, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "schema_name", name),

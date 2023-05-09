@@ -17,7 +17,7 @@ func TestAcc_ExternalTableGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalTableGrantConfig(name, onAll),
+				Config: externalTableGrantConfig(name, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "schema_name", name),
@@ -48,7 +48,7 @@ func TestAcc_ExternalTableGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalTableGrantConfig(name, onFuture),
+				Config: externalTableGrantConfig(name, onFuture, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_external_table_grant.test", "schema_name", name),
@@ -71,7 +71,7 @@ func TestAcc_ExternalTableGrant_onFuture(t *testing.T) {
 	})
 }
 
-func externalTableGrantConfig(name string, grantType grantType) string {
+func externalTableGrantConfig(name string, grantType grantType, privilege string) string {
 	var externalTableNameConfig string
 	switch grantType {
 	case onFuture:
@@ -99,7 +99,7 @@ resource "snowflake_external_table_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-	privilege = "SELECT"
+	privilege = "%s"
 }
-`, name, name, name, externalTableNameConfig)
+`, name, name, name, externalTableNameConfig, privilege)
 }

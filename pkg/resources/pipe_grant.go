@@ -16,6 +16,7 @@ var validPipePrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOperate,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var pipeGrantSchema = map[string]*schema.Schema{
@@ -40,7 +41,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future pipe.",
+		Description:  "The privilege to grant on the current or future pipe. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validPipePrivileges.ToList(), true),
 		ForceNew:     true,

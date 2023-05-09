@@ -44,13 +44,14 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegePurchaseDataExchangeListing,
 	privilegeAccountSupportCases,
 	privilegeUserSupportCases,
+	privilegeAllPrivileges,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
+		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html). To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 		ForceNew:     true,

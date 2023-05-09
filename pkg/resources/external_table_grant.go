@@ -15,6 +15,7 @@ var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 var externalTableGrantSchema = map[string]*schema.Schema{
@@ -54,7 +55,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future external table.",
+		Description:  "The privilege to grant on the current or future external table. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.ToList(), true),
 		ForceNew:     true,
