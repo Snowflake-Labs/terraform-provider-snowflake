@@ -10,6 +10,17 @@ type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
 }
 
+type TagAssociation struct {
+	Name  ObjectIdentifier `ddl:"identifier"`
+	eq    bool             `ddl:"static" db:"="` //lint:ignore U1000 This is used in the ddl tag
+	Value string           `ddl:"keyword,single_quotes"`
+}
+
+type TableColumnSignature struct {
+	Name string   `ddl:"keyword,double_quotes"`
+	Type DataType `ddl:"keyword"`
+}
+
 type StringProperty struct {
 	Value        string
 	DefaultValue string

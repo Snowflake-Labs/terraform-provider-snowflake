@@ -100,7 +100,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(monitorName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadResourceMonitorGrant(d, meta)
@@ -119,7 +119,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(monitorName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

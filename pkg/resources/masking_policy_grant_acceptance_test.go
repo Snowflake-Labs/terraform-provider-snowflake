@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,9 +10,6 @@ import (
 )
 
 func TestAcc_MaskingPolicyGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_MASKING_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccMaskingPolicy")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -64,7 +60,12 @@ func maskingPolicyGrantConfig(name string) string {
 		name = "%v"
 		database = snowflake_database.test.name
 		schema = snowflake_schema.test.name
-		value_data_type = "VARCHAR"
+		signature {
+			column {
+				name = "val"
+				type = "VARCHAR"
+			}
+		}
 		masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 		return_data_type = "VARCHAR"
 		comment = "Terraform acceptance test"

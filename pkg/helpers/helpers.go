@@ -52,8 +52,19 @@ func StringToBool(s string) bool {
 	return strings.ToLower(s) == "true"
 }
 
-// SnowflakeID generates a unique ID for a resource.
-func SnowflakeID(attributes ...interface{}) string {
+// EncodeSnowflakeID generates a unique ID for a resource.
+func EncodeSnowflakeID(attributes ...interface{}) string {
+	// is attribute already an object identifier?
+	if len(attributes) == 1 {
+		if id, ok := attributes[0].(sdk.ObjectIdentifier); ok {
+			// remove quotes and replace dots with pipes
+			parts := strings.Split(id.FullyQualifiedName(), ".")
+			for i, part := range parts {
+				parts[i] = strings.Trim(part, `"`)
+			}
+			return strings.Join(parts, IDDelimiter)
+		}
+	}
 	var parts []string
 	for i, attr := range attributes {
 		if attr == nil {

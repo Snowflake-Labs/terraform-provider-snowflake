@@ -15,6 +15,7 @@ func TestAcc_EmailNotificationIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EMAIL_INTEGRATION_TESTS"); ok {
 		t.Skip("Skipping TestAcc_EmailNotificationIntegration")
 	}
+
 	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,

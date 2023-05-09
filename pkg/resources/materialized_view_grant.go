@@ -183,7 +183,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadMaterializedViewGrant(d, meta)
@@ -225,7 +225,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	// if the ID is not in the new format, rewrite it
 	if d.Id() != grantID {
 		d.SetId(grantID)

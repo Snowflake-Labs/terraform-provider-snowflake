@@ -209,7 +209,7 @@ func (fgb *AllGrantBuilder) Role(n string) GrantExecutable {
 }
 
 // Share is not implemented because all objects cannot be granted to shares.
-func (fgb *AllGrantBuilder) Share(n string) GrantExecutable {
+func (fgb *AllGrantBuilder) Share(_ string) GrantExecutable {
 	return nil
 }
 

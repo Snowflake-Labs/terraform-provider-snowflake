@@ -164,7 +164,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadSequenceGrant(d, meta)
@@ -196,7 +196,7 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

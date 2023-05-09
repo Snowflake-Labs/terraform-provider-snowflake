@@ -292,7 +292,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("unable to set saml2_sp_initiated_login_page_label for security integration")
 			}
 		case "SAML2_ENABLE_SP_INITIATED":
-			b := false
+			var b bool
 			switch v2 := v.(type) {
 			case bool:
 				b = v2
@@ -312,7 +312,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("unable to set saml2_snowflake_x509_cert for security integration err = %w", err)
 			}
 		case "SAML2_SIGN_REQUEST":
-			b := false
+			var b bool
 			switch v2 := v.(type) {
 			case bool:
 				b = v2
@@ -336,7 +336,7 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("unable to set saml2_post_logout_redirect_url for security integration err = %w", err)
 			}
 		case "SAML2_FORCE_AUTHN":
-			b := false
+			var b bool
 			switch v2 := v.(type) {
 			case bool:
 				b = v2

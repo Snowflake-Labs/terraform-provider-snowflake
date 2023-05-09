@@ -1,12 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"fmt"
-	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -65,33 +64,29 @@ func ReadMaskingPolicies(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
-
-	currentMaskingPolicies, err := snowflake.ListMaskingPolicies(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] masking policies in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse masking policies in schema (%s)", d.Id())
-		d.SetId("")
-		return nil
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	maskingPolicies, err := client.MaskingPolicies.Show(ctx, &sdk.MaskingPolicyShowOptions{
+		In: &sdk.In{
+			Schema: sdk.NewSchemaIdentifier(databaseName, schemaName),
+		},
+	})
+	if err != nil {
+		return err
 	}
-
-	maskingPolicies := []map[string]interface{}{}
-
-	for _, maskingPolicy := range currentMaskingPolicies {
+	maskingPoliciesList := []map[string]interface{}{}
+	for _, maskingPolicy := range maskingPolicies {
 		maskingPolicyMap := map[string]interface{}{}
-
-		maskingPolicyMap["name"] = maskingPolicy.Name.String
-		maskingPolicyMap["database"] = maskingPolicy.DatabaseName.String
-		maskingPolicyMap["schema"] = maskingPolicy.SchemaName.String
-		maskingPolicyMap["comment"] = maskingPolicy.Comment.String
-		maskingPolicyMap["kind"] = maskingPolicy.Kind.String
-
-		maskingPolicies = append(maskingPolicies, maskingPolicyMap)
+		maskingPolicyMap["name"] = maskingPolicy.Name
+		maskingPolicyMap["database"] = maskingPolicy.DatabaseName
+		maskingPolicyMap["schema"] = maskingPolicy.SchemaName
+		maskingPolicyMap["comment"] = maskingPolicy.Comment
+		maskingPolicyMap["kind"] = maskingPolicy.Kind
+		maskingPoliciesList = append(maskingPoliciesList, maskingPolicyMap)
 	}
-
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("masking_policies", maskingPolicies)
+	if err := d.Set("masking_policies", maskingPoliciesList); err != nil {
+		return err
+	}
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
+	return nil
 }

@@ -30,6 +30,18 @@ export SNOWFLAKE_REGION=us-west-2
 export TF_ACC=true
 ```
 
+You can also read the config from a `~/.snowflake/config` file, although you will still need to set `TF_ACC` to true.
+
+
+~/.snowflake/config
+```sh
+[default]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='ACCOUNTADMIN'
+```
+
 **Note: PRs for new resources will not be accepted without passing acceptance tests.**
 
 For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.

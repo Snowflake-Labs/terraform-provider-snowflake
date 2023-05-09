@@ -1,9 +1,6 @@
 provider "snowflake" {
-  // required
-  username = "..."
-  account  = "..." # the Snowflake account identifier
-
-  // optional, exactly one must be set
+  account  = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
+  username = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
   password               = "..."
   oauth_access_token     = "..."
   private_key_path       = "..."
@@ -20,4 +17,9 @@ provider "snowflake" {
   role      = "..."
   host      = "..."
   warehouse = "..."
+}
+
+
+provider snowflake {
+  profile = "securityadmin"
 }

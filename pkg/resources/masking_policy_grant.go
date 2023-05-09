@@ -123,7 +123,7 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadMaskingPolicyGrant(d, meta)
@@ -145,7 +145,7 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

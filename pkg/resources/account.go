@@ -343,6 +343,6 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 }
 
 // DeleteAccount implements schema.DeleteFunc.
-func DeleteAccount(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccount(_ *schema.ResourceData, _ interface{}) error {
 	return fmt.Errorf("cannot delete Snowflake accounts because there is no self service API allowing Terraform to do so. To delete an account, contact Snowflake Support and provide a unique identifier for your account, which can be one of the following:\n  Account name\n  Account locator\nOnce you contact Snowflake Support, it may take up to six weeks for the account to be fully deleted. This delay allows you to recover the account within 30 days of the request. Snowflake usually deducts the account from the number of accounts allowed for your organization within a few days of the initial request")
 }

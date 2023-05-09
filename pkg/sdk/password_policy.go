@@ -35,8 +35,8 @@ type PasswordPolicyCreateOptions struct {
 	create         bool                   `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace      *bool                  `ddl:"keyword" db:"OR REPLACE"`
 	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	name           SchemaObjectIdentifier `ddl:"identifier"`
 	IfNotExists    *bool                  `ddl:"keyword" db:"IF NOT EXISTS"`
+	name           SchemaObjectIdentifier `ddl:"identifier"`
 
 	PasswordMinLength         *int `ddl:"parameter" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *int `ddl:"parameter" db:"PASSWORD_MAX_LENGTH"`
@@ -77,13 +77,13 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 }
 
 type PasswordPolicyAlterOptions struct {
-	alter          bool                      `ddl:"static" db:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                      `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists       *bool                     `ddl:"keyword" db:"IF EXISTS"`
-	name           SchemaObjectIdentifier    `ddl:"identifier"`
-	NewName        SchemaObjectIdentifier    `ddl:"identifier" db:"RENAME TO"`
-	Set            *PasswordPolicyAlterSet   `ddl:"keyword" db:"SET"`
-	Unset          *PasswordPolicyAlterUnset `ddl:"keyword" db:"UNSET"`
+	alter          bool                   `ddl:"static" db:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists       *bool                  `ddl:"keyword" db:"IF EXISTS"`
+	name           SchemaObjectIdentifier `ddl:"identifier"`
+	NewName        SchemaObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
+	Set            *PasswordPolicySet     `ddl:"keyword" db:"SET"`
+	Unset          *PasswordPolicyUnset   `ddl:"keyword" db:"UNSET"`
 }
 
 func (opts *PasswordPolicyAlterOptions) validate() error {
@@ -181,7 +181,7 @@ func (opts *PasswordPolicyAlterOptions) validate() error {
 	return nil
 }
 
-type PasswordPolicyAlterSet struct {
+type PasswordPolicySet struct {
 	PasswordMinLength         *int    `ddl:"parameter" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *int    `ddl:"parameter" db:"PASSWORD_MAX_LENGTH"`
 	PasswordMinUpperCaseChars *int    `ddl:"parameter" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
@@ -194,7 +194,7 @@ type PasswordPolicyAlterSet struct {
 	Comment                   *string `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
-type PasswordPolicyAlterUnset struct {
+type PasswordPolicyUnset struct {
 	PasswordMinLength         *bool `ddl:"keyword" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *bool `ddl:"keyword" db:"PASSWORD_MAX_LENGTH"`
 	PasswordMinUpperCaseChars *bool `ddl:"keyword" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
@@ -282,7 +282,7 @@ type PasswordPolicy struct {
 	Comment      string
 }
 
-func (v *PasswordPolicy) Identifier() SchemaObjectIdentifier {
+func (v *PasswordPolicy) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
@@ -299,7 +299,7 @@ type passwordPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func passwordPolicyFromRow(row passwordPolicyDBRow) *PasswordPolicy {
+func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
 	return &PasswordPolicy{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -332,7 +332,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	}
 	resultList := make([]*PasswordPolicy, len(dest))
 	for i, row := range dest {
-		resultList[i] = passwordPolicyFromRow(row)
+		resultList[i] = row.toPasswordPolicy()
 	}
 
 	return resultList, nil
