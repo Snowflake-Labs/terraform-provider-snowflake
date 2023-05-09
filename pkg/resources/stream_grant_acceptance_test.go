@@ -35,7 +35,7 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "stream_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "stream_name", streamName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
