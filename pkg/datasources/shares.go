@@ -92,6 +92,8 @@ func ReadShares(d *schema.ResourceData, meta interface{}) error {
 		shares = append(shares, shareMap)
 	}
 
-	err = d.Set("shares", shares)
-	return err
+	if err := d.Set("shares", shares); err != nil {
+		return err
+	}
+	return nil
 }

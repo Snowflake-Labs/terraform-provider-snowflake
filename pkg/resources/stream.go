@@ -348,8 +348,10 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("owner", stream.Owner.String)
-	return err
+	if err := d.Set("owner", stream.Owner.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteStream implements schema.DeleteFunc.

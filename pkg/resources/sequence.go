@@ -193,8 +193,10 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("fully_qualified_name", seq.Address())
-	return err
+	if err := d.Set("fully_qualified_name", seq.Address()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateSequence(d *schema.ResourceData, meta interface{}) error {

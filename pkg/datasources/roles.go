@@ -84,6 +84,8 @@ func ReadRoles(d *schema.ResourceData, meta interface{}) error {
 		roles = append(roles, roleMap)
 	}
 
-	err = d.Set("roles", roles)
-	return err
+	if err := d.Set("roles", roles); err != nil {
+		return err
+	}
+	return nil
 }

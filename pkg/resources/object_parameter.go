@@ -174,8 +174,10 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
-	err = d.Set("value", p.Value.String)
-	return err
+	if err := d.Set("value", p.Value.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateObjectParameter implements schema.UpdateFunc.

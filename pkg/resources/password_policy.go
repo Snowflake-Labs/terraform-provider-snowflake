@@ -264,8 +264,10 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("max_retries", passwordPolicyDetails.PasswordMaxRetries.Value); err != nil {
 		return err
 	}
-	err = d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins.Value)
-	return err
+	if err := d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins.Value); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdatePasswordPolicy implements schema.UpdateFunc.

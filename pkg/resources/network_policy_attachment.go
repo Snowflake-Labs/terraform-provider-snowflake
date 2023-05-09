@@ -116,8 +116,10 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		isSetOnAccount = true
 	}
 
-	err = d.Set("set_for_account", isSetOnAccount)
-	return err
+	if err := d.Set("set_for_account", isSetOnAccount); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateNetworkPolicyAttachment implements schema.UpdateFunc.

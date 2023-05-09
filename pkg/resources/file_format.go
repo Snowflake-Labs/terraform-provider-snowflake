@@ -688,8 +688,10 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("comment", f.Comment.String)
-	return err
+	if err := d.Set("comment", f.Comment.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateFileFormat implements schema.UpdateFunc.

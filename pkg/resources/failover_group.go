@@ -430,8 +430,10 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	err = d.Set("allowed_shares", nil)
-	return err
+	if err := d.Set("allowed_shares", nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateFailoverGroup implements schema.UpdateFunc.

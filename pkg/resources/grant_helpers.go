@@ -233,8 +233,10 @@ func readGenericGrant(
 			return err
 		}
 	}
-	err = d.Set("with_grant_option", grantOption)
-	return err
+	if err := d.Set("with_grant_option", grantOption); err != nil {
+		return err
+	}
+	return nil
 }
 
 func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*grant, error) {

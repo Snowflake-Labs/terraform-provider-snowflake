@@ -100,6 +100,7 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.",
 	}
 }
 
@@ -225,8 +226,10 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	err = d.Set("masking_policy_id", mpIDString)
-	return err
+	if err := d.Set("masking_policy_id", mpIDString); err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.

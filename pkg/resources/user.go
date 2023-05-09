@@ -226,8 +226,10 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("first_name", u.FirstName.String); err != nil {
 		return err
 	}
-	err = d.Set("last_name", u.LastName.String)
-	return err
+	if err = d.Set("last_name", u.LastName.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateUser(d *schema.ResourceData, meta interface{}) error {

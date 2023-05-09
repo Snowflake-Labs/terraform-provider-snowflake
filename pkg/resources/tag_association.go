@@ -175,8 +175,10 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tag associations")
 	}
 
-	err = d.Set("tag_value", ta.TagValue.String)
-	return err
+	if err := d.Set("tag_value", ta.TagValue.String); err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {

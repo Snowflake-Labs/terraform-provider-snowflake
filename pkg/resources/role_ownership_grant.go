@@ -117,9 +117,11 @@ func ReadRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("current_grants", currentGrants)
+	if err := d.Set("current_grants", currentGrants); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func UpdateRoleOwnershipGrant(d *schema.ResourceData, meta interface{}) error {

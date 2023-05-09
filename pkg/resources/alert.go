@@ -256,8 +256,10 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("action", alert.Action)
-	return err
+	if err := d.Set("action", alert.Action); err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateAlert implements schema.CreateFunc.

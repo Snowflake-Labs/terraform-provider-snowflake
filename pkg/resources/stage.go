@@ -299,8 +299,9 @@ func ReadStage(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser)
-	return err
+	if err := d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser); err != nil {
+		return err
+	}
 }
 
 // UpdateStage implements schema.UpdateFunc.
