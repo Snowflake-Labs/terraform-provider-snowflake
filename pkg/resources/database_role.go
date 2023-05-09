@@ -133,8 +133,10 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("comment", databaseRole.Comment)
-	return err
+	if err := d.Set("comment", databaseRole.Comment); err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateDatabaseRole implements schema.CreateFunc.

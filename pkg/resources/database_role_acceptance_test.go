@@ -42,7 +42,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 	})
 }
 
-func databaseRoleConfig(dbName string, dbRoleName string, comment string) string { //nolint
+func databaseRoleConfig(dbName string, dbRoleName string, comment string) string {
 	s := `
 resource "snowflake_database" "test_db" {
 	name = "%s"
