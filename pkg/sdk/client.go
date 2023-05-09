@@ -17,8 +17,15 @@ import (
 type ObjectType string
 
 const (
+	ObjectTypeDatabase       ObjectType = "DATABASE"
 	ObjectTypeMaskingPolicy  ObjectType = "MASKING POLICY"
 	ObjectTypePasswordPolicy ObjectType = "PASSWORD POLICY"
+	ObjectTypeSchema         ObjectType = "SCHEMA"
+	ObjectTypeTable          ObjectType = "TABLE"
+	ObjectTypeTableColumn    ObjectType = "TABLE COLUMN"
+	ObjectTypeTag            ObjectType = "TAG"
+	ObjectTypeView           ObjectType = "VIEW"
+	ObjectTypeWarehouse      ObjectType = "WAREHOUSE"
 )
 
 func (o ObjectType) String() string {

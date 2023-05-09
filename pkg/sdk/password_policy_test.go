@@ -11,7 +11,7 @@ import (
 
 func TestPasswordPolicyCreate(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypePasswordPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyCreateOptions{}
@@ -59,7 +59,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 
 func TestPasswordPolicyAlter(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypePasswordPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyAlterOptions{}
@@ -112,7 +112,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t), ObjectTypePasswordPolicy)
 		opts := &PasswordPolicyAlterOptions{
 			name:    id,
 			NewName: newID,
@@ -127,7 +127,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 
 func TestPasswordPolicyDrop(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypePasswordPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyDropOptions{}
@@ -164,7 +164,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 
 func TestPasswordPolicyShow(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypePasswordPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyShowOptions{}
@@ -205,7 +205,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
-		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
+		databaseIdentifier := NewAccountLevelIdentifier(id.DatabaseName(), ObjectTypePasswordPolicy)
 		opts := &PasswordPolicyShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
@@ -252,7 +252,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 
 func TestPasswordPolicyDescribe(t *testing.T) {
 	builder := testBuilder(t)
-	id := randomSchemaObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t, ObjectTypePasswordPolicy)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &passwordPolicyDescribeOptions{}

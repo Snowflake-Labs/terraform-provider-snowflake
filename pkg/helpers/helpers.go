@@ -82,15 +82,15 @@ func EncodeSnowflakeID(attributes ...interface{}) string {
 	return strings.Join(parts, "|")
 }
 
-func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
+func DecodeSnowflakeID(id string, objectType sdk.ObjectType) sdk.ObjectIdentifier {
 	parts := strings.Split(id, IDDelimiter)
 	switch len(parts) {
 	case 1:
-		return sdk.NewAccountObjectIdentifier(parts[0])
+		return sdk.NewAccountLevelIdentifier(parts[0], objectType)
 	case 2:
 		return sdk.NewSchemaIdentifier(parts[0], parts[1])
 	case 3:
-		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2], objectType)
 	case 4:
 		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
 	default:

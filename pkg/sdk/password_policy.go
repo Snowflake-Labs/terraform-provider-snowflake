@@ -283,7 +283,7 @@ type PasswordPolicy struct {
 }
 
 func (v *PasswordPolicy) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name, ObjectTypePasswordPolicy)
 }
 
 // passwordPolicyDBRow is used to decode the result of a CREATE PASSWORD POLICY query.

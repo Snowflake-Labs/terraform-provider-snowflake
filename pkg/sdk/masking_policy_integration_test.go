@@ -101,7 +101,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test complete case", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name, ObjectTypeMaskingPolicy)
 		signature := []TableColumnSignature{
 			{
 				Name: "col1",
@@ -146,7 +146,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test if_not_exists", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name, ObjectTypeMaskingPolicy)
 		signature := []TableColumnSignature{
 			{
 				Name: "col1",
@@ -190,7 +190,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test no options", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name, ObjectTypeMaskingPolicy)
 		signature := []TableColumnSignature{
 			{
 				Name: "col1",
@@ -224,7 +224,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test multiline expression", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name, ObjectTypeMaskingPolicy)
 		signature := []TableColumnSignature{
 			{
 				Name: "val",
@@ -272,7 +272,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist", ObjectTypeMaskingPolicy)
 		_, err := client.MaskingPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
@@ -338,7 +338,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 		newName := randomString(t)
-		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
+		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName, ObjectTypeMaskingPolicy)
 		alterOptions := &MaskingPolicyAlterOptions{
 			NewName: newID,
 		}
@@ -414,7 +414,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist", ObjectTypeMaskingPolicy)
 		err := client.MaskingPolicies.Drop(ctx, id)
 		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})

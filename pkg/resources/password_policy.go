@@ -141,7 +141,7 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
-	objectIdentifier := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	objectIdentifier := sdk.NewSchemaObjectIdentifier(database, schema, name, sdk.ObjectTypePasswordPolicy)
 	createOptions := &sdk.PasswordPolicyCreateOptions{}
 
 	if v, ok := d.GetOk("or_replace"); ok {
@@ -205,7 +205,7 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypePasswordPolicy).(sdk.SchemaObjectIdentifier)
 	schemaIdentifier := sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName())
 	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, &sdk.PasswordPolicyShowOptions{
 		Like: &sdk.Like{
@@ -276,7 +276,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypePasswordPolicy).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("min_length") {
 		alterOptions := &sdk.PasswordPolicyAlterOptions{}
@@ -447,7 +447,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		newName := n.(string)
-		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
+		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName, sdk.ObjectTypePasswordPolicy)
 		alterOptions := &sdk.PasswordPolicyAlterOptions{
 			NewName: newID,
 		}
@@ -466,7 +466,7 @@ func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypePasswordPolicy).(sdk.SchemaObjectIdentifier)
 	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)
 	if err != nil {
 		return err

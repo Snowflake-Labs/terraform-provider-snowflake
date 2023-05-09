@@ -224,7 +224,7 @@ type MaskingPolicy struct {
 }
 
 func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name, ObjectTypeMaskingPolicy)
 }
 
 // maskingPolicyDBRow is used to decode the result of a CREATE MASKING POLICY query.

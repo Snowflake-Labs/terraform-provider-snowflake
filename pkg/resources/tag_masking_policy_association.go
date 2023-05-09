@@ -117,7 +117,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 	tagName := tagIDStruct.TagName
 
 	mpID := d.Get("masking_policy_id").(string)
-	mpIDStruct := helpers.DecodeSnowflakeID(mpID).(sdk.SchemaObjectIdentifier)
+	mpIDStruct := helpers.DecodeSnowflakeID(mpID, sdk.ObjectTypeMaskingPolicy).(sdk.SchemaObjectIdentifier)
 	mpDB := mpIDStruct.DatabaseName()
 	mpSchema := mpIDStruct.SchemaName()
 	mpName := mpIDStruct.Name()
@@ -176,7 +176,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if originalWarehouse == "" {
 		log.Printf("[DEBUG] no current warehouse set, creating a temporary warehouse")
 		randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
-		tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+		tempWarehouseID := sdk.NewAccountLevelIdentifier(randomWarehouseName, sdk.ObjectTypeWarehouse)
 		err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				log.Printf("[WARN] error cleaning up temp warehouse %v", err)
 			}
-			err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
+			err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountLevelIdentifier(originalWarehouse, sdk.ObjectTypeWarehouse))
 			if err != nil {
 				log.Printf("[WARN] error resetting warehouse %v", err)
 			}

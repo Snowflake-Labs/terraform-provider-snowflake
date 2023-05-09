@@ -144,7 +144,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	returnDataType := d.Get("return_data_type").(string)
 
 	ctx := context.Background()
-	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name, sdk.ObjectTypeMaskingPolicy)
 
 	signatureList := d.Get("signature").([]interface{})
 	signature := []sdk.TableColumnSignature{}
@@ -184,7 +184,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypeMaskingPolicy).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
 	opts := &sdk.MaskingPolicyShowOptions{
@@ -261,7 +261,7 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypeMaskingPolicy).(sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
 	if d.HasChange("masking_expression") {
@@ -296,7 +296,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		newName := n.(string)
-		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
+		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName, sdk.ObjectTypeMaskingPolicy)
 		alterOptions := &sdk.MaskingPolicyAlterOptions{
 			NewName: newID,
 		}
@@ -315,7 +315,7 @@ func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id(), sdk.ObjectTypeMaskingPolicy).(sdk.SchemaObjectIdentifier)
 
 	err := client.MaskingPolicies.Drop(ctx, objectIdentifier)
 	if err != nil {
