@@ -19,6 +19,7 @@ var validDatabasePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferenceUsage,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var databaseGrantSchema = map[string]*schema.Schema{
@@ -31,7 +32,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the database.",
+		Description:  "The privilege to grant on the database. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "USAGE",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validDatabasePrivileges.ToList(), true),

@@ -16,6 +16,7 @@ var validTaskPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOperate,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var taskGrantSchema = map[string]*schema.Schema{
@@ -51,7 +52,7 @@ var taskGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future task.",
+		Description:  "The privilege to grant on the current or future task. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validTaskPrivileges.ToList(), true),
 		ForceNew:     true,

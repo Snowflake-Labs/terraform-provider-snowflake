@@ -35,6 +35,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var schemaGrantSchema = map[string]*schema.Schema{
@@ -53,7 +54,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
+		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.ToList(), true),
 		ForceNew:     true,

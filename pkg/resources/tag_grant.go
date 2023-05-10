@@ -14,6 +14,7 @@ import (
 var validTagPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeApply,
+	privilegeAllPrivileges,
 )
 
 var tagGrantSchema = map[string]*schema.Schema{
@@ -32,7 +33,7 @@ var tagGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the tag.",
+		Description:  "The privilege to grant on the tag. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "APPLY",
 		ValidateFunc: validation.StringInSlice(validTagPrivileges.ToList(), true),
 		ForceNew:     true,

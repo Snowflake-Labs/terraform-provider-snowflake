@@ -20,6 +20,7 @@ var validMaterializedViewPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 // The schema holds the resource variables that can be provided in the Terraform.
@@ -45,7 +46,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future materialized view.",
+		Description:  "The privilege to grant on the current or future materialized view. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,

@@ -34,7 +34,7 @@ resource "snowflake_database_grant" "grant" {
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `privilege` (String) The privilege to grant on the database.
+- `privilege` (String) The privilege to grant on the database. To grant all privileges, use the value `ALL PRIVILEGES`.
 - `roles` (Set of String) Grants privilege to these roles.
 - `shares` (Set of String) Grants privilege to these shares.
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.

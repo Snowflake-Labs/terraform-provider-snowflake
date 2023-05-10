@@ -14,6 +14,7 @@ import (
 var validIntegrationPrivileges = NewPrivilegeSet(
 	privilegeUsage,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var integrationGrantSchema = map[string]*schema.Schema{
@@ -26,7 +27,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the integration.",
+		Description:  "The privilege to grant on the integration. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.ToList(), true),
 		ForceNew:     true,

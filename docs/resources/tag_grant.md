@@ -35,7 +35,7 @@ resource "snowflake_tag_grant" "example" {
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `privilege` (String) The privilege to grant on the tag.
+- `privilege` (String) The privilege to grant on the tag. To grant all privileges, use the value `ALL PRIVILEGES`.
 - `roles` (Set of String) Grants privilege to these roles.
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.
 
