@@ -14,6 +14,7 @@ import (
 var validProcedurePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var procedureGrantSchema = map[string]*schema.Schema{
@@ -56,7 +57,7 @@ var procedureGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future procedure.",
+		Description:  "The privilege to grant on the current or future procedure. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validProcedurePrivileges.ToList(), true),
 		ForceNew:     true,
@@ -207,7 +208,7 @@ func CreateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 	return ReadProcedureGrant(d, meta)
 }
@@ -240,7 +241,7 @@ func ReadProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, procedureName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

@@ -11,7 +11,10 @@ linters-settings:
     packages:
       - github.com/pkg/error
       - io/ioutil
-
+  revive:
+    rules:
+      - name: if-return
+        disabled: true
 linters:
   disable-all: true
   enable:

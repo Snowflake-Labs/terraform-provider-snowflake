@@ -17,7 +17,7 @@ func TestAccFunctionGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionGrantConfig(name, onFuture),
+				Config: functionGrantConfig(name, onFuture, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", name),
@@ -48,7 +48,7 @@ func TestAccFunctionGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionGrantConfig(name, onAll),
+				Config: functionGrantConfig(name, onAll, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", name),
@@ -56,6 +56,18 @@ func TestAccFunctionGrant_onAll(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "privilege", "USAGE"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: functionGrantConfig(name, onAll, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", name),
+					resource.TestCheckNoResourceAttr("snowflake_function_grant.test", "function_name"),
+					resource.TestCheckResourceAttr("snowflake_function_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_function_grant.test", "on_all", "true"),
+					resource.TestCheckResourceAttr("snowflake_function_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			// IMPORT
@@ -71,7 +83,7 @@ func TestAccFunctionGrant_onAll(t *testing.T) {
 	})
 }
 
-func functionGrantConfig(name string, grantType grantType) string {
+func functionGrantConfig(name string, grantType grantType, privilege string) string {
 	var functionNameConfig string
 	switch grantType {
 	case onFuture:
@@ -99,7 +111,7 @@ resource "snowflake_function_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s
-	privilege = "USAGE"
+	privilege = "%s"
 }
-`, name, name, name, functionNameConfig)
+`, name, name, name, functionNameConfig, privilege)
 }

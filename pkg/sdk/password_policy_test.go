@@ -52,7 +52,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf(`CREATE OR REPLACE PASSWORD POLICY %s IF NOT EXISTS PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
+		expected := fmt.Sprintf(`CREATE OR REPLACE PASSWORD POLICY IF NOT EXISTS %s PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -84,7 +84,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	t.Run("with set", func(t *testing.T) {
 		opts := &PasswordPolicyAlterOptions{
 			name: id,
-			Set: &PasswordPolicyAlterSet{
+			Set: &PasswordPolicySet{
 				PasswordMinLength:         Int(10),
 				PasswordMaxLength:         Int(20),
 				PasswordMinUpperCaseChars: Int(1),
@@ -100,7 +100,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	t.Run("with unset", func(t *testing.T) {
 		opts := &PasswordPolicyAlterOptions{
 			name: id,
-			Unset: &PasswordPolicyAlterUnset{
+			Unset: &PasswordPolicyUnset{
 				PasswordMinLength: Bool(true),
 			},
 		}
@@ -112,7 +112,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.DatabaseName, id.SchemaName, randomString(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
 		opts := &PasswordPolicyAlterOptions{
 			name:    id,
 			NewName: newID,
@@ -178,20 +178,20 @@ func TestPasswordPolicyShow(t *testing.T) {
 	t.Run("with like", func(t *testing.T) {
 		opts := &PasswordPolicyShowOptions{
 			Like: &Like{
-				Pattern: String(id.Name),
+				Pattern: String(id.Name()),
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s'", id.Name)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s'", id.Name())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
 		opts := &PasswordPolicyShowOptions{
 			Like: &Like{
-				Pattern: String(id.Name),
+				Pattern: String(id.Name()),
 			},
 			In: &In{
 				Account: Bool(true),
@@ -200,15 +200,15 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN ACCOUNT", id.Name)
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN ACCOUNT", id.Name())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
-		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName)
+		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 		opts := &PasswordPolicyShowOptions{
 			Like: &Like{
-				Pattern: String(id.Name),
+				Pattern: String(id.Name()),
 			},
 			In: &In{
 				Database: databaseIdentifier,
@@ -217,15 +217,15 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN DATABASE %s", id.Name, databaseIdentifier.FullyQualifiedName())
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
-		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName, id.SchemaName)
+		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
 		opts := &PasswordPolicyShowOptions{
 			Like: &Like{
-				Pattern: String(id.Name),
+				Pattern: String(id.Name()),
 			},
 			In: &In{
 				Schema: schemaIdentifier,
@@ -234,7 +234,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name, schemaIdentifier.FullyQualifiedName())
+		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 

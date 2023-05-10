@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Pallinder/go-randomdata v1.2.0
+	github.com/buger/jsonparser v1.1.1
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/jmoiron/sqlx v1.3.5
@@ -48,6 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.6 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/brianvoe/gofakeit/v6 v6.21.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
@@ -99,6 +101,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

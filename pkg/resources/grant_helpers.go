@@ -113,11 +113,19 @@ func readGenericGrant(
 	builder snowflake.GrantBuilder,
 	futureObjects bool,
 	allObjects bool,
-	validPrivileges PrivilegeSet,
+	_ PrivilegeSet,
 ) error {
 	db := meta.(*sql.DB)
 	var grants []*grant
 	var err error
+
+	priv := d.Get("privilege").(string)
+
+	if priv == "ALL PRIVILEGES" {
+		// When running e.g. GRANT ALL PRIVILEGES ON TABLE <table_name> TO ROLE <role_name>..., then Snowflake creates a grant for each individual permission
+		// There is no way to attribute existing grants to a GRANT ALL PRIVILEGES grant. Thus they cannot be checked. However they can still be revoked.
+		return nil
+	}
 	switch {
 	case futureObjects:
 		grants, err = readGenericFutureGrants(db, builder)
@@ -143,7 +151,6 @@ func readGenericGrant(
 		return err
 	}
 
-	priv := d.Get("privilege").(string)
 	grantOption := d.Get("with_grant_option").(bool)
 
 	// Map of roles to privileges
@@ -236,7 +243,6 @@ func readGenericGrant(
 	if err := d.Set("with_grant_option", grantOption); err != nil {
 		return err
 	}
-
 	return nil
 }
 

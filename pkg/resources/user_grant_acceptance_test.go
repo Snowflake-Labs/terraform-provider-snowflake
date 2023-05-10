@@ -22,10 +22,18 @@ func TestAcc_UserGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: userGrantConfig(wName, roleName),
+				Config: userGrantConfig(wName, roleName, "MONITOR"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_grant.test", "user_name", wName),
 					resource.TestCheckResourceAttr("snowflake_user_grant.test", "privilege", "MONITOR"),
+				),
+			},
+			// UPDATE
+			{
+				Config: userGrantConfig(wName, roleName, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_user_grant.test", "user_name", wName),
+					resource.TestCheckResourceAttr("snowflake_user_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			// IMPORT
@@ -41,7 +49,7 @@ func TestAcc_UserGrant(t *testing.T) {
 	})
 }
 
-func userGrantConfig(n, role string) string {
+func userGrantConfig(n, role, privilege string) string {
 	return fmt.Sprintf(`
 
 resource "snowflake_user" "test" {
@@ -55,7 +63,7 @@ resource "snowflake_role" "test" {
 resource "snowflake_user_grant" "test" {
   user_name = snowflake_user.test.name
   roles     = [snowflake_role.test.name]
-  privilege = "MONITOR"
+  privilege = "%s"
 }
-`, n, role)
+`, n, role, privilege)
 }

@@ -22,10 +22,18 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: warehouseGrantConfig(wName, roleName),
+				Config: warehouseGrantConfig(wName, roleName, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "warehouse_name", wName),
 					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "privilege", "USAGE"),
+				),
+			},
+			// UPDATE
+			{
+				Config: warehouseGrantConfig(wName, roleName, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "warehouse_name", wName),
+					resource.TestCheckResourceAttr("snowflake_warehouse_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			// IMPORT
@@ -41,7 +49,7 @@ func TestAcc_WarehouseGrant(t *testing.T) {
 	})
 }
 
-func warehouseGrantConfig(n, role string) string {
+func warehouseGrantConfig(n, role, privilege string) string {
 	return fmt.Sprintf(`
 
 resource "snowflake_warehouse" "test" {
@@ -55,6 +63,7 @@ resource "snowflake_role" "test" {
 resource "snowflake_warehouse_grant" "test" {
   warehouse_name = snowflake_warehouse.test.name
   roles          = [snowflake_role.test.name]
+  privilege      = "%s"
 }
-`, n, role)
+`, n, role, privilege)
 }

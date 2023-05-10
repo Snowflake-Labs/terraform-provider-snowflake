@@ -15,6 +15,7 @@ import (
 var validFileFormatPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var fileFormatGrantSchema = map[string]*schema.Schema{
@@ -56,7 +57,7 @@ var fileFormatGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future file format.",
+		Description:  "The privilege to grant on the current or future file format. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validFileFormatPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -174,7 +175,7 @@ func CreateFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadFileFormatGrant(d, meta)
@@ -206,7 +207,7 @@ func ReadFileFormatGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, fileFormatName, privilege, withGrantOption, onFuture, onAll, roles)
 	if d.Id() != grantID {
 		d.SetId(grantID)
 	}

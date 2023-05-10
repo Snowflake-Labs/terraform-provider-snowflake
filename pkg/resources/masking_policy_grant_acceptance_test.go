@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,9 +10,6 @@ import (
 )
 
 func TestAcc_MaskingPolicyGrant(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_MASKING_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccMaskingPolicy")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -21,13 +17,24 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyGrantConfig(accName),
+				Config: maskingPolicyGrantConfig(accName, "APPLY"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "masking_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "APPLY"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: maskingPolicyGrantConfig(accName, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "masking_policy_name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			// IMPORT
@@ -43,7 +50,7 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 	})
 }
 
-func maskingPolicyGrantConfig(name string) string {
+func maskingPolicyGrantConfig(name string, privilege string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test" {
 		name = "%v"
@@ -64,7 +71,12 @@ func maskingPolicyGrantConfig(name string) string {
 		name = "%v"
 		database = snowflake_database.test.name
 		schema = snowflake_schema.test.name
-		value_data_type = "VARCHAR"
+		signature {
+			column {
+				name = "val"
+				type = "VARCHAR"
+			}
+		}
 		masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 		return_data_type = "VARCHAR"
 		comment = "Terraform acceptance test"
@@ -75,7 +87,7 @@ func maskingPolicyGrantConfig(name string) string {
 		database_name = snowflake_database.test.name
 		roles         = [snowflake_role.test.name]
 		schema_name   = snowflake_schema.test.name
-		privilege = "APPLY"
+		privilege = "%s"
 	}
-	`, name, name, name, name)
+	`, name, name, name, name, privilege)
 }

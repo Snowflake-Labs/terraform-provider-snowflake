@@ -6,105 +6,146 @@ import (
 )
 
 type ObjectIdentifier interface {
+	Name() string
 	FullyQualifiedName() string
 }
 
 type AccountObjectIdentifier struct {
-	Name string
+	name string
 }
 
 func NewAccountObjectIdentifier(name string) AccountObjectIdentifier {
-	return AccountObjectIdentifier{Name: name}
+	return AccountObjectIdentifier{name: name}
+}
+
+func (i AccountObjectIdentifier) Name() string {
+	return i.name
 }
 
 func (i AccountObjectIdentifier) FullyQualifiedName() string {
-	if i.Name == "" {
+	if i.name == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"`, i.Name)
+	return fmt.Sprintf(`"%v"`, i.name)
 }
 
 type SchemaIdentifier struct {
-	DatabaseName string
-	SchemaName   string
+	databaseName string
+	schemaName   string
 }
 
 func NewSchemaIdentifier(databaseName, schemaName string) SchemaIdentifier {
 	return SchemaIdentifier{
-		DatabaseName: strings.Trim(databaseName, `"`),
-		SchemaName:   strings.Trim(schemaName, `"`),
+		databaseName: strings.Trim(databaseName, `"`),
+		schemaName:   strings.Trim(schemaName, `"`),
 	}
 }
 
 func NewSchemaIdentifierFromFullyQualifiedName(fullyQualifiedName string) SchemaIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	return SchemaIdentifier{
-		DatabaseName: strings.Trim(parts[0], `"`),
-		SchemaName:   strings.Trim(parts[1], `"`),
+		databaseName: strings.Trim(parts[0], `"`),
+		schemaName:   strings.Trim(parts[1], `"`),
 	}
+}
+
+func (i SchemaIdentifier) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i SchemaIdentifier) Name() string {
+	return i.schemaName
 }
 
 func (i SchemaIdentifier) FullyQualifiedName() string {
-	if i.SchemaName == "" && i.DatabaseName == "" {
+	if i.schemaName == "" && i.databaseName == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"`, i.DatabaseName, i.SchemaName)
+	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.schemaName)
 }
 
 type SchemaObjectIdentifier struct {
-	DatabaseName string
-	SchemaName   string
-	Name         string
+	databaseName string
+	schemaName   string
+	name         string
 }
 
 func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObjectIdentifier {
 	return SchemaObjectIdentifier{
-		DatabaseName: strings.Trim(databaseName, `"`),
-		SchemaName:   strings.Trim(schemaName, `"`),
-		Name:         strings.Trim(name, `"`),
+		databaseName: strings.Trim(databaseName, `"`),
+		schemaName:   strings.Trim(schemaName, `"`),
+		name:         strings.Trim(name, `"`),
 	}
 }
 
 func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	return SchemaObjectIdentifier{
-		DatabaseName: strings.Trim(parts[0], `"`),
-		SchemaName:   strings.Trim(parts[1], `"`),
-		Name:         strings.Trim(parts[2], `"`),
+		databaseName: strings.Trim(parts[0], `"`),
+		schemaName:   strings.Trim(parts[1], `"`),
+		name:         strings.Trim(parts[2], `"`),
 	}
+}
+
+func (i SchemaObjectIdentifier) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i SchemaObjectIdentifier) SchemaName() string {
+	return i.schemaName
+}
+
+func (i SchemaObjectIdentifier) Name() string {
+	return i.name
 }
 
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {
-	if i.SchemaName == "" && i.DatabaseName == "" && i.Name == "" {
+	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"`, i.DatabaseName, i.SchemaName, i.Name)
+	return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
 }
 
 type TableColumnIdentifier struct {
-	DatabaseName string
-	SchemaName   string
-	TableName    string
-	ColumnName   string
+	databaseName string
+	schemaName   string
+	tableName    string
+	columnName   string
 }
 
 func NewTableColumnIdentifier(databaseName, schemaName, tableName, columnName string) TableColumnIdentifier {
-	return TableColumnIdentifier{DatabaseName: databaseName, SchemaName: schemaName, TableName: tableName, ColumnName: columnName}
+	return TableColumnIdentifier{databaseName: databaseName, schemaName: schemaName, tableName: tableName, columnName: columnName}
 }
 
 func NewTableColumnIdentifierFromFullyQualifiedName(fullyQualifiedName string) TableColumnIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	return TableColumnIdentifier{
-		DatabaseName: strings.Trim(parts[0], `"`),
-		SchemaName:   strings.Trim(parts[1], `"`),
-		TableName:    strings.Trim(parts[2], `"`),
-		ColumnName:   strings.Trim(parts[3], `"`),
+		databaseName: strings.Trim(parts[0], `"`),
+		schemaName:   strings.Trim(parts[1], `"`),
+		tableName:    strings.Trim(parts[2], `"`),
+		columnName:   strings.Trim(parts[3], `"`),
 	}
 }
 
+func (i TableColumnIdentifier) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i TableColumnIdentifier) SchemaName() string {
+	return i.schemaName
+}
+
+func (i TableColumnIdentifier) TableName() string {
+	return i.tableName
+}
+
+func (i TableColumnIdentifier) Name() string {
+	return i.columnName
+}
+
 func (i TableColumnIdentifier) FullyQualifiedName() string {
-	if i.SchemaName == "" && i.DatabaseName == "" && i.TableName == "" && i.ColumnName == "" {
+	if i.schemaName == "" && i.databaseName == "" && i.tableName == "" && i.columnName == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.DatabaseName, i.SchemaName, i.TableName, i.ColumnName)
+	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.databaseName, i.schemaName, i.tableName, i.columnName)
 }

@@ -14,6 +14,7 @@ import (
 var validMaskingPoilcyPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeApply,
+	privilegeAllPrivileges,
 )
 
 var maskingPolicyGrantSchema = map[string]*schema.Schema{
@@ -32,7 +33,7 @@ var maskingPolicyGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the masking policy.",
+		Description:  "The privilege to grant on the masking policy. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "APPLY",
 		ValidateFunc: validation.StringInSlice(validMaskingPoilcyPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -133,7 +134,7 @@ func CreateMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadMaskingPolicyGrant(d, meta)
@@ -155,7 +156,7 @@ func ReadMaskingPolicyGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, maskingPolicyName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

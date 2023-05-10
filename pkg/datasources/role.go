@@ -55,6 +55,5 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("comment", role.Comment.String); err != nil {
 		return err
 	}
-
 	return nil
 }

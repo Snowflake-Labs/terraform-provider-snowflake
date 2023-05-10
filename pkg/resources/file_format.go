@@ -691,7 +691,6 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("comment", f.Comment.String); err != nil {
 		return err
 	}
-
 	return nil
 }
 

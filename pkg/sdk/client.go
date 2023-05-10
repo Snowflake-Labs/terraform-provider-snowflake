@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
@@ -17,34 +16,26 @@ import (
 // ObjectType is the type of object.
 type ObjectType string
 
+const (
+	ObjectTypeMaskingPolicy  ObjectType = "MASKING POLICY"
+	ObjectTypePasswordPolicy ObjectType = "PASSWORD POLICY"
+)
+
 func (o ObjectType) String() string {
 	return string(o)
 }
 
-func DefaultConfig() *gosnowflake.Config {
-	cfg := &gosnowflake.Config{
-		Account:   os.Getenv("SNOWFLAKE_ACCOUNT"),
-		User:      os.Getenv("SNOWFLAKE_USER"),
-		Password:  os.Getenv("SNOWFLAKE_PASSWORD"),
-		Region:    os.Getenv("SNOWFLAKE_REGION"),
-		Role:      os.Getenv("SNOWFLAKE_ROLE"),
-		Host:      os.Getenv("SNOWFLAKE_HOST"),
-		Warehouse: os.Getenv("SNOWFLAKE_WAREHOUSE"),
-	}
-	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
-	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
-	if cfg.Region == "us-west-2" {
-		cfg.Region = ""
-	}
-	return cfg
-}
-
 type Client struct {
+	config *gosnowflake.Config
 	db     *sqlx.DB
 	dryRun bool
 
 	ContextFunctions ContextFunctions
+	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
+	Sessions         Sessions
+	SystemFunctions  SystemFunctions
+	Warehouses       Warehouses
 }
 
 func NewDefaultClient() (*Client, error) {
@@ -52,7 +43,9 @@ func NewDefaultClient() (*Client, error) {
 }
 
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
+	var err error
 	if cfg == nil {
+		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
 		cfg = DefaultConfig()
 	}
 
@@ -81,7 +74,8 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	client := &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe
-		db: db.Unsafe(),
+		db:     db.Unsafe(),
+		config: cfg,
 	}
 	client.initialize()
 
@@ -110,8 +104,12 @@ func NewClientFromDB(db *sql.DB) *Client {
 
 func (c *Client) initialize() {
 	b := &sqlBuilder{}
-	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
 	c.ContextFunctions = &contextFunctions{client: c, builder: b}
+	c.MaskingPolicies = &maskingPolicies{client: c, builder: b}
+	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
+	c.Sessions = &sessions{client: c, builder: b}
+	c.SystemFunctions = &systemFunctions{client: c, builder: b}
+	c.Warehouses = &warehouses{client: c, builder: b}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {

@@ -14,6 +14,7 @@ import (
 var validFunctionPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var functionGrantSchema = map[string]*schema.Schema{
@@ -62,7 +63,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future function. Must be one of `USAGE` or `OWNERSHIP`.",
+		Description:  "The privilege to grant on the current or future function. Must be one of `USAGE` or `OWNERSHIP`. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validFunctionPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -206,7 +207,7 @@ func CreateFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 	return ReadFunctionGrant(d, meta)
 }
@@ -238,7 +239,7 @@ func ReadFunctionGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, functionName, argumentDataTypes, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

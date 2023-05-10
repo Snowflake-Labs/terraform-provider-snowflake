@@ -17,13 +17,23 @@ func TestAcc_PipeGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipeGrantConfig(accName),
+				Config: pipeGrantConfig(accName, "OPERATE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "database_name", accName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "schema_name", accName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "pipe_name", accName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "privilege", "OPERATE"),
+				),
+			},
+			{
+				Config: pipeGrantConfig(accName, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "database_name", accName),
+					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "pipe_name", accName),
+					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			{
@@ -38,7 +48,7 @@ func TestAcc_PipeGrant(t *testing.T) {
 	})
 }
 
-func pipeGrantConfig(name string) string {
+func pipeGrantConfig(name, privilege string) string {
 	s := `
 resource "snowflake_database" "test" {
   name = "%v"
@@ -81,7 +91,7 @@ resource "snowflake_pipe_grant" "test" {
   database_name = snowflake_database.test.name
   roles         = [snowflake_role.test.name]
   schema_name   = snowflake_schema.test.name
-  privilege 	  = "OPERATE"
+  privilege 	  = "%s"
 }
 
 resource "snowflake_pipe" "test" {
@@ -97,5 +107,5 @@ CMD
   auto_ingest    = false
 }
 `
-	return fmt.Sprintf(s, name, name)
+	return fmt.Sprintf(s, name, name, privilege)
 }

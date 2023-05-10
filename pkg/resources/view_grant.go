@@ -15,6 +15,7 @@ var validViewPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 var viewGrantSchema = map[string]*schema.Schema{
@@ -39,7 +40,7 @@ var viewGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future view.",
+		Description:  "The privilege to grant on the current or future view. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeSelect.String(),
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validViewPrivileges.ToList(), true),
@@ -191,7 +192,7 @@ func CreateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 	return ReadViewGrant(d, meta)
 }
@@ -222,7 +223,7 @@ func ReadViewGrant(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, viewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

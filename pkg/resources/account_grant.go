@@ -44,13 +44,14 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegePurchaseDataExchangeListing,
 	privilegeAccountSupportCases,
 	privilegeUserSupportCases,
+	privilegeAllPrivileges,
 )
 
 var accountGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html)",
+		Description:  "The account privilege to grant. Valid privileges are those in [globalPrivileges](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege.html). To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeMonitorUsage,
 		ValidateFunc: validation.StringInSlice(validAccountPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -120,7 +121,7 @@ func CreateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	privilege := d.Get("privilege").(string)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
-	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadAccountGrant(d, meta)
@@ -138,7 +139,7 @@ func ReadAccountGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(privilege, withGrantOption, roles)
 	// if the ID is not in the new format, rewrite it
 	if grantID != d.Id() {
 		d.SetId(grantID)

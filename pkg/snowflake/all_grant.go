@@ -10,6 +10,7 @@ type (
 )
 
 const (
+	AllAccountGrantAccount       AllGrantType = "ACCOUNT"
 	AllGrantTypeSchema           AllGrantType = "SCHEMA"
 	AllGrantTypeTable            AllGrantType = "TABLE"
 	AllGrantTypeView             AllGrantType = "VIEW"
@@ -210,7 +211,7 @@ func (agb *AllGrantBuilder) Role(n string) GrantExecutable {
 }
 
 // Share is not implemented because all objects cannot be granted to shares.
-func (agb *AllGrantBuilder) Share(n string) GrantExecutable {
+func (agb *AllGrantBuilder) Share(_ string) GrantExecutable {
 	return nil
 }
 

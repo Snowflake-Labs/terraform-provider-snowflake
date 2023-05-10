@@ -15,6 +15,7 @@ import (
 var validSequencePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var sequenceGrantSchema = map[string]*schema.Schema{
@@ -50,7 +51,7 @@ var sequenceGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future sequence.",
+		Description:  "The privilege to grant on the current or future sequence. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validSequencePrivileges.ToList(), true),
 		ForceNew:     true,
@@ -174,7 +175,7 @@ func CreateSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadSequenceGrant(d, meta)
@@ -206,7 +207,7 @@ func ReadSequenceGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, sequenceName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

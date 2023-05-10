@@ -14,6 +14,7 @@ import (
 var validResourceMonitorPrivileges = NewPrivilegeSet(
 	privilegeModify,
 	privilegeMonitor,
+	privilegeAllPrivileges,
 )
 
 var resourceMonitorGrantSchema = map[string]*schema.Schema{
@@ -26,7 +27,7 @@ var resourceMonitorGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the resource monitor.",
+		Description:  "The privilege to grant on the resource monitor. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "MONITOR",
 		ValidateFunc: validation.StringInSlice(validResourceMonitorPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -100,7 +101,7 @@ func CreateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(monitorName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadResourceMonitorGrant(d, meta)
@@ -119,7 +120,7 @@ func ReadResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(monitorName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(monitorName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

@@ -13,6 +13,7 @@ import (
 
 var validUserPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
+	privilegeAllPrivileges,
 )
 
 var userGrantSchema = map[string]*schema.Schema{
@@ -25,7 +26,7 @@ var userGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "The privilege to grant on the user.",
+		Description:  "The privilege to grant on the user. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validUserPrivileges.ToList(), true),
 	},
@@ -97,7 +98,7 @@ func CreateUserGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(userName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(userName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadUserGrant(d, meta)
@@ -117,7 +118,7 @@ func ReadUserGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(userName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(userName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

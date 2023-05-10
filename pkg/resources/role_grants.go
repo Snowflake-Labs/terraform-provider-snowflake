@@ -85,7 +85,7 @@ func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no users or roles specified for role grants")
 	}
 
-	grantID := helpers.SnowflakeID(roleName, roles, users)
+	grantID := helpers.EncodeSnowflakeID(roleName, roles, users)
 	d.SetId(grantID)
 
 	for _, role := range roles {
@@ -170,7 +170,7 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(roleName, roles, users)
+	grantID := helpers.EncodeSnowflakeID(roleName, roles, users)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

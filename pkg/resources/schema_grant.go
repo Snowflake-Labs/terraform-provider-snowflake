@@ -35,6 +35,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOwnership,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var schemaGrantSchema = map[string]*schema.Schema{
@@ -53,7 +54,7 @@ var schemaGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access.",
+		Description:  "The privilege to grant on the current or future schema. Note that if \"OWNERSHIP\" is specified, ensure that the role that terraform is using is granted access. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validSchemaPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -194,7 +195,7 @@ func CreateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadSchemaGrant(d, meta)
@@ -292,7 +293,7 @@ func ReadSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

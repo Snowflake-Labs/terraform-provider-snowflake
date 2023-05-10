@@ -19,6 +19,7 @@ var validDatabasePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferenceUsage,
 	privilegeUsage,
+	privilegeAllPrivileges,
 )
 
 var databaseGrantSchema = map[string]*schema.Schema{
@@ -31,7 +32,7 @@ var databaseGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the database.",
+		Description:  "The privilege to grant on the database. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "USAGE",
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validDatabasePrivileges.ToList(), true),
@@ -124,7 +125,7 @@ func CreateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
-	grantID := helpers.SnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
 	d.SetId(grantID)
 
 	return ReadDatabaseGrant(d, meta)
@@ -151,7 +152,7 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading database grant: %w", err)
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

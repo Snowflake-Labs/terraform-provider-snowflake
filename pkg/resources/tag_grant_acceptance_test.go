@@ -17,13 +17,24 @@ func TestAccTagGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagGrantConfig(accName),
+				Config: tagGrantConfig(accName, "APPLY"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "tag_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "APPLY"),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: tagGrantConfig(accName, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "tag_name", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
 			},
 			{
@@ -38,7 +49,7 @@ func TestAccTagGrant(t *testing.T) {
 	})
 }
 
-func tagGrantConfig(name string) string {
+func tagGrantConfig(name string, privilege string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_database" "test" {
 		name = "%v"
@@ -67,8 +78,8 @@ func tagGrantConfig(name string) string {
 		database_name = snowflake_database.test.name
 		roles         = [snowflake_role.test.name]
 		schema_name   = snowflake_schema.test.name
-		privilege = "APPLY"
+		privilege = "%s"
 		
 	}
-	`, name, name, name, name)
+	`, name, name, name, name, privilege)
 }

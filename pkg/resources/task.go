@@ -405,12 +405,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 					// resume the task after modifications are complete as long as it is not a standalone task
 					if !(rootTask.Name == name) {
-						defer func() {
-							q = rootTask.Resume()
-							if err := snowflake.Exec(db, q); err != nil {
-								log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-							}
-						}()
+						defer resumeTask(db, rootTask)
 					}
 				}
 			}
@@ -448,6 +443,13 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	return ReadTask(d, meta)
 }
 
+func resumeTask(db *sql.DB, rootTask *snowflake.Task) {
+	q := rootTask.Resume()
+	if err := snowflake.Exec(db, q); err != nil {
+		log.Printf("[WARN] failed to resume task %s", rootTask.Name)
+	}
+}
+
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	taskID, err := taskIDFromString(d.Id())
@@ -475,12 +477,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer func() {
-					q = rootTask.Resume()
-					if err := snowflake.Exec(db, q); err != nil {
-						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-					}
-				}()
+				defer resumeTask(db, rootTask)
 			}
 		}
 	}
@@ -539,15 +536,15 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error suspending task %v", d.Id())
 		}
 
-		old, new := d.GetChange("after")
+		o, n := d.GetChange("after")
 		var oldAfter []string
-		if len(old.([]interface{})) > 0 {
-			oldAfter = expandStringList(old.([]interface{}))
+		if len(o.([]interface{})) > 0 {
+			oldAfter = expandStringList(o.([]interface{}))
 		}
 
 		var newAfter []string
-		if len(new.([]interface{})) > 0 {
-			newAfter = expandStringList(new.([]interface{}))
+		if len(n.([]interface{})) > 0 {
+			newAfter = expandStringList(n.([]interface{}))
 		}
 
 		// Remove old dependencies that are not in new dependencies
@@ -587,12 +584,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 						if !(rootTask.Name == name) {
 							// resume the task after modifications are complete, as long as it is not a standalone task
-							defer func() {
-								q = rootTask.Resume()
-								if err := snowflake.Exec(db, q); err != nil {
-									log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-								}
-							}()
+							defer resumeTask(db, rootTask)
 						}
 					}
 				}
@@ -606,11 +598,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("schedule") {
 		var q string
-		old, new := d.GetChange("schedule")
-		if old != "" && new == "" {
+		o, n := d.GetChange("schedule")
+		if o != "" && n == "" {
 			q = builder.RemoveSchedule()
 		} else {
-			q = builder.ChangeSchedule(new.(string))
+			q = builder.ChangeSchedule(n.(string))
 		}
 
 		if err := snowflake.Exec(db, q); err != nil {
@@ -620,11 +612,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("user_task_timeout_ms") {
 		var q string
-		old, new := d.GetChange("user_task_timeout_ms")
-		if old.(int) > 0 && new.(int) == 0 {
+		o, n := d.GetChange("user_task_timeout_ms")
+		if o.(int) > 0 && n.(int) == 0 {
 			q = builder.RemoveTimeout()
 		} else {
-			q = builder.ChangeTimeout(new.(int))
+			q = builder.ChangeTimeout(n.(int))
 		}
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating user task timeout on task %v", d.Id())
@@ -633,11 +625,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("comment") {
 		var q string
-		old, new := d.GetChange("comment")
-		if old != "" && new == "" {
+		o, n := d.GetChange("comment")
+		if o != "" && n == "" {
 			q = builder.RemoveComment()
 		} else {
-			q = builder.ChangeComment(new.(string))
+			q = builder.ChangeComment(n.(string))
 		}
 
 		if err := snowflake.Exec(db, q); err != nil {
@@ -647,8 +639,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("allow_overlapping_execution") {
 		var q string
-		_, new := d.GetChange("allow_overlapping_execution")
-		flag := new.(bool)
+		_, n := d.GetChange("allow_overlapping_execution")
+		flag := n.(bool)
 		if flag {
 			q = builder.SetAllowOverlappingExecutionParameter()
 		} else {
@@ -692,16 +684,16 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("when") {
-		new := d.Get("when")
-		q := builder.ChangeCondition(new.(string))
+		n := d.Get("when")
+		q := builder.ChangeCondition(n.(string))
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating when condition on task %v", d.Id())
 		}
 	}
 
 	if d.HasChange("sql_statement") {
-		new := d.Get("sql_statement")
-		q := builder.ChangeSQLStatement(new.(string))
+		n := d.Get("sql_statement")
+		q := builder.ChangeSQLStatement(n.(string))
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating sql statement on task %v", d.Id())
 		}
@@ -747,12 +739,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer func() {
-					q = rootTask.Resume()
-					if err := snowflake.Exec(db, q); err != nil {
-						log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-					}
-				}()
+				defer resumeTask(db, rootTask)
 			}
 		}
 	}

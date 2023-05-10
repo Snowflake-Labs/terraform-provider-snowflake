@@ -15,6 +15,7 @@ var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 var externalTableGrantSchema = map[string]*schema.Schema{
@@ -54,7 +55,7 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future external table.",
+		Description:  "The privilege to grant on the current or future external table. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.ToList(), true),
 		ForceNew:     true,
@@ -189,7 +190,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadExternalTableGrant(d, meta)
@@ -222,7 +223,7 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

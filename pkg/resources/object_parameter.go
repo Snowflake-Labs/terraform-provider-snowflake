@@ -177,7 +177,6 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("value", p.Value.String); err != nil {
 		return err
 	}
-
 	return nil
 }
 
