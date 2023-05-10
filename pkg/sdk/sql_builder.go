@@ -358,6 +358,10 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 	return append(clauses, clause), nil
 }
 
+type sqlClause interface {
+	String() string
+}
+
 type sqlListClause struct {
 	keyword        string
 	clauses        []sqlClause
@@ -383,10 +387,6 @@ func (v sqlListClause) String() string {
 		s = fmt.Sprintf("%s %s", v.keyword, s)
 	}
 	return s
-}
-
-type sqlClause interface {
-	String() string
 }
 
 type sqlStaticClause string
@@ -429,7 +429,7 @@ func (v sqlParameterClause) String() string {
 		result = fmt.Sprintf("%s = ", v.key)
 	}
 	if vType.Kind() == reflect.String {
-		result += v.qt.Quote(v.value.(string))
+		result += v.qt.Quote(v.value)
 	} else {
 		result += fmt.Sprintf("%v", v.value)
 	}
