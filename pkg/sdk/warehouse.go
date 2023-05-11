@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -309,37 +310,37 @@ type Warehouse struct {
 }
 
 type warehouseDBRow struct {
-	Name                            string    `db:"name"`
-	State                           string    `db:"state"`
-	Type                            string    `db:"type"`
-	Size                            string    `db:"size"`
-	MinClusterCount                 uint8     `db:"min_cluster_count"`
-	MaxClusterCount                 uint8     `db:"max_cluster_count"`
-	StartedClusters                 uint      `db:"started_clusters"`
-	Running                         uint      `db:"running"`
-	Queued                          uint      `db:"queued"`
-	IsDefault                       string    `db:"is_default"`
-	IsCurrent                       string    `db:"is_current"`
-	AutoSuspend                     *uint     `db:"auto_suspend"`
-	AutoResume                      bool      `db:"auto_resume"`
-	Available                       string    `db:"available"`
-	Provisioning                    string    `db:"provisioning"`
-	Quiescing                       string    `db:"quiescing"`
-	Other                           string    `db:"other"`
-	CreatedOn                       time.Time `db:"created_on"`
-	ResumedOn                       time.Time `db:"resumed_on"`
-	UpdatedOn                       time.Time `db:"updated_on"`
-	Owner                           string    `db:"owner"`
-	Comment                         string    `db:"comment"`
-	EnableQueryAcceleration         bool      `db:"enable_query_acceleration"`
-	QueryAccelerationMaxScaleFactor uint8     `db:"query_acceleration_max_scale_factor"`
-	ResourceMonitor                 string    `db:"resource_monitor"`
-	Actives                         string    `db:"actives"`
-	Pendings                        string    `db:"pendings"`
-	Failed                          string    `db:"failed"`
-	Suspended                       string    `db:"suspended"`
-	Uuid                            string    `db:"uuid"`
-	ScalingPolicy                   string    `db:"scaling_policy"`
+	Name                            string        `db:"name"`
+	State                           string        `db:"state"`
+	Type                            string        `db:"type"`
+	Size                            string        `db:"size"`
+	MinClusterCount                 uint8         `db:"min_cluster_count"`
+	MaxClusterCount                 uint8         `db:"max_cluster_count"`
+	StartedClusters                 uint          `db:"started_clusters"`
+	Running                         uint          `db:"running"`
+	Queued                          uint          `db:"queued"`
+	IsDefault                       string        `db:"is_default"`
+	IsCurrent                       string        `db:"is_current"`
+	AutoSuspend                     sql.NullInt16 `db:"auto_suspend"`
+	AutoResume                      bool          `db:"auto_resume"`
+	Available                       string        `db:"available"`
+	Provisioning                    string        `db:"provisioning"`
+	Quiescing                       string        `db:"quiescing"`
+	Other                           string        `db:"other"`
+	CreatedOn                       time.Time     `db:"created_on"`
+	ResumedOn                       time.Time     `db:"resumed_on"`
+	UpdatedOn                       time.Time     `db:"updated_on"`
+	Owner                           string        `db:"owner"`
+	Comment                         string        `db:"comment"`
+	EnableQueryAcceleration         bool          `db:"enable_query_acceleration"`
+	QueryAccelerationMaxScaleFactor uint8         `db:"query_acceleration_max_scale_factor"`
+	ResourceMonitor                 string        `db:"resource_monitor"`
+	Actives                         string        `db:"actives"`
+	Pendings                        string        `db:"pendings"`
+	Failed                          string        `db:"failed"`
+	Suspended                       string        `db:"suspended"`
+	Uuid                            string        `db:"uuid"`
+	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
 func (row warehouseDBRow) toWarehouse() *Warehouse {
@@ -355,7 +356,6 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 		Queued:                          row.Queued,
 		IsDefault:                       row.IsDefault == "Y",
 		IsCurrent:                       row.IsCurrent == "Y",
-		AutoSuspend:                     *row.AutoSuspend,
 		AutoResume:                      row.AutoResume,
 		CreatedOn:                       row.CreatedOn,
 		ResumedOn:                       row.ResumedOn,
@@ -383,6 +383,9 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 	}
 	if val, err := strconv.ParseFloat(row.Other, 64); err != nil {
 		wh.Other = val
+	}
+	if row.AutoSuspend.Valid {
+		wh.AutoSuspend = uint(row.AutoSuspend.Int16)
 	}
 	return wh
 }

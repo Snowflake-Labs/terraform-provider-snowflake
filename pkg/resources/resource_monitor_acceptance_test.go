@@ -57,7 +57,7 @@ func resourceMonitorConfig(accName string) string {
 resource "snowflake_warehouse" "warehouse" {
   name           = "test"
   comment        = "foo"
-  warehouse_size = "small"
+  warehouse_size = "SMALL"
 }
 
 resource "snowflake_resource_monitor" "test" {
@@ -77,7 +77,7 @@ func resourceMonitorConfig2(accName string) string {
 resource "snowflake_warehouse" "warehouse" {
   name           = "test"
   comment        = "foo"
-  warehouse_size = "small"
+  warehouse_size = "SMALL"
 }
 
 resource "snowflake_resource_monitor" "test" {
