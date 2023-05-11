@@ -19,6 +19,7 @@ type ObjectType string
 const (
 	ObjectTypeMaskingPolicy  ObjectType = "MASKING POLICY"
 	ObjectTypePasswordPolicy ObjectType = "PASSWORD POLICY"
+	ObjectTypeWarehouse      ObjectType = "WAREHOUSE"
 )
 
 func (o ObjectType) String() string {
