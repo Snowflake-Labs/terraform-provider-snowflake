@@ -48,11 +48,34 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, _ *W
 }
 
 // placeholder for the real implementation.
-type WarehouseDropOptions struct{}
+type WarehouseDropOptions struct {
+	drop      *bool                   `ddl:"static" db:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
+	warehouse *bool                   `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists  *bool                   `ddl:"keyword" db:"IF EXISTS"`
+	name      AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+}
 
-func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, _ *WarehouseDropOptions) error {
-	sql := fmt.Sprintf(`DROP WAREHOUSE %s`, id.FullyQualifiedName())
-	_, err := c.client.exec(ctx, sql)
+func (opts *WarehouseDropOptions) validate() error {
+	if opts.name.FullyQualifiedName() == "" {
+		return fmt.Errorf("name is required")
+	}
+	return nil
+}
+
+func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error {
+	if opts == nil {
+		opts = &WarehouseDropOptions{}
+	}
+	opts.name = id
+	if err := opts.validate(); err != nil {
+		return err
+	}
+	clauses, err := c.builder.parseStruct(opts)
+	if err != nil {
+		return err
+	}
+	sql := c.builder.sql(clauses...)
+	_, err = c.client.exec(ctx, sql)
 	return err
 }
 

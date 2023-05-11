@@ -86,7 +86,7 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	parts := strings.Split(id, IDDelimiter)
 	switch len(parts) {
 	case 1:
-		return sdk.NewAccountObjectIdentifier(parts[0])
+		return sdk.NewAccountLevelIdentifier(parts[0])
 	case 2:
 		return sdk.NewSchemaIdentifier(parts[0], parts[1])
 	case 3:

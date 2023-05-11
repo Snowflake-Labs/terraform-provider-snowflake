@@ -10,6 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
+	return AccountIdentifier{
+		organizationName: "SFDEVREL",
+		accountName:      "CLOUD_ENGINEERING4",
+	}
+}
+
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
 	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
@@ -82,6 +91,15 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
+func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
+	t.Helper()
+	config, err := ProfileConfig(profile)
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(config)
+}
+
 func randomUUID(t *testing.T) string {
 	t.Helper()
 	v, err := uuid.GenerateUUID()
@@ -120,17 +138,49 @@ func randomIntRange(t *testing.T, min, max int) int {
 	return gofakeit.IntRange(min, max)
 }
 
+func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
+	t.Helper()
+	return createFailoverGroupWithOptions(t, client, &FailoverGroupCreateOptions{})
+}
+
+func createFailoverGroupWithOptions(t *testing.T, client *Client, opts *FailoverGroupCreateOptions) (*FailoverGroup, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := NewAccountObjectIdentifier(name)
+	objectTypes := []ObjectType{
+		ObjectTypeDatabase,
+	}
+	allowedAccounts := []AccountIdentifier{
+		secondaryAccountIdentifier(t),
+	}
+	ctx := context.Background()
+	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	require.NoError(t, err)
+	failoverGroups, err := client.FailoverGroups.Show(ctx, nil)
+	require.NoError(t, err)
+	cleanupFailoverGroup := func() {
+		err := client.FailoverGroups.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+	for _, failoverGroup := range failoverGroups {
+		if failoverGroup.Name == name {
+			return failoverGroup, cleanupFailoverGroup
+		}
+	}
+	return nil, cleanupFailoverGroup
+}
+
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
 	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
 }
 
-func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
+func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCreateOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	id := NewAccountObjectIdentifier(name)
 	ctx := context.Background()
-	err := client.Warehouses.Create(ctx, id, nil)
+	err := client.Warehouses.Create(ctx, id, opts)
 	require.NoError(t, err)
 	return &Warehouse{
 			Name: name,
@@ -231,6 +281,30 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 		if databaseCleanup != nil {
 			databaseCleanup()
 		}
+	}
+}
+
+func createShare(t *testing.T, client *Client) (*Share, func()) {
+	t.Helper()
+	return createShareWithOptions(t, client, &ShareCreateOptions{})
+}
+
+func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptions) (*Share, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Shares.Create(ctx, id, opts)
+	require.NoError(t, err)
+	shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(shares))
+	return shares[0], func() {
+		err := client.Shares.Drop(ctx, id)
+		require.NoError(t, err)
 	}
 }
 

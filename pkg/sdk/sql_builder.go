@@ -81,6 +81,20 @@ func getUseParenthesesFromTag(tag reflect.StructTag, tagName string, defaultPare
 	return defaultParentheses
 }
 
+func getReversedFromTag(tag reflect.StructTag, tagName string) bool {
+	t := strings.ToLower(tag.Get(tagName))
+	if t == "" {
+		return false
+	}
+	parts := strings.Split(t, ",")
+	for _, part := range parts {
+		if strings.TrimSpace(part) == "reverse" {
+			return true
+		}
+	}
+	return false
+}
+
 type sqlBuilder struct{}
 
 // sql builds a SQL statement from sqlClauses.
@@ -135,45 +149,50 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 			if ddlTag != "" {
 				ddlTagParts := strings.Split(ddlTag, ",")
 				ddlType := ddlTagParts[0]
-				switch ddlType {
-				case "keyword":
+				if ddlType == "keyword" {
 					clauses = append(clauses, sqlKeywordClause{
 						value: field.Tag.Get("db"),
 						qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 					})
-				case "list":
-					listClauses := make([]sqlClause, 0)
-					// loop through the slice call parseStruct on each element (since the elements could be structs)
-					for i := 0; i < value.Len(); i++ {
-						v := value.Index(i).Interface()
-						// test if v is an ObjectIdentifier. If it is it needs to be handled separately
-						objectIdentifer, ok := v.(ObjectIdentifier)
-						if ok {
-							listClauses = append(listClauses, sqlIdentifierClause{
-								value: objectIdentifer,
-							})
-							continue
-						}
-						structClauses, err := b.parseStruct(value.Index(i).Interface())
-						if err != nil {
-							return nil, err
-						}
-						// each element of the slice needs to be pre-rendered before the commas are added
-						renderedStructClauses := b.sql(structClauses...)
-						sClause := sqlStaticClause(renderedStructClauses)
-						listClauses = append(listClauses, sClause)
-					}
-					if len(listClauses) < 1 {
-						continue
-					}
-					clauses = append(clauses, sqlListClause{
-						clauses:        listClauses,
-						sep:            ",",
-						useParentheses: getUseParenthesesFromTag(field.Tag, "ddl", true),
-						keyword:        field.Tag.Get("db"),
-					})
 				}
 			}
+			listClauses := make([]sqlClause, 0)
+			// loop through the slice call parseStruct on each element (since the elements could be structs)
+			for i := 0; i < value.Len(); i++ {
+				v := value.Index(i).Interface()
+				// test if v is an Identifier. If it is it needs to be handled separately
+				identifer, ok := v.(Identifier)
+				if ok {
+					listClauses = append(listClauses, sqlIdentifierClause{
+						value: identifer,
+					})
+					continue
+				}
+				// if it is a struct call parseStruct on it.
+				if value.Index(i).Kind() == reflect.Struct || value.Index(i).Kind() == reflect.Ptr {
+					structClauses, err := b.parseStruct(value.Index(i).Interface())
+					if err != nil {
+						return nil, err
+					}
+					// each element of the slice needs to be pre-rendered before the commas are added.
+					renderedStructClauses := b.sql(structClauses...)
+					sClause := sqlStaticClause(renderedStructClauses)
+					listClauses = append(listClauses, sClause)
+				} else {
+					// if it is not a struct, then it is a primitive type and can be added directly.
+					listClauses = append(listClauses, sqlStaticClause(fmt.Sprintf("%v", value.Index(i).Interface())))
+				}
+			}
+			if len(listClauses) < 1 {
+				continue
+			}
+			clauses = append(clauses, sqlListClause{
+				clauses:        listClauses,
+				sep:            ",",
+				useParentheses: getUseParenthesesFromTag(field.Tag, "ddl", true),
+				keyword:        field.Tag.Get("db"),
+			})
+
 		}
 
 		if value.Kind() == reflect.Struct {
@@ -192,13 +211,16 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 						qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
 					})
 				case "identifier":
-					if value.Interface().(ObjectIdentifier).FullyQualifiedName() == "" {
-						continue
+					// is it an identifier?
+					if _, ok := value.Interface().(Identifier); ok {
+						if value.Interface().(Identifier).Name() == "" {
+							continue
+						}
+						clauses = append(clauses, sqlIdentifierClause{
+							key:   field.Tag.Get("db"),
+							value: value.Interface().(Identifier),
+						})
 					}
-					clauses = append(clauses, sqlIdentifierClause{
-						key:   field.Tag.Get("db"),
-						value: value.Interface().(ObjectIdentifier),
-					})
 				}
 			}
 			structClauses, err := b.parseStruct(value.Interface())
@@ -276,7 +298,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 	case "identifier":
 		clause = sqlIdentifierClause{
 			key:   dbTag,
-			value: value.Interface().(ObjectIdentifier),
+			value: value.Interface().(Identifier),
 		}
 	case "parameter":
 		clause = sqlParameterClause{
@@ -317,10 +339,19 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 		// loop through the slice call parseStruct on each element (since the elements could be structs)
 		for i := 0; i < value.Len(); i++ {
 			u := b.getUnexportedField(value.Index(i))
-			structClauses, err := b.parseStruct(u)
-			if err != nil {
-				return nil, err
+			var structClauses []sqlClause
+			// if u is a struct then we call parseStruct(u)
+			if reflect.TypeOf(u).Kind() == reflect.Struct {
+				var err error
+				structClauses, err = b.parseStruct(u)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				// otherwise it is a primitive type and we will just treat it as a static
+				structClauses = []sqlClause{sqlStaticClause(fmt.Sprintf("%v", u))}
 			}
+
 			// each element of the slice needs to be pre-rendered before the commas are added
 			renderedStructClauses := b.sql(structClauses...)
 			sClause := sqlStaticClause(renderedStructClauses)
@@ -348,9 +379,10 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 		}
 	case "command":
 		clause = sqlCommandClause{
-			key:   dbTag,
-			value: b.getUnexportedField(value),
-			qt:    getQuoteTypeFromTag(field.Tag, "ddl"),
+			key:      dbTag,
+			value:    b.getUnexportedField(value),
+			reversed: getReversedFromTag(field.Tag, "ddl"),
+			qt:       getQuoteTypeFromTag(field.Tag, "ddl"),
 		}
 	case "static":
 		clause = sqlStaticClause(dbTag)
@@ -406,14 +438,22 @@ func (v sqlKeywordClause) String() string {
 
 type sqlIdentifierClause struct {
 	key   string
-	value ObjectIdentifier
+	value Identifier
 }
 
 func (v sqlIdentifierClause) String() string {
-	if v.key != "" {
-		return fmt.Sprintf("%s %s", v.key, v.value.FullyQualifiedName())
+	var name string
+	// object identifiers need to be fully qualified
+	if _, ok := v.value.(ObjectIdentifier); ok {
+		name = v.value.(ObjectIdentifier).FullyQualifiedName()
+	} else {
+		name = DoubleQuotes.Quote(v.value.Name())
 	}
-	return v.value.FullyQualifiedName()
+	// else try to get the string value
+	if v.key != "" {
+		return fmt.Sprintf("%s %s", v.key, name)
+	}
+	return name
 }
 
 type sqlParameterClause struct {
@@ -438,11 +478,15 @@ func (v sqlParameterClause) String() string {
 }
 
 type sqlCommandClause struct {
-	key   string
-	value interface{}
-	qt    quoteType
+	key      string
+	value    interface{}
+	qt       quoteType
+	reversed bool
 }
 
 func (v sqlCommandClause) String() string {
+	if v.reversed {
+		return fmt.Sprintf("%s %s", v.qt.Quote(v.value), v.key)
+	}
 	return fmt.Sprintf("%s %s", v.key, v.qt.Quote(v.value))
 }
