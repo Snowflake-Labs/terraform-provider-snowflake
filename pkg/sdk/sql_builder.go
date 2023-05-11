@@ -147,21 +147,25 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 					for i := 0; i < value.Len(); i++ {
 						v := value.Index(i).Interface()
 						// test if v is an ObjectIdentifier. If it is it needs to be handled separately
+
 						objectIdentifer, ok := v.(ObjectIdentifier)
-						if ok {
+						switch {
+						case ok:
 							listClauses = append(listClauses, sqlIdentifierClause{
 								value: objectIdentifer,
 							})
-							continue
+						case value.Index(i).Kind() == reflect.String:
+							listClauses = append(listClauses, sqlStaticClause(value.Index(i).String()))
+						default:
+							structClauses, err := b.parseStruct(v)
+							if err != nil {
+								return nil, err
+							}
+							// each element of the slice needs to be pre-rendered before the commas are added
+							renderedStructClauses := b.sql(structClauses...)
+							sClause := sqlStaticClause(renderedStructClauses)
+							listClauses = append(listClauses, sClause)
 						}
-						structClauses, err := b.parseStruct(value.Index(i).Interface())
-						if err != nil {
-							return nil, err
-						}
-						// each element of the slice needs to be pre-rendered before the commas are added
-						renderedStructClauses := b.sql(structClauses...)
-						sClause := sqlStaticClause(renderedStructClauses)
-						listClauses = append(listClauses, sClause)
 					}
 					if len(listClauses) < 1 {
 						continue
