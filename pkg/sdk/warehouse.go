@@ -19,6 +19,8 @@ type Warehouses interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error
 	// Show returns a list of warehouses.
 	Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error)
+	// Show + filter to return SHOW data for a single warehouse.
+	ShowById(ctx context.Context, id ObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
 }
@@ -414,6 +416,24 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	}
 
 	return resultList, nil
+}
+
+func (c *warehouses) ShowById(ctx context.Context, id ObjectIdentifier) (*Warehouse, error) {
+	results, err := c.Show(ctx, &WarehouseShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		if res.ID().name == id.Name() {
+			return res, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type warehouseDescribeOptions struct {
