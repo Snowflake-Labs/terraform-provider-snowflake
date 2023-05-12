@@ -142,7 +142,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.storageIntegration != "" {
-		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = "%v"`, sb.storageIntegration))
+		q.WriteString(fmt.Sprintf(` STORAGE_INTEGRATION = %v`, sb.storageIntegration))
 	}
 
 	if sb.encryption != "" {
