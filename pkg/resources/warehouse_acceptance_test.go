@@ -70,6 +70,28 @@ func TestAcc_Warehouse(t *testing.T) {
 	})
 }
 
+func TestAcc_WarehousePattern(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_TESTS"); ok {
+		t.Skip("Skipping TestAccWarehouse")
+	}
+
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: wConfigPattern(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w1", "name", fmt.Sprintf("%s_", prefix)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w2", "name", fmt.Sprintf("%s1", prefix)),
+				),
+			},
+		},
+	})
+}
+
 func wConfig(prefix string) string {
 	s := `
 resource "snowflake_warehouse" "w" {
@@ -105,4 +127,16 @@ resource "snowflake_warehouse" "w" {
 }
 `
 	return fmt.Sprintf(s, prefix)
+}
+
+func wConfigPattern(prefix string) string {
+	s := `
+resource "snowflake_warehouse" "w1" {
+	name           = "%s_"
+}
+resource "snowflake_warehouse" "w2" {
+	name           = "%s1"
+}
+`
+	return fmt.Sprintf(s, prefix, prefix)
 }

@@ -237,16 +237,10 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	warehouses, err := client.Warehouses.Show(ctx, &sdk.WarehouseShowOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(id.Name()),
-		},
-	})
+	w, err := client.Warehouses.ShowById(ctx, id)
 	if err != nil {
 		return err
 	}
-
-	w := warehouses[0]
 
 	if err = d.Set("name", w.Name); err != nil {
 		return err
