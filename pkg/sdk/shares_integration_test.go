@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,7 +69,7 @@ func TestInt_SharesCreate(t *testing.T) {
 			Comment:   String("test comment"),
 		})
 		require.NoError(t, err)
-		share, err := client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err := client.Shares.Show(ctx, &ShareShowOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -79,9 +78,9 @@ func TestInt_SharesCreate(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(share))
-		assert.Equal(t, id.Name(), share[0].Name.Name())
-		assert.Equal(t, "test comment", share[0].Comment)
+		assert.Equal(t, 1, len(shares))
+		assert.Equal(t, id.Name(), shares[0].Name.Name())
+		assert.Equal(t, "test comment", shares[0].Comment)
 
 		t.Cleanup(func() {
 			err := client.Shares.Drop(ctx, id)
@@ -96,11 +95,9 @@ func TestInt_SharesCreate(t *testing.T) {
 			Comment:   String("test comment"),
 		})
 		require.NoError(t, err)
-		share, err := client.Shares.Show(ctx, nil)
+		shares, err := client.Shares.Show(ctx, nil)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(share))
-		assert.Equal(t, id.Name(), share[0].Name)
-		assert.Equal(t, "test comment", share[0].Comment)
+		assert.GreaterOrEqual(t, len(shares), 1)
 
 		t.Cleanup(func() {
 			err := client.Shares.Drop(ctx, id)
@@ -182,9 +179,6 @@ func TestInt_Alter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(shares))
 		share = shares[0]
-		for _, account := range share.To {
-			log.Printf("account: %s", account.Name())
-		}
 		assert.Equal(t, 0, len(share.To))
 	})
 

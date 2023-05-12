@@ -149,22 +149,22 @@ func (opts *ShareAlterOptions) validate() error {
 }
 
 type ShareAdd struct {
-	Accounts          []AccountIdentifier `ddl:"list,no_parentheses" db:"ACCOUNTS ="`
+	Accounts          []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
 	ShareRestrictions *bool               `ddl:"parameter" db:"SHARE_RESTRICTIONS"`
 }
 
 type ShareRemove struct {
-	Accounts []AccountIdentifier `ddl:"list,no_parentheses" db:"ACCOUNTS ="`
+	Accounts []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
 }
 
 type ShareSet struct {
-	Accounts []AccountIdentifier `ddl:"list,no_parentheses" db:"ACCOUNTS ="`
+	Accounts []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
 	Comment  *string             `ddl:"parameter,single_quotes" db:"COMMENT"`
-	Tag      []TagAssociation    `ddl:"list,no_parentheses" db:"TAG"`
+	Tag      []TagAssociation    `ddl:"keyword" db:"TAG"`
 }
 
 type ShareUnset struct {
-	Tag     []ObjectIdentifier `ddl:"list,no_parentheses" db:"TAG"`
+	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
 	Comment *bool              `ddl:"keyword" db:"COMMENT"`
 }
 
@@ -237,9 +237,12 @@ type shareDetailsRow struct {
 }
 
 func (row *shareDetailsRow) toShareInfo() *ShareInfo {
+	objectType := ObjectType(row.Kind)
+	trimmedS := strings.Trim(row.Name, "\"")
+	id := objectType.GetObjectIdentifier(trimmedS)
 	return &ShareInfo{
-		Kind:     ObjectType(row.Kind),
-		Name:     NewObjectIdentifierFromFullyQualifiedName(strings.Trim(row.Name, "\"")),
+		Kind:     objectType,
+		Name:     id,
 		SharedOn: row.SharedOn,
 	}
 }

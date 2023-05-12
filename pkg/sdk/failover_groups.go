@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -59,7 +60,7 @@ type FailoverGroupCreateOptions struct {
 	AllowedShares           []AccountObjectIdentifier `ddl:"list,no_parentheses" db:"ALLOWED_SHARES ="`
 	AllowedIntegrationTypes []IntegrationType         `ddl:"list,no_parentheses" db:"ALLOWED_INTEGRATION_TYPES ="`
 	allowedAccounts         []AccountIdentifier       `ddl:"list,no_parentheses" db:"ALLOWED_ACCOUNTS ="`
-	IgnoreEditionCheck      *bool                     `ddl:"keyword" db:"IGNORE_EDITION_CHECK"`
+	IgnoreEditionCheck      *bool                     `ddl:"keyword" db:"IGNORE EDITION CHECK"`
 	ReplicationSchedule     *string                   `ddl:"parameter,single_quotes" db:"REPLICATION_SCHEDULE"`
 }
 
@@ -79,11 +80,11 @@ func (v *failoverGroups) Create(ctx context.Context, id AccountObjectIdentifier,
 	opts.allowedAccounts = allowedAccounts
 
 	// convert objectTypes to plural.
-	var objectTypesStr []string
+	var objectTypesStrList []string
 	for _, objectType := range objectTypes {
-		objectTypesStr = append(objectTypesStr, objectType.Plural())
+		objectTypesStrList = append(objectTypesStrList, objectType.Plural())
 	}
-	opts.objectTypes = objectTypesStr
+	opts.objectTypes = objectTypesStrList
 	if err := opts.validate(); err != nil {
 		return err
 	}
@@ -279,7 +280,7 @@ func (v *failoverGroups) Drop(ctx context.Context, id AccountObjectIdentifier, o
 type FailoverGroupShowOptions struct {
 	show           bool              `ddl:"static" db:"SHOW"`            //lint:ignore U1000 This is used in the ddl tag
 	failoverGroups bool              `ddl:"static" db:"FAILOVER GROUPS"` //lint:ignore U1000 This is used in the ddl tag
-	InAcccount     AccountIdentifier `ddl:"keyword" db:"IN ACCOUNT"`
+	InAcccount     AccountIdentifier `ddl:"identifier" db:"IN ACCOUNT"`
 }
 
 func (opts *FailoverGroupShowOptions) validate() error {
@@ -308,34 +309,38 @@ func (v *FailoverGroup) ID() AccountObjectIdentifier {
 
 // failoverGroupDBRow is used to decode the result of a CREATE FAILOVER GROUP query.
 type failoverGroupDBRow struct {
-	SnowflakeRegion         string    `db:"snowflake_region"`
-	CreatedOn               time.Time `db:"created_on"`
-	AccountName             string    `db:"account_name"`
-	Name                    string    `db:"name"`
-	Type                    string    `db:"type"`
-	Comment                 string    `db:"comment"`
-	IsPrimary               bool      `db:"is_primary"`
-	Primary                 string    `db:"primary"`
-	ObjectTypes             string    `db:"object_types"`
-	AllowedIntegrationTypes string    `db:"allowed_integration_types"`
-	AllowedAccounts         string    `db:"allowed_accounts"`
-	OrganizationName        string    `db:"organization_name"`
-	AccountLocator          string    `db:"account_locator"`
-	ReplicationSchedule     string    `db:"replication_schedule"`
-	SecondaryState          string    `db:"secondary_state"`
-	NextScheduledRefresh    string    `db:"next_scheduled_refresh"`
-	Owner                   string    `db:"owner"`
+	SnowflakeRegion         string         `db:"snowflake_region"`
+	CreatedOn               time.Time      `db:"created_on"`
+	AccountName             string         `db:"account_name"`
+	Name                    string         `db:"name"`
+	Type                    string         `db:"type"`
+	Comment                 sql.NullString `db:"comment"`
+	IsPrimary               bool           `db:"is_primary"`
+	Primary                 string         `db:"primary"`
+	ObjectTypes             string         `db:"object_types"`
+	AllowedIntegrationTypes string         `db:"allowed_integration_types"`
+	AllowedAccounts         string         `db:"allowed_accounts"`
+	OrganizationName        string         `db:"organization_name"`
+	AccountLocator          string         `db:"account_locator"`
+	ReplicationSchedule     string         `db:"replication_schedule"`
+	SecondaryState          sql.NullString `db:"secondary_state"`
+	NextScheduledRefresh    sql.NullString `db:"next_scheduled_refresh"`
+	Owner                   string         `db:"owner"`
 }
 
 func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 	var objectTypes []ObjectType
 	for _, v := range strings.Split(row.ObjectTypes, ",") {
-		objectTypes = append(objectTypes, ObjectType(strings.TrimSpace(v)))
+		objectTypes = append(objectTypes, ObjectTypeFromPluralString(strings.TrimSpace(v)))
 	}
 	var allowedIntegrationTypes []IntegrationType
 	for _, v := range strings.Split(row.AllowedIntegrationTypes, ",") {
+		if v == "" {
+			continue
+		}
 		allowedIntegrationTypes = append(allowedIntegrationTypes, IntegrationType(strings.TrimSpace(v)))
 	}
+	log.Printf("allowedIntegrationTypes: %+v", allowedIntegrationTypes)
 	var allowedAccounts []AccountIdentifier
 	for _, v := range strings.Split(row.AllowedAccounts, ",") {
 		s := strings.TrimSpace(v)
@@ -344,12 +349,16 @@ func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 		accountName := p[1]
 		allowedAccounts = append(allowedAccounts, NewAccountIdentifier(orgName, accountName))
 	}
+	var comment string
+	if row.Comment.Valid {
+		comment = row.Comment.String
+	}
 	return &FailoverGroup{
 		SnowflakeRegion:         row.SnowflakeRegion,
 		CreatedOn:               row.CreatedOn,
 		AccountName:             row.AccountName,
 		Name:                    row.Name,
-		Comment:                 row.Comment,
+		Comment:                 comment,
 		IsPrimary:               row.IsPrimary,
 		Primary:                 NewExternalObjectIdentifierFromFullyQualifiedName(row.Primary),
 		ObjectTypes:             objectTypes,
@@ -414,7 +423,7 @@ func (v *failoverGroups) ShowShares(ctx context.Context, id AccountObjectIdentif
 	}
 	resultList := make([]AccountObjectIdentifier, len(dest))
 	for i, row := range dest {
-		resultList[i] = NewAccountObjectIdentifier(row.Name)
+		resultList[i] = NewExternalObjectIdentifierFromFullyQualifiedName(row.Name).objectIdentifier.(AccountObjectIdentifier)
 	}
 	return resultList, nil
 }

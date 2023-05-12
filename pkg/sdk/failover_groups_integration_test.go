@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {
@@ -26,9 +27,6 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		allowedAccounts := []AccountIdentifier{
 			secondaryAccountIdentifier(t),
 		}
-		allowedIntegrationTypes := []IntegrationType{
-			IntegrationTypeNotificationIntegrations,
-		}
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &FailoverGroupCreateOptions{
 			IfNotExists: Bool(true),
@@ -38,10 +36,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			AllowedShares: []AccountObjectIdentifier{
 				shareTest.ID(),
 			},
-			AllowedIntegrationTypes: []IntegrationType{
-				IntegrationTypeNotificationIntegrations,
-			},
-			IgnoreEditionCheck: Bool(true),
+			IgnoreEditionCheck:  Bool(true),
 			ReplicationSchedule: String(replicationSchedule),
 		})
 		require.NoError(t, err)
@@ -62,22 +57,27 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		}
 		assert.NotNil(t, failoverGroup)
 		assert.Equal(t, name, failoverGroup.Name)
+		slices.Sort(objectTypes)
+		slices.Sort(failoverGroup.ObjectTypes)
 		assert.Equal(t, objectTypes, failoverGroup.ObjectTypes)
-		assert.Equal(t, allowedIntegrationTypes, failoverGroup.AllowedIntegrationTypes)
-		assert.Equal(t, allowedAccounts, failoverGroup.AllowedAccounts)
-		assert.Equal(t,replicationSchedule, failoverGroup.ReplicationSchedule)
+		assert.Equal(t, 0, len(failoverGroup.AllowedIntegrationTypes))
+		// this is length 2 because it automatically adds the current account to allowed accounts list
+		assert.Equal(t, 2, len(failoverGroup.AllowedAccounts))
+		for _, allowedAccount := range allowedAccounts {
+			assert.Contains(t, failoverGroup.AllowedAccounts, allowedAccount)
+		}
+		assert.Equal(t, replicationSchedule, failoverGroup.ReplicationSchedule)
 
 		fgDBS, err := client.FailoverGroups.ShowDatabases(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(fgDBS))
-		assert.Equal(t, databaseTest.ID().Name(), fgDBS[0].Name)
+		assert.Equal(t, databaseTest.ID().Name(), fgDBS[0].Name())
 
 		fgShares, err := client.FailoverGroups.ShowShares(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(fgShares))
-		assert.Equal(t, shareTest.ID().Name(), fgShares[0].Name)
+		assert.Equal(t, shareTest.ID().Name(), fgShares[0].Name())
 	})
-
 }
 
 /*

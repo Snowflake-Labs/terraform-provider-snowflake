@@ -10,6 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func primaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
+	return AccountIdentifier{
+		organizationName: "SFDEVREL",
+		accountName:      "CLOUD_ENGINEERING3",
+		accountLocator:   "IYA62698",
+	}
+}
+
 func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
 	t.Helper()
 	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.

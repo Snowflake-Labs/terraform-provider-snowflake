@@ -49,8 +49,8 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, _ *W
 
 // placeholder for the real implementation.
 type WarehouseDropOptions struct {
-	drop      *bool                   `ddl:"static" db:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
-	warehouse *bool                   `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	drop      bool                   `ddl:"static" db:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
+	warehouse bool                   `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
 	IfExists  *bool                   `ddl:"keyword" db:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
 }

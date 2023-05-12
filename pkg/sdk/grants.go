@@ -69,7 +69,7 @@ func (row *grantRow) toGrant() (*Grant, error) {
 }
 
 type grantPrivilegeToShareOptions struct {
-	grant           *bool                    `ddl:"static" db:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
+	grant           bool                    `ddl:"static" db:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
 	objectPrivilege Privilege                `ddl:"keyword"`
 	On              *GrantPrivilegeToShareOn `ddl:"keyword" db:"ON"`
 	to              AccountObjectIdentifier  `ddl:"identifier" db:"TO SHARE"`
@@ -89,7 +89,7 @@ type GrantPrivilegeToShareOn struct {
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
 	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
 	Function SchemaObjectIdentifier  `ddl:"identifier" db:"FUNCTION"`
-	Table    *OnTable                `ddl:"keyword"`
+	Table    *OnTable                `ddl:"-"`
 	View     SchemaObjectIdentifier  `ddl:"identifier" db:"VIEW"`
 }
 
@@ -117,7 +117,7 @@ func (v *grants) GrantPrivilegeToShare(ctx context.Context, objectPrivilege Priv
 }
 
 type revokePrivilegeFromShareOptions struct {
-	revoke          *bool                       `ddl:"static" db:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
+	revoke          bool                       `ddl:"static" db:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
 	objectPrivilege Privilege                   `ddl:"keyword"`
 	On              *RevokePrivilegeFromShareOn `ddl:"keyword" db:"ON"`
 	from            AccountObjectIdentifier     `ddl:"identifier" db:"FROM SHARE"`
@@ -136,8 +136,8 @@ func (opts *revokePrivilegeFromShareOptions) validate() error {
 type RevokePrivilegeFromShareOn struct {
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
 	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
-	Table    *OnTable                `ddl:"keyword"`
-	View     *OnView                 `ddl:"keyword"`
+	Table    *OnTable                `ddl:"-"`
+	View     *OnView                 `ddl:"-"`
 }
 
 type OnView struct {
@@ -165,8 +165,8 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, objectPrivilege P
 }
 
 type ShowGrantsOptions struct {
-	show   *bool         `ddl:"static" db:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	grants *bool         `ddl:"static" db:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
+	show   bool         `ddl:"static" db:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
+	grants bool         `ddl:"static" db:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
 	On     *ShowGrantsOn `ddl:"keyword" db:"ON"`
 	To     *ShowGrantsTo `ddl:"keyword" db:"TO"`
 	Of     *ShowGrantsOf `ddl:"keyword" db:"OF"`
