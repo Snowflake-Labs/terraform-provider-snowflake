@@ -5,5 +5,11 @@
     "gopls": {
         "formatting.gofumpt": true
     },
-    "go.testFlags": ["-v"],
+    "go.testFlags": [
+        "-v"
+    ],
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ],
 }
