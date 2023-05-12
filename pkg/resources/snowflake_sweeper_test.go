@@ -16,36 +16,6 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-func getWarehousesSweeper(name string) *resource.Sweeper {
-	return &resource.Sweeper{
-		Name: name,
-		F: func(ununsed string) error {
-			db, err := provider.GetDatabaseHandleFromEnv()
-			if err != nil {
-				return fmt.Errorf("Error getting db handle: %w", err)
-			}
-
-			warehouses, err := snowflake.ListWarehouses(db)
-			if err != nil {
-				return fmt.Errorf("Error listing warehouses: %w", err)
-			}
-
-			for _, wh := range warehouses {
-				log.Printf("[DEBUG] Testing if warehouse %s starts with tst-terraform", wh.Name)
-				if strings.HasPrefix(wh.Name, "tst-terraform") {
-					log.Printf("[DEBUG] deleting warehouse %s", wh.Name)
-					whBuilder := snowflake.NewWarehouseBuilder(name).Builder
-					stmt := whBuilder.Drop()
-					if err := snowflake.Exec(db, stmt); err != nil {
-						return fmt.Errorf("Error deleting warehouse %q %w", wh.Name, err)
-					}
-				}
-			}
-			return nil
-		},
-	}
-}
-
 func getDatabaseSweepers(name string) *resource.Sweeper {
 	return &resource.Sweeper{
 		Name: name,
@@ -161,7 +131,6 @@ func getIntegrationsSweeper(name string) *resource.Sweeper {
 // Sweepers usually go along with the tests. In TF[CE]'s case everything depends on the organization,
 // which means that if we delete it then all the other entities will  be deleted automatically.
 func init() {
-	resource.AddTestSweepers("wh_sweeper", getWarehousesSweeper("wh_sweeper"))
 	resource.AddTestSweepers("db_sweeper", getDatabaseSweepers("db_sweeper"))
 	resource.AddTestSweepers("role_sweeper", getRolesSweeper("role_sweeper"))
 	resource.AddTestSweepers("user_sweeper", getUsersSweeper("user_sweeper"))

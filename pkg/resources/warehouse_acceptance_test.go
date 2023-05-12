@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -48,15 +49,22 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "Small"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_warehouse.w",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning", "query_acceleration_max_scale_factor"},
+				ResourceName:      "snowflake_warehouse.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"initially_suspended",
+					"wait_for_provisioning",
+					"query_acceleration_max_scale_factor",
+					"max_concurrency_level",
+					"statement_queued_timeout_in_seconds",
+					"statement_timeout_in_seconds",
+				},
 			},
 		},
 	})
@@ -85,7 +93,7 @@ func wConfig2(prefix string) string {
 resource "snowflake_warehouse" "w" {
 	name           = "%s"
 	comment        = "test comment 2"
-	warehouse_size = "small"
+	warehouse_size = "SMALL"
 
 	auto_suspend          = 60
 	max_cluster_count     = 1

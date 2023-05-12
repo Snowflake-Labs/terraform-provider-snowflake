@@ -1,27 +1,15 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"log"
-	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
-
-// warehouseCreateProperties are only available via the CREATE statement.
-var warehouseCreateProperties = []string{"initially_suspended", "wait_for_provisioning"}
-
-var warehouseProperties = []string{
-	"comment", "warehouse_size", "max_cluster_count", "min_cluster_count",
-	"scaling_policy", "auto_suspend", "auto_resume",
-	"resource_monitor", "max_concurrency_level", "statement_queued_timeout_in_seconds",
-	"statement_timeout_in_seconds", "enable_query_acceleration", "query_acceleration_max_scale_factor",
-	"warehouse_type",
-}
 
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
@@ -39,11 +27,17 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 		ValidateFunc: validation.StringInSlice([]string{
-			"XSMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE",
-			"X-LARGE", "XXLARGE", "X2LARGE", "2X-LARGE", "XXXLARGE", "X3LARGE",
-			"3X-LARGE", "X4LARGE", "4X-LARGE", "X5LARGE", "5X-LARGE", "X6LARGE",
-			"6X-LARGE",
-		}, true),
+			string(sdk.WarehouseSizeXSmall),
+			string(sdk.WarehouseSizeSmall),
+			string(sdk.WarehouseSizeMedium),
+			string(sdk.WarehouseSizeLarge),
+			string(sdk.WarehouseSizeXLarge),
+			string(sdk.WarehouseSizeXXLarge),
+			string(sdk.WarehouseSizeXXXLarge),
+			string(sdk.WarehouseSizeX4Large),
+			string(sdk.WarehouseSizeX5Large),
+			string(sdk.WarehouseSizeX6Large),
+		}, false),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
 				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
@@ -57,7 +51,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(1),
+		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"min_cluster_count": {
 		Type:         schema.TypeInt,
@@ -67,11 +61,14 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"scaling_policy": {
-		Type:         schema.TypeString,
-		Description:  "Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.",
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "ECONOMY"}, true),
+		Type:        schema.TypeString,
+		Description: "Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.",
+		Optional:    true,
+		Computed:    true,
+		ValidateFunc: validation.StringInSlice([]string{
+			string(sdk.ScalingPolicyStandard),
+			string(sdk.ScalingPolicyEconomy),
+		}, true),
 	},
 	"auto_suspend": {
 		Type:         schema.TypeInt,
@@ -137,13 +134,15 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
 	"warehouse_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      "STANDARD",
-		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "SNOWPARK-OPTIMIZED"}, true),
-		Description:  "Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  string(sdk.WarehouseTypeStandard),
+		ValidateFunc: validation.StringInSlice([]string{
+			string(sdk.WarehouseTypeStandard),
+			string(sdk.WarehouseTypeSnowparkOptimized),
+		}, true),
+		Description: "Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse",
 	},
-	"tag": tagReferenceSchema,
 }
 
 // Warehouse returns a pointer to the resource representing a warehouse.
@@ -163,39 +162,99 @@ func Warehouse() *schema.Resource {
 
 // CreateWarehouse implements schema.CreateFunc.
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	props := append(warehouseProperties, warehouseCreateProperties...) //nolint:gocritic // todo: please fix this to pass gocritic
-	return CreateResource(
-		"warehouse",
-		props,
-		warehouseSchema,
-		func(name string) *snowflake.Builder {
-			return snowflake.NewWarehouseBuilder(name).Builder
-		},
-		ReadWarehouse,
-	)(d, meta)
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	name := d.Get("name").(string)
+	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+
+	createOptions := &sdk.WarehouseCreateOptions{}
+
+	if v, ok := d.GetOk("comment"); ok {
+		createOptions.Comment = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("warehouse_size"); ok {
+		size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
+		createOptions.WarehouseSize = &size
+	}
+	if v, ok := d.GetOk("max_cluster_count"); ok {
+		createOptions.MaxClusterCount = sdk.Uint8(uint8(v.(int)))
+	}
+	if v, ok := d.GetOk("min_cluster_count"); ok {
+		createOptions.MinClusterCount = sdk.Uint8(uint8(v.(int)))
+	}
+	if v, ok := d.GetOk("scaling_policy"); ok {
+		scalingPolicy := sdk.ScalingPolicy(v.(string))
+		createOptions.ScalingPolicy = &scalingPolicy
+	}
+	if v, ok := d.GetOk("auto_suspend"); ok {
+		createOptions.AutoSuspend = sdk.Uint(uint(v.(int)))
+	}
+	if v, ok := d.GetOk("auto_resume"); ok {
+		createOptions.AutoResume = sdk.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("initially_suspended"); ok {
+		createOptions.InitiallySuspended = sdk.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("resource_monitor"); ok {
+		createOptions.ResourceMonitor = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
+		createOptions.StatementTimeoutInSeconds = sdk.Uint(uint(v.(int)))
+	}
+	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
+		createOptions.StatementQueuedTimeoutInSeconds = sdk.Uint(uint(v.(int)))
+	}
+	if v, ok := d.GetOk("max_concurrency_level"); ok {
+		createOptions.MaxConcurrencyLevel = sdk.Uint(uint(v.(int)))
+	}
+	if v, ok := d.GetOk("enable_query_acceleration"); ok {
+		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+		createOptions.QueryAccelerationMaxScaleFactor = sdk.Uint8(uint8(v.(int)))
+	}
+	if v, ok := d.GetOk("warehouse_type"); ok {
+		whType := sdk.WarehouseType(v.(string))
+		createOptions.WarehouseType = &whType
+	}
+
+	err := client.Warehouses.Create(ctx, objectIdentifier, createOptions)
+	if err != nil {
+		return err
+	}
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+
+	return ReadWarehouse(d, meta)
 }
 
 // ReadWarehouse implements schema.ReadFunc.
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	warehouseBuilder := snowflake.NewWarehouseBuilder(d.Id())
-	stmt := warehouseBuilder.Show()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	row := snowflake.QueryRow(db, stmt)
-	w, err := snowflake.ScanWarehouse(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] warehouse (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	warehouses, err := client.Warehouses.Show(ctx, &sdk.WarehouseShowOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(id.Name()),
+		},
+	})
 	if err != nil {
 		return err
 	}
+
+	w := warehouses[0]
+
 	if err = d.Set("name", w.Name); err != nil {
 		return err
 	}
 	if err = d.Set("comment", w.Comment); err != nil {
+		return err
+	}
+	if err = d.Set("warehouse_type", w.Type); err != nil {
 		return err
 	}
 	if err = d.Set("warehouse_size", w.Size); err != nil {
@@ -210,7 +269,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
 		return err
 	}
-	if err = d.Set("auto_suspend", w.AutoSuspend.Int64); err != nil {
+	if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
 		return err
 	}
 	if err = d.Set("auto_resume", w.AutoResume); err != nil {
@@ -228,47 +287,167 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] warehouse type is: %s", w.WarehouseType)
-	if w.WarehouseType == "STANDARD" || w.WarehouseType == "SNOWPARK-OPTIMIZED" {
-		err = d.Set("warehouse_type", w.WarehouseType)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = d.Set("warehouse_type", "STANDARD")
-		if err != nil {
-			return err
-		}
-	}
+	return nil
+}
 
-	stmt = warehouseBuilder.ShowParameters()
-	paramRows, err := snowflake.Query(db, stmt)
-	if err != nil {
-		return err
-	}
+// UpdateWarehouse implements schema.UpdateFunc.
+func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	warehouseParams, err := snowflake.ScanWarehouseParameters(paramRows)
-	if err != nil {
-		return err
-	}
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	for _, param := range warehouseParams {
-		log.Printf("[TRACE] %+v\n", param)
-
-		var value interface{}
-		if strings.EqualFold(param.Type, "number") {
-			i, err := strconv.ParseInt(param.Value, 10, 64)
+	// Change name separately
+	if d.HasChange("name") {
+		if v, ok := d.GetOk("name"); ok {
+			newName := sdk.NewAccountObjectIdentifier(v.(string))
+			err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+				NewName: &newName,
+			})
 			if err != nil {
 				return err
 			}
-			value = i
+			d.SetId(helpers.EncodeSnowflakeID(newName))
 		} else {
-			value = param.Value
+			panic("name has to be set")
 		}
+	}
 
-		key := strings.ToLower(param.Key)
-		// lintignore:R001
-		err = d.Set(key, value)
+	// Batch SET operations and UNSET operations
+	var runSet bool = false
+	setOpts := sdk.WarehouseSetOptions{}
+	unsetFields := []sdk.WarehouseUnsetField{}
+
+	if d.HasChange("comment") {
+		if v, ok := d.GetOk("comment"); ok {
+			setOpts.Comment = sdk.String(v.(string))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.CommentField)
+		}
+	}
+	if d.HasChange("warehouse_size") {
+		if v, ok := d.GetOk("warehouse_size"); ok {
+			size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
+			setOpts.WarehouseSize = &size
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.WarehouseSizeField)
+		}
+	}
+	if d.HasChange("max_cluster_count") {
+		if v, ok := d.GetOk("max_cluster_count"); ok {
+			setOpts.MaxClusterCount = sdk.Uint8(v.(uint8))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.MaxClusterCountField)
+		}
+	}
+	if d.HasChange("min_cluster_count") {
+		if v, ok := d.GetOk("min_cluster_count"); ok {
+			setOpts.MinClusterCount = sdk.Uint8(v.(uint8))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.MinClusterCountField)
+		}
+	}
+	if d.HasChange("scaling_policy") {
+		if v, ok := d.GetOk("scaling_policy"); ok {
+			scalingPolicy := sdk.ScalingPolicy(v.(string))
+			setOpts.ScalingPolicy = &scalingPolicy
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.ScalingPolicyField)
+		}
+	}
+	if d.HasChange("auto_suspend") {
+		if v, ok := d.GetOk("auto_suspend"); ok {
+			setOpts.AutoSuspend = sdk.Uint(v.(uint))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.AutoSuspendField)
+		}
+	}
+	if d.HasChange("auto_resume") {
+		if v, ok := d.GetOk("auto_resume"); ok {
+			setOpts.AutoResume = sdk.Bool(v.(bool))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.AutoResumeField)
+		}
+	}
+	if d.HasChange("resource_monitor") {
+		if v, ok := d.GetOk("resource_monitor"); ok {
+			setOpts.ResourceMonitor = sdk.String(v.(string))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.ResourceMonitorField)
+		}
+	}
+	if d.HasChange("statement_timeout_in_seconds") {
+		if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
+			setOpts.StatementTimeoutInSeconds = sdk.Uint(v.(uint))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.StatementTimeoutInSecondsField)
+		}
+	}
+	if d.HasChange("statement_queued_timeout_in_seconds") {
+		if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
+			setOpts.StatementQueuedTimeoutInSeconds = sdk.Uint(v.(uint))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.StatementQueuedTimeoutInSecondsField)
+		}
+	}
+	if d.HasChange("max_concurrency_level") {
+		if v, ok := d.GetOk("max_concurrency_level"); ok {
+			setOpts.MaxConcurrencyLevel = sdk.Uint(uint(v.(int)))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.MaxConcurrencyLevelField)
+		}
+	}
+	if d.HasChange("enable_query_acceleration") {
+		if v, ok := d.GetOk("enable_query_acceleration"); ok {
+			setOpts.EnableQueryAcceleration = sdk.Bool(v.(bool))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.EnableQueryAccelerationField)
+		}
+	}
+	if d.HasChange("query_acceleration_max_scale_factor") {
+		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+			setOpts.QueryAccelerationMaxScaleFactor = sdk.Uint8(v.(uint8))
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.QueryAccelerationMaxScaleFactorField)
+		}
+	}
+	if d.HasChange("warehouse_type") {
+		if v, ok := d.GetOk("warehouse_type"); ok {
+			whType := sdk.WarehouseType(v.(string))
+			setOpts.WarehouseType = &whType
+			runSet = true
+		} else {
+			unsetFields = append(unsetFields, sdk.WarehouseTypeField)
+		}
+	}
+
+	// Apply SET and UNSET changes
+	if runSet {
+		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+			Set: &setOpts,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if len(unsetFields) > 0 {
+		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+			Unset: &unsetFields,
+		})
 		if err != nil {
 			return err
 		}
@@ -277,24 +456,18 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// UpdateWarehouse implements schema.UpdateFunc.
-func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource(
-		"warehouse",
-		warehouseProperties,
-		warehouseSchema,
-		func(name string) *snowflake.Builder {
-			return snowflake.NewWarehouseBuilder(name).Builder
-		},
-		ReadWarehouse,
-	)(d, meta)
-}
-
 // DeleteWarehouse implements schema.DeleteFunc.
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource(
-		"warehouse", func(name string) *snowflake.Builder {
-			return snowflake.NewWarehouseBuilder(name).Builder
-		},
-	)(d, meta)
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.Warehouses.Drop(ctx, id, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -125,12 +125,12 @@ func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
 }
 
-func createWarehouseWithOptions(t *testing.T, client *Client, _ *WarehouseCreateOptions) (*Warehouse, func()) {
+func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCreateOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	id := NewAccountObjectIdentifier(name)
 	ctx := context.Background()
-	err := client.Warehouses.Create(ctx, id, nil)
+	err := client.Warehouses.Create(ctx, id, opts)
 	require.NoError(t, err)
 	return &Warehouse{
 			Name: name,

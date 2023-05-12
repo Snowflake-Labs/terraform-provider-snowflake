@@ -147,21 +147,25 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 					for i := 0; i < value.Len(); i++ {
 						v := value.Index(i).Interface()
 						// test if v is an ObjectIdentifier. If it is it needs to be handled separately
+
 						objectIdentifer, ok := v.(ObjectIdentifier)
-						if ok {
+						switch {
+						case ok:
 							listClauses = append(listClauses, sqlIdentifierClause{
 								value: objectIdentifer,
 							})
-							continue
+						case value.Index(i).Kind() == reflect.String:
+							listClauses = append(listClauses, sqlStaticClause(value.Index(i).String()))
+						default:
+							structClauses, err := b.parseStruct(v)
+							if err != nil {
+								return nil, err
+							}
+							// each element of the slice needs to be pre-rendered before the commas are added
+							renderedStructClauses := b.sql(structClauses...)
+							sClause := sqlStaticClause(renderedStructClauses)
+							listClauses = append(listClauses, sClause)
 						}
-						structClauses, err := b.parseStruct(value.Index(i).Interface())
-						if err != nil {
-							return nil, err
-						}
-						// each element of the slice needs to be pre-rendered before the commas are added
-						renderedStructClauses := b.sql(structClauses...)
-						sClause := sqlStaticClause(renderedStructClauses)
-						listClauses = append(listClauses, sClause)
 					}
 					if len(listClauses) < 1 {
 						continue
@@ -358,6 +362,10 @@ func (b *sqlBuilder) parseUnexportedField(field reflect.StructField, value refle
 	return append(clauses, clause), nil
 }
 
+type sqlClause interface {
+	String() string
+}
+
 type sqlListClause struct {
 	keyword        string
 	clauses        []sqlClause
@@ -383,10 +391,6 @@ func (v sqlListClause) String() string {
 		s = fmt.Sprintf("%s %s", v.keyword, s)
 	}
 	return s
-}
-
-type sqlClause interface {
-	String() string
 }
 
 type sqlStaticClause string
@@ -429,7 +433,7 @@ func (v sqlParameterClause) String() string {
 		result = fmt.Sprintf("%s = ", v.key)
 	}
 	if vType.Kind() == reflect.String {
-		result += v.qt.Quote(v.value.(string))
+		result += v.qt.Quote(v.value)
 	} else {
 		result += fmt.Sprintf("%v", v.value)
 	}

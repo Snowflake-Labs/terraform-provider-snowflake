@@ -19,6 +19,16 @@ func Int(i int) *int {
 	return &i
 }
 
+// Uint returns a pointer to the given uint.
+func Uint(i uint) *uint {
+	return &i
+}
+
+// Uint returns a pointer to the given uint.
+func Uint8(i uint8) *uint8 {
+	return &i
+}
+
 // toInt converts a string to an int.
 func toInt(s string) int {
 	i, err := strconv.Atoi(s)
