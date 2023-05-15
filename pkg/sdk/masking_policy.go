@@ -24,6 +24,8 @@ type MaskingPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of masking policies.
 	Show(ctx context.Context, opts *MaskingPolicyShowOptions) ([]*MaskingPolicy, error)
+	// ShowByID returns a masking policy by ID
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	// Describe returns the details of a masking policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
@@ -281,6 +283,27 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 	}
 
 	return resultList, nil
+}
+
+func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
+	results, err := v.Show(ctx, &MaskingPolicyShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		if res.ID().name == id.Name() {
+			return res, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type maskingPolicyDescribeOptions struct {

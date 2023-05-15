@@ -206,23 +206,10 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	schemaIdentifier := sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName())
-	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, &sdk.PasswordPolicyShowOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(objectIdentifier.Name()),
-		},
-		In: &sdk.In{
-			Schema: schemaIdentifier,
-		},
-	})
+	passwordPolicy, err := client.PasswordPolicies.ShowByID(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
-	if len(passwordPolicyList) == 0 {
-		d.SetId("")
-		return nil
-	}
-	passwordPolicy := passwordPolicyList[0]
 
 	if err := d.Set("database", passwordPolicy.DatabaseName); err != nil {
 		return err

@@ -237,7 +237,7 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	w, err := client.Warehouses.ShowById(ctx, id)
+	w, err := client.Warehouses.ShowByID(ctx, id)
 	if err != nil {
 		return err
 	}

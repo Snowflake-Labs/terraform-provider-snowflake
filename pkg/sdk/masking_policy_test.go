@@ -18,7 +18,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		actual := builder.sql(clauses...)
-		expected := "CREATE MASKING POLICY RETURNS  ->"
+		expected := "CREATE MASKING POLICY RETURNS ->"
 		assert.Equal(t, expected, actual)
 	})
 

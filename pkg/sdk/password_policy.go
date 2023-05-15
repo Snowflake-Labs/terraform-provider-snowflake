@@ -21,6 +21,8 @@ type PasswordPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyDropOptions) error
 	// Show returns a list of password policies.
 	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
+	// ShowByID returns a password policy by ID.
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	// Describe returns the details of a password policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
@@ -336,6 +338,27 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	}
 
 	return resultList, nil
+}
+
+func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
+	results, err := v.Show(ctx, &PasswordPolicyShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		if res.ID().name == id.Name() {
+			return res, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type passwordPolicyDescribeOptions struct {

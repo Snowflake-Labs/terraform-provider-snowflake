@@ -19,8 +19,8 @@ type Warehouses interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error
 	// Show returns a list of warehouses.
 	Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error)
-	// Show returns a warehouse by ID
-	ShowById(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
+	// ShowByID returns a warehouse by ID
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
 }
@@ -438,7 +438,7 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	return resultList, nil
 }
 
-func (c *warehouses) ShowById(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
+func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
 	results, err := c.Show(ctx, &WarehouseShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),

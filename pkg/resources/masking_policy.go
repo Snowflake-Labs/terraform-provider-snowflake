@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -187,22 +186,10 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
-	opts := &sdk.MaskingPolicyShowOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(objectIdentifier.Name()),
-		},
-		In: &sdk.In{
-			Schema: sdk.NewSchemaIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName()),
-		},
-	}
-	maskingPolicies, err := client.MaskingPolicies.Show(ctx, opts)
+	maskingPolicy, err := client.MaskingPolicies.ShowByID(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
-	if len(maskingPolicies) == 0 {
-		return fmt.Errorf("masking policy %v not found", d.Id())
-	}
-	maskingPolicy := maskingPolicies[0]
 	if err := d.Set("name", maskingPolicy.Name); err != nil {
 		return err
 	}
