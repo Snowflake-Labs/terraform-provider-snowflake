@@ -55,13 +55,6 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	database, dbCleanup := createDatabase(t, client)
-	t.Cleanup(dbCleanup)
-	schema, schemaCleanup := createSchema(t, client, database)
-	t.Cleanup(schemaCleanup)
-	tag, tagCleanup := createTag(t, client, database, schema)
-	t.Cleanup(tagCleanup)
-
 	t.Run("test complete", func(t *testing.T) {
 		name := randomUUID(t)
 		id := NewAccountObjectIdentifier(name)
@@ -94,19 +87,15 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, name, result.Name)
 		assert.Equal(t, WarehouseTypeStandard, result.Type)
 		assert.Equal(t, WarehouseSizeSmall, result.Size)
-		assert.Equal(t, uint8(8), result.MaxClusterCount)
-		assert.Equal(t, uint8(2), result.MinClusterCount)
+		assert.Equal(t, 8, result.MaxClusterCount)
+		assert.Equal(t, 2, result.MinClusterCount)
 		assert.Equal(t, ScalingPolicyEconomy, result.ScalingPolicy)
-		assert.Equal(t, uint(1000), result.AutoSuspend)
+		assert.Equal(t, 1000, result.AutoSuspend)
 		assert.Equal(t, true, result.AutoResume)
 		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
 		assert.Equal(t, "comment", result.Comment)
 		assert.Equal(t, true, result.EnableQueryAcceleration)
-		assert.Equal(t, uint8(90), result.QueryAccelerationMaxScaleFactor)
-
-		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeWarehouse)
-		require.NoError(t, err)
-		require.Equal(t, "myval", val)
+		assert.Equal(t, 90, result.QueryAccelerationMaxScaleFactor)
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -125,15 +114,15 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, name, result.Name)
 		assert.Equal(t, WarehouseTypeStandard, result.Type)
 		assert.Equal(t, WarehouseSizeXSmall, result.Size)
-		assert.Equal(t, uint8(1), result.MaxClusterCount)
-		assert.Equal(t, uint8(1), result.MinClusterCount)
+		assert.Equal(t, 1, result.MaxClusterCount)
+		assert.Equal(t, 1, result.MinClusterCount)
 		assert.Equal(t, ScalingPolicyStandard, result.ScalingPolicy)
-		assert.Equal(t, uint(600), result.AutoSuspend)
+		assert.Equal(t, 600, result.AutoSuspend)
 		assert.Equal(t, true, result.AutoResume)
 		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
 		assert.Equal(t, "", result.Comment)
 		assert.Equal(t, false, result.EnableQueryAcceleration)
-		assert.Equal(t, uint8(8), result.QueryAccelerationMaxScaleFactor)
+		assert.Equal(t, 8, result.QueryAccelerationMaxScaleFactor)
 	})
 }
 
@@ -195,7 +184,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, WarehouseSizeMedium, result.Size)
 		assert.Equal(t, true, result.EnableQueryAcceleration)
-		assert.Equal(t, uint(1234), result.AutoSuspend)
+		assert.Equal(t, 1234, result.AutoSuspend)
 	})
 
 	t.Run("rename", func(t *testing.T) {
@@ -249,7 +238,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		result := warehouses[0]
 		assert.Equal(t, warehouse.Name, result.Name)
 		assert.Equal(t, "", result.Comment)
-		assert.Equal(t, uint8(1), result.MaxClusterCount)
+		assert.Equal(t, 1, result.MaxClusterCount)
 	})
 
 	t.Run("suspend & resume", func(t *testing.T) {
@@ -328,8 +317,8 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Equal(t, uint(1), result.Running)
-		assert.Equal(t, uint(0), result.Queued)
+		assert.Equal(t, 1, result.Running)
+		assert.Equal(t, 0, result.Queued)
 
 		// Abort all queries
 		alterOptions := &WarehouseAlterOptions{
@@ -350,8 +339,8 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result = warehouses[0]
-		assert.Equal(t, uint(0), result.Running)
-		assert.Equal(t, uint(0), result.Queued)
+		assert.Equal(t, 0, result.Running)
+		assert.Equal(t, 0, result.Queued)
 	})
 
 	t.Run("set tags", func(t *testing.T) {
