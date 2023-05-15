@@ -69,24 +69,18 @@ func TestInt_WarehouseCreate(t *testing.T) {
 			OrReplace:                       Bool(true),
 			WarehouseType:                   &WarehouseTypeStandard,
 			WarehouseSize:                   &WarehouseSizeSmall,
-			MaxClusterCount:                 Uint8(8),
-			MinClusterCount:                 Uint8(2),
+			MaxClusterCount:                 Int(8),
+			MinClusterCount:                 Int(2),
 			ScalingPolicy:                   &ScalingPolicyEconomy,
-			AutoSuspend:                     Uint(1000),
+			AutoSuspend:                     Int(1000),
 			AutoResume:                      Bool(true),
 			InitiallySuspended:              Bool(false),
 			Comment:                         String("comment"),
 			EnableQueryAcceleration:         Bool(true),
-			QueryAccelerationMaxScaleFactor: Uint8(90),
-			MaxConcurrencyLevel:             Uint(10),
-			StatementQueuedTimeoutInSeconds: Uint(2000),
-			StatementTimeoutInSeconds:       Uint(3000),
-			Tags: []TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "myval",
-				},
-			},
+			QueryAccelerationMaxScaleFactor: Int(90),
+			MaxConcurrencyLevel:             Int(10),
+			StatementQueuedTimeoutInSeconds: Int(2000),
+			StatementTimeoutInSeconds:       Int(3000),
 		})
 		require.NoError(t, err)
 		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
@@ -183,9 +177,9 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &WarehouseAlterOptions{
-			Set: &WarehouseSetOptions{
+			Set: &WarehouseSet{
 				WarehouseSize:           &WarehouseSizeMedium,
-				AutoSuspend:             Uint(1234),
+				AutoSuspend:             Int(1234),
 				EnableQueryAcceleration: Bool(true),
 			},
 		}
@@ -231,16 +225,16 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	t.Run("unset", func(t *testing.T) {
 		createOptions := &WarehouseCreateOptions{
 			Comment:         String("test comment"),
-			MaxClusterCount: Uint8(10),
+			MaxClusterCount: Int(10),
 		}
 		warehouse, warehouseCleanup := createWarehouseWithOptions(t, client, createOptions)
 		t.Cleanup(warehouseCleanup)
 		id := warehouse.ID()
 
 		alterOptions := &WarehouseAlterOptions{
-			Unset: &[]WarehouseUnsetField{
-				CommentField,
-				MaxClusterCountField,
+			Unset: &WarehouseUnset{
+				Comment:         Bool(true),
+				MaxClusterCount: Bool(true),
 			},
 		}
 		err := client.Warehouses.Alter(ctx, id, alterOptions)
@@ -365,14 +359,16 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &WarehouseAlterOptions{
-			SetTags: &[]TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "val",
-				},
-				{
-					Name:  tag2.ID(),
-					Value: "val2",
+			Set: &WarehouseSet{
+				Tag: []TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: "val",
+					},
+					{
+						Name:  tag2.ID(),
+						Value: "val2",
+					},
 				},
 			},
 		}
@@ -388,27 +384,35 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		warehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &WarehouseCreateOptions{
-			Tags: []TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "value",
-				},
-				{
-					Name:  tag2.ID(),
-					Value: "value2",
-				},
-			},
-		})
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &WarehouseAlterOptions{
-			UnsetTags: &[]ObjectIdentifier{
-				tag.ID(),
-				tag2.ID(),
+			Set: &WarehouseSet{
+				Tag: []TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: "val",
+					},
+					{
+						Name:  tag2.ID(),
+						Value: "val2",
+					},
+				},
 			},
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		alterOptions = &WarehouseAlterOptions{
+			Unset: &WarehouseUnset{
+				Tag: []ObjectIdentifier{
+					tag.ID(),
+					tag2.ID(),
+				},
+			},
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
 		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), ObjectTypeWarehouse)

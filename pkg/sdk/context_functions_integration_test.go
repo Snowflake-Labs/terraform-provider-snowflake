@@ -8,6 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInt_CurrentAccount(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	account, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, account)
+}
+
 func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()

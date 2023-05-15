@@ -1,5 +1,10 @@
 package sdk
 
+type LimitPagination struct {
+	Rows *int    `ddl:"keyword"`
+	From *string `ddl:"command,single_quotes" db:"FROM"`
+}
+
 type In struct {
 	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`

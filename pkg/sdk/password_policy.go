@@ -264,7 +264,7 @@ type PasswordPolicyShowOptions struct {
 	passwordPolicies bool  `ddl:"static" db:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
 	Like             *Like `ddl:"keyword" db:"LIKE"`
 	In               *In   `ddl:"keyword" db:"IN"`
-	Limit            *int  `ddl:"command,no_quotes" db:"LIMIT"`
+	Limit            *int  `ddl:"parameter,no_equals" db:"LIMIT"`
 }
 
 func (input *PasswordPolicyShowOptions) validate() error {

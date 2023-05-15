@@ -179,17 +179,17 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		createOptions.WarehouseSize = &size
 	}
 	if v, ok := d.GetOk("max_cluster_count"); ok {
-		createOptions.MaxClusterCount = sdk.Uint8(uint8(v.(int)))
+		createOptions.MaxClusterCount = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("min_cluster_count"); ok {
-		createOptions.MinClusterCount = sdk.Uint8(uint8(v.(int)))
+		createOptions.MinClusterCount = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("scaling_policy"); ok {
 		scalingPolicy := sdk.ScalingPolicy(v.(string))
 		createOptions.ScalingPolicy = &scalingPolicy
 	}
 	if v, ok := d.GetOk("auto_suspend"); ok {
-		createOptions.AutoSuspend = sdk.Uint(uint(v.(int)))
+		createOptions.AutoSuspend = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("auto_resume"); ok {
 		createOptions.AutoResume = sdk.Bool(v.(bool))
@@ -201,19 +201,19 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		createOptions.ResourceMonitor = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-		createOptions.StatementTimeoutInSeconds = sdk.Uint(uint(v.(int)))
+		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-		createOptions.StatementQueuedTimeoutInSeconds = sdk.Uint(uint(v.(int)))
+		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("max_concurrency_level"); ok {
-		createOptions.MaxConcurrencyLevel = sdk.Uint(uint(v.(int)))
+		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("enable_query_acceleration"); ok {
 		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-		createOptions.QueryAccelerationMaxScaleFactor = sdk.Uint8(uint8(v.(int)))
+		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("warehouse_type"); ok {
 		whType := sdk.WarehouseType(v.(string))
@@ -309,138 +309,152 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Batch SET operations and UNSET operations
-	var runSet bool = false
-	setOpts := sdk.WarehouseSetOptions{}
-	unsetFields := []sdk.WarehouseUnsetField{}
-
+	var runSet bool 
+	var runUnset bool 
+	set := sdk.WarehouseSet{}
+	unset := sdk.WarehouseUnset{}
 	if d.HasChange("comment") {
 		if v, ok := d.GetOk("comment"); ok {
-			setOpts.Comment = sdk.String(v.(string))
 			runSet = true
+			set.Comment = sdk.String(v.(string))
 		} else {
-			unsetFields = append(unsetFields, sdk.CommentField)
+			runUnset = true
+			unset.Comment = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("warehouse_size") {
 		if v, ok := d.GetOk("warehouse_size"); ok {
-			size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
-			setOpts.WarehouseSize = &size
 			runSet = true
+			size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
+			set.WarehouseSize = &size
 		} else {
-			unsetFields = append(unsetFields, sdk.WarehouseSizeField)
+			runUnset = true
+			unset.WarehouseSize = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {
-			setOpts.MaxClusterCount = sdk.Uint8(v.(uint8))
 			runSet = true
+			set.MaxClusterCount = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.MaxClusterCountField)
+			runUnset = true
+			unset.MaxClusterCount = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("min_cluster_count") {
 		if v, ok := d.GetOk("min_cluster_count"); ok {
-			setOpts.MinClusterCount = sdk.Uint8(v.(uint8))
 			runSet = true
-		} else {
-			unsetFields = append(unsetFields, sdk.MinClusterCountField)
+			set.MinClusterCount = sdk.Int(v.(int))
+		} else {			
+			runUnset = true
+			unset.MinClusterCount = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("scaling_policy") {
 		if v, ok := d.GetOk("scaling_policy"); ok {
-			scalingPolicy := sdk.ScalingPolicy(v.(string))
-			setOpts.ScalingPolicy = &scalingPolicy
 			runSet = true
+			scalingPolicy := sdk.ScalingPolicy(v.(string))
+			set.ScalingPolicy = &scalingPolicy
 		} else {
-			unsetFields = append(unsetFields, sdk.ScalingPolicyField)
+			runUnset = true
+			unset.ScalingPolicy = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("auto_suspend") {
 		if v, ok := d.GetOk("auto_suspend"); ok {
-			setOpts.AutoSuspend = sdk.Uint(v.(uint))
 			runSet = true
+			set.AutoSuspend = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.AutoSuspendField)
+			runUnset = true
+			unset.AutoSuspend = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("auto_resume") {
 		if v, ok := d.GetOk("auto_resume"); ok {
-			setOpts.AutoResume = sdk.Bool(v.(bool))
 			runSet = true
+			set.AutoResume = sdk.Bool(v.(bool))
 		} else {
-			unsetFields = append(unsetFields, sdk.AutoResumeField)
+			runUnset = true
+			unset.AutoResume = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("resource_monitor") {
 		if v, ok := d.GetOk("resource_monitor"); ok {
-			setOpts.ResourceMonitor = sdk.String(v.(string))
 			runSet = true
+			set.ResourceMonitor = sdk.NewAccountObjectIdentifier(v.(string))
 		} else {
-			unsetFields = append(unsetFields, sdk.ResourceMonitorField)
+			runUnset = true
+			unset.ResourceMonitor = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_timeout_in_seconds") {
 		if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-			setOpts.StatementTimeoutInSeconds = sdk.Uint(v.(uint))
 			runSet = true
+			set.StatementTimeoutInSeconds = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.StatementTimeoutInSecondsField)
+			runUnset = true
+			unset.StatementTimeoutInSeconds = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
 		if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-			setOpts.StatementQueuedTimeoutInSeconds = sdk.Uint(v.(uint))
 			runSet = true
+			set.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.StatementQueuedTimeoutInSecondsField)
+			runUnset = true
+			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("max_concurrency_level") {
 		if v, ok := d.GetOk("max_concurrency_level"); ok {
-			setOpts.MaxConcurrencyLevel = sdk.Uint(uint(v.(int)))
 			runSet = true
+			set.MaxConcurrencyLevel = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.MaxConcurrencyLevelField)
+			runUnset = true
+			unset.MaxConcurrencyLevel = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("enable_query_acceleration") {
 		if v, ok := d.GetOk("enable_query_acceleration"); ok {
-			setOpts.EnableQueryAcceleration = sdk.Bool(v.(bool))
 			runSet = true
+			set.EnableQueryAcceleration = sdk.Bool(v.(bool))
 		} else {
-			unsetFields = append(unsetFields, sdk.EnableQueryAccelerationField)
+			runUnset = true
+			unset.EnableQueryAcceleration = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
 		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-			setOpts.QueryAccelerationMaxScaleFactor = sdk.Uint8(v.(uint8))
 			runSet = true
+			set.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
 		} else {
-			unsetFields = append(unsetFields, sdk.QueryAccelerationMaxScaleFactorField)
+			runUnset = true
+			unset.QueryAccelerationMaxScaleFactor = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("warehouse_type") {
 		if v, ok := d.GetOk("warehouse_type"); ok {
-			whType := sdk.WarehouseType(v.(string))
-			setOpts.WarehouseType = &whType
 			runSet = true
+			whType := sdk.WarehouseType(v.(string))
+			set.WarehouseType = &whType
 		} else {
-			unsetFields = append(unsetFields, sdk.WarehouseTypeField)
+			runUnset = true
+			unset.WarehouseType = sdk.Bool(true)
 		}
 	}
 
 	// Apply SET and UNSET changes
 	if runSet {
 		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
-			Set: &setOpts,
+			Set: &set,
 		})
 		if err != nil {
 			return err
 		}
 	}
-	if len(unsetFields) > 0 {
+	if runUnset {
 		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
-			Unset: &unsetFields,
+			Unset: &unset,
 		})
 		if err != nil {
 			return err
