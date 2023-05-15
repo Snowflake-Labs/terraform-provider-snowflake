@@ -200,7 +200,7 @@ func (opts *WarehouseAlterOptions) validate() error {
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
 		return fmt.Errorf("Suspend and Resume cannot both be true")
 	}
-	if valueSet(opts.IfSuspended) && !valueSet(opts.Resume) {
+	if valueSet(opts.IfSuspended) && *opts.ifSuspended && (!valueSet(opts.Resume) || !*opts.Resume) {
 		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
 	}
 	if everyValueSet(opts.Set, opts.Unset) {
