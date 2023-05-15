@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -48,15 +49,44 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "Small"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_warehouse.w",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"initially_suspended", "wait_for_provisioning", "query_acceleration_max_scale_factor"},
+				ResourceName:      "snowflake_warehouse.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"initially_suspended",
+					"wait_for_provisioning",
+					"query_acceleration_max_scale_factor",
+					"max_concurrency_level",
+					"statement_queued_timeout_in_seconds",
+					"statement_timeout_in_seconds",
+				},
+			},
+		},
+	})
+}
+
+func TestAcc_WarehousePattern(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_TESTS"); ok {
+		t.Skip("Skipping TestAccWarehouse")
+	}
+
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: wConfigPattern(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w1", "name", fmt.Sprintf("%s_", prefix)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w2", "name", fmt.Sprintf("%s1", prefix)),
+				),
 			},
 		},
 	})
@@ -85,7 +115,7 @@ func wConfig2(prefix string) string {
 resource "snowflake_warehouse" "w" {
 	name           = "%s"
 	comment        = "test comment 2"
-	warehouse_size = "small"
+	warehouse_size = "SMALL"
 
 	auto_suspend          = 60
 	max_cluster_count     = 1
@@ -97,4 +127,16 @@ resource "snowflake_warehouse" "w" {
 }
 `
 	return fmt.Sprintf(s, prefix)
+}
+
+func wConfigPattern(prefix string) string {
+	s := `
+resource "snowflake_warehouse" "w1" {
+	name           = "%s_"
+}
+resource "snowflake_warehouse" "w2" {
+	name           = "%s1"
+}
+`
+	return fmt.Sprintf(s, prefix, prefix)
 }

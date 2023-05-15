@@ -1,11 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -59,31 +59,24 @@ func Warehouses() *schema.Resource {
 
 func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
 	account, err := snowflake.ReadCurrentAccount(db)
 	if err != nil {
-		log.Print("[DEBUG] unable to retrieve current account")
 		d.SetId("")
 		return nil
 	}
-
 	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
 
-	currentWarehouses, err := snowflake.ListWarehouses(db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] no warehouses found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse warehouses in account (%s)", d.Id())
-		d.SetId("")
-		return nil
+	result, err := client.Warehouses.Show(ctx, nil)
+	if err != nil {
+		return err
 	}
 
 	warehouses := []map[string]interface{}{}
 
-	for _, warehouse := range currentWarehouses {
+	for _, warehouse := range result {
 		warehouseMap := map[string]interface{}{}
 
 		warehouseMap["name"] = warehouse.Name

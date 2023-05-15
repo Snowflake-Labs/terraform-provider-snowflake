@@ -424,11 +424,14 @@ func TestBuilder_parseUnexportedField(t *testing.T) {
 	})
 }
 
+type StringAlias string
+
 type structTestHelper struct {
 	static  bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
 	name    AccountObjectIdentifier `ddl:"identifier"`
 	Param   *string                 `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
 	Command *string                 `ddl:"command" db:"EXAMPLE_COMMAND"`
+	List    []StringAlias           `ddl:"list,no_parentheses" db:"EXAMPLE_STRING_LIST"`
 }
 
 func TestBuilder_parseStruct(t *testing.T) {
@@ -446,14 +449,16 @@ func TestBuilder_parseStruct(t *testing.T) {
 			name:    randomAccountObjectIdentifier(t),
 			Param:   String("example"),
 			Command: String("example"),
+			List:    []StringAlias{"item1", "item2"},
 		}
 		clauses, err := builder.parseStruct(s)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 4)
+		assert.Len(t, clauses, 5)
 		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
 		assert.Equal(t, s.name.FullyQualifiedName(), clauses[1].String())
 		assert.Equal(t, "EXAMPLE_PARAMETER = example", clauses[2].String())
 		assert.Equal(t, "EXAMPLE_COMMAND example", clauses[3].String())
+		assert.Equal(t, "EXAMPLE_STRING_LIST item1,item2", clauses[4].String())
 	})
 
 	t.Run("struct with a slice field using ddl: list", func(t *testing.T) {
