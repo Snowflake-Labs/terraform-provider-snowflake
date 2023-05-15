@@ -309,8 +309,8 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Batch SET operations and UNSET operations
-	var runSet bool 
-	var runUnset bool 
+	var runSet bool
+	var runUnset bool
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
 	if d.HasChange("comment") {
@@ -345,7 +345,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("min_cluster_count"); ok {
 			runSet = true
 			set.MinClusterCount = sdk.Int(v.(int))
-		} else {			
+		} else {
 			runUnset = true
 			unset.MinClusterCount = sdk.Bool(true)
 		}
