@@ -32,6 +32,15 @@ func everyValueSet(values ...interface{}) bool {
 	return true
 }
 
+func everyValueNil(values ...interface{}) bool {
+	for _, v := range values {
+		if valueSet(v) {
+			return false
+		}
+	}
+	return true
+}
+
 func valueSet(value interface{}) bool {
 	if value == nil {
 		return false

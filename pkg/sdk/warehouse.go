@@ -200,7 +200,7 @@ func (opts *WarehouseAlterOptions) validate() error {
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
 		return fmt.Errorf("Suspend and Resume cannot both be true")
 	}
-	if valueSet(opts.IfSuspended) && *opts.ifSuspended && (!valueSet(opts.Resume) || !*opts.Resume) {
+	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
 		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
 	}
 	if everyValueSet(opts.Set, opts.Unset) {
@@ -226,6 +226,9 @@ func (opts *WarehouseAlterOptions) validate() error {
 			if ok := validateIntInRange(*opts.Set.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
 				return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 			}
+		}
+		if valueSet(opts.Set.Tag) && !everyValueNil(opts.Set.AutoResume, opts.Set.EnableQueryAcceleration, opts.Set.MaxClusterCount, opts.Set.MinClusterCount, opts.Set.AutoSuspend, opts.Set.QueryAccelerationMaxScaleFactor) {
+			return fmt.Errorf("Tag cannot be set with any other Set parameter")
 		}
 	}
 	return nil

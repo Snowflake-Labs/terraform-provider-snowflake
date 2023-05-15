@@ -17,7 +17,7 @@ const (
 )
 
 type modifier interface {
-	Modify(v any) any
+	Modify(v any) string
 }
 
 type quoteModifier string
@@ -28,7 +28,7 @@ const (
 	SingleQuotes quoteModifier = "single_quotes"
 )
 
-func (qm quoteModifier) Modify(v any) any {
+func (qm quoteModifier) Modify(v any) string {
 	s := fmt.Sprintf("%v", v)
 	switch qm {
 	case NoQuotes:
@@ -37,7 +37,9 @@ func (qm quoteModifier) Modify(v any) any {
 		escapedString := strings.ReplaceAll(s, qm.String(), qm.String()+qm.String())
 		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
 	case SingleQuotes:
-		escapedString := strings.Trim(s, qm.String())
+		// https://docs.snowflake.com/en/sql-reference/data-types-text#single-quoted-string-constants
+		// replace all single quotes with \'
+		escapedString := strings.ReplaceAll(s, qm.String(), `\'`)
 		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
 	default:
 		return s
@@ -57,10 +59,6 @@ func (qm quoteModifier) String() string {
 	}
 }
 
-func (qm quoteModifier) HandleQuotes(v any) string {
-	return qm.Modify(v).(string)
-}
-
 type parenModifier string
 
 const (
@@ -68,7 +66,7 @@ const (
 	Parentheses   parenModifier = "parentheses"
 )
 
-func (pm parenModifier) Modify(v any) any {
+func (pm parenModifier) Modify(v any) string {
 	s := fmt.Sprintf("%v", v)
 	switch pm {
 	case NoParentheses:
@@ -80,11 +78,6 @@ func (pm parenModifier) Modify(v any) any {
 	}
 }
 
-func (pm parenModifier) HandleParentheses(s string) string {
-	return pm.Modify(s).(string)
-}
-
-// this is only implemented for sqlCommandClause
 type reverseModifier string
 
 const (
@@ -92,7 +85,7 @@ const (
 	Reverse   reverseModifier = "reverse"
 )
 
-func (rm reverseModifier) Modify(v any) any {
+func (rm reverseModifier) Modify(v any) string {
 	// v is []string{} type. result will be a joined string
 	v = v.([]string)
 	switch rm {
@@ -110,10 +103,6 @@ func (rm reverseModifier) Modify(v any) any {
 	}
 }
 
-func (rm reverseModifier) HandleReverse(s []string) string {
-	return rm.Modify(s).(string)
-}
-
 type equalsModifier string
 
 const (
@@ -121,7 +110,7 @@ const (
 	NoEquals equalsModifier = "no_equals"
 )
 
-func (em equalsModifier) Modify(v any) any {
+func (em equalsModifier) Modify(v any) string {
 	if v == nil {
 		return ""
 	}
@@ -129,10 +118,6 @@ func (em equalsModifier) Modify(v any) any {
 		return fmt.Sprintf(`%v = `, v)
 	}
 	return fmt.Sprintf("%v ", v)
-}
-
-func (em equalsModifier) HandleEquals(s string) string {
-	return em.Modify(s).(string)
 }
 
 func (b *sqlBuilder) GetModifier(tag reflect.StructTag, tagName string, modType modifierType, defaultMod modifier) modifier {
@@ -450,7 +435,7 @@ func (v sqlListClause) String() string {
 		clauseStrings[i] = clause.String()
 	}
 	s := strings.Join(clauseStrings, v.sep)
-	s = v.pm.HandleParentheses(s)
+	s = v.pm.Modify(s)
 	return s
 }
 
@@ -470,7 +455,7 @@ type sqlKeywordClause struct {
 }
 
 func (v sqlKeywordClause) String() string {
-	return v.qm.Modify(v.key).(string)
+	return v.qm.Modify(v.key)
 }
 
 type sqlIdentifierClause struct {
@@ -485,11 +470,11 @@ func (v sqlIdentifierClause) String() string {
 	if _, ok := v.value.(ObjectIdentifier); ok {
 		name = v.value.(ObjectIdentifier).FullyQualifiedName()
 	} else {
-		name = DoubleQuotes.Modify(v.value.Name()).(string)
+		name = DoubleQuotes.Modify(v.value.Name())
 	}
 	// else try to get the string value
 	if v.key != "" {
-		return v.em.HandleEquals(v.key) + name
+		return v.em.Modify(v.key) + name
 	}
 	return name
 }
@@ -508,14 +493,14 @@ func (v sqlParameterClause) String() string {
 	// the reverse modifier is never used with equals modifier, so we just ignore it
 	if v.rm == Reverse {
 		// "value" key
-		return v.rm.HandleReverse([]string{v.key, v.qm.HandleQuotes(v.value)})
+		return v.rm.Modify([]string{v.key, v.qm.Modify(v.value)})
 	}
 	// key =
-	s := v.em.HandleEquals(v.key)
+	s := v.em.Modify(v.key)
 	if v.value == nil {
 		return s
 	}
 	// key = "value"
-	s += v.qm.HandleQuotes(v.value)
+	s += v.qm.Modify(v.value)
 	return s
 }

@@ -279,8 +279,6 @@ func TestReverseModifier(t *testing.T) {
 	t.Run("test reverse modifier", func(t *testing.T) {
 		result := Reverse.Modify([]string{"example", "DESC"})
 		assert.Equal(t, `DESC example`, result)
-		result = Reverse.HandleReverse([]string{"example", "DESC"})
-		assert.Equal(t, `DESC example`, result)
 	})
 
 	t.Run("test no reverse modifier", func(t *testing.T) {
@@ -298,21 +296,15 @@ func TestEqualsModifier(t *testing.T) {
 	t.Run("test equals modifier", func(t *testing.T) {
 		result := Equals.Modify("example")
 		assert.Equal(t, `example = `, result)
-		result = Equals.HandleEquals("example")
-		assert.Equal(t, `example = `, result)
 	})
 
 	t.Run("test no equals modifier", func(t *testing.T) {
 		result := NoEquals.Modify("example")
 		assert.Equal(t, `example `, result)
-		result = NoEquals.HandleEquals("example")
-		assert.Equal(t, `example `, result)
 	})
 
 	t.Run("test unknown equals modifier", func(t *testing.T) {
 		result := equalsModifier("unknown").Modify("example")
-		assert.Equal(t, `example `, result)
-		result = equalsModifier("unknown").HandleEquals("example")
 		assert.Equal(t, `example `, result)
 	})
 }
@@ -321,21 +313,15 @@ func TestParenModifier(t *testing.T) {
 	t.Run("test paren modifier", func(t *testing.T) {
 		result := Parentheses.Modify("example")
 		assert.Equal(t, `(example)`, result)
-		result = Parentheses.HandleParentheses("example")
-		assert.Equal(t, `(example)`, result)
 	})
 
 	t.Run("test no paren modifier", func(t *testing.T) {
 		result := NoParentheses.Modify("example")
 		assert.Equal(t, `example`, result)
-		result = NoParentheses.HandleParentheses("example")
-		assert.Equal(t, `example`, result)
 	})
 
 	t.Run("test unknown paren modifier", func(t *testing.T) {
 		result := parenModifier("unknown").Modify("example")
-		assert.Equal(t, `example`, result)
-		result = parenModifier("unknown").HandleParentheses("example")
 		assert.Equal(t, `example`, result)
 	})
 }
@@ -344,28 +330,20 @@ func TestQuoteModifier(t *testing.T) {
 	t.Run("test quotes modifier", func(t *testing.T) {
 		result := DoubleQuotes.Modify("example")
 		assert.Equal(t, `"example"`, result)
-		result = DoubleQuotes.HandleQuotes("example")
-		assert.Equal(t, `"example"`, result)
 	})
 
 	t.Run("test no quotes modifier", func(t *testing.T) {
 		result := NoQuotes.Modify("example")
-		assert.Equal(t, `example`, result)
-		result = NoQuotes.HandleQuotes("example")
 		assert.Equal(t, `example`, result)
 	})
 
 	t.Run("test single quotes modifier", func(t *testing.T) {
 		result := SingleQuotes.Modify("example")
 		assert.Equal(t, `'example'`, result)
-		result = SingleQuotes.HandleQuotes("example")
-		assert.Equal(t, `'example'`, result)
 	})
 
 	t.Run("test unknown modifier", func(t *testing.T) {
 		result := quoteModifier("unknown").Modify("example")
-		assert.Equal(t, `example`, result)
-		result = quoteModifier("unknown").HandleQuotes("example")
 		assert.Equal(t, `example`, result)
 	})
 }
