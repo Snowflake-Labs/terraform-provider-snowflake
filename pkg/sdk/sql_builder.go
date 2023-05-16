@@ -111,13 +111,10 @@ const (
 )
 
 func (em equalsModifier) Modify(v any) string {
-	if v == nil {
-		return ""
-	}
 	if em == Equals {
-		return fmt.Sprintf(`%v = `, v)
+		return strings.TrimLeft(fmt.Sprintf(`%v = `, v), " ")
 	}
-	return fmt.Sprintf("%v ", v)
+	return strings.TrimLeft(fmt.Sprintf("%v ", v), " ")
 }
 
 func (b *sqlBuilder) GetModifier(tag reflect.StructTag, tagName string, modType modifierType, defaultMod modifier) modifier {
@@ -323,6 +320,7 @@ func (b *sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Va
 			value: sClause,
 			qm:    b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+			rm:    b.GetModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
 		}, nil
 	case "keyword":
 		return b.renderStaticClause(sqlKeywordClause{
@@ -404,6 +402,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 			value: reflectedValue,
 			em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 			qm:    b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			rm:    b.GetModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
 		}
 	default:
 		return nil, nil

@@ -12,8 +12,7 @@ type Like struct {
 
 type TagAssociation struct {
 	Name  ObjectIdentifier `ddl:"identifier"`
-	eq    bool             `ddl:"static" db:"="` //lint:ignore U1000 This is used in the ddl tag
-	Value string           `ddl:"keyword,single_quotes"`
+	Value string           `ddl:"parameter,single_quotes"`
 }
 
 type TableColumnSignature struct {

@@ -54,6 +54,14 @@ func TestInt_WarehousesShow(t *testing.T) {
 func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	databaseTest, databaseCleanup := createDatabase(t, client)
+	t.Cleanup(databaseCleanup)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	t.Cleanup(schemaCleanup)
+	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	t.Cleanup(tagCleanup)
+	tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
+	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
 		name := randomUUID(t)
@@ -74,6 +82,16 @@ func TestInt_WarehouseCreate(t *testing.T) {
 			MaxConcurrencyLevel:             Int(10),
 			StatementQueuedTimeoutInSeconds: Int(2000),
 			StatementTimeoutInSeconds:       Int(3000),
+			Tag: []TagAssociation{
+				{
+					Name:  tagTest.ID(),
+					Value: "v1",
+				},
+				{
+					Name:  tag2Test.ID(),
+					Value: "v2",
+				},
+			},
 		})
 		require.NoError(t, err)
 		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
@@ -83,19 +101,26 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
-		assert.Equal(t, name, result.Name)
-		assert.Equal(t, WarehouseTypeStandard, result.Type)
-		assert.Equal(t, WarehouseSizeSmall, result.Size)
-		assert.Equal(t, 8, result.MaxClusterCount)
-		assert.Equal(t, 2, result.MinClusterCount)
-		assert.Equal(t, ScalingPolicyEconomy, result.ScalingPolicy)
-		assert.Equal(t, 1000, result.AutoSuspend)
-		assert.Equal(t, true, result.AutoResume)
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
-		assert.Equal(t, "comment", result.Comment)
-		assert.Equal(t, true, result.EnableQueryAcceleration)
-		assert.Equal(t, 90, result.QueryAccelerationMaxScaleFactor)
+		warehouse := warehouses[0]
+		assert.Equal(t, name, warehouse.Name)
+		assert.Equal(t, WarehouseTypeStandard, warehouse.Type)
+		assert.Equal(t, WarehouseSizeSmall, warehouse.Size)
+		assert.Equal(t, 8, warehouse.MaxClusterCount)
+		assert.Equal(t, 2, warehouse.MinClusterCount)
+		assert.Equal(t, ScalingPolicyEconomy, warehouse.ScalingPolicy)
+		assert.Equal(t, 1000, warehouse.AutoSuspend)
+		assert.Equal(t, true, warehouse.AutoResume)
+		assert.Contains(t, []string{"RESUMING", "STARTED"}, warehouse.State)
+		assert.Equal(t, "comment", warehouse.Comment)
+		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
+		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
+
+		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		assert.NoError(t, err)
+		assert.Equal(t, "v1", tag1Value)
+		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		assert.NoError(t, err)
+		assert.Equal(t, "v2", tag2Value)
 	})
 
 	t.Run("test no options", func(t *testing.T) {

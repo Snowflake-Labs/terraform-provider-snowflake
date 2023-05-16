@@ -83,9 +83,10 @@ type WarehouseCreateOptions struct {
 	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *int `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *int `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	MaxConcurrencyLevel             *int             `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *int             `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *int             `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	Tag                             []TagAssociation `ddl:"keyword,parentheses" db:"TAG"`
 }
 
 func (opts *WarehouseCreateOptions) validate() error {

@@ -26,6 +26,8 @@ func TestWarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
+		tag1 := randomSchemaObjectIdentifier(t)
+		tag2 := randomSchemaObjectIdentifier(t)
 		opts := &WarehouseCreateOptions{
 			OrReplace:   Bool(true),
 			name:        NewAccountObjectIdentifier("completewarehouse"),
@@ -47,11 +49,21 @@ func TestWarehouseCreate(t *testing.T) {
 			MaxConcurrencyLevel:             Int(7),
 			StatementQueuedTimeoutInSeconds: Int(29),
 			StatementTimeoutInSeconds:       Int(89),
+			Tag: []TagAssociation{
+				{
+					Name:  tag1,
+					Value: "v1",
+				},
+				{
+					Name:  tag2,
+					Value: "v2",
+				},
+			},
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		assert.Equal(t,
-			`CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89`,
+			`CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG (`+tag1.FullyQualifiedName()+` = 'v1',`+tag2.FullyQualifiedName()+` = 'v2')`,
 			builder.sql(clauses...),
 		)
 	})
