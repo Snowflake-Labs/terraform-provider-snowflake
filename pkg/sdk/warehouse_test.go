@@ -72,7 +72,7 @@ func TestWarehouseCreate(t *testing.T) {
 func TestWarehouseAlter(t *testing.T) {
 	builder := testBuilder(t)
 
-	t.Run("with set", func(t *testing.T) {
+	t.Run("with set params", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Set: &WarehouseSet{
@@ -93,13 +93,31 @@ func TestWarehouseAlter(t *testing.T) {
 		)
 	})
 
-	t.Run("with unset", func(t *testing.T) {
+	t.Run("with set tag", func(t *testing.T) {
+		opts := &WarehouseAlterOptions{
+			Set: &WarehouseSet{
+				Tag: []TagAssociation{
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+						Value: "v1",
+					},
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+						Value: "v2",
+					},
+				},
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
+		assert.Equal(t, `ALTER WAREHOUSE SET TAG "db"."schema"."tag1" = 'v1',"db"."schema"."tag2" = 'v2'`, stmt)
+	})
+
+	t.Run("with unset tag", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
-				WarehouseSize:   Bool(true),
-				MaxClusterCount: Bool(true),
-				AutoResume:      Bool(true),
 				Tag: []ObjectIdentifier{
 					NewSchemaObjectIdentifier("db", "schema", "tag1"),
 				},
@@ -107,9 +125,28 @@ func TestWarehouseAlter(t *testing.T) {
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
 		assert.Equal(t,
-			`ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE,MAX_CLUSTER_COUNT,AUTO_RESUME,TAG "db"."schema"."tag1"`,
-			builder.sql(clauses...),
+			`ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`,
+			stmt,
+		)
+	})
+
+	t.Run("with unset params", func(t *testing.T) {
+		opts := &WarehouseAlterOptions{
+			name: NewAccountObjectIdentifier("mywarehouse"),
+			Unset: &WarehouseUnset{
+				WarehouseSize:   Bool(true),
+				MaxClusterCount: Bool(true),
+				AutoResume:      Bool(true),
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
+		assert.Equal(t,
+			`ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE,MAX_CLUSTER_COUNT,AUTO_RESUME`,
+			stmt,
 		)
 	})
 
