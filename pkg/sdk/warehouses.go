@@ -119,7 +119,7 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 		return err
 	}
 	_, err = c.client.exec(ctx, stmt)
-	return decodeDriverError(err)
+	return err
 }
 
 type WarehouseAlterOptions struct {
@@ -265,7 +265,7 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 		return err
 	}
 	_, err = c.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type WarehouseDropOptions struct {
@@ -298,7 +298,7 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 	}
 	_, err = c.client.exec(ctx, sql)
 	if err != nil {
-		return decodeDriverError(err)
+		return err
 	}
 	return err
 }
@@ -442,7 +442,7 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	dest := []warehouseDBRow{}
 	err = c.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*Warehouse, len(dest))
 	for i, row := range dest {
@@ -518,7 +518,7 @@ func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (
 	dest := warehouseDetailsRow{}
 	err = c.client.queryOne(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return dest.toWarehouseDetails(), nil

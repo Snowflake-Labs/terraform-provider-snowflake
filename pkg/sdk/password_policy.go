@@ -73,7 +73,7 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type PasswordPolicyAlterOptions struct {
@@ -201,7 +201,7 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type PasswordPolicyDropOptions struct {
@@ -231,7 +231,7 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 // PasswordPolicyShowOptions represents the options for listing password policies.
@@ -303,7 +303,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*PasswordPolicy, len(dest))
 	for i, row := range dest {
@@ -410,7 +410,7 @@ func (v *passwordPolicies) Describe(ctx context.Context, id SchemaObjectIdentifi
 	dest := []propertyRow{}
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return passwordPolicyDetailsFromRows(dest), nil

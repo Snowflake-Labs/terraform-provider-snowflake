@@ -76,7 +76,7 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type MaskingPolicyAlterOptions struct {
@@ -187,7 +187,7 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	}
 	_, err = v.client.exec(ctx, sql)
 	if err != nil {
-		return decodeDriverError(err)
+		return err
 	}
 	return err
 }
@@ -267,7 +267,7 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*MaskingPolicy, len(dest))
 	for i, row := range dest {
@@ -365,7 +365,7 @@ func (v *maskingPolicies) Describe(ctx context.Context, id SchemaObjectIdentifie
 	dest := maskingPolicyDetailsRow{}
 	err = v.client.queryOne(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return dest.toMaskingPolicyDetails(), nil

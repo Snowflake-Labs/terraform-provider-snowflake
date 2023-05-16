@@ -132,7 +132,7 @@ func (v *grants) GrantPrivilegeToShare(ctx context.Context, objectPrivilege Priv
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type revokePrivilegeFromShareOptions struct {
@@ -206,7 +206,7 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, objectPrivilege P
 		return err
 	}
 	_, err = v.client.exec(ctx, sql)
-	return decodeDriverError(err)
+	return err
 }
 
 type ShowGrantsOptions struct {
@@ -257,7 +257,7 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantsOptions) ([]*Grant, e
 	var rows []grantRow
 	err = v.client.query(ctx, &rows, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	grants := make([]*Grant, 0, len(rows))
 	for _, row := range rows {
