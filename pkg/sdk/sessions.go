@@ -15,8 +15,7 @@ type Sessions interface {
 var _ Sessions = (*sessions)(nil)
 
 type sessions struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 func (c *sessions) UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error {

@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -19,8 +18,8 @@ type Warehouses interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error
 	// Show returns a list of warehouses.
 	Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error)
-	// Show + filter to return SHOW data for a single warehouse.
-	ShowById(ctx context.Context, id ObjectIdentifier) (*Warehouse, error)
+	// ShowByID returns a warehouse by ID
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
 }
@@ -28,8 +27,7 @@ type Warehouses interface {
 var _ Warehouses = (*warehouses)(nil)
 
 type warehouses struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 type WarehouseType string
@@ -71,36 +69,39 @@ type WarehouseCreateOptions struct {
 	// Object properties
 	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" db:"WAREHOUSE_TYPE"`
 	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" db:"WAREHOUSE_SIZE"`
-	MaxClusterCount                 *uint8         `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *uint8         `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
+	MaxClusterCount                 *int           `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int           `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
 	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" db:"SCALING_POLICY"`
-	AutoSuspend                     *uint          `ddl:"parameter" db:"AUTO_SUSPEND"`
+	AutoSuspend                     *int           `ddl:"parameter" db:"AUTO_SUSPEND"`
 	AutoResume                      *bool          `ddl:"parameter" db:"AUTO_RESUME"`
 	InitiallySuspended              *bool          `ddl:"parameter" db:"INITIALLY_SUSPENDED"`
 	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" db:"RESOURCE_MONITOR"`
 	Comment                         *string        `ddl:"parameter,single_quotes" db:"COMMENT"`
 	EnableQueryAcceleration         *bool          `ddl:"parameter" db:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *uint8         `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *uint            `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *uint            `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *uint            `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	Tags                            []TagAssociation `ddl:"list,parentheses" db:"TAG"`
+	MaxConcurrencyLevel             *int             `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *int             `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *int             `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	Tag                             []TagAssociation `ddl:"keyword,parentheses" db:"TAG"`
 }
 
 func (opts *WarehouseCreateOptions) validate() error {
-	if opts.MaxClusterCount != nil && ((*opts.MaxClusterCount < 1) || (10 < *opts.MaxClusterCount)) {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	if valueSet(opts.MaxClusterCount) && !validateIntInRange(*opts.MaxClusterCount, 1, 10) {
 		return fmt.Errorf("MaxClusterCount must be between 1 and 10")
 	}
-	if opts.MinClusterCount != nil && ((*opts.MinClusterCount < 1) || (10 < *opts.MinClusterCount)) {
+	if valueSet(opts.MinClusterCount) && !validateIntInRange(*opts.MinClusterCount, 1, 10) {
 		return fmt.Errorf("MinClusterCount must be between 1 and 10")
 	}
-	if opts.MinClusterCount != nil && opts.MaxClusterCount != nil && *opts.MaxClusterCount < *opts.MinClusterCount {
+	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 	}
-	if opts.QueryAccelerationMaxScaleFactor != nil && 100 < *opts.QueryAccelerationMaxScaleFactor {
-		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be less than or equal to 100")
+	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRange(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
+		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 	}
 	return nil
 }
@@ -113,12 +114,10 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 	if err := opts.validate(); err != nil {
 		return err
 	}
-
-	clauses, err := c.builder.parseStruct(opts)
+	stmt, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
 	_, err = c.client.exec(ctx, stmt)
 	return err
 }
@@ -135,81 +134,120 @@ type WarehouseAlterOptions struct {
 	AbortAllQueries *bool                    `ddl:"keyword" db:"ABORT ALL QUERIES"`
 	NewName         *AccountObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
 
-	Set   *WarehouseSetOptions   `ddl:"keyword" db:"SET"`
-	Unset *[]WarehouseUnsetField `ddl:"list,no_parentheses" db:"UNSET"`
-
-	SetTags   *[]TagAssociation   `ddl:"list,no_parentheses" db:"SET TAG"`
-	UnsetTags *[]ObjectIdentifier `ddl:"list,no_parentheses" db:"UNSET TAG"`
+	Set   *WarehouseSet   `ddl:"keyword" db:"SET"`
+	Unset *WarehouseUnset `ddl:"list,no_parentheses" db:"UNSET"`
 }
-
-type WarehouseSetOptions struct {
-	// Object properties
-	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" db:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" db:"WAREHOUSE_SIZE"`
-	WaitForCompletion               *bool          `ddl:"parameter" db:"WAIT_FOR_COMPLETION"`
-	MaxClusterCount                 *uint8         `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *uint8         `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" db:"SCALING_POLICY"`
-	AutoSuspend                     *uint          `ddl:"parameter" db:"AUTO_SUSPEND"`
-	AutoResume                      *bool          `ddl:"parameter" db:"AUTO_RESUME"`
-	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" db:"RESOURCE_MONITOR"`
-	Comment                         *string        `ddl:"parameter,single_quotes" db:"COMMENT"`
-	EnableQueryAcceleration         *bool          `ddl:"parameter" db:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *uint8         `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
-
-	// Object params
-	MaxConcurrencyLevel             *uint `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *uint `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *uint `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-}
-
-type WarehouseUnsetField string
-
-const (
-	WarehouseTypeField                   WarehouseUnsetField = "WAREHOUSE_TYPE"
-	WarehouseSizeField                   WarehouseUnsetField = "WAREHOUSE_SIZE"
-	WaitForCompletionField               WarehouseUnsetField = "WAIT_FOR_COMPLETION"
-	MaxClusterCountField                 WarehouseUnsetField = "MAX_CLUSTER_COUNT"
-	MinClusterCountField                 WarehouseUnsetField = "MIN_CLUSTER_COUNT"
-	ScalingPolicyField                   WarehouseUnsetField = "SCALING_POLICY"
-	AutoSuspendField                     WarehouseUnsetField = "AUTO_SUSPEND"
-	AutoResumeField                      WarehouseUnsetField = "AUTO_RESUME"
-	ResourceMonitorField                 WarehouseUnsetField = "RESOURCE_MONITOR"
-	CommentField                         WarehouseUnsetField = "COMMENT"
-	EnableQueryAccelerationField         WarehouseUnsetField = "ENABLE_QUERY_ACCELERATION"
-	QueryAccelerationMaxScaleFactorField WarehouseUnsetField = "QUERY_ACCELERATION_MAX_SCALE_FACTOR"
-	MaxConcurrencyLevelField             WarehouseUnsetField = "MAX_CONCURRENCY_LEVEL"
-	StatementQueuedTimeoutInSecondsField WarehouseUnsetField = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
-	StatementTimeoutInSecondsField       WarehouseUnsetField = "STATEMENT_TIMEOUT_IN_SECONDS"
-)
 
 func (opts *WarehouseAlterOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
-
-	exclusivePointers := []interface{}{
+	if ok := exactlyOneValueSet(
 		opts.Suspend,
 		opts.Resume,
 		opts.AbortAllQueries,
 		opts.NewName,
 		opts.Set,
-		opts.Unset,
-		opts.SetTags,
-		opts.UnsetTags,
+		opts.Unset); !ok {
+		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
 	}
-	if err := checkExclusivePointers(exclusivePointers); err != nil {
-		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset, SetTags and UnsetTags must be set: %w", err)
+	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
+		return fmt.Errorf("Suspend and Resume cannot both be true")
 	}
-
-	if opts.Suspend != nil && *opts.Suspend && opts.Resume != nil && *opts.Resume {
-		return fmt.Errorf(`"Suspend" and "Resume" cannot both be true`)
-	}
-	if opts.IfSuspended != nil && *opts.IfSuspended && (opts.Resume == nil || !*opts.Resume) {
+	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
 		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
 	}
-	if opts.Set != nil && opts.Unset != nil {
-		return fmt.Errorf("cannot set and unset parameters in the same ALTER statement")
+	if everyValueSet(opts.Set, opts.Unset) {
+		return fmt.Errorf("Set and Unset cannot both be set")
+	}
+	if valueSet(opts.Set) {
+		if err := opts.Set.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type WarehouseSet struct {
+	// Object properties
+	WarehouseType                   *WarehouseType          `ddl:"parameter,single_quotes" db:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *WarehouseSize          `ddl:"parameter,single_quotes" db:"WAREHOUSE_SIZE"`
+	WaitForCompletion               *bool                   `ddl:"parameter" db:"WAIT_FOR_COMPLETION"`
+	MaxClusterCount                 *int                    `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int                    `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *ScalingPolicy          `ddl:"parameter,single_quotes" db:"SCALING_POLICY"`
+	AutoSuspend                     *int                    `ddl:"parameter" db:"AUTO_SUSPEND"`
+	AutoResume                      *bool                   `ddl:"parameter" db:"AUTO_RESUME"`
+	ResourceMonitor                 AccountObjectIdentifier `ddl:"identifier,equals" db:"RESOURCE_MONITOR"`
+	Comment                         *string                 `ddl:"parameter,single_quotes" db:"COMMENT"`
+	EnableQueryAcceleration         *bool                   `ddl:"parameter" db:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *int                    `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+
+	// Object params
+	MaxConcurrencyLevel             *int `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *int `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+
+	Tag []TagAssociation `ddl:"keyword" db:"TAG"`
+}
+
+func (v *WarehouseSet) validate() error {
+	if v.MaxClusterCount != nil {
+		if ok := validateIntInRange(*v.MaxClusterCount, 1, 10); !ok {
+			return fmt.Errorf("MaxClusterCount must be between 1 and 10")
+		}
+	}
+	if v.MinClusterCount != nil {
+		if ok := validateIntInRange(*v.MinClusterCount, 1, 10); !ok {
+			return fmt.Errorf("MinClusterCount must be between 1 and 10")
+		}
+	}
+	if v.AutoSuspend != nil {
+		if ok := validateIntGreaterThanOrEqual(*v.AutoSuspend, 0); !ok {
+			return fmt.Errorf("AutoSuspend must be greater than or equal to 0")
+		}
+	}
+	if v.QueryAccelerationMaxScaleFactor != nil {
+		if ok := validateIntInRange(*v.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
+			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
+		}
+	}
+	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return fmt.Errorf("Tag cannot be set with any other Set parameter")
+	}
+	return nil
+}
+
+type WarehouseUnset struct {
+	// Object properties
+	WarehouseType                   *bool `ddl:"keyword" db:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *bool `ddl:"keyword" db:"WAREHOUSE_SIZE"`
+	WaitForCompletion               *bool `ddl:"keyword" db:"WAIT_FOR_COMPLETION"`
+	MaxClusterCount                 *bool `ddl:"keyword" db:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *bool `ddl:"keyword" db:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *bool `ddl:"keyword" db:"SCALING_POLICY"`
+	AutoSuspend                     *bool `ddl:"keyword" db:"AUTO_SUSPEND"`
+	AutoResume                      *bool `ddl:"keyword" db:"AUTO_RESUME"`
+	ResourceMonitor                 *bool `ddl:"keyword" db:"RESOURCE_MONITOR"`
+	Comment                         *bool `ddl:"keyword" db:"COMMENT"`
+	EnableQueryAcceleration         *bool `ddl:"keyword" db:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *bool `ddl:"keyword" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+
+	// Object params
+	MaxConcurrencyLevel             *bool              `ddl:"keyword" db:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *bool              `ddl:"keyword" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *bool              `ddl:"keyword" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	Tag                             []ObjectIdentifier `ddl:"keyword" db:"TAG"`
+}
+
+func (v *WarehouseUnset) validate() error {
+	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
 	}
 	return nil
 }
@@ -222,12 +260,11 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
-	_, err = c.client.exec(ctx, stmt)
+	_, err = c.client.exec(ctx, sql)
 	return err
 }
 
@@ -239,8 +276,8 @@ type WarehouseDropOptions struct {
 }
 
 func (opts *WarehouseDropOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -255,14 +292,13 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
-	_, err = c.client.exec(ctx, stmt)
+	_, err = c.client.exec(ctx, sql)
 	if err != nil {
-		return decodeDriverError(err)
+		return err
 	}
 	return err
 }
@@ -282,14 +318,14 @@ type Warehouse struct {
 	State                           string
 	Type                            WarehouseType
 	Size                            WarehouseSize
-	MinClusterCount                 uint8
-	MaxClusterCount                 uint8
-	StartedClusters                 uint
-	Running                         uint
-	Queued                          uint
+	MinClusterCount                 int
+	MaxClusterCount                 int
+	StartedClusters                 int
+	Running                         int
+	Queued                          int
 	IsDefault                       bool
 	IsCurrent                       bool
-	AutoSuspend                     uint
+	AutoSuspend                     int
 	AutoResume                      bool
 	Available                       float64
 	Provisioning                    float64
@@ -301,13 +337,13 @@ type Warehouse struct {
 	Owner                           string
 	Comment                         string
 	EnableQueryAcceleration         bool
-	QueryAccelerationMaxScaleFactor uint8
+	QueryAccelerationMaxScaleFactor int
 	ResourceMonitor                 string
 	Actives                         string
 	Pendings                        string
 	Failed                          string
 	Suspended                       string
-	Uuid                            string
+	UUID                            string
 	ScalingPolicy                   ScalingPolicy
 }
 
@@ -316,14 +352,14 @@ type warehouseDBRow struct {
 	State                           string        `db:"state"`
 	Type                            string        `db:"type"`
 	Size                            string        `db:"size"`
-	MinClusterCount                 uint8         `db:"min_cluster_count"`
-	MaxClusterCount                 uint8         `db:"max_cluster_count"`
-	StartedClusters                 uint          `db:"started_clusters"`
-	Running                         uint          `db:"running"`
-	Queued                          uint          `db:"queued"`
+	MinClusterCount                 int           `db:"min_cluster_count"`
+	MaxClusterCount                 int           `db:"max_cluster_count"`
+	StartedClusters                 int           `db:"started_clusters"`
+	Running                         int           `db:"running"`
+	Queued                          int           `db:"queued"`
 	IsDefault                       string        `db:"is_default"`
 	IsCurrent                       string        `db:"is_current"`
-	AutoSuspend                     sql.NullInt16 `db:"auto_suspend"`
+	AutoSuspend                     sql.NullInt64 `db:"auto_suspend"`
 	AutoResume                      bool          `db:"auto_resume"`
 	Available                       string        `db:"available"`
 	Provisioning                    string        `db:"provisioning"`
@@ -335,13 +371,13 @@ type warehouseDBRow struct {
 	Owner                           string        `db:"owner"`
 	Comment                         string        `db:"comment"`
 	EnableQueryAcceleration         bool          `db:"enable_query_acceleration"`
-	QueryAccelerationMaxScaleFactor uint8         `db:"query_acceleration_max_scale_factor"`
+	QueryAccelerationMaxScaleFactor int           `db:"query_acceleration_max_scale_factor"`
 	ResourceMonitor                 string        `db:"resource_monitor"`
 	Actives                         string        `db:"actives"`
 	Pendings                        string        `db:"pendings"`
 	Failed                          string        `db:"failed"`
 	Suspended                       string        `db:"suspended"`
-	Uuid                            string        `db:"uuid"`
+	UUID                            string        `db:"uuid"`
 	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
@@ -371,7 +407,7 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 		Pendings:                        row.Pendings,
 		Failed:                          row.Failed,
 		Suspended:                       row.Suspended,
-		Uuid:                            row.Uuid,
+		UUID:                            row.UUID,
 		ScalingPolicy:                   ScalingPolicy(row.ScalingPolicy),
 	}
 	if val, err := strconv.ParseFloat(row.Available, 64); err != nil {
@@ -387,7 +423,7 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 		wh.Other = val
 	}
 	if row.AutoSuspend.Valid {
-		wh.AutoSuspend = uint(row.AutoSuspend.Int16)
+		wh.AutoSuspend = int(row.AutoSuspend.Int64)
 	}
 	return wh
 }
@@ -399,16 +435,14 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := c.builder.sql(clauses...)
 	dest := []warehouseDBRow{}
-
-	err = c.client.query(ctx, &dest, stmt)
+	err = c.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*Warehouse, len(dest))
 	for i, row := range dest {
@@ -418,8 +452,8 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	return resultList, nil
 }
 
-func (c *warehouses) ShowById(ctx context.Context, id ObjectIdentifier) (*Warehouse, error) {
-	results, err := c.Show(ctx, &WarehouseShowOptions{
+func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
+	warehouses, err := c.Show(ctx, &WarehouseShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -428,9 +462,9 @@ func (c *warehouses) ShowById(ctx context.Context, id ObjectIdentifier) (*Wareho
 		return nil, err
 	}
 
-	for _, res := range results {
-		if res.ID().name == id.Name() {
-			return res, nil
+	for _, warehouse := range warehouses {
+		if warehouse.ID().name == id.Name() {
+			return warehouse, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -443,8 +477,8 @@ type warehouseDescribeOptions struct {
 }
 
 func (opts *warehouseDescribeOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -477,15 +511,14 @@ func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (
 		return nil, err
 	}
 
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := c.builder.sql(clauses...)
 	dest := warehouseDetailsRow{}
-	err = c.client.queryOne(ctx, &dest, stmt)
+	err = c.client.queryOne(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return dest.toWarehouseDetails(), nil

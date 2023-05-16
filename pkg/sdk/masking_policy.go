@@ -24,14 +24,15 @@ type MaskingPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of masking policies.
 	Show(ctx context.Context, opts *MaskingPolicyShowOptions) ([]*MaskingPolicy, error)
+	// ShowByID returns a masking policy by ID
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	// Describe returns the details of a masking policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
 
 // maskingPolicies implements MaskingPolicies.
 type maskingPolicies struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 type MaskingPolicyCreateOptions struct {
@@ -42,10 +43,9 @@ type MaskingPolicyCreateOptions struct {
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 
 	// required
-	signature []TableColumnSignature `ddl:"list" db:"AS"`
-	returns   DataType               `ddl:"command" db:"RETURNS"`
-	arrow     bool                   `ddl:"static" db:"->"` //lint:ignore U1000 This is used in the ddl tag
-	body      string                 `ddl:"keyword" db:"EXPRESSION"`
+	signature []TableColumnSignature `ddl:"keyword,parentheses" db:"AS"`
+	returns   DataType               `ddl:"parameter,no_equals" db:"RETURNS"`
+	body      string                 `ddl:"parameter,no_equals" db:"->"`
 
 	// optional
 	Comment             *string `ddl:"parameter,single_quotes" db:"COMMENT"`
@@ -53,8 +53,8 @@ type MaskingPolicyCreateOptions struct {
 }
 
 func (opts *MaskingPolicyCreateOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(opts.name) {
+		return errors.New("invalid object identifier")
 	}
 
 	return nil
@@ -71,12 +71,11 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	return err
 }
 
@@ -91,46 +90,29 @@ type MaskingPolicyAlterOptions struct {
 }
 
 func (opts *MaskingPolicyAlterOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return errors.New("invalid object identifier")
 	}
 
-	if opts.Set == nil && opts.Unset == nil {
-		if opts.NewName.FullyQualifiedName() == "" {
-			return errors.New("new name must not be empty")
-		}
-	}
-
-	if opts.Set != nil && opts.Unset != nil {
-		return errors.New("cannot set and unset parameters in the same ALTER statement")
-	}
-
-	if opts.Set != nil {
-		count := 0
-		if opts.Set.Body != nil {
-			count++
-		}
-		if opts.Set.Tag != nil {
-			count++
-		}
-		if opts.Set.Comment != nil {
-			count++
-		}
-		if count != 1 {
-			return errors.New("only one parameter must be set")
+	if everyValueNil(opts.Set, opts.Unset) {
+		if !validObjectidentifier(opts.NewName) {
+			return ErrInvalidObjectIdentifier
 		}
 	}
 
-	if opts.Unset != nil {
-		count := 0
-		if opts.Unset.Tag != nil {
-			count++
+	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
+		return errors.New("cannot use both set and unset")
+	}
+
+	if valueSet(opts.Set) {
+		if err := opts.Set.validate(); err != nil {
+			return err
 		}
-		if opts.Unset.Comment != nil {
-			count++
-		}
-		if count != 1 {
-			return errors.New("only one parameter can be unset at a time")
+	}
+
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
+			return err
 		}
 	}
 
@@ -138,14 +120,28 @@ func (opts *MaskingPolicyAlterOptions) validate() error {
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"command" db:"BODY ->"`
-	Tag     []TagAssociation `ddl:"list,no_parentheses" db:"TAG"`
+	Body    *string          `ddl:"parameter,no_equals" db:"BODY ->"`
+	Tag     []TagAssociation `ddl:"keyword" db:"TAG"`
 	Comment *string          `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
+func (v *MaskingPolicySet) validate() error {
+	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
+		return errors.New("only one parameter can be set at a time")
+	}
+	return nil
+}
+
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"list,no_parentheses" db:"TAG"`
+	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
 	Comment *bool              `ddl:"keyword" db:"COMMENT"`
+}
+
+func (v *MaskingPolicyUnset) validate() error {
+	if !exactlyOneValueSet(v.Tag, v.Comment) {
+		return errors.New("only one parameter can be unset at a time")
+	}
+	return nil
 }
 
 func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *MaskingPolicyAlterOptions) error {
@@ -156,12 +152,11 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	return err
 }
 
@@ -172,8 +167,8 @@ type MaskingPolicyDropOptions struct {
 }
 
 func (opts *MaskingPolicyDropOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -186,14 +181,13 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	if err != nil {
-		return decodeDriverError(err)
+		return err
 	}
 	return err
 }
@@ -204,7 +198,7 @@ type MaskingPolicyShowOptions struct {
 	maskingPolicies bool  `ddl:"static" db:"MASKING POLICIES"` //lint:ignore U1000 This is used in the ddl tag
 	Like            *Like `ddl:"keyword" db:"LIKE"`
 	In              *In   `ddl:"keyword" db:"IN"`
-	Limit           *int  `ddl:"command,no_quotes" db:"LIMIT"`
+	Limit           *int  `ddl:"parameter,no_equals" db:"LIMIT"`
 }
 
 func (input *MaskingPolicyShowOptions) validate() error {
@@ -265,16 +259,15 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := []maskingPolicyDBRow{}
 
-	err = v.client.query(ctx, &dest, stmt)
+	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*MaskingPolicy, len(dest))
 	for i, row := range dest {
@@ -284,6 +277,27 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 	return resultList, nil
 }
 
+func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
+	maskingPolicies, err := v.Show(ctx, &MaskingPolicyShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, maskingPolicy := range maskingPolicies {
+		if maskingPolicy.ID().name == id.Name() {
+			return maskingPolicy, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
+}
+
 type maskingPolicyDescribeOptions struct {
 	describe      bool                   `ddl:"static" db:"DESCRIBE"`       //lint:ignore U1000 This is used in the ddl tag
 	maskingPolicy bool                   `ddl:"static" db:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
@@ -291,8 +305,8 @@ type maskingPolicyDescribeOptions struct {
 }
 
 func (v *maskingPolicyDescribeOptions) validate() error {
-	if v.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -344,15 +358,14 @@ func (v *maskingPolicies) Describe(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := maskingPolicyDetailsRow{}
-	err = v.client.queryOne(ctx, &dest, stmt)
+	err = v.client.queryOne(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return dest.toMaskingPolicyDetails(), nil

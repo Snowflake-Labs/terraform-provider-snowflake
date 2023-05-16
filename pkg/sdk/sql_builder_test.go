@@ -8,8 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type unexportedTestHelper struct {
+	static bool `ddl:"static" db:"EXAMPLE_STATIC"`
+}
+
 func TestBuilder_parseField(t *testing.T) {
-	builder := testBuilder(t)
 	t.Run("test boolean keyword", func(t *testing.T) {
 		s := struct {
 			BooleanKeyword *bool `ddl:"keyword" db:"EXAMPLE_KEYWORD"`
@@ -21,10 +24,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("BooleanKeyword")
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_KEYWORD", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_KEYWORD", clause.String())
 	})
 
 	t.Run("test boolean keyword with false value", func(t *testing.T) {
@@ -38,9 +40,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("BooleanKeyword")
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 0)
+		assert.Nil(t, clause)
 	})
 
 	t.Run("test boolean keyword with nil value", func(t *testing.T) {
@@ -52,9 +54,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("BooleanKeyword")
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 0)
+		assert.Nil(t, clause)
 	})
 
 	t.Run("test string keyword with value", func(t *testing.T) {
@@ -68,10 +70,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("StringKeyword")
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "example", clauses[0].String())
+		assert.Equal(t, "example", clause.String())
 	})
 
 	t.Run("test string keyword with nil value", func(t *testing.T) {
@@ -83,9 +84,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("StringKeyword")
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 0)
+		assert.Nil(t, clause)
 	})
 
 	t.Run("test string keyword with double quotes", func(t *testing.T) {
@@ -99,10 +100,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("StringKeyword")
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `"example"`, clauses[0].String())
+		assert.Equal(t, `"example"`, clause.String())
 	})
 
 	t.Run("test string keyword with single quotes", func(t *testing.T) {
@@ -116,92 +116,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("StringKeyword")
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `'example'`, clauses[0].String())
-	})
-
-	t.Run("test command with value", func(t *testing.T) {
-		s := struct {
-			Command *string `ddl:"command" db:"EXAMPLE_COMMAND"`
-		}{
-			Command: String("example"),
-		}
-		val := reflect.ValueOf(s)
-		typ := val.Type()
-		value := val.FieldByName("Command")
-		field, ok := typ.FieldByName("Command")
-		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_COMMAND example", clauses[0].String())
-	})
-
-	t.Run("test command with nil value", func(t *testing.T) {
-		s := struct {
-			Command *string `ddl:"command" db:"EXAMPLE_COMMAND"`
-		}{}
-		val := reflect.ValueOf(s)
-		typ := val.Type()
-		value := val.FieldByName("Command")
-		field, ok := typ.FieldByName("Command")
-		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 0)
-	})
-
-	t.Run("test command with double quotes", func(t *testing.T) {
-		s := struct {
-			Command *string `ddl:"command,double_quotes" db:"EXAMPLE_COMMAND"`
-		}{
-			Command: String("example"),
-		}
-		val := reflect.ValueOf(s)
-		typ := val.Type()
-		value := val.FieldByName("Command")
-		field, ok := typ.FieldByName("Command")
-		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `EXAMPLE_COMMAND "example"`, clauses[0].String())
-	})
-
-	t.Run("test command with single quotes", func(t *testing.T) {
-		s := struct {
-			Command *string `ddl:"command,single_quotes" db:"EXAMPLE_COMMAND"`
-		}{
-			Command: String("example"),
-		}
-		val := reflect.ValueOf(s)
-		typ := val.Type()
-		value := val.FieldByName("Command")
-		field, ok := typ.FieldByName("Command")
-		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `EXAMPLE_COMMAND 'example'`, clauses[0].String())
-	})
-
-	t.Run("test command with integer value", func(t *testing.T) {
-		s := struct {
-			Command *int `ddl:"command" db:"EXAMPLE_COMMAND"`
-		}{
-			Command: Int(1),
-		}
-		val := reflect.ValueOf(s)
-		typ := val.Type()
-		value := val.FieldByName("Command")
-		field, ok := typ.FieldByName("Command")
-		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_COMMAND 1", clauses[0].String())
+		assert.Equal(t, `'example'`, clause.String())
 	})
 
 	t.Run("test static with value", func(t *testing.T) {
@@ -215,10 +132,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Static")
 		field, ok := typ.FieldByName("Static")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
 	t.Run("test static with nil value", func(t *testing.T) {
@@ -230,10 +146,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Static")
 		field, ok := typ.FieldByName("Static")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
 	t.Run("test parameter with value", func(t *testing.T) {
@@ -247,10 +162,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_PARAMETER = example", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_PARAMETER = example", clause.String())
 	})
 
 	t.Run("test parameter with nil value", func(t *testing.T) {
@@ -262,9 +176,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 0)
+		assert.Nil(t, clause)
 	})
 
 	t.Run("test parameter with double quotes", func(t *testing.T) {
@@ -278,10 +192,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `EXAMPLE_PARAMETER = "example"`, clauses[0].String())
+		assert.Equal(t, `EXAMPLE_PARAMETER = "example"`, clause.String())
 	})
 
 	t.Run("test parameter with single quotes", func(t *testing.T) {
@@ -295,10 +208,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, `EXAMPLE_PARAMETER = 'example'`, clauses[0].String())
+		assert.Equal(t, `EXAMPLE_PARAMETER = 'example'`, clause.String())
 	})
 
 	t.Run("test parameter with integer value", func(t *testing.T) {
@@ -312,10 +224,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_PARAMETER = 1", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_PARAMETER = 1", clause.String())
 	})
 
 	t.Run("test parameter with no db", func(t *testing.T) {
@@ -329,68 +240,9 @@ func TestBuilder_parseField(t *testing.T) {
 		value := val.FieldByName("Parameter")
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
-		clauses, err := builder.parseField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "example", clauses[0].String())
-	})
-}
-
-type unexportedTestHelper struct {
-	accountObjectIdentifier AccountObjectIdentifier `ddl:"identifier"`
-	schemaIdentifier        SchemaIdentifier        `ddl:"identifier"`
-	schemaObjectIdentifier  SchemaObjectIdentifier  `ddl:"identifier"`
-	static                  bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
-}
-
-func TestBuilder_parseUnexportedField(t *testing.T) {
-	builder := testBuilder(t)
-	t.Run("test unexported account object identifier", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
-		s := &unexportedTestHelper{
-			accountObjectIdentifier: id,
-		}
-		val := reflect.ValueOf(s).Elem()
-		typ := val.Type()
-		value := val.FieldByName("accountObjectIdentifier")
-		field, ok := typ.FieldByName("accountObjectIdentifier")
-		require.True(t, ok)
-		clauses, err := builder.parseUnexportedField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, id.FullyQualifiedName(), clauses[0].String())
-	})
-
-	t.Run("test unexported schema identifier", func(t *testing.T) {
-		id := randomSchemaIdentifier(t)
-		s := &unexportedTestHelper{
-			schemaIdentifier: id,
-		}
-		val := reflect.ValueOf(s).Elem()
-		typ := val.Type()
-		value := val.FieldByName("schemaIdentifier")
-		field, ok := typ.FieldByName("schemaIdentifier")
-		require.True(t, ok)
-		clauses, err := builder.parseUnexportedField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, id.FullyQualifiedName(), clauses[0].String())
-	})
-
-	t.Run("test unexported schema object identifier", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
-		s := &unexportedTestHelper{
-			schemaObjectIdentifier: id,
-		}
-		val := reflect.ValueOf(s).Elem()
-		typ := val.Type()
-		value := val.FieldByName("schemaObjectIdentifier")
-		field, ok := typ.FieldByName("schemaObjectIdentifier")
-		require.True(t, ok)
-		clauses, err := builder.parseUnexportedField(field, value)
-		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, id.FullyQualifiedName(), clauses[0].String())
+		assert.Equal(t, "= example", clause.String())
 	})
 
 	t.Run("test unexported static value set", func(t *testing.T) {
@@ -402,10 +254,9 @@ func TestBuilder_parseUnexportedField(t *testing.T) {
 		value := val.FieldByName("static")
 		field, ok := typ.FieldByName("static")
 		require.True(t, ok)
-		clauses, err := builder.parseUnexportedField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
 	t.Run("test unexported static value not set", func(t *testing.T) {
@@ -417,25 +268,92 @@ func TestBuilder_parseUnexportedField(t *testing.T) {
 		value := val.FieldByName("static")
 		field, ok := typ.FieldByName("static")
 		require.True(t, ok)
-		clauses, err := builder.parseUnexportedField(field, value)
+		clause, err := builder.parseField(field, value)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 1)
-		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
+		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 }
 
-type StringAlias string
+func TestReverseModifier(t *testing.T) {
+	t.Run("test reverse modifier", func(t *testing.T) {
+		result := Reverse.Modify([]string{"example", "DESC"})
+		assert.Equal(t, `DESC example`, result)
+	})
+
+	t.Run("test no reverse modifier", func(t *testing.T) {
+		result := NoReverse.Modify([]string{"example", "DESC"})
+		assert.Equal(t, `example DESC`, result)
+	})
+
+	t.Run("test unknown reverse modifier", func(t *testing.T) {
+		result := reverseModifier("unknown").Modify([]string{"example", "DESC"})
+		assert.Equal(t, `example DESC`, result)
+	})
+}
+
+func TestEqualsModifier(t *testing.T) {
+	t.Run("test equals modifier", func(t *testing.T) {
+		result := Equals.Modify("example")
+		assert.Equal(t, `example = `, result)
+	})
+
+	t.Run("test no equals modifier", func(t *testing.T) {
+		result := NoEquals.Modify("example")
+		assert.Equal(t, `example `, result)
+	})
+
+	t.Run("test unknown equals modifier", func(t *testing.T) {
+		result := equalsModifier("unknown").Modify("example")
+		assert.Equal(t, `example `, result)
+	})
+}
+
+func TestParenModifier(t *testing.T) {
+	t.Run("test paren modifier", func(t *testing.T) {
+		result := Parentheses.Modify("example")
+		assert.Equal(t, `(example)`, result)
+	})
+
+	t.Run("test no paren modifier", func(t *testing.T) {
+		result := NoParentheses.Modify("example")
+		assert.Equal(t, `example`, result)
+	})
+
+	t.Run("test unknown paren modifier", func(t *testing.T) {
+		result := parenModifier("unknown").Modify("example")
+		assert.Equal(t, `example`, result)
+	})
+}
+
+func TestQuoteModifier(t *testing.T) {
+	t.Run("test quotes modifier", func(t *testing.T) {
+		result := DoubleQuotes.Modify("example")
+		assert.Equal(t, `"example"`, result)
+	})
+
+	t.Run("test no quotes modifier", func(t *testing.T) {
+		result := NoQuotes.Modify("example")
+		assert.Equal(t, `example`, result)
+	})
+
+	t.Run("test single quotes modifier", func(t *testing.T) {
+		result := SingleQuotes.Modify("example")
+		assert.Equal(t, `'example'`, result)
+	})
+
+	t.Run("test unknown modifier", func(t *testing.T) {
+		result := quoteModifier("unknown").Modify("example")
+		assert.Equal(t, `example`, result)
+	})
+}
 
 type structTestHelper struct {
-	static  bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
-	name    AccountObjectIdentifier `ddl:"identifier"`
-	Param   *string                 `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
-	Command *string                 `ddl:"command" db:"EXAMPLE_COMMAND"`
-	List    []StringAlias           `ddl:"list,no_parentheses" db:"EXAMPLE_STRING_LIST"`
+	static bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
+	name   AccountObjectIdentifier `ddl:"identifier"`
+	Param  *string                 `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
 }
 
 func TestBuilder_parseStruct(t *testing.T) {
-	builder := testBuilder(t)
 	t.Run("test struct with no fields", func(t *testing.T) {
 		s := struct{}{}
 		clauses, err := builder.parseStruct(s)
@@ -445,29 +363,25 @@ func TestBuilder_parseStruct(t *testing.T) {
 
 	t.Run("test struct with all fields", func(t *testing.T) {
 		s := &structTestHelper{
-			static:  true,
-			name:    randomAccountObjectIdentifier(t),
-			Param:   String("example"),
-			Command: String("example"),
-			List:    []StringAlias{"item1", "item2"},
+			static: true,
+			name:   randomAccountObjectIdentifier(t),
+			Param:  String("example"),
 		}
 		clauses, err := builder.parseStruct(s)
 		assert.NoError(t, err)
-		assert.Len(t, clauses, 5)
+		assert.Len(t, clauses, 3)
 		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
 		assert.Equal(t, s.name.FullyQualifiedName(), clauses[1].String())
 		assert.Equal(t, "EXAMPLE_PARAMETER = example", clauses[2].String())
-		assert.Equal(t, "EXAMPLE_COMMAND example", clauses[3].String())
-		assert.Equal(t, "EXAMPLE_STRING_LIST item1,item2", clauses[4].String())
 	})
 
-	t.Run("struct with a slice field using ddl: list", func(t *testing.T) {
+	t.Run("struct with a slice field using ddl: keyword", func(t *testing.T) {
 		type testListElement struct {
 			K  *string `ddl:"parameter,single_quotes" db:"KEY"`
 			K2 *string `ddl:"parameter,single_quotes" db:"KEY2"`
 		}
 		s := &struct {
-			List []testListElement `ddl:"list" db:"TAG"`
+			List []testListElement `ddl:"keyword,parentheses" db:"TAG"`
 		}{
 			List: []testListElement{{K: String("abc"), K2: String("def")}, {K: String("123"), K2: String("456")}},
 		}
@@ -477,24 +391,24 @@ func TestBuilder_parseStruct(t *testing.T) {
 		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def',KEY = '123' KEY2 = '456')", clauses[0].String())
 	})
 
-	t.Run("struct with a slice field using ddl: list (no elements)", func(t *testing.T) {
+	t.Run("struct with a slice field using ddl: - (no elements)", func(t *testing.T) {
 		type testListElement struct {
 			K *string `ddl:"parameter,single_quotes" db:"KEY"`
 		}
 		s := &struct {
-			List []testListElement `ddl:"list"`
+			List []testListElement `ddl:"-"`
 		}{}
 		clauses, err := builder.parseStruct(s)
 		assert.NoError(t, err)
 		assert.Len(t, clauses, 0)
 	})
 
-	t.Run("struct with a slice field using ddl: list (no parentheses)", func(t *testing.T) {
+	t.Run("struct with a slice field using ddl: - (no_parentheses)", func(t *testing.T) {
 		type testListElement struct {
 			K *string `ddl:"parameter,single_quotes" db:"KEY"`
 		}
 		s := &struct {
-			List []testListElement `ddl:"list,no_parentheses"`
+			List []testListElement `ddl:"-,no_parentheses"`
 		}{
 			List: []testListElement{{K: String("abc")}, {K: String("123")}},
 		}
@@ -503,11 +417,26 @@ func TestBuilder_parseStruct(t *testing.T) {
 		assert.Len(t, clauses, 1)
 		assert.Equal(t, "KEY = 'abc',KEY = '123'", clauses[0].String())
 	})
+
+	t.Run("struct with a struct list using ddl: list", func(t *testing.T) {
+		type testListElement struct {
+			A bool `ddl:"static" db:"A"`
+			B bool `ddl:"static" db:"B"`
+			C bool `ddl:"static" db:"C"`
+		}
+		s := &struct {
+			List *testListElement `ddl:"list"`
+		}{
+			List: &testListElement{A: true, B: true, C: true},
+		}
+		clauses, err := builder.parseStruct(s)
+		assert.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "A,B,C", clauses[0].String())
+	})
 }
 
 func TestBuilder_sql(t *testing.T) {
-	builder := testBuilder(t)
-
 	t.Run("test sql with no clauses", func(t *testing.T) {
 		s := builder.sql([]sqlClause{}...)
 		assert.Equal(t, "", s)
@@ -519,6 +448,7 @@ func TestBuilder_sql(t *testing.T) {
 			sqlParameterClause{
 				key:   "EXAMPLE_KEYWORD",
 				value: "example",
+				em:    Equals,
 			},
 		}
 		s := builder.sql(clauses...)
