@@ -19,6 +19,7 @@ type Client struct {
 	dryRun bool
 
 	ContextFunctions ContextFunctions
+	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
 	Sessions         Sessions
@@ -93,6 +94,7 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	b := &sqlBuilder{}
 	c.ContextFunctions = &contextFunctions{client: c, builder: b}
+	c.Grants = &grants{client: c, builder: b}
 	c.MaskingPolicies = &maskingPolicies{client: c, builder: b}
 	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
 	c.Sessions = &sessions{client: c, builder: b}
