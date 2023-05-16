@@ -234,7 +234,7 @@ func (opts *WarehouseAlterOptions) validate() error {
 	}
 	if opts.Unset != nil {
 		if valueSet(opts.Unset.Tag) && !everyValueNil(opts.Unset.AutoResume, opts.Unset.EnableQueryAcceleration, opts.Unset.MaxClusterCount, opts.Unset.MinClusterCount, opts.Unset.AutoSuspend, opts.Unset.QueryAccelerationMaxScaleFactor) {
-			return fmt.Errorf("Tag cannot be set with any other Unset parameter")
+			return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
 		}
 	}
 	return nil
