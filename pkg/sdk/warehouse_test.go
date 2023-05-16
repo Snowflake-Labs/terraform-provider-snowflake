@@ -26,6 +26,8 @@ func TestWarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
+		tag1 := randomSchemaObjectIdentifier(t)
+		tag2 := randomSchemaObjectIdentifier(t)
 		opts := &WarehouseCreateOptions{
 			OrReplace:   Bool(true),
 			name:        NewAccountObjectIdentifier("completewarehouse"),
@@ -33,27 +35,27 @@ func TestWarehouseCreate(t *testing.T) {
 
 			WarehouseType:                   &WarehouseTypeStandard,
 			WarehouseSize:                   &WarehouseSizeX4Large,
-			MaxClusterCount:                 Uint8(8),
-			MinClusterCount:                 Uint8(3),
+			MaxClusterCount:                 Int(8),
+			MinClusterCount:                 Int(3),
 			ScalingPolicy:                   &ScalingPolicyEconomy,
-			AutoSuspend:                     Uint(1000),
+			AutoSuspend:                     Int(1000),
 			AutoResume:                      Bool(true),
 			InitiallySuspended:              Bool(false),
 			ResourceMonitor:                 String("myresmon"),
 			Comment:                         String("hello"),
 			EnableQueryAcceleration:         Bool(true),
-			QueryAccelerationMaxScaleFactor: Uint8(62),
+			QueryAccelerationMaxScaleFactor: Int(62),
 
-			MaxConcurrencyLevel:             Uint(7),
-			StatementQueuedTimeoutInSeconds: Uint(29),
-			StatementTimeoutInSeconds:       Uint(89),
-			Tags: []TagAssociation{
+			MaxConcurrencyLevel:             Int(7),
+			StatementQueuedTimeoutInSeconds: Int(29),
+			StatementTimeoutInSeconds:       Int(89),
+			Tag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+					Name:  tag1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+					Name:  tag2,
 					Value: "v2",
 				},
 			},
@@ -61,7 +63,7 @@ func TestWarehouseCreate(t *testing.T) {
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
 		assert.Equal(t,
-			`CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG ("db"."schema"."tag1" = 'v1',"db2"."schema2"."tag2" = 'v2')`,
+			`CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG (`+tag1.FullyQualifiedName()+` = 'v1',`+tag2.FullyQualifiedName()+` = 'v2')`,
 			builder.sql(clauses...),
 		)
 	})
@@ -69,19 +71,18 @@ func TestWarehouseCreate(t *testing.T) {
 
 func TestWarehouseAlter(t *testing.T) {
 	builder := testBuilder(t)
-	// id := randomSchemaObjectIdentifier(t)
 
-	t.Run("with set", func(t *testing.T) {
+	t.Run("with set params", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Set: &WarehouseSetOptions{
+			Set: &WarehouseSet{
 				WarehouseType:                   &WarehouseTypeSnowparkOptimized,
 				WaitForCompletion:               Bool(false),
-				MinClusterCount:                 Uint8(4),
-				AutoSuspend:                     Uint(200),
-				ResourceMonitor:                 String("resmon"),
+				MinClusterCount:                 Int(4),
+				AutoSuspend:                     Int(200),
+				ResourceMonitor:                 NewAccountObjectIdentifier("resmon"),
 				EnableQueryAcceleration:         Bool(false),
-				StatementQueuedTimeoutInSeconds: Uint(1200),
+				StatementQueuedTimeoutInSeconds: Int(1200),
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
@@ -92,24 +93,60 @@ func TestWarehouseAlter(t *testing.T) {
 		)
 	})
 
-	t.Run("with unset", func(t *testing.T) {
+	t.Run("with set tag", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
-			name: NewAccountObjectIdentifier("mywarehouse"),
-			Unset: &[]WarehouseUnsetField{
-				WarehouseSizeField,
-				MaxClusterCountField,
-				AutoResumeField,
-				// Tag: []ObjectIdentifier{
-				// 	NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-				// 	NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-				// },
+			Set: &WarehouseSet{
+				Tag: []TagAssociation{
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+						Value: "v1",
+					},
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+						Value: "v2",
+					},
+				},
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
 		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
+		assert.Equal(t, `ALTER WAREHOUSE SET TAG "db"."schema"."tag1" = 'v1',"db"."schema"."tag2" = 'v2'`, stmt)
+	})
+
+	t.Run("with unset tag", func(t *testing.T) {
+		opts := &WarehouseAlterOptions{
+			name: NewAccountObjectIdentifier("mywarehouse"),
+			Unset: &WarehouseUnset{
+				Tag: []ObjectIdentifier{
+					NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				},
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
+		assert.Equal(t,
+			`ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`,
+			stmt,
+		)
+	})
+
+	t.Run("with unset params", func(t *testing.T) {
+		opts := &WarehouseAlterOptions{
+			name: NewAccountObjectIdentifier("mywarehouse"),
+			Unset: &WarehouseUnset{
+				WarehouseSize:   Bool(true),
+				MaxClusterCount: Bool(true),
+				AutoResume:      Bool(true),
+			},
+		}
+		clauses, err := builder.parseStruct(opts)
+		require.NoError(t, err)
+		stmt := builder.sql(clauses...)
 		assert.Equal(t,
 			`ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE,MAX_CLUSTER_COUNT,AUTO_RESUME`,
-			builder.sql(clauses...),
+			stmt,
 		)
 	})
 
@@ -174,14 +211,16 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			SetTags: &[]TagAssociation{
-				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-					Value: "v1",
-				},
-				{
-					Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-					Value: "v2",
+			Set: &WarehouseSet{
+				Tag: []TagAssociation{
+					{
+						Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+						Value: "v1",
+					},
+					{
+						Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+						Value: "v2",
+					},
 				},
 			},
 		}
@@ -196,9 +235,11 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &WarehouseAlterOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			UnsetTags: &[]ObjectIdentifier{
-				NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-				NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+			Unset: &WarehouseUnset{
+				Tag: []ObjectIdentifier{
+					NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+				},
 			},
 		}
 		clauses, err := builder.parseStruct(opts)
@@ -212,7 +253,6 @@ func TestWarehouseAlter(t *testing.T) {
 
 func TestWarehouseDrop(t *testing.T) {
 	builder := testBuilder(t)
-	// id := randomSchemaObjectIdentifier(t)
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &WarehouseDropOptions{

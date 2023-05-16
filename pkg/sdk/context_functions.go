@@ -7,6 +7,7 @@ import (
 
 type ContextFunctions interface {
 	// Session functions.
+	CurrentAccount(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
 
 	// Session Object functions.
@@ -20,6 +21,17 @@ var _ ContextFunctions = (*contextFunctions)(nil)
 type contextFunctions struct {
 	client  *Client
 	builder *sqlBuilder
+}
+
+func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {
+	s := &struct {
+		CurrentAccount string `db:"CURRENT_ACCOUNT"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT() as CURRENT_ACCOUNT")
+	if err != nil {
+		return "", err
+	}
+	return s.CurrentAccount, nil
 }
 
 func (c *contextFunctions) CurrentSession(ctx context.Context) (string, error) {

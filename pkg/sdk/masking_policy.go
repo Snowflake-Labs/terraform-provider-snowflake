@@ -24,6 +24,8 @@ type MaskingPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of masking policies.
 	Show(ctx context.Context, opts *MaskingPolicyShowOptions) ([]*MaskingPolicy, error)
+	// ShowByID returns a masking policy by ID
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	// Describe returns the details of a masking policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
@@ -42,10 +44,9 @@ type MaskingPolicyCreateOptions struct {
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 
 	// required
-	signature []TableColumnSignature `ddl:"list" db:"AS"`
-	returns   DataType               `ddl:"command" db:"RETURNS"`
-	arrow     bool                   `ddl:"static" db:"->"` //lint:ignore U1000 This is used in the ddl tag
-	body      string                 `ddl:"keyword" db:"EXPRESSION"`
+	signature []TableColumnSignature `ddl:"keyword,parentheses" db:"AS"`
+	returns   DataType               `ddl:"parameter,no_equals" db:"RETURNS"`
+	body      string                 `ddl:"parameter,no_equals" db:"->"`
 
 	// optional
 	Comment             *string `ddl:"parameter,single_quotes" db:"COMMENT"`
@@ -138,13 +139,13 @@ func (opts *MaskingPolicyAlterOptions) validate() error {
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"command" db:"BODY ->"`
-	Tag     []TagAssociation `ddl:"list,no_parentheses" db:"TAG"`
+	Body    *string          `ddl:"parameter,no_equals" db:"BODY ->"`
+	Tag     []TagAssociation `ddl:"keyword" db:"TAG"`
 	Comment *string          `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"list,no_parentheses" db:"TAG"`
+	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
 	Comment *bool              `ddl:"keyword" db:"COMMENT"`
 }
 
@@ -204,7 +205,7 @@ type MaskingPolicyShowOptions struct {
 	maskingPolicies bool  `ddl:"static" db:"MASKING POLICIES"` //lint:ignore U1000 This is used in the ddl tag
 	Like            *Like `ddl:"keyword" db:"LIKE"`
 	In              *In   `ddl:"keyword" db:"IN"`
-	Limit           *int  `ddl:"command,no_quotes" db:"LIMIT"`
+	Limit           *int  `ddl:"parameter,no_equals" db:"LIMIT"`
 }
 
 func (input *MaskingPolicyShowOptions) validate() error {
@@ -282,6 +283,27 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 	}
 
 	return resultList, nil
+}
+
+func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
+	results, err := v.Show(ctx, &MaskingPolicyShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		if res.ID().name == id.Name() {
+			return res, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type maskingPolicyDescribeOptions struct {

@@ -13,19 +13,6 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-// ObjectType is the type of object.
-type ObjectType string
-
-const (
-	ObjectTypeMaskingPolicy  ObjectType = "MASKING POLICY"
-	ObjectTypePasswordPolicy ObjectType = "PASSWORD POLICY"
-	ObjectTypeWarehouse      ObjectType = "WAREHOUSE"
-)
-
-func (o ObjectType) String() string {
-	return string(o)
-}
-
 type Client struct {
 	config *gosnowflake.Config
 	db     *sqlx.DB

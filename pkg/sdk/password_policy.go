@@ -21,6 +21,8 @@ type PasswordPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyDropOptions) error
 	// Show returns a list of password policies.
 	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
+	// ShowByID returns a password policy by ID.
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	// Describe returns the details of a password policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
@@ -264,7 +266,7 @@ type PasswordPolicyShowOptions struct {
 	passwordPolicies bool  `ddl:"static" db:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
 	Like             *Like `ddl:"keyword" db:"LIKE"`
 	In               *In   `ddl:"keyword" db:"IN"`
-	Limit            *int  `ddl:"command,no_quotes" db:"LIMIT"`
+	Limit            *int  `ddl:"parameter,no_equals" db:"LIMIT"`
 }
 
 func (input *PasswordPolicyShowOptions) validate() error {
@@ -336,6 +338,27 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	}
 
 	return resultList, nil
+}
+
+func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
+	results, err := v.Show(ctx, &PasswordPolicyShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		if res.ID().name == id.Name() {
+			return res, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type passwordPolicyDescribeOptions struct {

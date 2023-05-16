@@ -4,6 +4,7 @@ run:
   # skip-dirs:
 
 linters-settings:
+  
   misspell:
     locale: US
   depguard:
@@ -23,8 +24,6 @@ linters:
     # - unparam  # todo: enabled
     # checks for pointers to enclosing loop variables
     - exportloopref
-    # Check if comments end in a period
-    - godot
     - gocritic
     - misspell
     # errcheck: Errcheck is a program for checking for unchecked errors in go programs.
