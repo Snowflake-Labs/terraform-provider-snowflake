@@ -19,6 +19,7 @@ type Client struct {
 	dryRun bool
 
 	ContextFunctions ContextFunctions
+	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
 	Sessions         Sessions
@@ -52,7 +53,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	dsn, err := gosnowflake.DSN(cfg)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	db, err := sqlx.Connect("snowflake-instrumented", dsn)
@@ -91,13 +92,13 @@ func NewClientFromDB(db *sql.DB) *Client {
 }
 
 func (c *Client) initialize() {
-	b := &sqlBuilder{}
-	c.ContextFunctions = &contextFunctions{client: c, builder: b}
-	c.MaskingPolicies = &maskingPolicies{client: c, builder: b}
-	c.PasswordPolicies = &passwordPolicies{client: c, builder: b}
-	c.Sessions = &sessions{client: c, builder: b}
-	c.SystemFunctions = &systemFunctions{client: c, builder: b}
-	c.Warehouses = &warehouses{client: c, builder: b}
+	c.ContextFunctions = &contextFunctions{client: c}
+	c.Grants = &grants{client: c}
+	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.PasswordPolicies = &passwordPolicies{client: c}
+	c.Sessions = &sessions{client: c}
+	c.SystemFunctions = &systemFunctions{client: c}
+	c.Warehouses = &warehouses{client: c}
 }
 
 func (c *Client) SetDryRun(dryRun bool) {
@@ -118,7 +119,8 @@ func (c *Client) Close() error {
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if !c.dryRun {
-		return c.db.ExecContext(ctx, sql)
+		result, err := c.db.ExecContext(ctx, sql)
+		return result, decodeDriverError(err)
 	}
 	return nil, nil
 }
@@ -126,7 +128,7 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 // query runs a query and returns the rows. dest is expected to be a slice of structs.
 func (c *Client) query(ctx context.Context, dest interface{}, sql string) error {
 	if !c.dryRun {
-		return c.db.SelectContext(ctx, dest, sql)
+		return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 	}
 	return nil
 }
@@ -134,7 +136,7 @@ func (c *Client) query(ctx context.Context, dest interface{}, sql string) error 
 // queryOne runs a query and returns one row. dest is expected to be a pointer to a struct.
 func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) error {
 	if !c.dryRun {
-		return c.db.GetContext(ctx, dest, sql)
+		return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 	}
 	return nil
 }

@@ -66,11 +66,6 @@ func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentif
 	}
 }
 
-func testBuilder(t *testing.T) *sqlBuilder {
-	t.Helper()
-	return &sqlBuilder{}
-}
-
 func testClient(t *testing.T) *Client {
 	t.Helper()
 

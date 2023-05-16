@@ -38,16 +38,6 @@ func TestLoadConfigFile(t *testing.T) {
 	assert.Equal(t, "SECURITYADMIN", m["securityadmin"].Role)
 }
 
-func TestEnvConfig(t *testing.T) {
-	cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
-	t.Cleanup(cleanupEnvVars)
-	config := EnvConfig()
-	assert.Equal(t, "TEST_ACCOUNT", config.Account)
-	assert.Equal(t, "TEST_USER", config.User)
-	assert.Equal(t, "abcd1234", config.Password)
-	assert.Equal(t, "ACCOUNTADMIN", config.Role)
-}
-
 func TestProfileConfig(t *testing.T) {
 	c := `
 	[securityadmin]
@@ -67,11 +57,11 @@ func TestProfileConfig(t *testing.T) {
 	assert.Equal(t, "SECURITYADMIN", config.Role)
 }
 
-func TestDefaultConfig(t *testing.T) {
+func TestEnvConfig(t *testing.T) {
 	t.Run("with no environment variables", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "", "", "", "", "")
 		t.Cleanup(cleanupEnvVars)
-		config := DefaultConfig()
+		config := EnvConfig()
 		assert.Equal(t, "", config.Account)
 		assert.Equal(t, "", config.User)
 		assert.Equal(t, "", config.Password)
@@ -81,7 +71,7 @@ func TestDefaultConfig(t *testing.T) {
 	t.Run("with environment variables", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
-		config := DefaultConfig()
+		config := EnvConfig()
 		assert.Equal(t, "TEST_ACCOUNT", config.Account)
 		assert.Equal(t, "TEST_USER", config.User)
 		assert.Equal(t, "abcd1234", config.Password)

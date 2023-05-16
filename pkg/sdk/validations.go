@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -10,17 +9,32 @@ func IsValidDataType(v string) bool {
 	return dt != DataTypeUnknown
 }
 
-func exactlyOneValueSet(values ...interface{}) error {
+func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
+	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
+	l := len(objectIdentifier.FullyQualifiedName())
+	if l == 0 || l > 255 {
+		return false
+	}
+	return true
+}
+
+func anyValueSet(values ...interface{}) bool {
+	for _, v := range values {
+		if valueSet(v) {
+			return true
+		}
+	}
+	return false
+}
+
+func exactlyOneValueSet(values ...interface{}) bool {
 	var count int
 	for _, v := range values {
-		if !reflect.ValueOf(v).IsNil() {
+		if v != nil && !reflect.ValueOf(v).IsNil() {
 			count++
 		}
 	}
-	if count != 1 {
-		return fmt.Errorf("exactly one of the following values must be non-nil: %v", values)
-	}
-	return nil
+	return count == 1
 }
 
 func everyValueSet(values ...interface{}) bool {
@@ -48,6 +62,12 @@ func valueSet(value interface{}) bool {
 	v := reflect.ValueOf(value)
 	if v.Kind() == reflect.Ptr {
 		return !v.IsNil()
+	}
+	if v.CanInterface() {
+		// if the value is an identifier, check if it is valid
+		if _, ok := v.Interface().(ObjectIdentifier); ok {
+			return validObjectidentifier(v.Interface().(ObjectIdentifier))
+		}
 	}
 	return false
 }

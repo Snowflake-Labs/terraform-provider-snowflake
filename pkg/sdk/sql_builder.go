@@ -117,7 +117,7 @@ func (em equalsModifier) Modify(v any) string {
 	return strings.TrimLeft(fmt.Sprintf("%v ", v), " ")
 }
 
-func (b *sqlBuilder) GetModifier(tag reflect.StructTag, tagName string, modType modifierType, defaultMod modifier) modifier {
+func (b *sqlBuilder) getModifier(tag reflect.StructTag, tagName string, modType modifierType, defaultMod modifier) modifier {
 	tagValue := strings.ToLower(tag.Get(tagName))
 	if tagValue == "" {
 		return defaultMod
@@ -141,14 +141,26 @@ func (b *sqlBuilder) GetModifier(tag reflect.StructTag, tagName string, modType 
 	return defaultMod
 }
 
-type sqlBuilder struct{}
+func structToSQL(v interface{}) (string, error) {
+	clauses, err := builder.parseStruct(v)
+	if err != nil {
+		return "", err
+	}
+	return builder.sql(clauses...), nil
+}
 
-func (b *sqlBuilder) renderStaticClause(clauses ...sqlClause) sqlClause {
+const (
+	builder sqlBuilder = "builder"
+)
+
+type sqlBuilder string
+
+func (b sqlBuilder) renderStaticClause(clauses ...sqlClause) sqlClause {
 	return sqlStaticClause(b.sql(clauses...))
 }
 
 // sql builds a SQL statement from sqlClauses.
-func (b *sqlBuilder) sql(clauses ...sqlClause) string {
+func (b sqlBuilder) sql(clauses ...sqlClause) string {
 	// remove nil and empty strings
 	sList := make([]string, 0)
 	for _, c := range clauses {
@@ -161,7 +173,7 @@ func (b *sqlBuilder) sql(clauses ...sqlClause) string {
 }
 
 // parseStruct parses a struct and returns a slice of sqlClauses.
-func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
+func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 	clauses := make([]sqlClause, 0)
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Ptr {
@@ -217,7 +229,7 @@ func (b *sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 	return prunedClauses, nil
 }
 
-func (b *sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Value) (sqlClause, error) {
+func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Value) (sqlClause, error) {
 	clauses := make([]sqlClause, 0)
 	// all this does is check if the field has a keyword or is an identifier type before digging into struct
 	ddlTag := field.Tag.Get("ddl")
@@ -230,7 +242,7 @@ func (b *sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.V
 		case "keyword":
 			clauses = append(clauses, sqlKeywordClause{
 				key: dbTag,
-				qm:  b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+				qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			})
 		case "identifier":
 			// identifiers are struct types but we don't want to dig into them
@@ -241,7 +253,7 @@ func (b *sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.V
 				return sqlIdentifierClause{
 					key:   dbTag,
 					value: reflectedValue.(Identifier),
-					em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
+					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 				}, nil
 			}
 		case "list":
@@ -255,7 +267,7 @@ func (b *sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.V
 			clauses = append(clauses, sqlListClause{
 				clauses: fieldStructClauses,
 				sep:     ",",
-				pm:      b.GetModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
+				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
 		}
@@ -268,7 +280,7 @@ func (b *sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.V
 	return b.renderStaticClause(clauses...), nil
 }
 
-func (b *sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Value) (sqlClause, error) {
+func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Value) (sqlClause, error) {
 	// dereference any pointers
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
@@ -283,7 +295,7 @@ func (b *sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Va
 		if ok {
 			listClauses = append(listClauses, sqlIdentifierClause{
 				value: identifier,
-				em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
+				em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 			})
 			continue
 		}
@@ -307,7 +319,7 @@ func (b *sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Va
 	clauses = append(clauses, sqlListClause{
 		clauses: listClauses,
 		sep:     ",",
-		pm:      b.GetModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
+		pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 	})
 	sClause := b.renderStaticClause(clauses...)
 	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
@@ -318,21 +330,21 @@ func (b *sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Va
 		return sqlParameterClause{
 			key:   dbTag,
 			value: sClause,
-			qm:    b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
-			em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
-			rm:    b.GetModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+			rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
 		}, nil
 	case "keyword":
 		return b.renderStaticClause(sqlKeywordClause{
 			key: dbTag,
-			qm:  b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 		}, sClause), nil
 	}
 	return sClause, nil
 }
 
 // parseField parses an exported struct field and returns all nested sqlClauses.
-func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (sqlClause, error) {
+func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (sqlClause, error) {
 	// all fields needs a ddl tag otherwise we don't know what to do with them
 	if field.Tag.Get("ddl") == "" {
 		return nil, nil
@@ -379,7 +391,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 			if useKeyword {
 				clause = sqlKeywordClause{
 					key: dbTag,
-					qm:  b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+					qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 				}
 			} else {
 				return nil, nil
@@ -387,22 +399,22 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 		} else {
 			clause = sqlKeywordClause{
 				key: reflectedValue,
-				qm:  b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+				qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			}
 		}
 	case "identifier":
 		clause = sqlIdentifierClause{
 			key:   dbTag,
 			value: reflectedValue.(Identifier),
-			em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
+			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
 	case "parameter":
 		clause = sqlParameterClause{
 			key:   dbTag,
 			value: reflectedValue,
-			em:    b.GetModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
-			qm:    b.GetModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
-			rm:    b.GetModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
 		}
 	default:
 		return nil, nil
@@ -410,7 +422,7 @@ func (b *sqlBuilder) parseField(field reflect.StructField, value reflect.Value) 
 	return b.renderStaticClause(append(clauses, clause)...), nil
 }
 
-func (b *sqlBuilder) getInterface(field reflect.Value) interface{} {
+func (b sqlBuilder) getInterface(field reflect.Value) interface{} {
 	// if the field is exported, then do this safely
 	if field.CanInterface() {
 		return field.Interface()

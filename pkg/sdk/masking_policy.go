@@ -32,8 +32,7 @@ type MaskingPolicies interface {
 
 // maskingPolicies implements MaskingPolicies.
 type maskingPolicies struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 type MaskingPolicyCreateOptions struct {
@@ -54,8 +53,8 @@ type MaskingPolicyCreateOptions struct {
 }
 
 func (opts *MaskingPolicyCreateOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(opts.name) {
+		return errors.New("invalid object identifier")
 	}
 
 	return nil
@@ -72,12 +71,11 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	return err
 }
 
@@ -92,46 +90,29 @@ type MaskingPolicyAlterOptions struct {
 }
 
 func (opts *MaskingPolicyAlterOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return errors.New("invalid object identifier")
 	}
 
-	if opts.Set == nil && opts.Unset == nil {
-		if opts.NewName.FullyQualifiedName() == "" {
-			return errors.New("new name must not be empty")
-		}
-	}
-
-	if opts.Set != nil && opts.Unset != nil {
-		return errors.New("cannot set and unset parameters in the same ALTER statement")
-	}
-
-	if opts.Set != nil {
-		count := 0
-		if opts.Set.Body != nil {
-			count++
-		}
-		if opts.Set.Tag != nil {
-			count++
-		}
-		if opts.Set.Comment != nil {
-			count++
-		}
-		if count != 1 {
-			return errors.New("only one parameter must be set")
+	if everyValueNil(opts.Set, opts.Unset) {
+		if !validObjectidentifier(opts.NewName) {
+			return ErrInvalidObjectIdentifier
 		}
 	}
 
-	if opts.Unset != nil {
-		count := 0
-		if opts.Unset.Tag != nil {
-			count++
+	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
+		return errors.New("cannot use both set and unset")
+	}
+
+	if valueSet(opts.Set) {
+		if err := opts.Set.validate(); err != nil {
+			return err
 		}
-		if opts.Unset.Comment != nil {
-			count++
-		}
-		if count != 1 {
-			return errors.New("only one parameter can be unset at a time")
+	}
+
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
+			return err
 		}
 	}
 
@@ -144,9 +125,23 @@ type MaskingPolicySet struct {
 	Comment *string          `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
+func (v *MaskingPolicySet) validate() error {
+	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
+		return errors.New("only one parameter can be set at a time")
+	}
+	return nil
+}
+
 type MaskingPolicyUnset struct {
 	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
 	Comment *bool              `ddl:"keyword" db:"COMMENT"`
+}
+
+func (v *MaskingPolicyUnset) validate() error {
+	if !exactlyOneValueSet(v.Tag, v.Comment) {
+		return errors.New("only one parameter can be unset at a time")
+	}
+	return nil
 }
 
 func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *MaskingPolicyAlterOptions) error {
@@ -157,12 +152,11 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	return err
 }
 
@@ -173,8 +167,8 @@ type MaskingPolicyDropOptions struct {
 }
 
 func (opts *MaskingPolicyDropOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -187,14 +181,13 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
+	_, err = v.client.exec(ctx, sql)
 	if err != nil {
-		return decodeDriverError(err)
+		return err
 	}
 	return err
 }
@@ -266,16 +259,15 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := []maskingPolicyDBRow{}
 
-	err = v.client.query(ctx, &dest, stmt)
+	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 	resultList := make([]*MaskingPolicy, len(dest))
 	for i, row := range dest {
@@ -286,7 +278,7 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 }
 
 func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
-	results, err := v.Show(ctx, &MaskingPolicyShowOptions{
+	maskingPolicies, err := v.Show(ctx, &MaskingPolicyShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -298,9 +290,9 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 
-	for _, res := range results {
-		if res.ID().name == id.Name() {
-			return res, nil
+	for _, maskingPolicy := range maskingPolicies {
+		if maskingPolicy.ID().name == id.Name() {
+			return maskingPolicy, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -313,8 +305,8 @@ type maskingPolicyDescribeOptions struct {
 }
 
 func (v *maskingPolicyDescribeOptions) validate() error {
-	if v.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -366,15 +358,14 @@ func (v *maskingPolicies) Describe(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := maskingPolicyDetailsRow{}
-	err = v.client.queryOne(ctx, &dest, stmt)
+	err = v.client.queryOne(ctx, &dest, sql)
 	if err != nil {
-		return nil, decodeDriverError(err)
+		return nil, err
 	}
 
 	return dest.toMaskingPolicyDetails(), nil
