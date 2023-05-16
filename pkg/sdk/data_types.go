@@ -37,10 +37,6 @@ func DataTypeFromString(s string) DataType {
 		return DataTypeDate
 	case "TIME":
 		return DataTypeTime
-	case "TIMESTAMP_LTZ":
-		return DataTypeTimestampLTZ
-	case "TIMESTAMP_TZ":
-		return DataTypeTimestampTZ
 	case "VARIANT":
 		return DataTypeVariant
 	case "OBJECT":
@@ -73,6 +69,16 @@ func DataTypeFromString(s string) DataType {
 	booleanSynonyms := []string{"BOOLEAN", "BOOL"}
 	if slices.Contains(booleanSynonyms, dType) {
 		return DataTypeBoolean
+	}
+
+	timestampLTZSynonyms := []string{"TIMESTAMP_LTZ"}
+	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTimestampLTZ
+	}
+	
+	timestampTZSynonyms := []string{"TIMESTAMP_TZ"}
+	if slices.ContainsFunc(timestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTimestampTZ
 	}
 
 	timestampNTZSynonyms := []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
