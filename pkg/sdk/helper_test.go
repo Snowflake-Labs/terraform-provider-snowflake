@@ -10,6 +10,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func primaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
+	return AccountIdentifier{
+		organizationName: "SFDEVREL",
+		accountName:      "CLOUD_ENGINEERING3",
+		accountLocator:   "IYA62698",
+	}
+}
+
+func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
+	return AccountIdentifier{
+		organizationName: "SFDEVREL",
+		accountName:      "CLOUD_ENGINEERING4",
+	}
+}
+
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
 	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
@@ -80,6 +99,15 @@ func testClient(t *testing.T) *Client {
 	}
 
 	return client
+}
+
+func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
+	t.Helper()
+	config, err := ProfileConfig(profile)
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(config)
 }
 
 func randomUUID(t *testing.T) string {
@@ -231,6 +259,30 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 		if databaseCleanup != nil {
 			databaseCleanup()
 		}
+	}
+}
+
+func createShare(t *testing.T, client *Client) (*Share, func()) {
+	t.Helper()
+	return createShareWithOptions(t, client, &ShareCreateOptions{})
+}
+
+func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptions) (*Share, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Shares.Create(ctx, id, opts)
+	require.NoError(t, err)
+	shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(shares))
+	return shares[0], func() {
+		err := client.Shares.Drop(ctx, id)
+		require.NoError(t, err)
 	}
 }
 

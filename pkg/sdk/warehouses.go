@@ -189,13 +189,13 @@ func (opts *WarehouseAlterOptions) validate() error {
 		return fmt.Errorf("name must not be empty")
 	}
 
-	if err := exactlyOneValueSet(
+	if ok := exactlyOneValueSet(
 		opts.Suspend,
 		opts.Resume,
 		opts.AbortAllQueries,
 		opts.NewName,
 		opts.Set,
-		opts.Unset); err != nil {
+		opts.Unset); !ok {
 		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
