@@ -406,7 +406,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 				Tag: []TagAssociation{
 					{
 						Name:  tag.ID(),
-						Value: "val",
+						Value: "val1",
 					},
 					{
 						Name:  tag2.ID(),
@@ -417,6 +417,12 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
+		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		require.NoError(t, err)
+		require.Equal(t, "val1", val)
+		val2, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		require.NoError(t, err)
+		require.Equal(t, "val2", val2)
 
 		alterOptions = &WarehouseAlterOptions{
 			Unset: &WarehouseUnset{
@@ -429,12 +435,12 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		val, err = client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), ObjectTypeWarehouse)
 		require.Error(t, err)
 		require.Equal(t, "", val)
-		val, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), ObjectTypeWarehouse)
+		val2, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), ObjectTypeWarehouse)
 		require.Error(t, err)
-		require.Equal(t, "", val)
+		require.Equal(t, "", val2)
 	})
 }
 
