@@ -13,7 +13,6 @@ type unexportedTestHelper struct {
 }
 
 func TestBuilder_parseField(t *testing.T) {
-	builder := testBuilder(t)
 	t.Run("test boolean keyword", func(t *testing.T) {
 		s := struct {
 			BooleanKeyword *bool `ddl:"keyword" db:"EXAMPLE_KEYWORD"`
@@ -355,7 +354,6 @@ type structTestHelper struct {
 }
 
 func TestBuilder_parseStruct(t *testing.T) {
-	builder := testBuilder(t)
 	t.Run("test struct with no fields", func(t *testing.T) {
 		s := struct{}{}
 		clauses, err := builder.parseStruct(s)
@@ -439,8 +437,6 @@ func TestBuilder_parseStruct(t *testing.T) {
 }
 
 func TestBuilder_sql(t *testing.T) {
-	builder := testBuilder(t)
-
 	t.Run("test sql with no clauses", func(t *testing.T) {
 		s := builder.sql([]sqlClause{}...)
 		assert.Equal(t, "", s)

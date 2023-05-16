@@ -12,8 +12,7 @@ type SystemFunctions interface {
 var _ SystemFunctions = (*systemFunctions)(nil)
 
 type systemFunctions struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {

@@ -70,7 +70,9 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 func configFile() (string, error) {
 	// has the user overwridden the default config path?
 	if configPath, ok := os.LookupEnv("SNOWFLAKE_CONFIG_PATH"); ok {
-		return configPath, nil
+		if configPath != "" {
+			return configPath, nil
+		}
 	}
 	dir, err := os.UserHomeDir()
 	if err != nil {

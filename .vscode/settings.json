@@ -8,6 +8,7 @@
     "go.testFlags": [
         "-v"
     ],
+    "go.testTimeout": "300s",
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
         "--fast"

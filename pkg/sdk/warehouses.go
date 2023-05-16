@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,8 +27,7 @@ type Warehouses interface {
 var _ Warehouses = (*warehouses)(nil)
 
 type warehouses struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 type WarehouseType string
@@ -90,17 +88,20 @@ type WarehouseCreateOptions struct {
 }
 
 func (opts *WarehouseCreateOptions) validate() error {
-	if opts.MaxClusterCount != nil && ((*opts.MaxClusterCount < 1) || (10 < *opts.MaxClusterCount)) {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	if valueSet(opts.MaxClusterCount) && !validateIntInRange(*opts.MaxClusterCount, 1, 10) {
 		return fmt.Errorf("MaxClusterCount must be between 1 and 10")
 	}
-	if opts.MinClusterCount != nil && ((*opts.MinClusterCount < 1) || (10 < *opts.MinClusterCount)) {
+	if valueSet(opts.MinClusterCount) && !validateIntInRange(*opts.MinClusterCount, 1, 10) {
 		return fmt.Errorf("MinClusterCount must be between 1 and 10")
 	}
-	if opts.MinClusterCount != nil && opts.MaxClusterCount != nil && *opts.MaxClusterCount < *opts.MinClusterCount {
+	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 	}
-	if opts.QueryAccelerationMaxScaleFactor != nil && 100 < *opts.QueryAccelerationMaxScaleFactor {
-		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be less than or equal to 100")
+	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRange(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
+		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 	}
 	return nil
 }
@@ -113,14 +114,12 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 	if err := opts.validate(); err != nil {
 		return err
 	}
-
-	clauses, err := c.builder.parseStruct(opts)
+	stmt, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
 	_, err = c.client.exec(ctx, stmt)
-	return err
+	return decodeDriverError(err)
 }
 
 type WarehouseAlterOptions struct {
@@ -137,6 +136,41 @@ type WarehouseAlterOptions struct {
 
 	Set   *WarehouseSet   `ddl:"keyword" db:"SET"`
 	Unset *WarehouseUnset `ddl:"list,no_parentheses" db:"UNSET"`
+}
+
+func (opts *WarehouseAlterOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	if ok := exactlyOneValueSet(
+		opts.Suspend,
+		opts.Resume,
+		opts.AbortAllQueries,
+		opts.NewName,
+		opts.Set,
+		opts.Unset); !ok {
+		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
+	}
+	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
+		return fmt.Errorf("Suspend and Resume cannot both be true")
+	}
+	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
+		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
+	}
+	if everyValueSet(opts.Set, opts.Unset) {
+		return fmt.Errorf("Set and Unset cannot both be set")
+	}
+	if valueSet(opts.Set) {
+		if err := opts.Set.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type WarehouseSet struct {
@@ -162,6 +196,33 @@ type WarehouseSet struct {
 	Tag []TagAssociation `ddl:"keyword" db:"TAG"`
 }
 
+func (v *WarehouseSet) validate() error {
+	if v.MaxClusterCount != nil {
+		if ok := validateIntInRange(*v.MaxClusterCount, 1, 10); !ok {
+			return fmt.Errorf("MaxClusterCount must be between 1 and 10")
+		}
+	}
+	if v.MinClusterCount != nil {
+		if ok := validateIntInRange(*v.MinClusterCount, 1, 10); !ok {
+			return fmt.Errorf("MinClusterCount must be between 1 and 10")
+		}
+	}
+	if v.AutoSuspend != nil {
+		if ok := validateIntGreaterThanOrEqual(*v.AutoSuspend, 0); !ok {
+			return fmt.Errorf("AutoSuspend must be greater than or equal to 0")
+		}
+	}
+	if v.QueryAccelerationMaxScaleFactor != nil {
+		if ok := validateIntInRange(*v.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
+			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
+		}
+	}
+	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return fmt.Errorf("Tag cannot be set with any other Set parameter")
+	}
+	return nil
+}
+
 type WarehouseUnset struct {
 	// Object properties
 	WarehouseType                   *bool `ddl:"keyword" db:"WAREHOUSE_TYPE"`
@@ -184,58 +245,9 @@ type WarehouseUnset struct {
 	Tag                             []ObjectIdentifier `ddl:"keyword" db:"TAG"`
 }
 
-func (opts *WarehouseAlterOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name must not be empty")
-	}
-
-	if err := exactlyOneValueSet(
-		opts.Suspend,
-		opts.Resume,
-		opts.AbortAllQueries,
-		opts.NewName,
-		opts.Set,
-		opts.Unset); err != nil {
-		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
-	}
-	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
-		return fmt.Errorf("Suspend and Resume cannot both be true")
-	}
-	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
-		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
-	}
-	if everyValueSet(opts.Set, opts.Unset) {
-		return fmt.Errorf("Set and Unset cannot both be set")
-	}
-	if opts.Set != nil {
-		if opts.Set.MaxClusterCount != nil {
-			if ok := validateIntInRange(*opts.Set.MaxClusterCount, 1, 10); !ok {
-				return fmt.Errorf("MaxClusterCount must be between 1 and 10")
-			}
-		}
-		if opts.Set.MinClusterCount != nil {
-			if ok := validateIntInRange(*opts.Set.MinClusterCount, 1, 10); !ok {
-				return fmt.Errorf("MinClusterCount must be between 1 and 10")
-			}
-		}
-		if opts.Set.AutoSuspend != nil {
-			if ok := validateIntGreaterThanOrEqual(*opts.Set.AutoSuspend, 0); !ok {
-				return fmt.Errorf("AutoSuspend must be greater than or equal to 0")
-			}
-		}
-		if opts.Set.QueryAccelerationMaxScaleFactor != nil {
-			if ok := validateIntInRange(*opts.Set.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
-				return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
-			}
-		}
-		if valueSet(opts.Set.Tag) && !everyValueNil(opts.Set.AutoResume, opts.Set.EnableQueryAcceleration, opts.Set.MaxClusterCount, opts.Set.MinClusterCount, opts.Set.AutoSuspend, opts.Set.QueryAccelerationMaxScaleFactor) {
-			return fmt.Errorf("Tag cannot be set with any other Set parameter")
-		}
-	}
-	if opts.Unset != nil {
-		if valueSet(opts.Unset.Tag) && !everyValueNil(opts.Unset.AutoResume, opts.Unset.EnableQueryAcceleration, opts.Unset.MaxClusterCount, opts.Unset.MinClusterCount, opts.Unset.AutoSuspend, opts.Unset.QueryAccelerationMaxScaleFactor) {
-			return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
-		}
+func (v *WarehouseUnset) validate() error {
+	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
 	}
 	return nil
 }
@@ -248,13 +260,12 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
-	_, err = c.client.exec(ctx, stmt)
-	return err
+	_, err = c.client.exec(ctx, sql)
+	return decodeDriverError(err)
 }
 
 type WarehouseDropOptions struct {
@@ -265,8 +276,8 @@ type WarehouseDropOptions struct {
 }
 
 func (opts *WarehouseDropOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -281,12 +292,11 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := c.builder.sql(clauses...)
-	_, err = c.client.exec(ctx, stmt)
+	_, err = c.client.exec(ctx, sql)
 	if err != nil {
 		return decodeDriverError(err)
 	}
@@ -425,14 +435,12 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := c.builder.sql(clauses...)
 	dest := []warehouseDBRow{}
-
-	err = c.client.query(ctx, &dest, stmt)
+	err = c.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, decodeDriverError(err)
 	}
@@ -445,7 +453,7 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 }
 
 func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
-	results, err := c.Show(ctx, &WarehouseShowOptions{
+	warehouses, err := c.Show(ctx, &WarehouseShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -454,9 +462,9 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 		return nil, err
 	}
 
-	for _, res := range results {
-		if res.ID().name == id.Name() {
-			return res, nil
+	for _, warehouse := range warehouses {
+		if warehouse.ID().name == id.Name() {
+			return warehouse, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -469,8 +477,8 @@ type warehouseDescribeOptions struct {
 }
 
 func (opts *warehouseDescribeOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -503,13 +511,12 @@ func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (
 		return nil, err
 	}
 
-	clauses, err := c.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := c.builder.sql(clauses...)
 	dest := warehouseDetailsRow{}
-	err = c.client.queryOne(ctx, &dest, stmt)
+	err = c.client.queryOne(ctx, &dest, sql)
 	if err != nil {
 		return nil, decodeDriverError(err)
 	}

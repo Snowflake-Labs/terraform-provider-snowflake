@@ -29,8 +29,7 @@ type PasswordPolicies interface {
 
 // passwordPolicies implements PasswordPolicies.
 type passwordPolicies struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 type PasswordPolicyCreateOptions struct {
@@ -54,8 +53,8 @@ type PasswordPolicyCreateOptions struct {
 }
 
 func (opts *PasswordPolicyCreateOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 
 	return nil
@@ -69,13 +68,12 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
-	return err
+	_, err = v.client.exec(ctx, sql)
+	return decodeDriverError(err)
 }
 
 type PasswordPolicyAlterOptions struct {
@@ -89,94 +87,28 @@ type PasswordPolicyAlterOptions struct {
 }
 
 func (opts *PasswordPolicyAlterOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 
-	if opts.Set == nil && opts.Unset == nil {
-		if opts.NewName.FullyQualifiedName() == "" {
-			return errors.New("new name must not be empty")
+	if everyValueNil(opts.Set, opts.Unset) {
+		if !validObjectidentifier(opts.NewName) {
+			return ErrInvalidObjectIdentifier
 		}
 	}
 
-	if opts.Set != nil && opts.Unset != nil {
+	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
 		return errors.New("cannot set and unset parameters in the same ALTER statement")
 	}
-
-	if opts.Set != nil {
-		count := 0
-		if opts.Set.PasswordMinLength != nil {
-			count++
-		}
-		if opts.Set.PasswordMaxLength != nil {
-			count++
-		}
-		if opts.Set.PasswordMinUpperCaseChars != nil {
-			count++
-		}
-		if opts.Set.PasswordMinLowerCaseChars != nil {
-			count++
-		}
-		if opts.Set.PasswordMinNumericChars != nil {
-			count++
-		}
-		if opts.Set.PasswordMinSpecialChars != nil {
-			count++
-		}
-		if opts.Set.PasswordMaxAgeDays != nil {
-			count++
-		}
-		if opts.Set.PasswordMaxRetries != nil {
-			count++
-		}
-		if opts.Set.PasswordLockoutTimeMins != nil {
-			count++
-		}
-		if opts.Set.Comment != nil {
-			count++
-		}
-		if count == 0 {
-			return errors.New("at least one parameter must be set")
+	if valueSet(opts.Set) {
+		if err := opts.Set.validate(); err != nil {
+			return err
 		}
 	}
 
-	if opts.Unset != nil {
-		count := 0
-		if opts.Unset.PasswordMinLength != nil {
-			count++
-		}
-		if opts.Unset.PasswordMaxLength != nil {
-			count++
-		}
-		if opts.Unset.PasswordMinUpperCaseChars != nil {
-			count++
-		}
-		if opts.Unset.PasswordMinLowerCaseChars != nil {
-			count++
-		}
-		if opts.Unset.PasswordMinNumericChars != nil {
-			count++
-		}
-		if opts.Unset.PasswordMinSpecialChars != nil {
-			count++
-		}
-		if opts.Unset.PasswordMaxAgeDays != nil {
-			count++
-		}
-		if opts.Unset.PasswordMaxRetries != nil {
-			count++
-		}
-		if opts.Unset.PasswordLockoutTimeMins != nil {
-			count++
-		}
-		if opts.Unset.Comment != nil {
-			count++
-		}
-		if count > 1 {
-			return errors.New("only one parameter can be unset at a time")
-		}
-		if count == 0 {
-			return errors.New("at least one parameter must be unset")
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
+			return err
 		}
 	}
 
@@ -196,6 +128,23 @@ type PasswordPolicySet struct {
 	Comment                   *string `ddl:"parameter,single_quotes" db:"COMMENT"`
 }
 
+func (v *PasswordPolicySet) validate() error {
+	if everyValueNil(
+		v.PasswordMinLength,
+		v.PasswordMaxLength,
+		v.PasswordMinUpperCaseChars,
+		v.PasswordMinLowerCaseChars,
+		v.PasswordMinNumericChars,
+		v.PasswordMinSpecialChars,
+		v.PasswordMaxAgeDays,
+		v.PasswordMaxRetries,
+		v.PasswordLockoutTimeMins,
+		v.Comment) {
+		return errors.New("must set at least one parameter")
+	}
+	return nil
+}
+
 type PasswordPolicyUnset struct {
 	PasswordMinLength         *bool `ddl:"keyword" db:"PASSWORD_MIN_LENGTH"`
 	PasswordMaxLength         *bool `ddl:"keyword" db:"PASSWORD_MAX_LENGTH"`
@@ -209,6 +158,36 @@ type PasswordPolicyUnset struct {
 	Comment                   *bool `ddl:"keyword" db:"COMMENT"`
 }
 
+func (v *PasswordPolicyUnset) validate() error {
+	if everyValueNil(
+		v.PasswordMinLength,
+		v.PasswordMaxLength,
+		v.PasswordMinUpperCaseChars,
+		v.PasswordMinLowerCaseChars,
+		v.PasswordMinNumericChars,
+		v.PasswordMinSpecialChars,
+		v.PasswordMaxAgeDays,
+		v.PasswordMaxRetries,
+		v.PasswordLockoutTimeMins,
+		v.Comment) {
+		return errors.New("must unset at least one parameter")
+	}
+	if !exactlyOneValueSet(
+		v.PasswordMinLength,
+		v.PasswordMaxLength,
+		v.PasswordMinUpperCaseChars,
+		v.PasswordMinLowerCaseChars,
+		v.PasswordMinNumericChars,
+		v.PasswordMinSpecialChars,
+		v.PasswordMaxAgeDays,
+		v.PasswordMaxRetries,
+		v.PasswordLockoutTimeMins,
+		v.Comment) {
+		return errors.New("cannot unset more than one parameter in the same ALTER statement")
+	}
+	return nil
+}
+
 func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyAlterOptions) error {
 	if opts == nil {
 		opts = &PasswordPolicyAlterOptions{}
@@ -217,13 +196,12 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 	if err := opts.validate(); err != nil {
 		return err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
-	return err
+	_, err = v.client.exec(ctx, sql)
+	return decodeDriverError(err)
 }
 
 type PasswordPolicyDropOptions struct {
@@ -234,8 +212,8 @@ type PasswordPolicyDropOptions struct {
 }
 
 func (opts *PasswordPolicyDropOptions) validate() error {
-	if opts.name.FullyQualifiedName() == "" {
-		return errors.New("name must not be empty")
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -248,16 +226,12 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	stmt := v.builder.sql(clauses...)
-	_, err = v.client.exec(ctx, stmt)
-	if err != nil {
-		return decodeDriverError(err)
-	}
-	return err
+	_, err = v.client.exec(ctx, sql)
+	return decodeDriverError(err)
 }
 
 // PasswordPolicyShowOptions represents the options for listing password policies.
@@ -321,14 +295,13 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := []passwordPolicyDBRow{}
 
-	err = v.client.query(ctx, &dest, stmt)
+	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, decodeDriverError(err)
 	}
@@ -341,7 +314,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 }
 
 func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
-	results, err := v.Show(ctx, &PasswordPolicyShowOptions{
+	passwordPolicies, err := v.Show(ctx, &PasswordPolicyShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -353,9 +326,9 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 		return nil, err
 	}
 
-	for _, res := range results {
-		if res.ID().name == id.Name() {
-			return res, nil
+	for _, passwordPolicy := range passwordPolicies {
+		if passwordPolicy.ID().name == id.Name() {
+			return passwordPolicy, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -368,8 +341,8 @@ type passwordPolicyDescribeOptions struct {
 }
 
 func (v *passwordPolicyDescribeOptions) validate() error {
-	if v.name.FullyQualifiedName() == "" {
-		return fmt.Errorf("name is required")
+	if !validObjectidentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -430,13 +403,12 @@ func (v *passwordPolicies) Describe(ctx context.Context, id SchemaObjectIdentifi
 		return nil, err
 	}
 
-	clauses, err := v.builder.parseStruct(opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return nil, err
 	}
-	stmt := v.builder.sql(clauses...)
 	dest := []propertyRow{}
-	err = v.client.query(ctx, &dest, stmt)
+	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, decodeDriverError(err)
 	}

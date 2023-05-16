@@ -10,14 +10,12 @@ import (
 )
 
 func TestPasswordPolicyCreate(t *testing.T) {
-	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyCreateOptions{}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "CREATE PASSWORD POLICY"
 		assert.Equal(t, expected, actual)
 	})
@@ -26,9 +24,8 @@ func TestPasswordPolicyCreate(t *testing.T) {
 		opts := &PasswordPolicyCreateOptions{
 			name: id,
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("CREATE PASSWORD POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -49,23 +46,20 @@ func TestPasswordPolicyCreate(t *testing.T) {
 			PasswordLockoutTimeMins:   Int(30),
 			Comment:                   String("test comment"),
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf(`CREATE OR REPLACE PASSWORD POLICY IF NOT EXISTS %s PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestPasswordPolicyAlter(t *testing.T) {
-	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyAlterOptions{}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "ALTER PASSWORD POLICY"
 		assert.Equal(t, expected, actual)
 	})
@@ -74,9 +68,8 @@ func TestPasswordPolicyAlter(t *testing.T) {
 		opts := &PasswordPolicyAlterOptions{
 			name: id,
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -90,9 +83,8 @@ func TestPasswordPolicyAlter(t *testing.T) {
 				PasswordMinUpperCaseChars: Int(1),
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s SET PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -104,9 +96,8 @@ func TestPasswordPolicyAlter(t *testing.T) {
 				PasswordMinLength: Bool(true),
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s UNSET PASSWORD_MIN_LENGTH", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -117,23 +108,20 @@ func TestPasswordPolicyAlter(t *testing.T) {
 			name:    id,
 			NewName: newID,
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("ALTER PASSWORD POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestPasswordPolicyDrop(t *testing.T) {
-	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyDropOptions{}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "DROP PASSWORD POLICY"
 		assert.Equal(t, expected, actual)
 	})
@@ -142,9 +130,8 @@ func TestPasswordPolicyDrop(t *testing.T) {
 		opts := &PasswordPolicyDropOptions{
 			name: id,
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("DROP PASSWORD POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -154,23 +141,20 @@ func TestPasswordPolicyDrop(t *testing.T) {
 			name:     id,
 			IfExists: Bool(true),
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("DROP PASSWORD POLICY IF EXISTS %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestPasswordPolicyShow(t *testing.T) {
-	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &PasswordPolicyShowOptions{}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "SHOW PASSWORD POLICIES"
 		assert.Equal(t, expected, actual)
 	})
@@ -181,9 +165,8 @@ func TestPasswordPolicyShow(t *testing.T) {
 				Pattern: String(id.Name()),
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s'", id.Name())
 		assert.Equal(t, expected, actual)
 	})
@@ -197,9 +180,8 @@ func TestPasswordPolicyShow(t *testing.T) {
 				Account: Bool(true),
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN ACCOUNT", id.Name())
 		assert.Equal(t, expected, actual)
 	})
@@ -214,9 +196,8 @@ func TestPasswordPolicyShow(t *testing.T) {
 				Database: databaseIdentifier,
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -231,9 +212,8 @@ func TestPasswordPolicyShow(t *testing.T) {
 				Schema: schemaIdentifier,
 			},
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
@@ -242,23 +222,20 @@ func TestPasswordPolicyShow(t *testing.T) {
 		opts := &PasswordPolicyShowOptions{
 			Limit: Int(10),
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "SHOW PASSWORD POLICIES LIMIT 10"
 		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestPasswordPolicyDescribe(t *testing.T) {
-	builder := testBuilder(t)
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &passwordPolicyDescribeOptions{}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := "DESCRIBE PASSWORD POLICY"
 		assert.Equal(t, expected, actual)
 	})
@@ -267,9 +244,8 @@ func TestPasswordPolicyDescribe(t *testing.T) {
 		opts := &passwordPolicyDescribeOptions{
 			name: id,
 		}
-		clauses, err := builder.parseStruct(opts)
+		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		actual := builder.sql(clauses...)
 		expected := fmt.Sprintf("DESCRIBE PASSWORD POLICY %s", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
