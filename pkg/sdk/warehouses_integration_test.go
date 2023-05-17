@@ -116,10 +116,10 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), warehouse.ID(), ObjectTypeWarehouse)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), warehouse.ID(), ObjectTypeWarehouse)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "v2", tag2Value)
 	})
 

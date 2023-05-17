@@ -30,7 +30,7 @@ func anyValueSet(values ...interface{}) bool {
 func exactlyOneValueSet(values ...interface{}) bool {
 	var count int
 	for _, v := range values {
-		if v != nil && !reflect.ValueOf(v).IsNil() {
+		if valueSet(v) {
 			count++
 		}
 	}
@@ -59,17 +59,26 @@ func valueSet(value interface{}) bool {
 	if value == nil {
 		return false
 	}
-	v := reflect.ValueOf(value)
-	if v.Kind() == reflect.Ptr {
-		return !v.IsNil()
+	reflectedValue := reflect.ValueOf(value)
+	if reflectedValue.Kind() == reflect.Ptr {
+		reflectedValue = reflectedValue.Elem()
 	}
-	if v.CanInterface() {
-		// if the value is an identifier, check if it is valid
-		if _, ok := v.Interface().(ObjectIdentifier); ok {
-			return validObjectidentifier(v.Interface().(ObjectIdentifier))
+	if reflectedValue.Kind() == reflect.Slice {
+		return reflectedValue.Len() > 0
+	}
+	if reflectedValue.Kind() == reflect.Invalid || reflectedValue.IsZero() {
+		return false
+	}
+	if reflectedValue.CanInterface() {
+		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
+			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
 		}
 	}
-	return false
+	if reflectedValue.Kind() != reflect.Struct && reflectedValue.Kind() != reflect.Bool {
+		return !reflectedValue.IsNil()
+	}
+
+	return true
 }
 
 func validateIntInRange(value int, min int, max int) bool {

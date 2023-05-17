@@ -75,7 +75,7 @@ func DataTypeFromString(s string) DataType {
 	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampLTZ
 	}
-	
+
 	timestampTZSynonyms := []string{"TIMESTAMP_TZ"}
 	if slices.ContainsFunc(timestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampTZ

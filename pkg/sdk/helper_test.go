@@ -3,12 +3,31 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
 	"github.com/stretchr/testify/require"
 )
+
+func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	secondaryAccount := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
+	if secondaryAccount == "" {
+		t.Skip("SNOWFLAKE_SECONDARY_ACCOUNT must be set for acceptance tests")
+	}
+	parts := strings.Split(secondaryAccount, ".")
+	organizationName := parts[0]
+	accountName := parts[1]
+
+	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
+	return AccountIdentifier{
+		organizationName: organizationName,
+		accountName:      accountName,
+	}
+}
 
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
@@ -77,6 +96,15 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
+func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
+	t.Helper()
+	config, err := ProfileConfig(profile)
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(config)
+}
+
 func randomUUID(t *testing.T) string {
 	t.Helper()
 	v, err := uuid.GenerateUUID()
@@ -115,6 +143,25 @@ func randomIntRange(t *testing.T, min, max int) int {
 	return gofakeit.IntRange(min, max)
 }
 
+func createShare(t *testing.T, client *Client) (*Share, func()) {
+	t.Helper()
+	return createShareWithOptions(t, client, &ShareCreateOptions{})
+}
+
+func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptions) (*Share, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Shares.Create(ctx, id, opts)
+	require.NoError(t, err)
+	share, err := client.Shares.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return share, func() {
+		err := client.Shares.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
 	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
@@ -142,14 +189,14 @@ func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 
 func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOptions) (*Database, func()) {
 	t.Helper()
-	name := randomStringRange(t, 8, 28)
+	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE DATABASE \"%s\"", name))
+	err := client.Databases.Create(ctx, id, nil)
 	require.NoError(t, err)
 	return &Database{
-			Name: name,
+			Name: id.Name(),
 		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP DATABASE \"%s\"", name))
+			err := client.Databases.Drop(ctx, id, nil)
 			require.NoError(t, err)
 		}
 }

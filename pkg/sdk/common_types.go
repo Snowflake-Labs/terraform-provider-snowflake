@@ -1,5 +1,10 @@
 package sdk
 
+type LimitFrom struct {
+	Rows *int    `ddl:"keyword"`
+	From *string `ddl:"parameter,no_equals,single_quotes" db:"FROM"`
+}
+
 type In struct {
 	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
