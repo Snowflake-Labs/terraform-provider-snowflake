@@ -3,11 +3,12 @@
 page_title: "snowflake_role_grants Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_role_grants (Resource)
 
+!> **WARNING:** If parameter `enable_multiple_grants` is set to `false`, the snowflake_role_grants resource creates **exclusive** grants for the selected role. Creating multiple resources for the same role with `enable_multiple_grants = false` will lead to permanent changes in plan.
 
 
 ## Example Usage
@@ -55,7 +56,7 @@ resource "snowflake_role_grants" "grants" {
 
 ### Optional
 
-- `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
+- `enable_multiple_grants` (Boolean) When this is set to false, multiple grants of the same type cannot be created. This will cause Terraform to revoke grants applied to roles and objects outside Terraform.
 - `roles` (Set of String) Grants role to this specified role.
 - `users` (Set of String) Grants role to this specified user.
 
