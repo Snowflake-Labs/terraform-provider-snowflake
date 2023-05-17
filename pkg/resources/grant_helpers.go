@@ -174,6 +174,20 @@ func readGenericGrant(
 			}
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
+		case "SHARE":
+			// Strip account name from grantee name
+			s := grant.GranteeName
+			granteeNameStrippedAccount := s[strings.LastIndex(s, ".")+1:]
+			// Find set of privileges
+			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
+			if !ok {
+				// If not there, create an empty set
+				privileges = PrivilegeSet{}
+			}
+			// Add privilege to the set
+			privileges.addString(grant.Privilege)
+			// Reassign set back
+			sharePrivileges[granteeNameStrippedAccount] = privileges
 		default:
 			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}

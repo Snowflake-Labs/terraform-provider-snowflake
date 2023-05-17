@@ -22,7 +22,6 @@ func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
 	organizationName := parts[0]
 	accountName := parts[1]
 
-	// unfortunately this needs to be a real account and this account isn't being used for anything except testing.
 	return AccountIdentifier{
 		organizationName: organizationName,
 		accountName:      accountName,
