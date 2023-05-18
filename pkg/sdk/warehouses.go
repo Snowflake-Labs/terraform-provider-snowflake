@@ -316,9 +316,11 @@ func (opts *WarehouseShowOptions) validate() error {
 type WarehouseState string
 
 const (
-	WarehouseStateSuspended WarehouseState = "SUSPENDED"
-	WarehouseStateStarted   WarehouseState = "STARTED"
-	WarehouseStateResizing  WarehouseState = "RESIZING"
+	WarehouseStateSuspended  WarehouseState = "SUSPENDED"
+	WarehouseStateSuspending WarehouseState = "SUSPENDING"
+	WarehouseStateStarted    WarehouseState = "STARTED"
+	WarehouseStateResizing   WarehouseState = "RESIZING"
+	WarehouseStateResuming   WarehouseState = "RESUMING"
 )
 
 type Warehouse struct {

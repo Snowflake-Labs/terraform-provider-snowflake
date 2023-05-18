@@ -68,7 +68,7 @@ func valueSet(value interface{}) bool {
 		return reflectedValue.Len() > 0
 	case reflect.Invalid:
 		return false
-	case reflect.Interface:
+	case reflect.Struct:
 		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
 			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
 		}

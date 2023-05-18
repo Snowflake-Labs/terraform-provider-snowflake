@@ -115,7 +115,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, ScalingPolicyEconomy, warehouse.ScalingPolicy)
 		assert.Equal(t, 1000, warehouse.AutoSuspend)
 		assert.Equal(t, true, warehouse.AutoResume)
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, warehouse.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateResuming, WarehouseStateStarted}, warehouse.State)
 		assert.Equal(t, "comment", warehouse.Comment)
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
@@ -154,7 +154,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, ScalingPolicyStandard, result.ScalingPolicy)
 		assert.Equal(t, 600, result.AutoSuspend)
 		assert.Equal(t, true, result.AutoResume)
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateResuming, WarehouseStateStarted}, result.State)
 		assert.Equal(t, "", result.Comment)
 		assert.Equal(t, false, result.EnableQueryAcceleration)
 		assert.Equal(t, 8, result.QueryAccelerationMaxScaleFactor)
@@ -349,7 +349,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Contains(t, []string{"SUSPENDING", "SUSPENDED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateSuspended, WarehouseStateSuspending}, result.State)
 
 		alterOptions = &WarehouseAlterOptions{
 			Resume: Bool(true),
@@ -364,7 +364,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result = warehouses[0]
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateStarted, WarehouseStateResuming}, result.State)
 	})
 
 	t.Run("resume without suspending", func(t *testing.T) {
@@ -385,7 +385,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Contains(t, []string{"STARTED", "RESUMING"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateStarted, WarehouseStateResuming}, result.State)
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
