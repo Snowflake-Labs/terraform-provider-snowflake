@@ -176,6 +176,13 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 		accounts[i] = accountIdentifier.Name()
 	}
 
+	currentAccount := d.Get("accounts")
+	if currentAccount != nil {
+		currentAccounts := expandStringList(currentAccount.([]interface{}))
+		// reorder the accounts so they match the order in the config
+		// this is to avoid unnecessary diffs
+		accounts = reorderStringList(currentAccounts, accounts)
+	}
 	if err := d.Set("accounts", accounts); err != nil {
 		return err
 	}

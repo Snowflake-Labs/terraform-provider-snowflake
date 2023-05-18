@@ -17,6 +17,10 @@ func TestAcc_Share(t *testing.T) {
 	if account2 == "" {
 		t.Skip("SNOWFLAKE_ACCOUNT_SECOND must be set for Share acceptance tests")
 	}
+	account3 := os.Getenv("SNOWFLAKE_ACCOUNT_THIRD")
+	if account3 == "" {
+		t.Skip("SNOWFLAKE_ACCOUNT_THIRD must be set for Share acceptance tests")
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
@@ -27,6 +31,14 @@ func TestAcc_Share(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_share.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_share.test", "comment", shareComment),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "0"),
+				),
+			},
+			{
+				Config: shareConfigTwoAccounts(name, shareComment, account2, account3),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.0", account2),
+					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.1", account3),
 				),
 			},
 			{
@@ -69,4 +81,14 @@ resource "snowflake_share" "test" {
 	accounts       = ["%v"]
 }
 `, name, comment, account2)
+}
+
+func shareConfigTwoAccounts(name string, comment string, account2 string, account3 string) string {
+	return fmt.Sprintf(`
+resource "snowflake_share" "test" {
+	name           = "%v"
+	comment        = "%v"
+	accounts       = ["%v", "%v"]
+}
+`, name, comment, account2, account3)
 }
