@@ -14,6 +14,8 @@ type Databases interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DatabaseDropOptions) error
 	// Show returns a list of databases.
 	Show(ctx context.Context, opts *DatabaseShowOptions) ([]*Database, error)
+	// ShowByID returns a database by ID
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	// Describe returns the details of a database.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
 }
@@ -85,6 +87,13 @@ func (c *databases) Show(ctx context.Context, _ *DatabaseShowOptions) ([]*Databa
 	var databases []*Database
 	err := c.client.query(ctx, &databases, sql)
 	return databases, err
+}
+
+func (c *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
+	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, id.Name())
+	var database Database
+	err := c.client.queryOne(ctx, &database, sql)
+	return &database, err
 }
 
 type DatabaseDetails struct {
