@@ -1,6 +1,13 @@
 package sdk
 
-/* to uncomment once shares are added
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -45,6 +52,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
 func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -67,6 +75,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
 func TestInt_ShowGrants(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -101,4 +110,3 @@ func TestInt_ShowGrants(t *testing.T) {
 		assert.LessOrEqual(t, 2, len(grants))
 	})
 }
-*/

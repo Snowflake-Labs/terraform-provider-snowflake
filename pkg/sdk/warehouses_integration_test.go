@@ -64,8 +64,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		name := randomUUID(t)
-		id := NewAccountObjectIdentifier(name)
+		id := randomAccountObjectIdentifier(t)
 		err := client.Warehouses.Create(ctx, id, &WarehouseCreateOptions{
 			OrReplace:                       Bool(true),
 			WarehouseType:                   &WarehouseTypeStandard,
@@ -94,15 +93,21 @@ func TestInt_WarehouseCreate(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+				IfExists: Bool(true),
+			})
+			require.NoError(t, err)
+		})
 		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
 			Like: &Like{
-				Pattern: String(name),
+				Pattern: String(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		require.Equal(t, 1, len(warehouses))
 		warehouse := warehouses[0]
-		assert.Equal(t, name, warehouse.Name)
+		assert.Equal(t, id.Name(), warehouse.Name)
 		assert.Equal(t, WarehouseTypeStandard, warehouse.Type)
 		assert.Equal(t, WarehouseSizeSmall, warehouse.Size)
 		assert.Equal(t, 8, warehouse.MaxClusterCount)
@@ -110,33 +115,38 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, ScalingPolicyEconomy, warehouse.ScalingPolicy)
 		assert.Equal(t, 1000, warehouse.AutoSuspend)
 		assert.Equal(t, true, warehouse.AutoResume)
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, warehouse.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateResuming, WarehouseStateStarted}, warehouse.State)
 		assert.Equal(t, "comment", warehouse.Comment)
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), warehouse.ID(), ObjectTypeWarehouse)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), warehouse.ID(), ObjectTypeWarehouse)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "v2", tag2Value)
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := randomUUID(t)
-		id := NewAccountObjectIdentifier(name)
+		id := randomAccountObjectIdentifier(t)
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+				IfExists: Bool(true),
+			})
+			require.NoError(t, err)
+		})
 		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
 			Like: &Like{
-				Pattern: String(name),
+				Pattern: String(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		require.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Equal(t, name, result.Name)
+		assert.Equal(t, id.Name(), result.Name)
 		assert.Equal(t, WarehouseTypeStandard, result.Type)
 		assert.Equal(t, WarehouseSizeXSmall, result.Size)
 		assert.Equal(t, 1, result.MaxClusterCount)
@@ -144,7 +154,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, ScalingPolicyStandard, result.ScalingPolicy)
 		assert.Equal(t, 600, result.AutoSuspend)
 		assert.Equal(t, true, result.AutoResume)
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateResuming, WarehouseStateStarted}, result.State)
 		assert.Equal(t, "", result.Comment)
 		assert.Equal(t, false, result.EnableQueryAcceleration)
 		assert.Equal(t, 8, result.QueryAccelerationMaxScaleFactor)
@@ -186,6 +196,63 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	tag2, tagCleanup2 := createTag(t, client, database, schema)
 	t.Cleanup(tagCleanup2)
 
+	t.Run("terraform acc test", func(t *testing.T) {
+		id := randomAccountObjectIdentifier(t)
+		opts := &WarehouseCreateOptions{
+			Comment:            String("test comment"),
+			WarehouseSize:      &WarehouseSizeXSmall,
+			AutoSuspend:        Int(60),
+			MaxClusterCount:    Int(1),
+			MinClusterCount:    Int(1),
+			ScalingPolicy:      &ScalingPolicyStandard,
+			AutoResume:         Bool(true),
+			InitiallySuspended: Bool(true),
+		}
+		err := client.Warehouses.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+				IfExists: Bool(true),
+			})
+			require.NoError(t, err)
+		})
+		warehouse, err := client.Warehouses.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, warehouse.MaxClusterCount)
+		assert.Equal(t, 1, warehouse.MinClusterCount)
+		assert.Equal(t, ScalingPolicyStandard, warehouse.ScalingPolicy)
+		assert.Equal(t, 60, warehouse.AutoSuspend)
+		assert.Equal(t, true, warehouse.AutoResume)
+		assert.Equal(t, "test comment", warehouse.Comment)
+		assert.Equal(t, WarehouseStateSuspended, warehouse.State)
+		assert.Equal(t, WarehouseSizeXSmall, warehouse.Size)
+
+		// rename
+		newID := randomAccountObjectIdentifier(t)
+		alterOptions := &WarehouseAlterOptions{
+			NewName: newID,
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+		warehouse, err = client.Warehouses.ShowByID(ctx, newID)
+		require.NoError(t, err)
+		assert.Equal(t, newID.Name(), warehouse.Name)
+
+		// change props
+		alterOptions = &WarehouseAlterOptions{
+			Set: &WarehouseSet{
+				WarehouseSize: &WarehouseSizeSmall,
+				Comment:       String("test comment2"),
+			},
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+		warehouse, err = client.Warehouses.ShowByID(ctx, newID)
+		require.NoError(t, err)
+		assert.Equal(t, "test comment2", warehouse.Comment)
+		assert.Equal(t, WarehouseSizeSmall, warehouse.Size)
+	})
+
 	t.Run("set", func(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
@@ -217,20 +284,19 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
-		newName := randomUUID(t)
-		newID := NewAccountObjectIdentifier(newName)
+		newID := randomAccountObjectIdentifier(t)
 		alterOptions := &WarehouseAlterOptions{
-			NewName: &newID,
+			NewName: newID,
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 		result, err := client.Warehouses.Describe(ctx, newID)
 		require.NoError(t, err)
-		assert.Equal(t, newName, result.Name)
+		assert.Equal(t, newID.Name(), result.Name)
 
 		// rename back to original name so it can be cleaned up
 		alterOptions = &WarehouseAlterOptions{
-			NewName: &oldID,
+			NewName: oldID,
 		}
 		err = client.Warehouses.Alter(ctx, newID, alterOptions)
 		require.NoError(t, err)
@@ -283,7 +349,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Contains(t, []string{"SUSPENDING", "SUSPENDED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateSuspended, WarehouseStateSuspending}, result.State)
 
 		alterOptions = &WarehouseAlterOptions{
 			Resume: Bool(true),
@@ -298,7 +364,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result = warehouses[0]
-		assert.Contains(t, []string{"RESUMING", "STARTED"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateStarted, WarehouseStateResuming}, result.State)
 	})
 
 	t.Run("resume without suspending", func(t *testing.T) {
@@ -319,7 +385,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
 		result := warehouses[0]
-		assert.Contains(t, []string{"STARTED", "RESUMING"}, result.State)
+		assert.Contains(t, []WarehouseState{WarehouseStateStarted, WarehouseStateResuming}, result.State)
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {

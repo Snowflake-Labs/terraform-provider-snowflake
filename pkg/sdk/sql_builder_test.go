@@ -25,7 +25,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_KEYWORD", clause.String())
 	})
 
@@ -41,7 +41,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, clause)
 	})
 
@@ -55,7 +55,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("BooleanKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, clause)
 	})
 
@@ -71,7 +71,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "example", clause.String())
 	})
 
@@ -85,7 +85,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, clause)
 	})
 
@@ -101,7 +101,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, `"example"`, clause.String())
 	})
 
@@ -117,7 +117,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("StringKeyword")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, `'example'`, clause.String())
 	})
 
@@ -133,7 +133,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Static")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
@@ -147,7 +147,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Static")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
@@ -163,7 +163,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_PARAMETER = example", clause.String())
 	})
 
@@ -177,7 +177,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, clause)
 	})
 
@@ -193,7 +193,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, `EXAMPLE_PARAMETER = "example"`, clause.String())
 	})
 
@@ -209,7 +209,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, `EXAMPLE_PARAMETER = 'example'`, clause.String())
 	})
 
@@ -225,7 +225,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_PARAMETER = 1", clause.String())
 	})
 
@@ -241,7 +241,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("Parameter")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "= example", clause.String())
 	})
 
@@ -255,7 +255,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("static")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 
@@ -269,7 +269,7 @@ func TestBuilder_parseField(t *testing.T) {
 		field, ok := typ.FieldByName("static")
 		require.True(t, ok)
 		clause, err := builder.parseField(field, value)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "EXAMPLE_STATIC", clause.String())
 	})
 }
@@ -357,7 +357,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 	t.Run("test struct with no fields", func(t *testing.T) {
 		s := struct{}{}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 0)
 	})
 
@@ -368,7 +368,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 			Param:  String("example"),
 		}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 3)
 		assert.Equal(t, "EXAMPLE_STATIC", clauses[0].String())
 		assert.Equal(t, s.name.FullyQualifiedName(), clauses[1].String())
@@ -386,7 +386,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 			List: []testListElement{{K: String("abc"), K2: String("def")}, {K: String("123"), K2: String("456")}},
 		}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
 		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def',KEY = '123' KEY2 = '456')", clauses[0].String())
 	})
@@ -399,7 +399,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 			List []testListElement `ddl:"-"`
 		}{}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 0)
 	})
 
@@ -413,7 +413,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 			List: []testListElement{{K: String("abc")}, {K: String("123")}},
 		}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
 		assert.Equal(t, "KEY = 'abc',KEY = '123'", clauses[0].String())
 	})
@@ -430,7 +430,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 			List: &testListElement{A: true, B: true, C: true},
 		}
 		clauses, err := builder.parseStruct(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
 		assert.Equal(t, "A,B,C", clauses[0].String())
 	})

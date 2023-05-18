@@ -1,11 +1,10 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -42,9 +41,10 @@ var sharesSchema = map[string]*schema.Schema{
 					Description: "The kind of the share.",
 				},
 				"to": {
-					Type:        schema.TypeString,
+					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "For the OUTBOUND share, list of consumers.",
+					Elem:        schema.TypeString,
 				},
 			},
 		},
@@ -63,36 +63,35 @@ func Shares() *schema.Resource {
 func ReadShares(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	d.SetId("shares_read")
-	sharePattern := d.Get(pattern).(string)
-
-	listShares, err := snowflake.ListShares(db, sharePattern)
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] no shares found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Println("[DEBUG] failed to list shares")
-		d.SetId("")
-		return nil
-	}
-
-	log.Printf("[DEBUG] list shares: %v", listShares)
-
-	shares := []map[string]interface{}{}
-	for _, share := range listShares {
-		shareMap := map[string]interface{}{}
-		if !share.Name.Valid {
-			continue
+	pattern := d.Get(pattern).(string)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	var opts sdk.ShareShowOptions
+	if pattern != "" {
+		opts.Like = &sdk.Like{
+			Pattern: sdk.String(pattern),
 		}
-		shareMap["name"] = share.Name.String
-		shareMap["comment"] = share.Comment.String
-		shareMap["owner"] = share.Owner.String
-		shareMap["kind"] = share.Kind.String
-		shareMap["to"] = share.To.String
-		shares = append(shares, shareMap)
+	}
+	shares, err := client.Shares.Show(ctx, &opts)
+	if err != nil {
+		return err
+	}
+	sharesFlatten := []map[string]interface{}{}
+	for _, share := range shares {
+		m := map[string]interface{}{}
+		m["name"] = share.Name.Name()
+		m["comment"] = share.Comment
+		m["owner"] = share.Owner
+		m["kind"] = share.Kind
+		var to []string
+		for _, consumer := range share.To {
+			to = append(to, consumer.Name())
+		}
+		m["to"] = to
+		sharesFlatten = append(sharesFlatten, m)
 	}
 
-	if err := d.Set("shares", shares); err != nil {
+	if err := d.Set("shares", sharesFlatten); err != nil {
 		return err
 	}
 	return nil

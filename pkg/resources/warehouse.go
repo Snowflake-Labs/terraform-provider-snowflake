@@ -100,7 +100,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
-		ForceNew:    true,
+		Deprecated:  "This field is deprecated and will be removed in the next major version of the provider. It doesn't do anything and should be removed from your configuration.",
 	},
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
@@ -297,7 +297,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("name"); ok {
 			newName := sdk.NewAccountObjectIdentifier(v.(string))
 			err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
-				NewName: &newName,
+				NewName: newName,
 			})
 			if err != nil {
 				return err

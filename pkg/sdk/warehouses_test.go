@@ -138,7 +138,7 @@ func TestWarehouseAlter(t *testing.T) {
 		newname := NewAccountObjectIdentifier("newname")
 		opts := &WarehouseAlterOptions{
 			name:    NewAccountObjectIdentifier("oldname"),
-			NewName: &newname,
+			NewName: newname,
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
