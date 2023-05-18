@@ -313,9 +313,17 @@ func (opts *WarehouseShowOptions) validate() error {
 	return nil
 }
 
+type WarehouseState string
+
+const (
+	WarehouseStateSuspended WarehouseState = "SUSPENDED"
+	WarehouseStateStarted   WarehouseState = "STARTED"
+	WarehouseStateResizing  WarehouseState = "RESIZING"
+)
+
 type Warehouse struct {
 	Name                            string
-	State                           string
+	State                           WarehouseState
 	Type                            WarehouseType
 	Size                            WarehouseSize
 	MinClusterCount                 int
@@ -339,11 +347,6 @@ type Warehouse struct {
 	EnableQueryAcceleration         bool
 	QueryAccelerationMaxScaleFactor int
 	ResourceMonitor                 string
-	Actives                         string
-	Pendings                        string
-	Failed                          string
-	Suspended                       string
-	UUID                            string
 	ScalingPolicy                   ScalingPolicy
 }
 
@@ -384,7 +387,7 @@ type warehouseDBRow struct {
 func (row warehouseDBRow) toWarehouse() *Warehouse {
 	wh := &Warehouse{
 		Name:                            row.Name,
-		State:                           row.State,
+		State:                           WarehouseState(row.State),
 		Type:                            WarehouseType(row.Type),
 		Size:                            WarehouseSize(strings.ReplaceAll(strings.ToUpper(row.Size), "-", "")),
 		MinClusterCount:                 row.MinClusterCount,
@@ -403,11 +406,6 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 		EnableQueryAcceleration:         row.EnableQueryAcceleration,
 		QueryAccelerationMaxScaleFactor: row.QueryAccelerationMaxScaleFactor,
 		ResourceMonitor:                 row.ResourceMonitor,
-		Actives:                         row.Actives,
-		Pendings:                        row.Pendings,
-		Failed:                          row.Failed,
-		Suspended:                       row.Suspended,
-		UUID:                            row.UUID,
 		ScalingPolicy:                   ScalingPolicy(row.ScalingPolicy),
 	}
 	if val, err := strconv.ParseFloat(row.Available, 64); err != nil {

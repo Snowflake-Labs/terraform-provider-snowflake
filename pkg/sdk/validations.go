@@ -63,21 +63,17 @@ func valueSet(value interface{}) bool {
 	if reflectedValue.Kind() == reflect.Ptr {
 		reflectedValue = reflectedValue.Elem()
 	}
-	if reflectedValue.Kind() == reflect.Slice {
+	switch reflectedValue.Kind() {
+	case reflect.Slice:
 		return reflectedValue.Len() > 0
-	}
-	if reflectedValue.Kind() == reflect.Invalid || reflectedValue.IsZero() {
+	case reflect.Invalid:
 		return false
-	}
-	if reflectedValue.CanInterface() {
+	case reflect.Interface:
 		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
 			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
 		}
+		return reflectedValue.Interface() != nil
 	}
-	if reflectedValue.Kind() != reflect.Struct && reflectedValue.Kind() != reflect.Bool {
-		return !reflectedValue.IsNil()
-	}
-
 	return true
 }
 

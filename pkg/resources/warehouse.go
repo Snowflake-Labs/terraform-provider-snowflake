@@ -100,7 +100,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
 		Optional:    true,
-		ForceNew:    true,
+		Deprecated:  "This field is deprecated and will be removed in the next major version of the provider. It doesn't do anything and should be removed from your configuration.",
 	},
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
