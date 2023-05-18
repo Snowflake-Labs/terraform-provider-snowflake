@@ -128,11 +128,11 @@ type WarehouseAlterOptions struct {
 	IfExists  *bool                   `ddl:"keyword" db:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
-	Suspend         *bool                    `ddl:"keyword" db:"SUSPEND"`
-	Resume          *bool                    `ddl:"keyword" db:"RESUME"`
-	IfSuspended     *bool                    `ddl:"keyword" db:"IF SUSPENDED"`
-	AbortAllQueries *bool                    `ddl:"keyword" db:"ABORT ALL QUERIES"`
-	NewName         *AccountObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
+	Suspend         *bool                   `ddl:"keyword" db:"SUSPEND"`
+	Resume          *bool                   `ddl:"keyword" db:"RESUME"`
+	IfSuspended     *bool                   `ddl:"keyword" db:"IF SUSPENDED"`
+	AbortAllQueries *bool                   `ddl:"keyword" db:"ABORT ALL QUERIES"`
+	NewName         AccountObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
 
 	Set   *WarehouseSet   `ddl:"keyword" db:"SET"`
 	Unset *WarehouseUnset `ddl:"list,no_parentheses" db:"UNSET"`
