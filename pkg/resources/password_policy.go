@@ -176,9 +176,7 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		createOptions.PasswordMinSpecialChars = sdk.Int(v.(int))
 	}
 
-	if v, ok := d.GetOk("max_age_days"); ok {
-		createOptions.PasswordMaxAgeDays = sdk.Int(v.(int))
-	}
+	createOptions.PasswordMaxAgeDays = sdk.Int(d.Get("max_age_days").(int))
 
 	if v, ok := d.GetOk("max_retries"); ok {
 		createOptions.PasswordMaxRetries = sdk.Int(v.(int))
@@ -365,15 +363,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("max_age_days") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("max_age_days"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMaxAgeDays: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMaxAgeDays: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMaxAgeDays: sdk.Int(d.Get("max_age_days").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
