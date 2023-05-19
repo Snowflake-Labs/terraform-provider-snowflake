@@ -169,11 +169,17 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
-	createOptions := &sdk.WarehouseCreateOptions{}
-
-	if v, ok := d.GetOk("comment"); ok {
-		createOptions.Comment = sdk.String(v.(string))
+	whType := sdk.WarehouseType(d.Get("warehouse_type").(string))
+	createOptions := &sdk.WarehouseCreateOptions{
+		Comment:                         sdk.String(d.Get("comment").(string)),
+		StatementTimeoutInSeconds:       sdk.Int(d.Get("statement_timeout_in_seconds").(int)),
+		StatementQueuedTimeoutInSeconds: sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int)),
+		MaxConcurrencyLevel:             sdk.Int(d.Get("max_concurrency_level").(int)),
+		EnableQueryAcceleration:         sdk.Bool(d.Get("enable_query_acceleration").(bool)),
+		QueryAccelerationMaxScaleFactor: sdk.Int(d.Get("query_acceleration_max_scale_factor").(int)),
+		WarehouseType:                   &whType,
 	}
+
 	if v, ok := d.GetOk("warehouse_size"); ok {
 		size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
 		createOptions.WarehouseSize = &size
@@ -199,25 +205,6 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("resource_monitor"); ok {
 		createOptions.ResourceMonitor = sdk.String(v.(string))
-	}
-	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("max_concurrency_level"); ok {
-		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("enable_query_acceleration"); ok {
-		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
-	}
-	if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("warehouse_type"); ok {
-		whType := sdk.WarehouseType(v.(string))
-		createOptions.WarehouseType = &whType
 	}
 
 	err := client.Warehouses.Create(ctx, objectIdentifier, createOptions)
@@ -314,23 +301,13 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
 	if d.HasChange("comment") {
-		if v, ok := d.GetOk("comment"); ok {
-			runSet = true
-			set.Comment = sdk.String(v.(string))
-		} else {
-			runUnset = true
-			unset.Comment = sdk.Bool(true)
-		}
+		runSet = true
+		set.Comment = sdk.String(d.Get("comment").(string))
 	}
 	if d.HasChange("warehouse_size") {
-		if v, ok := d.GetOk("warehouse_size"); ok {
-			runSet = true
-			size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
-			set.WarehouseSize = &size
-		} else {
-			runUnset = true
-			unset.WarehouseSize = sdk.Bool(true)
-		}
+		runSet = true
+		size := sdk.WarehouseSize(strings.ReplaceAll(d.Get("warehouse_size").(string), "-", ""))
+		set.WarehouseSize = &size
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {
@@ -388,49 +365,24 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("statement_timeout_in_seconds") {
-		if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-			runSet = true
-			set.StatementTimeoutInSeconds = sdk.Int(v.(int))
-		} else {
-			runUnset = true
-			unset.StatementTimeoutInSeconds = sdk.Bool(true)
-		}
+		runSet = true
+		set.StatementTimeoutInSeconds = sdk.Int(d.Get("statement_timeout_in_seconds").(int))
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
-		if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-			runSet = true
-			set.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
-		} else {
-			runUnset = true
-			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
-		}
+		runSet = true
+		set.StatementQueuedTimeoutInSeconds = sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int))
 	}
 	if d.HasChange("max_concurrency_level") {
-		if v, ok := d.GetOk("max_concurrency_level"); ok {
-			runSet = true
-			set.MaxConcurrencyLevel = sdk.Int(v.(int))
-		} else {
-			runUnset = true
-			unset.MaxConcurrencyLevel = sdk.Bool(true)
-		}
+		runSet = true
+		set.MaxConcurrencyLevel = sdk.Int(d.Get("max_concurrency_level").(int))
 	}
 	if d.HasChange("enable_query_acceleration") {
-		if v, ok := d.GetOk("enable_query_acceleration"); ok {
-			runSet = true
-			set.EnableQueryAcceleration = sdk.Bool(v.(bool))
-		} else {
-			runUnset = true
-			unset.EnableQueryAcceleration = sdk.Bool(true)
-		}
+		runSet = true
+		set.EnableQueryAcceleration = sdk.Bool(d.Get("enable_query_acceleration").(bool))
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
-		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-			runSet = true
-			set.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
-		} else {
-			runUnset = true
-			unset.QueryAccelerationMaxScaleFactor = sdk.Bool(true)
-		}
+		runSet = true
+		set.QueryAccelerationMaxScaleFactor = sdk.Int(d.Get("query_acceleration_max_scale_factor").(int))
 	}
 	if d.HasChange("warehouse_type") {
 		if v, ok := d.GetOk("warehouse_type"); ok {

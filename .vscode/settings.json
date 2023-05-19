@@ -13,4 +13,5 @@
     "go.lintFlags": [
         "--fast"
     ],
+    "files.trimTrailingWhitespace": true,
 }
