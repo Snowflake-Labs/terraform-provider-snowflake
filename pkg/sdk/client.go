@@ -18,6 +18,7 @@ type Client struct {
 	db     *sqlx.DB
 	dryRun bool
 
+	Accounts         Accounts
 	Comments         Comments
 	ContextFunctions ContextFunctions
 	Databases        Databases
@@ -95,6 +96,7 @@ func NewClientFromDB(db *sql.DB) *Client {
 }
 
 func (c *Client) initialize() {
+	c.Accounts = &accounts{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.Databases = &databases{client: c}
