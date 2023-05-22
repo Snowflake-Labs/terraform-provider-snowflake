@@ -8,6 +8,7 @@ import (
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
+	CurrentRegion(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
 
 	// Session Object functions.
@@ -32,6 +33,17 @@ func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return s.CurrentAccount, nil
+}
+
+func (c *contextFunctions) CurrentRegion(ctx context.Context) (string, error) {
+	s := &struct {
+		CurrentRegion string `db:"CURRENT_REGION"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_REGION() AS CURRENT_REGION")
+	if err != nil {
+		return "", err
+	}
+	return s.CurrentRegion, nil
 }
 
 func (c *contextFunctions) CurrentSession(ctx context.Context) (string, error) {
