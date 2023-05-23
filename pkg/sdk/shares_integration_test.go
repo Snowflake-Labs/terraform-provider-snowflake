@@ -142,9 +142,9 @@ func TestInt_Alter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-
+		secondaryClient := testClient(t)
 		accountsToAdd := []AccountIdentifier{
-			secondaryAccountIdentifier(t),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
 		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
@@ -197,9 +197,9 @@ func TestInt_Alter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-
+		secondaryClient := testSecondaryClient(t)
 		accountsToSet := []AccountIdentifier{
-			secondaryAccountIdentifier(t),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
 		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
@@ -367,10 +367,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 }
 
 func TestInt_ShareDescribeConsumer(t *testing.T) {
-	consumerClient, err := testClientFromProfile(t, "secondary_test_account")
-	if err != nil {
-		t.Skip("Skipping test due to missing profile credentials")
-	}
+	consumerClient := testSecondaryClient(t)
 	ctx := context.Background()
 	providerClient := testClient(t)
 
@@ -381,7 +378,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		databaseTest, databaseCleanup := createDatabase(t, providerClient)
 		t.Cleanup(databaseCleanup)
 
-		err = providerClient.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
+		err := providerClient.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -393,10 +390,10 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		})
 
 		// add consumer account to share.
-		err := providerClient.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = providerClient.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
 			Add: &ShareAdd{
 				Accounts: []AccountIdentifier{
-					secondaryAccountIdentifier(t),
+					getAccountIdentifier(t, consumerClient),
 				},
 			},
 		})

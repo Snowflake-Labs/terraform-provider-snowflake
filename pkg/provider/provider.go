@@ -296,6 +296,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_materialized_views":                 datasources.MaterializedViews(),
 		"snowflake_shares":                             datasources.Shares(),
 		"snowflake_stages":                             datasources.Stages(),
+		"snowflake_failover_groups":                    datasources.FailoverGroups(),
 		"snowflake_file_formats":                       datasources.FileFormats(),
 		"snowflake_sequences":                          datasources.Sequences(),
 		"snowflake_streams":                            datasources.Streams(),

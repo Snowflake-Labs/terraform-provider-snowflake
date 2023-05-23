@@ -262,6 +262,10 @@ func (v *PasswordPolicy) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+func (v *PasswordPolicy) ObjectType() ObjectType {
+	return ObjectTypePasswordPolicy
+}
+
 // passwordPolicyDBRow is used to decode the result of a CREATE PASSWORD POLICY query.
 type passwordPolicyDBRow struct {
 	CreatedOn     time.Time `db:"created_on"`

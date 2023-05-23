@@ -27,39 +27,47 @@ const (
 	ObjectTypeRole             ObjectType = "ROLE"
 	ObjectTypeSchema           ObjectType = "SCHEMA"
 	ObjectTypeShare            ObjectType = "SHARE"
+	ObjectTypeTag              ObjectType = "TAG"
 	ObjectTypeUser             ObjectType = "USER"
 	ObjectTypeWarehouse        ObjectType = "WAREHOUSE"
 )
-
-func ObjectTypeFromPluralString(s string) ObjectType {
-	// only care about the "ies" endings.
-	switch s {
-	case "MASKING POLICIES":
-		return ObjectTypeMaskingPolicy
-	case "NETWORK POLICIES":
-		return ObjectTypeNetworkPolicy
-	case "PASSWORD POLICIES":
-		return ObjectTypePasswordPolicy
-	default:
-		return ObjectType(s[:len(s)-1])
-	}
-}
 
 func (o ObjectType) String() string {
 	return string(o)
 }
 
-func (o ObjectType) Plural() string {
-	// only care about the "ies" endings.
+func (o ObjectType) Plural() PluralObjectType {
 	switch o {
+	case ObjectTypeAccountParameter:
+		return PluralObjectTypeAccountParameters
+	case ObjectTypeDatabase:
+		return PluralObjectTypeDatabases
+	case ObjectTypeFailoverGroup:
+		return PluralObjectTypeTypeFailoverGroups
+	case ObjectTypeIntegration:
+		return PluralObjectTypeIntegrations
 	case ObjectTypeMaskingPolicy:
-		return "MASKING POLICIES"
+		return PluralObjectTypeMaskingPolicies
 	case ObjectTypeNetworkPolicy:
-		return "NETWORK POLICIES"
+		return PluralObjectTypeNetworkPolicies
 	case ObjectTypePasswordPolicy:
-		return "PASSWORD POLICIES"
+		return PluralObjectTypePasswordPolicies
+	case ObjectTypeResourceMonitor:
+		return PluralObjectTypeResourceMonitors
+	case ObjectTypeRole:
+		return PluralObjectTypeRoles
+	case ObjectTypeSchema:
+		return PluralObjectTypeSchemas
+	case ObjectTypeShare:
+		return PluralObjectTypeShares
+	case ObjectTypeTag:
+		return PluralObjectTypeTags
+	case ObjectTypeUser:
+		return PluralObjectTypeUsers
+	case ObjectTypeWarehouse:
+		return PluralObjectTypeWarehouses
 	default:
-		return o.String() + "S"
+		return PluralObjectType("")
 	}
 }
 
@@ -88,4 +96,60 @@ func (o ObjectType) GetObjectIdentifier(fullyQualifiedName string) ObjectIdentif
 	schemaName := parts[1]
 	objectName := strings.Join(parts[2:], ".")
 	return NewSchemaObjectIdentifier(dbName, schemaName, objectName)
+}
+
+type PluralObjectType string
+
+const (
+	PluralObjectTypeAccountParameters  PluralObjectType = "ACCOUNT PARAMETERS"
+	PluralObjectTypeDatabases          PluralObjectType = "DATABASES"
+	PluralObjectTypeTypeFailoverGroups PluralObjectType = "FAILOVER GROUPS"
+	PluralObjectTypeIntegrations       PluralObjectType = "INTEGRATIONS"
+	PluralObjectTypeMaskingPolicies    PluralObjectType = "MASKING POLICIES"
+	PluralObjectTypeNetworkPolicies    PluralObjectType = "NETWORK POLICIES"
+	PluralObjectTypePasswordPolicies   PluralObjectType = "PASSWORD POLICIES"
+	PluralObjectTypeResourceMonitors   PluralObjectType = "RESOURCE MONITORS"
+	PluralObjectTypeRoles              PluralObjectType = "ROLES"
+	PluralObjectTypeSchemas            PluralObjectType = "SCHEMAS"
+	PluralObjectTypeShares             PluralObjectType = "SHARES"
+	PluralObjectTypeTags               PluralObjectType = "TAGS"
+	PluralObjectTypeUsers              PluralObjectType = "USERS"
+	PluralObjectTypeWarehouses         PluralObjectType = "WAREHOUSES"
+)
+
+func (p PluralObjectType) String() string {
+	return string(p)
+}
+
+func (p PluralObjectType) Singular() ObjectType {
+	switch p {
+	case PluralObjectTypeAccountParameters:
+		return ObjectTypeAccountParameter
+	case PluralObjectTypeDatabases:
+		return ObjectTypeDatabase
+	case PluralObjectTypeTypeFailoverGroups:
+		return ObjectTypeFailoverGroup
+	case PluralObjectTypeIntegrations:
+		return ObjectTypeIntegration
+	case PluralObjectTypeMaskingPolicies:
+		return ObjectTypeMaskingPolicy
+	case PluralObjectTypeNetworkPolicies:
+		return ObjectTypeNetworkPolicy
+	case PluralObjectTypePasswordPolicies:
+		return ObjectTypePasswordPolicy
+	case PluralObjectTypeResourceMonitors:
+		return ObjectTypeResourceMonitor
+	case PluralObjectTypeRoles:
+		return ObjectTypeRole
+	case PluralObjectTypeSchemas:
+		return ObjectTypeSchema
+	case PluralObjectTypeShares:
+		return ObjectTypeShare
+	case PluralObjectTypeUsers:
+		return ObjectTypeUser
+	case PluralObjectTypeWarehouses:
+		return ObjectTypeWarehouse
+	default:
+		return ObjectType("")
+	}
 }

@@ -55,6 +55,10 @@ func (v *Share) ExternalID() ExternalObjectIdentifier {
 	return v.Name
 }
 
+func (v *Share) ObjectType() ObjectType {
+	return ObjectTypeShare
+}
+
 type shareRow struct {
 	CreatedOn    time.Time `db:"created_on"`
 	Kind         string    `db:"kind"`

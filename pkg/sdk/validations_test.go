@@ -30,8 +30,13 @@ func TestValidObjectidentifier(t *testing.T) {
 	})
 
 	t.Run("over 255 characters", func(t *testing.T) {
-		ok := validObjectidentifier(NewAccountObjectIdentifier(randomStringRange(t, 256, 256)))
+		ok := validObjectidentifier(NewAccountObjectIdentifier(randomStringN(t, 256)))
 		assert.Equal(t, ok, false)
+	})
+
+	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
+		ok := validObjectidentifier(NewSchemaObjectIdentifier(randomStringN(t, 255), randomStringN(t, 255), randomStringN(t, 255)))
+		assert.Equal(t, ok, true)
 	})
 }
 

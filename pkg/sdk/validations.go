@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"log"
 	"reflect"
 )
 
@@ -11,7 +12,7 @@ func IsValidDataType(v string) bool {
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
 	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
-	l := len(objectIdentifier.FullyQualifiedName())
+	l := len(objectIdentifier.Name())
 	if l == 0 || l > 255 {
 		return false
 	}
@@ -71,6 +72,10 @@ func valueSet(value interface{}) bool {
 	case reflect.Struct:
 		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
 			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
+		}
+		if _, ok := reflectedValue.Interface().(ObjectType); ok {
+			log.Printf("valueSet: ObjectType: %v", reflectedValue.Interface().(ObjectType))
+			return true
 		}
 		return reflectedValue.Interface() != nil
 	}

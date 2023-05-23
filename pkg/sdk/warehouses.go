@@ -527,3 +527,7 @@ func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (
 func (v *Warehouse) ID() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(v.Name)
 }
+
+func (v *Warehouse) ObjectType() ObjectType {
+	return ObjectTypeWarehouse
+}
