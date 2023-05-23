@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"log"
 	"reflect"
 )
 
