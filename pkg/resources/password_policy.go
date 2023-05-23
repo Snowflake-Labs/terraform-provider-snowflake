@@ -142,50 +142,19 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
 	objectIdentifier := sdk.NewSchemaObjectIdentifier(database, schema, name)
-	createOptions := &sdk.PasswordPolicyCreateOptions{}
 
-	if v, ok := d.GetOk("or_replace"); ok {
-		createOptions.OrReplace = sdk.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("if_not_exists"); ok {
-		createOptions.IfNotExists = sdk.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("min_length"); ok {
-		createOptions.PasswordMinLength = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("max_length"); ok {
-		createOptions.PasswordMaxLength = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("min_upper_case_chars"); ok {
-		createOptions.PasswordMinUpperCaseChars = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("min_lower_case_chars"); ok {
-		createOptions.PasswordMinLowerCaseChars = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("min_numeric_chars"); ok {
-		createOptions.PasswordMinNumericChars = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("min_special_chars"); ok {
-		createOptions.PasswordMinSpecialChars = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("max_age_days"); ok {
-		createOptions.PasswordMaxAgeDays = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("max_retries"); ok {
-		createOptions.PasswordMaxRetries = sdk.Int(v.(int))
-	}
-
-	if v, ok := d.GetOk("lockout_time_mins"); ok {
-		createOptions.PasswordLockoutTimeMins = sdk.Int(v.(int))
+	createOptions := &sdk.PasswordPolicyCreateOptions{
+		OrReplace:                 sdk.Bool(d.Get("or_replace").(bool)),
+		IfNotExists:               sdk.Bool(d.Get("if_not_exists").(bool)),
+		PasswordMinLength:         sdk.Int(d.Get("min_length").(int)),
+		PasswordMaxLength:         sdk.Int(d.Get("max_length").(int)),
+		PasswordMinUpperCaseChars: sdk.Int(d.Get("min_upper_case_chars").(int)),
+		PasswordMinLowerCaseChars: sdk.Int(d.Get("min_lower_case_chars").(int)),
+		PasswordMinNumericChars:   sdk.Int(d.Get("min_numeric_chars").(int)),
+		PasswordMinSpecialChars:   sdk.Int(d.Get("min_special_chars").(int)),
+		PasswordMaxAgeDays:        sdk.Int(d.Get("max_age_days").(int)),
+		PasswordMaxRetries:        sdk.Int(d.Get("max_retries").(int)),
+		PasswordLockoutTimeMins:   sdk.Int(d.Get("lockout_time_mins").(int)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -266,15 +235,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("min_length") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("min_length"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMinLength: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMinLength: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinLength: sdk.Int(d.Get("min_length").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -282,15 +246,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("max_length") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("max_length"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMaxLength: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMaxLength: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMaxLength: sdk.Int(d.Get("max_length").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -298,15 +257,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("min_upper_case_chars") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("min_upper_case_chars"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMinUpperCaseChars: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMinUpperCaseChars: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinUpperCaseChars: sdk.Int(d.Get("min_upper_case_chars").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -314,15 +268,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("min_lower_case_chars") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("min_lower_case_chars"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMinLowerCaseChars: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMinLowerCaseChars: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinLowerCaseChars: sdk.Int(d.Get("min_lower_case_chars").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -331,15 +280,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("min_numeric_chars") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("min_numeric_chars"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMinNumericChars: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMinNumericChars: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinNumericChars: sdk.Int(d.Get("min_numeric_chars").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -348,15 +292,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("min_special_chars") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("min_special_chars"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMinSpecialChars: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMinSpecialChars: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinSpecialChars: sdk.Int(d.Get("min_special_chars").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -365,15 +304,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("max_age_days") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("max_age_days"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMaxAgeDays: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMaxAgeDays: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMaxAgeDays: sdk.Int(d.Get("max_age_days").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -382,15 +316,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("max_retries") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("max_retries"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordMaxRetries: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordMaxRetries: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMaxRetries: sdk.Int(d.Get("max_retries").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
@@ -398,15 +327,10 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("lockout_time_mins") {
-		alterOptions := &sdk.PasswordPolicyAlterOptions{}
-		if v, ok := d.GetOk("lockout_time_mins"); ok {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				PasswordLockoutTimeMins: sdk.Int(v.(int)),
-			}
-		} else {
-			alterOptions.Unset = &sdk.PasswordPolicyUnset{
-				PasswordLockoutTimeMins: sdk.Bool(true),
-			}
+		alterOptions := &sdk.PasswordPolicyAlterOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordLockoutTimeMins: sdk.Int(d.Get("lockout_time_mins").(int)),
+			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {

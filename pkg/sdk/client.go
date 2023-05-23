@@ -19,6 +19,8 @@ type Client struct {
 	sessionID      string
 	accountLocator string
 
+  Accounts         Accounts
+	Comments         Comments
 	ContextFunctions     ContextFunctions
 	Databases            Databases
 	FailoverGroups       FailoverGroups
@@ -105,6 +107,8 @@ func NewClientFromDB(db *sql.DB) *Client {
 }
 
 func (c *Client) initialize() {
+	c.Accounts = &accounts{client: c}
+	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
