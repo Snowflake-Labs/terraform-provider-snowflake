@@ -129,17 +129,28 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
 
-	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
-	// that it is still there. However, it is needed to grant usage for the snowflake database to custom roles.
-	// Just exit for now
+	// IMPORTED PRIVILEGES is not a real resource but
+	// it is needed to grant usage for the snowflake database to custom roles.
+	// We have to set to usage to check Snowflake for the grant
 	if privilege == "IMPORTED PRIVILEGES" {
-		return nil
+		err := d.Set("privilege", "USAGE")
+		if err != nil {
+			return fmt.Errorf("error setting privilege to USAGE: %w", err)
+		}
 	}
 
 	builder := snowflake.DatabaseGrant(databaseName)
 	err := readGenericGrant(d, meta, databaseGrantSchema, builder, false, false, validDatabasePrivileges)
 	if err != nil {
 		return fmt.Errorf("error reading database grant: %w", err)
+	}
+
+	// Then set it back to imported privledges for Terraform to execute the grant.
+	if privilege == "IMPORTED PRIVILEGES" {
+		err := d.Set("privilege", "IMPORTED PRIVILEGES")
+		if err != nil {
+			return fmt.Errorf("error setting privilege to IMPORTED PRIVILEGES: %w", err)
+		}
 	}
 
 	grantID := helpers.EncodeSnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
