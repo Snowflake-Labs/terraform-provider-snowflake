@@ -16,6 +16,7 @@ type Object struct {
 type ObjectType string
 
 const (
+	ObjectTypeAccount          ObjectType = "ACCOUNT"
 	ObjectTypeAccountParameter ObjectType = "ACCOUNT PARAMETER"
 	ObjectTypeDatabase         ObjectType = "DATABASE"
 	ObjectTypeFailoverGroup    ObjectType = "FAILOVER GROUP"
