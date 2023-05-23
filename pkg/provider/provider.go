@@ -185,6 +185,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROFILE", "default"),
 			},
+			"query_tag": {
+				Type:        schema.TypeString,
+				Description: "Sets the query tag for the sessions",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_QUERY_TAG", "default"),
+			},
 		},
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
@@ -344,6 +350,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	warehouse := s.Get("warehouse").(string)
 	insecureMode := s.Get("insecure_mode").(bool)
 	profile := s.Get("profile").(string)
+	query_tag := s.Get("query_tag").(string)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -352,6 +359,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		}
 		oauthAccessToken = accessToken
 	}
+
+	params:= make(map[string]*string)
+	if query_tag != "default" {
+		params["query_tag"] = &query_tag
+	}	
 
 	dsn, err := DSN(
 		account,
@@ -370,6 +382,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		warehouse,
 		insecureMode,
 		profile,
+		params,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -384,8 +397,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	log.Printf("[INFO] role: %s\n", role)
 	log.Printf("[INFO] warehouse: %s\n", warehouse)
 	log.Printf("[INFO] dsn: %s\n", dsn)
+	log.Printf("[INFO] query_tag: %s\n", query_tag)
 	client := sdk.NewClientFromDB(db)
-	sessionID, err := client.ContextFunctions.CurrentSession(context.Background())
+	ctx := context.Background()
+	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve session id err = %w", err)
 	}
@@ -414,6 +430,7 @@ func DSN(
 	warehouse string,
 	insecureMode bool,
 	profile string,
+	params map[string]*string,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -429,6 +446,8 @@ func DSN(
 		Port:         port,
 		Protocol:     protocol,
 		InsecureMode: insecureMode,
+		Params: params,
+		//Params: make(map[string]*string),
 	}
 
 	// If host is set trust it and do not use the region value
@@ -477,6 +496,7 @@ func DSN(
 		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
+	
 	return gosnowflake.DSN(config)
 }
 
@@ -599,6 +619,13 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
 	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
 	profile := os.Getenv("SNOWFLAKE_PROFILE")
+	query_tag := os.Getenv("SNOWFLAKE_QUERY_TAG")
+
+	params:= make(map[string]*string)
+	if (query_tag != "default" && query_tag != "") {
+		params["query_tag"] = &query_tag
+	}	
+
 	if profile == "" {
 		profile = "default"
 	}
@@ -623,6 +650,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		warehouse,
 		false,
 		profile,
+		params,
 	)
 	if err != nil {
 		return nil, err
