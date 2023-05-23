@@ -360,10 +360,10 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		oauthAccessToken = accessToken
 	}
 
-	params:= make(map[string]*string)
+	params := make(map[string]*string)
 	if query_tag != "default" {
 		params["query_tag"] = &query_tag
-	}	
+	}
 
 	dsn, err := DSN(
 		account,
@@ -401,7 +401,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve session id err = %w", err)
 	}
@@ -446,8 +445,8 @@ func DSN(
 		Port:         port,
 		Protocol:     protocol,
 		InsecureMode: insecureMode,
-		Params: params,
-		//Params: make(map[string]*string),
+		Params:       params,
+		// Params: make(map[string]*string),
 	}
 
 	// If host is set trust it and do not use the region value
@@ -496,7 +495,7 @@ func DSN(
 		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
-	
+
 	return gosnowflake.DSN(config)
 }
 
@@ -621,10 +620,10 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	profile := os.Getenv("SNOWFLAKE_PROFILE")
 	query_tag := os.Getenv("SNOWFLAKE_QUERY_TAG")
 
-	params:= make(map[string]*string)
-	if (query_tag != "default" && query_tag != "") {
+	params := make(map[string]*string)
+	if query_tag != "default" && query_tag != "" {
 		params["query_tag"] = &query_tag
-	}	
+	}
 
 	if profile == "" {
 		profile = "default"
