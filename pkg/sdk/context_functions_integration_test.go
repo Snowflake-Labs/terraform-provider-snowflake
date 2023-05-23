@@ -17,6 +17,15 @@ func TestInt_CurrentAccount(t *testing.T) {
 	assert.NotEmpty(t, account)
 }
 
+func TestInt_CurrentRegion(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	region, err := client.ContextFunctions.CurrentRegion(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, region)
+}
+
 func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
