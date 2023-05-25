@@ -283,6 +283,7 @@ func getResources() map[string]*schema.Resource {
 
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
+		"snowflake_accounts":                           datasources.Accounts(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
 		"snowflake_database_roles":                     datasources.DatabaseRoles(),
@@ -380,11 +381,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
-	log.Printf("[INFO] account: %s\n", account)
-	log.Printf("[INFO] user: %s\n", user)
-	log.Printf("[INFO] role: %s\n", role)
-	log.Printf("[INFO] warehouse: %s\n", warehouse)
-	log.Printf("[INFO] dsn: %s\n", dsn)
 	client := sdk.NewClientFromDB(db)
 	sessionID, err := client.ContextFunctions.CurrentSession(context.Background())
 	if err != nil {

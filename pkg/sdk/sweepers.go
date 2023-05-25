@@ -46,9 +46,12 @@ func getFailoverGroupSweeper(client *Client, prefix string) func() error {
 		}
 		for _, fg := range fgs {
 			if (prefix == "" || strings.HasPrefix(fg.Name, prefix)) && fg.AccountLocator == currentAccount {
+				log.Printf("[DEBUG] Dropping failover group %s", fg.Name)
 				if err := client.FailoverGroups.Drop(ctx, fg.ID(), nil); err != nil {
 					return err
 				}
+			} else {
+				log.Printf("[DEBUG] Skipping failover group %s", fg.Name)
 			}
 		}
 		return nil
@@ -69,9 +72,12 @@ func getShareSweeper(client *Client, prefix string) func() error {
 		}
 		for _, share := range shares {
 			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
+				log.Printf("[DEBUG] Dropping share %s", share.Name.Name())
 				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
 					return err
 				}
+			} else {
+				log.Printf("[DEBUG] Skipping share %s", share.Name.Name())
 			}
 		}
 		return nil
@@ -92,9 +98,12 @@ func getDatabaseSweeper(client *Client, prefix string) func() error {
 		}
 		for _, db := range dbs {
 			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" {
+				log.Printf("[DEBUG] Dropping database %s", db.Name)
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
 					return err
 				}
+			} else {
+				log.Printf("[DEBUG] Skipping database %s", db.Name)
 			}
 		}
 		return nil
@@ -115,9 +124,12 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 		}
 		for _, wh := range whs {
 			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" {
+				log.Printf("[DEBUG] Dropping warehouse %s", wh.Name)
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return err
 				}
+			} else {
+				log.Printf("[DEBUG] Skipping warehouse %s", wh.Name)
 			}
 		}
 		return nil
