@@ -197,6 +197,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_account_grant":           resources.AccountGrant(),
 		"snowflake_database_grant":          resources.DatabaseGrant(),
 		"snowflake_external_table_grant":    resources.ExternalTableGrant(),
+		"snowflake_failover_group_grant":    resources.FailoverGroupGrant(),
 		"snowflake_file_format_grant":       resources.FileFormatGrant(),
 		"snowflake_function_grant":          resources.FunctionGrant(),
 		"snowflake_integration_grant":       resources.IntegrationGrant(),

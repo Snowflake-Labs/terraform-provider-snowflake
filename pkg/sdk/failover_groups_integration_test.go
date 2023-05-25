@@ -15,6 +15,10 @@ import (
 func TestInt_FailoverGroupsCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	shareTest, shareCleanup := createShare(t, client)
@@ -104,10 +108,14 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	client := testClient(t)
+	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	primaryAccountID := getAccountIdentifier(t, client)
 	secondaryClient := testSecondaryClient(t)
 	secondaryClientID := getAccountIdentifier(t, secondaryClient)
-	ctx := context.Background()
 
 	// create a temp share
 	shareTest, cleanupDatabase := createShare(t, client)
@@ -129,7 +137,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	objectTypes := []PluralObjectType{
 		PluralObjectTypeShares,
 	}
-	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	err = client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
 	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
 	require.NoError(t, err)
@@ -178,6 +186,10 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 
 	t.Run("rename the failover group", func(t *testing.T) {
 		failoverGroup, _ := createFailoverGroup(t, client)
@@ -534,10 +546,14 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 
 func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	client := testClient(t)
+	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	primaryAccountID := getAccountIdentifier(t, client)
 	secondaryClient := testSecondaryClient(t)
 	secondaryClientID := getAccountIdentifier(t, secondaryClient)
-	ctx := context.Background()
 
 	// create a temp database
 	databaseTest, cleanupDatabase := createDatabase(t, client)
@@ -559,7 +575,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	objectTypes := []PluralObjectType{
 		PluralObjectTypeDatabases,
 	}
-	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	err = client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
 	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
 	require.NoError(t, err)
@@ -657,7 +673,10 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 func TestInt_FailoverGroupsDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	t.Run("no options", func(t *testing.T) {
 		failoverGroup, _ := createFailoverGroup(t, client)
 		err := client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
@@ -677,6 +696,10 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 func TestInt_FailoverGroupsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
@@ -706,6 +729,10 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
@@ -718,7 +745,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 			},
 		},
 	}
-	err := client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
+	err = client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
 	require.NoError(t, err)
 	opts = &FailoverGroupAlterSourceOptions{
 		Add: &FailoverGroupAdd{
@@ -738,6 +765,10 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 func TestInt_FailoverGroupsShowShares(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	_, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		t.Skip("Replication is not enabled in this account")
+	}
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
@@ -750,7 +781,7 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 			},
 		},
 	}
-	err := client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
+	err = client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
 	require.NoError(t, err)
 	opts = &FailoverGroupAlterSourceOptions{
 		Add: &FailoverGroupAdd{
