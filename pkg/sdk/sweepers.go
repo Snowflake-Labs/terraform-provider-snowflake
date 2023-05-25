@@ -91,11 +91,9 @@ func getDatabaseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, db := range dbs {
-			if prefix == "" || strings.HasPrefix(db.Name, prefix) {
-				if db.Name != "SNOWFLAKE" {
-					if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
-						return err
-					}
+			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" {
+				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
+					return err
 				}
 			}
 		}
@@ -116,7 +114,7 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, wh := range whs {
-			if prefix == "" || strings.HasPrefix(wh.Name, prefix) {
+			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" {
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return err
 				}
