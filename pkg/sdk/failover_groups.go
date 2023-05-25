@@ -141,8 +141,8 @@ func (opts *FailoverGroupAlterSourceOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove) {
-		return errors.New("exactly one of SET, ADD, MOVE, or REMOVE must be specified")
+	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
+		return errors.New("exactly one of SET, ADD, MOVE, REMOVE, or NewName must be specified")
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {

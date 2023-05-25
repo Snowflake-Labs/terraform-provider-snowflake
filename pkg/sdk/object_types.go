@@ -27,8 +27,11 @@ const (
 	ObjectTypeResourceMonitor  ObjectType = "RESOURCE MONITOR"
 	ObjectTypeRole             ObjectType = "ROLE"
 	ObjectTypeSchema           ObjectType = "SCHEMA"
+	ObjectTypeSessionPolicy    ObjectType = "SESSION POLICY"
 	ObjectTypeShare            ObjectType = "SHARE"
+	ObjectTypeTable            ObjectType = "TABLE"
 	ObjectTypeTag              ObjectType = "TAG"
+	ObjectTypeTask             ObjectType = "TASK"
 	ObjectTypeUser             ObjectType = "USER"
 	ObjectTypeWarehouse        ObjectType = "WAREHOUSE"
 )
@@ -37,39 +40,41 @@ func (o ObjectType) String() string {
 	return string(o)
 }
 
-func (o ObjectType) Plural() PluralObjectType {
-	switch o {
-	case ObjectTypeAccountParameter:
-		return PluralObjectTypeAccountParameters
-	case ObjectTypeDatabase:
-		return PluralObjectTypeDatabases
-	case ObjectTypeFailoverGroup:
-		return PluralObjectTypeTypeFailoverGroups
-	case ObjectTypeIntegration:
-		return PluralObjectTypeIntegrations
-	case ObjectTypeMaskingPolicy:
-		return PluralObjectTypeMaskingPolicies
-	case ObjectTypeNetworkPolicy:
-		return PluralObjectTypeNetworkPolicies
-	case ObjectTypePasswordPolicy:
-		return PluralObjectTypePasswordPolicies
-	case ObjectTypeResourceMonitor:
-		return PluralObjectTypeResourceMonitors
-	case ObjectTypeRole:
-		return PluralObjectTypeRoles
-	case ObjectTypeSchema:
-		return PluralObjectTypeSchemas
-	case ObjectTypeShare:
-		return PluralObjectTypeShares
-	case ObjectTypeTag:
-		return PluralObjectTypeTags
-	case ObjectTypeUser:
-		return PluralObjectTypeUsers
-	case ObjectTypeWarehouse:
-		return PluralObjectTypeWarehouses
-	default:
-		return PluralObjectType("")
+func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
+	return map[ObjectType]PluralObjectType{
+		ObjectTypeAccountParameter: PluralObjectTypeAccountParameters,
+		ObjectTypeDatabase:         PluralObjectTypeDatabases,
+		ObjectTypeFailoverGroup:    PluralObjectTypeTypeFailoverGroups,
+		ObjectTypeIntegration:      PluralObjectTypeIntegrations,
+		ObjectTypeMaskingPolicy:    PluralObjectTypeMaskingPolicies,
+		ObjectTypeNetworkPolicy:    PluralObjectTypeNetworkPolicies,
+		ObjectTypePasswordPolicy:   PluralObjectTypePasswordPolicies,
+		ObjectTypeResourceMonitor:  PluralObjectTypeResourceMonitors,
+		ObjectTypeRole:             PluralObjectTypeRoles,
+		ObjectTypeSchema:           PluralObjectTypeSchemas,
+		ObjectTypeSessionPolicy:    PluralObjectTypeSessionPolicies,
+		ObjectTypeShare:            PluralObjectTypeShares,
+		ObjectTypeTable:            PluralObjectTypeTables,
+		ObjectTypeTag:              PluralObjectTypeTags,
+		ObjectTypeTask:             PluralObjectTypeTasks,
+		ObjectTypeUser:             PluralObjectTypeUsers,
+		ObjectTypeWarehouse:        PluralObjectTypeWarehouses,
 	}
+}
+
+func pluralObjectTypeToSingularMap() map[PluralObjectType]ObjectType {
+	m := make(map[PluralObjectType]ObjectType)
+	for k, v := range objectTypeSingularToPluralMap() {
+		m[v] = k
+	}
+	return m
+}
+
+func (o ObjectType) Plural() PluralObjectType {
+	if plural, ok := objectTypeSingularToPluralMap()[o]; ok {
+		return plural
+	}
+	return PluralObjectType(o + "S")
 }
 
 // GetObjectIdentifier returns the ObjectIdentifier for the ObjectType and fully qualified name.
@@ -112,8 +117,11 @@ const (
 	PluralObjectTypeResourceMonitors   PluralObjectType = "RESOURCE MONITORS"
 	PluralObjectTypeRoles              PluralObjectType = "ROLES"
 	PluralObjectTypeSchemas            PluralObjectType = "SCHEMAS"
+	PluralObjectTypeSessionPolicies    PluralObjectType = "SESSION POLICIES"
 	PluralObjectTypeShares             PluralObjectType = "SHARES"
+	PluralObjectTypeTables             PluralObjectType = "TABLES"
 	PluralObjectTypeTags               PluralObjectType = "TAGS"
+	PluralObjectTypeTasks              PluralObjectType = "TASKS"
 	PluralObjectTypeUsers              PluralObjectType = "USERS"
 	PluralObjectTypeWarehouses         PluralObjectType = "WAREHOUSES"
 )
@@ -123,34 +131,8 @@ func (p PluralObjectType) String() string {
 }
 
 func (p PluralObjectType) Singular() ObjectType {
-	switch p {
-	case PluralObjectTypeAccountParameters:
-		return ObjectTypeAccountParameter
-	case PluralObjectTypeDatabases:
-		return ObjectTypeDatabase
-	case PluralObjectTypeTypeFailoverGroups:
-		return ObjectTypeFailoverGroup
-	case PluralObjectTypeIntegrations:
-		return ObjectTypeIntegration
-	case PluralObjectTypeMaskingPolicies:
-		return ObjectTypeMaskingPolicy
-	case PluralObjectTypeNetworkPolicies:
-		return ObjectTypeNetworkPolicy
-	case PluralObjectTypePasswordPolicies:
-		return ObjectTypePasswordPolicy
-	case PluralObjectTypeResourceMonitors:
-		return ObjectTypeResourceMonitor
-	case PluralObjectTypeRoles:
-		return ObjectTypeRole
-	case PluralObjectTypeSchemas:
-		return ObjectTypeSchema
-	case PluralObjectTypeShares:
-		return ObjectTypeShare
-	case PluralObjectTypeUsers:
-		return ObjectTypeUser
-	case PluralObjectTypeWarehouses:
-		return ObjectTypeWarehouse
-	default:
-		return ObjectType("")
+	if singular, ok := pluralObjectTypeToSingularMap()[p]; ok {
+		return singular
 	}
+	return ObjectType(strings.TrimSuffix(string(p), "S"))
 }

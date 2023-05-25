@@ -68,11 +68,9 @@ func getShareSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, share := range shares {
-			if share.Kind == ShareKindOutbound {
-				if prefix == "" || strings.HasPrefix(share.Name.Name(), prefix) {
-					if err := client.Shares.Drop(ctx, share.ID()); err != nil {
-						return err
-					}
+			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
+				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
+					return err
 				}
 			}
 		}

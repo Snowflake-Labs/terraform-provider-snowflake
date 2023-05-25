@@ -148,6 +148,14 @@ func TestValueSet(t *testing.T) {
 		ok := valueSet(NewAccountObjectIdentifier(""))
 		assert.Equal(t, ok, false)
 	})
+
+	t.Run("with zero ObjectType", func(t *testing.T) {
+		s := struct {
+			ot *ObjectType
+		}{}
+		ok := valueSet(s.ot)
+		assert.Equal(t, ok, false)
+	})
 }
 
 func TestValidateIntInRange(t *testing.T) {

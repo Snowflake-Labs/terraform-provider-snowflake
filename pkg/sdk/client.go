@@ -19,8 +19,8 @@ type Client struct {
 	sessionID      string
 	accountLocator string
 
-  Accounts         Accounts
-	Comments         Comments
+	Accounts             Accounts
+	Comments             Comments
 	ContextFunctions     ContextFunctions
 	Databases            Databases
 	FailoverGroups       FailoverGroups
@@ -28,6 +28,8 @@ type Client struct {
 	MaskingPolicies      MaskingPolicies
 	PasswordPolicies     PasswordPolicies
 	ReplicationFunctions ReplicationFunctions
+	ResourceMonitors     ResourceMonitors
+	SessionPolicies      SessionPolicies
 	Sessions             Sessions
 	Shares               Shares
 	SystemFunctions      SystemFunctions
@@ -116,6 +118,8 @@ func (c *Client) initialize() {
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
+	c.ResourceMonitors = &resourceMonitors{client: c}
+	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}

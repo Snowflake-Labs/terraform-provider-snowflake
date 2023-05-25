@@ -176,6 +176,44 @@ func randomIntRange(t *testing.T, min, max int) int {
 	return gofakeit.IntRange(min, max)
 }
 
+func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
+	t.Helper()
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
+	return createSessionPolicyWithOptions(t, client, id, &SessionPolicyCreateOptions{})
+}
+
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *SessionPolicyCreateOptions) (*SessionPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.SessionPolicies.Create(ctx, id, opts)
+	require.NoError(t, err)
+	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return sessionPolicy, func() {
+		err := client.SessionPolicies.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
+	t.Helper()
+	return createResourceMonitorWithOptions(t, client, &ResourceMonitorCreateOptions{})
+}
+
+func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *ResourceMonitorCreateOptions) (*ResourceMonitor, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.ResourceMonitors.Create(ctx, id, opts)
+	require.NoError(t, err)
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return resourceMonitor, func() {
+		err := client.ResourceMonitors.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
 func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []PluralObjectType{PluralObjectTypeRoles}

@@ -72,9 +72,6 @@ func valueSet(value interface{}) bool {
 		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
 			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
 		}
-		if _, ok := reflectedValue.Interface().(ObjectType); ok {
-			return true
-		}
 		return reflectedValue.Interface() != nil
 	}
 	return true

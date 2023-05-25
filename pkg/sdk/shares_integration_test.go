@@ -122,7 +122,7 @@ func TestInt_SharesDrop(t *testing.T) {
 	})
 }
 
-func TestInt_Alter(t *testing.T) {
+func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
@@ -142,7 +142,7 @@ func TestInt_Alter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-		secondaryClient := testClient(t)
+		secondaryClient := testSecondaryClient(t)
 		accountsToAdd := []AccountIdentifier{
 			getAccountIdentifier(t, secondaryClient),
 		}
