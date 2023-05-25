@@ -10,6 +10,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func isReplicationEnabled(t *testing.T, client *Client) bool {
+	t.Helper()
+	ctx := context.Background()
+	accounts, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	if err != nil {
+		return false
+	}
+	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	for _, account := range accounts {
+		if account.AccountName == currentAccount || account.AccountLocator == currentAccount {
+			return true
+		}
+	}
+	return false
+}
+
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
 // the account locator and by filtering the list of accounts in replication accounts by the account locator
 func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
