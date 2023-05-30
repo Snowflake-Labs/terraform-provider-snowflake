@@ -1,16 +1,15 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jmoiron/sqlx"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
@@ -219,40 +218,23 @@ func createDatabaseFromReplica(d *schema.ResourceData, meta interface{}) error {
 
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbx := sqlx.NewDb(db, "snowflake")
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	name := d.Id()
+	id := sdk.NewAccountObjectIdentifier(name)
 
-	// perform a "show database" command to ensure that the database is actually there.
-	stmt := snowflake.NewDatabaseBuilder(name).Show()
-	row := snowflake.QueryRow(db, stmt)
-	_, err := snowflake.ScanDatabase(row)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// If not found, mark resource to be removed from statefile during apply or refresh
-			log.Printf("[DEBUG] database (%s) not found", name)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("unable to scan row for SHOW DATABASES")
-	}
-
-	// there may be more than one database found, so we need to filter. this could probably be combined with the above query
-	database, err := snowflake.ListDatabase(dbx, name)
+	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("name", database.DBName.String); err != nil {
+	if err := d.Set("name", database.Name); err != nil {
 		return err
 	}
-	if err := d.Set("comment", database.Comment.String); err != nil {
+	if err := d.Set("comment", database.Comment); err != nil {
 		return err
 	}
 
-	i, err := strconv.ParseInt(database.RetentionTime.String, 10, 64)
-	if err != nil {
-		return err
-	}
-	if err := d.Set("data_retention_time_in_days", i); err != nil {
+	if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
 		return err
 	}
 
@@ -261,7 +243,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if opts := database.Options.String; opts != "" {
+	if opts := database.Options; opts != "" {
 		for _, opt := range strings.Split(opts, ", ") {
 			if opt == "TRANSIENT" {
 				if err := d.Set("is_transient", true); err != nil {

@@ -289,12 +289,12 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 	ctx := context.Background()
 	err := client.Databases.Create(ctx, id, nil)
 	require.NoError(t, err)
-	return &Database{
-			Name: id.Name(),
-		}, func() {
-			err := client.Databases.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
+	database, err := client.Databases.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return database, func() {
+		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {

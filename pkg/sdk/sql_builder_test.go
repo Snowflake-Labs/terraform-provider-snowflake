@@ -434,6 +434,23 @@ func TestBuilder_parseStruct(t *testing.T) {
 		assert.Len(t, clauses, 1)
 		assert.Equal(t, "A,B,C", clauses[0].String())
 	})
+
+	t.Run("struct with a struct list using ddl: list,no_comma", func(t *testing.T) {
+		type testListElement struct {
+			A bool `ddl:"static" sql:"A"`
+			B bool `ddl:"static" sql:"B"`
+			C bool `ddl:"static" sql:"C"`
+		}
+		s := &struct {
+			List *testListElement `ddl:"list,no_comma"`
+		}{
+			List: &testListElement{A: true, B: true, C: true},
+		}
+		clauses, err := builder.parseStruct(s)
+		require.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "A B C", clauses[0].String())
+	})
 }
 
 func TestBuilder_sql(t *testing.T) {

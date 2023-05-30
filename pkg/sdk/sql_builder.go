@@ -12,12 +12,32 @@ type modifierType string
 const (
 	quoteModifierType   modifierType = "quotes"
 	parenModifierType   modifierType = "paren"
+	commaModifierType   modifierType = "comma"
 	reverseModifierType modifierType = "reverse"
 	equalsModifierType  modifierType = "equals"
 )
 
 type modifier interface {
 	Modify(v any) string
+}
+
+type commaModifier string
+
+const (
+	Comma   commaModifier = "comma"
+	NoComma commaModifier = "no_comma"
+)
+
+func (cm commaModifier) Modify(v any) string {
+	s := fmt.Sprintf("%v", v)
+	switch cm {
+	case Comma:
+		return fmt.Sprintf(`%v,`, s)
+	case NoComma:
+		return s
+	default:
+		return s
+	}
 }
 
 type quoteModifier string
@@ -106,13 +126,17 @@ func (rm reverseModifier) Modify(v any) string {
 type equalsModifier string
 
 const (
-	Equals   equalsModifier = "equals"
-	NoEquals equalsModifier = "no_equals"
+	Equals      equalsModifier = "equals"
+	ArrowEquals equalsModifier = "arrow_equals"
+	NoEquals    equalsModifier = "no_equals"
 )
 
 func (em equalsModifier) Modify(v any) string {
 	if em == Equals {
 		return strings.TrimLeft(fmt.Sprintf(`%v = `, v), " ")
+	}
+	if em == ArrowEquals {
+		return strings.TrimLeft(fmt.Sprintf(`%v => `, v), " ")
 	}
 	return strings.TrimLeft(fmt.Sprintf("%v ", v), " ")
 }
@@ -135,6 +159,8 @@ func (b *sqlBuilder) getModifier(tag reflect.StructTag, tagName string, modType 
 				return equalsModifier(trimmedS)
 			case reverseModifierType:
 				return reverseModifier(trimmedS)
+			case commaModifierType:
+				return commaModifier(trimmedS)
 			}
 		}
 	}
@@ -266,7 +292,7 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 			}
 			clauses = append(clauses, sqlListClause{
 				clauses: fieldStructClauses,
-				sep:     ",",
+				cm:      b.getModifier(field.Tag, "ddl", commaModifierType, Comma).(commaModifier),
 				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
@@ -318,7 +344,7 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 	}
 	clauses = append(clauses, sqlListClause{
 		clauses: listClauses,
-		sep:     ",",
+		cm:      b.getModifier(field.Tag, "ddl", commaModifierType, Comma).(commaModifier),
 		pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 	})
 	sClause := b.renderStaticClause(clauses...)
@@ -434,7 +460,7 @@ func (b sqlBuilder) getInterface(field reflect.Value) interface{} {
 
 type sqlListClause struct {
 	clauses []sqlClause
-	sep     string
+	cm      commaModifier
 	pm      parenModifier
 }
 
@@ -446,7 +472,10 @@ func (v sqlListClause) String() string {
 	for i, clause := range v.clauses {
 		clauseStrings[i] = clause.String()
 	}
-	s := strings.Join(clauseStrings, v.sep)
+	if v.cm == NoComma {
+		return strings.Join(clauseStrings, " ")
+	}
+	s := strings.Join(clauseStrings, ", ")
 	s = v.pm.Modify(s)
 	return s
 }

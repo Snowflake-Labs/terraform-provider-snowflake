@@ -8,6 +8,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDatabasesCreate(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	t.Run("minimal", func(t *testing.T) {
+		databaseID := randomAccountObjectIdentifier(t)
+		err := client.Databases.Create(ctx, databaseID, nil)
+		require.NoError(t, err)
+		database, err := client.Databases.ShowByID(ctx, databaseID)
+		require.NoError(t, err)
+		assert.Equal(t, databaseID.Name(), database.Name)
+		t.Cleanup(func() {
+			err = client.Databases.Drop(ctx, databaseID, nil)
+			require.NoError(t, err)
+		})
+	})
+	/*
+		t.Run("as clone", func(t *testing.T) {
+			cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
+			t.Cleanup(cloneDatabaseCleanup)
+			databaseID := randomAccountObjectIdentifier(t)
+			opts := &CreateDatabaseOptions{
+				Clone: &Clone{
+					SourceObject: cloneDatabase.ID(),
+					At: &TimeTravel{
+						Timestamp: Pointer(cloneDatabase.CreatedOn),
+					},
+				},
+			}
+			err := client.Databases.Create(ctx, databaseID, opts)
+			require.NoError(t, err)
+			database, err := client.Databases.ShowByID(ctx, databaseID)
+			require.NoError(t, err)
+			assert.Equal(t, databaseID.Name(), database.Name)
+			t.Cleanup(func() {
+				err = client.Databases.Drop(ctx, databaseID, nil)
+				require.NoError(t, err)
+			})
+		})
+	*/
+}
+
 func TestInt_DatabasesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
