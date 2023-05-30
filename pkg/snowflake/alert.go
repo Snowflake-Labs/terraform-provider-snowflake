@@ -261,9 +261,24 @@ func ScanAlert(row *sqlx.Row) (*Alert, error) {
 	return t, e
 }
 
-func ListAlerts(databaseName string, schemaName string, db *sql.DB) ([]Alert, error) {
-	stmt := fmt.Sprintf(`SHOW ALERTS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
+func ListAlerts(databaseName, schemaName, pattern string, db *sql.DB) ([]Alert, error) {
+	stmt := strings.Builder{}
+	stmt.WriteString("SHOW ALERTS")
+	if pattern != "" {
+		stmt.WriteString(fmt.Sprintf(` LIKE '%v'`, pattern))
+	}
+	if schemaName != "" && databaseName == "" {
+		stmt.WriteString(fmt.Sprintf(` IN SCHEMA '%v'`, schemaName))
+	}
+	if databaseName != "" {
+		if schemaName == "" {
+			stmt.WriteString(fmt.Sprintf(` IN DATABASE %v`, databaseName))
+		} else {
+			stmt.WriteString(fmt.Sprintf(` IN SCHEMA %v.%v`, databaseName, schemaName))
+		}
+	}
+
+	rows, err := Query(db, stmt.String())
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +290,7 @@ func ListAlerts(databaseName string, schemaName string, db *sql.DB) ([]Alert, er
 			log.Println("[DEBUG] no alerts found")
 			return nil, nil
 		}
-		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
+		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt.String(), err)
 	}
 	return dbs, nil
 }
