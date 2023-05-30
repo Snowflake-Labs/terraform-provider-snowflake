@@ -11,7 +11,7 @@ func IsValidDataType(v string) bool {
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
 	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
-	l := len(objectIdentifier.FullyQualifiedName())
+	l := len(objectIdentifier.Name())
 	if l == 0 || l > 255 {
 		return false
 	}

@@ -1,8 +1,17 @@
 # Snowflake Go SDK
 
-Required environment variables for running integration tests that provision resources in multiple accounts:
+[secondary_test_account] credentials are required in the Snowflake profile if running integration tests that provision resources in multiple accounts:
 
-SNOWFLAKE_ACCOUNT_SECOND=<org_name>.<account_name> (e.g. `acme.data-dev2`)
+Required environment variable to run sweepers (cleanup up resources created by integration tests):
+
+```
+SNOWFLAKE_ENABLE_SWEEP=1
+```
+Required environment variable to test creating an account. Note that this cannot be cleaned up by sweepers:
+
+```
+SNOWFLAKE_TEST_ACCOUNT_CREATE=1
+```
 
 ## SQL clause types
 

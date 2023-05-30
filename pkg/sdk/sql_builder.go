@@ -380,10 +380,6 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 		return b.renderStaticClause(structClauses...), nil
 	}
 
-	if value.Kind() == reflect.Invalid {
-		return nil, nil
-	}
-
 	switch ddlTag {
 	case "keyword":
 		if value.Kind() == reflect.Bool {
@@ -409,6 +405,11 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
 	case "parameter":
+		if _, ok := reflectedValue.(ObjectType); ok {
+			if reflectedValue.(ObjectType).String() == "" {
+				return nil, nil
+			}
+		}
 		clause = sqlParameterClause{
 			key:   dbTag,
 			value: reflectedValue,

@@ -190,7 +190,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the account.",
-		ForceNew:    true, // Apparently there is no API to change comments on accounts. ALTER ACCOUNT and COMMENT commands do not work
+		ForceNew:    true,
 	},
 	"is_org_admin": {
 		Type:        schema.TypeBool,
@@ -226,7 +226,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	createOptions := &sdk.AccountCreateOptions{
 		AdminName: d.Get("admin_name").(string),
 		Email:     d.Get("email").(string),
-		Edition:   d.Get("edition").(sdk.AccountEdition),
+		Edition:   sdk.AccountEdition(d.Get("edition").(string)),
 	}
 
 	// get optional fields.
@@ -341,15 +341,17 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 
 	// Rename
 	if d.HasChange("name") {
-		newName := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 		err := client.Accounts.Alter(ctx, &sdk.AccountAlterOptions{
-			Name:    &id,
-			NewName: newName,
+			Rename: &sdk.AccountRename{
+				Name:    id,
+				NewName: newID,
+			},
 		})
 		if err != nil {
 			return err
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newName))
+		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
 	// Change comment

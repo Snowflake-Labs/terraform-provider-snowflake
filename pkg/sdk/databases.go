@@ -110,3 +110,7 @@ func (c *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 func (v *Database) ID() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(v.Name)
 }
+
+func (v *Database) ObjectType() ObjectType {
+	return ObjectTypeDatabase
+}

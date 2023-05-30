@@ -11,9 +11,7 @@ import (
 func TestAccountCreate(t *testing.T) {
 	t.Run("simplest case", func(t *testing.T) {
 		opts := &AccountCreateOptions{
-			name: AccountObjectIdentifier{
-				name: "newaccount",
-			},
+			name:          NewAccountObjectIdentifier("newaccount"),
 			AdminName:     "someadmin",
 			AdminPassword: String("v3rys3cr3t"),
 			Email:         "admin@example.com",
@@ -27,9 +25,7 @@ func TestAccountCreate(t *testing.T) {
 
 	t.Run("every option", func(t *testing.T) {
 		opts := &AccountCreateOptions{
-			name: AccountObjectIdentifier{
-				name: "newaccount",
-			},
+			name:               NewAccountObjectIdentifier("newaccount"),
 			AdminName:          "someadmin",
 			AdminRSAPublicKey:  String("s3cr3tk3y"),
 			FirstName:          String("Ad"),
@@ -52,38 +48,55 @@ func TestAccountAlter(t *testing.T) {
 	t.Run("with set params", func(t *testing.T) {
 		opts := &AccountAlterOptions{
 			Set: &AccountSet{
-				ClientEncryptionKeySize:       Int(20),
-				PreventUnloadToInternalStages: Bool(true),
-				MaxDataExtensionTimeInDays:    Int(30),
-				JsonIndent:                    Int(40),
-				TimestampOutputFormat:         String("hello"),
+				Parameters: &AccountLevelParameters{
+					AccountParameters: &AccountParameters{
+						ClientEncryptionKeySize:       Int(128),
+						PreventUnloadToInternalStages: Bool(true),
+					},
+					SessionParameters: &SessionParameters{
+						JSONIndent: Int(16),
+					},
+					ObjectParameters: &ObjectParameters{
+						MaxDataExtensionTimeInDays: Int(30),
+					},
+				},
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 20 PREVENT_UNLOAD_TO_INTERNAL_STAGES = true MAX_DATA_EXTENSION_TIME_IN_DAYS = 30 JSON_INDENT = 40 TIMESTAMP_OUTPUT_FORMAT = 'hello'`
+		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128,PREVENT_UNLOAD_TO_INTERNAL_STAGES = true,JSON_INDENT = 16,MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
 		opts := &AccountAlterOptions{
 			Unset: &AccountUnset{
-				InitialReplicationSizeLimitInTb: Bool(true),
-				SsoLoginPage:                    Bool(true),
-				DefaultDdlCollation:             Bool(true),
-				SimulatedDataSharingConsumer:    Bool(true),
-				Timezone:                        Bool(true),
+				Parameters: &AccountLevelParametersUnset{
+					AccountParameters: &AccountParametersUnset{
+						InitialReplicationSizeLimitInTB: Bool(true),
+						SSOLoginPage:                    Bool(true),
+					},
+					SessionParameters: &SessionParametersUnset{
+						SimulatedDataSharingConsumer: Bool(true),
+						Timezone:                     Bool(true),
+					},
+					ObjectParameters: &ObjectParametersUnset{
+						DefaultDDLCollation: Bool(true),
+					},
+				},
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB,SSO_LOGIN_PAGE,DEFAULT_DDL_COLLATION,SIMULATED_DATA_SHARING_CONSUMER,TIMEZONE`
+		expected := `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB,SSO_LOGIN_PAGE,SIMULATED_DATA_SHARING_CONSUMER,TIMEZONE,DEFAULT_DDL_COLLATION`
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with set resource monitor", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			ResourceMonitor: NewAccountObjectIdentifier("mymonitor"),
+			Set: &AccountSet{
+				ResourceMonitor: NewAccountObjectIdentifier("mymonitor"),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -93,7 +106,9 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with set password policy", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			PasswordPolicy: NewSchemaObjectIdentifier("db", "schema", "passpol"),
+			Set: &AccountSet{
+				PasswordPolicy: NewSchemaObjectIdentifier("db", "schema", "passpol"),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -103,7 +118,9 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with set session policy", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			SessionPolicy: NewSchemaObjectIdentifier("db", "schema", "sesspol"),
+			Set: &AccountSet{
+				SessionPolicy: NewSchemaObjectIdentifier("db", "schema", "sesspol"),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -113,7 +130,9 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with unset password policy", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			UnsetPasswordPolicy: Bool(true),
+			Unset: &AccountUnset{
+				PasswordPolicy: Bool(true),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -123,7 +142,9 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with unset session policy", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			UnsetSessionPolicy: Bool(true),
+			Unset: &AccountUnset{
+				SessionPolicy: Bool(true),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -133,14 +154,16 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			SetTag: []TagAssociation{
-				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
-					Value: "v1",
-				},
-				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
-					Value: "v2",
+			Set: &AccountSet{
+				Tag: []TagAssociation{
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+						Value: "v1",
+					},
+					{
+						Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+						Value: "v2",
+					},
 				},
 			},
 		}
@@ -152,8 +175,10 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &AccountAlterOptions{
-			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "tag1"),
+			Unset: &AccountUnset{
+				Tag: []ObjectIdentifier{
+					NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				},
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -164,10 +189,13 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		oldName := NewAccountObjectIdentifier("oldname")
+		newName := NewAccountObjectIdentifier("newname")
 		opts := &AccountAlterOptions{
-			Name:       &oldName,
-			NewName:    NewAccountObjectIdentifier("newname"),
-			SaveOldURL: Bool(false),
+			Rename: &AccountRename{
+				Name:       oldName,
+				NewName:    newName,
+				SaveOldURL: Bool(false),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -178,8 +206,10 @@ func TestAccountAlter(t *testing.T) {
 	t.Run("drop old url", func(t *testing.T) {
 		oldName := NewAccountObjectIdentifier("oldname")
 		opts := &AccountAlterOptions{
-			Name:       &oldName,
-			DropOldURL: Bool(true),
+			Drop: &AccountDrop{
+				Name:   oldName,
+				OldURL: Bool(true),
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)

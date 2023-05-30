@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -12,35 +10,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+// there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
+// the account locator and by filtering the list of accounts in replication accounts by the account locator
+func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
 	t.Helper()
-	secondaryAccount := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
-	if secondaryAccount == "" {
-		t.Skip("SNOWFLAKE_SECONDARY_ACCOUNT must be set for acceptance tests")
+	ctx := context.Background()
+	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	require.NoError(t, err)
+	for _, replicationAccount := range replicationAccounts {
+		if replicationAccount.AccountLocator == currentAccountLocator {
+			return AccountIdentifier{
+				organizationName: replicationAccount.OrganizationName,
+				accountName:      replicationAccount.AccountName,
+			}
+		}
 	}
-	parts := strings.Split(secondaryAccount, ".")
-	organizationName := parts[0]
-	accountName := parts[1]
+	return AccountIdentifier{}
+}
 
-	return AccountIdentifier{
-		organizationName: organizationName,
-		accountName:      accountName,
-	}
+func getPrimaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	client := testClient(t)
+	return getAccountIdentifier(t, client)
+}
+
+func getSecondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	client := testSecondaryClient(t)
+	return getAccountIdentifier(t, client)
 }
 
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
+	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
 }
 
 func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
+	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
-	return NewAccountObjectIdentifier(randomStringRange(t, 8, 12))
+	return NewAccountObjectIdentifier(randomStringN(t, 12))
 }
 
 func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
@@ -95,6 +109,21 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
+const (
+	secondaryAccountProfile = "secondary_test_account"
+)
+
+func testSecondaryClient(t *testing.T) *Client {
+	t.Helper()
+
+	client, err := testClientFromProfile(t, secondaryAccountProfile)
+	if err != nil {
+		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
+	}
+
+	return client
+}
+
 func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
 	t.Helper()
 	config, err := ProfileConfig(profile)
@@ -126,6 +155,11 @@ func randomString(t *testing.T) string {
 	return gofakeit.Password(true, true, true, true, false, 28)
 }
 
+func randomStringN(t *testing.T, num int) string {
+	t.Helper()
+	return gofakeit.Password(true, true, true, true, false, num)
+}
+
 func randomStringRange(t *testing.T, min, max int) string {
 	t.Helper()
 	if min > max {
@@ -140,6 +174,69 @@ func randomIntRange(t *testing.T, min, max int) int {
 		t.Errorf("min %d is greater than max %d", min, max)
 	}
 	return gofakeit.IntRange(min, max)
+}
+
+func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
+	t.Helper()
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
+	return createSessionPolicyWithOptions(t, client, id, &SessionPolicyCreateOptions{})
+}
+
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *SessionPolicyCreateOptions) (*SessionPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.SessionPolicies.Create(ctx, id, opts)
+	require.NoError(t, err)
+	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return sessionPolicy, func() {
+		err := client.SessionPolicies.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
+	t.Helper()
+	return createResourceMonitorWithOptions(t, client, &ResourceMonitorCreateOptions{})
+}
+
+func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *ResourceMonitorCreateOptions) (*ResourceMonitor, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.ResourceMonitors.Create(ctx, id, opts)
+	require.NoError(t, err)
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return resourceMonitor, func() {
+		err := client.ResourceMonitors.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
+func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
+	t.Helper()
+	objectTypes := []PluralObjectType{PluralObjectTypeRoles}
+	ctx := context.Background()
+	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	accountID := NewAccountIdentifierFromAccountLocator(currentAccount)
+	allowedAccounts := []AccountIdentifier{accountID}
+	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
+}
+
+func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *FailoverGroupCreateOptions) (*FailoverGroup, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	require.NoError(t, err)
+	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return failoverGroup, func() {
+		err := client.FailoverGroups.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createShare(t *testing.T, client *Client) (*Share, func()) {

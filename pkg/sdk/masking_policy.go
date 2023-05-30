@@ -221,6 +221,10 @@ func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+func (v *MaskingPolicy) ObjectType() ObjectType {
+	return ObjectTypeMaskingPolicy
+}
+
 // maskingPolicyDBRow is used to decode the result of a CREATE MASKING POLICY query.
 type maskingPolicyDBRow struct {
 	CreatedOn     time.Time `db:"created_on"`
