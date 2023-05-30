@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 func Sweep(client *Client, prefix string) error {
@@ -12,6 +14,7 @@ func Sweep(client *Client, prefix string) error {
 		getShareSweeper(client, prefix),
 		getDatabaseSweeper(client, prefix),
 		getWarehouseSweeper(client, prefix),
+		getRoleSweeper(client, prefix),
 	}
 	for _, sweeper := range sweepers {
 		if err := sweeper(); err != nil {
@@ -52,6 +55,32 @@ func getFailoverGroupSweeper(client *Client, prefix string) func() error {
 				}
 			} else {
 				log.Printf("[DEBUG] Skipping failover group %s", fg.Name)
+			}
+		}
+		return nil
+	}
+}
+
+func getRoleSweeper(client *Client, prefix string) func() error {
+	return func() error {
+		if prefix == "" {
+			log.Printf("[DEBUG] Sweeping all roles")
+		} else {
+			log.Printf("[DEBUG] Sweeping all roles with prefix %s", prefix)
+		}
+		ctx := context.Background()
+		roles, err := client.Roles.Show(ctx, nil)
+		if err != nil {
+			return err
+		}
+		for _, role := range roles {
+			if (prefix == "" || strings.HasPrefix(role.Name, prefix)) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
+				log.Printf("[DEBUG] Dropping role %s", role.Name)
+				if err := client.Roles.Drop(ctx, role.ID(), nil); err != nil {
+					return err
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping role %s", role.Name)
 			}
 		}
 		return nil
