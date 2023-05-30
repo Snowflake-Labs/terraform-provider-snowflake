@@ -106,7 +106,6 @@ func (row *databaseRow) toDatabase() *Database {
 			database.RetentionTime = 0
 		}
 		database.RetentionTime = retentionTimeInt
-
 	}
 	if row.ResourceGroup.Valid {
 		database.ResourceGroup = row.ResourceGroup.String
@@ -124,11 +123,11 @@ type CreateDatabaseOptions struct {
 	database                   bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
 	name                       AccountObjectIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	Clone                      *Clone
-	DataRetentionTimeInDays    *int             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int             `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	Tag                        []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment                    *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Clone                      *Clone                  `ddl:"-" sql:"CLONE"`
+	DataRetentionTimeInDays    *int                    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	Tag                        []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment                    *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateDatabaseOptions) validate() error {
