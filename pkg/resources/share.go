@@ -1,8 +1,8 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -10,13 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
-
-var shareProperties = []string{
-	"comment",
-}
 
 var shareSchema = map[string]*schema.Schema{
 	"name": {
@@ -63,45 +59,60 @@ func Share() *schema.Resource {
 func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
-
-	builder := snowflake.NewShareBuilder(name).Create()
-	builder.SetString("COMMENT", d.Get("comment").(string))
-
-	if err := snowflake.Exec(db, builder.Statement()); err != nil {
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	comment := d.Get("comment").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	var opts sdk.ShareCreateOptions
+	if comment != "" {
+		opts = sdk.ShareCreateOptions{
+			Comment: sdk.String(comment),
+		}
+	}
+	if err := client.Shares.Create(ctx, id, &opts); err != nil {
 		return fmt.Errorf("error creating share err = %w", err)
 	}
 	d.SetId(name)
 
-	// Adding accounts must be done via an ALTER query
-
-	// @TODO flesh out the share type in the snowflake package since it doesn't
-	// follow the normal generic rules
-	if err := setAccounts(d, meta); err != nil {
-		return err
+	accounts := expandStringList(d.Get("accounts").([]interface{}))
+	if len(accounts) > 0 {
+		shareID := sdk.NewAccountObjectIdentifier(name)
+		accountIdentifiers := make([]sdk.AccountIdentifier, len(accounts))
+		for i, account := range accounts {
+			parts := strings.Split(account, ".")
+			orgName := parts[0]
+			accountName := parts[1]
+			accountIdentifiers[i] = sdk.NewAccountIdentifier(orgName, accountName)
+		}
+		err := setShareAccounts(ctx, client, shareID, accountIdentifiers)
+		if err != nil {
+			return err
+		}
 	}
-
 	return ReadShare(d, meta)
 }
 
-func setAccounts(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	accs := expandStringList(d.Get("accounts").([]interface{}))
-
+func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.AccountObjectIdentifier, accounts []sdk.AccountIdentifier) error {
 	// There is a race condition where error accounts cannot be added to a
 	// share until after a database is added to the share. Since a database
 	// grant is dependent on the share itself, this is a hack to get the
 	// thing working.
+
 	// 1. Create new temporary DB
-	tempName := fmt.Sprintf("TEMP_%v_%d", name, time.Now().Unix())
-	tempDB := snowflake.NewDatabaseBuilder(tempName)
-	if err := snowflake.Exec(db, tempDB.Create()); err != nil {
+	tempName := fmt.Sprintf("TEMP_%v_%d", shareID.Name(), time.Now().Unix())
+	tempDatabaseID := sdk.NewAccountObjectIdentifier(tempName)
+	err := client.Databases.Create(ctx, tempDatabaseID, nil)
+	if err != nil {
 		return fmt.Errorf("error creating temporary DB %v err = %w", tempName, err)
 	}
-
+	defer func() {
+		// drop the temporary DB during cleanup
+		err = client.Databases.Drop(ctx, tempDatabaseID, nil)
+		if err != nil {
+			log.Printf("[WARN] error dropping temporary DB %v err = %v", tempName, err)
+		}
+	}()
 	// 2. Create temporary DB grant to the share
-	tempDBGrant := snowflake.DatabaseGrant(tempName)
-
 	// USAGE can only be granted to one database - granting USAGE on the temp db here
 	// conflicts (and errors) with having a database already shared (i.e. when you
 	// already have a share and are just adding or removing accounts). Instead, use
@@ -112,92 +123,134 @@ func setAccounts(d *schema.ResourceData, meta interface{}) error {
 	// case where the main db doesn't already exist, so it will need to be revoked
 	// before deleting the temp db. Where USAGE hasn't been already granted it is not
 	// an error to revoke it, so it's ok to just do the revoke every time.
-	if err := snowflake.Exec(db, tempDBGrant.Share(name).Grant("REFERENCE_USAGE", false)); err != nil {
-		return fmt.Errorf("error creating temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
+	err = client.Grants.GrantPrivilegeToShare(ctx, sdk.PrivilegeReferenceUsage, &sdk.GrantPrivilegeToShareOn{
+		Database: tempDatabaseID,
+	}, shareID)
+	if err != nil {
+		return fmt.Errorf("error granting privilege to share err = %w", err)
 	}
-
-	// 3. Add the accounts to the share
-	if len(accs) > 0 {
-		q := fmt.Sprintf(`ALTER SHARE "%v" SET ACCOUNTS=%v`, name, strings.Join(accs, ","))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error adding accounts to share %v err = %w", name, err)
+	defer func() {
+		// revoke the REFERENCE_USAGE privilege during cleanup
+		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.PrivilegeReferenceUsage, &sdk.RevokePrivilegeFromShareOn{
+			Database: tempDatabaseID,
+		}, shareID)
+		if err != nil {
+			log.Printf("[WARN] error revoking privilege from share err = %v", err)
 		}
-	} else {
-		q := fmt.Sprintf(`ALTER SHARE "%v" UNSET ACCOUNTS`, name)
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error unsetting accounts to share %v err = %w", name, err)
+		// revoke the maybe automatically granted USAGE privilege during cleanup
+		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.PrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+			Database: tempDatabaseID,
+		}, shareID)
+		if err != nil {
+			log.Printf("[WARN] error revoking privilege from share err = %v", err)
 		}
-	}
-
-	// 4. Revoke temporary DB grant to the share
-	if err := snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("REFERENCE_USAGE")); err != nil {
-		return fmt.Errorf("error revoking temporary DB REFERENCE_USAGE grant %v err = %w", tempName, err)
-	}
-
-	// revoke the maybe automatically granted USAGE privilege.
-	if err := snowflake.ExecMulti(db, tempDBGrant.Share(name).Revoke("USAGE")); err != nil {
-		return fmt.Errorf("error revoking temporary DB grant %v err = %w", tempName, err)
-	}
-
-	// 5. Remove the temporary DB
-	if err := snowflake.Exec(db, tempDB.Drop()); err != nil {
-		return fmt.Errorf("error dropping temporary DB %v err = %w", tempName, err)
-	}
-
-	return nil
+	}()
+	// 3. Add accounts to the share
+	err = client.Shares.Alter(ctx, shareID, &sdk.ShareAlterOptions{
+		Add: &sdk.ShareAdd{
+			Accounts: accounts,
+		},
+	})
+	return err
 }
 
 // ReadShare implements schema.ReadFunc.
 func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	id := sdk.NewAccountObjectIdentifier(d.Id())
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	stmt := snowflake.NewShareBuilder(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	s, err := snowflake.ScanShare(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] share (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
+	share, err := client.Shares.ShowByID(ctx, id)
 	if err != nil {
+		return fmt.Errorf("error reading share err = %w", err)
+	}
+	if err := d.Set("name", share.Name.Name()); err != nil {
 		return err
+	}
+	if err := d.Set("comment", share.Comment); err != nil {
+		return err
+	}
+	accounts := make([]string, len(share.To))
+	for i, accountIdentifier := range share.To {
+		accounts[i] = accountIdentifier.Name()
 	}
 
-	if err := d.Set("name", StripAccountFromName(s.Name.String)); err != nil {
+	currentAccount := d.Get("accounts")
+	if currentAccount != nil {
+		currentAccounts := expandStringList(currentAccount.([]interface{}))
+		// reorder the accounts so they match the order in the config
+		// this is to avoid unnecessary diffs
+		accounts = reorderStringList(currentAccounts, accounts)
+	}
+	if err := d.Set("accounts", accounts); err != nil {
 		return err
 	}
-	if err := d.Set("comment", s.Comment.String); err != nil {
-		return err
-	}
-
-	accs := strings.FieldsFunc(s.To.String, func(c rune) bool { return c == ',' })
-	err = d.Set("accounts", accs)
 
 	return err
 }
 
+func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {
+	accountIdentifiers := make([]sdk.AccountIdentifier, len(accounts))
+	for i, account := range accounts {
+		parts := strings.Split(account, ".")
+		orgName := parts[0]
+		accountName := parts[1]
+		accountIdentifiers[i] = sdk.NewAccountIdentifier(orgName, accountName)
+	}
+	return accountIdentifiers
+}
+
 // UpdateShare implements schema.UpdateFunc.
 func UpdateShare(d *schema.ResourceData, meta interface{}) error {
-	// Change the accounts first - this is a special case and won't work using the generic method
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	if d.HasChange("accounts") {
-		if err := setAccounts(d, meta); err != nil {
-			return err
+		o, n := d.GetChange("accounts")
+		oldAccounts := expandStringList(o.([]interface{}))
+		newAccounts := expandStringList(n.([]interface{}))
+		if len(newAccounts) == 0 {
+			accountIdentifiers := accountIdentifiersFromSlice(oldAccounts)
+			err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.ShareAlterOptions{
+				Remove: &sdk.ShareRemove{
+					Accounts: accountIdentifiers,
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error removing accounts from share err = %w", err)
+			}
+		} else {
+			accountIdentifiers := accountIdentifiersFromSlice(newAccounts)
+			err := setShareAccounts(ctx, client, sdk.NewAccountObjectIdentifier(d.Id()), accountIdentifiers)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.ShareAlterOptions{
+			Set: &sdk.ShareSet{
+				Comment: sdk.String(comment),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("error updating share comment err = %w", err)
 		}
 	}
 
-	return UpdateResource("this does not seem to be used", shareProperties, shareSchema, snowflake.NewShareBuilder, ReadShare)(d, meta)
+	return ReadShare(d, meta)
 }
 
 // DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.NewShareBuilder)(d, meta)
-}
-
-// StripAccountFromName removes the account prefix from a resource (e.g. a share)
-// that returns it (e.g. yt12345.my_share or org.acc.my_share should just be my_share).
-func StripAccountFromName(s string) string {
-	return s[strings.LastIndex(s, ".")+1:]
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()))
+	if err != nil {
+		return fmt.Errorf("error deleting share err = %w", err)
+	}
+	return nil
 }

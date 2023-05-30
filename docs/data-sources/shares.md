@@ -33,6 +33,6 @@ Read-Only:
 - `kind` (String)
 - `name` (String)
 - `owner` (String)
-- `to` (String)
+- `to` (List of String)
 
 

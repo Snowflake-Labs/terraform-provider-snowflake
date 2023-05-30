@@ -1,5 +1,10 @@
 package sdk
 
+type LimitFrom struct {
+	Rows *int    `ddl:"keyword"`
+	From *string `ddl:"parameter,no_equals,single_quotes" db:"FROM"`
+}
+
 type In struct {
 	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
@@ -12,8 +17,7 @@ type Like struct {
 
 type TagAssociation struct {
 	Name  ObjectIdentifier `ddl:"identifier"`
-	eq    bool             `ddl:"static" db:"="` //lint:ignore U1000 This is used in the ddl tag
-	Value string           `ddl:"keyword,single_quotes"`
+	Value string           `ddl:"parameter,single_quotes"`
 }
 
 type TableColumnSignature struct {

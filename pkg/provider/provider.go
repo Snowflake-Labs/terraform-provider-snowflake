@@ -197,6 +197,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_account_grant":           resources.AccountGrant(),
 		"snowflake_database_grant":          resources.DatabaseGrant(),
 		"snowflake_external_table_grant":    resources.ExternalTableGrant(),
+		"snowflake_failover_group_grant":    resources.FailoverGroupGrant(),
 		"snowflake_file_format_grant":       resources.FileFormatGrant(),
 		"snowflake_function_grant":          resources.FunctionGrant(),
 		"snowflake_integration_grant":       resources.IntegrationGrant(),
@@ -283,6 +284,8 @@ func getResources() map[string]*schema.Resource {
 
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
+		"snowflake_accounts":                           datasources.Accounts(),
+    "snowflake_alerts":                             datasources.Alerts(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
 		"snowflake_database":                           datasources.Database(),
@@ -290,6 +293,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_databases":                          datasources.Databases(),
 		"snowflake_external_functions":                 datasources.ExternalFunctions(),
 		"snowflake_external_tables":                    datasources.ExternalTables(),
+    "snowflake_failover_groups":                    datasources.FailoverGroups(),
 		"snowflake_file_formats":                       datasources.FileFormats(),
 		"snowflake_functions":                          datasources.Functions(),
 		"snowflake_grants":                             datasources.Grants(),
@@ -379,11 +383,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
-	log.Printf("[INFO] account: %s\n", account)
-	log.Printf("[INFO] user: %s\n", user)
-	log.Printf("[INFO] role: %s\n", role)
-	log.Printf("[INFO] warehouse: %s\n", warehouse)
-	log.Printf("[INFO] dsn: %s\n", dsn)
 	client := sdk.NewClientFromDB(db)
 	sessionID, err := client.ContextFunctions.CurrentSession(context.Background())
 	if err != nil {

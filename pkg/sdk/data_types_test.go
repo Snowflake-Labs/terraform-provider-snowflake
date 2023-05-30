@@ -58,11 +58,20 @@ func TestDataTypeFromString(t *testing.T) {
 		{input: "timestamp", want: DataTypeTimestampNTZ},
 		{input: "timestamp_ntz", want: DataTypeTimestampNTZ},
 
+		// timestamp tz types.
+		{input: "timestamp_tz", want: DataTypeTimestampTZ},
+		{input: "timestamp_tz(9)", want: DataTypeTimestampTZ},
+
+		// timestamp ltz types.
+		{input: "timestamp_ltz", want: DataTypeTimestampLTZ},
+		{input: "timestamp_ltz(9)", want: DataTypeTimestampLTZ},
+
+		// time types.
+		{input: "time", want: DataTypeTime},
+		{input: "time(9)", want: DataTypeTime},
+
 		// all othertypes
 		{input: "date", want: DataTypeDate},
-		{input: "time", want: DataTypeTime},
-		{input: "timestamp_ltz", want: DataTypeTimestampLTZ},
-		{input: "timestamp_tz", want: DataTypeTimestampTZ},
 		{input: "variant", want: DataTypeVariant},
 		{input: "object", want: DataTypeObject},
 		{input: "array", want: DataTypeArray},

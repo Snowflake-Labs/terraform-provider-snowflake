@@ -175,7 +175,9 @@ func readGenericGrant(
 			// Reassign set back
 			rolePrivileges[roleName] = privileges
 		case "SHARE":
-			granteeNameStrippedAccount := StripAccountFromName(grant.GranteeName)
+			// Strip account name from grantee name
+			s := grant.GranteeName
+			granteeNameStrippedAccount := s[strings.LastIndex(s, ".")+1:]
 			// Find set of privileges
 			privileges, ok := sharePrivileges[granteeNameStrippedAccount]
 			if !ok {
