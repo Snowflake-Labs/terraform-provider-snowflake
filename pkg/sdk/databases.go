@@ -2,7 +2,9 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 )
 
 type Databases interface {
@@ -13,7 +15,7 @@ type Databases interface {
 	// Drop removes a database.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropDatabaseOptions) error
 	// Show returns a list of databases.
-	Show(ctx context.Context, opts *ShowDatabaseOptions) ([]*Database, error)
+	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error)
 	// ShowByID returns a database by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	// Describe returns the details of a database.
@@ -27,7 +29,66 @@ type databases struct {
 }
 
 type Database struct {
-	Name string
+	CreatedOn     time.Time
+	Name          string
+	IsDefault     string
+	IsCurrent     string
+	Origin        string
+	Owner         string
+	Comment       string
+	Options       string
+	RetentionTime string
+	ResourceGroup string
+	DroppedOn     time.Time
+}
+
+type databaseRow struct {
+	CreatedOn     time.Time      `db:"created_on"`
+	Name          string         `db:"name"`
+	IsDefault     sql.NullString `db:"is_default"`
+	IsCurrent     sql.NullString `db:"is_current"`
+	Origin        sql.NullString `db:"origin"`
+	Owner         sql.NullString `db:"owner"`
+	Comment       sql.NullString `db:"comment"`
+	Options       sql.NullString `db:"options"`
+	RetentionTime sql.NullString `db:"retention_time"`
+	ResourceGroup sql.NullString `db:"resource_group"`
+	DroppedOn     sql.NullTime   `db:"dropped_on"`
+}
+
+func (row *databaseRow) toDatabase() *Database {
+	database := Database{
+		CreatedOn: row.CreatedOn,
+		Name:      row.Name,
+	}
+	if row.IsDefault.Valid {
+		database.IsDefault = row.IsDefault.String
+	}
+	if row.IsCurrent.Valid {
+		database.IsCurrent = row.IsCurrent.String
+	}
+	if row.Origin.Valid {
+		database.Origin = row.Origin.String
+	}
+	if row.Owner.Valid {
+		database.Owner = row.Owner.String
+	}
+	if row.Comment.Valid {
+		database.Comment = row.Comment.String
+	}
+	if row.Options.Valid {
+		database.Options = row.Options.String
+	}
+	if row.RetentionTime.Valid {
+		database.RetentionTime = row.RetentionTime.String
+	}
+	if row.ResourceGroup.Valid {
+		database.ResourceGroup = row.ResourceGroup.String
+	}
+	if row.DroppedOn.Valid {
+		database.DroppedOn = row.DroppedOn.Time
+	}
+	return &database
 }
 
 // placeholder for the real implementation.
@@ -80,20 +141,55 @@ func (c *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *
 }
 
 // placeholder for the real implementation.
-type ShowDatabaseOptions struct{}
+type ShowDatabasesOptions struct {
+	show       bool       `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
+	databases  bool       `ddl:"static" sql:"DATABASES"` //lint:ignore U1000 This is used in the ddl tag
+	History    *bool      `ddl:"keyword" sql:"HISTORY"`
+	Like       *Like      `ddl:"keyword" sql:"LIKE"`
+	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	LimitFrom  *LimitFrom `ddl:"keyword" sql:"LIMIT"`
+}
 
-func (c *databases) Show(ctx context.Context, _ *ShowDatabaseOptions) ([]*Database, error) {
-	sql := `SHOW DATABASES`
-	var databases []*Database
-	err := c.client.query(ctx, &databases, sql)
+func (opts *ShowDatabasesOptions) validate() error {
+	return nil
+}
+
+func (c *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error) {
+	if opts == nil {
+		opts = &ShowDatabasesOptions{}
+	}
+	if err := opts.validate(); err != nil {
+		return nil, err
+	}
+	sql, err := structToSQL(opts)
+	if err != nil {
+		return nil, err
+	}
+	var rows []databaseRow
+	err = c.client.query(ctx, &rows, sql)
+	databases := make([]*Database, len(rows))
+	for i, row := range rows {
+		databases[i] = row.toDatabase()
+	}
 	return databases, err
 }
 
-func (c *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
-	sql := fmt.Sprintf(`SHOW DATABASES LIKE '%s'`, id.Name())
-	var database Database
-	err := c.client.queryOne(ctx, &database, sql)
-	return &database, err
+func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
+	databases, err := v.client.Databases.Show(ctx, &ShowDatabasesOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, database := range databases {
+		if database.ID() == id {
+			return database, nil
+		}
+	}
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type DatabaseDetails struct {

@@ -183,7 +183,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with double quotes", func(t *testing.T) {
 		s := struct {
-			Parameter *string `ddl:"parameter,double_quotes" db:"EXAMPLE_PARAMETER"`
+			Parameter *string `ddl:"parameter,double_quotes" sql:"EXAMPLE_PARAMETER"`
 		}{
 			Parameter: String("example"),
 		}
