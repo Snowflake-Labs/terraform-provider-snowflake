@@ -275,6 +275,7 @@ type Database struct {
 	Options       sql.NullString `db:"options"`
 	RetentionTime sql.NullString `db:"retention_time"`
 	ResourceGroup sql.NullString `db:"resource_group"`
+	Kind          sql.NullString `db:"kind"`
 }
 
 func ScanDatabase(row *sqlx.Row) (*Database, error) {
