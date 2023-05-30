@@ -3,12 +3,11 @@
 page_title: "snowflake_role_grants Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_role_grants (Resource)
 
-!> **WARNING:** If parameter `enable_multiple_grants` is set to `false`, the snowflake_role_grants resource creates **exclusive** grants for the selected role. Creating multiple resources for the same role with `enable_multiple_grants = false` will lead to permanent changes in plan.
 
 
 ## Example Usage

@@ -351,7 +351,11 @@ func deleteGenericGrantRolesAndShares(
 
 func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	priv := d.Get("privilege").(string)
-	reversionRole := d.Get("revert_ownership_to_role_name").(string)
+	rr := d.Get("revert_ownership_to_role_name")
+	var reversionRole string
+	if rr != nil {
+		reversionRole = rr.(string)
+	}
 	roles, shares := expandRolesAndShares(d)
 	if err := deleteGenericGrantRolesAndShares(meta, builder, priv, reversionRole, roles, shares); err != nil {
 		return err
