@@ -199,10 +199,9 @@ func (agb *AllGrantBuilder) Show() string {
 	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, agb.allGrantTarget, agb.qualifiedName)
 }
 
-
-// Role returns a pointer to a ExistingGrantExecutable for a role.
+// Role returns a pointer to a AllGrantExecutable for a role.
 func (agb *AllGrantBuilder) Role(n string) GrantExecutable {
-	return &ExistingGrantExecutable{
+	return &AllGrantExecutable{
 		granteeName:    n,
 		grantName:      agb.qualifiedName,
 		allGrantType:   agb.allGrantType,
@@ -225,7 +224,7 @@ type AllGrantExecutable struct {
 }
 
 // Grant returns the SQL that will grant all privileges on the grant to the grantee.
-func (ege *ExistingGrantExecutable) Grant(p string, w bool) string {
+func (ege *AllGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if w {
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v" WITH GRANT OPTION`
@@ -237,7 +236,7 @@ func (ege *ExistingGrantExecutable) Grant(p string, w bool) string {
 }
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
-func (ege *ExistingGrantExecutable) Revoke(p string) []string {
+func (ege *AllGrantExecutable) Revoke(p string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
@@ -247,7 +246,7 @@ func (ege *ExistingGrantExecutable) Revoke(p string) []string {
 
 // Revoke returns the SQL that will revoke ownership privileges on the grant from the grantee.
 // Note: returns the same SQL as Revoke.
-func (ege *ExistingGrantExecutable) RevokeOwnership(r string) []string {
+func (ege *AllGrantExecutable) RevokeOwnership(r string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE OWNERSHIP ON ALL %vS IN %v %v FROM ROLE "%v"`,
@@ -256,7 +255,7 @@ func (ege *ExistingGrantExecutable) RevokeOwnership(r string) []string {
 }
 
 // Show returns the SQL that will show all grants on the schema.
-func (ege *ExistingGrantExecutable) Show() string {
+func (ege *AllGrantExecutable) Show() string {
 	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, therefore changed the query to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which runs in snowflake.
 	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, ege.allGrantTarget, ege.grantName)
 }
