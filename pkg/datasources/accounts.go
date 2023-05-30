@@ -128,7 +128,7 @@ func ReadAccounts(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] ORGADMIN role is not in current session, cannot read accounts")
 		return nil
 	}
-	opts := &sdk.AccountShowOptions{}
+	opts := &sdk.ShowAccountOptions{}
 	if pattern, ok := d.GetOk("pattern"); ok {
 		opts.Like = &sdk.Like{
 			Pattern: sdk.String(pattern.(string)),

@@ -9,7 +9,7 @@ import (
 
 func TestFailoverGroupsCreate(t *testing.T) {
 	t.Run("complete", func(t *testing.T) {
-		opts := &FailoverGroupCreateOptions{
+		opts := &CreateFailoverGroupOptions{
 			IfNotExists: Bool(true),
 			name:        NewAccountObjectIdentifier("fg1"),
 			objectTypes: []PluralObjectType{
@@ -35,7 +35,7 @@ func TestFailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("minimal", func(t *testing.T) {
-		opts := &FailoverGroupCreateOptions{
+		opts := &CreateFailoverGroupOptions{
 			IfNotExists: Bool(true),
 			name:        NewAccountObjectIdentifier("fg1"),
 			objectTypes: []PluralObjectType{
@@ -53,7 +53,7 @@ func TestFailoverGroupsCreate(t *testing.T) {
 }
 
 func TestCreateSecondaryReplicationGroup(t *testing.T) {
-	opts := &FailoverGroupCreateSecondaryReplicationGroupOptions{
+	opts := &CreateSecondaryReplicationGroupOptions{
 		IfNotExists:          Bool(true),
 		name:                 NewAccountObjectIdentifier("fg1"),
 		primaryFailoverGroup: NewExternalObjectIdentifierFromFullyQualifiedName("myorg.myaccount.fg1"),
@@ -66,7 +66,7 @@ func TestCreateSecondaryReplicationGroup(t *testing.T) {
 
 func TestFailoverGroupAlterSource(t *testing.T) {
 	t.Run("rename", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			name:    NewAccountObjectIdentifier("fg1"),
 			NewName: NewAccountObjectIdentifier("myfg1"),
 		}
@@ -77,7 +77,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("set object types and replication schedule", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			name: NewAccountObjectIdentifier("fg1"),
 			Set: &FailoverGroupSet{
 				ObjectTypes:         []PluralObjectType{PluralObjectTypeShares},
@@ -91,7 +91,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("add database account object", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			Add: &FailoverGroupAdd{
 				AllowedDatabases: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("db1"),
@@ -105,7 +105,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("remove database account object", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			Remove: &FailoverGroupRemove{
 				AllowedDatabases: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("db1"),
@@ -119,7 +119,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("add share account object", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			Add: &FailoverGroupAdd{
 				AllowedShares: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("share1"),
@@ -133,7 +133,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("remove share account object", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			Remove: &FailoverGroupRemove{
 				AllowedShares: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("share1"),
@@ -147,7 +147,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
-		opts := &FailoverGroupAlterSourceOptions{
+		opts := &AlterSourceFailoverGroupOptions{
 			name: NewAccountObjectIdentifier("fg1"),
 			Move: &FailoverGroupMove{
 				Shares: []AccountObjectIdentifier{
@@ -165,7 +165,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 
 func TestFailoverGroupsAlterTarget(t *testing.T) {
 	t.Run("resume", func(t *testing.T) {
-		opts := &FailoverGroupAlterTargetOptions{
+		opts := &AlterTargetFailoverGroupOptions{
 			name:   NewAccountObjectIdentifier("fg1"),
 			Resume: Bool(true),
 		}
@@ -176,7 +176,7 @@ func TestFailoverGroupsAlterTarget(t *testing.T) {
 	})
 
 	t.Run("primary", func(t *testing.T) {
-		opts := &FailoverGroupAlterTargetOptions{
+		opts := &AlterTargetFailoverGroupOptions{
 			name:    NewAccountObjectIdentifier("fg1"),
 			Primary: Bool(true),
 		}
@@ -189,7 +189,7 @@ func TestFailoverGroupsAlterTarget(t *testing.T) {
 
 func TestFailoverGroupsDrop(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &FailoverGroupDropOptions{
+		opts := &DropFailoverGroupOptions{
 			name: NewAccountObjectIdentifier("fg1"),
 		}
 		actual, err := structToSQL(opts)
@@ -199,7 +199,7 @@ func TestFailoverGroupsDrop(t *testing.T) {
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		opts := &FailoverGroupDropOptions{
+		opts := &DropFailoverGroupOptions{
 			name:     NewAccountObjectIdentifier("fg1"),
 			IfExists: Bool(true),
 		}
@@ -212,7 +212,7 @@ func TestFailoverGroupsDrop(t *testing.T) {
 
 func TestFailoverGroupsShow(t *testing.T) {
 	t.Run("without show options", func(t *testing.T) {
-		opts := &FailoverGroupShowOptions{}
+		opts := &ShowFailoverGroupOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := `SHOW FAILOVER GROUPS`
@@ -220,7 +220,7 @@ func TestFailoverGroupsShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &FailoverGroupShowOptions{
+		showOptions := &ShowFailoverGroupOptions{
 			InAccount: NewAccountIdentifierFromAccountLocator("abcd123"),
 		}
 		actual, err := structToSQL(showOptions)
@@ -231,7 +231,7 @@ func TestFailoverGroupsShow(t *testing.T) {
 }
 
 func TestFailoverGroupsShowDatabases(t *testing.T) {
-	opts := &failoverGroupShowDatabasesOptions{}
+	opts := &showFailoverGroupDatabasesOptions{}
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)
 	expected := `SHOW DATABASES`
@@ -239,7 +239,7 @@ func TestFailoverGroupsShowDatabases(t *testing.T) {
 }
 
 func TestFailoverGroupsShowShares(t *testing.T) {
-	opts := &failoverGroupShowSharesOptions{
+	opts := &showFailoverGroupSharesOptions{
 		in: NewAccountObjectIdentifier("fg1"),
 	}
 	actual, err := structToSQL(opts)

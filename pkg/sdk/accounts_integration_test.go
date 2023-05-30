@@ -22,7 +22,7 @@ func TestInt_AccountShow(t *testing.T) {
 	}
 	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
-	opts := &AccountShowOptions{
+	opts := &ShowAccountOptions{
 		Like: &Like{
 			Pattern: String(currentAccount),
 		},
@@ -50,7 +50,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		region, err := client.ContextFunctions.CurrentRegion(ctx)
 		require.NoError(t, err)
 
-		opts := &AccountCreateOptions{
+		opts := &CreateAccountOptions{
 			AdminName:          "someadmin",
 			AdminPassword:      String(randomStringN(t, 12)),
 			FirstName:          String("Ad"),
@@ -72,7 +72,7 @@ func TestInt_AccountCreate(t *testing.T) {
 
 		// rename
 		newAccountID := NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", (randomIntRange(t, 100, 999))))
-		alterOpts := &AccountAlterOptions{
+		alterOpts := &AlterAccountOptions{
 			Rename: &AccountRename{
 				Name:       accountID,
 				NewName:    newAccountID,
@@ -86,7 +86,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		assert.Equal(t, newAccountID.Name(), account.AccountName)
 
 		// drop old url
-		alterOpts = &AccountAlterOptions{
+		alterOpts = &AlterAccountOptions{
 			Drop: &AccountDrop{
 				Name:   newAccountID,
 				OldURL: Bool(true),
@@ -108,7 +108,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Skip("ACCOUNTADMIN role is not in current session")
 	}
 	t.Run("set and unset params", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				Parameters: &AccountLevelParameters{
 					AccountParameters: &AccountParameters{
@@ -139,7 +139,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 30, toInt(p.Value))
 
-		opts = &AccountAlterOptions{
+		opts = &AlterAccountOptions{
 			Unset: &AccountUnset{
 				Parameters: &AccountLevelParametersUnset{
 					AccountParameters: &AccountParametersUnset{
@@ -162,7 +162,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	t.Run("set resource monitor", func(t *testing.T) {
 		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				ResourceMonitor: resourceMonitorTest.ID(),
 			},
@@ -178,7 +178,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(schemaCleanup)
 		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				PasswordPolicy: passwordPolicyTest.ID(),
 			},
@@ -187,7 +187,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		// now unset
-		opts = &AccountAlterOptions{
+		opts = &AlterAccountOptions{
 			Unset: &AccountUnset{
 				PasswordPolicy: Bool(true),
 			},
@@ -203,7 +203,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(schemaCleanup)
 		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(sessionPolicyCleanup)
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				SessionPolicy: sessionPolicyTest.ID(),
 			},
@@ -212,7 +212,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		// now unset
-		opts = &AccountAlterOptions{
+		opts = &AlterAccountOptions{
 			Unset: &AccountUnset{
 				SessionPolicy: Bool(true),
 			},
@@ -231,7 +231,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup2)
 
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				Tag: []TagAssociation{
 					{

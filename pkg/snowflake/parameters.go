@@ -66,6 +66,21 @@ func ParameterDefaults() map[string]ParameterDefault {
 				return nil
 			},
 		},
+		"CLIENT_METADATA_USE_SESSION_DATABASE": {
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+		},
+		"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX": {
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+		},
+		"CLIENT_RESULT_COLUMN_CASE_INSENSITIVE": {
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+		},
 		"ENABLE_INTERNAL_STAGES_PRIVATELINK": {
 			TypeSet:      []ParameterType{ParameterTypeAccount},
 			DefaultValue: false,
@@ -105,6 +120,20 @@ func ParameterDefaults() map[string]ParameterDefault {
 				}
 				if v < 0 || v > 90 {
 					return fmt.Errorf("%v must be 0 or 1 for Standard Edition, or between 0 and 90 for Enterprise Edition or higher", v)
+				}
+				return nil
+			},
+		},
+		"MULTI_STATEMENT_COUNT": {
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
+			DefaultValue: 1,
+			Validate: func(value string) (err error) {
+				v, err := strconv.ParseInt(value, 10, 64)
+				if err != nil {
+					return fmt.Errorf("%v cannot be cast to an integer", value)
+				}
+				if v < 0 {
+					return fmt.Errorf("%v must be a positive integer", v)
 				}
 				return nil
 			},
@@ -257,6 +286,11 @@ func ParameterDefaults() map[string]ParameterDefault {
 				}
 				return nil
 			},
+		},
+		"QUOTED_IDENTIFIERS_IGNORE_CASE": {
+			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
 		},
 		"ROWS_PER_RESULTSET": {
 			TypeSet:      []ParameterType{ParameterTypeSession},

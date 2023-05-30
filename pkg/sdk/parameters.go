@@ -180,21 +180,21 @@ const (
 
 type AccountParameters struct {
 	// Account Parameters
-	AllowClientMFACaching                        *bool    `ddl:"parameter" db:"ALLOW_CLIENT_MFA_CACHING"`
-	AllowIDToken                                 *bool    `ddl:"parameter" db:"ALLOW_ID_TOKEN"`
-	ClientEncryptionKeySize                      *int     `ddl:"parameter" db:"CLIENT_ENCRYPTION_KEY_SIZE"`
-	EnableInternalStagesPrivatelink              *bool    `ddl:"parameter" db:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
-	EventTable                                   *string  `ddl:"parameter,single_quotes" db:"EVENT_TABLE"`
-	ExternalOAuthAddPrivilegedRolesToBlockedList *bool    `ddl:"parameter" db:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	InitialReplicationSizeLimitInTB              *float64 `ddl:"parameter" db:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                   *int     `ddl:"parameter" db:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                *string  `ddl:"parameter,single_quotes" db:"NETWORK_POLICY"`
-	PeriodicDataRekeying                         *bool    `ddl:"parameter" db:"PERIODIC_DATA_REKEYING"`
-	PreventUnloadToInlineURL                     *bool    `ddl:"parameter" db:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages                *bool    `ddl:"parameter" db:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation    *bool    `ddl:"parameter" db:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation   *bool    `ddl:"parameter" db:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                                 *bool    `ddl:"parameter" db:"SSO_LOGIN_PAGE"`
+	AllowClientMFACaching                        *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
+	AllowIDToken                                 *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
+	ClientEncryptionKeySize                      *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	EnableInternalStagesPrivatelink              *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EventTable                                   *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
+	ExternalOAuthAddPrivilegedRolesToBlockedList *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	InitialReplicationSizeLimitInTB              *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MinDataRetentionTimeInDays                   *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                                *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	PeriodicDataRekeying                         *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
+	PreventUnloadToInlineURL                     *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages                *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation    *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation   *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                                 *bool    `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
 }
 
 func (v *AccountParameters) validate() error {
@@ -219,21 +219,21 @@ func (v *AccountParameters) validate() error {
 }
 
 type AccountParametersUnset struct {
-	AllowClientMFACaching                        *bool `ddl:"keyword" db:"ALLOW_CLIENT_MFA_CACHING"`
-	AllowIDToken                                 *bool `ddl:"keyword" db:"ALLOW_ID_TOKEN"`
-	ClientEncryptionKeySize                      *bool `ddl:"keyword" db:"CLIENT_ENCRYPTION_KEY_SIZE"`
-	EnableInternalStagesPrivatelink              *bool `ddl:"keyword" db:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
-	EventTable                                   *bool `ddl:"keyword" db:"EVENT_TABLE"`
-	ExternalOAuthAddPrivilegedRolesToBlockedList *bool `ddl:"keyword" db:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	InitialReplicationSizeLimitInTB              *bool `ddl:"keyword" db:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                   *bool `ddl:"keyword" db:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                *bool `ddl:"keyword,single_quotes" db:"NETWORK_POLICY"`
-	PeriodicDataRekeying                         *bool `ddl:"keyword" db:"PERIODIC_DATA_REKEYING"`
-	PreventUnloadToInlineURL                     *bool `ddl:"keyword" db:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages                *bool `ddl:"keyword" db:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation    *bool `ddl:"keyword" db:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation   *bool `ddl:"keyword" db:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                                 *bool `ddl:"keyword" db:"SSO_LOGIN_PAGE"`
+	AllowClientMFACaching                        *bool `ddl:"keyword" sql:"ALLOW_CLIENT_MFA_CACHING"`
+	AllowIDToken                                 *bool `ddl:"keyword" sql:"ALLOW_ID_TOKEN"`
+	ClientEncryptionKeySize                      *bool `ddl:"keyword" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	EnableInternalStagesPrivatelink              *bool `ddl:"keyword" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EventTable                                   *bool `ddl:"keyword" sql:"EVENT_TABLE"`
+	ExternalOAuthAddPrivilegedRolesToBlockedList *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	InitialReplicationSizeLimitInTB              *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MinDataRetentionTimeInDays                   *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                                *bool `ddl:"keyword,single_quotes" sql:"NETWORK_POLICY"`
+	PeriodicDataRekeying                         *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
+	PreventUnloadToInlineURL                     *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages                *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation    *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation   *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                                 *bool `ddl:"keyword" sql:"SSO_LOGIN_PAGE"`
 }
 
 type GeographyOutputFormat string
@@ -267,38 +267,38 @@ const (
 )
 
 type SessionParameters struct {
-	AbortDetachedQuery               *bool                             `ddl:"parameter" db:"ABORT_DETACHED_QUERY"`
-	Autocommit                       *bool                             `ddl:"parameter" db:"AUTOCOMMIT"`
-	BinaryInputFormat                *string                           `ddl:"parameter,single_quotes" db:"BINARY_INPUT_FORMAT"`
-	BinaryOutputFormat               *BinaryInputFormat                `ddl:"parameter,single_quotes" db:"BINARY_OUTPUT_FORMAT"`
-	DateInputFormat                  *string                           `ddl:"parameter,single_quotes" db:"DATE_INPUT_FORMAT"`
-	DateOutputFormat                 *string                           `ddl:"parameter,single_quotes" db:"DATE_OUTPUT_FORMAT"`
-	ErrorOnNondeterministicMerge     *bool                             `ddl:"parameter" db:"ERROR_ON_NONDETERMINISTIC_MERGE"`
-	ErrorOnNondeterministicUpdate    *bool                             `ddl:"parameter" db:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
-	GeographyOutputFormat            *GeographyOutputFormat            `ddl:"parameter,single_quotes" db:"GEOGRAPHY_OUTPUT_FORMAT"`
-	JSONIndent                       *int                              `ddl:"parameter" db:"JSON_INDENT"`
-	LockTimeout                      *int                              `ddl:"parameter" db:"LOCK_TIMEOUT"`
-	QueryTag                         *string                           `ddl:"parameter,single_quotes" db:"QUERY_TAG"`
-	RowsPerResultset                 *int                              `ddl:"parameter" db:"ROWS_PER_RESULTSET"`
-	SimulatedDataSharingConsumer     *string                           `ddl:"parameter,single_quotes" db:"SIMULATED_DATA_SHARING_CONSUMER"`
-	StatementTimeoutInSeconds        *int                              `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	StrictJSONOutput                 *bool                             `ddl:"parameter" db:"STRICT_JSON_OUTPUT"`
-	TimestampDayIsAlways24h          *bool                             `ddl:"parameter" db:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
-	TimestampInputFormat             *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_INPUT_FORMAT"`
-	TimestampLTZOutputFormat         *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
-	TimestampNTZOutputFormat         *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
-	TimestampOutputFormat            *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_OUTPUT_FORMAT"`
-	TimestampTypeMapping             *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_TYPE_MAPPING"`
-	TimestampTZOutputFormat          *string                           `ddl:"parameter,single_quotes" db:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
-	Timezone                         *string                           `ddl:"parameter,single_quotes" db:"TIMEZONE"`
-	TimeInputFormat                  *string                           `ddl:"parameter,single_quotes" db:"TIME_INPUT_FORMAT"`
-	TimeOutputFormat                 *string                           `ddl:"parameter,single_quotes" db:"TIME_OUTPUT_FORMAT"`
-	TransactionDefaultIsolationLevel *TransactionDefaultIsolationLevel `ddl:"parameter,single_quotes" db:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
-	TwoDigitCenturyStart             *int                              `ddl:"parameter" db:"TWO_DIGIT_CENTURY_START"`
-	UnsupportedDDLAction             *UnsupportedDDLAction             `ddl:"parameter,single_quotes" db:"UNSUPPORTED_DDL_ACTION"`
-	UseCachedResult                  *bool                             `ddl:"parameter" db:"USE_CACHED_RESULT"`
-	WeekOfYearPolicy                 *int                              `ddl:"parameter" db:"WEEK_OF_YEAR_POLICY"`
-	WeekStart                        *int                              `ddl:"parameter" db:"WEEK_START"`
+	AbortDetachedQuery               *bool                             `ddl:"parameter" sql:"ABORT_DETACHED_QUERY"`
+	Autocommit                       *bool                             `ddl:"parameter" sql:"AUTOCOMMIT"`
+	BinaryInputFormat                *string                           `ddl:"parameter,single_quotes" sql:"BINARY_INPUT_FORMAT"`
+	BinaryOutputFormat               *BinaryInputFormat                `ddl:"parameter,single_quotes" sql:"BINARY_OUTPUT_FORMAT"`
+	DateInputFormat                  *string                           `ddl:"parameter,single_quotes" sql:"DATE_INPUT_FORMAT"`
+	DateOutputFormat                 *string                           `ddl:"parameter,single_quotes" sql:"DATE_OUTPUT_FORMAT"`
+	ErrorOnNondeterministicMerge     *bool                             `ddl:"parameter" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
+	ErrorOnNondeterministicUpdate    *bool                             `ddl:"parameter" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
+	GeographyOutputFormat            *GeographyOutputFormat            `ddl:"parameter,single_quotes" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
+	JSONIndent                       *int                              `ddl:"parameter" sql:"JSON_INDENT"`
+	LockTimeout                      *int                              `ddl:"parameter" sql:"LOCK_TIMEOUT"`
+	QueryTag                         *string                           `ddl:"parameter,single_quotes" sql:"QUERY_TAG"`
+	RowsPerResultset                 *int                              `ddl:"parameter" sql:"ROWS_PER_RESULTSET"`
+	SimulatedDataSharingConsumer     *string                           `ddl:"parameter,single_quotes" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
+	StatementTimeoutInSeconds        *int                              `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	StrictJSONOutput                 *bool                             `ddl:"parameter" sql:"STRICT_JSON_OUTPUT"`
+	TimestampDayIsAlways24h          *bool                             `ddl:"parameter" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
+	TimestampInputFormat             *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_INPUT_FORMAT"`
+	TimestampLTZOutputFormat         *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
+	TimestampNTZOutputFormat         *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
+	TimestampOutputFormat            *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_OUTPUT_FORMAT"`
+	TimestampTypeMapping             *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_TYPE_MAPPING"`
+	TimestampTZOutputFormat          *string                           `ddl:"parameter,single_quotes" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
+	Timezone                         *string                           `ddl:"parameter,single_quotes" sql:"TIMEZONE"`
+	TimeInputFormat                  *string                           `ddl:"parameter,single_quotes" sql:"TIME_INPUT_FORMAT"`
+	TimeOutputFormat                 *string                           `ddl:"parameter,single_quotes" sql:"TIME_OUTPUT_FORMAT"`
+	TransactionDefaultIsolationLevel *TransactionDefaultIsolationLevel `ddl:"parameter,single_quotes" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
+	TwoDigitCenturyStart             *int                              `ddl:"parameter" sql:"TWO_DIGIT_CENTURY_START"`
+	UnsupportedDDLAction             *UnsupportedDDLAction             `ddl:"parameter,single_quotes" sql:"UNSUPPORTED_DDL_ACTION"`
+	UseCachedResult                  *bool                             `ddl:"parameter" sql:"USE_CACHED_RESULT"`
+	WeekOfYearPolicy                 *int                              `ddl:"parameter" sql:"WEEK_OF_YEAR_POLICY"`
+	WeekStart                        *int                              `ddl:"parameter" sql:"WEEK_START"`
 }
 
 func (v *SessionParameters) validate() error {
@@ -341,38 +341,38 @@ func (v *SessionParameters) validate() error {
 }
 
 type SessionParametersUnset struct {
-	AbortDetachedQuery               *bool `ddl:"keyword" db:"ABORT_DETACHED_QUERY"`
-	Autocommit                       *bool `ddl:"keyword" db:"AUTOCOMMIT"`
-	BinaryInputFormat                *bool `ddl:"keyword" db:"BINARY_INPUT_FORMAT"`
-	BinaryOutputFormat               *bool `ddl:"keyword" db:"BINARY_OUTPUT_FORMAT"`
-	DateInputFormat                  *bool `ddl:"keyword" db:"DATE_INPUT_FORMAT"`
-	DateOutputFormat                 *bool `ddl:"keyword" db:"DATE_OUTPUT_FORMAT"`
-	ErrorOnNondeterministicMerge     *bool `ddl:"keyword" db:"ERROR_ON_NONDETERMINISTIC_MERGE"`
-	ErrorOnNondeterministicUpdate    *bool `ddl:"keyword" db:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
-	GeographyOutputFormat            *bool `ddl:"keyword" db:"GEOGRAPHY_OUTPUT_FORMAT"`
-	JSONIndent                       *bool `ddl:"keyword" db:"JSON_INDENT"`
-	LockTimeout                      *bool `ddl:"keyword" db:"LOCK_TIMEOUT"`
-	QueryTag                         *bool `ddl:"keyword" db:"QUERY_TAG"`
-	RowsPerResultset                 *bool `ddl:"keyword" db:"ROWS_PER_RESULTSET"`
-	SimulatedDataSharingConsumer     *bool `ddl:"keyword" db:"SIMULATED_DATA_SHARING_CONSUMER"`
-	StatementTimeoutInSeconds        *bool `ddl:"keyword" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	StrictJSONOutput                 *bool `ddl:"keyword" db:"STRICT_JSON_OUTPUT"`
-	TimestampDayIsAlways24h          *bool `ddl:"keyword" db:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
-	TimestampInputFormat             *bool `ddl:"keyword" db:"TIMESTAMP_INPUT_FORMAT"`
-	TimestampLTZOutputFormat         *bool `ddl:"keyword" db:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
-	TimestampNTZOutputFormat         *bool `ddl:"keyword" db:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
-	TimestampOutputFormat            *bool `ddl:"keyword" db:"TIMESTAMP_OUTPUT_FORMAT"`
-	TimestampTypeMapping             *bool `ddl:"keyword" db:"TIMESTAMP_TYPE_MAPPING"`
-	TimestampTZOutputFormat          *bool `ddl:"keyword" db:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
-	Timezone                         *bool `ddl:"keyword" db:"TIMEZONE"`
-	TimeInputFormat                  *bool `ddl:"keyword" db:"TIME_INPUT_FORMAT"`
-	TimeOutputFormat                 *bool `ddl:"keyword" db:"TIME_OUTPUT_FORMAT"`
-	TransactionDefaultIsolationLevel *bool `ddl:"keyword" db:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
-	TwoDigitCenturyStart             *bool `ddl:"keyword" db:"TWO_DIGIT_CENTURY_START"`
-	UnsupportedDDLAction             *bool `ddl:"keyword" db:"UNSUPPORTED_DDL_ACTION"`
-	UseCachedResult                  *bool `ddl:"keyword" db:"USE_CACHED_RESULT"`
-	WeekOfYearPolicy                 *bool `ddl:"keyword" db:"WEEK_OF_YEAR_POLICY"`
-	WeekStart                        *bool `ddl:"keyword" db:"WEEK_START"`
+	AbortDetachedQuery               *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
+	Autocommit                       *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
+	BinaryInputFormat                *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
+	BinaryOutputFormat               *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
+	DateInputFormat                  *bool `ddl:"keyword" sql:"DATE_INPUT_FORMAT"`
+	DateOutputFormat                 *bool `ddl:"keyword" sql:"DATE_OUTPUT_FORMAT"`
+	ErrorOnNondeterministicMerge     *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
+	ErrorOnNondeterministicUpdate    *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
+	GeographyOutputFormat            *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
+	JSONIndent                       *bool `ddl:"keyword" sql:"JSON_INDENT"`
+	LockTimeout                      *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
+	QueryTag                         *bool `ddl:"keyword" sql:"QUERY_TAG"`
+	RowsPerResultset                 *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
+	SimulatedDataSharingConsumer     *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
+	StatementTimeoutInSeconds        *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	StrictJSONOutput                 *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`
+	TimestampDayIsAlways24h          *bool `ddl:"keyword" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
+	TimestampInputFormat             *bool `ddl:"keyword" sql:"TIMESTAMP_INPUT_FORMAT"`
+	TimestampLTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
+	TimestampNTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
+	TimestampOutputFormat            *bool `ddl:"keyword" sql:"TIMESTAMP_OUTPUT_FORMAT"`
+	TimestampTypeMapping             *bool `ddl:"keyword" sql:"TIMESTAMP_TYPE_MAPPING"`
+	TimestampTZOutputFormat          *bool `ddl:"keyword" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
+	Timezone                         *bool `ddl:"keyword" sql:"TIMEZONE"`
+	TimeInputFormat                  *bool `ddl:"keyword" sql:"TIME_INPUT_FORMAT"`
+	TimeOutputFormat                 *bool `ddl:"keyword" sql:"TIME_OUTPUT_FORMAT"`
+	TransactionDefaultIsolationLevel *bool `ddl:"keyword" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
+	TwoDigitCenturyStart             *bool `ddl:"keyword" sql:"TWO_DIGIT_CENTURY_START"`
+	UnsupportedDDLAction             *bool `ddl:"keyword" sql:"UNSUPPORTED_DDL_ACTION"`
+	UseCachedResult                  *bool `ddl:"keyword" sql:"USE_CACHED_RESULT"`
+	WeekOfYearPolicy                 *bool `ddl:"keyword" sql:"WEEK_OF_YEAR_POLICY"`
+	WeekStart                        *bool `ddl:"keyword" sql:"WEEK_START"`
 }
 
 func (v *SessionParametersUnset) validate() error {
@@ -403,20 +403,20 @@ const (
 )
 
 type ObjectParameters struct {
-	DataRetentionTimeInDays             *int           `ddl:"parameter" db:"DATA_RETENTION_TIME_IN_DAYS"`
-	DefaultDDLCollation                 *string        `ddl:"parameter,single_quotes" db:"DEFAULT_DDL_COLLATION"`
-	LogLevel                            *LogLevel      `ddl:"parameter" db:"LOG_LEVEL"`
-	MaxConcurrencyLevel                 *int           `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	MaxDataExtensionTimeInDays          *int           `ddl:"parameter" db:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	PipeExecutionPaused                 *bool          `ddl:"parameter" db:"PIPE_EXECUTION_PAUSED"`
-	PreventUnloadToInternalStages       *bool          `ddl:"parameter" db:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	StatementQueuedTimeoutInSeconds     *int           `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	NetworkPolicy                       *string        `ddl:"parameter,single_quotes" db:"NETWORK_POLICY"`
-	ShareRestrictions                   *bool          `ddl:"parameter" db:"SHARE_RESTRICTIONS"`
-	SuspendTaskAfterNumFailures         *int           `ddl:"parameter" db:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	TraceLevel                          *TraceLevel    `ddl:"parameter" db:"TRACE_LEVEL"`
-	UserTaskManagedInitialWarehouseSize *WarehouseSize `ddl:"parameter" db:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
-	UserTaskTimeoutMs                   *int           `ddl:"parameter" db:"USER_TASK_TIMEOUT_MS"`
+	DataRetentionTimeInDays             *int           `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	DefaultDDLCollation                 *string        `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel                            *LogLevel      `ddl:"parameter" sql:"LOG_LEVEL"`
+	MaxConcurrencyLevel                 *int           `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
+	MaxDataExtensionTimeInDays          *int           `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	PipeExecutionPaused                 *bool          `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
+	PreventUnloadToInternalStages       *bool          `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	StatementQueuedTimeoutInSeconds     *int           `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	NetworkPolicy                       *string        `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	ShareRestrictions                   *bool          `ddl:"parameter" sql:"SHARE_RESTRICTIONS"`
+	SuspendTaskAfterNumFailures         *int           `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TraceLevel                          *TraceLevel    `ddl:"parameter" sql:"TRACE_LEVEL"`
+	UserTaskManagedInitialWarehouseSize *WarehouseSize `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                   *int           `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
 }
 
 func (v *ObjectParameters) validate() error {
@@ -458,24 +458,24 @@ func (v *ObjectParameters) validate() error {
 }
 
 type ObjectParametersUnset struct {
-	DataRetentionTimeInDays             *bool `ddl:"keyword" db:"DATA_RETENTION_TIME_IN_DAYS"`
-	DefaultDDLCollation                 *bool `ddl:"keyword" db:"DEFAULT_DDL_COLLATION"`
-	LogLevel                            *bool `ddl:"keyword" db:"LOG_LEVEL"`
-	MaxConcurrencyLevel                 *bool `ddl:"keyword" db:"MAX_CONCURRENCY_LEVEL"`
-	MaxDataExtensionTimeInDays          *bool `ddl:"keyword" db:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	PipeExecutionPaused                 *bool `ddl:"keyword" db:"PIPE_EXECUTION_PAUSED"`
-	PreventUnloadToInternalStages       *bool `ddl:"keyword" db:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	StatementQueuedTimeoutInSeconds     *bool `ddl:"keyword" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	NetworkPolicy                       *bool `ddl:"keyword,single_quotes" db:"NETWORK_POLICY"`
-	ShareRestrictions                   *bool `ddl:"keyword" db:"SHARE_RESTRICTIONS"`
-	SuspendTaskAfterNumFailures         *bool `ddl:"keyword" db:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	TraceLevel                          *bool `ddl:"keyword" db:"TRACE_LEVEL"`
-	UserTaskManagedInitialWarehouseSize *bool `ddl:"keyword" db:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
-	UserTaskTimeoutMs                   *bool `ddl:"keyword" db:"USER_TASK_TIMEOUT_MS"`
+	DataRetentionTimeInDays             *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	DefaultDDLCollation                 *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel                            *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	MaxConcurrencyLevel                 *bool `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
+	MaxDataExtensionTimeInDays          *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	PipeExecutionPaused                 *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
+	PreventUnloadToInternalStages       *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	StatementQueuedTimeoutInSeconds     *bool `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	NetworkPolicy                       *bool `ddl:"keyword,single_quotes" sql:"NETWORK_POLICY"`
+	ShareRestrictions                   *bool `ddl:"keyword" sql:"SHARE_RESTRICTIONS"`
+	SuspendTaskAfterNumFailures         *bool `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TraceLevel                          *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
+	UserTaskManagedInitialWarehouseSize *bool `ddl:"keyword" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                   *bool `ddl:"keyword" sql:"USER_TASK_TIMEOUT_MS"`
 }
 
 type UserParameters struct {
-	EnableUnredactedQuerySyntaxError *bool `ddl:"parameter" db:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
+	EnableUnredactedQuerySyntaxError *bool `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 }
 
 func (v *UserParameters) validate() error {
@@ -483,5 +483,5 @@ func (v *UserParameters) validate() error {
 }
 
 type UserParametersUnset struct {
-	EnableUnredactedQuerySyntaxError *bool `ddl:"keyword" db:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
+	EnableUnredactedQuerySyntaxError *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 }

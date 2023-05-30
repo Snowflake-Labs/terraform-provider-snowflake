@@ -13,7 +13,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &MaskingPolicyCreateOptions{}
+		opts := &CreateMaskingPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "CREATE MASKING POLICY RETURNS ->"
@@ -34,7 +34,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 		expression := "REPLACE('X', 1, 2)"
 		comment := randomString(t)
 
-		opts := &MaskingPolicyCreateOptions{
+		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
 			name:                id,
 			IfNotExists:         Bool(true),
@@ -56,7 +56,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &MaskingPolicyAlterOptions{}
+		opts := &AlterMaskingPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "ALTER MASKING POLICY"
@@ -64,7 +64,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &MaskingPolicyAlterOptions{
+		opts := &AlterMaskingPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -75,7 +75,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 
 	t.Run("with set", func(t *testing.T) {
 		newComment := randomString(t)
-		opts := &MaskingPolicyAlterOptions{
+		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{
 				Comment: String(newComment),
@@ -88,7 +88,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with unset", func(t *testing.T) {
-		opts := &MaskingPolicyAlterOptions{
+		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Unset: &MaskingPolicyUnset{
 				Comment: Bool(true),
@@ -102,7 +102,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
-		opts := &MaskingPolicyAlterOptions{
+		opts := &AlterMaskingPolicyOptions{
 			name:    id,
 			NewName: newID,
 		}
@@ -117,7 +117,7 @@ func TestMaskingPolicyDrop(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &MaskingPolicyDropOptions{}
+		opts := &DropMaskingPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "DROP MASKING POLICY"
@@ -125,7 +125,7 @@ func TestMaskingPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &MaskingPolicyDropOptions{
+		opts := &DropMaskingPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -139,7 +139,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &MaskingPolicyShowOptions{}
+		opts := &ShowMaskingPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "SHOW MASKING POLICIES"
@@ -147,7 +147,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := &MaskingPolicyShowOptions{
+		opts := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -159,7 +159,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
-		opts := &MaskingPolicyShowOptions{
+		opts := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -175,7 +175,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 
 	t.Run("with like and in database", func(t *testing.T) {
 		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
-		opts := &MaskingPolicyShowOptions{
+		opts := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -191,7 +191,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 
 	t.Run("with like and in schema", func(t *testing.T) {
 		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
-		opts := &MaskingPolicyShowOptions{
+		opts := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -206,7 +206,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with limit", func(t *testing.T) {
-		opts := &MaskingPolicyShowOptions{
+		opts := &ShowMaskingPolicyOptions{
 			Limit: Int(10),
 		}
 		actual, err := structToSQL(opts)
@@ -220,7 +220,7 @@ func TestMaskingPolicyDescribe(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &maskingPolicyDescribeOptions{}
+		opts := &describeMaskingPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "DESCRIBE MASKING POLICY"
@@ -228,7 +228,7 @@ func TestMaskingPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &maskingPolicyDescribeOptions{
+		opts := &describeMaskingPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)

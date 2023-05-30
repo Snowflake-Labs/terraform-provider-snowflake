@@ -13,7 +13,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{}
+		opts := &CreatePasswordPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "CREATE PASSWORD POLICY"
@@ -21,7 +21,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{
+		opts := &CreatePasswordPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -31,7 +31,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		opts := &PasswordPolicyCreateOptions{
+		opts := &CreatePasswordPolicyOptions{
 			OrReplace:                 Bool(true),
 			name:                      id,
 			IfNotExists:               Bool(true),
@@ -57,7 +57,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{}
+		opts := &AlterPasswordPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "ALTER PASSWORD POLICY"
@@ -65,7 +65,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		opts := &AlterPasswordPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -75,7 +75,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		opts := &AlterPasswordPolicyOptions{
 			name: id,
 			Set: &PasswordPolicySet{
 				PasswordMinLength:         Int(10),
@@ -90,7 +90,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with unset", func(t *testing.T) {
-		opts := &PasswordPolicyAlterOptions{
+		opts := &AlterPasswordPolicyOptions{
 			name: id,
 			Unset: &PasswordPolicyUnset{
 				PasswordMinLength: Bool(true),
@@ -104,7 +104,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
-		opts := &PasswordPolicyAlterOptions{
+		opts := &AlterPasswordPolicyOptions{
 			name:    id,
 			NewName: newID,
 		}
@@ -119,7 +119,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{}
+		opts := &DropPasswordPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "DROP PASSWORD POLICY"
@@ -127,7 +127,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{
+		opts := &DropPasswordPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -137,7 +137,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("with if exists", func(t *testing.T) {
-		opts := &PasswordPolicyDropOptions{
+		opts := &DropPasswordPolicyOptions{
 			name:     id,
 			IfExists: Bool(true),
 		}
@@ -233,7 +233,7 @@ func TestPasswordPolicyDescribe(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &passwordPolicyDescribeOptions{}
+		opts := &describePasswordPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "DESCRIBE PASSWORD POLICY"
@@ -241,7 +241,7 @@ func TestPasswordPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &passwordPolicyDescribeOptions{
+		opts := &describePasswordPolicyOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)

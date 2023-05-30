@@ -170,7 +170,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
 	whType := sdk.WarehouseType(d.Get("warehouse_type").(string))
-	createOptions := &sdk.WarehouseCreateOptions{
+	createOptions := &sdk.CreateWarehouseOptions{
 		Comment:                         sdk.String(d.Get("comment").(string)),
 		StatementTimeoutInSeconds:       sdk.Int(d.Get("statement_timeout_in_seconds").(int)),
 		StatementQueuedTimeoutInSeconds: sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int)),
@@ -283,7 +283,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		if v, ok := d.GetOk("name"); ok {
 			newName := sdk.NewAccountObjectIdentifier(v.(string))
-			err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+			err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
 				NewName: newName,
 			})
 			if err != nil {
@@ -397,7 +397,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	// Apply SET and UNSET changes
 	if runSet {
-		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+		err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
 			Set: &set,
 		})
 		if err != nil {
@@ -405,7 +405,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if runUnset {
-		err := client.Warehouses.Alter(ctx, id, &sdk.WarehouseAlterOptions{
+		err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
 			Unset: &unset,
 		})
 		if err != nil {

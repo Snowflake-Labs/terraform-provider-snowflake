@@ -24,8 +24,7 @@ type ContextFunctions interface {
 var _ ContextFunctions = (*contextFunctions)(nil)
 
 type contextFunctions struct {
-	client  *Client
-	builder *sqlBuilder
+	client *Client
 }
 
 func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {

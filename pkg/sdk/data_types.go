@@ -69,11 +69,6 @@ func DataTypeFromString(s string) DataType {
 		return DataTypeBoolean
 	}
 
-	timeSynonyms := []string{"TIME"}
-	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTime
-	}
-
 	timestampLTZSynonyms := []string{"TIMESTAMP_LTZ"}
 	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampLTZ
@@ -87,6 +82,11 @@ func DataTypeFromString(s string) DataType {
 	timestampNTZSynonyms := []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
 	if slices.ContainsFunc(timestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampNTZ
+	}
+
+	timeSynonyms := []string{"TIME"}
+	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTime
 	}
 
 	return DataTypeUnknown

@@ -48,3 +48,19 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_AccountParameter_CLIENT_METADATA_USE_SESSION_DATABASE(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountParameterBasic("CLIENT_METADATA_USE_SESSION_DATABASE", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "CLIENT_METADATA_USE_SESSION_DATABASE"),
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				),
+			},
+		},
+	})
+}

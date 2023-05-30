@@ -11,13 +11,13 @@ import (
 
 type Warehouses interface {
 	// Create creates a warehouse.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
 	// Alter modifies an existing warehouse
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseAlterOptions) error
+	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterWarehouseOptions) error
 	// Drop removes a warehouse.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
 	// Show returns a list of warehouses.
-	Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error)
+	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error)
 	// ShowByID returns a warehouse by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
@@ -59,35 +59,35 @@ var (
 	ScalingPolicyEconomy  ScalingPolicy = "ECONOMY"
 )
 
-type WarehouseCreateOptions struct {
-	create      bool                    `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace   *bool                   `ddl:"keyword" db:"OR REPLACE"`
-	warehouse   bool                    `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
-	IfNotExists *bool                   `ddl:"keyword" db:"IF NOT EXISTS"`
+type CreateWarehouseOptions struct {
+	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	warehouse   bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
-	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" db:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" db:"WAREHOUSE_SIZE"`
-	MaxClusterCount                 *int           `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *int           `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" db:"SCALING_POLICY"`
-	AutoSuspend                     *int           `ddl:"parameter" db:"AUTO_SUSPEND"`
-	AutoResume                      *bool          `ddl:"parameter" db:"AUTO_RESUME"`
-	InitiallySuspended              *bool          `ddl:"parameter" db:"INITIALLY_SUSPENDED"`
-	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" db:"RESOURCE_MONITOR"`
-	Comment                         *string        `ddl:"parameter,single_quotes" db:"COMMENT"`
-	EnableQueryAcceleration         *bool          `ddl:"parameter" db:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
+	MaxClusterCount                 *int           `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int           `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
+	AutoSuspend                     *int           `ddl:"parameter" sql:"AUTO_SUSPEND"`
+	AutoResume                      *bool          `ddl:"parameter" sql:"AUTO_RESUME"`
+	InitiallySuspended              *bool          `ddl:"parameter" sql:"INITIALLY_SUSPENDED"`
+	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" sql:"RESOURCE_MONITOR"`
+	Comment                         *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableQueryAcceleration         *bool          `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *int             `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *int             `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *int             `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	Tag                             []TagAssociation `ddl:"keyword,parentheses" db:"TAG"`
+	MaxConcurrencyLevel             *int             `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *int             `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *int             `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	Tag                             []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
-func (opts *WarehouseCreateOptions) validate() error {
+func (opts *CreateWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -106,9 +106,9 @@ func (opts *WarehouseCreateOptions) validate() error {
 	return nil
 }
 
-func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseCreateOptions) error {
+func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error {
 	if opts == nil {
-		opts = &WarehouseCreateOptions{}
+		opts = &CreateWarehouseOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -122,23 +122,23 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 	return err
 }
 
-type WarehouseAlterOptions struct {
-	alter     bool                    `ddl:"static" db:"ALTER"`     //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists  *bool                   `ddl:"keyword" db:"IF EXISTS"`
+type AlterWarehouseOptions struct {
+	alter     bool                    `ddl:"static" sql:"ALTER"`     //lint:ignore U1000 This is used in the ddl tag
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
-	Suspend         *bool                   `ddl:"keyword" db:"SUSPEND"`
-	Resume          *bool                   `ddl:"keyword" db:"RESUME"`
-	IfSuspended     *bool                   `ddl:"keyword" db:"IF SUSPENDED"`
-	AbortAllQueries *bool                   `ddl:"keyword" db:"ABORT ALL QUERIES"`
-	NewName         AccountObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
+	Suspend         *bool                   `ddl:"keyword" sql:"SUSPEND"`
+	Resume          *bool                   `ddl:"keyword" sql:"RESUME"`
+	IfSuspended     *bool                   `ddl:"keyword" sql:"IF SUSPENDED"`
+	AbortAllQueries *bool                   `ddl:"keyword" sql:"ABORT ALL QUERIES"`
+	NewName         AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
-	Set   *WarehouseSet   `ddl:"keyword" db:"SET"`
-	Unset *WarehouseUnset `ddl:"list,no_parentheses" db:"UNSET"`
+	Set   *WarehouseSet   `ddl:"keyword" sql:"SET"`
+	Unset *WarehouseUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-func (opts *WarehouseAlterOptions) validate() error {
+func (opts *AlterWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -175,25 +175,25 @@ func (opts *WarehouseAlterOptions) validate() error {
 
 type WarehouseSet struct {
 	// Object properties
-	WarehouseType                   *WarehouseType          `ddl:"parameter,single_quotes" db:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *WarehouseSize          `ddl:"parameter,single_quotes" db:"WAREHOUSE_SIZE"`
-	WaitForCompletion               *bool                   `ddl:"parameter" db:"WAIT_FOR_COMPLETION"`
-	MaxClusterCount                 *int                    `ddl:"parameter" db:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *int                    `ddl:"parameter" db:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *ScalingPolicy          `ddl:"parameter,single_quotes" db:"SCALING_POLICY"`
-	AutoSuspend                     *int                    `ddl:"parameter" db:"AUTO_SUSPEND"`
-	AutoResume                      *bool                   `ddl:"parameter" db:"AUTO_RESUME"`
-	ResourceMonitor                 AccountObjectIdentifier `ddl:"identifier,equals" db:"RESOURCE_MONITOR"`
-	Comment                         *string                 `ddl:"parameter,single_quotes" db:"COMMENT"`
-	EnableQueryAcceleration         *bool                   `ddl:"parameter" db:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *int                    `ddl:"parameter" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	WarehouseType                   *WarehouseType          `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *WarehouseSize          `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
+	WaitForCompletion               *bool                   `ddl:"parameter" sql:"WAIT_FOR_COMPLETION"`
+	MaxClusterCount                 *int                    `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int                    `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *ScalingPolicy          `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
+	AutoSuspend                     *int                    `ddl:"parameter" sql:"AUTO_SUSPEND"`
+	AutoResume                      *bool                   `ddl:"parameter" sql:"AUTO_RESUME"`
+	ResourceMonitor                 AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	Comment                         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableQueryAcceleration         *bool                   `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *int                    `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *int `ddl:"parameter" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *int `ddl:"parameter" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	MaxConcurrencyLevel             *int `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *int `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 
-	Tag []TagAssociation `ddl:"keyword" db:"TAG"`
+	Tag []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *WarehouseSet) validate() error {
@@ -225,24 +225,24 @@ func (v *WarehouseSet) validate() error {
 
 type WarehouseUnset struct {
 	// Object properties
-	WarehouseType                   *bool `ddl:"keyword" db:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *bool `ddl:"keyword" db:"WAREHOUSE_SIZE"`
-	WaitForCompletion               *bool `ddl:"keyword" db:"WAIT_FOR_COMPLETION"`
-	MaxClusterCount                 *bool `ddl:"keyword" db:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *bool `ddl:"keyword" db:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *bool `ddl:"keyword" db:"SCALING_POLICY"`
-	AutoSuspend                     *bool `ddl:"keyword" db:"AUTO_SUSPEND"`
-	AutoResume                      *bool `ddl:"keyword" db:"AUTO_RESUME"`
-	ResourceMonitor                 *bool `ddl:"keyword" db:"RESOURCE_MONITOR"`
-	Comment                         *bool `ddl:"keyword" db:"COMMENT"`
-	EnableQueryAcceleration         *bool `ddl:"keyword" db:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *bool `ddl:"keyword" db:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	WarehouseType                   *bool `ddl:"keyword" sql:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *bool `ddl:"keyword" sql:"WAREHOUSE_SIZE"`
+	WaitForCompletion               *bool `ddl:"keyword" sql:"WAIT_FOR_COMPLETION"`
+	MaxClusterCount                 *bool `ddl:"keyword" sql:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *bool `ddl:"keyword" sql:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *bool `ddl:"keyword" sql:"SCALING_POLICY"`
+	AutoSuspend                     *bool `ddl:"keyword" sql:"AUTO_SUSPEND"`
+	AutoResume                      *bool `ddl:"keyword" sql:"AUTO_RESUME"`
+	ResourceMonitor                 *bool `ddl:"keyword" sql:"RESOURCE_MONITOR"`
+	Comment                         *bool `ddl:"keyword" sql:"COMMENT"`
+	EnableQueryAcceleration         *bool `ddl:"keyword" sql:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *bool `ddl:"keyword" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *bool              `ddl:"keyword" db:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *bool              `ddl:"keyword" db:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *bool              `ddl:"keyword" db:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	Tag                             []ObjectIdentifier `ddl:"keyword" db:"TAG"`
+	MaxConcurrencyLevel             *bool              `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *bool              `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *bool              `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	Tag                             []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *WarehouseUnset) validate() error {
@@ -252,9 +252,9 @@ func (v *WarehouseUnset) validate() error {
 	return nil
 }
 
-func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseAlterOptions) error {
+func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterWarehouseOptions) error {
 	if opts == nil {
-		opts = &WarehouseAlterOptions{}
+		opts = &AlterWarehouseOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -268,23 +268,23 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	return err
 }
 
-type WarehouseDropOptions struct {
-	drop      bool                    `ddl:"static" db:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists  *bool                   `ddl:"keyword" db:"IF EXISTS"`
+type DropWarehouseOptions struct {
+	drop      bool                    `ddl:"static" sql:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *WarehouseDropOptions) validate() error {
+func (opts *DropWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts *WarehouseDropOptions) error {
+func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error {
 	if opts == nil {
-		opts = &WarehouseDropOptions{
+		opts = &DropWarehouseOptions{
 			name: id,
 		}
 	}
@@ -303,13 +303,13 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 	return err
 }
 
-type WarehouseShowOptions struct {
-	show       bool  `ddl:"static" db:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	warehouses bool  `ddl:"static" db:"WAREHOUSES"` //lint:ignore U1000 This is used in the ddl tag
-	Like       *Like `ddl:"keyword" db:"LIKE"`
+type ShowWarehouseOptions struct {
+	show       bool  `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
+	warehouses bool  `ddl:"static" sql:"WAREHOUSES"` //lint:ignore U1000 This is used in the ddl tag
+	Like       *Like `ddl:"keyword" sql:"LIKE"`
 }
 
-func (opts *WarehouseShowOptions) validate() error {
+func (opts *ShowWarehouseOptions) validate() error {
 	return nil
 }
 
@@ -428,9 +428,9 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 	return wh
 }
 
-func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*Warehouse, error) {
+func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error) {
 	if opts == nil {
-		opts = &WarehouseShowOptions{}
+		opts = &ShowWarehouseOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -453,7 +453,7 @@ func (c *warehouses) Show(ctx context.Context, opts *WarehouseShowOptions) ([]*W
 }
 
 func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
-	warehouses, err := c.Show(ctx, &WarehouseShowOptions{
+	warehouses, err := c.Show(ctx, &ShowWarehouseOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -471,8 +471,8 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 }
 
 type warehouseDescribeOptions struct {
-	describe  bool                    `ddl:"static" db:"DESCRIBE"`  //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" db:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	describe  bool                    `ddl:"static" sql:"DESCRIBE"`  //lint:ignore U1000 This is used in the ddl tag
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 

@@ -179,10 +179,10 @@ func randomIntRange(t *testing.T, min, max int) int {
 func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
 	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
-	return createSessionPolicyWithOptions(t, client, id, &SessionPolicyCreateOptions{})
+	return createSessionPolicyWithOptions(t, client, id, &CreateSessionPolicyOptions{})
 }
 
-func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *SessionPolicyCreateOptions) (*SessionPolicy, func()) {
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) (*SessionPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
 	err := client.SessionPolicies.Create(ctx, id, opts)
@@ -197,10 +197,10 @@ func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjec
 
 func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
 	t.Helper()
-	return createResourceMonitorWithOptions(t, client, &ResourceMonitorCreateOptions{})
+	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{})
 }
 
-func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *ResourceMonitorCreateOptions) (*ResourceMonitor, func()) {
+func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *CreateResourceMonitorOptions) (*ResourceMonitor, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
@@ -225,7 +225,7 @@ func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) 
 	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
 }
 
-func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *FailoverGroupCreateOptions) (*FailoverGroup, func()) {
+func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *CreateFailoverGroupOptions) (*FailoverGroup, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
@@ -241,10 +241,10 @@ func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []
 
 func createShare(t *testing.T, client *Client) (*Share, func()) {
 	t.Helper()
-	return createShareWithOptions(t, client, &ShareCreateOptions{})
+	return createShareWithOptions(t, client, &CreateShareOptions{})
 }
 
-func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptions) (*Share, func()) {
+func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptions) (*Share, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
@@ -260,10 +260,10 @@ func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptio
 
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
-	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
+	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
 }
 
-func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCreateOptions) (*Warehouse, func()) {
+func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWarehouseOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	id := NewAccountObjectIdentifier(name)
@@ -280,10 +280,10 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCre
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, &DatabaseCreateOptions{})
+	return createDatabaseWithOptions(t, client, &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOptions) (*Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOptions) (*Database, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
@@ -333,7 +333,7 @@ func createTagWithOptions(t *testing.T, client *Client, database *Database, sche
 		}
 }
 
-func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *PasswordPolicyCreateOptions) (*PasswordPolicy, func()) {
+func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
@@ -377,7 +377,7 @@ func createPasswordPolicy(t *testing.T, client *Client, database *Database, sche
 	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
 }
 
-func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *MaskingPolicyCreateOptions) (*MaskingPolicy, func()) {
+func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *CreateMaskingPolicyOptions) (*MaskingPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
@@ -393,7 +393,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
 	require.NoError(t, err)
 
-	showOptions := &MaskingPolicyShowOptions{
+	showOptions := &ShowMaskingPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},
@@ -432,5 +432,5 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 		})
 	}
 	expression := "REPLACE('X', 1, 2)"
-	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{})
+	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
 }

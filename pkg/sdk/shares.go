@@ -9,13 +9,13 @@ import (
 
 type Shares interface {
 	// Create creates a share.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *ShareCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
 	// Alter modifies an existing share
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *ShareAlterOptions) error
+	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
 	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of shares.
-	Show(ctx context.Context, opts *ShareShowOptions) ([]*Share, error)
+	Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error)
 	// ShowByID returns a share by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	// Describe returns the details of an outbound share.
@@ -99,24 +99,24 @@ func (r *shareRow) toShare() *Share {
 	}
 }
 
-type ShareCreateOptions struct {
-	create    bool                    `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace *bool                   `ddl:"keyword" db:"OR REPLACE"`
-	share     bool                    `ddl:"static" db:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
+type CreateShareOptions struct {
+	create    bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	share     bool                    `ddl:"static" sql:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
 	name      AccountObjectIdentifier `ddl:"identifier"`
-	Comment   *string                 `ddl:"parameter,single_quotes" db:"COMMENT"`
+	Comment   *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *ShareCreateOptions) validate() error {
+func (opts *CreateShareOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return fmt.Errorf("not a valid object identifier: %s", opts.name)
 	}
 	return nil
 }
 
-func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *ShareCreateOptions) error {
+func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error {
 	if opts == nil {
-		opts = &ShareCreateOptions{}
+		opts = &CreateShareOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -131,8 +131,8 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *S
 }
 
 type shareDropOptions struct {
-	drop  bool                    `ddl:"static" db:"DROP"` //lint:ignore U1000 This is used in the ddl tag
-	share bool                    `ddl:"static" db:"SHARE"`
+	drop  bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
+	share bool                    `ddl:"static" sql:"SHARE"`
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -148,18 +148,18 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	return err
 }
 
-type ShareAlterOptions struct {
-	alter    bool                    `ddl:"static" db:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	share    bool                    `ddl:"static" db:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                   `ddl:"keyword" db:"IF EXISTS"`
+type AlterShareOptions struct {
+	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	share    bool                    `ddl:"static" sql:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
-	Add      *ShareAdd               `ddl:"keyword" db:"ADD"`
-	Remove   *ShareRemove            `ddl:"keyword" db:"REMOVE"`
-	Set      *ShareSet               `ddl:"keyword" db:"SET"`
-	Unset    *ShareUnset             `ddl:"keyword" db:"UNSET"`
+	Add      *ShareAdd               `ddl:"keyword" sql:"ADD"`
+	Remove   *ShareRemove            `ddl:"keyword" sql:"REMOVE"`
+	Set      *ShareSet               `ddl:"keyword" sql:"SET"`
+	Unset    *ShareUnset             `ddl:"keyword" sql:"UNSET"`
 }
 
-func (opts *ShareAlterOptions) validate() error {
+func (opts *AlterShareOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return fmt.Errorf("not a valid object identifier: %s", opts.name)
 	}
@@ -190,8 +190,8 @@ func (opts *ShareAlterOptions) validate() error {
 }
 
 type ShareAdd struct {
-	Accounts          []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
-	ShareRestrictions *bool               `ddl:"parameter" db:"SHARE_RESTRICTIONS"`
+	Accounts          []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
+	ShareRestrictions *bool               `ddl:"parameter" sql:"SHARE_RESTRICTIONS"`
 }
 
 func (v *ShareAdd) validate() error {
@@ -202,7 +202,7 @@ func (v *ShareAdd) validate() error {
 }
 
 type ShareRemove struct {
-	Accounts []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
+	Accounts []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
 }
 
 func (v *ShareRemove) validate() error {
@@ -213,9 +213,9 @@ func (v *ShareRemove) validate() error {
 }
 
 type ShareSet struct {
-	Accounts []AccountIdentifier `ddl:"parameter" db:"ACCOUNTS"`
-	Comment  *string             `ddl:"parameter,single_quotes" db:"COMMENT"`
-	Tag      []TagAssociation    `ddl:"keyword" db:"TAG"`
+	Accounts []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
+	Comment  *string             `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag      []TagAssociation    `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *ShareSet) validate() error {
@@ -226,8 +226,8 @@ func (v *ShareSet) validate() error {
 }
 
 type ShareUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
-	Comment *bool              `ddl:"keyword" db:"COMMENT"`
+	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *ShareUnset) validate() error {
@@ -237,9 +237,9 @@ func (v *ShareUnset) validate() error {
 	return nil
 }
 
-func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *ShareAlterOptions) error {
+func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error {
 	if opts == nil {
-		opts = &ShareAlterOptions{}
+		opts = &AlterShareOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -253,21 +253,21 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Sh
 	return err
 }
 
-type ShareShowOptions struct {
-	show       bool       `ddl:"static" db:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	shares     bool       `ddl:"static" db:"SHARES"` //lint:ignore U1000 This is used in the ddl tag
-	Like       *Like      `ddl:"keyword" db:"LIKE"`
-	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" db:"STARTS WITH"`
-	Limit      *LimitFrom `ddl:"keyword" db:"LIMIT"`
+type ShowShareOptions struct {
+	show       bool       `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
+	shares     bool       `ddl:"static" sql:"SHARES"` //lint:ignore U1000 This is used in the ddl tag
+	Like       *Like      `ddl:"keyword" sql:"LIKE"`
+	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
 
-func (opts *ShareShowOptions) validate() error {
+func (opts *ShowShareOptions) validate() error {
 	return nil
 }
 
-func (s *shares) Show(ctx context.Context, opts *ShareShowOptions) ([]*Share, error) {
+func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error) {
 	if opts == nil {
-		opts = &ShareShowOptions{}
+		opts = &ShowShareOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (s *shares) Show(ctx context.Context, opts *ShareShowOptions) ([]*Share, er
 }
 
 func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {
-	shares, err := s.Show(ctx, &ShareShowOptions{
+	shares, err := s.Show(ctx, &ShowShareOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -341,8 +341,8 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 }
 
 type shareDescribeOptions struct {
-	describe bool             `ddl:"static" db:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	share    bool             `ddl:"static" db:"SHARE"`    //lint:ignore U1000 This is used in the ddl tag
+	describe bool             `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
+	share    bool             `ddl:"static" sql:"SHARE"`    //lint:ignore U1000 This is used in the ddl tag
 	name     ObjectIdentifier `ddl:"identifier"`
 }
 
