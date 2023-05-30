@@ -5,8 +5,8 @@ import (
 )
 
 type Comments interface {
-	Set(ctx context.Context, opts *SetCommentOpts) error
-	SetColumn(ctx context.Context, opts *SetColumnCommentOpts) error
+	Set(ctx context.Context, opts *SetCommentOptions) error
+	SetColumn(ctx context.Context, opts *SetColumnCommentOptions) error
 }
 
 type comments struct {
@@ -15,22 +15,22 @@ type comments struct {
 
 var _ Comments = (*comments)(nil)
 
-type SetCommentOpts struct {
-	comment    bool             `ddl:"static" db:"COMMENT"`
-	IfExists   *bool            `ddl:"keyword" db:"IF EXISTS"`
-	on         bool             `ddl:"static" db:"ON"`
+type SetCommentOptions struct {
+	comment    bool             `ddl:"static" sql:"COMMENT"`
+	IfExists   *bool            `ddl:"keyword" sql:"IF EXISTS"`
+	on         bool             `ddl:"static" sql:"ON"`
 	ObjectType ObjectType       `ddl:"keyword"`
 	ObjectName ObjectIdentifier `ddl:"identifier"`
-	Value      *string          `ddl:"parameter,single_quotes,no_equals" db:"IS"`
+	Value      *string          `ddl:"parameter,single_quotes,no_equals" sql:"IS"`
 }
 
-func (opts *SetCommentOpts) validate() error {
+func (opts *SetCommentOptions) validate() error {
 	return nil
 }
 
-func (c *comments) Set(ctx context.Context, opts *SetCommentOpts) error {
+func (c *comments) Set(ctx context.Context, opts *SetCommentOptions) error {
 	if opts == nil {
-		opts = &SetCommentOpts{}
+		opts = &SetCommentOptions{}
 	}
 	// opts.name = name
 	if err := opts.validate(); err != nil {
@@ -44,21 +44,21 @@ func (c *comments) Set(ctx context.Context, opts *SetCommentOpts) error {
 	return err
 }
 
-type SetColumnCommentOpts struct {
-	comment  bool             `ddl:"static" db:"COMMENT"`
-	IfExists *bool            `ddl:"keyword" db:"IF EXISTS"`
-	on       bool             `ddl:"static" db:"ON"`
-	Column   ObjectIdentifier `ddl:"identifier" db:"COLUMN"`
-	Value    *string          `ddl:"parameter,single_quotes,no_equals" db:"IS"`
+type SetColumnCommentOptions struct {
+	comment  bool             `ddl:"static" sql:"COMMENT"`
+	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
+	on       bool             `ddl:"static" sql:"ON"`
+	Column   ObjectIdentifier `ddl:"identifier" sql:"COLUMN"`
+	Value    *string          `ddl:"parameter,single_quotes,no_equals" sql:"IS"`
 }
 
-func (opts *SetColumnCommentOpts) validate() error {
+func (opts *SetColumnCommentOptions) validate() error {
 	return nil
 }
 
-func (c *comments) SetColumn(ctx context.Context, opts *SetColumnCommentOpts) error {
+func (c *comments) SetColumn(ctx context.Context, opts *SetColumnCommentOptions) error {
 	if opts == nil {
-		opts = &SetColumnCommentOpts{}
+		opts = &SetColumnCommentOptions{}
 	}
 	// We only want to render table.column, not the fully qualified name with database and schema.
 	if v, ok := opts.Column.(TableColumnIdentifier); ok {

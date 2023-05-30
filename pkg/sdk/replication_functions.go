@@ -85,9 +85,9 @@ func (row *regionRow) toRegion() *Region {
 }
 
 type ShowRegionsOptions struct {
-	show    bool  `ddl:"static" db:"SHOW"`    //lint:ignore U1000 This is used in the ddl tag
-	regions bool  `ddl:"static" db:"REGIONS"` //lint:ignore U1000 This is used in the ddl tag
-	Like    *Like `ddl:"keyword" db:"LIKE"`
+	show    bool  `ddl:"static" sql:"SHOW"`    //lint:ignore U1000 This is used in the ddl tag
+	regions bool  `ddl:"static" sql:"REGIONS"` //lint:ignore U1000 This is used in the ddl tag
+	Like    *Like `ddl:"keyword" sql:"LIKE"`
 }
 
 func (opts *ShowRegionsOptions) validate() error {

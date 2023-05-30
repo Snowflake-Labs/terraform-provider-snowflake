@@ -28,10 +28,10 @@ type sessions struct {
 }
 
 type AlterSessionOptions struct {
-	alter   bool          `ddl:"static" db:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
-	session bool          `ddl:"static" db:"SESSION"` //lint:ignore U1000 This is used in the ddl tag
-	Set     *SessionSet   `ddl:"keyword" db:"SET"`
-	Unset   *SessionUnset `ddl:"keyword" db:"UNSET"`
+	alter   bool          `ddl:"static" sql:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
+	session bool          `ddl:"static" sql:"SESSION"` //lint:ignore U1000 This is used in the ddl tag
+	Set     *SessionSet   `ddl:"keyword" sql:"SET"`
+	Unset   *SessionUnset `ddl:"keyword" sql:"UNSET"`
 }
 
 func (opts *AlterSessionOptions) validate() error {
@@ -89,10 +89,10 @@ func (v *sessions) AlterSession(ctx context.Context, opts *AlterSessionOptions) 
 }
 
 type ShowParametersOptions struct {
-	show       bool          `ddl:"static" db:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	parameters bool          `ddl:"static" db:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag
-	Like       *Like         `ddl:"keyword" db:"LIKE"`
-	In         *ParametersIn `ddl:"keyword" db:"IN"`
+	show       bool          `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
+	parameters bool          `ddl:"static" sql:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag
+	Like       *Like         `ddl:"keyword" sql:"LIKE"`
+	In         *ParametersIn `ddl:"keyword" sql:"IN"`
 }
 
 func (opts *ShowParametersOptions) validate() error {
@@ -105,14 +105,14 @@ func (opts *ShowParametersOptions) validate() error {
 }
 
 type ParametersIn struct {
-	Session   *bool                   `ddl:"keyword" db:"SESSION"`
-	Account   *bool                   `ddl:"keyword" db:"ACCOUNT"`
-	User      AccountObjectIdentifier `ddl:"identifier" db:"USER"`
-	Warehouse AccountObjectIdentifier `ddl:"identifier" db:"WAREHOUSE"`
-	Database  AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
-	Schema    SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
-	Task      SchemaObjectIdentifier  `ddl:"identifier" db:"TASK"`
-	Table     SchemaObjectIdentifier  `ddl:"identifier" db:"TABLE"`
+	Session   *bool                   `ddl:"keyword" sql:"SESSION"`
+	Account   *bool                   `ddl:"keyword" sql:"ACCOUNT"`
+	User      AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
+	Warehouse AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
+	Database  AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
+	Schema    SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Task      SchemaObjectIdentifier  `ddl:"identifier" sql:"TASK"`
+	Table     SchemaObjectIdentifier  `ddl:"identifier" sql:"TABLE"`
 }
 
 func (v *ParametersIn) validate() error {

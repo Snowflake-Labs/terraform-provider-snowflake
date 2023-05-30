@@ -7,13 +7,13 @@ import (
 
 type Databases interface {
 	// Create creates a database.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *DatabaseCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
 	// Alter modifies an existing database
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *DatabaseAlterOptions) error
+	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseOptions) error
 	// Drop removes a database.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DatabaseDropOptions) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropDatabaseOptions) error
 	// Show returns a list of databases.
-	Show(ctx context.Context, opts *DatabaseShowOptions) ([]*Database, error)
+	Show(ctx context.Context, opts *ShowDatabaseOptions) ([]*Database, error)
 	// ShowByID returns a database by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	// Describe returns the details of a database.
@@ -31,41 +31,41 @@ type Database struct {
 }
 
 // placeholder for the real implementation.
-type DatabaseCreateOptions struct{}
+type CreateDatabaseOptions struct{}
 
-func (c *databases) Create(ctx context.Context, id AccountObjectIdentifier, _ *DatabaseCreateOptions) error {
+func (c *databases) Create(ctx context.Context, id AccountObjectIdentifier, _ *CreateDatabaseOptions) error {
 	sql := fmt.Sprintf(`CREATE DATABASE %s`, id.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
 }
 
 // placeholder for the real implementation.
-type DatabaseAlterOptions struct{}
+type AlterDatabaseOptions struct{}
 
-func (c *databases) Alter(ctx context.Context, id AccountObjectIdentifier, _ *DatabaseAlterOptions) error {
+func (c *databases) Alter(ctx context.Context, id AccountObjectIdentifier, _ *AlterDatabaseOptions) error {
 	sql := fmt.Sprintf(`ALTER DATABASE %s`, id.FullyQualifiedName())
 	_, err := c.client.exec(ctx, sql)
 	return err
 }
 
 // placeholder for the real implementation.
-type DatabaseDropOptions struct {
-	drop     bool                    `ddl:"static" db:"DROP"`     //lint:ignore U1000 This is used in the ddl tag
-	database bool                    `ddl:"static" db:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                   `ddl:"keyword" db:"IF EXISTS"`
+type DropDatabaseOptions struct {
+	drop     bool                    `ddl:"static" sql:"DROP"`     //lint:ignore U1000 This is used in the ddl tag
+	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
 }
 
-func (opts *DatabaseDropOptions) validate() error {
+func (opts *DropDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (c *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DatabaseDropOptions) error {
+func (c *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropDatabaseOptions) error {
 	if opts == nil {
-		opts = &DatabaseDropOptions{}
+		opts = &DropDatabaseOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -80,9 +80,9 @@ func (c *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *
 }
 
 // placeholder for the real implementation.
-type DatabaseShowOptions struct{}
+type ShowDatabaseOptions struct{}
 
-func (c *databases) Show(ctx context.Context, _ *DatabaseShowOptions) ([]*Database, error) {
+func (c *databases) Show(ctx context.Context, _ *ShowDatabaseOptions) ([]*Database, error) {
 	sql := `SHOW DATABASES`
 	var databases []*Database
 	err := c.client.query(ctx, &databases, sql)

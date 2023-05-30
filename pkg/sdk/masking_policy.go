@@ -17,13 +17,13 @@ var _ MaskingPolicies = (*maskingPolicies)(nil)
 // Snowflake API supports.
 type MaskingPolicies interface {
 	// Create creates a new masking policy.
-	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *MaskingPolicyCreateOptions) error
+	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *CreateMaskingPolicyOptions) error
 	// Alter modifies an existing masking policy.
-	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *MaskingPolicyAlterOptions) error
+	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error
 	// Drop removes a masking policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of masking policies.
-	Show(ctx context.Context, opts *MaskingPolicyShowOptions) ([]*MaskingPolicy, error)
+	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error)
 	// ShowByID returns a masking policy by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	// Describe returns the details of a masking policy.
@@ -35,24 +35,24 @@ type maskingPolicies struct {
 	client *Client
 }
 
-type MaskingPolicyCreateOptions struct {
-	create        bool                   `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace     *bool                  `ddl:"keyword" db:"OR REPLACE"`
-	maskingPolicy bool                   `ddl:"static" db:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfNotExists   *bool                  `ddl:"keyword" db:"IF NOT EXISTS"`
+type CreateMaskingPolicyOptions struct {
+	create        bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace     *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfNotExists   *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 
 	// required
-	signature []TableColumnSignature `ddl:"keyword,parentheses" db:"AS"`
-	returns   DataType               `ddl:"parameter,no_equals" db:"RETURNS"`
-	body      string                 `ddl:"parameter,no_equals" db:"->"`
+	signature []TableColumnSignature `ddl:"keyword,parentheses" sql:"AS"`
+	returns   DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
+	body      string                 `ddl:"parameter,no_equals" sql:"->"`
 
 	// optional
-	Comment             *string `ddl:"parameter,single_quotes" db:"COMMENT"`
-	ExemptOtherPolicies *bool   `ddl:"parameter" db:"EXEMPT_OTHER_POLICIES"`
+	Comment             *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ExemptOtherPolicies *bool   `ddl:"parameter" sql:"EXEMPT_OTHER_POLICIES"`
 }
 
-func (opts *MaskingPolicyCreateOptions) validate() error {
+func (opts *CreateMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
@@ -60,9 +60,9 @@ func (opts *MaskingPolicyCreateOptions) validate() error {
 	return nil
 }
 
-func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, body string, opts *MaskingPolicyCreateOptions) error {
+func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, body string, opts *CreateMaskingPolicyOptions) error {
 	if opts == nil {
-		opts = &MaskingPolicyCreateOptions{}
+		opts = &CreateMaskingPolicyOptions{}
 	}
 	opts.name = id
 	opts.signature = signature
@@ -79,17 +79,17 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
-type MaskingPolicyAlterOptions struct {
-	alter         bool                   `ddl:"static" db:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" db:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists      *bool                  `ddl:"keyword" db:"IF EXISTS"`
+type AlterMaskingPolicyOptions struct {
+	alter         bool                   `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
-	NewName       SchemaObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
-	Set           *MaskingPolicySet      `ddl:"keyword" db:"SET"`
-	Unset         *MaskingPolicyUnset    `ddl:"keyword" db:"UNSET"`
+	NewName       SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set           *MaskingPolicySet      `ddl:"keyword" sql:"SET"`
+	Unset         *MaskingPolicyUnset    `ddl:"keyword" sql:"UNSET"`
 }
 
-func (opts *MaskingPolicyAlterOptions) validate() error {
+func (opts *AlterMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
@@ -120,9 +120,9 @@ func (opts *MaskingPolicyAlterOptions) validate() error {
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"parameter,no_equals" db:"BODY ->"`
-	Tag     []TagAssociation `ddl:"keyword" db:"TAG"`
-	Comment *string          `ddl:"parameter,single_quotes" db:"COMMENT"`
+	Body    *string          `ddl:"parameter,no_equals" sql:"BODY ->"`
+	Tag     []TagAssociation `ddl:"keyword" sql:"TAG"`
+	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicySet) validate() error {
@@ -133,8 +133,8 @@ func (v *MaskingPolicySet) validate() error {
 }
 
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" db:"TAG"`
-	Comment *bool              `ddl:"keyword" db:"COMMENT"`
+	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicyUnset) validate() error {
@@ -144,9 +144,9 @@ func (v *MaskingPolicyUnset) validate() error {
 	return nil
 }
 
-func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *MaskingPolicyAlterOptions) error {
+func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error {
 	if opts == nil {
-		opts = &MaskingPolicyAlterOptions{}
+		opts = &AlterMaskingPolicyOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -160,13 +160,13 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
-type MaskingPolicyDropOptions struct {
-	drop          bool                   `ddl:"static" db:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" db:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+type DropMaskingPolicyOptions struct {
+	drop          bool                   `ddl:"static" sql:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *MaskingPolicyDropOptions) validate() error {
+func (opts *DropMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -175,7 +175,7 @@ func (opts *MaskingPolicyDropOptions) validate() error {
 
 func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 	// masking policy drop does not support [IF EXISTS] so there are no drop options.
-	opts := &MaskingPolicyDropOptions{
+	opts := &DropMaskingPolicyOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
@@ -192,16 +192,16 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	return err
 }
 
-// MaskingPolicyShowOptions represents the options for listing masking policies.
-type MaskingPolicyShowOptions struct {
-	show            bool  `ddl:"static" db:"SHOW"`             //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicies bool  `ddl:"static" db:"MASKING POLICIES"` //lint:ignore U1000 This is used in the ddl tag
-	Like            *Like `ddl:"keyword" db:"LIKE"`
-	In              *In   `ddl:"keyword" db:"IN"`
-	Limit           *int  `ddl:"parameter,no_equals" db:"LIMIT"`
+// ShowMaskingPolicyOptions represents the options for listing masking policies.
+type ShowMaskingPolicyOptions struct {
+	show            bool  `ddl:"static" sql:"SHOW"`             //lint:ignore U1000 This is used in the ddl tag
+	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+	Like            *Like `ddl:"keyword" sql:"LIKE"`
+	In              *In   `ddl:"keyword" sql:"IN"`
+	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *MaskingPolicyShowOptions) validate() error {
+func (input *ShowMaskingPolicyOptions) validate() error {
 	return nil
 }
 
@@ -256,9 +256,9 @@ func (row maskingPolicyDBRow) toMaskingPolicy() *MaskingPolicy {
 }
 
 // List all the masking policies by pattern.
-func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptions) ([]*MaskingPolicy, error) {
+func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error) {
 	if opts == nil {
-		opts = &MaskingPolicyShowOptions{}
+		opts = &ShowMaskingPolicyOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -282,7 +282,7 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *MaskingPolicyShowOptio
 }
 
 func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
-	maskingPolicies, err := v.Show(ctx, &MaskingPolicyShowOptions{
+	maskingPolicies, err := v.Show(ctx, &ShowMaskingPolicyOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -302,13 +302,13 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-type maskingPolicyDescribeOptions struct {
-	describe      bool                   `ddl:"static" db:"DESCRIBE"`       //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" db:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+type describeMaskingPolicyOptions struct {
+	describe      bool                   `ddl:"static" sql:"DESCRIBE"`       //lint:ignore U1000 This is used in the ddl tag
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *maskingPolicyDescribeOptions) validate() error {
+func (v *describeMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -355,7 +355,7 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 }
 
 func (v *maskingPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error) {
-	opts := &maskingPolicyDescribeOptions{
+	opts := &describeMaskingPolicyOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {

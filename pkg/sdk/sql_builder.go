@@ -237,11 +237,11 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 	if ddlTag != "" {
 		ddlTagParts := strings.Split(ddlTag, ",")
 		ddlType := ddlTagParts[0]
-		dbTag := field.Tag.Get("db")
+		sqlTag := field.Tag.Get("sql")
 		switch ddlType {
 		case "keyword":
 			clauses = append(clauses, sqlKeywordClause{
-				key: dbTag,
+				key: sqlTag,
 				qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			})
 		case "identifier":
@@ -251,14 +251,14 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 					return nil, nil
 				}
 				return sqlIdentifierClause{
-					key:   dbTag,
+					key:   sqlTag,
 					value: reflectedValue.(Identifier),
 					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 				}, nil
 			}
 		case "list":
-			if dbTag != "" {
-				clauses = append(clauses, sqlStaticClause(dbTag))
+			if sqlTag != "" {
+				clauses = append(clauses, sqlStaticClause(sqlTag))
 			}
 			fieldStructClauses, err := b.parseStruct(reflectedValue)
 			if err != nil {
@@ -323,12 +323,12 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 	})
 	sClause := b.renderStaticClause(clauses...)
 	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
-	dbTag := field.Tag.Get("db")
+	sqlTag := field.Tag.Get("sql")
 	// depending on the ddl tag we may want to add a parameter clause or a keyword clause before rendered list clause
 	switch ddlTag {
 	case "parameter":
 		return sqlParameterClause{
-			key:   dbTag,
+			key:   sqlTag,
 			value: sClause,
 			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
@@ -336,7 +336,7 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 		}, nil
 	case "keyword":
 		return b.renderStaticClause(sqlKeywordClause{
-			key: dbTag,
+			key: sqlTag,
 			qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 		}, sClause), nil
 	}
@@ -359,11 +359,11 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 	}
 
 	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
-	dbTag := field.Tag.Get("db")
+	sqlTag := field.Tag.Get("sql")
 
 	// static must be applied no matter what
 	if ddlTag == "static" {
-		return sqlStaticClause(dbTag), nil
+		return sqlStaticClause(sqlTag), nil
 	}
 
 	if value.Kind() == reflect.Invalid {
@@ -386,7 +386,7 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			useKeyword := reflectedValue.(bool)
 			if useKeyword {
 				clause = sqlKeywordClause{
-					key: dbTag,
+					key: sqlTag,
 					qm:  b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 				}
 			} else {
@@ -400,7 +400,7 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 		}
 	case "identifier":
 		clause = sqlIdentifierClause{
-			key:   dbTag,
+			key:   sqlTag,
 			value: reflectedValue.(Identifier),
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
@@ -411,7 +411,7 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			}
 		}
 		clause = sqlParameterClause{
-			key:   dbTag,
+			key:   sqlTag,
 			value: reflectedValue,
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
