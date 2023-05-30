@@ -9,7 +9,7 @@ import (
 
 func TestSharesCreate(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &ShareCreateOptions{
+		opts := &CreateShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
 		actual, err := structToSQL(opts)
@@ -20,7 +20,7 @@ func TestSharesCreate(t *testing.T) {
 
 	t.Run("with complete options", func(t *testing.T) {
 		comment := randomComment(t)
-		opts := &ShareCreateOptions{
+		opts := &CreateShareOptions{
 			OrReplace: Bool(true),
 			name:      NewAccountObjectIdentifier("complete_share"),
 			Comment:   String(comment),
@@ -34,7 +34,7 @@ func TestSharesCreate(t *testing.T) {
 
 func TestShareAlter(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
 		actual, err := structToSQL(opts)
@@ -45,7 +45,7 @@ func TestShareAlter(t *testing.T) {
 
 	t.Run("with add", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount")}
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Add: &ShareAdd{
@@ -61,7 +61,7 @@ func TestShareAlter(t *testing.T) {
 
 	t.Run("with remove", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount"), NewAccountIdentifier("my-org", "myaccount2")}
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Remove: &ShareRemove{
@@ -77,7 +77,7 @@ func TestShareAlter(t *testing.T) {
 	t.Run("with set", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount")}
 		comment := randomComment(t)
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Set: &ShareSet{
@@ -92,7 +92,7 @@ func TestShareAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Set: &ShareSet{
@@ -111,7 +111,7 @@ func TestShareAlter(t *testing.T) {
 	})
 
 	t.Run("with unset", func(t *testing.T) {
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Unset: &ShareUnset{
@@ -125,7 +125,7 @@ func TestShareAlter(t *testing.T) {
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
-		opts := &ShareAlterOptions{
+		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			Unset: &ShareUnset{
@@ -143,7 +143,7 @@ func TestShareAlter(t *testing.T) {
 
 func TestShareShow(t *testing.T) {
 	t.Run("complete", func(t *testing.T) {
-		opts := &ShareShowOptions{
+		opts := &ShowShareOptions{
 			Like: &Like{
 				Pattern: String("myshare"),
 			},

@@ -11,7 +11,7 @@ import (
 func TestComments(t *testing.T) {
 	t.Run("set on schema", func(t *testing.T) {
 		id := NewSchemaIdentifier("db1", "schema2")
-		opts := &SetCommentOpts{
+		opts := &SetCommentOptions{
 			ObjectType: ObjectTypeSchema,
 			ObjectName: &id,
 			Value:      String("mycomment"),
@@ -24,7 +24,7 @@ func TestComments(t *testing.T) {
 
 	t.Run("set if exists", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("maskpol")
-		opts := &SetCommentOpts{
+		opts := &SetCommentOptions{
 			IfExists:   Bool(true),
 			ObjectType: ObjectTypeMaskingPolicy,
 			ObjectName: &id,
@@ -37,7 +37,7 @@ func TestComments(t *testing.T) {
 	})
 
 	t.Run("set column comment", func(t *testing.T) {
-		opts := &SetColumnCommentOpts{
+		opts := &SetColumnCommentOptions{
 			Column: NewSchemaIdentifier("table3", "column4"),
 			Value:  String("mycomment3"),
 		}

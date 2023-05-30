@@ -10,7 +10,7 @@ import (
 
 func TestWarehouseCreate(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &WarehouseCreateOptions{
+		opts := &CreateWarehouseOptions{
 			name: AccountObjectIdentifier{
 				name: "mywarehouse",
 			},
@@ -24,7 +24,7 @@ func TestWarehouseCreate(t *testing.T) {
 	t.Run("with complete options", func(t *testing.T) {
 		tag1 := randomSchemaObjectIdentifier(t)
 		tag2 := randomSchemaObjectIdentifier(t)
-		opts := &WarehouseCreateOptions{
+		opts := &CreateWarehouseOptions{
 			OrReplace:   Bool(true),
 			name:        NewAccountObjectIdentifier("completewarehouse"),
 			IfNotExists: Bool(true),
@@ -65,7 +65,7 @@ func TestWarehouseCreate(t *testing.T) {
 
 func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set params", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Set: &WarehouseSet{
 				WarehouseType:                   &WarehouseTypeSnowparkOptimized,
@@ -84,7 +84,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			Set: &WarehouseSet{
 				Tag: []TagAssociation{
 					{
@@ -105,7 +105,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
 				Tag: []ObjectIdentifier{
@@ -120,7 +120,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
 				WarehouseSize:   Bool(true),
@@ -136,7 +136,7 @@ func TestWarehouseAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		newname := NewAccountObjectIdentifier("newname")
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name:    NewAccountObjectIdentifier("oldname"),
 			NewName: newname,
 		}
@@ -147,7 +147,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("suspend", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name:    NewAccountObjectIdentifier("mywarehouse"),
 			Suspend: Bool(true),
 		}
@@ -158,7 +158,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("resume", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name:        NewAccountObjectIdentifier("mywarehouse"),
 			Resume:      Bool(true),
 			IfSuspended: Bool(true),
@@ -170,7 +170,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			AbortAllQueries: Bool(true),
 		}
@@ -181,7 +181,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Set: &WarehouseSet{
 				Tag: []TagAssociation{
@@ -203,7 +203,7 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
-		opts := &WarehouseAlterOptions{
+		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
 				Tag: []ObjectIdentifier{
@@ -221,7 +221,7 @@ func TestWarehouseAlter(t *testing.T) {
 
 func TestWarehouseDrop(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &WarehouseDropOptions{
+		opts := &DropWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 		}
 		actual, err := structToSQL(opts)
@@ -231,7 +231,7 @@ func TestWarehouseDrop(t *testing.T) {
 	})
 
 	t.Run("with if exists", func(t *testing.T) {
-		opts := &WarehouseDropOptions{
+		opts := &DropWarehouseOptions{
 			name:     NewAccountObjectIdentifier("mywarehouse"),
 			IfExists: Bool(true),
 		}
@@ -244,7 +244,7 @@ func TestWarehouseDrop(t *testing.T) {
 
 func TestWarehouseShow(t *testing.T) {
 	t.Run("empty options", func(t *testing.T) {
-		opts := &WarehouseShowOptions{}
+		opts := &ShowWarehouseOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := `SHOW WAREHOUSES`
@@ -252,7 +252,7 @@ func TestWarehouseShow(t *testing.T) {
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := &WarehouseShowOptions{
+		opts := &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String("mywarehouse"),
 			},

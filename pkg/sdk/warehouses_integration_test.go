@@ -13,7 +13,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	testWarehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &WarehouseCreateOptions{
+	testWarehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &CreateWarehouseOptions{
 		WarehouseSize: &WarehouseSizeSmall,
 	})
 	t.Cleanup(warehouseCleanup)
@@ -27,7 +27,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 	})
 
 	t.Run("show with options", func(t *testing.T) {
-		showOptions := &WarehouseShowOptions{
+		showOptions := &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: &testWarehouse.Name,
 			},
@@ -40,7 +40,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
-		showOptions := &WarehouseShowOptions{
+		showOptions := &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -65,7 +65,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 
 	t.Run("test complete", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		err := client.Warehouses.Create(ctx, id, &WarehouseCreateOptions{
+		err := client.Warehouses.Create(ctx, id, &CreateWarehouseOptions{
 			OrReplace:                       Bool(true),
 			WarehouseType:                   &WarehouseTypeStandard,
 			WarehouseSize:                   &WarehouseSizeSmall,
@@ -94,12 +94,12 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+			err = client.Warehouses.Drop(ctx, id, &DropWarehouseOptions{
 				IfExists: Bool(true),
 			})
 			require.NoError(t, err)
 		})
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -133,12 +133,12 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+			err = client.Warehouses.Drop(ctx, id, &DropWarehouseOptions{
 				IfExists: Bool(true),
 			})
 			require.NoError(t, err)
 		})
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -198,7 +198,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("terraform acc test", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		opts := &WarehouseCreateOptions{
+		opts := &CreateWarehouseOptions{
 			Comment:            String("test comment"),
 			WarehouseSize:      &WarehouseSizeXSmall,
 			AutoSuspend:        Int(60),
@@ -211,7 +211,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		err := client.Warehouses.Create(ctx, id, opts)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &WarehouseDropOptions{
+			err = client.Warehouses.Drop(ctx, id, &DropWarehouseOptions{
 				IfExists: Bool(true),
 			})
 			require.NoError(t, err)
@@ -229,7 +229,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 		// rename
 		newID := randomAccountObjectIdentifier(t)
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			NewName: newID,
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
@@ -239,7 +239,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, newID.Name(), warehouse.Name)
 
 		// change props
-		alterOptions = &WarehouseAlterOptions{
+		alterOptions = &AlterWarehouseOptions{
 			Set: &WarehouseSet{
 				WarehouseSize: &WarehouseSizeSmall,
 				Comment:       String("test comment2"),
@@ -257,7 +257,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Set: &WarehouseSet{
 				WarehouseSize:           &WarehouseSizeMedium,
 				AutoSuspend:             Int(1234),
@@ -266,7 +266,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -285,7 +285,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 
 		newID := randomAccountObjectIdentifier(t)
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			NewName: newID,
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
@@ -295,7 +295,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, newID.Name(), result.Name)
 
 		// rename back to original name so it can be cleaned up
-		alterOptions = &WarehouseAlterOptions{
+		alterOptions = &AlterWarehouseOptions{
 			NewName: oldID,
 		}
 		err = client.Warehouses.Alter(ctx, newID, alterOptions)
@@ -303,7 +303,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		createOptions := &WarehouseCreateOptions{
+		createOptions := &CreateWarehouseOptions{
 			Comment:         String("test comment"),
 			MaxClusterCount: Int(10),
 		}
@@ -311,7 +311,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 		id := warehouse.ID()
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Unset: &WarehouseUnset{
 				Comment:         Bool(true),
 				MaxClusterCount: Bool(true),
@@ -319,7 +319,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -336,12 +336,12 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Suspend: Bool(true),
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -351,12 +351,12 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		result := warehouses[0]
 		assert.Contains(t, []WarehouseState{WarehouseStateSuspended, WarehouseStateSuspending}, result.State)
 
-		alterOptions = &WarehouseAlterOptions{
+		alterOptions = &AlterWarehouseOptions{
 			Resume: Bool(true),
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err = client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err = client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -371,13 +371,13 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Resume:      Bool(true),
 			IfSuspended: Bool(true),
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -400,7 +400,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		time.Sleep(5 * time.Second)
 
 		// Check that query is running
-		warehouses, err := client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -412,7 +412,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, 0, result.Queued)
 
 		// Abort all queries
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			AbortAllQueries: Bool(true),
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
@@ -422,7 +422,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		time.Sleep(5 * time.Second)
 
 		// Check no query is running
-		warehouses, err = client.Warehouses.Show(ctx, &WarehouseShowOptions{
+		warehouses, err = client.Warehouses.Show(ctx, &ShowWarehouseOptions{
 			Like: &Like{
 				Pattern: String(warehouse.Name),
 			},
@@ -438,7 +438,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Set: &WarehouseSet{
 				Tag: []TagAssociation{
 					{
@@ -467,7 +467,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		alterOptions := &WarehouseAlterOptions{
+		alterOptions := &AlterWarehouseOptions{
 			Set: &WarehouseSet{
 				Tag: []TagAssociation{
 					{
@@ -490,7 +490,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "val2", val2)
 
-		alterOptions = &WarehouseAlterOptions{
+		alterOptions = &AlterWarehouseOptions{
 			Unset: &WarehouseUnset{
 				Tag: []ObjectIdentifier{
 					tag.ID(),
@@ -532,7 +532,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
 		warehouse, _ := createWarehouse(t, client)
 
-		dropOptions := &WarehouseDropOptions{IfExists: Bool(true)}
+		dropOptions := &DropWarehouseOptions{IfExists: Bool(true)}
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), dropOptions)
 		require.NoError(t, err)
 		_, err = client.Warehouses.Describe(ctx, warehouse.ID())

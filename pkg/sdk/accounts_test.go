@@ -10,7 +10,7 @@ import (
 
 func TestAccountCreate(t *testing.T) {
 	t.Run("simplest case", func(t *testing.T) {
-		opts := &AccountCreateOptions{
+		opts := &CreateAccountOptions{
 			name:          NewAccountObjectIdentifier("newaccount"),
 			AdminName:     "someadmin",
 			AdminPassword: String("v3rys3cr3t"),
@@ -24,7 +24,7 @@ func TestAccountCreate(t *testing.T) {
 	})
 
 	t.Run("every option", func(t *testing.T) {
-		opts := &AccountCreateOptions{
+		opts := &CreateAccountOptions{
 			name:               NewAccountObjectIdentifier("newaccount"),
 			AdminName:          "someadmin",
 			AdminRSAPublicKey:  String("s3cr3tk3y"),
@@ -46,7 +46,7 @@ func TestAccountCreate(t *testing.T) {
 
 func TestAccountAlter(t *testing.T) {
 	t.Run("with set params", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				Parameters: &AccountLevelParameters{
 					AccountParameters: &AccountParameters{
@@ -69,7 +69,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Unset: &AccountUnset{
 				Parameters: &AccountLevelParametersUnset{
 					AccountParameters: &AccountParametersUnset{
@@ -93,7 +93,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set resource monitor", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				ResourceMonitor: NewAccountObjectIdentifier("mymonitor"),
 			},
@@ -105,7 +105,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set password policy", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				PasswordPolicy: NewSchemaObjectIdentifier("db", "schema", "passpol"),
 			},
@@ -117,7 +117,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set session policy", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				SessionPolicy: NewSchemaObjectIdentifier("db", "schema", "sesspol"),
 			},
@@ -129,7 +129,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with unset password policy", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Unset: &AccountUnset{
 				PasswordPolicy: Bool(true),
 			},
@@ -141,7 +141,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with unset session policy", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Unset: &AccountUnset{
 				SessionPolicy: Bool(true),
 			},
@@ -153,7 +153,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Set: &AccountSet{
 				Tag: []TagAssociation{
 					{
@@ -174,7 +174,7 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Unset: &AccountUnset{
 				Tag: []ObjectIdentifier{
 					NewSchemaObjectIdentifier("db", "schema", "tag1"),
@@ -190,7 +190,7 @@ func TestAccountAlter(t *testing.T) {
 	t.Run("rename", func(t *testing.T) {
 		oldName := NewAccountObjectIdentifier("oldname")
 		newName := NewAccountObjectIdentifier("newname")
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Rename: &AccountRename{
 				Name:       oldName,
 				NewName:    newName,
@@ -205,7 +205,7 @@ func TestAccountAlter(t *testing.T) {
 
 	t.Run("drop old url", func(t *testing.T) {
 		oldName := NewAccountObjectIdentifier("oldname")
-		opts := &AccountAlterOptions{
+		opts := &AlterAccountOptions{
 			Drop: &AccountDrop{
 				Name:   oldName,
 				OldURL: Bool(true),
@@ -220,7 +220,7 @@ func TestAccountAlter(t *testing.T) {
 
 func TestAccountShow(t *testing.T) {
 	t.Run("empty options", func(t *testing.T) {
-		opts := &AccountShowOptions{}
+		opts := &ShowAccountOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := `SHOW ORGANIZATION ACCOUNTS`
@@ -228,7 +228,7 @@ func TestAccountShow(t *testing.T) {
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := &AccountShowOptions{
+		opts := &ShowAccountOptions{
 			Like: &Like{
 				Pattern: String("myaccount"),
 			},

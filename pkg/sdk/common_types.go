@@ -2,13 +2,13 @@ package sdk
 
 type LimitFrom struct {
 	Rows *int    `ddl:"keyword"`
-	From *string `ddl:"parameter,no_equals,single_quotes" db:"FROM"`
+	From *string `ddl:"parameter,no_equals,single_quotes" sql:"FROM"`
 }
 
 type In struct {
-	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
-	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
+	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
+	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
+	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
 }
 
 type Like struct {

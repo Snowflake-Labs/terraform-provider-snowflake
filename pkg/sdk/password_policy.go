@@ -14,11 +14,11 @@ var _ PasswordPolicies = (*passwordPolicies)(nil)
 // Snowflake API supports.
 type PasswordPolicies interface {
 	// Create creates a new password policy.
-	Create(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyCreateOptions) error
+	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreatePasswordPolicyOptions) error
 	// Alter modifies an existing password policy.
-	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyAlterOptions) error
+	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPasswordPolicyOptions) error
 	// Drop removes a password policy.
-	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyDropOptions) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
 	// Show returns a list of password policies.
 	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
 	// ShowByID returns a password policy by ID.
@@ -32,27 +32,27 @@ type passwordPolicies struct {
 	client *Client
 }
 
-type PasswordPolicyCreateOptions struct {
-	create         bool                   `ddl:"static" db:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace      *bool                  `ddl:"keyword" db:"OR REPLACE"`
-	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfNotExists    *bool                  `ddl:"keyword" db:"IF NOT EXISTS"`
+type CreatePasswordPolicyOptions struct {
+	create         bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace      *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfNotExists    *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 
-	PasswordMinLength         *int `ddl:"parameter" db:"PASSWORD_MIN_LENGTH"`
-	PasswordMaxLength         *int `ddl:"parameter" db:"PASSWORD_MAX_LENGTH"`
-	PasswordMinUpperCaseChars *int `ddl:"parameter" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
-	PasswordMinLowerCaseChars *int `ddl:"parameter" db:"PASSWORD_MIN_LOWER_CASE_CHARS"`
-	PasswordMinNumericChars   *int `ddl:"parameter" db:"PASSWORD_MIN_NUMERIC_CHARS"`
-	PasswordMinSpecialChars   *int `ddl:"parameter" db:"PASSWORD_MIN_SPECIAL_CHARS"`
-	PasswordMaxAgeDays        *int `ddl:"parameter" db:"PASSWORD_MAX_AGE_DAYS"`
-	PasswordMaxRetries        *int `ddl:"parameter" db:"PASSWORD_MAX_RETRIES"`
-	PasswordLockoutTimeMins   *int `ddl:"parameter" db:"PASSWORD_LOCKOUT_TIME_MINS"`
+	PasswordMinLength         *int `ddl:"parameter" sql:"PASSWORD_MIN_LENGTH"`
+	PasswordMaxLength         *int `ddl:"parameter" sql:"PASSWORD_MAX_LENGTH"`
+	PasswordMinUpperCaseChars *int `ddl:"parameter" sql:"PASSWORD_MIN_UPPER_CASE_CHARS"`
+	PasswordMinLowerCaseChars *int `ddl:"parameter" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
+	PasswordMinNumericChars   *int `ddl:"parameter" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
+	PasswordMinSpecialChars   *int `ddl:"parameter" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMaxAgeDays        *int `ddl:"parameter" sql:"PASSWORD_MAX_AGE_DAYS"`
+	PasswordMaxRetries        *int `ddl:"parameter" sql:"PASSWORD_MAX_RETRIES"`
+	PasswordLockoutTimeMins   *int `ddl:"parameter" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
 
-	Comment *string `ddl:"parameter,single_quotes" db:"COMMENT"`
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *PasswordPolicyCreateOptions) validate() error {
+func (opts *CreatePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -60,9 +60,9 @@ func (opts *PasswordPolicyCreateOptions) validate() error {
 	return nil
 }
 
-func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyCreateOptions) error {
+func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreatePasswordPolicyOptions) error {
 	if opts == nil {
-		opts = &PasswordPolicyCreateOptions{}
+		opts = &CreatePasswordPolicyOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -76,17 +76,17 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 	return err
 }
 
-type PasswordPolicyAlterOptions struct {
-	alter          bool                   `ddl:"static" db:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists       *bool                  `ddl:"keyword" db:"IF EXISTS"`
+type AlterPasswordPolicyOptions struct {
+	alter          bool                   `ddl:"static" sql:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
-	NewName        SchemaObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
-	Set            *PasswordPolicySet     `ddl:"keyword" db:"SET"`
-	Unset          *PasswordPolicyUnset   `ddl:"keyword" db:"UNSET"`
+	NewName        SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set            *PasswordPolicySet     `ddl:"keyword" sql:"SET"`
+	Unset          *PasswordPolicyUnset   `ddl:"keyword" sql:"UNSET"`
 }
 
-func (opts *PasswordPolicyAlterOptions) validate() error {
+func (opts *AlterPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -116,16 +116,16 @@ func (opts *PasswordPolicyAlterOptions) validate() error {
 }
 
 type PasswordPolicySet struct {
-	PasswordMinLength         *int    `ddl:"parameter" db:"PASSWORD_MIN_LENGTH"`
-	PasswordMaxLength         *int    `ddl:"parameter" db:"PASSWORD_MAX_LENGTH"`
-	PasswordMinUpperCaseChars *int    `ddl:"parameter" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
-	PasswordMinLowerCaseChars *int    `ddl:"parameter" db:"PASSWORD_MIN_LOWER_CASE_CHARS"`
-	PasswordMinNumericChars   *int    `ddl:"parameter" db:"PASSWORD_MIN_NUMERIC_CHARS"`
-	PasswordMinSpecialChars   *int    `ddl:"parameter" db:"PASSWORD_MIN_SPECIAL_CHARS"`
-	PasswordMaxAgeDays        *int    `ddl:"parameter" db:"PASSWORD_MAX_AGE_DAYS"`
-	PasswordMaxRetries        *int    `ddl:"parameter" db:"PASSWORD_MAX_RETRIES"`
-	PasswordLockoutTimeMins   *int    `ddl:"parameter" db:"PASSWORD_LOCKOUT_TIME_MINS"`
-	Comment                   *string `ddl:"parameter,single_quotes" db:"COMMENT"`
+	PasswordMinLength         *int    `ddl:"parameter" sql:"PASSWORD_MIN_LENGTH"`
+	PasswordMaxLength         *int    `ddl:"parameter" sql:"PASSWORD_MAX_LENGTH"`
+	PasswordMinUpperCaseChars *int    `ddl:"parameter" sql:"PASSWORD_MIN_UPPER_CASE_CHARS"`
+	PasswordMinLowerCaseChars *int    `ddl:"parameter" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
+	PasswordMinNumericChars   *int    `ddl:"parameter" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
+	PasswordMinSpecialChars   *int    `ddl:"parameter" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMaxAgeDays        *int    `ddl:"parameter" sql:"PASSWORD_MAX_AGE_DAYS"`
+	PasswordMaxRetries        *int    `ddl:"parameter" sql:"PASSWORD_MAX_RETRIES"`
+	PasswordLockoutTimeMins   *int    `ddl:"parameter" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
+	Comment                   *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *PasswordPolicySet) validate() error {
@@ -146,16 +146,16 @@ func (v *PasswordPolicySet) validate() error {
 }
 
 type PasswordPolicyUnset struct {
-	PasswordMinLength         *bool `ddl:"keyword" db:"PASSWORD_MIN_LENGTH"`
-	PasswordMaxLength         *bool `ddl:"keyword" db:"PASSWORD_MAX_LENGTH"`
-	PasswordMinUpperCaseChars *bool `ddl:"keyword" db:"PASSWORD_MIN_UPPER_CASE_CHARS"`
-	PasswordMinLowerCaseChars *bool `ddl:"keyword" db:"PASSWORD_MIN_LOWER_CASE_CHARS"`
-	PasswordMinNumericChars   *bool `ddl:"keyword" db:"PASSWORD_MIN_NUMERIC_CHARS"`
-	PasswordMinSpecialChars   *bool `ddl:"keyword" db:"PASSWORD_MIN_SPECIAL_CHARS"`
-	PasswordMaxAgeDays        *bool `ddl:"keyword" db:"PASSWORD_MAX_AGE_DAYS"`
-	PasswordMaxRetries        *bool `ddl:"keyword" db:"PASSWORD_MAX_RETRIES"`
-	PasswordLockoutTimeMins   *bool `ddl:"keyword" db:"PASSWORD_LOCKOUT_TIME_MINS"`
-	Comment                   *bool `ddl:"keyword" db:"COMMENT"`
+	PasswordMinLength         *bool `ddl:"keyword" sql:"PASSWORD_MIN_LENGTH"`
+	PasswordMaxLength         *bool `ddl:"keyword" sql:"PASSWORD_MAX_LENGTH"`
+	PasswordMinUpperCaseChars *bool `ddl:"keyword" sql:"PASSWORD_MIN_UPPER_CASE_CHARS"`
+	PasswordMinLowerCaseChars *bool `ddl:"keyword" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
+	PasswordMinNumericChars   *bool `ddl:"keyword" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
+	PasswordMinSpecialChars   *bool `ddl:"keyword" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMaxAgeDays        *bool `ddl:"keyword" sql:"PASSWORD_MAX_AGE_DAYS"`
+	PasswordMaxRetries        *bool `ddl:"keyword" sql:"PASSWORD_MAX_RETRIES"`
+	PasswordLockoutTimeMins   *bool `ddl:"keyword" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
+	Comment                   *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *PasswordPolicyUnset) validate() error {
@@ -188,9 +188,9 @@ func (v *PasswordPolicyUnset) validate() error {
 	return nil
 }
 
-func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyAlterOptions) error {
+func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPasswordPolicyOptions) error {
 	if opts == nil {
-		opts = &PasswordPolicyAlterOptions{}
+		opts = &AlterPasswordPolicyOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -204,23 +204,23 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
-type PasswordPolicyDropOptions struct {
-	drop           bool                   `ddl:"static" db:"DROP"`            //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists       *bool                  `ddl:"keyword" db:"IF EXISTS"`
+type DropPasswordPolicyOptions struct {
+	drop           bool                   `ddl:"static" sql:"DROP"`            //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *PasswordPolicyDropOptions) validate() error {
+func (opts *DropPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PasswordPolicyDropOptions) error {
+func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error {
 	if opts == nil {
-		opts = &PasswordPolicyDropOptions{}
+		opts = &DropPasswordPolicyOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -236,11 +236,11 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 
 // PasswordPolicyShowOptions represents the options for listing password policies.
 type PasswordPolicyShowOptions struct {
-	show             bool  `ddl:"static" db:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicies bool  `ddl:"static" db:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
-	Like             *Like `ddl:"keyword" db:"LIKE"`
-	In               *In   `ddl:"keyword" db:"IN"`
-	Limit            *int  `ddl:"parameter,no_equals" db:"LIMIT"`
+	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+	Like             *Like `ddl:"keyword" sql:"LIKE"`
+	In               *In   `ddl:"keyword" sql:"IN"`
+	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
 func (input *PasswordPolicyShowOptions) validate() error {
@@ -338,13 +338,13 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-type passwordPolicyDescribeOptions struct {
-	describe       bool                   `ddl:"static" db:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" db:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+type describePasswordPolicyOptions struct {
+	describe       bool                   `ddl:"static" sql:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *passwordPolicyDescribeOptions) validate() error {
+func (v *describePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -400,7 +400,7 @@ func passwordPolicyDetailsFromRows(rows []propertyRow) *PasswordPolicyDetails {
 }
 
 func (v *passwordPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error) {
-	opts := &passwordPolicyDescribeOptions{
+	opts := &describePasswordPolicyOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {

@@ -6,13 +6,13 @@ import (
 
 type ResourceMonitors interface {
 	// Create creates a resource monitor.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *ResourceMonitorCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
 	// Alter modifies an existing resource monitor
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *ResourceMonitorAlterOptions) error
+	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error
 	// Drop removes a resource monitor.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of resource monitor.
-	Show(ctx context.Context, opts *ResourceMonitorShowOptions) ([]*ResourceMonitor, error)
+	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error)
 	// ShowByID returns a resource monitor by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
@@ -45,23 +45,23 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 	return ObjectTypeResourceMonitor
 }
 
-// ResourceMonitorCreateOptions contains options for creating a resource monitor.
-type ResourceMonitorCreateOptions struct {
-	create          bool                    `ddl:"static" db:"CREATE"`           //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" db:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+// CreateResourceMonitorOptions contains options for creating a resource monitor.
+type CreateResourceMonitorOptions struct {
+	create          bool                    `ddl:"static" sql:"CREATE"`           //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *ResourceMonitorCreateOptions) validate() error {
+func (opts *CreateResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifier, opts *ResourceMonitorCreateOptions) error {
+func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error {
 	if opts == nil {
-		opts = &ResourceMonitorCreateOptions{}
+		opts = &CreateResourceMonitorOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -75,17 +75,17 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 	return err
 }
 
-// ResourceMonitorAlterOptions contains options for altering a resource monitor.
-type ResourceMonitorAlterOptions struct{}
+// AlterResourceMonitorOptions contains options for altering a resource monitor.
+type AlterResourceMonitorOptions struct{}
 
-func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *ResourceMonitorAlterOptions) error {
+func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
 	return nil
 }
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
 type resourceMonitorDropOptions struct {
-	drop            bool                    `ddl:"static" db:"DROP"`             //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" db:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	drop            bool                    `ddl:"static" sql:"DROP"`             //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -111,20 +111,20 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier)
 	return err
 }
 
-// ResourceMonitorShowOptions contains options for listing resource monitors.
-type ResourceMonitorShowOptions struct {
-	show             bool  `ddl:"static" db:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitors bool  `ddl:"static" db:"RESOURCE MONITORS"` //lint:ignore U1000 This is used in the ddl tag
-	Like             *Like `ddl:"keyword" db:"LIKE"`
+// ShowResourceMonitorOptions contains options for listing resource monitors.
+type ShowResourceMonitorOptions struct {
+	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"` //lint:ignore U1000 This is used in the ddl tag
+	Like             *Like `ddl:"keyword" sql:"LIKE"`
 }
 
-func (opts *ResourceMonitorShowOptions) validate() error {
+func (opts *ShowResourceMonitorOptions) validate() error {
 	return nil
 }
 
-func (v *resourceMonitors) Show(ctx context.Context, opts *ResourceMonitorShowOptions) ([]*ResourceMonitor, error) {
+func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error) {
 	if opts == nil {
-		opts = &ResourceMonitorShowOptions{}
+		opts = &ShowResourceMonitorOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ResourceMonitorShowOp
 }
 
 func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error) {
-	resourceMonitors, err := v.Show(ctx, &ResourceMonitorShowOptions{
+	resourceMonitors, err := v.Show(ctx, &ShowResourceMonitorOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
