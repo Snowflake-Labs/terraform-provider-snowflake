@@ -40,7 +40,7 @@ resource "snowflake_task_grant" "grant" {
 - `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all tasks in the given schema. When this is true and no schema_name is provided apply this grant on all tasks in the given database. The task_name field must be unset in order to use on_all. Cannot be used together with on_future.
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future tasks in the given schema. When this is true and no schema_name is provided apply this grant on all future tasks in the given database. The task_name field must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future task. To grant all privileges, use the value `ALL PRIVILEGES`.
-- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`.
+- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`
 - `schema_name` (String) The name of the schema containing the current or future tasks on which to grant privileges.
 - `task_name` (String) The name of the task on which to grant privileges immediately (only valid if on_future is false).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.

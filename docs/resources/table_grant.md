@@ -40,7 +40,7 @@ resource "snowflake_table_grant" "grant" {
 - `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all tables in the given schema. When this is true and no schema_name is provided apply this grant on all tables in the given database. The table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future tables in the given schema. When this is true and no schema_name is provided apply this grant on all future tables in the given database. The table_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future table. To grant all privileges, use the value `ALL PRIVILEGES`.
-- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`.
+- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema containing the current or future tables on which to grant privileges.
 - `shares` (Set of String) Grants privilege to these shares (only valid if on_future or on_all are unset).

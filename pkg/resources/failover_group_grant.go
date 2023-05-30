@@ -172,7 +172,7 @@ func UpdateFailoverGroupGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, privilege,reversionRole, rolesToRevoke, []string{},
+		meta, builder, privilege, reversionRole, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}

@@ -41,8 +41,8 @@ resource "snowflake_materialized_view_grant" "grant" {
 - `materialized_view_name` (String) The name of the materialized view on which to grant privileges immediately (only valid if on_future and on_all are false).
 - `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all future materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
-- `privilege` (String) The privilege to grant on the current or future materialized view. To grant all privileges, use the value `ALL PRIVILEGES`.
-- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`.
+- `privilege` (String) The privilege to grant on the current or future materialized view. To grant all privileges, use the value `ALL PRIVILEGES`
+- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`
 - `roles` (Set of String) Grants privilege to these roles.
 - `schema_name` (String) The name of the schema containing the current or future materialized views on which to grant privileges.
 - `shares` (Set of String) Grants privilege to these shares (only valid if on_future and on_all are false).
