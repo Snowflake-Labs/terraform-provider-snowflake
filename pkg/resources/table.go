@@ -646,8 +646,8 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("column") {
-		t, new := d.GetChange("column")
-		removed, added, changed := getColumns(t).diffs(getColumns(new))
+		t, n := d.GetChange("column")
+		removed, added, changed := getColumns(t).diffs(getColumns(n))
 		for _, cA := range removed {
 			q := builder.DropColumn(cA.name)
 			if err := snowflake.Exec(db, q); err != nil {

@@ -38,9 +38,9 @@ resource "snowflake_stage_grant" "grant" {
 ### Optional
 
 - `enable_multiple_grants` (Boolean) When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.
-- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.
+- `on_all` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all stages in the given schema. When this is true and no schema_name is provided apply this grant on all stages in the given database. The stage_name field must be unset in order to use on_all. Cannot be used together with on_future.
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future stages in the given schema. When this is true and no schema_name is provided apply this grant on all future stages in the given database. The stage_name field must be unset in order to use on_future. Cannot be used together with on_all.
-- `privilege` (String) The privilege to grant on the stage.
+- `privilege` (String) The privilege to grant on the stage. To grant all privileges, use the value `ALL PRIVILEGES`.
 - `schema_name` (String) The name of the schema containing the current stage on which to grant privileges.
 - `stage_name` (String) The name of the stage on which to grant privilege (only valid if on_future and on_all are false).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.

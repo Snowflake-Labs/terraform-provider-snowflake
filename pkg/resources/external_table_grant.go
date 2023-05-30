@@ -15,6 +15,7 @@ var validExternalTablePrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 var externalTableGrantSchema = map[string]*schema.Schema{
@@ -40,14 +41,21 @@ var externalTableGrantSchema = map[string]*schema.Schema{
 	"on_future": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future.",
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all future external tables in the given schema. When this is true and no schema_name is provided apply this grant on all future external tables in the given database. The external_table_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:     false,
+		ForceNew:    true,
+	},
+	"on_all": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all external tables in the given schema. When this is true and no schema_name is provided apply this grant on all external tables in the given database. The external_table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:     false,
 		ForceNew:    true,
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future external table.",
+		Description:  "The privilege to grant on the current or future external table. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validExternalTablePrivileges.ToList(), true),
 		ForceNew:     true,
@@ -92,7 +100,7 @@ func ExternalTableGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 8 {
+					if len(parts) != 9 {
 						return nil, errors.New("external table grant ID should be in the format database|schema|external_table|privilege|with_grant_option|on_future|roles|shares")
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
@@ -115,10 +123,13 @@ func ExternalTableGrant() *TerraformGrantResource {
 					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("shares", helpers.StringListToList(parts[7])); err != nil {
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("shares", helpers.StringListToList(parts[8])); err != nil {
 						return nil, err
 					}
 
@@ -137,24 +148,31 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
+	if onFuture && onAll {
+		return errors.New("on_future and on_all cannot both be true")
+	}
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
-	if (externalTableName == "") && !onFuture {
-		return errors.New("external_table_name must be set unless on_future is true")
+	if (externalTableName == "") && !onFuture && !onAll {
+		return errors.New("external_table_name must be set unless on_future or on_all is true")
 	}
-	if (externalTableName != "") && onFuture {
-		return errors.New("external_table_name must be empty if on_future is true")
+	if (externalTableName != "") && (onFuture || onAll) {
+		return errors.New("external_table_name must be empty if on_future or on_all is true")
 	}
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureExternalTableGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllExternalTableGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.ExternalTableGrant(databaseName, schemaName, externalTableName)
 	}
 
@@ -162,7 +180,7 @@ func CreateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadExternalTableGrant(d, meta)
@@ -173,33 +191,29 @@ func ReadExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	externalTableName := d.Get("external_table_name").(string)
-	onFuture := d.Get("on_future").(bool)
-	if (externalTableName == "") && !onFuture {
-		return errors.New("external_table_name must be set unless on_future is true")
-	}
-	if (externalTableName != "") && onFuture {
-		return errors.New("external_table_name must be empty if on_future is true")
-	}
 	privilege := d.Get("privilege").(string)
+	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureExternalTableGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllExternalTableGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.ExternalTableGrant(databaseName, schemaName, externalTableName)
 	}
-	// TODO
-	onAll := false
 
 	err := readGenericGrant(d, meta, externalTableGrantSchema, builder, onFuture, onAll, validExternalTablePrivileges)
 	if err != nil {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, externalTableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
@@ -212,11 +226,15 @@ func DeleteExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	externalTableName := d.Get("external_table_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureExternalTableGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllExternalTableGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.ExternalTableGrant(databaseName, schemaName, externalTableName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -245,15 +263,18 @@ func UpdateExternalTableGrant(d *schema.ResourceData, meta interface{}) error {
 	externalTableName := d.Get("external_table_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureExternalTableGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllExternalTableGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.ExternalTableGrant(databaseName, schemaName, externalTableName)
 	}
-
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
 		meta, builder, privilege, rolesToRevoke, sharesToRevoke,

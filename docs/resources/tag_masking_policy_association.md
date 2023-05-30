@@ -3,12 +3,12 @@
 page_title: "snowflake_tag_masking_policy_association Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.
 ---
 
 # snowflake_tag_masking_policy_association (Resource)
 
-
+Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.
 
 ## Example Usage
 

@@ -16,6 +16,7 @@ var validPipePrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOperate,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var pipeGrantSchema = map[string]*schema.Schema{
@@ -40,7 +41,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future pipe.",
+		Description:  "The privilege to grant on the current or future pipe. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validPipePrivileges.ToList(), true),
 		ForceNew:     true,
@@ -152,7 +153,7 @@ func CreatePipeGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, pipeName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, pipeName, privilege, withGrantOption, onFuture, roles)
 	d.SetId(grantID)
 
 	return ReadPipeGrant(d, meta)
@@ -188,7 +189,7 @@ func ReadPipeGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, pipeName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, pipeName, privilege, withGrantOption, onFuture, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

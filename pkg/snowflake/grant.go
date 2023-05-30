@@ -26,6 +26,7 @@ const (
 	tableType            grantType = "TABLE"
 	warehouseType        grantType = "WAREHOUSE"
 	externalTableType    grantType = "EXTERNAL TABLE"
+	failoverGroupType    grantType = "FAILOVER GROUP"
 	fileFormatType       grantType = "FILE FORMAT"
 	functionType         grantType = "FUNCTION"
 	procedureType        grantType = "PROCEDURE"
@@ -224,6 +225,15 @@ func ExternalTableGrant(db, schema, externalTable string) GrantBuilder {
 		name:          externalTable,
 		qualifiedName: fmt.Sprintf(`"%v"."%v"."%v"`, db, schema, externalTable),
 		grantType:     externalTableType,
+	}
+}
+
+// FailoverGroupGrant returns a pointer to a CurrentGrantBuilder for a failover group.
+func FailoverGroupGrant(failoverGroup string) GrantBuilder {
+	return &CurrentGrantBuilder{
+		name:          failoverGroup,
+		qualifiedName: fmt.Sprintf(`"%v"`, failoverGroup),
+		grantType:     failoverGroupType,
 	}
 }
 

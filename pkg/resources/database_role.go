@@ -136,7 +136,6 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("comment", databaseRole.Comment); err != nil {
 		return err
 	}
-
 	return nil
 }
 

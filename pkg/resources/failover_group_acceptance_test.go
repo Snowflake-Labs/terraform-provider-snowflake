@@ -33,6 +33,50 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:            "snowflake_failover_group.fg",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ignore_edition_check"},
+			},
+		},
+	})
+}
+
+func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
+	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	if _, ok := os.LookupEnv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"); !ok {
+		t.Skip("Skipping TestAcc_FailoverGroup since not a business critical account")
+	}
+	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
+	resource.Test(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.interval", "20"),
+				),
+			},
+			{
+				Config: failoverGroupWithNoWarehouse(randomCharacters, accountName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "0"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.interval", "20"),
+				),
+			},
 		},
 	})
 }
@@ -165,6 +209,24 @@ resource "snowflake_failover_group" "fg" {
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
 	allowed_databases = [snowflake_database.db.name]
+	allowed_integration_types = ["SECURITY INTEGRATIONS"]
+	replication_schedule {
+		interval = %d
+	}
+}
+`, randomCharacters, randomCharacters, accountName, interval)
+}
+
+func failoverGroupWithNoWarehouse(randomCharacters, accountName string, interval int) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "db" {
+	name = "tst-terraform-%s"
+}
+
+resource "snowflake_failover_group" "fg" {
+	name = "%s"
+	object_types = ["DATABASES", "INTEGRATIONS", "ROLES"]
+	allowed_accounts= ["%s"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		interval = %d

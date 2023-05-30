@@ -7,8 +7,12 @@ import (
 )
 
 var (
+	// go-snowflake errors.
 	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
 	ErrAccountIsEmpty             = errors.New("account is empty")
+
+	// snowflake-sdk errors.
+	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
 func decodeDriverError(err error) error {

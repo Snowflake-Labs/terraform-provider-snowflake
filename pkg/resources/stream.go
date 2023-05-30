@@ -317,18 +317,19 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if stream.SourceType.String == "Stage" {
+	switch stream.SourceType.String {
+	case "Stage":
 		if err := d.Set("on_stage", stream.TableName.String); err != nil {
 			return err
 		}
-	} else {
+	case "View":
+		if err := d.Set("on_view", stream.TableName.String); err != nil {
+			return err
+		}
+	default:
 		if err := d.Set("on_table", stream.TableName.String); err != nil {
 			return err
 		}
-	}
-
-	if err := d.Set("on_view", stream.ViewName.String); err != nil {
-		return err
 	}
 
 	if err := d.Set("append_only", stream.Mode.String == "APPEND_ONLY"); err != nil {
@@ -350,7 +351,6 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("owner", stream.Owner.String); err != nil {
 		return err
 	}
-
 	return nil
 }
 

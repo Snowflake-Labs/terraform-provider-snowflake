@@ -1,5 +1,10 @@
 package sdk
 
+type LimitFrom struct {
+	Rows *int    `ddl:"keyword"`
+	From *string `ddl:"parameter,no_equals,single_quotes" db:"FROM"`
+}
+
 type In struct {
 	Account  *bool                   `ddl:"keyword" db:"ACCOUNT"`
 	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
@@ -8,6 +13,16 @@ type In struct {
 
 type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
+}
+
+type TagAssociation struct {
+	Name  ObjectIdentifier `ddl:"identifier"`
+	Value string           `ddl:"parameter,single_quotes"`
+}
+
+type TableColumnSignature struct {
+	Name string   `ddl:"keyword,double_quotes"`
+	Type DataType `ddl:"keyword"`
 }
 
 type StringProperty struct {

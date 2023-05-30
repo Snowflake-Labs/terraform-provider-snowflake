@@ -14,6 +14,7 @@ import (
 var validIntegrationPrivileges = NewPrivilegeSet(
 	privilegeUsage,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var integrationGrantSchema = map[string]*schema.Schema{
@@ -26,7 +27,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the integration.",
+		Description:  "The privilege to grant on the integration. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validIntegrationPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -100,7 +101,7 @@ func CreateIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(integrationName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(integrationName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadIntegrationGrant(d, meta)
@@ -120,7 +121,7 @@ func ReadIntegrationGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(integrationName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(integrationName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

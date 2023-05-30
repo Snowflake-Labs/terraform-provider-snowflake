@@ -7,6 +7,7 @@ func (p Privilege) String() string {
 }
 
 const (
+	privilegeAllPrivileges               Privilege = "ALL PRIVILEGES"
 	privilegeAccountSupportCases         Privilege = "MANAGE ACCOUNT SUPPORT CASES"
 	privilegeAddSearchOptimization       Privilege = "ADD SEARCH OPTIMIZATION"
 	privilegeApply                       Privilege = "APPLY"
@@ -49,6 +50,7 @@ const (
 	privilegeDelete                      Privilege = "DELETE"
 	privilegeExecuteManagedTask          Privilege = "EXECUTE MANAGED TASK"
 	privilegeExecuteTask                 Privilege = "EXECUTE TASK"
+	privilegeFailover                    Privilege = "FAILOVER"
 	privilegeImportedPrivileges          Privilege = "IMPORTED PRIVILEGES"
 	privilegeImportShare                 Privilege = "IMPORT SHARE"
 	privilegeInsert                      Privilege = "INSERT"
@@ -68,6 +70,7 @@ const (
 	privilegeRebuild                     Privilege = "REBUILD"
 	privilegeReferences                  Privilege = "REFERENCES"
 	privilegeReferenceUsage              Privilege = "REFERENCE_USAGE"
+	privilegeReplicate                   Privilege = "REPLICATE"
 	privilegeSelect                      Privilege = "SELECT"
 	privilegeTruncate                    Privilege = "TRUNCATE"
 	privilegeUpdate                      Privilege = "UPDATE"

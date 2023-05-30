@@ -20,6 +20,7 @@ var validTablePrivileges = NewPrivilegeSet(
 	privilegeReferences,
 	privilegeRebuild,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var tableGrantSchema = map[string]*schema.Schema{
@@ -44,7 +45,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future table.",
+		Description:  "The privilege to grant on the current or future table. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      privilegeSelect.String(),
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice(validTablePrivileges.ToList(), true),
@@ -72,7 +73,7 @@ var tableGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:          schema.TypeBool,
 		Optional:      true,
-		Description:   "When this is set to true and a schema_name is provided, apply this grant on all tables in the given schema. When this is true and no schema_name is provided apply this grant on all tables in the given database. The table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all tables in the given schema. When this is true and no schema_name is provided apply this grant on all tables in the given database. The table_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:       false,
 		ForceNew:      true,
 		ConflictsWith: []string{"table_name", "shares"},
@@ -184,7 +185,7 @@ func CreateTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 	return ReadTableGrant(d, meta)
 }
@@ -215,7 +216,7 @@ func ReadTableGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tableName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
@@ -251,9 +252,9 @@ func UpdateTableGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// difference calculates roles/shares to add/revoke
 	difference := func(key string) (toAdd []string, toRevoke []string) {
-		old, new := d.GetChange(key)
-		oldSet := old.(*schema.Set)
-		newSet := new.(*schema.Set)
+		o, n := d.GetChange(key)
+		oldSet := o.(*schema.Set)
+		newSet := n.(*schema.Set)
 		toAdd = expandStringList(newSet.Difference(oldSet).List())
 		toRevoke = expandStringList(oldSet.Difference(newSet).List())
 		return

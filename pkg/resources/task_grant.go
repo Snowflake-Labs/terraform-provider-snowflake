@@ -16,6 +16,7 @@ var validTaskPrivileges = NewPrivilegeSet(
 	privilegeMonitor,
 	privilegeOperate,
 	privilegeOwnership,
+	privilegeAllPrivileges,
 )
 
 var taskGrantSchema = map[string]*schema.Schema{
@@ -33,16 +34,25 @@ var taskGrantSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"on_future": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all future tasks in the given schema. When this is true and no schema_name is provided apply this grant on all future tasks in the given database. The task_name field must be unset in order to use on_future.",
-		Default:     false,
-		ForceNew:    true,
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all future tasks in the given schema. When this is true and no schema_name is provided apply this grant on all future tasks in the given database. The task_name field must be unset in order to use on_future. Cannot be used together with on_all.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"task_name"},
+	},
+	"on_all": {
+		Type:          schema.TypeBool,
+		Optional:      true,
+		Description:   "When this is set to true and a schema_name is provided, apply this grant on all tasks in the given schema. When this is true and no schema_name is provided apply this grant on all tasks in the given database. The task_name field must be unset in order to use on_all. Cannot be used together with on_future.",
+		Default:       false,
+		ForceNew:      true,
+		ConflictsWith: []string{"task_name"},
 	},
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future task.",
+		Description:  "The privilege to grant on the current or future task. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "USAGE",
 		ValidateFunc: validation.StringInSlice(validTaskPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -87,7 +97,7 @@ func TaskGrant() *TerraformGrantResource {
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
-					if len(parts) != 7 {
+					if len(parts) != 8 {
 						return nil, fmt.Errorf("unexpected format of ID (%v), expected database_name|schema_name|task_name|privilege|with_grant_option|on_future|roles", d.Id())
 					}
 					if err := d.Set("database_name", parts[0]); err != nil {
@@ -110,7 +120,10 @@ func TaskGrant() *TerraformGrantResource {
 					if err := d.Set("on_future", helpers.StringToBool(parts[5])); err != nil {
 						return nil, err
 					}
-					if err := d.Set("roles", helpers.StringListToList(parts[6])); err != nil {
+					if err := d.Set("on_all", helpers.StringToBool(parts[6])); err != nil {
+						return nil, err
+					}
+					if err := d.Set("roles", helpers.StringListToList(parts[7])); err != nil {
 						return nil, err
 					}
 					return []*schema.ResourceData{d}, nil
@@ -128,30 +141,31 @@ func CreateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
-	if (taskName == "") && !onFuture {
-		return errors.New("task_name must be set unless on_future is true")
+	if (taskName == "") && !onFuture && !onAll {
+		return errors.New("task_name must be set unless on_future or on_all is true")
 	}
-	if (taskName != "") && onFuture {
-		return errors.New("task_name must be empty if on_future is true")
-	}
-	if (schemaName == "") && !onFuture {
-		return errors.New("schema_name must be set unless on_future is true")
+	if (schemaName == "") && !onFuture && !onAll {
+		return errors.New("schema_name must be set unless on_future or on_all is true")
 	}
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTaskGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllTaskGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.TaskGrant(databaseName, schemaName, taskName)
 	}
 
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
 	d.SetId(grantID)
 
 	return ReadTaskGrant(d, meta)
@@ -164,24 +178,26 @@ func ReadTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	taskName := d.Get("task_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTaskGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllTaskGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.TaskGrant(databaseName, schemaName, taskName)
 	}
-	// TODO
-	onAll := false
 
 	err := readGenericGrant(d, meta, taskGrantSchema, builder, onFuture, onAll, validTaskPrivileges)
 	if err != nil {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, taskName, privilege, withGrantOption, onFuture, onAll, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}
@@ -194,11 +210,15 @@ func DeleteTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	taskName := d.Get("task_name").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTaskGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllTaskGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.TaskGrant(databaseName, schemaName, taskName)
 	}
 	return deleteGenericGrant(d, meta, builder)
@@ -223,12 +243,16 @@ func UpdateTaskGrant(d *schema.ResourceData, meta interface{}) error {
 	taskName := d.Get("task_name").(string)
 	privilege := d.Get("privilege").(string)
 	onFuture := d.Get("on_future").(bool)
+	onAll := d.Get("on_all").(bool)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	var builder snowflake.GrantBuilder
-	if onFuture {
+	switch {
+	case onFuture:
 		builder = snowflake.FutureTaskGrant(databaseName, schemaName)
-	} else {
+	case onAll:
+		builder = snowflake.AllTaskGrant(databaseName, schemaName)
+	default:
 		builder = snowflake.TaskGrant(databaseName, schemaName, taskName)
 	}
 

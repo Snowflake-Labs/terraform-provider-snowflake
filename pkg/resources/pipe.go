@@ -97,13 +97,13 @@ func Pipe() *schema.Resource {
 	}
 }
 
-func pipeCopyStatementDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+func pipeCopyStatementDiffSuppress(_, o, n string, _ *schema.ResourceData) bool {
 	// standardize line endings
-	old = strings.ReplaceAll(old, "\r\n", "\n")
-	new = strings.ReplaceAll(new, "\r\n", "\n")
+	o = strings.ReplaceAll(o, "\r\n", "\n")
+	n = strings.ReplaceAll(n, "\r\n", "\n")
 
 	// trim off any trailing line endings
-	return strings.TrimRight(old, ";\r\n") == strings.TrimRight(new, ";\r\n")
+	return strings.TrimRight(o, ";\r\n") == strings.TrimRight(n, ";\r\n")
 }
 
 type pipeID struct {
@@ -272,11 +272,8 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		pipe.ErrorIntegration.Valid = false
 		pipe.ErrorIntegration.String = ""
 	}
-	if err := d.Set("error_integration", pipe.ErrorIntegration.String); err != nil {
-		return err
-	}
-
-	return nil
+	err = d.Set("error_integration", pipe.ErrorIntegration.String)
+	return err
 }
 
 // UpdatePipe implements schema.UpdateFunc.

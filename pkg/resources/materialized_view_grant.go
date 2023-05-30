@@ -20,6 +20,7 @@ var validMaterializedViewPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeReferences,
 	privilegeSelect,
+	privilegeAllPrivileges,
 )
 
 // The schema holds the resource variables that can be provided in the Terraform.
@@ -45,7 +46,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the current or future materialized view.",
+		Description:  "The privilege to grant on the current or future materialized view. To grant all privileges, use the value `ALL PRIVILEGES`",
 		Default:      "SELECT",
 		ValidateFunc: validation.StringInSlice(validMaterializedViewPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -72,7 +73,7 @@ var materializedViewGrantSchema = map[string]*schema.Schema{
 	"on_all": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future. Importing the resource with the on_all=true option is not supported.",
+		Description: "When this is set to true and a schema_name is provided, apply this grant on all materialized views in the given schema. When this is true and no schema_name is provided apply this grant on all materialized views in the given database. The materialized_view_name and shares fields must be unset in order to use on_all. Cannot be used together with on_future.",
 		Default:     false,
 		ForceNew:    true,
 	},
@@ -183,7 +184,7 @@ func CreateMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	d.SetId(grantID)
 
 	return ReadMaterializedViewGrant(d, meta)
@@ -225,7 +226,7 @@ func ReadMaterializedViewGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, materializedViewName, privilege, withGrantOption, onFuture, onAll, roles, shares)
 	// if the ID is not in the new format, rewrite it
 	if d.Id() != grantID {
 		d.SetId(grantID)

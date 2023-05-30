@@ -17,7 +17,7 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageGrantConfig(name, normal),
+				Config: stageGrantConfig(name, normal, "READ"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
@@ -26,6 +26,20 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "privilege", "READ"),
+					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}),
+				),
+			},
+			// UPDATE ALL PRIVILEGES
+			{
+				Config: stageGrantConfig(name, normal, "ALL PRIVILEGES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
+					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "privilege", "ALL PRIVILEGES"),
 					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}),
 				),
 			},
@@ -42,7 +56,7 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 	})
 }
 
-func stageGrantConfig(name string, grantType grantType) string {
+func stageGrantConfig(name string, grantType grantType, privilege string) string {
 	var stageNameConfig string
 	switch grantType {
 	case normal:
@@ -81,13 +95,13 @@ func stageGrantConfig(name string, grantType grantType) string {
 		schema_name = snowflake_schema.s.name
 		%s
 
-		privilege = "READ"
+		privilege = "%s"
 
 		roles = [
 			snowflake_role.r.name
 		]
 	}
-`, name, name, name, name, stageNameConfig)
+`, name, name, name, name, stageNameConfig, privilege)
 }
 
 func TestAcc_StageFutureGrant(t *testing.T) {
@@ -98,7 +112,7 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageGrantConfig(name, onFuture),
+				Config: stageGrantConfig(name, onFuture, "READ"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
@@ -130,7 +144,7 @@ func TestAcc_StageGrantOnAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageGrantConfig(name, onAll),
+				Config: stageGrantConfig(name, onAll, "READ"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),

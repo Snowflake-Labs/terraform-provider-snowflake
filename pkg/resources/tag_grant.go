@@ -14,6 +14,7 @@ import (
 var validTagPrivileges = NewPrivilegeSet(
 	privilegeOwnership,
 	privilegeApply,
+	privilegeAllPrivileges,
 )
 
 var tagGrantSchema = map[string]*schema.Schema{
@@ -32,7 +33,7 @@ var tagGrantSchema = map[string]*schema.Schema{
 	"privilege": {
 		Type:         schema.TypeString,
 		Optional:     true,
-		Description:  "The privilege to grant on the tag.",
+		Description:  "The privilege to grant on the tag. To grant all privileges, use the value `ALL PRIVILEGES`.",
 		Default:      "APPLY",
 		ValidateFunc: validation.StringInSlice(validTagPrivileges.ToList(), true),
 		ForceNew:     true,
@@ -121,7 +122,7 @@ func CreateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	if err := createGenericGrant(d, meta, builder); err != nil {
 		return err
 	}
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
 	d.SetId(grantID)
 
 	return ReadTagGrant(d, meta)
@@ -143,7 +144,7 @@ func ReadTagGrant(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	grantID := helpers.SnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
+	grantID := helpers.EncodeSnowflakeID(databaseName, schemaName, tagName, privilege, withGrantOption, roles)
 	if grantID != d.Id() {
 		d.SetId(grantID)
 	}

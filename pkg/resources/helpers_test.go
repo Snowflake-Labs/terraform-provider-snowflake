@@ -117,15 +117,6 @@ func managedAccount(t *testing.T, id string, params map[string]interface{}) *sch
 	return d
 }
 
-func maskingPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.MaskingPolicy().Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
 func networkPolicy(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
@@ -263,15 +254,6 @@ func oauthIntegration(t *testing.T, id string, params map[string]interface{}) *s
 	t.Helper()
 	r := require.New(t)
 	d := schema.TestResourceDataRaw(t, resources.OAuthIntegration().Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
-func externalOauthIntegration(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.ExternalOauthIntegration().Schema, params)
 	r.NotNil(d)
 	d.SetId(id)
 	return d

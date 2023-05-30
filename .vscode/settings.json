@@ -5,5 +5,13 @@
     "gopls": {
         "formatting.gofumpt": true
     },
-    "go.testFlags": ["-v"],
+    "go.testFlags": [
+        "-v"
+    ],
+    "go.testTimeout": "600s",
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ],
+    "files.trimTrailingWhitespace": true,
 }

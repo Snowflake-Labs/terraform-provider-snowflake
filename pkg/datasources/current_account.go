@@ -59,7 +59,6 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	url, err := acc.AccountURL()
 	if err != nil {
 		log.Println("[DEBUG] generating snowflake url failed")
-		d.SetId("")
 		return nil
 	}
 

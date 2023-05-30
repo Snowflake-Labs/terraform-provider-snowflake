@@ -9,12 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	pattern = "pattern"
-)
-
 var rolesSchema = map[string]*schema.Schema{
-	pattern: {
+	"pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Filters the command output by object name.",
@@ -57,7 +53,7 @@ func Roles() *schema.Resource {
 func ReadRoles(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	d.SetId("roles_read")
-	rolePattern := d.Get(pattern).(string)
+	rolePattern := d.Get("pattern").(string)
 
 	listRoles, err := snowflake.ListRoles(db, rolePattern)
 	if errors.Is(err, sql.ErrNoRows) {

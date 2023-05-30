@@ -24,10 +24,29 @@ const (
 	DataTypeArray        DataType = "ARRAY"
 	DataTypeGeography    DataType = "GEOGRAPHY"
 	DataTypeGeometry     DataType = "GEOMETRY"
+
+	// DataTypeUnknown is used for testing purposes only.
+	DataTypeUnknown DataType = "UNKNOWN"
 )
 
-func NewDataType(s string) DataType {
+func DataTypeFromString(s string) DataType {
 	dType := strings.ToUpper(s)
+
+	switch dType {
+	case "DATE":
+		return DataTypeDate
+	case "VARIANT":
+		return DataTypeVariant
+	case "OBJECT":
+		return DataTypeObject
+	case "ARRAY":
+		return DataTypeArray
+	case "GEOGRAPHY":
+		return DataTypeGeography
+	case "GEOMETRY":
+		return DataTypeGeometry
+	}
+
 	numberSynonyms := []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 	if slices.ContainsFunc(numberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeNumber
@@ -49,6 +68,26 @@ func NewDataType(s string) DataType {
 	if slices.Contains(booleanSynonyms, dType) {
 		return DataTypeBoolean
 	}
-	// todo: date, time, timestamp, variant, object, array, geography, geometry
-	return DataType(dType)
+
+	timeSynonyms := []string{"TIME"}
+	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTime
+	}
+
+	timestampLTZSynonyms := []string{"TIMESTAMP_LTZ"}
+	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTimestampLTZ
+	}
+
+	timestampTZSynonyms := []string{"TIMESTAMP_TZ"}
+	if slices.ContainsFunc(timestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTimestampTZ
+	}
+
+	timestampNTZSynonyms := []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
+	if slices.ContainsFunc(timestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+		return DataTypeTimestampNTZ
+	}
+
+	return DataTypeUnknown
 }
