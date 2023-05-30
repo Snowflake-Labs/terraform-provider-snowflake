@@ -93,6 +93,16 @@ var procedureGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 // ProcedureGrant returns a pointer to the resource representing a procedure grant.
@@ -285,6 +295,7 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 	procedureName := d.Get("procedure_name").(string)
 	argumentDataTypes := expandStringList(d.Get("argument_data_types").([]interface{}))
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
@@ -300,7 +311,7 @@ func UpdateProcedureGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, privilege, rolesToRevoke, sharesToRevoke,
+		meta, builder, privilege, reversionRole, rolesToRevoke, sharesToRevoke,
 	); err != nil {
 		return err
 	}

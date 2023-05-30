@@ -64,6 +64,16 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 // RowAccessPolicyGrant returns a pointer to the resource representing a row access policy grant.
@@ -188,6 +198,7 @@ func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 	schemaName := d.Get("schema_name").(string)
 	rowAccessPolicyName := d.Get("row_access_policy_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
@@ -195,7 +206,7 @@ func UpdateRowAccessPolicyGrant(d *schema.ResourceData, meta interface{}) error 
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, reversionRole, rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}

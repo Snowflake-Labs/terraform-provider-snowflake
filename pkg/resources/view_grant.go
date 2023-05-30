@@ -86,6 +86,16 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
 	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 // ViewGrant returns a pointer to the resource representing a view grant.
@@ -263,6 +273,7 @@ func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	viewName := d.Get("view_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
@@ -280,7 +291,7 @@ func UpdateViewGrant(d *schema.ResourceData, meta interface{}) error {
 
 	// first revoke
 	err := deleteGenericGrantRolesAndShares(
-		meta, builder, privilege, rolesToRevoke, sharesToRevoke)
+		meta, builder, privilege, reversionRole, rolesToRevoke, sharesToRevoke)
 	if err != nil {
 		return err
 	}

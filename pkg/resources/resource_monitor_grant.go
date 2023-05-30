@@ -159,7 +159,7 @@ func UpdateResourceMonitorGrant(d *schema.ResourceData, meta interface{}) error 
 
 	// first revoke
 	if err := deleteGenericGrantRolesAndShares(
-		meta, builder, privilege, rolesToRevoke, []string{},
+		meta, builder, privilege, "", rolesToRevoke, []string{},
 	); err != nil {
 		return err
 	}

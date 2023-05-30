@@ -64,6 +64,16 @@ var tagGrantSchema = map[string]*schema.Schema{
 		Default:     false,
 		ForceNew:    true,
 	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 // TagGrant returns a pointer to the resource representing a tag grant.
@@ -165,6 +175,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema_name").(string)
 	tagName := d.Get("tag_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
@@ -175,6 +186,7 @@ func UpdateTagGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		privilege,
+		reversionRole,
 		rolesToRevoke,
 		nil,
 	); err != nil {

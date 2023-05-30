@@ -168,7 +168,7 @@ func UpdateAccountGrant(d *schema.ResourceData, meta interface{}) error {
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// first revoke
-	if err := deleteGenericGrantRolesAndShares(meta, builder, privilege, rolesToRevoke, nil); err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, privilege, "", rolesToRevoke, nil); err != nil {
 		return err
 	}
 

@@ -252,6 +252,16 @@ func (fge *FutureGrantExecutable) Revoke(p string) []string {
 	}
 }
 
+// Revoke returns the SQL that will revoke ownership privileges on the grant from the grantee.
+// Note: returns the same SQL as Revoke.
+func (fge *FutureGrantExecutable) RevokeOwnership(r string) []string {
+	// Note: has no effect for ALL GRANTS
+	return []string{
+		fmt.Sprintf(`REVOKE OWNERSHIP ON ALL %vS IN %v %v FROM ROLE "%v"`,
+			fge.futureGrantType, fge.futureGrantTarget, fge.grantName, fge.granteeName),
+	}
+}
+
 // Show returns the SQL that will show all future grants on the schema.
 func (fge *FutureGrantExecutable) Show() string {
 	return fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`, fge.futureGrantTarget, fge.grantName)
