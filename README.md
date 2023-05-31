@@ -44,7 +44,7 @@ Some links that might help you:
 - The [introductory tutorial](https://guides.snowflake.com/guide/terraforming_snowflake/#0) shows how to set up your Snowflake account for Terraform (service user, role, authentication, etc) and how to create your first resources in Terraform.
 - The [docs on the Terraform registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest) are a complete reference of all resources and data sources supported and contain more advanced examples.
 - The [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo, we use this forum to discuss new features and changes to the provider.
-- **If you're an enterprise customer**, reach out to your account representative. We prioritize support requests over GitHub issues. This also helps us allocating additional engineering resources to supporting the provider.
+- **If you are an enterprise customer**, reach out to your account team. This helps us prioritize issues.
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
 
 ## Contributing
