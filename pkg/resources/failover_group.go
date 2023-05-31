@@ -200,7 +200,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		allowedAccounts[i] = sdk.NewAccountIdentifier(organizationName, accountName)
 	}
 
-	var opts sdk.FailoverGroupCreateOptions
+	var opts sdk.CreateFailoverGroupOptions
 	// setting optional attributes
 	if v, ok := d.GetOk("allowed_databases"); ok {
 		allowedDatabasesList := expandStringList(v.(*schema.Set).List())
@@ -401,7 +401,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	id := sdk.NewAccountObjectIdentifier(name)
 
 	// alter failover group <name> set ...
-	opts := &sdk.FailoverGroupAlterSourceOptions{
+	opts := &sdk.AlterSourceFailoverGroupOptions{
 		Set: &sdk.FailoverGroupSet{},
 	}
 	runSet := false
@@ -484,7 +484,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if len(removedDatabases) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Remove: &sdk.FailoverGroupRemove{
 					AllowedDatabases: removedDatabases,
 				},
@@ -502,7 +502,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedDatabases) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Add: &sdk.FailoverGroupAdd{
 					AllowedDatabases: addedDatabases,
 				},
@@ -533,7 +533,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if len(removedShares) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Remove: &sdk.FailoverGroupRemove{
 					AllowedShares: removedShares,
 				},
@@ -551,7 +551,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedShares) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Add: &sdk.FailoverGroupAdd{
 					AllowedShares: addedShares,
 				},
@@ -590,7 +590,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if len(removedAccounts) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Remove: &sdk.FailoverGroupRemove{
 					AllowedAccounts: removedAccounts,
 				},
@@ -608,7 +608,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedAccounts) > 0 {
-			opts := &sdk.FailoverGroupAlterSourceOptions{
+			opts := &sdk.AlterSourceFailoverGroupOptions{
 				Add: &sdk.FailoverGroupAdd{
 					AllowedAccounts: addedAccounts,
 				},
@@ -629,7 +629,7 @@ func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
 	ctx := context.Background()
-	err := client.FailoverGroups.Drop(ctx, id, &sdk.FailoverGroupDropOptions{IfExists: sdk.Bool(true)})
+	err := client.FailoverGroups.Drop(ctx, id, &sdk.DropFailoverGroupOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return fmt.Errorf("error deleting failover group %v err = %w", name, err)
 	}

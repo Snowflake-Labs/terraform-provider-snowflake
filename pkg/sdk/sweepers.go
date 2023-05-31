@@ -40,7 +40,7 @@ func getFailoverGroupSweeper(client *Client, prefix string) func() error {
 		if err != nil {
 			return err
 		}
-		opts := &FailoverGroupShowOptions{
+		opts := &ShowFailoverGroupOptions{
 			InAccount: NewAccountIdentifierFromAccountLocator(currentAccount),
 		}
 		fgs, err := client.FailoverGroups.Show(ctx, opts)

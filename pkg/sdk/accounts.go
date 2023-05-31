@@ -9,11 +9,11 @@ import (
 
 type Accounts interface {
 	// Create creates an account.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *AccountCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error
 	// Alter modifies an existing account
-	Alter(ctx context.Context, opts *AccountAlterOptions) error
+	Alter(ctx context.Context, opts *AlterAccountOptions) error
 	// Show returns a list of accounts.
-	Show(ctx context.Context, opts *AccountShowOptions) ([]*Account, error)
+	Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error)
 	// ShowByID returns an account by id
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 }
@@ -32,26 +32,26 @@ var (
 	EditionBusinessCritical AccountEdition = "BUSINESS_CRITICAL"
 )
 
-type AccountCreateOptions struct {
-	create  bool                    `ddl:"static" db:"CREATE"`  //lint:ignore U1000 This is used in the ddl tag
-	account bool                    `ddl:"static" db:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+type CreateAccountOptions struct {
+	create  bool                    `ddl:"static" sql:"CREATE"`  //lint:ignore U1000 This is used in the ddl tag
+	account bool                    `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
 	name    AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
-	AdminName          string         `ddl:"parameter,single_quotes" db:"ADMIN_NAME"`
-	AdminPassword      *string        `ddl:"parameter,single_quotes" db:"ADMIN_PASSWORD"`
-	AdminRSAPublicKey  *string        `ddl:"parameter,single_quotes" db:"ADMIN_RSA_PUBLIC_KEY"`
-	FirstName          *string        `ddl:"parameter,single_quotes" db:"FIRST_NAME"`
-	LastName           *string        `ddl:"parameter,single_quotes" db:"LAST_NAME"`
-	Email              string         `ddl:"parameter,single_quotes" db:"EMAIL"`
-	MustChangePassword *bool          `ddl:"parameter" db:"MUST_CHANGE_PASSWORD"`
-	Edition            AccountEdition `ddl:"parameter" db:"EDITION"`
-	RegionGroup        *string        `ddl:"parameter,single_quotes" db:"REGION_GROUP"`
-	Region             *string        `ddl:"parameter,single_quotes" db:"REGION"`
-	Comment            *string        `ddl:"parameter,single_quotes" db:"COMMENT"`
+	AdminName          string         `ddl:"parameter,single_quotes" sql:"ADMIN_NAME"`
+	AdminPassword      *string        `ddl:"parameter,single_quotes" sql:"ADMIN_PASSWORD"`
+	AdminRSAPublicKey  *string        `ddl:"parameter,single_quotes" sql:"ADMIN_RSA_PUBLIC_KEY"`
+	FirstName          *string        `ddl:"parameter,single_quotes" sql:"FIRST_NAME"`
+	LastName           *string        `ddl:"parameter,single_quotes" sql:"LAST_NAME"`
+	Email              string         `ddl:"parameter,single_quotes" sql:"EMAIL"`
+	MustChangePassword *bool          `ddl:"parameter" sql:"MUST_CHANGE_PASSWORD"`
+	Edition            AccountEdition `ddl:"parameter" sql:"EDITION"`
+	RegionGroup        *string        `ddl:"parameter,single_quotes" sql:"REGION_GROUP"`
+	Region             *string        `ddl:"parameter,single_quotes" sql:"REGION"`
+	Comment            *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *AccountCreateOptions) validate() error {
+func (opts *CreateAccountOptions) validate() error {
 	if opts.AdminName == "" {
 		return fmt.Errorf("AdminName is required")
 	}
@@ -67,9 +67,9 @@ func (opts *AccountCreateOptions) validate() error {
 	return nil
 }
 
-func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *AccountCreateOptions) error {
+func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error {
 	if opts == nil {
-		opts = &AccountCreateOptions{}
+		opts = &CreateAccountOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -83,17 +83,17 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 	return err
 }
 
-type AccountAlterOptions struct {
-	alter   bool `ddl:"static" db:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
-	account bool `ddl:"static" db:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+type AlterAccountOptions struct {
+	alter   bool `ddl:"static" sql:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
+	account bool `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
 
-	Set    *AccountSet    `ddl:"keyword" db:"SET"`
-	Unset  *AccountUnset  `ddl:"list,no_parentheses" db:"UNSET"`
+	Set    *AccountSet    `ddl:"keyword" sql:"SET"`
+	Unset  *AccountUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	Rename *AccountRename `ddl:"-"`
 	Drop   *AccountDrop   `ddl:"-"`
 }
 
-func (opts *AccountAlterOptions) validate() error {
+func (opts *AlterAccountOptions) validate() error {
 	if ok := exactlyOneValueSet(
 		opts.Set,
 		opts.Unset,
@@ -149,10 +149,10 @@ func (opts *AccountLevelParameters) validate() error {
 
 type AccountSet struct {
 	Parameters      *AccountLevelParameters `ddl:"list,no_parentheses"`
-	ResourceMonitor AccountObjectIdentifier `ddl:"identifier,equals" db:"RESOURCE_MONITOR"`
-	PasswordPolicy  SchemaObjectIdentifier  `ddl:"identifier" db:"PASSWORD POLICY"`
-	SessionPolicy   SchemaObjectIdentifier  `ddl:"identifier" db:"SESSION POLICY"`
-	Tag             []TagAssociation        `ddl:"keyword" db:"TAG"`
+	ResourceMonitor AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	PasswordPolicy  SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
+	SessionPolicy   SchemaObjectIdentifier  `ddl:"identifier" sql:"SESSION POLICY"`
+	Tag             []TagAssociation        `ddl:"keyword" sql:"TAG"`
 }
 
 func (opts *AccountSet) validate() error {
@@ -202,9 +202,9 @@ func (opts *AccountLevelParametersUnset) validate() error {
 
 type AccountUnset struct {
 	Parameters     *AccountLevelParametersUnset `ddl:"list,no_parentheses"`
-	PasswordPolicy *bool                        `ddl:"keyword" db:"PASSWORD POLICY"`
-	SessionPolicy  *bool                        `ddl:"keyword" db:"SESSION POLICY"`
-	Tag            []ObjectIdentifier           `ddl:"keyword" db:"TAG"`
+	PasswordPolicy *bool                        `ddl:"keyword" sql:"PASSWORD POLICY"`
+	SessionPolicy  *bool                        `ddl:"keyword" sql:"SESSION POLICY"`
+	Tag            []ObjectIdentifier           `ddl:"keyword" sql:"TAG"`
 }
 
 func (opts *AccountUnset) validate() error {
@@ -234,8 +234,8 @@ func (opts *AccountUnset) validate() error {
 
 type AccountRename struct {
 	Name       AccountObjectIdentifier `ddl:"identifier"`
-	NewName    AccountObjectIdentifier `ddl:"identifier" db:"RENAME TO"`
-	SaveOldURL *bool                   `ddl:"parameter" db:"SAVE_OLD_URL"`
+	NewName    AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SaveOldURL *bool                   `ddl:"parameter" sql:"SAVE_OLD_URL"`
 }
 
 func (opts *AccountRename) validate() error {
@@ -250,7 +250,7 @@ func (opts *AccountRename) validate() error {
 
 type AccountDrop struct {
 	Name   AccountObjectIdentifier `ddl:"identifier"`
-	OldURL *bool                   `ddl:"keyword" db:"DROP OLD URL"`
+	OldURL *bool                   `ddl:"keyword" sql:"DROP OLD URL"`
 }
 
 func (opts *AccountDrop) validate() error {
@@ -267,9 +267,9 @@ func (opts *AccountDrop) validate() error {
 	return nil
 }
 
-func (c *accounts) Alter(ctx context.Context, opts *AccountAlterOptions) error {
+func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 	if opts == nil {
-		opts = &AccountAlterOptions{}
+		opts = &AlterAccountOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return err
@@ -282,13 +282,13 @@ func (c *accounts) Alter(ctx context.Context, opts *AccountAlterOptions) error {
 	return err
 }
 
-type AccountShowOptions struct {
-	show     bool  `ddl:"static" db:"SHOW"`                  //lint:ignore U1000 This is used in the ddl tag
-	accounts bool  `ddl:"static" db:"ORGANIZATION ACCOUNTS"` //lint:ignore U1000 This is used in the ddl tag
-	Like     *Like `ddl:"keyword" db:"LIKE"`
+type ShowAccountOptions struct {
+	show     bool  `ddl:"static" sql:"SHOW"`                  //lint:ignore U1000 This is used in the ddl tag
+	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"` //lint:ignore U1000 This is used in the ddl tag
+	Like     *Like `ddl:"keyword" sql:"LIKE"`
 }
 
-func (opts *AccountShowOptions) validate() error {
+func (opts *ShowAccountOptions) validate() error {
 	return nil
 }
 
@@ -370,9 +370,9 @@ func (row accountDBRow) toAccount() *Account {
 	return acc
 }
 
-func (c *accounts) Show(ctx context.Context, opts *AccountShowOptions) ([]*Account, error) {
+func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error) {
 	if opts == nil {
-		opts = &AccountShowOptions{}
+		opts = &ShowAccountOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -395,7 +395,7 @@ func (c *accounts) Show(ctx context.Context, opts *AccountShowOptions) ([]*Accou
 }
 
 func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error) {
-	accounts, err := c.Show(ctx, &AccountShowOptions{
+	accounts, err := c.Show(ctx, &ShowAccountOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},

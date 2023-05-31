@@ -128,7 +128,7 @@ func ReadFailoverGroups(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	inAccount := d.Get("in_account").(string)
-	opts := sdk.FailoverGroupShowOptions{}
+	opts := sdk.ShowFailoverGroupOptions{}
 	if inAccount != "" {
 		opts.InAccount = sdk.NewAccountIdentifierFromAccountLocator(inAccount)
 	}

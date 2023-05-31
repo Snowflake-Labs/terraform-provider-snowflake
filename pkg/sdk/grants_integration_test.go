@@ -24,7 +24,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
-		grants, err := client.Grants.Show(ctx, &ShowGrantsOptions{
+		grants, err := client.Grants.Show(ctx, &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Object: &Object{
 					ObjectType: ObjectTypeDatabase,
@@ -98,7 +98,7 @@ func TestInt_ShowGrants(t *testing.T) {
 		require.Error(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
-		grants, err := client.Grants.Show(ctx, &ShowGrantsOptions{
+		grants, err := client.Grants.Show(ctx, &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Object: &Object{
 					ObjectType: ObjectTypeDatabase,

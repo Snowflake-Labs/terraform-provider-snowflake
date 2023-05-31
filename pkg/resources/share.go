@@ -63,9 +63,9 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	comment := d.Get("comment").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
-	var opts sdk.ShareCreateOptions
+	var opts sdk.CreateShareOptions
 	if comment != "" {
-		opts = sdk.ShareCreateOptions{
+		opts = sdk.CreateShareOptions{
 			Comment: sdk.String(comment),
 		}
 	}
@@ -146,7 +146,7 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 		}
 	}()
 	// 3. Add accounts to the share
-	err = client.Shares.Alter(ctx, shareID, &sdk.ShareAlterOptions{
+	err = client.Shares.Alter(ctx, shareID, &sdk.AlterShareOptions{
 		Add: &sdk.ShareAdd{
 			Accounts: accounts,
 		},
@@ -212,7 +212,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 		newAccounts := expandStringList(n.([]interface{}))
 		if len(newAccounts) == 0 {
 			accountIdentifiers := accountIdentifiersFromSlice(oldAccounts)
-			err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.ShareAlterOptions{
+			err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.AlterShareOptions{
 				Remove: &sdk.ShareRemove{
 					Accounts: accountIdentifiers,
 				},
@@ -230,7 +230,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
-		err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.ShareAlterOptions{
+		err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.AlterShareOptions{
 			Set: &sdk.ShareSet{
 				Comment: sdk.String(comment),
 			},

@@ -36,7 +36,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &MaskingPolicyShowOptions{
+		showOptions := &ShowMaskingPolicyOptions{
 			In: &In{
 				Schema: schemaTest.ID(),
 			},
@@ -49,7 +49,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &MaskingPolicyShowOptions{
+		showOptions := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(maskingPolicyTest.Name),
 			},
@@ -64,7 +64,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent masking policy", func(t *testing.T) {
-		showOptions := &MaskingPolicyShowOptions{
+		showOptions := &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -115,7 +115,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		expression := "REPLACE('X', 1, 2)"
 		comment := randomComment(t)
 		exemptOtherPolicies := randomBool(t)
-		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{
+		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
 			IfNotExists:         Bool(false),
 			Comment:             String(comment),
@@ -129,7 +129,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		assert.Equal(t, DataTypeVARCHAR, maskingPolicyDetails.ReturnType)
 		assert.Equal(t, expression, maskingPolicyDetails.Body)
 
-		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(name),
 			},
@@ -159,7 +159,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		}
 		expression := "REPLACE('X', 1, 2)"
 		comment := randomComment(t)
-		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{
+		err := client.MaskingPolicies.Create(ctx, id, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(false),
 			IfNotExists:         Bool(true),
 			Comment:             String(comment),
@@ -173,7 +173,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		assert.Equal(t, DataTypeVARCHAR, maskingPolicyDetails.ReturnType)
 		assert.Equal(t, expression, maskingPolicyDetails.Body)
 
-		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(name),
 			},
@@ -207,7 +207,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 		assert.Equal(t, DataTypeVARCHAR, maskingPolicyDetails.ReturnType)
 		assert.Equal(t, expression, maskingPolicyDetails.Body)
 
-		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+		maskingPolicy, err := client.MaskingPolicies.Show(ctx, &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(name),
 			},
@@ -232,10 +232,10 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := `
-		case 
-			when current_role() in ('ROLE_A') then 
-				val 
-			when is_role_in_session( 'ROLE_B' ) then 
+		case
+			when current_role() in ('ROLE_A') then
+				val
+			when is_role_in_session( 'ROLE_B' ) then
 				'ABC123'
 			else
 				'******'
@@ -292,14 +292,14 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
 		comment := randomComment(t)
-		alterOptions := &MaskingPolicyAlterOptions{
+		alterOptions := &AlterMaskingPolicyOptions{
 			Set: &MaskingPolicySet{
 				Comment: String(comment),
 			},
 		}
 		err := client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
 		require.NoError(t, err)
-		maskingPolicies, err := client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+		maskingPolicies, err := client.MaskingPolicies.Show(ctx, &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(maskingPolicy.Name),
 			},
@@ -313,14 +313,14 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 
 		err = client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
 		require.NoError(t, err)
-		alterOptions = &MaskingPolicyAlterOptions{
+		alterOptions = &AlterMaskingPolicyOptions{
 			Unset: &MaskingPolicyUnset{
 				Comment: Bool(true),
 			},
 		}
 		err = client.MaskingPolicies.Alter(ctx, maskingPolicy.ID(), alterOptions)
 		require.NoError(t, err)
-		maskingPolicies, err = client.MaskingPolicies.Show(ctx, &MaskingPolicyShowOptions{
+		maskingPolicies, err = client.MaskingPolicies.Show(ctx, &ShowMaskingPolicyOptions{
 			Like: &Like{
 				Pattern: String(maskingPolicy.Name),
 			},
@@ -339,7 +339,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		t.Cleanup(maskingPolicyCleanup)
 		newName := randomString(t)
 		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
-		alterOptions := &MaskingPolicyAlterOptions{
+		alterOptions := &AlterMaskingPolicyOptions{
 			NewName: newID,
 		}
 		err := client.MaskingPolicies.Alter(ctx, oldID, alterOptions)
@@ -348,7 +348,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, newName, maskingPolicyDetails.Name)
 		// rename back to original name so it can be cleaned up
-		alterOptions = &MaskingPolicyAlterOptions{
+		alterOptions = &AlterMaskingPolicyOptions{
 			NewName: oldID,
 		}
 		err = client.MaskingPolicies.Alter(ctx, newID, alterOptions)
@@ -367,7 +367,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		t.Cleanup(tag2Cleanup)
 
 		tagAssociations := []TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}
-		alterOptions := &MaskingPolicyAlterOptions{
+		alterOptions := &AlterMaskingPolicyOptions{
 			Set: &MaskingPolicySet{
 				Tag: tagAssociations,
 			},
@@ -382,7 +382,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		assert.Equal(t, tagAssociations[1].Value, tag2Value)
 
 		// unset tag
-		alterOptions = &MaskingPolicyAlterOptions{
+		alterOptions = &AlterMaskingPolicyOptions{
 			Unset: &MaskingPolicyUnset{
 				Tag: []ObjectIdentifier{tag.ID()},
 			},

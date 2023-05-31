@@ -223,7 +223,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
-	createOptions := &sdk.AccountCreateOptions{
+	createOptions := &sdk.CreateAccountOptions{
 		AdminName: d.Get("admin_name").(string),
 		Email:     d.Get("email").(string),
 		Edition:   sdk.AccountEdition(d.Get("edition").(string)),
@@ -342,7 +342,7 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 	// Rename
 	if d.HasChange("name") {
 		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Accounts.Alter(ctx, &sdk.AccountAlterOptions{
+		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Rename: &sdk.AccountRename{
 				Name:    id,
 				NewName: newID,
@@ -356,7 +356,7 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 
 	// Change comment
 	if d.HasChange("comment") {
-		err := client.Comments.Set(ctx, &sdk.SetCommentOpts{
+		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
 			ObjectType: sdk.ObjectTypeAccount,
 			ObjectName: id,
 			Value:      sdk.String(d.Get("comment").(string)),

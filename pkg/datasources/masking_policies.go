@@ -66,7 +66,7 @@ func ReadMaskingPolicies(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema").(string)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	maskingPolicies, err := client.MaskingPolicies.Show(ctx, &sdk.MaskingPolicyShowOptions{
+	maskingPolicies, err := client.MaskingPolicies.Show(ctx, &sdk.ShowMaskingPolicyOptions{
 		In: &sdk.In{
 			Schema: sdk.NewSchemaIdentifier(databaseName, schemaName),
 		},
