@@ -1,13 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"log"
-	"strconv"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jmoiron/sqlx"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -61,60 +59,41 @@ func Database() *schema.Resource {
 // ReadDatabase read the database meta-data information.
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbx := sqlx.NewDb(db, "snowflake")
-	dbData, err := snowflake.ListDatabase(dbx, d.Get("name").(string))
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
-		log.Println("[DEBUG] list database failed to decode")
-		d.SetId("")
-		return nil
+		return err
 	}
-	if dbData == nil || !dbData.DBName.Valid {
-		log.Println("[DEBUG] database not found")
-		d.SetId("")
-		return nil
+	d.SetId(database.Name)
+	if err := d.Set("name", database.Name); err != nil {
+		return err
 	}
-	log.Printf("[DEBUG] list database: %v", dbData)
-	d.SetId(dbData.DBName.String)
-	commentErr := d.Set("comment", dbData.Comment.String)
-	if commentErr != nil {
-		return commentErr
+	if err := d.Set("comment", database.Comment); err != nil {
+		return err
 	}
-	ownerErr := d.Set("owner", dbData.Owner.String)
-	if ownerErr != nil {
-		return ownerErr
+	if err := d.Set("owner", database.Owner); err != nil {
+		return err
 	}
-	isDefaultErr := d.Set("is_default", dbData.IsDefault.String == "Y")
-	if isDefaultErr != nil {
-		return isDefaultErr
+	if err := d.Set("is_default", database.IsDefault); err != nil {
+		return err
 	}
-	isCurrentErr := d.Set("is_current", dbData.IsCurrent.String == "Y")
-	if isCurrentErr != nil {
-		return isCurrentErr
+	if err := d.Set("is_current", database.IsCurrent); err != nil {
+		return err
 	}
-	originErr := d.Set("origin", dbData.Origin.String)
-	if originErr != nil {
-		return originErr
+	if err := d.Set("origin", database.Origin); err != nil {
+		return err
 	}
-	createdOnErr := d.Set("created_on", dbData.CreatedOn.String)
-	if createdOnErr != nil {
-		return createdOnErr
+	if err := d.Set("retention_time", database.RetentionTime); err != nil {
+		return err
 	}
-	optionsErr := d.Set("options", dbData.Options.String)
-	if optionsErr != nil {
-		return optionsErr
+	if err := d.Set("created_on", database.CreatedOn.String()); err != nil {
+		return err
 	}
-	retentionTimeErr := d.Set("retention_time", -1)
-	if retentionTimeErr != nil {
-		return retentionTimeErr
-	}
-	if dbData.RetentionTime.Valid {
-		v, err := strconv.Atoi(dbData.RetentionTime.String)
-		if err == nil {
-			retentionTimeErr := d.Set("retention_time", v)
-			if retentionTimeErr != nil {
-				return retentionTimeErr
-			}
-		}
+	if err := d.Set("options", database.Options); err != nil {
+		return err
 	}
 	return nil
 }

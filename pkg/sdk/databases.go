@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -12,7 +13,7 @@ type Databases interface {
 	// Create creates a database.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
 	// CreateShared creates a database from a shared database.
-	CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier) error
+	CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier, opts *CreateSharedDatabaseOptions) error
 	// CreateSecondary creates a secondary database.
 	CreateSecondary(ctx context.Context, id AccountObjectIdentifier, primaryID ExternalObjectIdentifier, opts *CreateSecondaryDatabaseOptions) error
 	// Alter modifies an existing database
@@ -53,6 +54,7 @@ type Database struct {
 	RetentionTime int
 	ResourceGroup string
 	DroppedOn     time.Time
+	Transient     bool
 }
 
 func (v *Database) ID() AccountObjectIdentifier {
@@ -113,6 +115,14 @@ func (row *databaseRow) toDatabase() *Database {
 	if row.DroppedOn.Valid {
 		database.DroppedOn = row.DroppedOn.Time
 	}
+	if row.Options.Valid {
+		parts := strings.Split(row.Options.String, ", ")
+		for _, part := range parts {
+			if part == "TRANSIENT" {
+				database.Transient = true
+			}
+		}
+	}
 	return &database
 }
 
@@ -123,11 +133,11 @@ type CreateDatabaseOptions struct {
 	database                   bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
 	name                       AccountObjectIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	Clone                      *Clone                  `ddl:"-" sql:"CLONE"`
+	Clone                      *Clone                  `ddl:"-"`
 	DataRetentionTimeInDays    *int                    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	Tag                        []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment                    *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag                        []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateDatabaseOptions) validate() error {
@@ -158,14 +168,15 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 	return err
 }
 
-type createSharedDatabaseOptions struct {
+type CreateSharedDatabaseOptions struct {
 	create    bool                     `ddl:"static" sql:"CREATE"`   //lint:ignore U1000 This is used in the ddl tag
 	database  bool                     `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
 	name      AccountObjectIdentifier  `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
-	fromShare ExternalObjectIdentifier `ddl:"keyword" sql:"FROM SHARE"`
+	fromShare ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
+	Comment   *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *createSharedDatabaseOptions) validate() error {
+func (opts *CreateSharedDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -175,11 +186,14 @@ func (opts *createSharedDatabaseOptions) validate() error {
 	return nil
 }
 
-func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier) error {
-	opts := &createSharedDatabaseOptions{
-		name:      id,
-		fromShare: shareID,
+func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier, opts *CreateSharedDatabaseOptions) error {
+	if opts == nil {
+		opts = &CreateSharedDatabaseOptions{}
 	}
+
+	opts.name = id
+	opts.fromShare = shareID
+
 	if err := opts.validate(); err != nil {
 		return err
 	}
@@ -195,7 +209,7 @@ type CreateSecondaryDatabaseOptions struct {
 	create                  bool                     `ddl:"static" sql:"CREATE"`   //lint:ignore U1000 This is used in the ddl tag
 	database                bool                     `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
 	name                    AccountObjectIdentifier  `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
-	primaryDatabase         ExternalObjectIdentifier `ddl:"keyword" sql:"AS REPLICA OF"`
+	primaryDatabase         ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
 	DataRetentionTimeInDays *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 }
 
@@ -227,14 +241,14 @@ func (v *databases) CreateSecondary(ctx context.Context, id AccountObjectIdentif
 }
 
 type AlterDatabaseOptions struct {
-	alter    bool  `ddl:"static" sql:"ALTER"`    //lint:ignore U1000 This is used in the ddl tag
-	database bool  `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool `ddl:"keyword" sql:"IF EXISTS"`
-	name     AccountObjectIdentifier
+	alter    bool                    `ddl:"static" sql:"ALTER"`    //lint:ignore U1000 This is used in the ddl tag
+	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 	NewName  AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	SwapWith AccountObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
 	Set      *DatabaseSet            `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *DatabaseSet            `ddl:"list,no_parentheses" sql:"UNSET"`
+	Unset    *DatabaseUnset          `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 func (opts *AlterDatabaseOptions) validate() error {
@@ -548,6 +562,10 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 }
 
 type DatabaseDetails struct {
+	Rows []DatabaseDetailsRow
+}
+
+type DatabaseDetailsRow struct {
 	CreatedOn time.Time
 	Name      string
 	Kind      string
@@ -577,8 +595,14 @@ func (v *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 	if err != nil {
 		return nil, err
 	}
-	var details DatabaseDetails
-	err = v.client.queryOne(ctx, &details, sql)
+	var rows []DatabaseDetailsRow
+	err = v.client.query(ctx, &rows, sql)
+	if err != nil {
+		return nil, err
+	}
+	details := DatabaseDetails{
+		Rows: rows,
+	}
 	return &details, err
 }
 

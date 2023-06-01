@@ -7,7 +7,7 @@ import (
 
 type TimeTravel struct {
 	Timestamp *time.Time `ddl:"parameter,single_quotes,arrow_equals" sql:"TIMESTAMP"`
-	Offset    *int       `ddl:"parameter,single_quotes,arrow_equals" sql:"OFFSET"`
+	Offset    *int       `ddl:"parameter,arrow_equals" sql:"OFFSET"`
 	Statement *string    `ddl:"parameter,single_quotes,arrow_equals" sql:"STATEMENT"`
 }
 
@@ -19,9 +19,9 @@ func (v *TimeTravel) validate() error {
 }
 
 type Clone struct {
-	SourceObject ObjectIdentifier
-	At           *TimeTravel `ddl:"list,no_comma" sql:"AT"`
-	Before       *TimeTravel `ddl:"list,no_comma" sql:"BEFORE"`
+	SourceObject ObjectIdentifier `ddl:"identifier" sql:"CLONE"`
+	At           *TimeTravel      `ddl:"list,parentheses,no_comma" sql:"AT"`
+	Before       *TimeTravel      `ddl:"list,parentheses,no_comma" sql:"BEFORE"`
 }
 
 func (v *Clone) validate() error {

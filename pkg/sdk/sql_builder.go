@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -29,14 +30,14 @@ const (
 )
 
 func (cm commaModifier) Modify(v any) string {
-	s := fmt.Sprintf("%v", v)
+	s := v.([]string)
 	switch cm {
 	case Comma:
-		return fmt.Sprintf(`%v,`, s)
+		return strings.Join(s, ", ")
 	case NoComma:
-		return s
+		return strings.Join(s, " ")
 	default:
-		return s
+		return strings.Join(s, " ")
 	}
 }
 
@@ -198,6 +199,38 @@ func (b sqlBuilder) sql(clauses ...sqlClause) string {
 	return strings.Trim(strings.Join(sList, " "), " ")
 }
 
+func (b sqlBuilder) parseInterface(v interface{}, tag reflect.StructTag) (sqlClause, error) {
+	ddlTag := tag.Get("ddl")
+	sqlTag := tag.Get("sql")
+	if ddlTag == "" {
+		return nil, nil
+	}
+	ddlTagParts := strings.Split(ddlTag, ",")
+	ddlType := ddlTagParts[0]
+	switch ddlType {
+	case "parameter":
+		return sqlParameterClause{
+			key:   sqlTag,
+			value: v,
+			qm:    b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			em:    b.getModifier(tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+			rm:    b.getModifier(tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+		}, nil
+	case "keyword":
+		return sqlKeywordClause{
+			key: sqlTag,
+			qm:  b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+		}, nil
+	case "identifier":
+		return sqlIdentifierClause{
+			key:   sqlTag,
+			value: v.(Identifier),
+			em:    b.getModifier(tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
+		}, nil
+	}
+	return nil, nil
+}
+
 // parseStruct parses a struct and returns a slice of sqlClauses.
 func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 	clauses := make([]sqlClause, 0)
@@ -206,13 +239,12 @@ func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 		v = v.Elem()
 	}
 	if v.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("expected struct, got %s", v.Kind())
+		return nil, fmt.Errorf("expected struct, got %s", v)
 	}
 	t := v.Type()
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		value := v.Field(i)
-
 		// Derefence pointers as long as they are not nil
 		if value.Kind() == reflect.Ptr {
 			if value.IsNil() {
@@ -298,11 +330,22 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 			return b.renderStaticClause(clauses...), nil
 		}
 	}
-	fieldStructClauses, err := b.parseStruct(reflectedValue)
-	if err != nil {
-		return nil, err
+
+	// time is a weird struct - you don't want to parse it, just get the string value.
+	// since it is a built-in type we can't change anything about it
+	if tm, ok := reflectedValue.(time.Time); ok {
+		clause, err := b.parseInterface(tm, field.Tag)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, clause)
+	} else {
+		fieldStructClauses, err := b.parseStruct(reflectedValue)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, fieldStructClauses...)
 	}
-	clauses = append(clauses, fieldStructClauses...)
 	return b.renderStaticClause(clauses...), nil
 }
 
@@ -325,11 +368,29 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 			})
 			continue
 		}
+		k := value.Index(i)
+		// if it is a pointer, dereference it
+		if k.Kind() == reflect.Ptr {
+			k = k.Elem()
+		}
+
 		// if it is a struct call parseStruct on it (recusive)
-		if value.Index(i).Kind() == reflect.Struct || value.Index(i).Kind() == reflect.Ptr {
-			structClauses, err := b.parseStruct(reflectedValue)
-			if err != nil {
-				return nil, err
+		if k.Kind() == reflect.Struct {
+			var structClauses []sqlClause
+			var err error
+			// if it is time.Time then its not a struct we want to dig into, just render as is.
+			if tm, ok := reflectedValue.(time.Time); ok {
+				var structClause sqlClause
+				structClause, err = b.parseInterface(tm, field.Tag)
+				if err != nil {
+					return nil, err
+				}
+				structClauses = append(structClauses, structClause)
+			} else {
+				structClauses, err = b.parseStruct(reflectedValue)
+				if err != nil {
+					return nil, err
+				}
 			}
 			// each element of the slice needs to be pre-rendered before the commas are added.
 			sClause := b.renderStaticClause(structClauses...)
@@ -472,10 +533,7 @@ func (v sqlListClause) String() string {
 	for i, clause := range v.clauses {
 		clauseStrings[i] = clause.String()
 	}
-	if v.cm == NoComma {
-		return strings.Join(clauseStrings, " ")
-	}
-	s := strings.Join(clauseStrings, ", ")
+	s := v.cm.Modify(clauseStrings)
 	s = v.pm.Modify(s)
 	return s
 }

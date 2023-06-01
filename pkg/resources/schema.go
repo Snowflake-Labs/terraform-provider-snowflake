@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
@@ -178,16 +180,15 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	schema := schemaID.SchemaName
 
 	// Checks if the corresponding database still exists; if not, than the schema also cannot exist
-	q := snowflake.NewDatabaseBuilder(dbName).Show()
-	row := snowflake.QueryRow(db, q)
-	_, err = snowflake.ScanDatabase(row)
-	if errors.Is(err, sql.ErrNoRows) {
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(dbName))
+	if err != nil {
 		d.SetId("")
-		return nil
 	}
 
-	q = snowflake.NewSchemaBuilder(schema).WithDB(dbName).Show()
-	row = snowflake.QueryRow(db, q)
+	q := snowflake.NewSchemaBuilder(schema).WithDB(dbName).Show()
+	row := snowflake.QueryRow(db, q)
 
 	s, err := snowflake.ScanSchema(row)
 	if errors.Is(err, sql.ErrNoRows) {
