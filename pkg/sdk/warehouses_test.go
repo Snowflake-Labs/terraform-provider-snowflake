@@ -22,8 +22,6 @@ func TestWarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		tag1 := randomSchemaObjectIdentifier(t)
-		tag2 := randomSchemaObjectIdentifier(t)
 		opts := &CreateWarehouseOptions{
 			OrReplace:   Bool(true),
 			name:        NewAccountObjectIdentifier("completewarehouse"),
@@ -47,18 +45,18 @@ func TestWarehouseCreate(t *testing.T) {
 			StatementTimeoutInSeconds:       Int(89),
 			Tag: []TagAssociation{
 				{
-					Name:  tag1,
+					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
 					Value: "v1",
 				},
 				{
-					Name:  tag2,
+					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag2"),
 					Value: "v2",
 				},
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG (` + tag1.FullyQualifiedName() + ` = 'v1',` + tag2.FullyQualifiedName() + ` = 'v2')`
+		expected := `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG ("db1"."schema1"."tag1" = 'v1', "db1"."schema1"."tag2" = 'v2')`
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -100,7 +98,7 @@ func TestWarehouseAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE SET TAG "db"."schema"."tag1" = 'v1',"db"."schema"."tag2" = 'v2'`
+		expected := `ALTER WAREHOUSE SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -130,7 +128,7 @@ func TestWarehouseAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE,MAX_CLUSTER_COUNT,AUTO_RESUME`
+		expected := `ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE, MAX_CLUSTER_COUNT, AUTO_RESUME`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -198,7 +196,7 @@ func TestWarehouseAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" SET TAG "db1"."schema1"."tag1" = 'v1',"db2"."schema2"."tag2" = 'v2'`
+		expected := `ALTER WAREHOUSE "mywarehouse" SET TAG "db1"."schema1"."tag1" = 'v1', "db2"."schema2"."tag2" = 'v2'`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -214,7 +212,7 @@ func TestWarehouseAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1","db2"."schema2"."tag2"`
+		expected := `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1", "db2"."schema2"."tag2"`
 		assert.Equal(t, expected, actual)
 	})
 }
