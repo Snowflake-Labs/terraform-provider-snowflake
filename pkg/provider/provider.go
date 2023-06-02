@@ -471,8 +471,13 @@ func DSN(
 		log.Printf("[DEBUG] No account or user provided, falling back to profile %s\n", profile)
 		profileConfig, err := sdk.ProfileConfig(profile)
 		if err != nil {
-			return "", errors.New("no authentication method provided")
+			return "", errors.New("could not retrieve profile config: " + err.Error())
 		}
+		if profileConfig == nil {
+			// try reading environment variables
+			profileConfig = sdk.EnvConfig()
+		}
+		// merge any credentials found in profile or environment with config
 		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
