@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.66.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.65.0...v0.66.0) (2023-06-02)
+
+
+### Features
+
+* databases sdk v2 ([#1840](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1840)) ([410b493](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/410b493ff75188b70cee91db56c60538d6823aac))
+
+
+### Misc
+
+* rename "db" symbol to "sql" and make input options more uniform in naming convention ([#1837](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1837)) ([244b5b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/244b5b45e22f66875f14be9bcb9af08ad41d37ca))
+
 ## [0.65.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.64.0...v0.65.0) (2023-05-30)
 
 
