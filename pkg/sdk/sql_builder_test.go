@@ -388,7 +388,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def',KEY = '123' KEY2 = '456')", clauses[0].String())
+		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def', KEY = '123' KEY2 = '456')", clauses[0].String())
 	})
 
 	t.Run("struct with a slice field using ddl: - (no elements)", func(t *testing.T) {
@@ -415,7 +415,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "KEY = 'abc',KEY = '123'", clauses[0].String())
+		assert.Equal(t, "KEY = 'abc', KEY = '123'", clauses[0].String())
 	})
 
 	t.Run("struct with a struct list using ddl: list", func(t *testing.T) {
@@ -432,7 +432,24 @@ func TestBuilder_parseStruct(t *testing.T) {
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "A,B,C", clauses[0].String())
+		assert.Equal(t, "A, B, C", clauses[0].String())
+	})
+
+	t.Run("struct with a struct list using ddl: list,no_comma", func(t *testing.T) {
+		type testListElement struct {
+			A bool `ddl:"static" sql:"A"`
+			B bool `ddl:"static" sql:"B"`
+			C bool `ddl:"static" sql:"C"`
+		}
+		s := &struct {
+			List *testListElement `ddl:"list,no_comma"`
+		}{
+			List: &testListElement{A: true, B: true, C: true},
+		}
+		clauses, err := builder.parseStruct(s)
+		require.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "A B C", clauses[0].String())
 	})
 }
 

@@ -70,7 +70,7 @@ func TestShareAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org.myaccount","my-org.myaccount2"`
+		expected := `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org.myaccount", "my-org.myaccount2"`
 		assert.Equal(t, expected, actual)
 	})
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -12,12 +13,32 @@ type modifierType string
 const (
 	quoteModifierType   modifierType = "quotes"
 	parenModifierType   modifierType = "paren"
+	commaModifierType   modifierType = "comma"
 	reverseModifierType modifierType = "reverse"
 	equalsModifierType  modifierType = "equals"
 )
 
 type modifier interface {
 	Modify(v any) string
+}
+
+type commaModifier string
+
+const (
+	Comma   commaModifier = "comma"
+	NoComma commaModifier = "no_comma"
+)
+
+func (cm commaModifier) Modify(v any) string {
+	s := v.([]string)
+	switch cm {
+	case Comma:
+		return strings.Join(s, ", ")
+	case NoComma:
+		return strings.Join(s, " ")
+	default:
+		return strings.Join(s, " ")
+	}
 }
 
 type quoteModifier string
@@ -106,13 +127,17 @@ func (rm reverseModifier) Modify(v any) string {
 type equalsModifier string
 
 const (
-	Equals   equalsModifier = "equals"
-	NoEquals equalsModifier = "no_equals"
+	Equals      equalsModifier = "equals"
+	ArrowEquals equalsModifier = "arrow_equals"
+	NoEquals    equalsModifier = "no_equals"
 )
 
 func (em equalsModifier) Modify(v any) string {
 	if em == Equals {
 		return strings.TrimLeft(fmt.Sprintf(`%v = `, v), " ")
+	}
+	if em == ArrowEquals {
+		return strings.TrimLeft(fmt.Sprintf(`%v => `, v), " ")
 	}
 	return strings.TrimLeft(fmt.Sprintf("%v ", v), " ")
 }
@@ -135,6 +160,8 @@ func (b *sqlBuilder) getModifier(tag reflect.StructTag, tagName string, modType 
 				return equalsModifier(trimmedS)
 			case reverseModifierType:
 				return reverseModifier(trimmedS)
+			case commaModifierType:
+				return commaModifier(trimmedS)
 			}
 		}
 	}
@@ -172,6 +199,38 @@ func (b sqlBuilder) sql(clauses ...sqlClause) string {
 	return strings.Trim(strings.Join(sList, " "), " ")
 }
 
+func (b sqlBuilder) parseInterface(v interface{}, tag reflect.StructTag) (sqlClause, error) {
+	ddlTag := tag.Get("ddl")
+	sqlTag := tag.Get("sql")
+	if ddlTag == "" {
+		return nil, nil
+	}
+	ddlTagParts := strings.Split(ddlTag, ",")
+	ddlType := ddlTagParts[0]
+	switch ddlType {
+	case "parameter":
+		return sqlParameterClause{
+			key:   sqlTag,
+			value: v,
+			qm:    b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+			em:    b.getModifier(tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+			rm:    b.getModifier(tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+		}, nil
+	case "keyword":
+		return sqlKeywordClause{
+			key: sqlTag,
+			qm:  b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+		}, nil
+	case "identifier":
+		return sqlIdentifierClause{
+			key:   sqlTag,
+			value: v.(Identifier),
+			em:    b.getModifier(tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
+		}, nil
+	}
+	return nil, nil
+}
+
 // parseStruct parses a struct and returns a slice of sqlClauses.
 func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 	clauses := make([]sqlClause, 0)
@@ -180,13 +239,12 @@ func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 		v = v.Elem()
 	}
 	if v.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("expected struct, got %s", v.Kind())
+		return nil, fmt.Errorf("expected struct, got %s", v)
 	}
 	t := v.Type()
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		value := v.Field(i)
-
 		// Derefence pointers as long as they are not nil
 		if value.Kind() == reflect.Ptr {
 			if value.IsNil() {
@@ -266,17 +324,28 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 			}
 			clauses = append(clauses, sqlListClause{
 				clauses: fieldStructClauses,
-				sep:     ",",
+				cm:      b.getModifier(field.Tag, "ddl", commaModifierType, Comma).(commaModifier),
 				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
 		}
 	}
-	fieldStructClauses, err := b.parseStruct(reflectedValue)
-	if err != nil {
-		return nil, err
+
+	// time is a weird struct - you don't want to parse it, just get the string value.
+	// since it is a built-in type we can't change anything about it
+	if tm, ok := reflectedValue.(time.Time); ok {
+		clause, err := b.parseInterface(tm, field.Tag)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, clause)
+	} else {
+		fieldStructClauses, err := b.parseStruct(reflectedValue)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, fieldStructClauses...)
 	}
-	clauses = append(clauses, fieldStructClauses...)
 	return b.renderStaticClause(clauses...), nil
 }
 
@@ -299,11 +368,29 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 			})
 			continue
 		}
+		k := value.Index(i)
+		// if it is a pointer, dereference it
+		if k.Kind() == reflect.Ptr {
+			k = k.Elem()
+		}
+
 		// if it is a struct call parseStruct on it (recusive)
-		if value.Index(i).Kind() == reflect.Struct || value.Index(i).Kind() == reflect.Ptr {
-			structClauses, err := b.parseStruct(reflectedValue)
-			if err != nil {
-				return nil, err
+		if k.Kind() == reflect.Struct {
+			var structClauses []sqlClause
+			var err error
+			// if it is time.Time then its not a struct we want to dig into, just render as is.
+			if tm, ok := reflectedValue.(time.Time); ok {
+				var structClause sqlClause
+				structClause, err = b.parseInterface(tm, field.Tag)
+				if err != nil {
+					return nil, err
+				}
+				structClauses = append(structClauses, structClause)
+			} else {
+				structClauses, err = b.parseStruct(reflectedValue)
+				if err != nil {
+					return nil, err
+				}
 			}
 			// each element of the slice needs to be pre-rendered before the commas are added.
 			sClause := b.renderStaticClause(structClauses...)
@@ -318,7 +405,7 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 	}
 	clauses = append(clauses, sqlListClause{
 		clauses: listClauses,
-		sep:     ",",
+		cm:      b.getModifier(field.Tag, "ddl", commaModifierType, Comma).(commaModifier),
 		pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 	})
 	sClause := b.renderStaticClause(clauses...)
@@ -434,7 +521,7 @@ func (b sqlBuilder) getInterface(field reflect.Value) interface{} {
 
 type sqlListClause struct {
 	clauses []sqlClause
-	sep     string
+	cm      commaModifier
 	pm      parenModifier
 }
 
@@ -446,7 +533,7 @@ func (v sqlListClause) String() string {
 	for i, clause := range v.clauses {
 		clauseStrings[i] = clause.String()
 	}
-	s := strings.Join(clauseStrings, v.sep)
+	s := v.cm.Modify(clauseStrings)
 	s = v.pm.Modify(s)
 	return s
 }

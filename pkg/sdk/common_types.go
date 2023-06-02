@@ -1,5 +1,42 @@
 package sdk
 
+import (
+	"errors"
+	"time"
+)
+
+type TimeTravel struct {
+	Timestamp *time.Time `ddl:"parameter,single_quotes,arrow_equals" sql:"TIMESTAMP"`
+	Offset    *int       `ddl:"parameter,arrow_equals" sql:"OFFSET"`
+	Statement *string    `ddl:"parameter,single_quotes,arrow_equals" sql:"STATEMENT"`
+}
+
+func (v *TimeTravel) validate() error {
+	if !exactlyOneValueSet(v.Timestamp, v.Offset, v.Statement) {
+		return errors.New("exactly one of TIMESTAMP, OFFSET or STATEMENT can be set")
+	}
+	return nil
+}
+
+type Clone struct {
+	SourceObject ObjectIdentifier `ddl:"identifier" sql:"CLONE"`
+	At           *TimeTravel      `ddl:"list,parentheses,no_comma" sql:"AT"`
+	Before       *TimeTravel      `ddl:"list,parentheses,no_comma" sql:"BEFORE"`
+}
+
+func (v *Clone) validate() error {
+	if everyValueSet(v.At, v.Before) {
+		return errors.New("only one of AT or BEFORE can be set")
+	}
+	if valueSet(v.At) {
+		return v.At.validate()
+	}
+	if valueSet(v.Before) {
+		return v.Before.validate()
+	}
+	return nil
+}
+
 type LimitFrom struct {
 	Rows *int    `ddl:"keyword"`
 	From *string `ddl:"parameter,no_equals,single_quotes" sql:"FROM"`
