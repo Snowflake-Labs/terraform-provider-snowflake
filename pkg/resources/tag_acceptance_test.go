@@ -50,17 +50,5 @@ resource "snowflake_tag" "test" {
 	allowed_values = ["alv1", "alv2"]
 	comment = "Terraform acceptance test"
 }
-
-resource "snowflake_database" "test2" {
-	name = "%[1]v_2"
-	comment = "Terraform acceptance test2 with tags"
-
-	tag {
-		name = snowflake_tag.test.name
-		schema = snowflake_tag.test.schema
-		database = snowflake_tag.test.database
-		value = "%[1]v"
-	}
-}
 `, n)
 }
