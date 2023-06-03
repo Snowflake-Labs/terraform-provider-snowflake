@@ -7,13 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClient_newClient(t *testing.T) {
+func TestClient_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
 		config := DefaultConfig()
 		_, err := NewClient(config)
 		require.NoError(t, err)
 	})
-
 	t.Run("uses env vars if values are missing", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
