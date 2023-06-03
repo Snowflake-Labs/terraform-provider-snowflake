@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.66.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.0...v0.66.1) (2023-06-03)
+
+
+### BugFixes
+
+* err when reading profile ([#1853](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1853)) ([29c4633](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/29c463383da5fbb8de0af5c957aa9f3a34572c6e))
+
 ## [0.66.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.65.0...v0.66.0) (2023-06-02)
 
 
