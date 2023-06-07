@@ -169,8 +169,14 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		StatementQueuedTimeoutInSeconds: sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int)),
 		MaxConcurrencyLevel:             sdk.Int(d.Get("max_concurrency_level").(int)),
 		EnableQueryAcceleration:         sdk.Bool(d.Get("enable_query_acceleration").(bool)),
-		QueryAccelerationMaxScaleFactor: sdk.Int(d.Get("query_acceleration_max_scale_factor").(int)),
 		WarehouseType:                   &whType,
+	}
+
+	if enable := *sdk.Bool(d.Get("enable_query_acceleration").(bool)); enable {
+		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+			queryAccelerationMaxScaleFactor := sdk.Int(v.(int))
+			createOptions.QueryAccelerationMaxScaleFactor = queryAccelerationMaxScaleFactor
+		}
 	}
 
 	if v, ok := d.GetOk("warehouse_size"); ok {
