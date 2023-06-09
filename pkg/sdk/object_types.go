@@ -17,6 +17,7 @@ type ObjectType string
 
 const (
 	ObjectTypeAccount          ObjectType = "ACCOUNT"
+	ObjectTypeAlert            ObjectType = "ALERT"
 	ObjectTypeAccountParameter ObjectType = "ACCOUNT PARAMETER"
 	ObjectTypeDatabase         ObjectType = "DATABASE"
 	ObjectTypeFailoverGroup    ObjectType = "FAILOVER GROUP"

@@ -2,14 +2,16 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -170,19 +172,12 @@ func Alert() *schema.Resource {
 // ReadAlert implements schema.ReadFunc.
 func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	alertID, err := alertIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	database := alertID.DatabaseName
-	SchemaName := alertID.SchemaName
-	name := alertID.AlertName
+	ctx := context.Background()
+	alert, err := client.Alerts.ShowByID(ctx, objectIdentifier)
 
-	builder := snowflake.NewAlertBuilder(name, database, SchemaName)
-	qry := builder.Show()
-	row := snowflake.QueryRow(db, qry)
-	alert, err := snowflake.ScanAlert(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] alert (%s) not found", d.Id())
@@ -213,41 +208,6 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	alertSchedule := alert.Schedule
-	if alertSchedule != "" {
-		if strings.Contains(alertSchedule, "MINUTE") {
-			interval, err := strconv.Atoi(strings.TrimSuffix(alertSchedule, " MINUTE"))
-			if err != nil {
-				return err
-			}
-			err = d.Set("alert_schedule", []interface{}{
-				map[string]interface{}{
-					"interval": interval,
-				},
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			repScheduleParts := strings.Split(alertSchedule, " ")
-			timeZone := repScheduleParts[len(repScheduleParts)-1]
-			expression := strings.TrimSuffix(strings.TrimPrefix(alertSchedule, "USING CRON "), " "+timeZone)
-			err = d.Set("alert_schedule", []interface{}{
-				map[string]interface{}{
-					"cron": []interface{}{
-						map[string]interface{}{
-							"expression": expression,
-							"time_zone":  timeZone,
-						},
-					},
-				},
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	if err := d.Set("comment", alert.Comment); err != nil {
 		return err
 	}
@@ -264,169 +224,154 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 
 // CreateAlert implements schema.CreateFunc.
 func CreateAlert(d *schema.ResourceData, meta interface{}) error {
-	var err error
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 
-	database := d.Get("database").(string)
+	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	builder := snowflake.NewAlertBuilder(name, database, schemaName)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	if v, ok := d.GetOk("alert_schedule"); ok {
-		alertSchedule := v.([]interface{})[0].(map[string]interface{})
-		if v, ok := alertSchedule["cron"]; ok {
-			c := v.([]interface{})
-			if len(c) > 0 {
-				cron := c[0].(map[string]interface{})
-				cronExpression := cron["expression"].(string)
-				builder.WithAlertScheduleCronExpression(cronExpression)
-				if v, ok := cron["time_zone"]; ok {
-					timeZone := v.(string)
-					builder.WithAlertScheduleTimeZone(timeZone)
-				}
-			}
-		}
-		if v, ok := alertSchedule["interval"]; ok {
-			interval := v.(int)
-			if interval > 0 {
-				builder.WithAlertScheduleInterval(interval)
-			}
-		}
+	alertSchedule := getAlertSchedule(d)
+
+	warehouseName := d.Get("warehouse").(string)
+	warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
+
+	opts := &sdk.CreateAlertOptions{}
+
+	if v, ok := d.GetOk("comment"); ok {
+		opts.Comment = sdk.String(v.(string))
+	}
+
+	condition := d.Get("condition").(string)
+
+	action := d.Get("action").(string)
+
+	err := client.Alerts.Create(ctx, objectIdentifier, warehouse, alertSchedule, condition, action, opts)
+
+	if err != nil {
+		return err
 	}
 
 	enabled := d.Get("enabled").(bool)
 
-	warehouse := d.Get("warehouse").(string)
-	builder.WithWarehouse(warehouse)
-
-	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
-	}
-
-	condition := d.Get("condition").(string)
-	builder.WithCondition(condition)
-
-	action := d.Get("action").(string)
-	builder.WithAction(action)
-
-	q := builder.Create()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating alert %v err = %w", name, err)
-	}
-
-	alertID := &alertID{
-		DatabaseName: database,
-		SchemaName:   schemaName,
-		AlertName:    name,
-	}
-	dataIDInput, err := alertID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
-
 	if enabled {
-		if err := snowflake.WaitResumeAlert(db, name, database, schemaName); err != nil {
-			log.Printf("[WARN] failed to resume alert %s", name)
+		opts := sdk.AlterAlertOptions{State: &sdk.Resume}
+		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
+		if err != nil {
+			return err
 		}
 	}
+
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
 	return ReadAlert(d, meta)
 }
 
+func getAlertSchedule(d *schema.ResourceData) sdk.AlertSchedule {
+	var alertSchedule sdk.AlertSchedule
+	if v, ok := d.GetOk("alert_schedule"); ok {
+		schedule := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := schedule["cron"]; ok {
+			c := v.([]interface{})
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+				timeZone := cron["time_zone"].(string)
+				alertSchedule = sdk.AlertScheduleCronExpression{Expression: cronExpression, TimeZone: timeZone}
+			}
+		}
+		if v, ok := schedule["interval"]; ok {
+			interval := v.(int)
+			if interval > 0 {
+				alertSchedule = sdk.AlertScheduleInterval(interval)
+			}
+		}
+	}
+	return alertSchedule
+}
+
 // UpdateAlert implements schema.UpdateFunc.
 func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
-	alertID, err := alertIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
 	db := meta.(*sql.DB)
-	database := alertID.DatabaseName
-	schemaName := alertID.SchemaName
-	name := alertID.AlertName
-	builder := snowflake.NewAlertBuilder(name, database, schemaName)
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	ctx := context.Background()
 
 	enabled := d.Get("enabled").(bool)
 	if d.HasChanges("enabled", "warehouse", "alert_schedule", "condition", "action", "comment") {
-		if err := snowflake.WaitSuspendAlert(db, name, database, schemaName); err != nil {
-			log.Printf("[WARN] failed to suspend alert %s", name)
+		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
 
 	if d.HasChange("warehouse") {
-		var q string
-		newWarehouse := d.Get("warehouse")
-		q = builder.ChangeWarehouse(newWarehouse.(string))
-
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating warehouse on alert %v", d.Id())
+		alterOptions := &sdk.AlterAlertOptions{}
+		warehouseName := d.Get("warehouse").(string)
+		warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
+		alterOptions.Set = &sdk.AlertSet{
+			Warehouse: &warehouse,
+		}
+		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return fmt.Errorf("error updating warehouse on alert %v", objectIdentifier.Name())
 		}
 	}
 
 	if d.HasChange("alert_schedule") {
-		_, n := d.GetChange("alert_schedule")
-		alertSchedule := n.([]interface{})[0].(map[string]interface{})
-		log.Printf("[DEBUG] alertSchedule: %v", alertSchedule)
-		log.Printf("[DEBUG] alertSchedule[cron]: %v", alertSchedule["cron"])
-		c := alertSchedule["cron"].([]interface{})
-		if len(c) > 0 {
-			if len(c) > 0 {
-				cron := c[0].(map[string]interface{})
-				cronExpression := cron["expression"].(string)
-
-				timeZone := ""
-				if v, ok := cron["time_zone"]; ok {
-					timeZone = v.(string)
-				}
-				stmt := builder.ChangeAlertCronSchedule(cronExpression, timeZone)
-				if err := snowflake.Exec(db, stmt); err != nil {
-					return fmt.Errorf("error updating alert cron schedule %v err = %w", name, err)
-				}
-			}
-		} else {
-			log.Printf("[DEBUG] alertSchedule[interval]: %v", alertSchedule["interval"])
-			interval := alertSchedule["interval"].(int)
-			stmt := builder.ChangeAlertIntervalSchedule(interval)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error updating alert interval schedule %v err = %w", name, err)
-			}
+		alertSchedule := getAlertSchedule(d).String()
+		alterOptions := &sdk.AlterAlertOptions{}
+		alterOptions.Set = &sdk.AlertSet{
+			Schedule: &alertSchedule,
 		}
+		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return fmt.Errorf("error updating schedule on alert %v", objectIdentifier.Name())
+		}
+
 	}
 
 	if d.HasChange("comment") {
-		var q string
-		_, newVal := d.GetChange("comment")
-		q = builder.ChangeComment(newVal.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating comment on alert %v", d.Id())
+		newComment := d.Get("comment").(string)
+		alterOptions := &sdk.AlterAlertOptions{}
+		alterOptions.Set = &sdk.AlertSet{
+			Comment: &newComment,
+		}
+		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return fmt.Errorf("error updating schedule on comment %v", objectIdentifier.Name())
 		}
 	}
 
 	if d.HasChange("condition") {
-		newVal := d.Get("condition")
-		q := builder.ChangeCondition(newVal.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating condition on alert %v", d.Id())
+		condition := d.Get("condition").(string)
+		alterOptions := &sdk.AlterAlertOptions{}
+		alterOptions.ModifyCondition = &condition
+		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return fmt.Errorf("error updating schedule on condition %v", objectIdentifier.Name())
 		}
 	}
 
 	if d.HasChange("action") {
-		newVal := d.Get("action")
-		q := builder.ChangeAction(newVal.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating action on alert %v", d.Id())
+		action := d.Get("action").(string)
+		alterOptions := &sdk.AlterAlertOptions{}
+		alterOptions.ModifyAction = &action
+		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return fmt.Errorf("error updating schedule on action %v", objectIdentifier.Name())
 		}
 	}
 
 	if enabled {
-		if err := snowflake.WaitResumeAlert(db, name, database, schemaName); err != nil {
-			log.Printf("[WARN] failed to resume alert %s", name)
+		if err := snowflake.WaitResumeAlert(ctx, client, objectIdentifier); err != nil {
+			log.Printf("[WARN] failed to resume alert %s", objectIdentifier.Name())
 		}
 	} else {
-		if err := snowflake.WaitSuspendAlert(db, name, database, schemaName); err != nil {
-			log.Printf("[WARN] failed to suspend alert %s", name)
+		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
 	return ReadAlert(d, meta)
@@ -435,18 +380,13 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 // DeleteAlert implements schema.DeleteFunc.
 func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	alterID, err := alertIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.Alerts.Drop(ctx, objectIdentifier)
 	if err != nil {
 		return err
-	}
-
-	database := alterID.DatabaseName
-	schemaName := alterID.SchemaName
-	name := alterID.AlertName
-
-	q := snowflake.NewAlertBuilder(name, database, schemaName).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting alert %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")
