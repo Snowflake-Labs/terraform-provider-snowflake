@@ -52,6 +52,14 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
+			"password_mfa": {
+				Type:          schema.TypeString,
+				Description:   "Password + MFA for username+password auth with MFA caching support. Cannot be used with `browser_auth` or `private_key_path`. Can be sourced from `SNOWFLAKE_PASSWORD_MFA` environment variable.",
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD_MFA", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token", "password"},
+			},
 			"oauth_access_token": {
 				Type:          schema.TypeString,
 				Description:   "Token for use with OAuth. Generating the token is left to other tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.",
@@ -330,6 +338,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	account := s.Get("account").(string)
 	user := s.Get("username").(string)
 	password := s.Get("password").(string)
+	passwordMFA := s.Get("password_mfa").(string)
 	browserAuth := s.Get("browser_auth").(bool)
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
@@ -361,6 +370,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		account,
 		user,
 		password,
+		passwordMFA,
 		browserAuth,
 		privateKeyPath,
 		privateKey,
@@ -400,6 +410,7 @@ func DSN(
 	account string,
 	user string,
 	password string,
+	passwordMFA string,
 	browserAuth bool,
 	privateKeyPath string,
 	privateKey string,
@@ -464,6 +475,9 @@ func DSN(
 	} else if oauthAccessToken != "" {
 		config.Authenticator = gosnowflake.AuthTypeOAuth
 		config.Token = oauthAccessToken
+  } else if passwordMFA != "" {
+		config.Authenticator = gosnowflake.AuthTypeUsernamePasswordMFA
+    config.Password = passwordMFA
 	} else if password != "" {
 		config.Password = password
 	} else if account == "" || user == "" {
@@ -599,6 +613,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	account := os.Getenv("SNOWFLAKE_ACCOUNT")
 	user := os.Getenv("SNOWFLAKE_USER")
 	password := os.Getenv("SNOWFLAKE_PASSWORD")
+	passwordMFA := os.Getenv("SNOWFLAKE_PASSWORD_MFA")
 	browserAuth := os.Getenv("SNOWFLAKE_BROWSER_AUTH") == "true"
 	privateKeyPath := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
 	privateKey := os.Getenv("SNOWFLAKE_PRIVATE_KEY")
@@ -621,6 +636,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		account,
 		user,
 		password,
+		passwordMFA,
 		browserAuth,
 		privateKeyPath,
 		privateKey,
