@@ -86,9 +86,9 @@ func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehous
 type state string
 
 var (
-	//Resume makes a suspended alert active.
+	// Resume makes a suspended alert active.
 	Resume state = "RESUME"
-	//Suspend puts the alert into a “Suspended” state.
+	// Suspend puts the alert into a “Suspended” state.
 	Suspend state = "SUSPEND"
 )
 
@@ -98,7 +98,7 @@ type AlterAlertOptions struct {
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
-	//one of
+	// One of
 	State           *state      `ddl:"keyword"`
 	Set             *AlertSet   `ddl:"keyword" sql:"SET"`
 	Unset           *AlertUnset `ddl:"keyword" sql:"UNSET"`
@@ -242,7 +242,6 @@ func AlertScheduleFromString(s string) (AlertSchedule, bool) {
 	} else {
 		return nil, false
 	}
-
 }
 func dropUsingCron(parts []string) []string {
 	if parts[0] == "USING" && parts[1] == "CRON" {

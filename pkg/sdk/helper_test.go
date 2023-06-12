@@ -486,6 +486,6 @@ func createAlert(t *testing.T, client *Client, database *Database, schema *Schem
 	t.Helper()
 	schedule := AlertScheduleCronExpression{Expression: "* * * * *", TimeZone: "UTC"}
 	condition := "SELECT 1"
-	action := fmt.Sprintf("SELECT 1")
+	action := "SELECT 1"
 	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
 }

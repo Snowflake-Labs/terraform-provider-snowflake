@@ -237,7 +237,6 @@ func TestInt_AlertCreate(t *testing.T) {
 		assert.Equal(t, name, alert[0].Name)
 		assert.Equal(t, "", *alert[0].Comment)
 	})
-
 }
 
 func TestInt_AlertDescribe(t *testing.T) {

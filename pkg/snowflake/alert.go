@@ -298,7 +298,6 @@ func ListAlerts(databaseName, schemaName, pattern string, db *sql.DB) ([]Alert, 
 }
 
 func WaitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-
 	opts := sdk.AlterAlertOptions{State: &sdk.Resume}
 	// try to resume the alert, and verify that it was resumed.
 	// if it's not resumed then try again up until a maximum of 5 times

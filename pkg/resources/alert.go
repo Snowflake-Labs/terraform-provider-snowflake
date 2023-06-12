@@ -330,7 +330,6 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error updating schedule on alert %v", objectIdentifier.Name())
 		}
-
 	}
 
 	if d.HasChange("comment") {

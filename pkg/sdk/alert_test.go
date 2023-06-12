@@ -147,7 +147,6 @@ func TestAlertAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER ALERT %s MODIFY ACTION %s", id.FullyQualifiedName(), *modifyAction)
 		assert.Equal(t, expected, actual)
 	})
-
 }
 
 func TestAlertDrop(t *testing.T) {
