@@ -196,7 +196,7 @@ type ShowAlertOptions struct {
 	Terse  *bool `ddl:"keyword" sql:"TERSE"`
 	alerts bool  `ddl:"static" sql:"ALERTS"` //lint:ignore U1000 This is used in the ddl tag
 
-	//optional
+	// optional
 	Like       *Like   `ddl:"keyword" sql:"LIKE"`
 	In         *In     `ddl:"keyword" sql:"IN"`
 	StartsWith *string `ddl:"parameter,no_equals,single_quotes" sql:"STARTS WITH"`
