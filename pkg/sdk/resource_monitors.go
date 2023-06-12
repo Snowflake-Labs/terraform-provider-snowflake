@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"errors"
+	"time"
 )
 
 type ResourceMonitors interface {
@@ -47,15 +49,40 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 
 // CreateResourceMonitorOptions contains options for creating a resource monitor.
 type CreateResourceMonitorOptions struct {
-	create          bool                    `ddl:"static" sql:"CREATE"`           //lint:ignore U1000 This is used in the ddl tag
+	create          bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
+	with            bool                    `ddl:"static" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
+
+	//optional, at least one
+	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
+	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
+	StartTimeStamp *string              `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
+	EndTimeStamp   *string              `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
+	NotifyUsers    *NotifyUsers         `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
+	Triggers       *[]TriggerDefinition `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 
 func (opts *CreateResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
+
+	if opts == nil || everyValueNil(
+		opts.CreditQuota,
+		opts.Frequency,
+		opts.StartTimeStamp,
+		opts.EndTimeStamp,
+		opts.NotifyUsers,
+		opts.Triggers,
+	) {
+		return errors.New("No alter action specified")
+	}
+	if (opts.Frequency != nil && opts.StartTimeStamp == nil) || (opts.Frequency == nil && opts.StartTimeStamp != nil) {
+		return errors.New("must specify frequency and start time together")
+	}
+
 	return nil
 }
 
@@ -75,21 +102,112 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 	return err
 }
 
-// AlterResourceMonitorOptions contains options for altering a resource monitor.
-type AlterResourceMonitorOptions struct{}
+type TriggerDefinition struct {
+	on            bool          `ddl:"static" sql:"ON"`      //lint:ignore U1000 This is used in the ddl tag
+	Threshold     int           `ddl:"keyword" `             //lint:ignore U1000 This is used in the ddl tag
+	percent       bool          `ddl:"static" sql:"PERCENT"` //lint:ignore U1000 This is used in the ddl tag
+	do            bool          `ddl:"static" sql:"DO"`      //lint:ignore U1000 This is used in the ddl tag
+	TriggerAction triggerAction `ddl:"keyword" `             //lint:ignore U1000 This is used in the ddl tag
 
-func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
+}
+
+type triggerAction string
+
+const (
+	Suspend          triggerAction = "SUSPEND"
+	SuspendImmediate triggerAction = "SUSPEND_IMMEDIATE"
+	Notify           triggerAction = "NOTIFY"
+)
+
+type NotifyUsers struct {
+	//tutaj walidacja zwykla chyba, a nie w typie przekazane ze jest min 1
+	Users []string `ddl:"list,parentheses,no_comma"`
+}
+
+type StartTimeStamp interface {
+	startTimeStamp()
+	String() string
+}
+type Immediately struct{}
+
+func (Immediately) startTimeStamp() {}
+func (Immediately) String() string {
+	return "IMMEDIATELY"
+}
+
+// time na pewno do poprawki, zobacz jak te timestampy ograć
+type TimeStamp time.Time
+
+func (TimeStamp) startTimeStamp() {}
+
+func (ts TimeStamp) String() string {
+	return (time.Time)(ts).String()
+
+}
+
+type Frequency string
+
+const (
+	Monthly Frequency = "MONTHLY"
+	Daily   Frequency = "DAILY"
+	Weekly  Frequency = "WEEKLY"
+	Yearly  Frequency = "YEARLY"
+	Never   Frequency = "NEVER"
+)
+
+// AlterResourceMonitorOptions contains options for altering a resource monitor.
+type AlterResourceMonitorOptions struct {
+	alter           bool                    `ddl:"static" sql:"ALTER"`            //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name            AccountObjectIdentifier `ddl:"identifier"`
+	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
+}
+
+func (opts *AlterResourceMonitorOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	if opts == nil || opts.Set == nil || everyValueNil(
+		opts.Set.CreditQuota,
+		opts.Set.Frequency,
+		opts.Set.StartTimeStamp,
+		opts.Set.EndTimeStamp,
+		opts.Set.NotifyUsers,
+		opts.Set.Triggers,
+	) {
+		return errors.New("No alter action specified")
+	}
+	if (opts.Set.Frequency != nil && opts.Set.StartTimeStamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimeStamp != nil) {
+		return errors.New("must specify frequency and start time together")
+	}
+
 	return nil
 }
 
+func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
+
+	return nil
+}
+
+type ResourceMonitorSet struct {
+	//at least one
+	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
+	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
+	StartTimeStamp *string              `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
+	EndTimeStamp   *string              `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
+	NotifyUsers    *NotifyUsers         `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
+	Triggers       *[]TriggerDefinition `ddl:"keyword,no_comma" sql:"TRIGGERS"`
+}
+
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
-type resourceMonitorDropOptions struct {
+type dropResourceMonitorOptions struct {
 	drop            bool                    `ddl:"static" sql:"DROP"`             //lint:ignore U1000 This is used in the ddl tag
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *resourceMonitorDropOptions) validate() error {
+func (opts *dropResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -97,7 +215,7 @@ func (opts *resourceMonitorDropOptions) validate() error {
 }
 
 func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &resourceMonitorDropOptions{
+	opts := &dropResourceMonitorOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {

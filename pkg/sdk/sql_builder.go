@@ -328,6 +328,23 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
+		case "parameter":
+			structClauses, err := b.parseStruct(reflectedValue)
+			if err != nil {
+				return nil, err
+			}
+			if len(structClauses) != 1 {
+				return nil, fmt.Errorf("expected 1 field in parameter struct, got %d", len(structClauses))
+			}
+			innerClause := structClauses[0]
+			clauses = append(clauses, sqlParameterClause{
+				key:   sqlTag,
+				value: innerClause,
+				qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+				em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+				rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			})
+			return b.renderStaticClause(clauses...), nil
 		}
 	}
 
