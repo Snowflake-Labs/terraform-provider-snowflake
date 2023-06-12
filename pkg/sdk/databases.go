@@ -77,6 +77,7 @@ type databaseRow struct {
 	RetentionTime sql.NullString `db:"retention_time"`
 	ResourceGroup sql.NullString `db:"resource_group"`
 	DroppedOn     sql.NullTime   `db:"dropped_on"`
+	Kind          sql.NullString `db:"kind"`
 }
 
 func (row *databaseRow) toDatabase() *Database {
