@@ -55,9 +55,7 @@ var (
 func ToWarehouseSize(s string) (WarehouseSize, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "XSMALL":
-		return WarehouseSizeXSmall, nil
-	case "X-SMALL":
+	case "XSMALL", "X-SMALL":
 		return WarehouseSizeXSmall, nil
 	case "SMALL":
 		return WarehouseSizeSmall, nil
