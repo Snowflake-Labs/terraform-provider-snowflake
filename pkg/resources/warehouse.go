@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -303,7 +302,11 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("warehouse_size") {
 		runSet = true
-		size := sdk.WarehouseSize(strings.ReplaceAll(d.Get("warehouse_size").(string), "-", ""))
+		v := d.Get("warehouse_size")
+		size, err := sdk.ToWarehouseSize(v.(string))
+		if err != nil {
+			return err
+		}
 		set.WarehouseSize = &size
 	}
 	if d.HasChange("max_cluster_count") {
