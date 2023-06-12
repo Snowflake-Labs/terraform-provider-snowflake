@@ -52,6 +52,52 @@ var (
 	WarehouseSizeX6Large  WarehouseSize = "X6LARGE"
 )
 
+func ToWarehouseSize(s string) (WarehouseSize, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case "XSMALL":
+		return WarehouseSizeXSmall, nil
+	case "X-SMALL":
+		return WarehouseSizeXSmall, nil
+	case "SMALL":
+		return WarehouseSizeSmall, nil
+	case "MEDIUM":
+		return WarehouseSizeMedium, nil
+	case "LARGE":
+		return WarehouseSizeLarge, nil
+	case "XLARGE":
+		return WarehouseSizeXLarge, nil
+	case "X-LARGE":
+		return WarehouseSizeXLarge, nil
+	case "XXLARGE":
+		return WarehouseSizeXXLarge, nil
+	case "X2LARGE":
+		return WarehouseSizeXXLarge, nil
+	case "2X-LARGE":
+		return WarehouseSizeXXLarge, nil
+	case "XXXLARGE":
+		return WarehouseSizeXXXLarge, nil
+	case "X3LARGE":
+		return WarehouseSizeXXXLarge, nil
+	case "3X-LARGE":
+		return WarehouseSizeXXXLarge, nil
+	case "X4LARGE":
+		return WarehouseSizeX4Large, nil
+	case "4X-LARGE":
+		return WarehouseSizeX4Large, nil
+	case "X5LARGE":
+		return WarehouseSizeX5Large, nil
+	case "5X-LARGE":
+		return WarehouseSizeX5Large, nil
+	case "X6LARGE":
+		return WarehouseSizeX6Large, nil
+	case "6X-LARGE":
+		return WarehouseSizeX6Large, nil
+	default:
+		return "", fmt.Errorf("invalid warehouse size: %s", s)
+	}
+}
+
 type ScalingPolicy string
 
 var (
