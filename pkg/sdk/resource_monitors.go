@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -46,6 +47,8 @@ func (v *ResourceMonitor) ID() AccountObjectIdentifier {
 func (v *ResourceMonitor) ObjectType() ObjectType {
 	return ObjectTypeResourceMonitor
 }
+
+
 
 // CreateResourceMonitorOptions contains options for creating a resource monitor.
 type CreateResourceMonitorOptions struct {
@@ -128,6 +131,13 @@ type StartTimeStamp interface {
 	startTimeStamp()
 	String() string
 }
+
+// func StartTimeStampFromString(s string) (StartTimeStamp, error) {
+// 	if strings.ToUpper(s) == "IMMEDIATELY" {
+// 		return Immediately{}, nil
+// 	}
+// 	if 
+// }
 type Immediately struct{}
 
 func (Immediately) startTimeStamp() {}
@@ -146,6 +156,25 @@ func (ts TimeStamp) String() string {
 }
 
 type Frequency string
+
+func FrequencyFromString(s string) (*Frequency, error) {
+	if monthly := string(Monthly); monthly == s {
+		return (*Frequency)(&monthly), nil
+	}
+	if daily := string(Daily); daily == s {
+		return (*Frequency)(&daily), nil
+	}
+	if weekly := string(Weekly); weekly == s {
+		return (*Frequency)(&weekly), nil
+	}
+	if yearly := string(Yearly); yearly == s {
+		return (*Frequency)(&yearly), nil
+	}
+	if never := string(Never); never == s {
+		return (*Frequency)(&never), nil
+	}
+	return nil, errors.New(fmt.Sprintf("Invalid frequence type: %s", s))
+}
 
 const (
 	Monthly Frequency = "MONTHLY"

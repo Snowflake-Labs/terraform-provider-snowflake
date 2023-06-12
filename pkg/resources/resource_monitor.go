@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -130,6 +131,7 @@ func checkAccountAgainstWarehouses(d *schema.ResourceData, name string) error {
 // CreateResourceMonitor implements schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	name := d.Get("name").(string)
 
 	check := checkAccountAgainstWarehouses(d, name)
@@ -139,7 +141,37 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	cb := snowflake.NewResourceMonitorBuilder(name).Create()
+
 	// Set optionals.
+
+	var notifyUsers *sdk.NotifyUsers
+	if v, ok := d.GetOk("notify_users"); ok {
+		notifyUsers = &sdk.NotifyUsers{Users: expandStringList(v.(*schema.Set).List())}
+	}
+	var creditQuota *int
+	if v, ok := d.GetOk("credit_quota"); ok {
+		creditQuota = sdk.Pointer(v.(int))
+	}
+	var frequency *sdk.Frequency
+	if v, ok := d.GetOk("frequency"); ok {
+		freq, err := sdk.FrequencyFromString(v.(string))
+		if err != nil {
+			return err
+		}
+		frequency = freq
+	}
+
+	var startTimeStamp *sdk.StartTimeStamp
+	if v, ok := d.GetOk("start_timestamp"); ok {
+		cb.SetString("start_timestamp", v.(string))
+	}
+	if v, ok := d.GetOk("end_timestamp"); ok {
+		cb.SetString("end_timestamp", v.(string))
+	}
+	if v, ok := d.GetOk("suspend_trigger"); ok {
+		cb.SuspendAt(v.(int))
+	}
+
 	if v, ok := d.GetOk("notify_users"); ok {
 		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
 	}
