@@ -100,7 +100,7 @@ func TestInt_AlertCreate(t *testing.T) {
 
 	t.Run("test complete case", func(t *testing.T) {
 		name := randomString(t)
-		schedule := AlertScheduleCronExpression{Expression: "* * * * TUE,THU", TimeZone: "UTC"}
+		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := randomComment(t)
@@ -136,7 +136,7 @@ func TestInt_AlertCreate(t *testing.T) {
 
 	t.Run("test if_not_exists", func(t *testing.T) {
 		name := randomString(t)
-		schedule := AlertScheduleCronExpression{Expression: "* * * * TUE,THU", TimeZone: "UTC"}
+		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := randomComment(t)
@@ -172,7 +172,7 @@ func TestInt_AlertCreate(t *testing.T) {
 
 	t.Run("test no options", func(t *testing.T) {
 		name := randomString(t)
-		schedule := AlertScheduleCronExpression{Expression: "* * * * TUE,THU", TimeZone: "UTC"}
+		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
@@ -202,7 +202,7 @@ func TestInt_AlertCreate(t *testing.T) {
 
 	t.Run("test multiline action", func(t *testing.T) {
 		name := randomString(t)
-		schedule := AlertScheduleCronExpression{Expression: "* * * * TUE,THU", TimeZone: "UTC"}
+		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := `
 			select
@@ -284,12 +284,11 @@ func TestInt_AlertAlter(t *testing.T) {
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
 		alert, alertCleanup := createAlert(t, client, databaseTest, schemaTest, warehouseTest)
 		t.Cleanup(alertCleanup)
-		newSchedule := AlertScheduleCronExpression{Expression: "* * * * TUE,FRI", TimeZone: "GMT"}
-		scheduleString := newSchedule.String()
+		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
 		alterOptions := &AlterAlertOptions{
 			Set: &AlertSet{
-				Schedule: &scheduleString,
+				Schedule: &newSchedule,
 			},
 		}
 
@@ -357,7 +356,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &AlterAlertOptions{
-			State: &Resume,
+			Operation: &Resume,
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -372,10 +371,10 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].IsEnabled())
+		assert.True(t, alerts[0].State == Started)
 
 		alterOptions = &AlterAlertOptions{
-			State: &Suspend,
+			Operation: &Suspend,
 		}
 
 		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -390,7 +389,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].IsSuspended())
+		assert.True(t, alerts[0].State == Suspended)
 	})
 }
 

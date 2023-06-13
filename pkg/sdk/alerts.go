@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -13,7 +12,7 @@ var _ Alerts = (*alerts)(nil)
 
 type Alerts interface {
 	// Create creates a new alert.
-	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule AlertSchedule, condition string, action string, opts *CreateAlertOptions) error
+	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error
 	// Alter modifies an existing alert.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error
 	// Drop removes an alert.
@@ -62,13 +61,13 @@ func (opts *CreateAlertOptions) validate() error {
 	return nil
 }
 
-func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule AlertSchedule, condition string, action string, opts *CreateAlertOptions) error {
+func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error {
 	if opts == nil {
 		opts = &CreateAlertOptions{}
 	}
 	opts.name = id
 	opts.warehouse = warehouse
-	opts.schedule = schedule.String()
+	opts.schedule = schedule
 	opts.name = id
 	opts.condition = AlertCondition{condition}
 	opts.action = action
@@ -83,13 +82,20 @@ func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehous
 	return err
 }
 
-type state string
+type AlertOperation string
 
 var (
 	// Resume makes a suspended alert active.
-	Resume state = "RESUME"
+	Resume AlertOperation = "RESUME"
 	// Suspend puts the alert into a “Suspended” state.
-	Suspend state = "SUSPEND"
+	Suspend AlertOperation = "SUSPEND"
+)
+
+type AlertState string
+
+var (
+	Started   AlertState = "started"
+	Suspended AlertState = "suspended"
 )
 
 type AlterAlertOptions struct {
@@ -99,11 +105,11 @@ type AlterAlertOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	State           *state      `ddl:"keyword"`
-	Set             *AlertSet   `ddl:"keyword" sql:"SET"`
-	Unset           *AlertUnset `ddl:"keyword" sql:"UNSET"`
-	ModifyCondition *string     `ddl:"condition,parentheses" sql:"MODIFY CONDITION EXISTS"`
-	ModifyAction    *string     `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
+	Operation       *AlertOperation `ddl:"keyword"`
+	Set             *AlertSet       `ddl:"keyword" sql:"SET"`
+	Unset           *AlertUnset     `ddl:"keyword" sql:"UNSET"`
+	ModifyCondition *string         `ddl:"condition,parentheses" sql:"MODIFY CONDITION EXISTS"`
+	ModifyAction    *string         `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
 }
 
 func (opts *AlterAlertOptions) validate() error {
@@ -111,10 +117,10 @@ func (opts *AlterAlertOptions) validate() error {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.State, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
+	if everyValueNil(opts.Operation, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		return errors.New("No alter action specified")
 	}
-	if !exactlyOneValueSet(opts.State, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
+	if !exactlyOneValueSet(opts.Operation, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		return errors.New(`
 		Only one of the following actions can be performed at a time:
 		{
@@ -219,63 +225,10 @@ type Alert struct {
 	Owner        string
 	Comment      *string
 	Warehouse    string
-	Schedule     AlertSchedule
-	State        string
+	Schedule     string
+	State        AlertState
 	Condition    string
 	Action       string
-}
-
-type AlertSchedule interface {
-	alertSchedule()
-	String() string
-}
-
-func AlertScheduleFromString(s string) (AlertSchedule, bool) {
-	parts := strings.Fields(s)
-	if len(parts) == 2 && parts[len(parts)-1] == "MINUTE" {
-		return AlertScheduleInterval(toInt(parts[0])), true
-	} else if withoutCron := dropUsingCron(parts); len(withoutCron) == 6 {
-		return AlertScheduleCronExpression{
-			Expression: strings.Join(withoutCron[0:len(withoutCron)-1], " "),
-			TimeZone:   withoutCron[len(withoutCron)-1],
-		}, true
-	} else {
-		return nil, false
-	}
-}
-func dropUsingCron(parts []string) []string {
-	if parts[0] == "USING" && parts[1] == "CRON" {
-		return parts[2:]
-	} else {
-		return parts
-	}
-}
-
-type AlertScheduleInterval int
-
-func (interval AlertScheduleInterval) String() string {
-	return fmt.Sprintf("%d MINUTE", interval)
-}
-
-func (AlertScheduleInterval) alertSchedule() {}
-
-type AlertScheduleCronExpression struct {
-	Expression string
-	TimeZone   string
-}
-
-func (expression AlertScheduleCronExpression) String() string {
-	return fmt.Sprintf("USING CRON %v %v", expression.Expression, expression.TimeZone)
-}
-
-func (AlertScheduleCronExpression) alertSchedule() {}
-
-func (v *Alert) IsEnabled() bool {
-	return strings.ToLower(v.State) == "started"
-}
-
-func (v *Alert) IsSuspended() bool {
-	return strings.ToLower(v.State) == "suspended"
 }
 
 type alertDBRow struct {
@@ -292,8 +245,7 @@ type alertDBRow struct {
 	Action       string    `db:"action"`
 }
 
-func (row alertDBRow) toAlert() *Alert {
-	schedule, _ := AlertScheduleFromString(row.Schedule)
+func (row alertDBRow) toAlert() (*Alert, error) {
 	return &Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -302,16 +254,23 @@ func (row alertDBRow) toAlert() *Alert {
 		Owner:        row.Owner,
 		Comment:      row.Comment,
 		Warehouse:    row.Warehouse,
-		Schedule:     schedule,
-		State:        row.State,
+		Schedule:     row.Schedule,
+		State:        AlertState(row.State),
 		Condition:    row.Condition,
 		Action:       row.Action,
-	}
+	}, nil
+}
+
+func (opts *ShowAlertOptions) validate() error {
+	return nil
 }
 
 func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, error) {
 	if opts == nil {
 		opts = &ShowAlertOptions{}
+	}
+	if err := opts.validate(); err != nil {
+		return nil, err
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {
@@ -325,7 +284,11 @@ func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, er
 	}
 	resultList := make([]*Alert, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toAlert()
+		alert, err := row.toAlert()
+		if err != nil {
+			return nil, err
+		}
+		resultList[i] = alert
 	}
 
 	return resultList, nil
@@ -373,15 +336,13 @@ type AlertDetails struct {
 	Owner        string
 	Comment      *string
 	Warehouse    string
-	Schedule     AlertSchedule
+	Schedule     string
 	State        string
 	Condition    string
 	Action       string
 }
 
-func (row alertDBRow) toAlertDetails() *AlertDetails {
-	schedule, _ := AlertScheduleFromString(row.Schedule)
-
+func (row alertDBRow) toAlertDetails() (*AlertDetails, error) {
 	return &AlertDetails{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -390,11 +351,11 @@ func (row alertDBRow) toAlertDetails() *AlertDetails {
 		Owner:        row.Owner,
 		Comment:      row.Comment,
 		Warehouse:    row.Warehouse,
-		Schedule:     schedule,
+		Schedule:     row.Schedule,
 		State:        row.State,
 		Condition:    row.Condition,
 		Action:       row.Action,
-	}
+	}, nil
 }
 
 func (v *alerts) Describe(ctx context.Context, id SchemaObjectIdentifier) (*AlertDetails, error) {
@@ -417,5 +378,5 @@ func (v *alerts) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 		return nil, err
 	}
 
-	return dest.toAlertDetails(), nil
+	return dest.toAlertDetails()
 }

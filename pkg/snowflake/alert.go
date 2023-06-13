@@ -298,7 +298,7 @@ func ListAlerts(databaseName, schemaName, pattern string, db *sql.DB) ([]Alert, 
 }
 
 func WaitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	opts := sdk.AlterAlertOptions{State: &sdk.Resume}
+	opts := sdk.AlterAlertOptions{Action: &sdk.Resume}
 	// try to resume the alert, and verify that it was resumed.
 	// if it's not resumed then try again up until a maximum of 5 times
 	for i := 0; i < 5; i++ {
@@ -308,11 +308,10 @@ func WaitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjec
 		}
 
 		alert, err := client.Alerts.ShowByID(ctx, id)
-
 		if err != nil {
 			return err
 		}
-		if alert.IsEnabled() {
+		if alert.State == sdk.Started {
 			return nil
 		}
 		time.Sleep(10 * time.Second)
@@ -321,7 +320,7 @@ func WaitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjec
 }
 
 func WaitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	opts := sdk.AlterAlertOptions{State: &sdk.Suspend}
+	opts := sdk.AlterAlertOptions{Action: &sdk.Suspend}
 
 	// try to suspend the alert, and verify that it was suspended.
 	// if it's not suspended then try again up until a maximum of 5 times
@@ -332,11 +331,10 @@ func WaitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 		}
 
 		alert, err := client.Alerts.ShowByID(ctx, id)
-
 		if err != nil {
 			return err
 		}
-		if alert.IsSuspended() {
+		if alert.State == sdk.Suspended {
 			return nil
 		}
 		time.Sleep(10 * time.Second)

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -188,7 +189,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("enabled", alert.IsEnabled()); err != nil {
+	if err := d.Set("enabled", alert.State == sdk.Started); err != nil {
 		return err
 	}
 
@@ -250,7 +251,6 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	action := d.Get("action").(string)
 
 	err := client.Alerts.Create(ctx, objectIdentifier, warehouse, alertSchedule, condition, action, opts)
-
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	enabled := d.Get("enabled").(bool)
 
 	if enabled {
-		opts := sdk.AlterAlertOptions{State: &sdk.Resume}
+		opts := sdk.AlterAlertOptions{Operation: &sdk.Resume}
 		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
 		if err != nil {
 			return err
@@ -270,8 +270,8 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	return ReadAlert(d, meta)
 }
 
-func getAlertSchedule(d *schema.ResourceData) sdk.AlertSchedule {
-	var alertSchedule sdk.AlertSchedule
+func getAlertSchedule(d *schema.ResourceData) string {
+	var alertSchedule string
 	if v, ok := d.GetOk("alert_schedule"); ok {
 		schedule := v.([]interface{})[0].(map[string]interface{})
 		if v, ok := schedule["cron"]; ok {
@@ -280,13 +280,13 @@ func getAlertSchedule(d *schema.ResourceData) sdk.AlertSchedule {
 				cron := c[0].(map[string]interface{})
 				cronExpression := cron["expression"].(string)
 				timeZone := cron["time_zone"].(string)
-				alertSchedule = sdk.AlertScheduleCronExpression{Expression: cronExpression, TimeZone: timeZone}
+				alertSchedule = fmt.Sprintf("USING CRON %s %s", cronExpression, timeZone)
 			}
 		}
 		if v, ok := schedule["interval"]; ok {
 			interval := v.(int)
 			if interval > 0 {
-				alertSchedule = sdk.AlertScheduleInterval(interval)
+				alertSchedule = fmt.Sprintf("%s MINUTE", strconv.Itoa(interval))
 			}
 		}
 	}
@@ -321,7 +321,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("alert_schedule") {
-		alertSchedule := getAlertSchedule(d).String()
+		alertSchedule := getAlertSchedule(d)
 		alterOptions := &sdk.AlterAlertOptions{}
 		alterOptions.Set = &sdk.AlertSet{
 			Schedule: &alertSchedule,

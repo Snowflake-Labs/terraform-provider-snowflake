@@ -435,7 +435,7 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
 }
 
-func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule AlertSchedule, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
+func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule string, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
@@ -484,7 +484,7 @@ func createAlertWithOptions(t *testing.T, client *Client, database *Database, sc
 
 func createAlert(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse) (*Alert, func()) {
 	t.Helper()
-	schedule := AlertScheduleCronExpression{Expression: "* * * * *", TimeZone: "UTC"}
+	schedule := "USING CRON * * * * * UTC"
 	condition := "SELECT 1"
 	action := "SELECT 1"
 	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
