@@ -20,8 +20,14 @@ func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []err
 }
 
 func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	oldDT := sdk.DataTypeFromString(old)
-	newDT := sdk.DataTypeFromString(new)
+	oldDT, err := sdk.ToDataType(old)
+	if err != nil {
+		return false
+	}
+	newDT, err := sdk.ToDataType(new)
+	if err != nil {
+		return false
+	}
 	return oldDT == newDT
 }
 
