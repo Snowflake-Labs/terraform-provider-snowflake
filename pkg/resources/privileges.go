@@ -72,6 +72,7 @@ const (
 	privilegeReferences                  Privilege = "REFERENCES"
 	privilegeReferenceUsage              Privilege = "REFERENCE_USAGE"
 	privilegeReplicate                   Privilege = "REPLICATE"
+	privilegeResolveAll                  Privilege = "RESOLVE ALL"
 	privilegeSelect                      Privilege = "SELECT"
 	privilegeTruncate                    Privilege = "TRUNCATE"
 	privilegeUpdate                      Privilege = "UPDATE"
