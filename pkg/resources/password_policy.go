@@ -116,6 +116,11 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Adds a comment or overwrites an existing comment for the password policy.",
 	},
+	"qualified_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The qualified name for the password policy.",
+	},
 }
 
 func PasswordPolicy() *schema.Resource {
@@ -175,6 +180,11 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	if err := d.Set("qualified_name", objectIdentifier.FullyQualifiedName()); err != nil {
+		return err
+	}
+
 	passwordPolicy, err := client.PasswordPolicies.ShowByID(ctx, objectIdentifier)
 	if err != nil {
 		return err

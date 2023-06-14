@@ -225,6 +225,7 @@ func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
 		"snowflake_account":                                 resources.Account(),
+		"snowflake_account_password_policy_attachment":      resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                       resources.AccountParameter(),
 		"snowflake_alert":                                   resources.Alert(),
 		"snowflake_api_integration":                         resources.APIIntegration(),
