@@ -416,6 +416,20 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	}
 }
 
+func createRole(t *testing.T, client *Client) (*Role, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Roles.Create(ctx, id, nil)
+	require.NoError(t, err)
+	return &Role{
+			Name: id.Name(),
+		}, func() {
+			err := client.Roles.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+}
+
 func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
 	t.Helper()
 	signature := []TableColumnSignature{

@@ -8,6 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInt_GrantGlobalPrivilegesToAccountRole(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	roleTest, roleCleanup := createRole(t, client)
+	t.Cleanup(roleCleanup)
+	t.Run("with privilege list", func(t *testing.T) {
+		opts := &GrantGlobalPrivilegesToAccountRoleOptions{
+			Privileges:      []GlobalPrivilege{GlobalPrivilegeMonitorUsage, GlobalPrivilegeApplyTag},
+			
+		err := client.Grants.GrantGlobalPrivilegesToAccountRole(ctx, )
+	})
+}
+
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -16,11 +29,11 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	t.Run("without options", func(t *testing.T) {
-		err := client.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, nil, shareTest.ID())
+		err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, nil, shareTest.ID())
 		require.Error(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
-		err := client.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
+		err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, &GrantPrivilegeToShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -42,11 +55,11 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			}
 		}
 		assert.NotNil(t, shareGrant)
-		assert.Equal(t, PrivilegeUsage, shareGrant.Privilege)
+		assert.Equal(t, ObjectPrivilegeUsage, shareGrant.Privilege)
 		assert.Equal(t, ObjectTypeDatabase, shareGrant.GrantedOn)
 		assert.Equal(t, ObjectTypeShare, shareGrant.GrantedTo)
 		assert.Equal(t, databaseTest.ID().Name(), shareGrant.Name.Name())
-		err = client.Grants.RevokePrivilegeFromShare(ctx, PrivilegeUsage, &RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, ObjectPrivilegeUsage, &RevokePrivilegeFromShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -60,16 +73,16 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	t.Cleanup(shareCleanup)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
+	err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, &GrantPrivilegeToShareOn{
 		Database: databaseTest.ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Run("without options", func(t *testing.T) {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, PrivilegeUsage, nil, shareTest.ID())
+		err = client.Grants.RevokePrivilegeFromShare(ctx, ObjectPrivilegeUsage, nil, shareTest.ID())
 		require.Error(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, PrivilegeUsage, &RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, ObjectPrivilegeUsage, &RevokePrivilegeFromShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -83,12 +96,12 @@ func TestInt_ShowGrants(t *testing.T) {
 	t.Cleanup(shareCleanup)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
+	err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, &GrantPrivilegeToShareOn{
 		Database: databaseTest.ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, PrivilegeUsage, &RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, ObjectPrivilegeUsage, &RevokePrivilegeFromShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
