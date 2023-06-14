@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.66.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.1...v0.66.2) (2023-06-13)
+
+
+### BugFixes
+
+* warehouse size validation ([#1873](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1873)) ([5bbe460](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5bbe4600e2768a66a83df67a16368888b7f1d76b))
+
 ## [0.66.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.0...v0.66.1) (2023-06-03)
 
 

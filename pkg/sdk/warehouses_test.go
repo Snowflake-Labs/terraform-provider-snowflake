@@ -273,3 +273,52 @@ func TestWarehouseDescribe(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 }
+
+func TestToWarehouseSize(t *testing.T) {
+	type test struct {
+		input string
+		want  WarehouseSize
+	}
+
+	tests := []test{
+		// case insensitive.
+		{input: "XSMALL", want: WarehouseSizeXSmall},
+		{input: "xsmall", want: WarehouseSizeXSmall},
+
+		// Supported Values
+		{input: "XSMALL", want: WarehouseSizeXSmall},
+		{input: "SMALL", want: WarehouseSizeSmall},
+		{input: "MEDIUM", want: WarehouseSizeMedium},
+		{input: "LARGE", want: WarehouseSizeLarge},
+		{input: "XLARGE", want: WarehouseSizeXLarge},
+		{input: "XXLARGE", want: WarehouseSizeXXLarge},
+		{input: "XXXLARGE", want: WarehouseSizeXXXLarge},
+		{input: "X4LARGE", want: WarehouseSizeX4Large},
+		{input: "X5LARGE", want: WarehouseSizeX5Large},
+		{input: "X6LARGE", want: WarehouseSizeX6Large},
+
+		// Synonyms
+		{input: "X-SMALL", want: WarehouseSizeXSmall},
+		{input: "X-LARGE", want: WarehouseSizeXLarge},
+		{input: "X2LARGE", want: WarehouseSizeXXLarge},
+		{input: "2X-LARGE", want: WarehouseSizeXXLarge},
+		{input: "X3LARGE", want: WarehouseSizeXXXLarge},
+		{input: "3X-LARGE", want: WarehouseSizeXXXLarge},
+		{input: "4X-LARGE", want: WarehouseSizeX4Large},
+		{input: "5X-LARGE", want: WarehouseSizeX5Large},
+		{input: "6X-LARGE", want: WarehouseSizeX6Large},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToWarehouseSize(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+
+		t.Run("invalid warehouse size", func(t *testing.T) {
+			_, err := ToWarehouseSize("foo")
+			require.Error(t, err)
+		})
+	}
+}

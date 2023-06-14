@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 const (
@@ -104,6 +106,21 @@ func ValidateAccountIdentifier(i interface{}, k string) (s []string, errors []er
 	match, _ := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9_]*$`, v)
 	if !match {
 		errors = append(errors, fmt.Errorf("must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_)"))
+	}
+	return
+}
+
+func ValidateWarehouseSize(i interface{}, k string) (s []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+	if v == "" { // The default value for Terraform
+		return
+	}
+	if !sdk.IsValidWarehouseSize(v) {
+		errors = append(errors, fmt.Errorf("not a valid warehouse size: %s", v))
 	}
 	return
 }
