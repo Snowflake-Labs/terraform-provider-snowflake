@@ -55,6 +55,7 @@ type Database struct {
 	ResourceGroup string
 	DroppedOn     time.Time
 	Transient     bool
+	Kind          string
 }
 
 func (v *Database) ID() AccountObjectIdentifier {
@@ -123,6 +124,9 @@ func (row *databaseRow) toDatabase() *Database {
 				database.Transient = true
 			}
 		}
+	}
+	if row.Kind.Valid {
+		database.Kind = row.Kind.String
 	}
 	return &database
 }
