@@ -8,23 +8,9 @@ import (
 )
 
 type Grants interface {
-	// Account Roles (grant)
-	GrantPrivilegesToAccountRole(ctx context.Context, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
-	// GrantAccountObjectPrivilegesToAccountRole(ctx context.Context, opts *GrantAccountObjectPrivilegesToAccountRoleOptions) error
-	// GrantSchemaPrivilegesToAccountRole(ctx context.Context, privileges []SchemaPrivilege, opts *GrantSchemaPrivilegesToRoleOptions) error
-	// GrantSchemaObjectPrivilegesToAccountRole(ctx context.Context, privileges []SchemaObjectPrivilege, opts *GrantSchemaObjectPrivilegesToRoleOptions) error
-
-	// Account Roles (revoke)
-	RevokeGlobalPrivilegesFromAccountRole(ctx context.Context, opts *RevokeGlobalPrivilegesFromAccountRoleOptions) error
-	RevokeAccountObjectPrivilegesFromAccountRole(ctx context.Context, opts *RevokeAccountObjectPrivilegesFromAccountRoleOptions) error
-
-	// RevokeGlobalPrivilegesFromAccountRole(ctx context.Context, privileges []GlobalPrivilege, opts *RevokeGlobalPrivilegesFromRoleOptions) error
-	// RevokeGlobalPrivilegesFromAccountRole(ctx context.Context, privileges []GlobalPrivilege, opts *RevokeGlobalPrivilegesFromRoleOptions) error
-	// RevokeAccountObjectPrivilegesFromAccountRole(ctx context.Context, privileges []GlobalPrivilege, opts *GrantAccountObjectPrivilegesToRoleOptions) error
-	// RevokeSchemaPrivilegesFromAccountRole(ctx context.Context, privileges []SchemaPrivilege, opts *RevokeSchemaPrivilegesFromRoleOptions) error
-	// RevokeSchemaObjectPrivilegesFromAccountRole(ctx context.Context, privileges []SchemaObjectPrivilege, opts *RevokeSchemaObjectPrivilegesFromRoleOptions) error
-	// Database Roles (grant)
-	// RevokePrivilegesFromAccountRole(ctx context.Context, objectPrivilege ObjectPrivilege, on *RevokePrivilegeFromRoleOn, from RoleObjectIdentifier) error
+	GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
+	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error
+	// todo: GrantPrivilegesToDatabaseRole and RevokePrivilegesFromDatabaseRole
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error)
@@ -55,6 +41,7 @@ type grantRow struct {
 	CreatedOn   time.Time `db:"created_on"`
 	Privilege   string    `db:"privilege"`
 	GrantedOn   string    `db:"granted_on"`
+	GrantOn     string    `db:"grant_on"`
 	Name        string    `db:"name"`
 	GrantedTo   string    `db:"granted_to"`
 	GranteeName string    `db:"grantee_name"`
@@ -80,16 +67,35 @@ func (row *grantRow) toGrant() (*Grant, error) {
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}
+	// true for future grants
+	if row.GrantOn != "" {
+		grant.GrantedOn = ObjectType(row.GrantOn)
+	}
 	return grant, nil
 }
 
 type GrantPrivilegesToAccountRoleOptions struct {
 	grant           bool                        `ddl:"static" sql:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
-	Privileges      *AccountRoleGrantPrivileges `ddl:"-"`
-	AllPrivileges   *bool                       `ddl:"keyword" sql:"ALL PRIVILEGES"`
-	On              *GrantOn                    `ddl:"-"`
-	toRole          AccountObjectIdentifier     `ddl:"identifier" sql:"TO ROLE"`
+	privileges      *AccountRoleGrantPrivileges `ddl:"-"`
+	on              *AccountRoleGrantOn         `ddl:"keyword" sql:"ON"`
+	accountRole     AccountObjectIdentifier     `ddl:"identifier" sql:"TO ROLE"`
 	WithGrantOption *bool                       `ddl:"keyword" sql:"WITH GRANT OPTION"`
+}
+
+func (opts *GrantPrivilegesToAccountRoleOptions) validate() error {
+	if !valueSet(opts.privileges) {
+		return fmt.Errorf("privileges must be set")
+	}
+	if err := opts.privileges.validate(); err != nil {
+		return err
+	}
+	if !valueSet(opts.on) {
+		return fmt.Errorf("on must be set")
+	}
+	if err := opts.on.validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
 type AccountRoleGrantPrivileges struct {
@@ -97,13 +103,43 @@ type AccountRoleGrantPrivileges struct {
 	AccountObjectPrivileges []AccountObjectPrivilege `ddl:"-"`
 	SchemaPrivileges        []SchemaPrivilege        `ddl:"-"`
 	SchemaObjectPrivileges  []SchemaObjectPrivilege  `ddl:"-"`
+	AllPrivileges           *bool                    `ddl:"keyword" sql:"ALL PRIVILEGES"`
 }
 
-type GrantOn struct {
+func (v *AccountRoleGrantPrivileges) validate() error {
+	if !exactlyOneValueSet(v.AllPrivileges, v.GlobalPrivileges, v.AccountObjectPrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges) {
+		return fmt.Errorf("exactly one of AllPrivileges, GlobalPrivileges, AccountObjectPrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set")
+	}
+	return nil
+}
+
+type AccountRoleGrantOn struct {
 	Account       *bool                 `ddl:"keyword" sql:"ACCOUNT"`
 	AccountObject *GrantOnAccountObject `ddl:"-"`
 	Schema        *GrantOnSchema        `ddl:"-"`
 	SchemaObject  *GrantOnSchemaObject  `ddl:"-"`
+}
+
+func (v *AccountRoleGrantOn) validate() error {
+	if !exactlyOneValueSet(v.Account, v.AccountObject, v.Schema, v.SchemaObject) {
+		return fmt.Errorf("exactly one of Account, AccountObject, Schema, or SchemaObject must be set")
+	}
+	if valueSet(v.AccountObject) {
+		if err := v.AccountObject.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(v.Schema) {
+		if err := v.Schema.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(v.SchemaObject) {
+		if err := v.SchemaObject.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type GrantOnAccountObject struct {
@@ -114,6 +150,13 @@ type GrantOnAccountObject struct {
 	Integration      *AccountObjectIdentifier `ddl:"identifier" sql:"INTEGRATION"`
 	FailoverGroup    *AccountObjectIdentifier `ddl:"identifier" sql:"FAILOVER GROUP"`
 	ReplicationGroup *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
+}
+
+func (v *GrantOnAccountObject) validate() error {
+	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.Database, v.Integration, v.FailoverGroup, v.ReplicationGroup) {
+		return fmt.Errorf("exactly one of User, ResourceMonitor, Warehouse, Database, Integration, FailoverGroup, or ReplicationGroup must be set")
+	}
+	return nil
 }
 
 type GrantOnSchema struct {
@@ -122,31 +165,46 @@ type GrantOnSchema struct {
 	FutureSchemasInDatabase *AccountObjectIdentifier `ddl:"identifier" sql:"FUTURE SCHEMAS IN DATABASE"`
 }
 
-type GrantOnSchemaObject struct {
-	Object *Object                   `ddl:"-"`
-	AllIn  *GrantOnSchemaObjectAllIn `ddl:"-"`
+func (v *GrantOnSchema) validate() error {
+	if !exactlyOneValueSet(v.Schema, v.AllSchemasInDatabase, v.FutureSchemasInDatabase) {
+		return fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set")
+	}
+	return nil
 }
 
 type GrantOnSchemaObject struct {
-	PluralObjectType *PluralObjectType        `ddl:"keyword" sql:"ALL"`
+	SchemaObject *Object                `ddl:"-"`
+	All          *GrantOnSchemaObjectIn `ddl:"keyword" sql:"ALL"`
+	Future       *GrantOnSchemaObjectIn `ddl:"keyword" sql:"FUTURE"`
+}
+
+func (v *GrantOnSchemaObject) validate() error {
+	if !exactlyOneValueSet(v.SchemaObject, v.All, v.Future) {
+		return fmt.Errorf("exactly one of Object, AllIn or Future must be set")
+	}
+	return nil
+}
+
+type GrantOnSchemaObjectIn struct {
+	PluralObjectType PluralObjectType         `ddl:"keyword" sql:"ALL"`
 	InDatabase       *AccountObjectIdentifier `ddl:"identifier" sql:"IN DATABASE"`
 	InSchema         *SchemaIdentifier        `ddl:"identifier" sql:"IN SCHEMA"`
 }
 
-func (opts *GrantGlobalPrivilegesToAccountRoleOptions) validate() error {
-	if !exactlyOneValueSet(opts.Privileges, opts.AllPrivileges) {
-		return fmt.Errorf("only one of privileges or allPrivileges can be set")
-	}
-	if !validObjectidentifier(opts.toRole) {
-		return ErrInvalidObjectIdentifier
+func (v *GrantOnSchemaObjectIn) validate() error {
+	if !exactlyOneValueSet(v.PluralObjectType, v.InDatabase, v.InSchema) {
+		return fmt.Errorf("exactly one of PluralObjectType, InDatabase, or InSchema must be set")
 	}
 	return nil
 }
 
-func (v *grants) GrantGlobalPrivilegesToAccountRole(ctx context.Context, opts *GrantGlobalPrivilegesToAccountRoleOptions) error {
+func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error {
 	if opts == nil {
-		return fmt.Errorf("opts cannot be nil")
+		opts = &GrantPrivilegesToAccountRoleOptions{}
 	}
+	opts.privileges = privileges
+	opts.on = on
+	opts.accountRole = role
 	if err := opts.validate(); err != nil {
 		return err
 	}
@@ -161,130 +219,45 @@ func (v *grants) GrantGlobalPrivilegesToAccountRole(ctx context.Context, opts *G
 	return nil
 }
 
-type RevokeGlobalPrivilegesFromAccountRoleOptions struct {
-	revoke         bool                    `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
-	GrantOptionFor *bool                   `ddl:"keyword" sql:"GRANT OPTION FOR"`
-	Privileges     []GlobalPrivilege       `ddl:"-"`
-	AllPrivileges  bool                    `ddl:"keyword" sql:"ALL PRIVILEGES"`
-	onAccount      bool                    `ddl:"static" sql:"ON ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
-	fromRole       AccountObjectIdentifier `ddl:"identifier" sql:"FROM ROLE"`
-	Restrict       *bool                   `ddl:"keyword" sql:"RESTRICT"`
-	Cascade        *bool                   `ddl:"keyword" sql:"CASCADE"`
+type RevokePrivilegesFromAccountRoleOptions struct {
+	revoke         bool                        `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
+	GrantOptionFor *bool                       `ddl:"keyword" sql:"GRANT OPTION FOR"`
+	privileges     *AccountRoleGrantPrivileges `ddl:"-"`
+	on             *AccountRoleGrantOn         `ddl:"keyword" sql:"ON"`
+	accountRole    AccountObjectIdentifier     `ddl:"identifier" sql:"FROM ROLE"`
+	Restrict       *bool                       `ddl:"keyword" sql:"RESTRICT"`
+	Cascade        *bool                       `ddl:"keyword" sql:"CASCADE"`
 }
 
-func (opts *RevokeGlobalPrivilegesFromAccountRoleOptions) validate() error {
-	if !exactlyOneValueSet(opts.Privileges, opts.AllPrivileges) {
-		return fmt.Errorf("only one of privileges or allPrivileges can be set")
+func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
+	if !valueSet(opts.privileges) {
+		return fmt.Errorf("privileges must be set")
 	}
-	if !validObjectidentifier(opts.fromRole) {
-		return ErrInvalidObjectIdentifier
-	}
-	return nil
-}
-
-func (v *grants) RevokeGlobalPrivilegesFromAccountRole(ctx context.Context, opts *RevokeGlobalPrivilegesFromAccountRoleOptions) error {
-	if opts == nil {
-		return fmt.Errorf("opts cannot be nil")
-	}
-	if err := opts.validate(); err != nil {
+	if err := opts.privileges.validate(); err != nil {
 		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type GrantAccountObjectPrivilegesToAccountRoleOptions struct {
-	grant           bool                     `ddl:"static" sql:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
-	Privileges      []AccountObjectPrivilege `ddl:"-"`
-	AllPrivileges   bool                     `ddl:"keyword" sql:"ALL PRIVILEGES"`
-	on              *GrantOnAccountObject    `ddl:"-" sql:"ON"`
-	toRole          AccountObjectIdentifier  `ddl:"identifier" sql:"TO ROLE"`
-	WithGrantOption bool                     `ddl:"keyword" sql:"WITH GRANT OPTION"`
-}
-
-func (opts *GrantAccountObjectPrivilegesToAccountRoleOptions) validate() error {
-	if !exactlyOneValueSet(opts.Privileges, opts.AllPrivileges) {
-		return fmt.Errorf("only one of privileges or allPrivileges can be set")
-	}
-	if !validObjectidentifier(opts.toRole) {
-		return ErrInvalidObjectIdentifier
 	}
 	if !valueSet(opts.on) {
-		return fmt.Errorf("on cannot be nil")
+		return fmt.Errorf("on must be set")
 	}
 	if err := opts.on.validate(); err != nil {
 		return err
 	}
-	return nil
-}
-
-type GrantOnAccountObject struct {
-	User             *AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
-	ResourceMonitor  *AccountObjectIdentifier `ddl:"identifier" sql:"RESOURCE MONITOR"`
-	Warehouse        *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
-	Database         *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Integration      *AccountObjectIdentifier `ddl:"identifier" sql:"INTEGRATION"`
-	FailoverGroup    *AccountObjectIdentifier `ddl:"identifier" sql:"FAILOVER GROUP"`
-	ReplicationGroup *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
-}
-
-func (opts *GrantOnAccountObject) validate() error {
-	if !exactlyOneValueSet(opts.User, opts.ResourceMonitor, opts.Warehouse, opts.Database, opts.Integration, opts.FailoverGroup, opts.ReplicationGroup) {
-		return fmt.Errorf("only one of user, resourceMonitor, warehouse, database, integration, failoverGroup, replicationGroup can be set")
-	}
-	return nil
-}
-
-func (v *grants) GrantAccountObjectPrivilegesToAccountRole(ctx context.Context, opts *GrantAccountObjectPrivilegesToAccountRoleOptions) error {
-	if opts == nil {
-		return fmt.Errorf("opts cannot be nil")
-	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type RevokeAccountObjectPrivilegesFromAccountRoleOptions struct {
-	revoke         bool                     `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
-	GrantOptionFor *bool                    `ddl:"keyword" sql:"GRANT OPTION FOR"`
-	Privileges     []AccountObjectPrivilege `ddl:"-"`
-	AllPrivileges  bool                     `ddl:"keyword" sql:"ALL PRIVILEGES"`
-	on             *GrantOnAccountObject    `ddl:"-" sql:"ON"`
-	fromRole       AccountObjectIdentifier  `ddl:"identifier" sql:"FROM ROLE"`
-	Restrict       *bool                    `ddl:"keyword" sql:"RESTRICT"`
-	Cascade        *bool                    `ddl:"keyword" sql:"CASCADE"`
-}
-
-func (opts *RevokeAccountObjectPrivilegesFromAccountRoleOptions) validate() error {
-	if !exactlyOneValueSet(opts.Privileges, opts.AllPrivileges) {
-		return fmt.Errorf("only one of privileges or allPrivileges can be set")
-	}
-	if !validObjectidentifier(opts.fromRole) {
+	if !validObjectidentifier(opts.accountRole) {
 		return ErrInvalidObjectIdentifier
 	}
+	if everyValueSet(opts.Restrict, opts.Cascade) {
+		return fmt.Errorf("either Restrict or Cascade can be set, or neither but not both")
+	}
 	return nil
 }
 
-func (v *grants) RevokeAccountObjectPrivilegesFromAccountRole(ctx context.Context, opts *RevokeAccountObjectPrivilegesFromAccountRoleOptions) error {
+func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error {
 	if opts == nil {
-		return fmt.Errorf("opts cannot be nil")
+		opts = &RevokePrivilegesFromAccountRoleOptions{}
 	}
+	opts.privileges = privileges
+	opts.on = on
+	opts.accountRole = role
 	if err := opts.validate(); err != nil {
 		return err
 	}
@@ -443,21 +416,28 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectP
 }
 
 type ShowGrantOptions struct {
-	show   bool          `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
+	show   bool          `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	Future *bool         `ddl:"keyword" sql:"FUTURE"`
 	grants bool          `ddl:"static" sql:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
 	On     *ShowGrantsOn `ddl:"keyword" sql:"ON"`
 	To     *ShowGrantsTo `ddl:"keyword" sql:"TO"`
 	Of     *ShowGrantsOf `ddl:"keyword" sql:"OF"`
+	In     *ShowGrantsIn `ddl:"keyword" sql:"IN"`
 }
 
 func (opts *ShowGrantOptions) validate() error {
-	if everyValueNil(opts.On, opts.To, opts.Of) {
-		return fmt.Errorf("at least one of on, to, or of is required")
+	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {
+		return fmt.Errorf("at least one of on, to, of, or in is required")
 	}
-	if !exactlyOneValueSet(opts.On, opts.To, opts.Of) {
-		return fmt.Errorf("only one of on, to, or of can be set")
+	if !exactlyOneValueSet(opts.On, opts.To, opts.Of, opts.In) {
+		return fmt.Errorf("only one of on, to, of, or in can be set")
 	}
 	return nil
+}
+
+type ShowGrantsIn struct {
+	Schema   *SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Database *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
 }
 
 type ShowGrantsOn struct {

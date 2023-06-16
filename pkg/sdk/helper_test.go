@@ -312,6 +312,22 @@ func createSchema(t *testing.T, client *Client, database *Database) (*Schema, fu
 		}
 }
 
+func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
+	require.NoError(t, err)
+	return &Table{
+			DatabaseName: database.Name,
+			SchemaName:   schema.Name,
+			Name:         name,
+		}, func() {
+			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+			require.NoError(t, err)
+		}
+}
+
 func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
 	return createTagWithOptions(t, client, database, schema, &TagCreateOptions{})
