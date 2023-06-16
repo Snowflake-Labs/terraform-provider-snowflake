@@ -127,8 +127,8 @@ func (builder *AlertBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` COMMENT = '%v'`, EscapeString(builder.comment)))
 	}
 
-	q.WriteString(fmt.Sprintf(` IF (EXISTS ( %v ))`, EscapeString(builder.condition)))
-	q.WriteString(fmt.Sprintf(` THEN %v`, EscapeString(builder.action)))
+	q.WriteString(fmt.Sprintf(` IF (EXISTS ( %v ))`, builder.condition))
+	q.WriteString(fmt.Sprintf(` THEN %v`, builder.action))
 
 	return q.String()
 }
@@ -181,7 +181,7 @@ func (builder *AlertBuilder) ChangeCondition(newCondition string) string {
 
 // ChangeAction returns the sql that will update the sql the alert executes.
 func (builder *AlertBuilder) ChangeAction(newAction string) string {
-	return fmt.Sprintf(`ALTER ALERT %v MODIFY ACTION %v`, builder.QualifiedName(), UnescapeString(newAction))
+	return fmt.Sprintf(`ALTER ALERT %v MODIFY ACTION %v`, builder.QualifiedName(), newAction)
 }
 
 // Suspend returns the sql that will suspend the alert.

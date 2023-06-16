@@ -91,8 +91,8 @@ var (
 		Alert: &AlertSettings{
 			Name:      alertName,
 			Schema:    schemaName,
-			Condition: "select 2 as c",
-			Action:    "select 2 as c",
+			Condition: "select 's' as c where 1=0",
+			Action:    "SELECT SYSTEM$TYPEOF(null) FROM (values(1)) v",
 			Enabled:   false,
 			Schedule:  5,
 		},
