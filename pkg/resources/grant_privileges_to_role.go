@@ -29,6 +29,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 	"all_privileges": {
 		Type:        schema.TypeBool,
 		Optional:    true,
+		Default:     false,
 		Description: "Grant all privileges on the account role.",
 		ConflictsWith: []string{
 			"privileges",
@@ -279,7 +280,101 @@ func GrantPrivilegesToRole() *schema.Resource {
 
 		Schema: grantPrivilegesToRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
+				if err := d.Set("role_name", resourceID.RoleName); err != nil {
+					return nil, err
+				}
+				if err := d.Set("privileges", resourceID.Privileges); err != nil {
+					return nil, err
+				}
+				if err := d.Set("all_privileges", resourceID.AllPrivileges); err != nil {
+					return nil, err
+				}
+				if err := d.Set("with_grant_option", resourceID.WithGrantOption); err != nil {
+					return nil, err
+				}
+				if err := d.Set("on_account", resourceID.OnAccount); err != nil {
+					return nil, err
+				}
+				if resourceID.OnAccountObject {
+					if err := d.Set("on_account_object", []map[string]interface{}{{
+						"object_type": resourceID.ObjectType,
+						"object_name": resourceID.ObjectName,
+					}}); err != nil {
+						return nil, err
+					}
+				}
+				if resourceID.OnSchema {
+					var onSchema []interface{}
+					if resourceID.SchemaName != "" {
+						onSchema = append(onSchema, map[string]interface{}{
+							"schema_name": resourceID.SchemaName,
+						})
+					}
+					if resourceID.All {
+						onSchema = append(onSchema, map[string]interface{}{
+							"all_schemas_in_database": resourceID.DatabaseName,
+						})
+					}
+					if resourceID.Future {
+						onSchema = append(onSchema, map[string]interface{}{
+							"future_schemas_in_database": resourceID.DatabaseName,
+						})
+					}
+					if err := d.Set("on_schema", onSchema); err != nil {
+						return nil, err
+					}
+				}
+
+				if resourceID.OnSchemaObject {
+					var onSchemaObject []interface{}
+					if resourceID.ObjectName != "" {
+						onSchemaObject = append(onSchemaObject, map[string]interface{}{
+							"object_name": resourceID.ObjectName,
+							"object_type": resourceID.ObjectType,
+						})
+					}
+					if resourceID.All {
+						all := make([]interface{}, 0)
+						m := map[string]interface{}{
+							"object_type_plural": resourceID.ObjectTypePlural,
+						}
+
+						if resourceID.InSchema {
+							m["in_schema"] = resourceID.SchemaName
+						}
+						if resourceID.InDatabase {
+							m["in_database"] = resourceID.DatabaseName
+						}
+						all = append(all, m)
+						onSchemaObject = append(onSchemaObject, map[string]interface{}{
+							"all": all,
+						})
+					}
+					if resourceID.Future {
+						future := make([]interface{}, 0)
+						m := map[string]interface{}{
+							"object_type_plural": resourceID.ObjectTypePlural,
+						}
+						if resourceID.InSchema {
+							m["in_schema"] = resourceID.SchemaName
+						}
+						if resourceID.InDatabase {
+							m["in_database"] = resourceID.DatabaseName
+						}
+						future = append(future, m)
+						onSchemaObject = append(onSchemaObject, map[string]interface{}{
+							"future": future,
+						})
+					}
+					if err := d.Set("on_schema_object", onSchemaObject); err != nil {
+						return nil, err
+					}
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }
@@ -296,9 +391,9 @@ type GrantPrivilegesToAccountRoleID struct {
 	OnSchemaObject   bool
 	All              bool
 	Future           bool
-	ObjectType       sdk.ObjectType
+	ObjectType       string
 	ObjectName       string
-	ObjectTypePlural sdk.PluralObjectType
+	ObjectTypePlural string
 	InSchema         bool
 	SchemaName       string
 	InDatabase       bool
@@ -307,9 +402,13 @@ type GrantPrivilegesToAccountRoleID struct {
 
 func NewGrantPrivilegesToAccountRoleID(id string) GrantPrivilegesToAccountRoleID {
 	parts := strings.Split(id, "|")
+	privileges := strings.Split(parts[1], ",")
+	if len(privileges) == 1 && privileges[0] == "" {
+		privileges = []string{}
+	}
 	return GrantPrivilegesToAccountRoleID{
 		RoleName:         parts[0],
-		Privileges:       strings.Split(parts[1], ","),
+		Privileges:       privileges,
 		AllPrivileges:    parts[2] == "true",
 		WithGrantOption:  parts[3] == "true",
 		OnAccount:        parts[4] == "true",
@@ -318,9 +417,9 @@ func NewGrantPrivilegesToAccountRoleID(id string) GrantPrivilegesToAccountRoleID
 		OnSchemaObject:   parts[7] == "true",
 		All:              parts[8] == "true",
 		Future:           parts[9] == "true",
-		ObjectType:       sdk.ObjectType(parts[10]),
+		ObjectType:       parts[10],
 		ObjectName:       parts[11],
-		ObjectTypePlural: sdk.PluralObjectType(parts[12]),
+		ObjectTypePlural: parts[12],
 		InSchema:         parts[13] == "true",
 		SchemaName:       parts[14],
 		InDatabase:       parts[15] == "true",
@@ -328,8 +427,8 @@ func NewGrantPrivilegesToAccountRoleID(id string) GrantPrivilegesToAccountRoleID
 	}
 }
 
-func (v GrantPrivilegesToAccountRoleID) ID() string {
-	return helpers.EncodeSnowflakeID(v.RoleName, v.Privileges, v.AllPrivileges, v.WithGrantOption, v.OnAccount, v.OnAccountObject, v.ObjectType, v.ObjectName, v.OnSchema, v.SchemaName, v.All, v.DatabaseName, v.Future, v.OnSchemaObject, v.ObjectTypePlural, v.InDatabase, v.InSchema)
+func (v GrantPrivilegesToAccountRoleID) String() string {
+	return helpers.EncodeSnowflakeID(v.RoleName, v.Privileges, v.AllPrivileges, v.WithGrantOption, v.OnAccount, v.OnAccountObject, v.OnSchema, v.OnSchemaObject, v.All, v.Future, v.ObjectType, v.ObjectName, v.ObjectTypePlural, v.InSchema, v.SchemaName, v.InDatabase, v.DatabaseName)
 }
 
 func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
@@ -361,7 +460,7 @@ func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error granting privileges to account role: %w", err)
 	}
 
-	d.SetId(resourceID.ID())
+	d.SetId(resourceID.String())
 	return ReadGrantPrivilegesToRole(d, meta)
 }
 
@@ -370,7 +469,6 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
-	onFutureFlag := resourceID.Future
 	roleName := resourceID.RoleName
 	allPrivileges := resourceID.AllPrivileges
 	if allPrivileges {
@@ -379,7 +477,8 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	}
 	var opts sdk.ShowGrantOptions
 	var grantOn sdk.ObjectType
-	if v, ok := d.GetOk("on_account"); ok && v.(bool) {
+	if resourceID.OnAccount {
+		grantOn = sdk.ObjectTypeAccount
 		opts = sdk.ShowGrantOptions{
 			On: &sdk.ShowGrantsOn{
 				Account: sdk.Bool(true),
@@ -387,92 +486,85 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("on_account_object"); ok && len(v.([]interface{})) > 0 {
-		onAccountObject := v.([]interface{})[0].(map[string]interface{})
-		objectType := sdk.ObjectType(onAccountObject["object_type"].(string))
+	if resourceID.OnAccountObject {
+		objectType := sdk.ObjectType(resourceID.ObjectType)
 		grantOn = objectType
 		opts = sdk.ShowGrantOptions{
 			On: &sdk.ShowGrantsOn{
 				Object: &sdk.Object{
 					ObjectType: objectType,
-					Name:       sdk.NewAccountObjectIdentifierFromFullyQualifiedName(onAccountObject["object_name"].(string)),
+					Name:       sdk.NewAccountObjectIdentifierFromFullyQualifiedName(resourceID.ObjectName),
 				},
 			},
 		}
 	}
 
-	if v, ok := d.GetOk("on_schema"); ok && len(v.([]interface{})) > 0 {
-		onSchema := v.([]interface{})[0].(map[string]interface{})
+	if resourceID.OnSchema {
 		grantOn = sdk.ObjectTypeSchema
-		if schemaName, ok := onSchema["schema_name"]; ok && len(schemaName.(string)) > 0 {
+		if resourceID.SchemaName != "" {
 			opts = sdk.ShowGrantOptions{
 				On: &sdk.ShowGrantsOn{
 					Object: &sdk.Object{
 						ObjectType: sdk.ObjectTypeSchema,
-						Name:       sdk.NewSchemaIdentifierFromFullyQualifiedName(schemaName.(string)),
+						Name:       sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName),
 					},
 				},
 			}
 		}
-		if v, ok := onSchema["all_schemas_in_database"]; ok && len(v.(string)) > 0 {
+		if resourceID.All {
 			log.Printf("[DEBUG] cannot read ALL SCHEMAS IN DATABASE on grant to role %s because this is not returned by API", roleName)
 			return nil // on_all is not supported by API
 		}
-		if v, ok := onSchema["future_schemas_in_database"]; ok && len(v.(string)) > 0 {
-			onFutureFlag = true
+		if resourceID.Future {
 			opts = sdk.ShowGrantOptions{
 				Future: sdk.Bool(true),
 				In: &sdk.ShowGrantsIn{
-					Database: sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string))),
+					Database: sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(resourceID.DatabaseName)),
 				},
 			}
 		}
 	}
 
-	if v, ok := d.GetOk("on_schema_object"); ok && len(v.([]interface{})) > 0 {
-		onSchemaObject := v.([]interface{})[0].(map[string]interface{})
-		if v, ok := onSchemaObject["object_type"]; ok && len(v.(string)) > 0 {
-			objectType := sdk.ObjectType(v.(string))
+	if resourceID.OnSchemaObject {
+		if resourceID.ObjectName != "" {
+			objectType := sdk.ObjectType(resourceID.ObjectType)
 			grantOn = objectType
 			opts = sdk.ShowGrantOptions{
 				On: &sdk.ShowGrantsOn{
 					Object: &sdk.Object{
 						ObjectType: objectType,
-						Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(onSchemaObject["object_name"].(string)),
+						Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(resourceID.ObjectName),
 					},
 				},
 			}
 		}
 
-		if v, ok := onSchemaObject["all"]; ok && len(v.([]interface{})) > 0 {
+		if resourceID.All {
 			return nil // on_all is not supported by API
 		}
 
-		if v, ok := onSchemaObject["future"]; ok && len(v.([]interface{})) > 0 {
-			onFuture := v.([]interface{})[0].(map[string]interface{})
-			grantOn = sdk.PluralObjectType(onFuture["object_type_plural"].(string)).Singular()
-			if v, ok := onFuture["in_schema"]; ok && len(v.(string)) > 0 {
-				onFutureFlag = true
+		if resourceID.Future {
+			grantOn = sdk.PluralObjectType(resourceID.ObjectTypePlural).Singular()
+			if resourceID.InSchema {
 				opts = sdk.ShowGrantOptions{
 					Future: sdk.Bool(true),
 					In: &sdk.ShowGrantsIn{
-						Schema: sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string))),
+						Schema: sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName)),
 					},
 				}
 			}
-			if v, ok := onFuture["in_database"]; ok && len(v.(string)) > 0 {
-				onFutureFlag = true
+			if resourceID.InDatabase {
 				opts = sdk.ShowGrantOptions{
 					Future: sdk.Bool(true),
 					In: &sdk.ShowGrantsIn{
-						Database: sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string))),
+						Database: sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(resourceID.DatabaseName)),
 					},
 				}
 			}
 		}
 	}
 
-	err := readAccountRoleGrantPrivileges(ctx, client, grantOn, onFutureFlag, &opts, d)
+	err := readAccountRoleGrantPrivileges(ctx, client, grantOn, resourceID.Future, &opts, d)
 	if err != nil {
 		return err
 	}
@@ -530,6 +622,9 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 				return fmt.Errorf("error revoking privileges from account role: %w", err)
 			}
 		}
+		resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
+		resourceID.Privileges = newPrivileges
+		d.SetId(resourceID.String())
 	}
 	return ReadGrantPrivilegesToRole(d, meta)
 }
@@ -575,7 +670,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		resourceID.OnAccountObject = true
 		onAccountObject := v.([]interface{})[0].(map[string]interface{})
 		objectType := sdk.ObjectType(onAccountObject["object_type"].(string))
-		resourceID.ObjectType = objectType
+		resourceID.ObjectType = objectType.String()
 		objectName := onAccountObject["object_name"].(string)
 		resourceID.ObjectName = objectName
 		objectID := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName)
@@ -631,7 +726,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		on.SchemaObject = &sdk.GrantOnSchemaObject{}
 		resourceID.OnSchemaObject = true
 		if v, ok := onSchemaObject["object_type"]; ok && len(v.(string)) > 0 {
-			resourceID.ObjectType = sdk.ObjectType(v.(string))
+			resourceID.ObjectType = v.(string)
 			on.SchemaObject.SchemaObject = &sdk.Object{
 				ObjectType: sdk.ObjectType(v.(string)),
 			}
@@ -645,8 +740,8 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			on.SchemaObject.All = &sdk.GrantOnSchemaObjectIn{}
 			resourceID.All = true
 			pluralObjectType := all["object_type_plural"].(string)
+			resourceID.ObjectTypePlural = pluralObjectType
 			on.SchemaObject.All.PluralObjectType = sdk.PluralObjectType(pluralObjectType)
-			resourceID.ObjectTypePlural = sdk.PluralObjectType(pluralObjectType)
 			if v, ok := all["in_database"]; ok && len(v.(string)) > 0 {
 				resourceID.InDatabase = true
 				resourceID.DatabaseName = v.(string)
@@ -664,8 +759,8 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			resourceID.Future = true
 			on.SchemaObject.Future = &sdk.GrantOnSchemaObjectIn{}
 			pluralObjectType := future["object_type_plural"].(string)
+			resourceID.ObjectTypePlural = pluralObjectType
 			on.SchemaObject.Future.PluralObjectType = sdk.PluralObjectType(pluralObjectType)
-			resourceID.ObjectTypePlural = sdk.PluralObjectType(pluralObjectType)
 			if v, ok := future["in_database"]; ok && len(v.(string)) > 0 {
 				resourceID.InDatabase = true
 				resourceID.DatabaseName = v.(string)
