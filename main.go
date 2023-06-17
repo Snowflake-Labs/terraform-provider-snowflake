@@ -9,8 +9,11 @@ import (
 
 const ProviderAddr = "registry.terraform.io/Snowflake-Labs/snowflake"
 
+
+
 func main() {
 	debug := flag.Bool("debug", false, "set to true to run the provider with support for debuggers like delve")
+	
 	flag.Parse()
 
 	plugin.Serve(&plugin.ServeOpts{

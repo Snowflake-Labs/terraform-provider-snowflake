@@ -197,7 +197,19 @@ func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjec
 
 func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
 	t.Helper()
-	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{})
+	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{
+		CreditQuota: Pointer(100),
+		Triggers: &[]TriggerDefinition{
+			{
+				Threshold:     100,
+				TriggerAction: Suspend,
+			},
+			{
+				Threshold:     90,
+				TriggerAction: Notify,
+			},
+		},
+	})
 }
 
 func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *CreateResourceMonitorOptions) (*ResourceMonitor, func()) {
@@ -293,6 +305,19 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createUser(t *testing.T, client *Client) (string, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	email := "user@email.com"
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE USER \"%s\" EMAIL = \"%s\"", name, email))
+	require.NoError(t, err)
+	return name, func() {
+		_, err := client.exec(ctx, fmt.Sprintf("DROP USER \"%s\"", name))
 		require.NoError(t, err)
 	}
 }

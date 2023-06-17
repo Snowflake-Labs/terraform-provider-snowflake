@@ -226,3 +226,4 @@ func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName strin
 	}
 	return parts[0], parts[1], parts[2]
 }
+

@@ -1,15 +1,12 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -140,95 +137,68 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		return check
 	}
 
-	cb := snowflake.NewResourceMonitorBuilder(name).Create()
+	ctx := context.Background()
+	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
 	// Set optionals.
-
-	var notifyUsers *sdk.NotifyUsers
+	opts := &sdk.CreateResourceMonitorOptions{}
 	if v, ok := d.GetOk("notify_users"); ok {
-		notifyUsers = &sdk.NotifyUsers{Users: expandStringList(v.(*schema.Set).List())}
+		userNames := expandStringList(v.(*schema.Set).List())
+		users := []sdk.NotifiedUser{}
+		for _, name := range userNames {
+			users = append(users, sdk.NotifiedUser{Name: name})
+		}
+		opts.NotifyUsers = &sdk.NotifyUsers{Users: users}
 	}
-	var creditQuota *int
+
 	if v, ok := d.GetOk("credit_quota"); ok {
-		creditQuota = sdk.Pointer(v.(int))
+		opts.CreditQuota = sdk.Pointer(v.(int))
 	}
-	var frequency *sdk.Frequency
 	if v, ok := d.GetOk("frequency"); ok {
-		freq, err := sdk.FrequencyFromString(v.(string))
+		frequency, err := sdk.FrequencyFromString(v.(string))
 		if err != nil {
 			return err
 		}
-		frequency = freq
+		opts.Frequency = frequency
 	}
 
-	var startTimeStamp *sdk.StartTimeStamp
 	if v, ok := d.GetOk("start_timestamp"); ok {
-		cb.SetString("start_timestamp", v.(string))
+		opts.StartTimeStamp = sdk.Pointer(v.(string))
 	}
 	if v, ok := d.GetOk("end_timestamp"); ok {
-		cb.SetString("end_timestamp", v.(string))
-	}
-	if v, ok := d.GetOk("suspend_trigger"); ok {
-		cb.SuspendAt(v.(int))
+		opts.EndTimeStamp = sdk.Pointer(v.(string))
 	}
 
-	if v, ok := d.GetOk("notify_users"); ok {
-		cb.SetStringList("notify_users", expandStringList(v.(*schema.Set).List()))
-	}
-	if v, ok := d.GetOk("credit_quota"); ok {
-		cb.SetInt("credit_quota", v.(int))
-	}
-	if v, ok := d.GetOk("frequency"); ok {
-		cb.SetString("frequency", v.(string))
-	}
-	if v, ok := d.GetOk("start_timestamp"); ok {
-		cb.SetString("start_timestamp", v.(string))
-	}
-	if v, ok := d.GetOk("end_timestamp"); ok {
-		cb.SetString("end_timestamp", v.(string))
-	}
-	if v, ok := d.GetOk("suspend_trigger"); ok {
-		cb.SuspendAt(v.(int))
-	}
-	// Support deprecated suspend_triggers.
-	if v, ok := d.GetOk("suspend_triggers"); ok {
-		siTrigs := expandIntList(v.(*schema.Set).List())
-		for _, t := range siTrigs {
-			cb.SuspendAt(t)
-		}
-	}
-	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
-		cb.SuspendImmediatelyAt(v.(int))
-	}
-	// Support deprecated suspend_immediate_triggers.
-	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
-		sTrigs := expandIntList(v.(*schema.Set).List())
-		for _, t := range sTrigs {
-			cb.SuspendImmediatelyAt(t)
-		}
-	}
-	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
-	for _, t := range nTrigs {
-		cb.NotifyAt(t)
-	}
+	triggers := collectAllTriggers(d)
+	opts.Triggers = &triggers
 
-	stmt := cb.Statement()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
+	err := client.ResourceMonitors.Create(ctx, objectIdentifier, opts)
+	if err != nil {
+		fmt.Errorf("error creating resource monitor %v err = %w", name, err)
 	}
-
 	d.SetId(name)
 
 	if d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, cb.SetOnAccount()); err != nil {
+		accountOpts := sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				ResourceMonitor: objectIdentifier,
+			},
+		}
+		if err := client.Accounts.Alter(ctx, &accountOpts); err != nil {
 			return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
 		}
 	}
 
 	if v, ok := d.GetOk("warehouses"); ok {
 		for _, w := range v.(*schema.Set).List() {
-			if err := snowflake.Exec(db, cb.SetOnWarehouse(w.(string))); err != nil {
-				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, w.(string), err)
+			warehouseOpts := sdk.AlterWarehouseOptions{
+				Set: &sdk.WarehouseSet{
+					ResourceMonitor: objectIdentifier,
+				},
+			}
+			warehouseId := sdk.NewAccountObjectIdentifier(w.(string))
+			if err := client.Warehouses.Alter(ctx, warehouseId, &warehouseOpts); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, warehouseId.Name(), err)
 			}
 		}
 	}
@@ -242,55 +212,42 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 // ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	stmt := snowflake.NewResourceMonitorBuilder(d.Id()).Show()
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	row := snowflake.QueryRow(db, stmt)
+	ctx := context.Background()
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, objectIdentifier)
 
-	rm, err := snowflake.ScanResourceMonitor(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] resource monitor (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return err
 	}
-
-	// Set string values
-	nullStrings := map[string]sql.NullString{
-		"name":            rm.Name,
-		"frequency":       rm.Frequency,
-		"start_timestamp": rm.StartTime,
-		"end_timestamp":   rm.EndTime,
+	if err := d.Set("name", resourceMonitor.Name); err != nil {
+		return err
 	}
-	if err := setDataFromNullStrings(d, nullStrings); err != nil {
+	if err := d.Set("frequency", string(*resourceMonitor.Frequency)); err != nil {
 		return err
 	}
 
-	if len(rm.NotifyUsers.String) > 0 {
-		if err := d.Set("notify_users", strings.Split(rm.NotifyUsers.String, ", ")); err != nil {
+	if err := d.Set("start_timestamp", resourceMonitor.StartTime.String()); err != nil {
+		return err
+	}
+	if err := d.Set("start_timestamp", resourceMonitor.EndTime.String()); err != nil {
+		return err
+	}
+
+	if len(resourceMonitor.NotifyUsers) > 0 {
+		if err := d.Set("notify_users", resourceMonitor.NotifyUsers); err != nil {
 			return err
 		}
 	}
 
 	// Snowflake returns credit_quota as a float, but only accepts input as an int
-	if rm.CreditQuota.Valid {
-		cqf, err := strconv.ParseFloat(rm.CreditQuota.String, 64)
-		if err != nil {
-			return err
-		}
-		if err := d.Set("credit_quota", int(cqf)); err != nil {
-			return err
-		}
-	}
-
-	// Triggers
-	sTrig, err := extractTriggerInts(rm.SuspendAt)
-	if err != nil {
+	if err := d.Set("credit_quota", int(*resourceMonitor.CreditQuota)); err != nil {
 		return err
 	}
 
+	// Triggers
+	sTrig := resourceMonitor.SuspendTriggers
 	var setSuspendTrigger bool
 	if _, ok := d.GetOk("suspend_trigger"); ok {
 		if len(sTrig) > 0 {
@@ -323,11 +280,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	siTrig, err := extractTriggerInts(rm.SuspendImmediatelyAt)
-	if err != nil {
-		return err
-	}
-
+	siTrig := resourceMonitor.SuspendImmediateTriggers
 	var setSuspendImmediateTrigger bool
 	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
 		if len(siTrig) > 0 {
@@ -360,167 +313,143 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	nTrigs, err := extractTriggerInts(rm.NotifyAt)
-	if err != nil {
-		return err
-	}
-	if err := d.Set("notify_triggers", nTrigs); err != nil {
+	if err := d.Set("notify_triggers", resourceMonitor.NotifyTriggers); err != nil {
 		return err
 	}
 
 	// Account level
-	if err := d.Set("set_for_account", rm.Level.Valid && rm.Level.String == "ACCOUNT"); err != nil {
+	if err := d.Set("set_for_account", resourceMonitor.SetForAccount); err != nil {
 		return err
 	}
 
 	return err
 }
 
-// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
-func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
-	for k, v := range ns {
-		var err error
-		if v.Valid {
-			err = data.Set(k, v.String) // lintignore:R001
-		} else {
-			err = data.Set(k, "") // lintignore:R001
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailing %s) into a slice of ints.
-func extractTriggerInts(s sql.NullString) ([]int, error) {
-	// Check if this is NULL
-	if !s.Valid {
-		return []int{}, nil
-	}
-	ints := strings.Split(s.String, ",")
-	out := make([]int, 0, len(ints))
-	for _, i := range ints {
-		myInt, err := strconv.Atoi(i[:len(i)-1])
-		if err != nil {
-			return out, fmt.Errorf("failed to convert %v to integer err = %w", i, err)
-		}
-		out = append(out, myInt)
-	}
-	return out, nil
-}
-
 // UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
 
-	check := checkAccountAgainstWarehouses(d, id)
+	check := checkAccountAgainstWarehouses(d, name)
 
 	if check != nil {
 		return check
 	}
 
-	ub := snowflake.NewResourceMonitorBuilder(id).Alter()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	ctx := context.Background()
 	var runSetStatement bool
+
+	opts := sdk.AlterResourceMonitorOptions{}
 
 	if d.HasChange("notify_users") {
 		runSetStatement = true
-		ub.SetStringList(`NOTIFY_USERS`, expandStringList(d.Get("notify_users").(*schema.Set).List()))
+
+		userNames := expandStringList(d.Get("notify_users").(*schema.Set).List())
+		users := []sdk.NotifiedUser{}
+		for _, name := range userNames {
+			users = append(users, sdk.NotifiedUser{Name: name})
+		}
+		opts.NotifyUsers.Users = users
 	}
 
 	if d.HasChange("credit_quota") {
 		runSetStatement = true
-		ub.SetInt(`CREDIT_QUOTA`, d.Get("credit_quota").(int))
+		opts.Set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
 	}
 
 	if d.HasChange("frequency") {
 		runSetStatement = true
-		ub.SetString(`FREQUENCY`, d.Get("frequency").(string))
+		frequency, err := sdk.FrequencyFromString(d.Get("frequency").(string))
+		if err != nil {
+			return err
+		}
+		opts.Set.Frequency = frequency
 	}
 
 	if d.HasChange("start_timestamp") {
 		runSetStatement = true
-		ub.SetString(`START_TIMESTAMP`, d.Get("start_timestamp").(string))
+		opts.Set.StartTimeStamp = sdk.Pointer(d.Get("start_timestamp").(string))
 	}
 
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
-		ub.SetString(`END_TIMESTAMP`, d.Get("end_timestamp").(string))
+		opts.Set.EndTimeStamp = sdk.Pointer(d.Get("end_timestamp").(string))
 	}
 
-	// Set triggers
-	if d.HasChange("suspend_trigger") {
+	// If ANY of the triggers changed, we collect all triggers and set them
+	if d.HasChange("suspend_trigger") ||
+		d.HasChange("suspend_triggers") ||
+		d.HasChange("suspend_immediate_trigger") ||
+		d.HasChange("suspend_immediate_triggers") ||
+		d.HasChange("notify_triggers") {
 		runSetStatement = true
-		ub.SuspendAt(d.Get("suspend_trigger").(int))
-	}
-	// Support deprecated suspend_triggers.
-	if d.HasChange("suspend_triggers") {
-		runSetStatement = true
-		siTrigs := expandIntList(d.Get("suspend_triggers").(*schema.Set).List())
-		for _, t := range siTrigs {
-			ub.SuspendAt(t)
-		}
-	}
-
-	if d.HasChange("suspend_immediate_trigger") {
-		runSetStatement = true
-		ub.SuspendImmediatelyAt(d.Get("suspend_immediate_trigger").(int))
-	}
-	// Support deprecated suspend_immediate_trigger.
-	if d.HasChange("suspend_immediate_triggers") {
-		runSetStatement = true
-		siTrigs := expandIntList(d.Get("suspend_immediate_triggers").(*schema.Set).List())
-		for _, t := range siTrigs {
-			ub.SuspendImmediatelyAt(t)
-		}
-	}
-
-	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
-	for _, t := range nTrigs {
-		runSetStatement = true
-		ub.NotifyAt(t)
+		triggers := collectAllTriggers(d)
+		opts.Triggers = &triggers
 	}
 
 	if runSetStatement {
-		if err := snowflake.Exec(db, ub.Statement()); err != nil {
-			return fmt.Errorf("error updating resource monitor %v\n%w", id, err)
+		if err := client.ResourceMonitors.Alter(ctx, objectIdentifier, &opts); err != nil {
+			return fmt.Errorf("error updating resource monitor %v\n%w", objectIdentifier.Name(), err)
 		}
 	}
 
 	// Remove from account
 	if d.HasChange("set_for_account") && !d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, ub.UnsetOnAccount()); err != nil {
-			return fmt.Errorf("error unsetting resource monitor %v on account err = %w", id, err)
+		accountOpts := sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				ResourceMonitor: sdk.NewAccountObjectIdentifier("NULL"),
+			},
+		}
+		if err := client.Accounts.Alter(ctx, &accountOpts); err != nil {
+			return fmt.Errorf("error unsetting resource monitor %v on account err = %w", objectIdentifier.Name(), err)
 		}
 	}
 
 	// Remove from all old warehouses
 	if d.HasChange("warehouses") {
 		oldV, v := d.GetChange("warehouses")
-		res := intersectionAAndNotB(oldV.(*schema.Set).List(), v.(*schema.Set).List())
+		res := ADiffB(oldV.(*schema.Set).List(), v.(*schema.Set).List())
 		for _, w := range res {
-			if err := snowflake.Exec(db, ub.UnsetOnWarehouse(w)); err != nil {
-				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
+			warehouseOpts := sdk.AlterWarehouseOptions{
+				Unset: &sdk.WarehouseUnset{
+					ResourceMonitor: sdk.Bool(true),
+				},
+			}
+			warehouseId := sdk.NewAccountObjectIdentifier(w)
+			if err := client.Warehouses.Alter(ctx, warehouseId, &warehouseOpts); err != nil {
+				return fmt.Errorf("error unsetting resource monitor %v on warehouse %v err = %w", name, warehouseId.Name(), err)
 			}
 		}
 	}
 
 	// Add to account
 	if d.HasChange("set_for_account") && d.Get("set_for_account").(bool) {
-		if err := snowflake.Exec(db, ub.SetOnAccount()); err != nil {
-			return fmt.Errorf("error setting resource monitor %v on account err = %w", id, err)
+		accountOpts := sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				ResourceMonitor: objectIdentifier,
+			},
+		}
+		if err := client.Accounts.Alter(ctx, &accountOpts); err != nil {
+			return fmt.Errorf("error setting resource monitor %v on account err = %w", name, err)
 		}
 	}
 
 	// Add to all new warehouses
 	if d.HasChange("warehouses") {
 		oldV, v := d.GetChange("warehouses")
-		res := intersectionAAndNotB(v.(*schema.Set).List(), oldV.(*schema.Set).List())
+		res := ADiffB(v.(*schema.Set).List(), oldV.(*schema.Set).List())
 		for _, w := range res {
-			if err := snowflake.Exec(db, ub.SetOnWarehouse(w)); err != nil {
-				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", id, w, err)
+			warehouseOpts := sdk.AlterWarehouseOptions{
+				Set: &sdk.WarehouseSet{
+					ResourceMonitor: objectIdentifier,
+				},
+			}
+			warehouseId := sdk.NewAccountObjectIdentifier(w)
+			if err := client.Warehouses.Alter(ctx, warehouseId, &warehouseOpts); err != nil {
+				return fmt.Errorf("error setting resource monitor %v on warehouse %v err = %w", name, warehouseId.Name(), err)
 			}
 		}
 	}
@@ -528,13 +457,61 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return ReadResourceMonitor(d, meta)
 }
 
+func collectAllTriggers(d *schema.ResourceData) []sdk.TriggerDefinition {
+
+	var suspendTriggers []sdk.TriggerDefinition
+	if v, ok := d.GetOk("suspend_trigger"); ok {
+		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+			Threshold:     v.(int),
+			TriggerAction: sdk.Suspend,
+		})
+	}
+
+	if v, ok := d.GetOk("suspend_triggers"); ok {
+		siTrigs := expandIntList(v.(*schema.Set).List())
+		for _, t := range siTrigs {
+			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+				Threshold:     t,
+				TriggerAction: sdk.Suspend,
+			})
+		}
+	}
+	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+			Threshold:     v.(int),
+			TriggerAction: sdk.SuspendImmediate,
+		})
+	}
+	// Support deprecated suspend_immediate_triggers.
+	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		sTrigs := expandIntList(v.(*schema.Set).List())
+		for _, t := range sTrigs {
+			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+				Threshold:     t,
+				TriggerAction: sdk.SuspendImmediate,
+			})
+		}
+	}
+	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
+	for _, t := range nTrigs {
+		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+			Threshold:     t,
+			TriggerAction: sdk.Notify,
+		})
+	}
+	return suspendTriggers
+}
+
 // DeleteResourceMonitor implements schema.DeleteFunc.
 func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewResourceMonitorBuilder(d.Id()).Drop()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error deleting resource monitor %v err = %w", d.Id(), err)
+	err := client.ResourceMonitors.Drop(ctx, objectIdentifier)
+	if err != nil {
+		return err
 	}
 
 	d.SetId("")

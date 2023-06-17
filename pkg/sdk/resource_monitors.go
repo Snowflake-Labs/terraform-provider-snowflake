@@ -2,8 +2,11 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -27,16 +30,114 @@ type resourceMonitors struct {
 }
 
 type ResourceMonitor struct {
-	Name string
+	Name                     string
+	CreditQuota              *float64
+	Frequency                *Frequency
+	StartTime                *time.Time
+	EndTime                  *time.Time
+	SuspendTriggers          []TriggerDefinition
+	SuspendImmediateTriggers []TriggerDefinition
+	NotifyTriggers           []TriggerDefinition
+	SetForAccount            bool
+	Comment                  *string
+	NotifyUsers              []string
 }
 
 type resourceMonitorRow struct {
-	Name string `db:"name"`
+	Name               string         `db:"name"`
+	CreditQuota        sql.NullString `db:"credit_quota"`
+	UsedCredits        sql.NullString `db:"used_credits"`
+	RemainingCredits   sql.NullString `db:"remaining_credits"`
+	Level              sql.NullString `db:"level"`
+	Frequency          sql.NullString `db:"frequency"`
+	StartTime          sql.NullTime   `db:"start_time"`
+	EndTime            sql.NullTime   `db:"end_time"`
+	NotifyAt           sql.NullString `db:"notify_at"`
+	SuspendAt          sql.NullString `db:"suspend_at"`
+	SuspendImmediateAt sql.NullString `db:"suspend_immediately_at"`
+	Owner              sql.NullString `db:"owner"`
+	Comment            sql.NullString `db:"comment"`
+	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
-func (row *resourceMonitorRow) toResourceMonitor() *ResourceMonitor {
-	return &ResourceMonitor{
+func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
+	resourceMonitor := &ResourceMonitor{
 		Name: row.Name,
+	}
+	if row.CreditQuota.Valid {
+		creditQuota, err := strconv.ParseFloat(row.CreditQuota.String, 64)
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.CreditQuota = &creditQuota
+	}
+	if row.Frequency.Valid {
+		frequency, err := FrequencyFromString(row.Frequency.String)
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.Frequency = frequency
+	}
+	if row.StartTime.Valid {
+		resourceMonitor.StartTime = &row.StartTime.Time
+	}
+	if row.EndTime.Valid {
+		resourceMonitor.EndTime = &row.EndTime.Time
+	}
+	suspendTriggers, err := extractTriggers(row.SuspendAt, Suspend)
+	if err != nil {
+		return nil, err
+	}
+	resourceMonitor.SuspendTriggers = suspendTriggers
+	suspendImmediateTriggers, err := extractTriggers(row.SuspendImmediateAt, SuspendImmediate)
+	if err != nil {
+		return nil, err
+	}
+	resourceMonitor.SuspendImmediateTriggers = suspendImmediateTriggers
+	notifyTriggers, err := extractTriggers(row.NotifyAt, Notify)
+	if err != nil {
+		return nil, err
+	}
+	resourceMonitor.NotifyTriggers = notifyTriggers
+	if row.Comment.Valid {
+		resourceMonitor.Comment = &row.Comment.String
+	}
+	resourceMonitor.NotifyUsers = extractUsers(row.NotifyUsers)
+
+	if row.Level.Valid && row.Level.String == "ACCOUNT" {
+		resourceMonitor.SetForAccount = true
+	} else {
+		resourceMonitor.SetForAccount = false
+	}
+
+	return resourceMonitor, nil
+
+}
+
+// extractTriggerInts converts the triggers in the DB (stored as a comma
+// separated string with trailing %s) into a slice of ints.
+func extractTriggers(s sql.NullString, trigger triggerAction) ([]TriggerDefinition, error) {
+	// Check if this is NULL
+	if !s.Valid {
+		return []TriggerDefinition{}, nil
+	}
+	ints := strings.Split(s.String, ",")
+	out := make([]TriggerDefinition, 0, len(ints))
+	for _, i := range ints {
+		threshold, err := strconv.Atoi(i[:len(i)-1])
+		if err != nil {
+			return out, fmt.Errorf("failed to convert %v to integer err = %w", i, err)
+		}
+		out = append(out, TriggerDefinition{Threshold: threshold, TriggerAction: trigger})
+	}
+	return out, nil
+}
+
+func extractUsers(s sql.NullString) []string {
+	if s.Valid && s.String != "" {
+		return strings.Split(s.String, ", ")
+	} else {
+		return []string{}
 	}
 }
 
@@ -48,21 +149,19 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 	return ObjectTypeResourceMonitor
 }
 
-
-
 // CreateResourceMonitorOptions contains options for creating a resource monitor.
 type CreateResourceMonitorOptions struct {
 	create          bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
-	with            bool                    `ddl:"static" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
+	with            *bool                   `ddl:"keyword" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
 
-	//optional, at least one
+	// optional, at least one
 	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimeStamp *string              `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
-	EndTimeStamp   *string              `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
+	StartTimeStamp *string              `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimeStamp   *string              `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 	NotifyUsers    *NotifyUsers         `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 	Triggers       *[]TriggerDefinition `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
@@ -71,7 +170,10 @@ func (opts *CreateResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
+	return nil
+}
 
+func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error {
 	if opts == nil || everyValueNil(
 		opts.CreditQuota,
 		opts.Frequency,
@@ -80,19 +182,12 @@ func (opts *CreateResourceMonitorOptions) validate() error {
 		opts.NotifyUsers,
 		opts.Triggers,
 	) {
-		return errors.New("No alter action specified")
-	}
-	if (opts.Frequency != nil && opts.StartTimeStamp == nil) || (opts.Frequency == nil && opts.StartTimeStamp != nil) {
-		return errors.New("must specify frequency and start time together")
-	}
-
-	return nil
-}
-
-func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error {
-	if opts == nil {
 		opts = &CreateResourceMonitorOptions{}
+		opts.with = Bool(false)
+	} else {
+		opts.with = Bool(true)
 	}
+
 	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err
@@ -107,11 +202,10 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 
 type TriggerDefinition struct {
 	on            bool          `ddl:"static" sql:"ON"`      //lint:ignore U1000 This is used in the ddl tag
-	Threshold     int           `ddl:"keyword" `             //lint:ignore U1000 This is used in the ddl tag
+	Threshold     int           `ddl:"keyword"`              //lint:ignore U1000 This is used in the ddl tag
 	percent       bool          `ddl:"static" sql:"PERCENT"` //lint:ignore U1000 This is used in the ddl tag
 	do            bool          `ddl:"static" sql:"DO"`      //lint:ignore U1000 This is used in the ddl tag
 	TriggerAction triggerAction `ddl:"keyword" `             //lint:ignore U1000 This is used in the ddl tag
-
 }
 
 type triggerAction string
@@ -123,41 +217,17 @@ const (
 )
 
 type NotifyUsers struct {
-	//tutaj walidacja zwykla chyba, a nie w typie przekazane ze jest min 1
-	Users []string `ddl:"list,parentheses,no_comma"`
+	Users []NotifiedUser `ddl:"list,parentheses,comma"`
 }
 
-type StartTimeStamp interface {
-	startTimeStamp()
-	String() string
-}
-
-// func StartTimeStampFromString(s string) (StartTimeStamp, error) {
-// 	if strings.ToUpper(s) == "IMMEDIATELY" {
-// 		return Immediately{}, nil
-// 	}
-// 	if 
-// }
-type Immediately struct{}
-
-func (Immediately) startTimeStamp() {}
-func (Immediately) String() string {
-	return "IMMEDIATELY"
-}
-
-// time na pewno do poprawki, zobacz jak te timestampy ograć
-type TimeStamp time.Time
-
-func (TimeStamp) startTimeStamp() {}
-
-func (ts TimeStamp) String() string {
-	return (time.Time)(ts).String()
-
+type NotifiedUser struct {
+	Name string `ddl:"keyword,double_quotes"`
 }
 
 type Frequency string
 
 func FrequencyFromString(s string) (*Frequency, error) {
+	s = strings.ToUpper(s)
 	if monthly := string(Monthly); monthly == s {
 		return (*Frequency)(&monthly), nil
 	}
@@ -191,21 +261,16 @@ type AlterResourceMonitorOptions struct {
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
+	NotifyUsers     *NotifyUsers            `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
+	Triggers        *[]TriggerDefinition    `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 
 func (opts *AlterResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if opts == nil || opts.Set == nil || everyValueNil(
-		opts.Set.CreditQuota,
-		opts.Set.Frequency,
-		opts.Set.StartTimeStamp,
-		opts.Set.EndTimeStamp,
-		opts.Set.NotifyUsers,
-		opts.Set.Triggers,
-	) {
-		return errors.New("No alter action specified")
+	if opts.Set == nil {
+		return nil
 	}
 	if (opts.Set.Frequency != nil && opts.Set.StartTimeStamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimeStamp != nil) {
 		return errors.New("must specify frequency and start time together")
@@ -215,18 +280,29 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 }
 
 func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
+	if opts == nil {
+		opts = &AlterResourceMonitorOptions{}
+	}
+	opts.name = id
 
-	return nil
+	if err := opts.validate(); err != nil {
+		return err
+	}
+	sql, err := structToSQL(opts)
+	if err != nil {
+		return err
+	}
+	_, err = v.client.exec(ctx, sql)
+	return err
+
 }
 
 type ResourceMonitorSet struct {
-	//at least one
-	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
-	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimeStamp *string              `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
-	EndTimeStamp   *string              `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
-	NotifyUsers    *NotifyUsers         `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
-	Triggers       *[]TriggerDefinition `ddl:"keyword,no_comma" sql:"TRIGGERS"`
+	// at least one
+	CreditQuota    *int       `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
+	Frequency      *Frequency `ddl:"parameter,equals" sql:"FREQUENCY"`
+	StartTimeStamp *string    `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
+	EndTimeStamp   *string    `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
 }
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
@@ -287,7 +363,11 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOp
 	}
 	resourceMonitors := make([]*ResourceMonitor, 0, len(rows))
 	for _, row := range rows {
-		resourceMonitors = append(resourceMonitors, row.toResourceMonitor())
+		resourceMonitor, err := row.toResourceMonitor()
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitors = append(resourceMonitors, resourceMonitor)
 	}
 	return resourceMonitors, nil
 }

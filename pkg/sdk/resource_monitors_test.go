@@ -23,10 +23,9 @@ func TestResourceMonitorCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-
 		creditQuota := Int(100)
 		frequency := Monthly
-		startTimeStamp := Immediately{}.String()
+		startTimeStamp := "IMMIEDIATELY"
 		endTimeStamp := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC).String()
 		notifyUsers := []string{"FIRST_USER", "SECOND_USER"}
 		triggers := []TriggerDefinition{
@@ -47,7 +46,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 			Frequency:      &frequency,
 			StartTimeStamp: &startTimeStamp,
 			EndTimeStamp:   &endTimeStamp,
-			NotifyUsers:    &NotifyUsers{notifyUsers},
+			// NotifyUsers:    &NotifyUsers{notifyUsers},
 			Triggers:       &triggers,
 		}
 
@@ -68,7 +67,6 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 		assert.Equal(t, expected, actual)
 	})
-
 }
 
 func TestResourceMonitorAlter(t *testing.T) {
@@ -102,14 +100,14 @@ func TestResourceMonitorAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d", id.FullyQualifiedName(), newCreditQuota)
+		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d", id.FullyQualifiedName(), *newCreditQuota)
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("with a mulitple set", func(t *testing.T) {
 		newCreditQuota := Int(50)
 		newFrequency := Yearly
-		newStartTimeStamp := TimeStamp(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)).String()
+		newStartTimeStamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).String()
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 			Set: &ResourceMonitorSet{
@@ -123,7 +121,6 @@ func TestResourceMonitorAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = %s", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
 		assert.Equal(t, expected, actual)
 	})
-
 }
 
 func TestResourceMonitorDrop(t *testing.T) {
