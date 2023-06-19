@@ -328,42 +328,24 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
-		case "parameter":
-
-			// time is a weird struct - you don't want to parse it, just get the string value.
-			// since it is a built-in type we can't change anything about it
-			if tm, ok := reflectedValue.(time.Time); ok {
-				clause, err := b.parseInterface(tm, field.Tag)
-				if err != nil {
-					return nil, err
-				}
-				clauses = append(clauses, clause)
-			} else {
-				structClauses, err := b.parseStruct(reflectedValue)
-				if err != nil {
-					return nil, err
-				}
-				if len(structClauses) != 1 {
-					return nil, fmt.Errorf("expected 1 field in parameter struct, got %d", len(structClauses))
-				}
-				innerClause := structClauses[0]
-				clauses = append(clauses, sqlParameterClause{
-					key:   sqlTag,
-					value: innerClause,
-					qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
-					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
-					rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
-				})
-			}
-			return b.renderStaticClause(clauses...), nil
 		}
 	}
 
-	fieldStructClauses, err := b.parseStruct(reflectedValue)
-	if err != nil {
-		return nil, err
+	// time is a weird struct - you don't want to parse it, just get the string value.
+	// since it is a built-in type we can't change anything about it
+	if tm, ok := reflectedValue.(time.Time); ok {
+		clause, err := b.parseInterface(tm, field.Tag)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, clause)
+	} else {
+		fieldStructClauses, err := b.parseStruct(reflectedValue)
+		if err != nil {
+			return nil, err
+		}
+		clauses = append(clauses, fieldStructClauses...)
 	}
-	clauses = append(clauses, fieldStructClauses...)
 	return b.renderStaticClause(clauses...), nil
 }
 
