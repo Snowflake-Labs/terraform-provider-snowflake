@@ -117,7 +117,6 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 			err = client.ResourceMonitors.Drop(ctx, id)
 			require.NoError(t, err)
 		})
-
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -161,8 +160,12 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 
-		oldTriggers := append(resourceMonitor.SuspendImmediateTriggers, append(resourceMonitor.NotifyTriggers, resourceMonitor.SuspendTriggers...)...)
-		newTriggers := append(oldTriggers, TriggerDefinition{Threshold: 30, TriggerAction: Notify})
+		oldTriggers := []TriggerDefinition{}
+		oldTriggers = append(oldTriggers, resourceMonitor.NotifyTriggers...)
+		oldTriggers = append(oldTriggers, resourceMonitor.SuspendTriggers...)
+		oldTriggers = append(oldTriggers, resourceMonitor.SuspendImmediateTriggers...)
+		newTriggers := oldTriggers
+		newTriggers = append(newTriggers, TriggerDefinition{Threshold: 30, TriggerAction: Notify})
 		alterOptions := &AlterResourceMonitorOptions{
 			Triggers: &newTriggers,
 		}
@@ -176,12 +179,13 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = resourceMonitors[0]
-		allTriggers := append(resourceMonitor.SuspendImmediateTriggers, append(resourceMonitor.NotifyTriggers, resourceMonitor.SuspendTriggers...)...)
+		allTriggers := resourceMonitor.SuspendImmediateTriggers
+		allTriggers = append(allTriggers, resourceMonitor.NotifyTriggers...)
+		allTriggers = append(allTriggers, resourceMonitor.SuspendTriggers...)
 		assert.ElementsMatch(t, newTriggers, allTriggers)
-
 	})
 
-	t.Run("when settting credit quota", func(t *testing.T) {
+	t.Run("when setting credit quota", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		creditQuota := 100
@@ -202,7 +206,6 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor = resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
 	})
-
 }
 
 func TestInt_ResourceMonitorDrop(t *testing.T) {

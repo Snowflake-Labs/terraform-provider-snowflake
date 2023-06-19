@@ -103,7 +103,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("with a mulitple set", func(t *testing.T) {
+	t.Run("with a multitple set", func(t *testing.T) {
 		newCreditQuota := Int(50)
 		newFrequency := Yearly
 		newStartTimeStamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).String()

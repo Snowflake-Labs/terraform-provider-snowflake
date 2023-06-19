@@ -111,7 +111,6 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 	}
 
 	return resourceMonitor, nil
-
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
@@ -242,7 +241,7 @@ func FrequencyFromString(s string) (*Frequency, error) {
 	if never := string(Never); never == s {
 		return (*Frequency)(&never), nil
 	}
-	return nil, errors.New(fmt.Sprintf("Invalid frequence type: %s", s))
+	return nil, errors.New(fmt.Sprintf("Invalid frequency type: %s", s))
 }
 
 const (
@@ -293,7 +292,6 @@ func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier
 	}
 	_, err = v.client.exec(ctx, sql)
 	return err
-
 }
 
 type ResourceMonitorSet struct {

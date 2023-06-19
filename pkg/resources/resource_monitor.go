@@ -217,7 +217,6 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	ctx := context.Background()
 	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, objectIdentifier)
-
 	if err != nil {
 		return err
 	}
@@ -458,8 +457,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 }
 
 func collectAllTriggers(d *schema.ResourceData) []sdk.TriggerDefinition {
-
-	var suspendTriggers []sdk.TriggerDefinition
+	suspendTriggers := []sdk.TriggerDefinition{}
 	if v, ok := d.GetOk("suspend_trigger"); ok {
 		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 			Threshold:     v.(int),
