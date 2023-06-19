@@ -1,24 +1,16 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-const (
-	alertIDDelimiter = '|'
 )
 
 var alertSchema = map[string]*schema.Schema{
@@ -110,51 +102,6 @@ var alertSchema = map[string]*schema.Schema{
 	},
 }
 
-type alertID struct {
-	DatabaseName string
-	SchemaName   string
-	AlertName    string
-}
-
-// String() takes in a alertID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|AlertName.
-func (aId *alertID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = alertIDDelimiter
-	dataIdentifiers := [][]string{{aId.DatabaseName, aId.SchemaName, aId.AlertName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strAlertID := strings.TrimSpace(buf.String())
-	return strAlertID, nil
-}
-
-// alertIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|AlertName
-// and returns a alertID object.
-func alertIDFromString(stringID string) (*alertID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = pipeIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per alert")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	alertResult := &alertID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		AlertName:    lines[0][2],
-	}
-	return alertResult, nil
-}
-
 // Alert returns a pointer to the resource representing an alert.
 func Alert() *schema.Resource {
 	return &schema.Resource{
@@ -179,7 +126,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	alert, err := client.Alerts.ShowByID(ctx, objectIdentifier)
 
-	if errors.Is(err, sql.ErrNoRows) {
+	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] alert (%s) not found", d.Id())
 		d.SetId("")
@@ -189,7 +136,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("enabled", alert.State == sdk.Started); err != nil {
+	if err := d.Set("enabled", alert.State == sdk.AlertStarted); err != nil {
 		return err
 	}
 
@@ -198,6 +145,10 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("database", alert.DatabaseName); err != nil {
+		return err
+	}
+
+	if err := d.Set("schedule", alert.Schedule); err != nil {
 		return err
 	}
 
@@ -258,7 +209,7 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	enabled := d.Get("enabled").(bool)
 
 	if enabled {
-		opts := sdk.AlterAlertOptions{Operation: &sdk.Resume}
+		opts := sdk.AlterAlertOptions{Action: &sdk.Resume}
 		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
 		if err != nil {
 			return err
@@ -307,50 +258,72 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	opts := &sdk.AlterAlertOptions{
+		Set:   &sdk.AlertSet{},
+		Unset: &sdk.AlertUnset{},
+	}
+	runSetStatement := false
+	runUnsetStatement := false
+
 	if d.HasChange("warehouse") {
-		alterOptions := &sdk.AlterAlertOptions{}
-		warehouseName := d.Get("warehouse").(string)
-		warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
-		alterOptions.Set = &sdk.AlertSet{
-			Warehouse: &warehouse,
-		}
-		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
-		if err != nil {
-			return fmt.Errorf("error updating warehouse on alert %v", objectIdentifier.Name())
+		if v, ok := d.GetOk("warehouse"); ok {
+			runSetStatement = true
+			warehouseName := v.(string)
+			warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
+			opts.Set.Warehouse = &warehouse
+		} else {
+			runUnsetStatement = false
+			opts.Unset.Warehouse = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("alert_schedule") {
-		alertSchedule := getAlertSchedule(d)
-		alterOptions := &sdk.AlterAlertOptions{}
-		alterOptions.Set = &sdk.AlertSet{
-			Schedule: &alertSchedule,
-		}
-		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
-		if err != nil {
-			return fmt.Errorf("error updating schedule on alert %v", objectIdentifier.Name())
+		if _, ok := d.GetOk("alert_schedule"); ok {
+			runSetStatement = true
+			alertSchedule := getAlertSchedule(d)
+			opts.Set.Schedule = &alertSchedule
+		} else {
+			runUnsetStatement = true
+			opts.Unset.Schedule = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("comment") {
-		newComment := d.Get("comment").(string)
-		alterOptions := &sdk.AlterAlertOptions{}
-		alterOptions.Set = &sdk.AlertSet{
-			Comment: &newComment,
+		if v, ok := d.GetOk("comment"); ok {
+			runSetStatement = true
+			newComment := v.(string)
+			opts.Set.Comment = &newComment
+		} else {
+			runUnsetStatement = true
+			opts.Unset.Comment = sdk.Bool(true)
 		}
-		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
+	}
+
+	if runSetStatement {
+		setOptions := &sdk.AlterAlertOptions{Set: opts.Set}
+		err := client.Alerts.Alter(ctx, objectIdentifier, setOptions)
 		if err != nil {
-			return fmt.Errorf("error updating schedule on comment %v", objectIdentifier.Name())
+			return fmt.Errorf("error updating alert %v: %w", objectIdentifier.Name(), err)
 		}
+
+	}
+
+	if runUnsetStatement {
+		unsetOptions := &sdk.AlterAlertOptions{Unset: opts.Unset}
+		err := client.Alerts.Alter(ctx, objectIdentifier, unsetOptions)
+		if err != nil {
+			return fmt.Errorf("error updating alert %v: %w", objectIdentifier.Name(), err)
+		}
+
 	}
 
 	if d.HasChange("condition") {
 		condition := d.Get("condition").(string)
 		alterOptions := &sdk.AlterAlertOptions{}
-		alterOptions.ModifyCondition = &condition
+		alterOptions.ModifyCondition = &[]string{condition}
 		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return fmt.Errorf("error updating schedule on condition %v", objectIdentifier.Name())
+			return fmt.Errorf("error updating schedule on condition %v: %w", objectIdentifier.Name(), err)
 		}
 	}
 
@@ -360,7 +333,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		alterOptions.ModifyAction = &action
 		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return fmt.Errorf("error updating schedule on action %v", objectIdentifier.Name())
+			return fmt.Errorf("error updating schedule on action %v: %w", objectIdentifier.Name(), err)
 		}
 	}
 

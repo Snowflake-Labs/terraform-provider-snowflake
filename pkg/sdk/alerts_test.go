@@ -110,7 +110,7 @@ func TestAlertAlter(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name: id,
 			Unset: &AlertUnset{
-				comment: Bool(true),
+				Comment: Bool(true),
 			},
 		}
 		err := opts.validate()

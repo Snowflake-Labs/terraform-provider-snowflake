@@ -45,12 +45,12 @@ type CreateAlertOptions struct {
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 
 	// required
-	condition AlertCondition `ddl:"condition,parentheses"   sql:"IF"`
-	action    string         `ddl:"parameter,no_equals" sql:"THEN"`
+	condition []AlertCondition `ddl:"list,parentheses,no_comma"   sql:"IF"`
+	action    string           `ddl:"parameter,no_equals" sql:"THEN"`
 }
 
 type AlertCondition struct {
-	Condition string `ddl:"condition,parentheses" sql:"EXISTS"`
+	Condition []string `ddl:"list,parentheses,no_comma" sql:"EXISTS"`
 }
 
 func (opts *CreateAlertOptions) validate() error {
@@ -69,7 +69,7 @@ func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehous
 	opts.warehouse = warehouse
 	opts.schedule = schedule
 	opts.name = id
-	opts.condition = AlertCondition{condition}
+	opts.condition = []AlertCondition{{Condition: []string{condition}}}
 	opts.action = action
 	if err := opts.validate(); err != nil {
 		return err
@@ -82,20 +82,20 @@ func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehous
 	return err
 }
 
-type AlertOperation string
+type AlertAction string
 
 var (
 	// Resume makes a suspended alert active.
-	Resume AlertOperation = "RESUME"
+	Resume AlertAction = "RESUME"
 	// Suspend puts the alert into a “Suspended” state.
-	Suspend AlertOperation = "SUSPEND"
+	Suspend AlertAction = "SUSPEND"
 )
 
 type AlertState string
 
 var (
-	Started   AlertState = "started"
-	Suspended AlertState = "suspended"
+	AlertStarted   AlertState = "started"
+	AlertSuspended AlertState = "suspended"
 )
 
 type AlterAlertOptions struct {
@@ -105,11 +105,11 @@ type AlterAlertOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	Operation       *AlertOperation `ddl:"keyword"`
-	Set             *AlertSet       `ddl:"keyword" sql:"SET"`
-	Unset           *AlertUnset     `ddl:"keyword" sql:"UNSET"`
-	ModifyCondition *string         `ddl:"condition,parentheses" sql:"MODIFY CONDITION EXISTS"`
-	ModifyAction    *string         `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
+	Action          *AlertAction `ddl:"keyword"`
+	Set             *AlertSet    `ddl:"keyword" sql:"SET"`
+	Unset           *AlertUnset  `ddl:"keyword" sql:"UNSET"`
+	ModifyCondition *[]string    `ddl:"list,parentheses,no_comma" sql:"MODIFY CONDITION EXISTS"`
+	ModifyAction    *string      `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
 }
 
 func (opts *AlterAlertOptions) validate() error {
@@ -117,10 +117,10 @@ func (opts *AlterAlertOptions) validate() error {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.Operation, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
+	if everyValueNil(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		return errors.New("No alter action specified")
 	}
-	if !exactlyOneValueSet(opts.Operation, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
+	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		return errors.New(`
 		Only one of the following actions can be performed at a time:
 		{
@@ -143,9 +143,9 @@ type AlertSet struct {
 }
 
 type AlertUnset struct {
-	warehouse *bool `ddl:"keyword" sql:"WAREHOUSE"`
-	schedule  *bool `ddl:"keyword" sql:"SCHEDULE"`
-	comment   *bool `ddl:"keyword" sql:"COMMENT"`
+	Warehouse *bool `ddl:"keyword" sql:"WAREHOUSE"`
+	Schedule  *bool `ddl:"keyword" sql:"SCHEDULE"`
+	Comment   *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error {
@@ -165,13 +165,13 @@ func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alt
 	return err
 }
 
-type DropAlertOptions struct {
+type dropAlertOptions struct {
 	drop  bool                   `ddl:"static" sql:"DROP"`  //lint:ignore U1000 This is used in the ddl tag
 	alert bool                   `ddl:"static" sql:"ALERT"` //lint:ignore U1000 This is used in the ddl tag
 	name  SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *DropAlertOptions) validate() error {
+func (opts *dropAlertOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -180,7 +180,7 @@ func (opts *DropAlertOptions) validate() error {
 
 func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 	// alert drop does not support [IF EXISTS] so there are no drop options.
-	opts := &DropAlertOptions{
+	opts := &dropAlertOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
