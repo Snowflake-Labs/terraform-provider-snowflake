@@ -241,7 +241,7 @@ func FrequencyFromString(s string) (*Frequency, error) {
 	if never := string(Never); never == s {
 		return (*Frequency)(&never), nil
 	}
-	return nil, errors.New(fmt.Sprintf("Invalid frequency type: %s", s))
+	return nil, fmt.Errorf("Invalid frequency type: %s", s)
 }
 
 const (

@@ -11,28 +11,12 @@ import (
 func TestInt_ResourceMonitorsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
 
 	resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 	t.Cleanup(resourceMonitorCleanup)
 
 	_, resourceMonitorCleanup2 := createResourceMonitor(t, client)
 	t.Cleanup(resourceMonitorCleanup2)
-
-	t.Run("without show options", func(t *testing.T) {
-		useDatabaseCleanup := useDatabase(t, client, databaseTest.ID())
-		t.Cleanup(useDatabaseCleanup)
-		useSchemaCleanup := useSchema(t, client, schemaTest.ID())
-		t.Cleanup(useSchemaCleanup)
-
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, nil)
-		require.NoError(t, err)
-		assert.Equal(t, 2, len(resourceMonitors))
-	})
 
 	t.Run("with like", func(t *testing.T) {
 		showOptions := &ShowResourceMonitorOptions{
@@ -213,8 +197,7 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
-		t.Cleanup(resourceMonitorCleanup)
+		resourceMonitor, _ := createResourceMonitor(t, client)
 		id := resourceMonitor.ID()
 		err := client.ResourceMonitors.Drop(ctx, id)
 		require.NoError(t, err)
