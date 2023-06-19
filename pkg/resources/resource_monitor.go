@@ -174,7 +174,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ResourceMonitors.Create(ctx, objectIdentifier, opts)
 	if err != nil {
-		fmt.Errorf("error creating resource monitor %v err = %w", name, err)
+		return fmt.Errorf("error creating resource monitor %v err = %w", name, err)
 	}
 	d.SetId(name)
 

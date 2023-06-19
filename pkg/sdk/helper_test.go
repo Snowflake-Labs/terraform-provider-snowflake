@@ -309,19 +309,6 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 	}
 }
 
-func createUser(t *testing.T, client *Client) (string, func()) {
-	t.Helper()
-	name := randomStringRange(t, 8, 28)
-	email := "user@email.com"
-	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE USER \"%s\" EMAIL = \"%s\"", name, email))
-	require.NoError(t, err)
-	return name, func() {
-		_, err := client.exec(ctx, fmt.Sprintf("DROP USER \"%s\"", name))
-		require.NoError(t, err)
-	}
-}
-
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)

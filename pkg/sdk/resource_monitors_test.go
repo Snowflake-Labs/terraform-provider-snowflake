@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -18,7 +17,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 		opts := &CreateResourceMonitorOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := "CREATE RESOURCE MONITOR WITH"
+		expected := "CREATE RESOURCE MONITOR"
 		assert.Equal(t, expected, actual)
 	})
 
@@ -27,7 +26,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 		frequency := Monthly
 		startTimeStamp := "IMMIEDIATELY"
 		endTimeStamp := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC).String()
-		notifyUsers := []string{"FIRST_USER", "SECOND_USER"}
+		notifiedUsers := []NotifiedUser{{Name: "FIRST_USER"}, {Name: "SECOND_USER"}}
 		triggers := []TriggerDefinition{
 			{
 				Threshold:     50,
@@ -41,24 +40,24 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 		opts := &CreateResourceMonitorOptions{
 			OrReplace:      Bool(true),
+			With:           Bool(true),
 			name:           id,
 			CreditQuota:    creditQuota,
 			Frequency:      &frequency,
 			StartTimeStamp: &startTimeStamp,
 			EndTimeStamp:   &endTimeStamp,
-			// NotifyUsers:    &NotifyUsers{notifyUsers},
+			NotifyUsers:    &NotifyUsers{notifiedUsers},
 			Triggers:       &triggers,
 		}
 
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = %s END_TIMESTAMP = %s NOTIFY_USERS = (%s) TRIGGERS ON %d PERCENT DO %s ON %d PERCENT DO %s`,
+		expected := fmt.Sprintf(`CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s' END_TIMESTAMP = '%s' NOTIFY_USERS = ("FIRST_USER", "SECOND_USER") TRIGGERS ON %d PERCENT DO %s ON %d PERCENT DO %s`,
 			id.FullyQualifiedName(),
 			*creditQuota,
 			frequency,
 			startTimeStamp,
 			endTimeStamp,
-			strings.Join(notifyUsers, " "),
 			triggers[0].Threshold,
 			triggers[0].TriggerAction,
 			triggers[1].Threshold,

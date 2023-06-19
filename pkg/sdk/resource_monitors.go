@@ -155,9 +155,8 @@ type CreateResourceMonitorOptions struct {
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
-	with            *bool                   `ddl:"keyword" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
+	With            *bool                   `ddl:"keyword" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
 
-	// optional, at least one
 	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
 	StartTimeStamp *string              `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
@@ -183,9 +182,9 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 		opts.Triggers,
 	) {
 		opts = &CreateResourceMonitorOptions{}
-		opts.with = Bool(false)
+		opts.With = Bool(false)
 	} else {
-		opts.with = Bool(true)
+		opts.With = Bool(true)
 	}
 
 	opts.name = id
