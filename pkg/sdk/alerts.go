@@ -45,12 +45,12 @@ type CreateAlertOptions struct {
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 
 	// required
-	condition []AlertCondition `ddl:"list,parentheses,no_comma"   sql:"IF"`
+	condition []AlertCondition `ddl:"keyword,parentheses,no_comma"   sql:"IF"`
 	action    string           `ddl:"parameter,no_equals" sql:"THEN"`
 }
 
 type AlertCondition struct {
-	Condition []string `ddl:"list,parentheses,no_comma" sql:"EXISTS"`
+	Condition []string `ddl:"keyword,parentheses,no_comma" sql:"EXISTS"`
 }
 
 func (opts *CreateAlertOptions) validate() error {
@@ -108,7 +108,7 @@ type AlterAlertOptions struct {
 	Action          *AlertAction `ddl:"keyword"`
 	Set             *AlertSet    `ddl:"keyword" sql:"SET"`
 	Unset           *AlertUnset  `ddl:"keyword" sql:"UNSET"`
-	ModifyCondition *[]string    `ddl:"list,parentheses,no_comma" sql:"MODIFY CONDITION EXISTS"`
+	ModifyCondition *[]string    `ddl:"keyword,parentheses,no_comma" sql:"MODIFY CONDITION EXISTS"`
 	ModifyAction    *string      `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
 }
 

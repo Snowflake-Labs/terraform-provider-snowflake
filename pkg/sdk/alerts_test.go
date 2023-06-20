@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAlertPolicyCreate(t *testing.T) {
+func TestAlertCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("with complete options", func(t *testing.T) {
