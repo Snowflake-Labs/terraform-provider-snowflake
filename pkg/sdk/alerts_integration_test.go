@@ -313,7 +313,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		newCondition := "select * from DUAL where false"
 
 		alterOptions := &AlterAlertOptions{
-			ModifyCondition: &newCondition,
+			ModifyCondition: &[]string{newCondition},
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -356,7 +356,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &AlterAlertOptions{
-			Operation: &Resume,
+			Action: &Resume,
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -371,10 +371,10 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == Started)
+		assert.True(t, alerts[0].State == AlertStarted)
 
 		alterOptions = &AlterAlertOptions{
-			Operation: &Suspend,
+			Action: &Suspend,
 		}
 
 		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -389,7 +389,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == Suspended)
+		assert.True(t, alerts[0].State == AlertSuspended)
 	})
 }
 

@@ -16,7 +16,7 @@ func TestAlertPolicyCreate(t *testing.T) {
 		newComment := randomString(t)
 		warehouse := AccountObjectIdentifier{"warehouse"}
 		existsCondition := "SELECT 1"
-		condition := AlertCondition{existsCondition}
+		condition := AlertCondition{[]string{existsCondition}}
 		schedule := "1 minute"
 		action := "INSERT INTO FOO VALUES (1)"
 
@@ -24,7 +24,7 @@ func TestAlertPolicyCreate(t *testing.T) {
 			name:      id,
 			warehouse: warehouse,
 			schedule:  schedule,
-			condition: condition,
+			condition: []AlertCondition{condition},
 			action:    action,
 			Comment:   String(newComment),
 		}
@@ -53,7 +53,7 @@ func TestAlertAlter(t *testing.T) {
 		newComment := randomString(t)
 		opts := &AlterAlertOptions{
 			name:      id,
-			Operation: &Resume,
+			Action: &Resume,
 			Set: &AlertSet{
 				Comment: String(newComment),
 			},
@@ -65,7 +65,7 @@ func TestAlertAlter(t *testing.T) {
 	t.Run("with resume", func(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name:      id,
-			Operation: &Resume,
+			Action: &Resume,
 		}
 
 		err := opts.validate()
@@ -79,7 +79,7 @@ func TestAlertAlter(t *testing.T) {
 	t.Run("with suspend", func(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name:      id,
-			Operation: &Suspend,
+			Action: &Suspend,
 		}
 
 		err := opts.validate()
@@ -153,7 +153,7 @@ func TestAlertDrop(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &DropAlertOptions{}
+		opts := &dropAlertOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "DROP ALERT"
@@ -161,7 +161,7 @@ func TestAlertDrop(t *testing.T) {
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &DropAlertOptions{
+		opts := &dropAlertOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
