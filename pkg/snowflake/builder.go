@@ -267,7 +267,7 @@ func (b *SQLBuilder) Create(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, (obj).QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, (obj).QualifiedName()))
 
 	// eg. `PARAM = "value"`
 	params, err := b.renderParameters(obj, b.createConfig.parameters, true)
@@ -296,7 +296,7 @@ func (b *SQLBuilder) Alter(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(" SET")
 
@@ -327,7 +327,7 @@ func (b *SQLBuilder) Unset(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(" UNSET")
 
@@ -358,7 +358,7 @@ func (b *SQLBuilder) Drop(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(";")
 
@@ -390,7 +390,7 @@ func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 	sb.WriteString(fmt.Sprintf(" %v", b.objectType))
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(";")
 
