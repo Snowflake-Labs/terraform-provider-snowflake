@@ -33,7 +33,7 @@ func TestAlertCreate(t *testing.T) {
 		assert.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE ALERT %s WAREHOUSE = "%s" SCHEDULE = '%s' COMMENT = '%s' IF(EXISTS(%s)) THEN %s`, id.FullyQualifiedName(), warehouse.name, schedule, newComment, existsCondition, action)
+		expected := fmt.Sprintf(`CREATE ALERT %s WAREHOUSE = "%s" SCHEDULE = '%s' COMMENT = '%s' IF (EXISTS (%s)) THEN %s`, id.FullyQualifiedName(), warehouse.name, schedule, newComment, existsCondition, action)
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -131,7 +131,7 @@ func TestAlertAlter(t *testing.T) {
 		assert.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS(%s)", id.FullyQualifiedName(), modifyCondition)
+		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS (%s)", id.FullyQualifiedName(), modifyCondition)
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with modify action", func(t *testing.T) {
