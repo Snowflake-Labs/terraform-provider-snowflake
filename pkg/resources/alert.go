@@ -125,7 +125,6 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 
 	ctx := context.Background()
 	alert, err := client.Alerts.ShowByID(ctx, objectIdentifier)
-
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] alert (%s) not found", d.Id())

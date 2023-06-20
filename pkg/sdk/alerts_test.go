@@ -52,7 +52,7 @@ func TestAlertAlter(t *testing.T) {
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
 		newComment := randomString(t)
 		opts := &AlterAlertOptions{
-			name:      id,
+			name:   id,
 			Action: &Resume,
 			Set: &AlertSet{
 				Comment: String(newComment),
@@ -64,7 +64,7 @@ func TestAlertAlter(t *testing.T) {
 
 	t.Run("with resume", func(t *testing.T) {
 		opts := &AlterAlertOptions{
-			name:      id,
+			name:   id,
 			Action: &Resume,
 		}
 
@@ -78,7 +78,7 @@ func TestAlertAlter(t *testing.T) {
 
 	t.Run("with suspend", func(t *testing.T) {
 		opts := &AlterAlertOptions{
-			name:      id,
+			name:   id,
 			Action: &Suspend,
 		}
 
