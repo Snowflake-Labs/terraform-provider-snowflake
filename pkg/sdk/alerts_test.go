@@ -122,16 +122,16 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("with modify condition", func(t *testing.T) {
-		modifyCondition := String("SELECT * FROM FOO")
+		modifyCondition := "SELECT * FROM FOO"
 		opts := &AlterAlertOptions{
 			name:            id,
-			ModifyCondition: modifyCondition,
+			ModifyCondition: &[]string{modifyCondition},
 		}
 		err := opts.validate()
 		assert.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS(%s)", id.FullyQualifiedName(), *modifyCondition)
+		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS(%s)", id.FullyQualifiedName(), modifyCondition)
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with modify action", func(t *testing.T) {
