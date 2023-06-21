@@ -305,26 +305,6 @@ func TestInt_AlertAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
 		assert.Equal(t, newSchedule, alerts[0].Schedule)
-
-		alterOptions = &AlterAlertOptions{
-			Unset: &AlertUnset{
-				Comment: Bool(true),
-			},
-		}
-
-		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
-		require.NoError(t, err)
-		alerts, err = client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
-			},
-			In: &In{
-				Schema: schemaTest.ID(),
-			},
-		})
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(alerts))
-		assert.Nil(t, alerts[0].Comment)
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {

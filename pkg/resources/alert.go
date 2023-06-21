@@ -217,7 +217,7 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	alertSchedule := getAlertSchedule(d)
+	alertSchedule := getAlertSchedule(d.Get("alert_schedule"))
 
 	warehouseName := d.Get("warehouse").(string)
 	warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
@@ -252,24 +252,22 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	return ReadAlert(d, meta)
 }
 
-func getAlertSchedule(d *schema.ResourceData) string {
+func getAlertSchedule(v interface{}) string {
 	var alertSchedule string
-	if v, ok := d.GetOk("alert_schedule"); ok {
-		schedule := v.([]interface{})[0].(map[string]interface{})
-		if v, ok := schedule["cron"]; ok {
-			c := v.([]interface{})
-			if len(c) > 0 {
-				cron := c[0].(map[string]interface{})
-				cronExpression := cron["expression"].(string)
-				timeZone := cron["time_zone"].(string)
-				alertSchedule = fmt.Sprintf("USING CRON %s %s", cronExpression, timeZone)
-			}
+	schedule := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := schedule["cron"]; ok {
+		c := v.([]interface{})
+		if len(c) > 0 {
+			cron := c[0].(map[string]interface{})
+			cronExpression := cron["expression"].(string)
+			timeZone := cron["time_zone"].(string)
+			alertSchedule = fmt.Sprintf("USING CRON %s %s", cronExpression, timeZone)
 		}
-		if v, ok := schedule["interval"]; ok {
-			interval := v.(int)
-			if interval > 0 {
-				alertSchedule = fmt.Sprintf("%s MINUTE", strconv.Itoa(interval))
-			}
+	}
+	if v, ok := schedule["interval"]; ok {
+		interval := v.(int)
+		if interval > 0 {
+			alertSchedule = fmt.Sprintf("%s MINUTE", strconv.Itoa(interval))
 		}
 	}
 	return alertSchedule
@@ -294,53 +292,32 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		Unset: &sdk.AlertUnset{},
 	}
 	runSetStatement := false
-	runUnsetStatement := false
 
 	if d.HasChange("warehouse") {
-		if v, ok := d.GetOk("warehouse"); ok {
-			runSetStatement = true
-			warehouseName := v.(string)
-			warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
-			opts.Set.Warehouse = &warehouse
-		} else {
-			runUnsetStatement = true
-			opts.Unset.Warehouse = sdk.Bool(true)
-		}
+		runSetStatement = true
+		_, v := d.GetChange("warehouse")
+		warehouseName := v.(string)
+		warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
+		opts.Set.Warehouse = &warehouse
 	}
 
 	if d.HasChange("alert_schedule") {
-		if _, ok := d.GetOk("alert_schedule"); ok {
-			runSetStatement = true
-			alertSchedule := getAlertSchedule(d)
-			opts.Set.Schedule = &alertSchedule
-		} else {
-			runUnsetStatement = true
-			opts.Unset.Schedule = sdk.Bool(true)
-		}
+		runSetStatement = true
+		_, v := d.GetChange("alert_schedule")
+		alertSchedule := getAlertSchedule(v)
+		opts.Set.Schedule = &alertSchedule
 	}
 
 	if d.HasChange("comment") {
-		if v, ok := d.GetOk("comment"); ok {
-			runSetStatement = true
-			newComment := v.(string)
-			opts.Set.Comment = &newComment
-		} else {
-			runUnsetStatement = true
-			opts.Unset.Comment = sdk.Bool(true)
-		}
+		_, v := d.GetChange("comment")
+		runSetStatement = true
+		newComment := v.(string)
+		opts.Set.Comment = &newComment
 	}
 
 	if runSetStatement {
 		setOptions := &sdk.AlterAlertOptions{Set: opts.Set}
 		err := client.Alerts.Alter(ctx, objectIdentifier, setOptions)
-		if err != nil {
-			return fmt.Errorf("error updating alert %v: %w", objectIdentifier.Name(), err)
-		}
-	}
-
-	if runUnsetStatement {
-		unsetOptions := &sdk.AlterAlertOptions{Unset: opts.Unset}
-		err := client.Alerts.Alter(ctx, objectIdentifier, unsetOptions)
 		if err != nil {
 			return fmt.Errorf("error updating alert %v: %w", objectIdentifier.Name(), err)
 		}
