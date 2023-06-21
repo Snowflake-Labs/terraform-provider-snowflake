@@ -314,23 +314,6 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 				}, nil
 			}
-		case "condition":
-			structClauses, err := b.parseStruct(reflectedValue)
-			if err != nil {
-				return nil, err
-			}
-			if len(structClauses) != 1 {
-				return nil, fmt.Errorf("expected 1 field in condition struct, got %d", len(structClauses))
-			}
-			conditionBody := structClauses[0]
-
-			clauses = append(clauses, sqlConditionClause{
-				key:           sqlTag,
-				conditionBody: conditionBody,
-				pm:            b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
-			})
-			return b.renderStaticClause(clauses...), nil
-
 		case "list":
 			if sqlTag != "" {
 				clauses = append(clauses, sqlStaticClause(sqlTag))
@@ -521,15 +504,6 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
 		}
-	case "condition":
-		clause = sqlConditionClause{
-			key: sqlTag,
-			conditionBody: sqlKeywordClause{
-				key: reflectedValue,
-				qm:  NoQuotes,
-			},
-			pm: b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
-		}
 	default:
 		return nil, nil
 	}
@@ -572,18 +546,6 @@ type sqlStaticClause string
 
 func (v sqlStaticClause) String() string {
 	return string(v)
-}
-
-type sqlConditionClause struct {
-	key           string
-	conditionBody sqlClause
-	pm            parenModifier
-}
-
-func (v sqlConditionClause) String() string {
-	body := v.conditionBody.String()
-	s := v.key + v.pm.Modify(body)
-	return s
 }
 
 type sqlKeywordClause struct {
