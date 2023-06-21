@@ -42,6 +42,38 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 	})
 }
 
+func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
+	oauthIntName := strings.ToLower(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	integrationType := "AZURE"
+
+	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: externalOauthIntegrationConfig(oauthIntName, integrationType, issuer),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", oauthIntName),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "type", integrationType),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "issuer", issuer),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "snowflake_user_mapping_attribute", "LOGIN_NAME"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.0", "test"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.1", "upn"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_external_oauth_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
 	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	integrationType := "CUSTOM"

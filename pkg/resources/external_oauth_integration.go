@@ -210,7 +210,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	}
 
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
+	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing create statement: %w", err)
 	}
@@ -271,13 +271,13 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("couldn't generate describe statement: %w", err)
 	}
 
-	rows, err := db.Query(stmt)
+	rows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error querying external oauth integration: %w", err)
 	}
 
 	defer rows.Close()
-	describeOutput, err := manager.ParseDescribe(rows)
+	describeOutput, err := manager.ParseDescribe(rows.Rows)
 	if err != nil {
 		return fmt.Errorf("failed to parse result of describe: %w", err)
 	}
@@ -525,7 +525,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("couldn't generate alter statement for external oauth integration: %w", err)
 		}
 
-		_, err = db.Exec(stmt)
+		err = snowflake.Exec(db, stmt)
 		if err != nil {
 			return fmt.Errorf("error executing alter statement: %w", err)
 		}
@@ -537,7 +537,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("couldn't generate unset statement for external oauth integration: %w", err)
 		}
 
-		_, err = db.Exec(stmt)
+		err = snowflake.Exec(db, stmt)
 		if err != nil {
 			return fmt.Errorf("error executing unset statement: %w", err)
 		}
@@ -565,7 +565,7 @@ func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	}
 
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
+	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing drop statement: %w", err)
 	}
