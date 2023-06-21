@@ -303,7 +303,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 			warehouse := sdk.NewAccountObjectIdentifier(warehouseName)
 			opts.Set.Warehouse = &warehouse
 		} else {
-			runUnsetStatement = false
+			runUnsetStatement = true
 			opts.Unset.Warehouse = sdk.Bool(true)
 		}
 	}
