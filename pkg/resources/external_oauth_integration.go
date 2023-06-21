@@ -199,7 +199,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			ExternalOauthScopeMappingAttribute:           d.Get("scope_mapping_attribute").(string),
 			ExternalOauthScopeMappingAttributeOk:         isOk(d.GetOk("scope_mapping_attribute")),
 
-			Comment:   d.Get("comment").(string),
+			Comment:   sql.NullString{String: d.Get("comment").(string)},
 			CommentOk: isOk(d.GetOk("comment")),
 		},
 	}
@@ -258,7 +258,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("enabled", showOutput.Enabled); err != nil {
 		return fmt.Errorf("error setting enabled: %w", err)
 	}
-	if err := d.Set("comment", showOutput.Comment); err != nil {
+	if err := d.Set("comment", showOutput.Comment.String); err != nil {
 		return fmt.Errorf("error setting comment: %w", err)
 	}
 	// if err := d.Set("created_on", showOutput.CreatedOn.String); err != nil {
@@ -508,7 +508,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("comment") {
 		val, ok := d.GetOk("comment")
 		if ok {
-			alterInput.Comment = val.(string)
+			alterInput.Comment.String = val.(string)
 			alterInput.CommentOk = true
 			runAlter = true
 		} else {

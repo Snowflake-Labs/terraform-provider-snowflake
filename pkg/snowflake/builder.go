@@ -14,6 +14,7 @@ type ParamType string
 var (
 	Integer    ParamType = "int"
 	String     ParamType = "string"
+	NullString ParamType = "nullstring"
 	StringList ParamType = "stringlist"
 	Bool       ParamType = "bool"
 )
@@ -97,6 +98,8 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 				paramType = Integer
 			case reflect.TypeOf(""):
 				paramType = String
+			case reflect.TypeOf(sql.NullString{}):
+				paramType = NullString
 			case reflect.SliceOf(reflect.TypeOf("")):
 				paramType = StringList
 			case reflect.TypeOf(true):
@@ -222,6 +225,22 @@ func (b *SQLBuilder) renderParameters(obj Identifier, paramConf []*SQLParameter,
 			if ok.Bool() {
 				if withValues {
 					sb.WriteString(fmt.Sprintf(` %v = '%v'`, param.sqlName, rv.String()))
+				} else {
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
+				}
+			}
+		case NullString:
+			ok, err := getFieldValue(obj, param.structName+"Ok")
+			if err != nil {
+				return "", err
+			}
+			if ok.Bool() {
+				if withValues {
+					ns, ok := rv.Interface().(sql.NullString)
+					if !ok {
+						return "", fmt.Errorf("Cannot convert %v to NullString", rv)
+					}
+					sb.WriteString(fmt.Sprintf(` %v = '%v'`, param.sqlName, ns.String))
 				} else {
 					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
 				}
