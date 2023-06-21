@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -147,8 +148,39 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("schedule", alert.Schedule); err != nil {
-		return err
+	alertSchedule := alert.Schedule
+	if alertSchedule != "" {
+		if strings.Contains(alertSchedule, "MINUTE") {
+			interval, err := strconv.Atoi(strings.TrimSuffix(alertSchedule, " MINUTE"))
+			if err != nil {
+				return err
+			}
+			err = d.Set("alert_schedule", []interface{}{
+				map[string]interface{}{
+					"interval": interval,
+				},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			repScheduleParts := strings.Split(alertSchedule, " ")
+			timeZone := repScheduleParts[len(repScheduleParts)-1]
+			expression := strings.TrimSuffix(strings.TrimPrefix(alertSchedule, "USING CRON "), " "+timeZone)
+			err = d.Set("alert_schedule", []interface{}{
+				map[string]interface{}{
+					"cron": []interface{}{
+						map[string]interface{}{
+							"expression": expression,
+							"time_zone":  timeZone,
+						},
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := d.Set("schema", alert.SchemaName); err != nil {
