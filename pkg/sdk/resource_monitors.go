@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type ResourceMonitors interface {
@@ -31,15 +30,15 @@ type resourceMonitors struct {
 
 type ResourceMonitor struct {
 	Name                     string
-	CreditQuota              *float64
-	Frequency                *Frequency
-	StartTime                *time.Time
-	EndTime                  *time.Time
+	CreditQuota              float64
+	Frequency                Frequency
+	StartTime                string
+	EndTime                  string
 	SuspendTriggers          []TriggerDefinition
 	SuspendImmediateTriggers []TriggerDefinition
 	NotifyTriggers           []TriggerDefinition
 	SetForAccount            bool
-	Comment                  *string
+	Comment                  string
 	NotifyUsers              []string
 }
 
@@ -50,8 +49,8 @@ type resourceMonitorRow struct {
 	RemainingCredits   sql.NullString `db:"remaining_credits"`
 	Level              sql.NullString `db:"level"`
 	Frequency          sql.NullString `db:"frequency"`
-	StartTime          sql.NullTime   `db:"start_time"`
-	EndTime            sql.NullTime   `db:"end_time"`
+	StartTime          sql.NullString   `db:"start_time"`
+	EndTime            sql.NullString   `db:"end_time"`
 	NotifyAt           sql.NullString `db:"notify_at"`
 	SuspendAt          sql.NullString `db:"suspend_at"`
 	SuspendImmediateAt sql.NullString `db:"suspend_immediately_at"`
@@ -69,20 +68,20 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitor.CreditQuota = &creditQuota
+		resourceMonitor.CreditQuota = creditQuota
 	}
 	if row.Frequency.Valid {
 		frequency, err := FrequencyFromString(row.Frequency.String)
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitor.Frequency = frequency
+		resourceMonitor.Frequency = *frequency
 	}
 	if row.StartTime.Valid {
-		resourceMonitor.StartTime = &row.StartTime.Time
+		resourceMonitor.StartTime = row.StartTime.String
 	}
 	if row.EndTime.Valid {
-		resourceMonitor.EndTime = &row.EndTime.Time
+		resourceMonitor.EndTime = row.EndTime.String
 	}
 	suspendTriggers, err := extractTriggers(row.SuspendAt, Suspend)
 	if err != nil {
@@ -100,7 +99,7 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 	}
 	resourceMonitor.NotifyTriggers = notifyTriggers
 	if row.Comment.Valid {
-		resourceMonitor.Comment = &row.Comment.String
+		resourceMonitor.Comment = row.Comment.String
 	}
 	resourceMonitor.NotifyUsers = extractUsers(row.NotifyUsers)
 

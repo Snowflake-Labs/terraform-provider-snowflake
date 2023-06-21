@@ -88,12 +88,12 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, name, resourceMonitor.Name)
 		assert.Equal(t, frequency, resourceMonitor.Frequency)
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.NotEmpty(t, resourceMonitor.EndTime)
 		allTriggers := resourceMonitor.SuspendTriggers
 		allTriggers = append(allTriggers, resourceMonitor.SuspendImmediateTriggers...)
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		allTriggers = append(allTriggers, resourceMonitor.NotifyTriggers...)
 		assert.Equal(t, triggers, allTriggers)
 
@@ -123,7 +123,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.Nil(t, resourceMonitor.EndTime)
 		assert.Nil(t, resourceMonitor.CreditQuota)
-		assert.Equal(t, Monthly, *resourceMonitor.Frequency)
+		assert.Equal(t, Monthly, resourceMonitor.Frequency)
 		assert.Empty(t, resourceMonitor.NotifyUsers)
 		assert.Empty(t, resourceMonitor.NotifyTriggers)
 		assert.Empty(t, resourceMonitor.SuspendImmediateTriggers)
@@ -188,7 +188,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = resourceMonitors[0]
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
 }
 

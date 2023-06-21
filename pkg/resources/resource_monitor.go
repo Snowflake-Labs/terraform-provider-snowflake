@@ -220,17 +220,19 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	if err := d.Set("name", resourceMonitor.Name); err != nil {
 		return err
 	}
-	if err := d.Set("frequency", string(*resourceMonitor.Frequency)); err != nil {
+	if err := d.Set("frequency", string(resourceMonitor.Frequency)); err != nil {
 		return err
 	}
 
-	if err := d.Set("start_timestamp", resourceMonitor.StartTime.String()); err != nil {
+	if err := d.Set("start_timestamp", resourceMonitor.StartTime); err != nil {
 		return err
 	}
-	if err := d.Set("start_timestamp", resourceMonitor.EndTime.String()); err != nil {
+
+	if err := d.Set("end_timestamp", resourceMonitor.EndTime); err != nil {
 		return err
 	}
 
@@ -241,7 +243,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Snowflake returns credit_quota as a float, but only accepts input as an int
-	if err := d.Set("credit_quota", int(*resourceMonitor.CreditQuota)); err != nil {
+	if err := d.Set("credit_quota", int(resourceMonitor.CreditQuota)); err != nil {
 		return err
 	}
 
@@ -322,6 +324,22 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return err
+}
+
+// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
+func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
+	for k, v := range ns {
+		var err error
+		if v.Valid {
+			err = data.Set(k, v.String) // lintignore:R001
+		} else {
+			err = data.Set(k, "") // lintignore:R001
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // UpdateResourceMonitor implements schema.UpdateFunc.
