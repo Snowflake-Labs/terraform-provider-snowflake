@@ -64,7 +64,7 @@ func TestAccountAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128,PREVENT_UNLOAD_TO_INTERNAL_STAGES = true,JSON_INDENT = 16,MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
+		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128, PREVENT_UNLOAD_TO_INTERNAL_STAGES = true, JSON_INDENT = 16, MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -88,7 +88,7 @@ func TestAccountAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB,SSO_LOGIN_PAGE,SIMULATED_DATA_SHARING_CONSUMER,TIMEZONE,DEFAULT_DDL_COLLATION`
+		expected := `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB, SSO_LOGIN_PAGE, SIMULATED_DATA_SHARING_CONSUMER, TIMEZONE, DEFAULT_DDL_COLLATION`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -169,7 +169,7 @@ func TestAccountAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET TAG "db"."schema"."tag1" = 'v1',"db"."schema"."tag2" = 'v2'`
+		expected := `ALTER ACCOUNT SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`
 		assert.Equal(t, expected, actual)
 	})
 

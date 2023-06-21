@@ -5,8 +5,13 @@ import (
 )
 
 func IsValidDataType(v string) bool {
-	dt := DataTypeFromString(v)
-	return dt != DataTypeUnknown
+	_, err := ToDataType(v)
+	return err == nil
+}
+
+func IsValidWarehouseSize(v string) bool {
+	_, err := ToWarehouseSize(v)
+	return err == nil
 }
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {

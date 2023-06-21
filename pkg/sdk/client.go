@@ -19,22 +19,26 @@ type Client struct {
 	sessionID      string
 	accountLocator string
 
-	Accounts             Accounts
-	Comments             Comments
+	// System-Defined Functions
 	ContextFunctions     ContextFunctions
-	Databases            Databases
-	FailoverGroups       FailoverGroups
-	Grants               Grants
-	MaskingPolicies      MaskingPolicies
-	PasswordPolicies     PasswordPolicies
-	ReplicationFunctions ReplicationFunctions
-	ResourceMonitors     ResourceMonitors
-	Roles                Roles
-	SessionPolicies      SessionPolicies
-	Sessions             Sessions
-	Shares               Shares
+	ConversionFunctions  ConversionFunctions
 	SystemFunctions      SystemFunctions
-	Warehouses           Warehouses
+	ReplicationFunctions ReplicationFunctions
+
+	// DDL Commands
+	Accounts         Accounts
+	Comments         Comments
+	Databases        Databases
+	FailoverGroups   FailoverGroups
+	Grants           Grants
+	MaskingPolicies  MaskingPolicies
+	PasswordPolicies PasswordPolicies
+	ResourceMonitors ResourceMonitors
+	Roles            Roles
+	SessionPolicies  SessionPolicies
+	Sessions         Sessions
+	Shares           Shares
+	Warehouses       Warehouses
 }
 
 func NewDefaultClient() (*Client, error) {
@@ -113,6 +117,7 @@ func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
+	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.Grants = &grants{client: c}

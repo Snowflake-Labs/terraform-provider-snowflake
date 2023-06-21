@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -44,12 +43,12 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: wConfig2(prefix2),
+				Config: wConfig2(prefix2, "X-LARGE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "X-LARGE"),
 				),
 			},
 			// IMPORT
@@ -110,12 +109,12 @@ resource "snowflake_warehouse" "w" {
 	return fmt.Sprintf(s, prefix)
 }
 
-func wConfig2(prefix string) string {
+func wConfig2(prefix string, size string) string {
 	s := `
 resource "snowflake_warehouse" "w" {
 	name           = "%s"
 	comment        = "test comment 2"
-	warehouse_size = "SMALL"
+	warehouse_size = "%s"
 
 	auto_suspend          = 60
 	max_cluster_count     = 1
@@ -126,7 +125,7 @@ resource "snowflake_warehouse" "w" {
 	wait_for_provisioning = false
 }
 `
-	return fmt.Sprintf(s, prefix)
+	return fmt.Sprintf(s, prefix, size)
 }
 
 func wConfigPattern(prefix string) string {

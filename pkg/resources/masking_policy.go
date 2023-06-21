@@ -152,7 +152,10 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		columns := m["column"].([]interface{})
 		for _, c := range columns {
 			cm := c.(map[string]interface{})
-			dt := sdk.DataTypeFromString(cm["type"].(string))
+			dt, err := sdk.ToDataType(cm["type"].(string))
+			if err != nil {
+				return err
+			}
 			signature = append(signature, sdk.TableColumnSignature{
 				Name: cm["name"].(string),
 				Type: dt,
@@ -160,8 +163,10 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	returns := sdk.DataTypeFromString(returnDataType)
-
+	returns, err := sdk.ToDataType(returnDataType)
+	if err != nil {
+		return err
+	}
 	opts := &sdk.CreateMaskingPolicyOptions{}
 	if comment, ok := d.Get("comment").(string); ok {
 		opts.Comment = sdk.String(comment)
@@ -170,7 +175,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		opts.ExemptOtherPolicies = sdk.Bool(exemptOtherPolicies)
 	}
 
-	err := client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
+	err = client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
 	if err != nil {
 		return err
 	}

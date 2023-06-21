@@ -3,10 +3,10 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	snowflakevalidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -23,26 +23,20 @@ var warehouseSchema = map[string]*schema.Schema{
 		Default:  "",
 	},
 	"warehouse_size": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ValidateFunc: validation.StringInSlice([]string{
-			string(sdk.WarehouseSizeXSmall),
-			string(sdk.WarehouseSizeSmall),
-			string(sdk.WarehouseSizeMedium),
-			string(sdk.WarehouseSizeLarge),
-			string(sdk.WarehouseSizeXLarge),
-			string(sdk.WarehouseSizeXXLarge),
-			string(sdk.WarehouseSizeXXXLarge),
-			string(sdk.WarehouseSizeX4Large),
-			string(sdk.WarehouseSizeX5Large),
-			string(sdk.WarehouseSizeX6Large),
-		}, false),
+		Type:         schema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: snowflakevalidation.ValidateWarehouseSize,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			normalize := func(s string) string {
-				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
+			oldSize, err := sdk.ToWarehouseSize(old)
+			if err != nil {
+				return false
 			}
-			return normalize(old) == normalize(new)
+			newSize, err := sdk.ToWarehouseSize(new)
+			if err != nil {
+				return false
+			}
+			return oldSize == newSize
 		},
 		Description: "Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).",
 	},
@@ -168,7 +162,6 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
-
 	whType := sdk.WarehouseType(d.Get("warehouse_type").(string))
 	createOptions := &sdk.CreateWarehouseOptions{
 		Comment:                         sdk.String(d.Get("comment").(string)),
@@ -181,7 +174,10 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("warehouse_size"); ok {
-		size := sdk.WarehouseSize(strings.ReplaceAll(v.(string), "-", ""))
+		size, err := sdk.ToWarehouseSize(v.(string))
+		if err != nil {
+			return err
+		}
 		createOptions.WarehouseSize = &size
 	}
 	if v, ok := d.GetOk("max_cluster_count"); ok {
@@ -306,7 +302,11 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("warehouse_size") {
 		runSet = true
-		size := sdk.WarehouseSize(strings.ReplaceAll(d.Get("warehouse_size").(string), "-", ""))
+		v := d.Get("warehouse_size")
+		size, err := sdk.ToWarehouseSize(v.(string))
+		if err != nil {
+			return err
+		}
 		set.WarehouseSize = &size
 	}
 	if d.HasChange("max_cluster_count") {

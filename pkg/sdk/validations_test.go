@@ -9,12 +9,24 @@ import (
 func TestIsValidDataType(t *testing.T) {
 	t.Run("with valid data type", func(t *testing.T) {
 		ok := IsValidDataType("VARCHAR")
-		assert.Equal(t, ok, true)
+		assert.True(t, ok)
 	})
 
 	t.Run("with invalid data type", func(t *testing.T) {
 		ok := IsValidDataType("foo")
-		assert.Equal(t, ok, false)
+		assert.False(t, ok)
+	})
+}
+
+func TestIsValidWarehouseSize(t *testing.T) {
+	t.Run("with valid warehouse size", func(t *testing.T) {
+		ok := IsValidWarehouseSize("XSMALL")
+		assert.True(t, ok)
+	})
+
+	t.Run("with invalid warehouse size", func(t *testing.T) {
+		ok := IsValidWarehouseSize("foo")
+		assert.False(t, ok)
 	})
 }
 

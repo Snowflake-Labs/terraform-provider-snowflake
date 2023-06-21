@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.66.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.1...v0.66.2) (2023-06-13)
+
+
+### BugFixes
+
+* warehouse size validation ([#1873](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1873)) ([5bbe460](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5bbe4600e2768a66a83df67a16368888b7f1d76b))
+
+## [0.66.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.0...v0.66.1) (2023-06-03)
+
+
+### BugFixes
+
+* err when reading profile ([#1853](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1853)) ([29c4633](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/29c463383da5fbb8de0af5c957aa9f3a34572c6e))
+
+## [0.66.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.65.0...v0.66.0) (2023-06-02)
+
+
+### Features
+
+* databases sdk v2 ([#1840](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1840)) ([410b493](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/410b493ff75188b70cee91db56c60538d6823aac))
+
+
+### Misc
+
+* rename "db" symbol to "sql" and make input options more uniform in naming convention ([#1837](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1837)) ([244b5b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/244b5b45e22f66875f14be9bcb9af08ad41d37ca))
+
 ## [0.65.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.64.0...v0.65.0) (2023-05-30)
 
 

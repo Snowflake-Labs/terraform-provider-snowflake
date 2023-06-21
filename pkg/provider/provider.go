@@ -225,6 +225,7 @@ func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
 		"snowflake_account":                                 resources.Account(),
+		"snowflake_account_password_policy_attachment":      resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                       resources.AccountParameter(),
 		"snowflake_alert":                                   resources.Alert(),
 		"snowflake_api_integration":                         resources.APIIntegration(),
@@ -466,14 +467,26 @@ func DSN(
 		config.Token = oauthAccessToken
 	} else if password != "" {
 		config.Password = password
-	} else if account == "" && user == "" {
+	} else if account == "" || user == "" {
 		// If account and user are empty then we need to fall back on using profile config
 		log.Printf("[DEBUG] No account or user provided, falling back to profile %s\n", profile)
-		profileConfig, err := sdk.ProfileConfig(profile)
-		if err != nil {
-			return "", errors.New("no authentication method provided")
+		if profile == "default" {
+			defaultConfig := sdk.DefaultConfig()
+			if defaultConfig.Account == "" || defaultConfig.User == "" {
+				return "", errors.New("Account and User must be set in provider config, ~/.snowflake/config, or as an environment variable.")
+			}
+			config = sdk.MergeConfig(config, defaultConfig)
+		} else {
+			profileConfig, err := sdk.ProfileConfig(profile)
+			if err != nil {
+				return "", errors.New("could not retrieve profile config: " + err.Error())
+			}
+			if profileConfig == nil {
+				return "", errors.New("profile with name: " + profile + " not found in config file")
+			}
+			// merge any credentials found in profile with config
+			config = sdk.MergeConfig(config, profileConfig)
 		}
-		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
 	return gosnowflake.DSN(config)

@@ -47,14 +47,25 @@ func TestProfileConfig(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testFile(t, "config", []byte(c))
-	cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-	t.Cleanup(cleanupEnvVars)
-	config, err := ProfileConfig("securityadmin")
-	require.NoError(t, err)
-	assert.Equal(t, "TEST_ACCOUNT", config.Account)
-	assert.Equal(t, "TEST_USER", config.User)
-	assert.Equal(t, "abcd1234", config.Password)
-	assert.Equal(t, "SECURITYADMIN", config.Role)
+
+	t.Run("with found profile", func(t *testing.T) {
+		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
+		t.Cleanup(cleanupEnvVars)
+		config, err := ProfileConfig("securityadmin")
+		require.NoError(t, err)
+		assert.Equal(t, "TEST_ACCOUNT", config.Account)
+		assert.Equal(t, "TEST_USER", config.User)
+		assert.Equal(t, "abcd1234", config.Password)
+		assert.Equal(t, "SECURITYADMIN", config.Role)
+	})
+
+	t.Run("with not found profile", func(t *testing.T) {
+		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
+		t.Cleanup(cleanupEnvVars)
+		config, err := ProfileConfig("orgadmin")
+		require.NoError(t, err)
+		require.Nil(t, config)
+	})
 }
 
 func TestEnvConfig(t *testing.T) {

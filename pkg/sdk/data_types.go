@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -24,70 +25,67 @@ const (
 	DataTypeArray        DataType = "ARRAY"
 	DataTypeGeography    DataType = "GEOGRAPHY"
 	DataTypeGeometry     DataType = "GEOMETRY"
-
-	// DataTypeUnknown is used for testing purposes only.
-	DataTypeUnknown DataType = "UNKNOWN"
 )
 
-func DataTypeFromString(s string) DataType {
+func ToDataType(s string) (DataType, error) {
 	dType := strings.ToUpper(s)
 
 	switch dType {
 	case "DATE":
-		return DataTypeDate
+		return DataTypeDate, nil
 	case "VARIANT":
-		return DataTypeVariant
+		return DataTypeVariant, nil
 	case "OBJECT":
-		return DataTypeObject
+		return DataTypeObject, nil
 	case "ARRAY":
-		return DataTypeArray
+		return DataTypeArray, nil
 	case "GEOGRAPHY":
-		return DataTypeGeography
+		return DataTypeGeography, nil
 	case "GEOMETRY":
-		return DataTypeGeometry
+		return DataTypeGeometry, nil
 	}
 
 	numberSynonyms := []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 	if slices.ContainsFunc(numberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeNumber
+		return DataTypeNumber, nil
 	}
 
 	floatSynonyms := []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
 	if slices.ContainsFunc(floatSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeFloat
+		return DataTypeFloat, nil
 	}
 	varcharSynonyms := []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
 	if slices.ContainsFunc(varcharSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeVARCHAR
+		return DataTypeVARCHAR, nil
 	}
 	binarySynonyms := []string{"BINARY", "VARBINARY"}
 	if slices.ContainsFunc(binarySynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeBinary
+		return DataTypeBinary, nil
 	}
 	booleanSynonyms := []string{"BOOLEAN", "BOOL"}
 	if slices.Contains(booleanSynonyms, dType) {
-		return DataTypeBoolean
+		return DataTypeBoolean, nil
 	}
 
 	timestampLTZSynonyms := []string{"TIMESTAMP_LTZ"}
 	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampLTZ
+		return DataTypeTimestampLTZ, nil
 	}
 
 	timestampTZSynonyms := []string{"TIMESTAMP_TZ"}
 	if slices.ContainsFunc(timestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampTZ
+		return DataTypeTimestampTZ, nil
 	}
 
 	timestampNTZSynonyms := []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
 	if slices.ContainsFunc(timestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampNTZ
+		return DataTypeTimestampNTZ, nil
 	}
 
 	timeSynonyms := []string{"TIME"}
 	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTime
+		return DataTypeTime, nil
 	}
 
-	return DataTypeUnknown
+	return "", fmt.Errorf("invalid data type: %s", s)
 }
