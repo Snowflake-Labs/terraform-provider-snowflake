@@ -289,7 +289,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	var setSuspendImmediateTrigger bool
 	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
 		if len(siTrig) > 0 {
-			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0].Threshold); err != nil {
 				return err
 			}
 			setSuspendImmediateTrigger = true
@@ -312,7 +312,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 	if !setSuspendImmediateTrigger {
 		if len(siTrig) > 0 {
-			if err := d.Set("suspend_immediate_trigger", siTrig[0]); err != nil {
+			if err := d.Set("suspend_immediate_trigger", siTrig[0].Threshold); err != nil {
 				return err
 			}
 		} else {
