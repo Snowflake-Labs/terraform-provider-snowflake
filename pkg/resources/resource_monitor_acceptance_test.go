@@ -38,7 +38,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "80"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
 				),
 			},
@@ -86,7 +86,7 @@ resource "snowflake_resource_monitor" "test" {
 	set_for_account = true
 	notify_triggers = [50]
 	warehouses      = []
-	suspend_trigger = 75
+	suspend_trigger = 80
 	suspend_immediate_trigger = 95
 }
 `, accName)
