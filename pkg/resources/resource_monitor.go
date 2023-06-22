@@ -371,7 +371,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	var runSetStatement bool
 
-	opts := sdk.AlterResourceMonitorOptions{}
+	opts := sdk.AlterResourceMonitorOptions{Set: &sdk.ResourceMonitorSet{}}
 
 	if d.HasChange("notify_users") {
 		runSetStatement = true
