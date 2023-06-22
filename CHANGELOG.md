@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.67.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.2...v0.67.0) (2023-06-22)
+
+
+### Features
+
+* account password policy attachment ([#1824](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1824)) ([f408828](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f408828fd023c2207ec41f702cec7dae524b1e93))
+
+
+### BugFixes
+
+* Generate security integration statements using double quoted names. ([#1897](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1897)) ([a21d44f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a21d44fc9109c589a7e4c78032e2f5a62b6ed514))
+* missing 'kind' field ([#1872](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1872)) ([59b7ef5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59b7ef5d791ecce366063a5cb8e2d68c68fb3e39))
+* support empty comments in oauth integrations ([#1900](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1900)) ([53d46b3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53d46b3a97680a4bf0e402d48c7db15c0d3c6f03))
+
 ## [0.66.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.1...v0.66.2) (2023-06-13)
 
 
