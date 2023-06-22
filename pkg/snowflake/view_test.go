@@ -34,7 +34,7 @@ func TestView(t *testing.T) {
 
 	q, err := vb.Create()
 	r.NoError(err)
-	r.Equal(`CREATE SECURE VIEW "some_database"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "some_database"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' CHANGE_TRACKING = false AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q, err = vb.Secure()
 	r.NoError(err)
@@ -66,7 +66,7 @@ func TestView(t *testing.T) {
 
 	q, err = vb.Create()
 	r.NoError(err)
-	r.Equal(`CREATE SECURE VIEW "mydb"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
+	r.Equal(`CREATE SECURE VIEW "mydb"."some_schema"."test" COPY GRANTS COMMENT = 'great\' comment' CHANGE_TRACKING = false AS SELECT * FROM DUMMY WHERE blah = 'blahblah' LIMIT 1`, q)
 
 	q, err = vb.Secure()
 	r.NoError(err)

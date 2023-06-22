@@ -36,7 +36,7 @@ func TestViewCreate(t *testing.T) {
 
 	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' CHANGE_TRACKING = false AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -62,7 +62,7 @@ func TestViewCreateOrReplace(t *testing.T) {
 
 	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE OR REPLACE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
+			`^CREATE OR REPLACE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' CHANGE_TRACKING = false AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id = 'bobs-account-id'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -87,7 +87,7 @@ func TestViewCreateAmpersand(t *testing.T) {
 
 	testhelpers.WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(
-			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
+			`^CREATE SECURE VIEW "test_db"."test_schema"."good_name" COMMENT = 'great comment' CHANGE_TRACKING = false AS SELECT \* FROM test_db.PUBLIC.GREAT_TABLE WHERE account_id LIKE 'bob%'$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadView(mock)
@@ -98,9 +98,9 @@ func TestViewCreateAmpersand(t *testing.T) {
 
 func expectReadView(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{
-		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure", "is_materialized",
+		"created_on", "name", "reserved", "database_name", "schema_name", "owner", "comment", "text", "is_secure", "is_materialized", "change_tracking",
 	},
-	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "test_db", "test_schema", "admin", "great comment", "SELECT * FROM test_db.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true, false)
+	).AddRow("2019-05-19 16:55:36.530 -0700", "good_name", "", "test_db", "test_schema", "admin", "great comment", "SELECT * FROM test_db.GREAT_SCHEMA.GREAT_TABLE WHERE account_id = 'bobs-account-id'", true, false, "OFF")
 	mock.ExpectQuery(`^SHOW VIEWS LIKE 'good_name' IN SCHEMA "test_db"."test_schema"$`).WillReturnRows(rows)
 }
 

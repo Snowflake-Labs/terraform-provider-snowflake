@@ -43,9 +43,10 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	// TODO column list
 	e.consumeSpace()
 	e.consumeToken("copy grants")
-	e.consumeComment()
 	e.consumeSpace()
 	e.consumeComment()
+	e.consumeSpace()
+	e.consumeChangeTracking()
 	e.consumeSpace()
 	e.consumeToken("as")
 	e.consumeSpace()
@@ -169,6 +170,26 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 	e.pos += found
 
 	if !e.consumeToken("'") {
+		return
+	}
+}
+
+func (e *ViewSelectStatementExtractor) consumeChangeTracking() {
+	if c := e.consumeToken("change_tracking"); !c {
+		return
+	}
+
+	e.consumeSpace()
+
+	if c := e.consumeToken("="); !c {
+		return
+	}
+
+	e.consumeSpace()
+
+	if c := e.consumeToken("true"); c {
+		return
+	} else if c := e.consumeToken("false"); c {
 		return
 	}
 }
