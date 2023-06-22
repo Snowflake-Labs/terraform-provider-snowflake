@@ -3,7 +3,7 @@
 page_title: "snowflake_role_grants Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_role_grants (Resource)
