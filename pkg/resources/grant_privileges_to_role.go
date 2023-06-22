@@ -38,6 +38,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 	"on_account": {
 		Type:          schema.TypeBool,
 		Optional:      true,
+		Default:       false,
 		Description:   "If true, the privileges will be granted on the account.",
 		ConflictsWith: []string{"on_account_object", "on_schema", "on_schema_object"},
 		ForceNew:      true,
