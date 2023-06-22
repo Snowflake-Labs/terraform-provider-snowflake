@@ -264,14 +264,18 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if _, ok := d.GetOk("suspend_triggers"); ok {
-		if err := d.Set("suspend_triggers", sTrig); err != nil {
+		thresholds := []int{}
+		for _, trig := range sTrig {
+			thresholds = append(thresholds, trig.Threshold)
+		}
+		if err := d.Set("suspend_triggers", thresholds); err != nil {
 			return err
 		}
 		setSuspendTrigger = true
 	}
 	if !setSuspendTrigger {
 		if len(sTrig) > 0 {
-			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+			if err := d.Set("suspend_trigger", sTrig[0].Threshold); err != nil {
 				return err
 			}
 		} else {
@@ -297,7 +301,11 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if _, ok := d.GetOk("suspend_immediate_triggers"); ok {
-		if err := d.Set("suspend_immediate_triggers", siTrig); err != nil {
+		thresholds := []int{}
+		for _, trig := range siTrig {
+			thresholds = append(thresholds, trig.Threshold)
+		}
+		if err := d.Set("suspend_immediate_triggers", thresholds); err != nil {
 			return err
 		}
 		setSuspendImmediateTrigger = true
@@ -314,7 +322,11 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("notify_triggers", resourceMonitor.NotifyTriggers); err != nil {
+	thresholds := []int{}
+	for _, trig := range resourceMonitor.NotifyTriggers {
+		thresholds = append(thresholds, trig.Threshold)
+	}
+	if err := d.Set("notify_triggers", thresholds); err != nil {
 		return err
 	}
 
