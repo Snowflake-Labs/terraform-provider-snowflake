@@ -14,6 +14,7 @@ type ParamType string
 var (
 	Integer    ParamType = "int"
 	String     ParamType = "string"
+	NullString ParamType = "nullstring"
 	StringList ParamType = "stringlist"
 	Bool       ParamType = "bool"
 )
@@ -97,6 +98,8 @@ func parseConfigFromType(t reflect.Type) (*SQLBuilderConfig, error) {
 				paramType = Integer
 			case reflect.TypeOf(""):
 				paramType = String
+			case reflect.TypeOf(sql.NullString{}):
+				paramType = NullString
 			case reflect.SliceOf(reflect.TypeOf("")):
 				paramType = StringList
 			case reflect.TypeOf(true):
@@ -226,6 +229,22 @@ func (b *SQLBuilder) renderParameters(obj Identifier, paramConf []*SQLParameter,
 					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
 				}
 			}
+		case NullString:
+			ok, err := getFieldValue(obj, param.structName+"Ok")
+			if err != nil {
+				return "", err
+			}
+			if ok.Bool() {
+				if withValues {
+					ns, ok := rv.Interface().(sql.NullString)
+					if !ok {
+						return "", fmt.Errorf("Cannot convert %v to NullString", rv)
+					}
+					sb.WriteString(fmt.Sprintf(` %v = '%v'`, param.sqlName, ns.String))
+				} else {
+					sb.WriteString(fmt.Sprintf(` %v`, param.sqlName))
+				}
+			}
 		case StringList:
 			ok, err := getFieldValue(obj, param.structName+"Ok")
 			if err != nil {
@@ -267,7 +286,7 @@ func (b *SQLBuilder) Create(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, (obj).QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, (obj).QualifiedName()))
 
 	// eg. `PARAM = "value"`
 	params, err := b.renderParameters(obj, b.createConfig.parameters, true)
@@ -296,7 +315,7 @@ func (b *SQLBuilder) Alter(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(" SET")
 
@@ -327,7 +346,7 @@ func (b *SQLBuilder) Unset(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(" UNSET")
 
@@ -358,7 +377,7 @@ func (b *SQLBuilder) Drop(obj Identifier) (string, error) {
 	sb.WriteString(after)
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(";")
 
@@ -390,7 +409,7 @@ func (b *SQLBuilder) Describe(obj Identifier) (string, error) {
 	sb.WriteString(fmt.Sprintf(" %v", b.objectType))
 
 	// eg. "my_table"
-	sb.WriteString(fmt.Sprintf(` %v`, obj.QualifiedName()))
+	sb.WriteString(fmt.Sprintf(` "%v"`, obj.QualifiedName()))
 
 	sb.WriteString(";")
 
