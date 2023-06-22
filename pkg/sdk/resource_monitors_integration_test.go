@@ -87,7 +87,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		resourceMonitor := resourceMonitors[0]
 		require.NoError(t, err)
 		assert.Equal(t, name, resourceMonitor.Name)
-		assert.Equal(t, frequency, resourceMonitor.Frequency)
+		assert.Equal(t, *frequency, resourceMonitor.Frequency)
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.NotEmpty(t, resourceMonitor.EndTime)

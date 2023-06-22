@@ -169,7 +169,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		opts.EndTimeStamp = sdk.Pointer(v.(string))
 	}
 
-	triggers := collectAllTriggers(d)
+	triggers := collectResourceMonitorTriggers(d)
 	opts.Triggers = &triggers
 
 	err := client.ResourceMonitors.Create(ctx, objectIdentifier, opts)
@@ -252,7 +252,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	var setSuspendTrigger bool
 	if _, ok := d.GetOk("suspend_trigger"); ok {
 		if len(sTrig) > 0 {
-			if err := d.Set("suspend_trigger", sTrig[0]); err != nil {
+			if err := d.Set("suspend_trigger", sTrig[0].Threshold); err != nil {
 				return err
 			}
 			setSuspendTrigger = true
@@ -403,7 +403,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		d.HasChange("suspend_immediate_triggers") ||
 		d.HasChange("notify_triggers") {
 		runSetStatement = true
-		triggers := collectAllTriggers(d)
+		triggers := collectResourceMonitorTriggers(d)
 		opts.Triggers = &triggers
 	}
 
@@ -474,7 +474,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return ReadResourceMonitor(d, meta)
 }
 
-func collectAllTriggers(d *schema.ResourceData) []sdk.TriggerDefinition {
+func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinition {
 	suspendTriggers := []sdk.TriggerDefinition{}
 	if v, ok := d.GetOk("suspend_trigger"); ok {
 		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{

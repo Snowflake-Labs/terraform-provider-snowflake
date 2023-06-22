@@ -49,8 +49,8 @@ type resourceMonitorRow struct {
 	RemainingCredits   sql.NullString `db:"remaining_credits"`
 	Level              sql.NullString `db:"level"`
 	Frequency          sql.NullString `db:"frequency"`
-	StartTime          sql.NullString   `db:"start_time"`
-	EndTime            sql.NullString   `db:"end_time"`
+	StartTime          sql.NullString `db:"start_time"`
+	EndTime            sql.NullString `db:"end_time"`
 	NotifyAt           sql.NullString `db:"notify_at"`
 	SuspendAt          sql.NullString `db:"suspend_at"`
 	SuspendImmediateAt sql.NullString `db:"suspend_immediately_at"`
@@ -113,7 +113,7 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 }
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailing %s) into a slice of ints.
+// separated string with trailing %s) into a slice of TriggerDefinitions.
 func extractTriggers(s sql.NullString, trigger triggerAction) ([]TriggerDefinition, error) {
 	// Check if this is NULL
 	if !s.Valid {
