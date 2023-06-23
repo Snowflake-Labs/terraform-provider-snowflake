@@ -21,7 +21,71 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalOauthIntegrationConfig(oauthIntName, integrationType, issuer),
+				Config: externalOauthIntegrationConfig(oauthIntName, integrationType, issuer, "test resource"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", oauthIntName),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "type", integrationType),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "issuer", issuer),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "snowflake_user_mapping_attribute", "LOGIN_NAME"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.0", "test"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.1", "upn"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_external_oauth_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
+	oauthIntName := strings.ToLower(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	integrationType := "AZURE"
+
+	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: externalOauthIntegrationConfig(oauthIntName, integrationType, issuer, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", oauthIntName),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "type", integrationType),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "issuer", issuer),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "snowflake_user_mapping_attribute", "LOGIN_NAME"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.0", "test"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "token_user_mapping_claims.1", "upn"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_external_oauth_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
+	oauthIntName := strings.ToLower(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	integrationType := "AZURE"
+
+	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: externalOauthIntegrationConfig(oauthIntName, integrationType, issuer, "test resource"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", oauthIntName),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "type", integrationType),
@@ -88,7 +152,7 @@ func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
 	})
 }
 
-func externalOauthIntegrationConfig(name, integrationType, issuer string) string {
+func externalOauthIntegrationConfig(name, integrationType, issuer, comment string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_external_oauth_integration" "test" {
 		name = "%s"
@@ -99,7 +163,7 @@ func externalOauthIntegrationConfig(name, integrationType, issuer string) string
 		jws_keys_urls = ["https://login.windows.net/common/discovery/keys"]
 		audience_urls = ["https://analysis.windows.net/powerbi/connector/Snowflake"]
   		token_user_mapping_claims = ["upn", "test"]
-		comment = "hey"
+		comment = "%s"
 	}
-	`, name, integrationType, issuer)
+	`, name, integrationType, issuer, comment)
 }

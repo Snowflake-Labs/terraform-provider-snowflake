@@ -42,6 +42,7 @@ resource "snowflake_procedure_grant" "grant" {
 - `on_future` (Boolean) When this is set to true and a schema_name is provided, apply this grant on all future procedures in the given schema. When this is true and no schema_name is provided apply this grant on all future procedures in the given database. The procedure_name and shares fields must be unset in order to use on_future. Cannot be used together with on_all.
 - `privilege` (String) The privilege to grant on the current or future procedure. To grant all privileges, use the value `ALL PRIVILEGES`
 - `procedure_name` (String) The name of the procedure on which to grant privileges immediately (only valid if on_future is false).
+- `revert_ownership_to_role_name` (String) The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`
 - `schema_name` (String) The name of the schema containing the current or future procedures on which to grant privileges.
 - `shares` (Set of String) Grants privilege to these shares (only valid if on_future is false).
 - `with_grant_option` (Boolean) When this is set to true, allows the recipient role to grant the privileges to other roles.

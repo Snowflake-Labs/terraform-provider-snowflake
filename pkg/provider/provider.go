@@ -202,6 +202,7 @@ func GetGrantResources() resources.TerraformGrantResources {
 		"snowflake_account_grant":           resources.AccountGrant(),
 		"snowflake_database_grant":          resources.DatabaseGrant(),
 		"snowflake_external_table_grant":    resources.ExternalTableGrant(),
+		"snowflake_failover_group_grant":    resources.FailoverGroupGrant(),
 		"snowflake_file_format_grant":       resources.FileFormatGrant(),
 		"snowflake_function_grant":          resources.FunctionGrant(),
 		"snowflake_integration_grant":       resources.IntegrationGrant(),
@@ -229,6 +230,7 @@ func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
 		"snowflake_account":                                 resources.Account(),
+		"snowflake_account_password_policy_attachment":      resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                       resources.AccountParameter(),
 		"snowflake_alert":                                   resources.Alert(),
 		"snowflake_api_integration":                         resources.APIIntegration(),
@@ -288,40 +290,43 @@ func getResources() map[string]*schema.Resource {
 
 func getDataSources() map[string]*schema.Resource {
 	dataSources := map[string]*schema.Resource{
+		"snowflake_accounts":                           datasources.Accounts(),
+		"snowflake_alerts":                             datasources.Alerts(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
+		"snowflake_database":                           datasources.Database(),
 		"snowflake_database_roles":                     datasources.DatabaseRoles(),
+		"snowflake_databases":                          datasources.Databases(),
+		"snowflake_external_functions":                 datasources.ExternalFunctions(),
+		"snowflake_external_tables":                    datasources.ExternalTables(),
+		"snowflake_failover_groups":                    datasources.FailoverGroups(),
+		"snowflake_file_formats":                       datasources.FileFormats(),
+		"snowflake_functions":                          datasources.Functions(),
+		"snowflake_grants":                             datasources.Grants(),
+		"snowflake_masking_policies":                   datasources.MaskingPolicies(),
+		"snowflake_materialized_views":                 datasources.MaterializedViews(),
+		"snowflake_parameters":                         datasources.Parameters(),
+		"snowflake_pipes":                              datasources.Pipes(),
+		"snowflake_procedures":                         datasources.Procedures(),
+		"snowflake_resource_monitors":                  datasources.ResourceMonitors(),
+		"snowflake_role":                               datasources.Role(),
+		"snowflake_roles":                              datasources.Roles(),
+		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
+		"snowflake_schemas":                            datasources.Schemas(),
+		"snowflake_sequences":                          datasources.Sequences(),
+		"snowflake_shares":                             datasources.Shares(),
+		"snowflake_stages":                             datasources.Stages(),
+		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
+		"snowflake_streams":                            datasources.Streams(),
 		"snowflake_system_generate_scim_access_token":  datasources.SystemGenerateSCIMAccessToken(),
 		"snowflake_system_get_aws_sns_iam_policy":      datasources.SystemGetAWSSNSIAMPolicy(),
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
 		"snowflake_system_get_snowflake_platform_info": datasources.SystemGetSnowflakePlatformInfo(),
-		"snowflake_schemas":                            datasources.Schemas(),
 		"snowflake_tables":                             datasources.Tables(),
-		"snowflake_views":                              datasources.Views(),
-		"snowflake_materialized_views":                 datasources.MaterializedViews(),
-		"snowflake_shares":                             datasources.Shares(),
-		"snowflake_stages":                             datasources.Stages(),
-		"snowflake_file_formats":                       datasources.FileFormats(),
-		"snowflake_sequences":                          datasources.Sequences(),
-		"snowflake_streams":                            datasources.Streams(),
 		"snowflake_tasks":                              datasources.Tasks(),
-		"snowflake_masking_policies":                   datasources.MaskingPolicies(),
-		"snowflake_external_functions":                 datasources.ExternalFunctions(),
-		"snowflake_external_tables":                    datasources.ExternalTables(),
-		"snowflake_warehouses":                         datasources.Warehouses(),
-		"snowflake_resource_monitors":                  datasources.ResourceMonitors(),
-		"snowflake_storage_integrations":               datasources.StorageIntegrations(),
-		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
-		"snowflake_functions":                          datasources.Functions(),
-		"snowflake_parameters":                         datasources.Parameters(),
-		"snowflake_pipes":                              datasources.Pipes(),
-		"snowflake_procedures":                         datasources.Procedures(),
-		"snowflake_databases":                          datasources.Databases(),
-		"snowflake_database":                           datasources.Database(),
-		"snowflake_role":                               datasources.Role(),
-		"snowflake_roles":                              datasources.Roles(),
 		"snowflake_users":                              datasources.Users(),
-		"snowflake_grants":                             datasources.Grants(),
+		"snowflake_views":                              datasources.Views(),
+		"snowflake_warehouses":                         datasources.Warehouses(),
 	}
 
 	return dataSources
@@ -391,12 +396,15 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
+<<<<<<< HEAD
 	log.Printf("[INFO] account: %s\n", account)
 	log.Printf("[INFO] user: %s\n", user)
 	log.Printf("[INFO] role: %s\n", role)
 	log.Printf("[INFO] warehouse: %s\n", warehouse)
 	log.Printf("[INFO] dsn: %s\n", dsn)
 	log.Printf("[INFO] query_tag: %s\n", query_tag)
+=======
+>>>>>>> origin/main
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
@@ -484,14 +492,26 @@ func DSN(
 		config.Token = oauthAccessToken
 	} else if password != "" {
 		config.Password = password
-	} else if account == "" && user == "" {
+	} else if account == "" || user == "" {
 		// If account and user are empty then we need to fall back on using profile config
 		log.Printf("[DEBUG] No account or user provided, falling back to profile %s\n", profile)
-		profileConfig, err := sdk.ProfileConfig(profile)
-		if err != nil {
-			return "", errors.New("no authentication method provided")
+		if profile == "default" {
+			defaultConfig := sdk.DefaultConfig()
+			if defaultConfig.Account == "" || defaultConfig.User == "" {
+				return "", errors.New("Account and User must be set in provider config, ~/.snowflake/config, or as an environment variable.")
+			}
+			config = sdk.MergeConfig(config, defaultConfig)
+		} else {
+			profileConfig, err := sdk.ProfileConfig(profile)
+			if err != nil {
+				return "", errors.New("could not retrieve profile config: " + err.Error())
+			}
+			if profileConfig == nil {
+				return "", errors.New("profile with name: " + profile + " not found in config file")
+			}
+			// merge any credentials found in profile with config
+			config = sdk.MergeConfig(config, profileConfig)
 		}
-		config = sdk.MergeConfig(config, profileConfig)
 	}
 	config.Application = "terraform-provider-snowflake"
 

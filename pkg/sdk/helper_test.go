@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -12,35 +10,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func secondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+// there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
+// the account locator and by filtering the list of accounts in replication accounts by the account locator
+func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
 	t.Helper()
-	secondaryAccount := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
-	if secondaryAccount == "" {
-		t.Skip("SNOWFLAKE_SECONDARY_ACCOUNT must be set for acceptance tests")
+	ctx := context.Background()
+	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	require.NoError(t, err)
+	for _, replicationAccount := range replicationAccounts {
+		if replicationAccount.AccountLocator == currentAccountLocator {
+			return AccountIdentifier{
+				organizationName: replicationAccount.OrganizationName,
+				accountName:      replicationAccount.AccountName,
+			}
+		}
 	}
-	parts := strings.Split(secondaryAccount, ".")
-	organizationName := parts[0]
-	accountName := parts[1]
+	return AccountIdentifier{}
+}
 
-	return AccountIdentifier{
-		organizationName: organizationName,
-		accountName:      accountName,
-	}
+func getPrimaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	client := testClient(t)
+	return getAccountIdentifier(t, client)
+}
+
+func getSecondaryAccountIdentifier(t *testing.T) AccountIdentifier {
+	t.Helper()
+	client := testSecondaryClient(t)
+	return getAccountIdentifier(t, client)
 }
 
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
+	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
 }
 
 func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomStringRange(t, 8, 12), randomStringRange(t, 8, 12))
+	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
-	return NewAccountObjectIdentifier(randomStringRange(t, 8, 12))
+	return NewAccountObjectIdentifier(randomStringN(t, 12))
 }
 
 func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
@@ -95,6 +109,21 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
+const (
+	secondaryAccountProfile = "secondary_test_account"
+)
+
+func testSecondaryClient(t *testing.T) *Client {
+	t.Helper()
+
+	client, err := testClientFromProfile(t, secondaryAccountProfile)
+	if err != nil {
+		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
+	}
+
+	return client
+}
+
 func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
 	t.Helper()
 	config, err := ProfileConfig(profile)
@@ -126,6 +155,11 @@ func randomString(t *testing.T) string {
 	return gofakeit.Password(true, true, true, true, false, 28)
 }
 
+func randomStringN(t *testing.T, num int) string {
+	t.Helper()
+	return gofakeit.Password(true, true, true, true, false, num)
+}
+
 func randomStringRange(t *testing.T, min, max int) string {
 	t.Helper()
 	if min > max {
@@ -142,12 +176,75 @@ func randomIntRange(t *testing.T, min, max int) int {
 	return gofakeit.IntRange(min, max)
 }
 
-func createShare(t *testing.T, client *Client) (*Share, func()) {
+func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
-	return createShareWithOptions(t, client, &ShareCreateOptions{})
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
+	return createSessionPolicyWithOptions(t, client, id, &CreateSessionPolicyOptions{})
 }
 
-func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptions) (*Share, func()) {
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) (*SessionPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.SessionPolicies.Create(ctx, id, opts)
+	require.NoError(t, err)
+	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return sessionPolicy, func() {
+		err := client.SessionPolicies.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
+	t.Helper()
+	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{})
+}
+
+func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *CreateResourceMonitorOptions) (*ResourceMonitor, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.ResourceMonitors.Create(ctx, id, opts)
+	require.NoError(t, err)
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return resourceMonitor, func() {
+		err := client.ResourceMonitors.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
+func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
+	t.Helper()
+	objectTypes := []PluralObjectType{PluralObjectTypeRoles}
+	ctx := context.Background()
+	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	accountID := NewAccountIdentifierFromAccountLocator(currentAccount)
+	allowedAccounts := []AccountIdentifier{accountID}
+	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
+}
+
+func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *CreateFailoverGroupOptions) (*FailoverGroup, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	require.NoError(t, err)
+	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return failoverGroup, func() {
+		err := client.FailoverGroups.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createShare(t *testing.T, client *Client) (*Share, func()) {
+	t.Helper()
+	return createShareWithOptions(t, client, &CreateShareOptions{})
+}
+
+func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptions) (*Share, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
@@ -163,10 +260,10 @@ func createShareWithOptions(t *testing.T, client *Client, opts *ShareCreateOptio
 
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
-	return createWarehouseWithOptions(t, client, &WarehouseCreateOptions{})
+	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
 }
 
-func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCreateOptions) (*Warehouse, func()) {
+func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWarehouseOptions) (*Warehouse, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	id := NewAccountObjectIdentifier(name)
@@ -183,21 +280,21 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *WarehouseCre
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, &DatabaseCreateOptions{})
+	return createDatabaseWithOptions(t, client, &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, _ *DatabaseCreateOptions) (*Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOptions) (*Database, func()) {
 	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
 	err := client.Databases.Create(ctx, id, nil)
 	require.NoError(t, err)
-	return &Database{
-			Name: id.Name(),
-		}, func() {
-			err := client.Databases.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
+	database, err := client.Databases.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return database, func() {
+		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
@@ -236,7 +333,7 @@ func createTagWithOptions(t *testing.T, client *Client, database *Database, sche
 		}
 }
 
-func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *PasswordPolicyCreateOptions) (*PasswordPolicy, func()) {
+func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
@@ -280,7 +377,7 @@ func createPasswordPolicy(t *testing.T, client *Client, database *Database, sche
 	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
 }
 
-func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *MaskingPolicyCreateOptions) (*MaskingPolicy, func()) {
+func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *CreateMaskingPolicyOptions) (*MaskingPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
@@ -296,7 +393,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
 	require.NoError(t, err)
 
-	showOptions := &MaskingPolicyShowOptions{
+	showOptions := &ShowMaskingPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},
@@ -335,5 +432,5 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 		})
 	}
 	expression := "REPLACE('X', 1, 2)"
-	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &MaskingPolicyCreateOptions{})
+	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
 }

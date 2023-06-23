@@ -17,13 +17,36 @@ func TestInt_CurrentAccount(t *testing.T) {
 	assert.NotEmpty(t, account)
 }
 
+func TestInt_CurrentRole(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	role, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, role)
+}
+
+func TestInt_CurrentRegion(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	region, err := client.ContextFunctions.CurrentRegion(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, region)
+}
+
 func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
 	session, err := client.ContextFunctions.CurrentSession(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, session)
+}
+
+func TestInt_CurrentUser(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	user, err := client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, user)
 }
 
 func TestInt_CurrentDatabase(t *testing.T) {
@@ -64,4 +87,14 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, warehouse)
+}
+
+func TestInt_IsRoleInSession(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+	role, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier(currentRole))
+	require.NoError(t, err)
+	assert.True(t, role)
 }

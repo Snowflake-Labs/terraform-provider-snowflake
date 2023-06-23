@@ -52,13 +52,13 @@ func passwordPolicyConfig(s string, minLength int, maxLength int, comment string
 		name = "%v"
 		comment = "Terraform acceptance test"
 	  }
-	  
+
 	  resource "snowflake_schema" "test" {
 		name = "%v"
 		database = snowflake_database.test.name
 		comment = "Terraform acceptance test"
 	  }
-	  
+
 	resource "snowflake_password_policy" "pa" {
 		database   = snowflake_database.test.name
 		schema     = snowflake_schema.test.name
@@ -69,4 +69,62 @@ func passwordPolicyConfig(s string, minLength int, maxLength int, comment string
 		or_replace = true
 	}
 	`, s, s, s, minLength, maxLength, comment)
+}
+
+func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// Creation sets zero properly
+			{
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
+				),
+			},
+			{
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "10"),
+				),
+			},
+			// Update sets zero properly
+			{
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_password_policy.pa",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func passwordPolicyDefaultMaxageDaysConfig(s string, maxAgeDays int) string {
+	return fmt.Sprintf(`
+	resource "snowflake_database" "test" {
+		name = "%v"
+		comment = "Terraform acceptance test"
+	}
+
+	resource "snowflake_schema" "test" {
+		name = "%v"
+		database = snowflake_database.test.name
+		comment = "Terraform acceptance test"
+	}
+
+	resource "snowflake_password_policy" "pa" {
+		database     = snowflake_database.test.name
+		schema       = snowflake_schema.test.name
+		name         = "%v"
+		max_age_days = %d
+	}
+	`, s, s, s, maxAgeDays)
 }

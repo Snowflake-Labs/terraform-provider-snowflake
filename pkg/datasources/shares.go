@@ -63,10 +63,10 @@ func Shares() *schema.Resource {
 func ReadShares(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	d.SetId("shares_read")
-	pattern := d.Get(pattern).(string)
+	pattern := d.Get("pattern").(string)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	var opts sdk.ShareShowOptions
+	var opts sdk.ShowShareOptions
 	if pattern != "" {
 		opts.Like = &sdk.Like{
 			Pattern: sdk.String(pattern),

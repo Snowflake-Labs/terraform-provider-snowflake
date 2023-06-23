@@ -321,19 +321,28 @@ func deleteGenericGrantRolesAndShares(
 	meta interface{},
 	builder snowflake.GrantBuilder,
 	priv string,
+	reversionRole string,
 	roles []string,
 	shares []string,
 ) error {
 	db := meta.(*sql.DB)
 
 	for _, role := range roles {
-		if err := snowflake.ExecMulti(db, builder.Role(role).Revoke(priv)); err != nil {
+		executable := builder.Role(role).Revoke(priv)
+		if priv == "OWNERSHIP" {
+			executable = builder.Role(role).RevokeOwnership(reversionRole)
+		}
+		if err := snowflake.ExecMulti(db, executable); err != nil {
 			return err
 		}
 	}
 
 	for _, share := range shares {
-		if err := snowflake.ExecMulti(db, builder.Share(share).Revoke(priv)); err != nil {
+		executable := builder.Share(share).Revoke(priv)
+		if priv == "OWNERSHIP" {
+			executable = builder.Share(share).RevokeOwnership(reversionRole)
+		}
+		if err := snowflake.ExecMulti(db, executable); err != nil {
 			return err
 		}
 	}
@@ -342,8 +351,13 @@ func deleteGenericGrantRolesAndShares(
 
 func deleteGenericGrant(d *schema.ResourceData, meta interface{}, builder snowflake.GrantBuilder) error {
 	priv := d.Get("privilege").(string)
+	rr := d.Get("revert_ownership_to_role_name")
+	var reversionRole string
+	if rr != nil {
+		reversionRole = rr.(string)
+	}
 	roles, shares := expandRolesAndShares(d)
-	if err := deleteGenericGrantRolesAndShares(meta, builder, priv, roles, shares); err != nil {
+	if err := deleteGenericGrantRolesAndShares(meta, builder, priv, reversionRole, roles, shares); err != nil {
 		return err
 	}
 	d.SetId("")

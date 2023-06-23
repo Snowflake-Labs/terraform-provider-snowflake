@@ -24,7 +24,7 @@ func TestInt_SharesShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &ShareShowOptions{
+		showOptions := &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -36,7 +36,7 @@ func TestInt_SharesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent share", func(t *testing.T) {
-		showOptions := &ShareShowOptions{
+		showOptions := &ShowShareOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -47,7 +47,7 @@ func TestInt_SharesShow(t *testing.T) {
 	})
 
 	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &ShareShowOptions{
+		showOptions := &ShowShareOptions{
 			Limit: &LimitFrom{
 				Rows: Int(1),
 			},
@@ -64,12 +64,12 @@ func TestInt_SharesCreate(t *testing.T) {
 
 	t.Run("test complete", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		err := client.Shares.Create(ctx, id, &ShareCreateOptions{
+		err := client.Shares.Create(ctx, id, &CreateShareOptions{
 			OrReplace: Bool(true),
 			Comment:   String("test comment"),
 		})
 		require.NoError(t, err)
-		shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err := client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -90,7 +90,7 @@ func TestInt_SharesCreate(t *testing.T) {
 
 	t.Run("test no options", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		err := client.Shares.Create(ctx, id, &ShareCreateOptions{
+		err := client.Shares.Create(ctx, id, &CreateShareOptions{
 			OrReplace: Bool(true),
 			Comment:   String("test comment"),
 		})
@@ -122,7 +122,7 @@ func TestInt_SharesDrop(t *testing.T) {
 	})
 }
 
-func TestInt_Alter(t *testing.T) {
+func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
@@ -142,12 +142,12 @@ func TestInt_Alter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-
+		secondaryClient := testSecondaryClient(t)
 		accountsToAdd := []AccountIdentifier{
-			secondaryAccountIdentifier(t),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Add: &ShareAdd{
 				Accounts:          accountsToAdd,
@@ -155,7 +155,7 @@ func TestInt_Alter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err := client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -166,14 +166,14 @@ func TestInt_Alter(t *testing.T) {
 		assert.Equal(t, accountsToAdd, share.To)
 
 		// now remove the account that was added.
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Remove: &ShareRemove{
 				Accounts: accountsToAdd,
 			},
 		})
 		require.NoError(t, err)
-		shares, err = client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err = client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -197,19 +197,19 @@ func TestInt_Alter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-
+		secondaryClient := testSecondaryClient(t)
 		accountsToSet := []AccountIdentifier{
-			secondaryAccountIdentifier(t),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Set: &ShareSet{
 				Accounts: accountsToSet,
 			},
 		})
 		require.NoError(t, err)
-		shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err := client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -235,14 +235,14 @@ func TestInt_Alter(t *testing.T) {
 		})
 
 		comment := randomComment(t)
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Set: &ShareSet{
 				Comment: String(comment),
 			},
 		})
 		require.NoError(t, err)
-		shares, err := client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err := client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -253,14 +253,14 @@ func TestInt_Alter(t *testing.T) {
 		assert.Equal(t, comment, share.Comment)
 
 		// reset comment
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Unset: &ShareUnset{
 				Comment: Bool(true),
 			},
 		})
 		require.NoError(t, err)
-		shares, err = client.Shares.Show(ctx, &ShareShowOptions{
+		shares, err = client.Shares.Show(ctx, &ShowShareOptions{
 			Like: &Like{
 				Pattern: String(shareTest.Name.Name()),
 			},
@@ -301,7 +301,7 @@ func TestInt_Alter(t *testing.T) {
 				Value: randomString(t),
 			},
 		}
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Set: &ShareSet{
 				Tag: tagAssociations,
@@ -316,7 +316,7 @@ func TestInt_Alter(t *testing.T) {
 		assert.Equal(t, tagAssociations[1].Value, tagValue)
 
 		// unset tags
-		err = client.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			IfExists: Bool(true),
 			Unset: &ShareUnset{
 				Tag: []ObjectIdentifier{
@@ -367,10 +367,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 }
 
 func TestInt_ShareDescribeConsumer(t *testing.T) {
-	consumerClient, err := testClientFromProfile(t, "secondary_test_account")
-	if err != nil {
-		t.Skip("Skipping test due to missing profile credentials")
-	}
+	consumerClient := testSecondaryClient(t)
 	ctx := context.Background()
 	providerClient := testClient(t)
 
@@ -381,7 +378,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		databaseTest, databaseCleanup := createDatabase(t, providerClient)
 		t.Cleanup(databaseCleanup)
 
-		err = providerClient.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
+		err := providerClient.Grants.GrantPrivilegeToShare(ctx, PrivilegeUsage, &GrantPrivilegeToShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -393,10 +390,10 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		})
 
 		// add consumer account to share.
-		err := providerClient.Shares.Alter(ctx, shareTest.ID(), &ShareAlterOptions{
+		err = providerClient.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
 			Add: &ShareAdd{
 				Accounts: []AccountIdentifier{
-					secondaryAccountIdentifier(t),
+					getAccountIdentifier(t, consumerClient),
 				},
 			},
 		})

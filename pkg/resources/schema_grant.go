@@ -26,6 +26,7 @@ var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeCreateSessionPolicy,
 	privilegeCreateStage,
 	privilegeCreateStream,
+	privilegeCreateStreamlit,
 	privilegeCreateTable,
 	privilegeCreateTag,
 	privilegeCreateTask,
@@ -99,6 +100,16 @@ var schemaGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
+	},
+	"revert_ownership_to_role_name": {
+		Optional:    true,
+		Type:        schema.TypeString,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
 	},
 }
 
@@ -213,6 +224,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database_name").(string)
 	schemaName := d.Get("schema_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	onFuture := d.Get("on_future").(bool)
 	onAll := d.Get("on_all").(bool)
@@ -233,6 +245,7 @@ func UpdateSchemaGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		privilege,
+		reversionRole,
 		rolesToRevoke,
 		sharesToRevoke,
 	); err != nil {

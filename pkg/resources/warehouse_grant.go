@@ -54,6 +54,16 @@ var warehouseGrantSchema = map[string]*schema.Schema{
 		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
 	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
+	},
 }
 
 // WarehouseGrant returns a pointer to the resource representing a warehouse grant.
@@ -152,6 +162,7 @@ func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	warehouseName := d.Get("warehouse_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 
 	// create the builder
@@ -162,6 +173,7 @@ func UpdateWarehouseGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		privilege,
+		reversionRole,
 		rolesToRevoke,
 		nil,
 	); err != nil {

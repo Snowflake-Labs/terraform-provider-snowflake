@@ -193,7 +193,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 
 func TestGrantShow(t *testing.T) {
 	t.Run("no options", func(t *testing.T) {
-		opts := &ShowGrantsOptions{}
+		opts := &ShowGrantOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "SHOW GRANTS"
@@ -201,7 +201,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("on account", func(t *testing.T) {
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Account: Bool(true),
 			},
@@ -214,7 +214,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("on database", func(t *testing.T) {
 		dbID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Object: &Object{
 					ObjectType: ObjectTypeDatabase,
@@ -230,7 +230,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("to role", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				Role: roleID,
 			},
@@ -243,7 +243,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("to user", func(t *testing.T) {
 		userID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				User: userID,
 			},
@@ -256,7 +256,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("to share", func(t *testing.T) {
 		shareID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				Share: shareID,
 			},
@@ -269,7 +269,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("of role", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Role: roleID,
 			},
@@ -282,7 +282,7 @@ func TestGrantShow(t *testing.T) {
 
 	t.Run("of share", func(t *testing.T) {
 		shareID := randomAccountObjectIdentifier(t)
-		opts := &ShowGrantsOptions{
+		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Share: shareID,
 			},

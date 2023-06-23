@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDataTypeFromString(t *testing.T) {
+func TestToDataType(t *testing.T) {
 	type test struct {
 		input string
 		want  DataType
@@ -66,20 +66,23 @@ func TestDataTypeFromString(t *testing.T) {
 		{input: "timestamp_ltz", want: DataTypeTimestampLTZ},
 		{input: "timestamp_ltz(9)", want: DataTypeTimestampLTZ},
 
+		// time types.
+		{input: "time", want: DataTypeTime},
+		{input: "time(9)", want: DataTypeTime},
+
 		// all othertypes
 		{input: "date", want: DataTypeDate},
-		{input: "time", want: DataTypeTime},
 		{input: "variant", want: DataTypeVariant},
 		{input: "object", want: DataTypeObject},
 		{input: "array", want: DataTypeArray},
 		{input: "geography", want: DataTypeGeography},
 		{input: "geometry", want: DataTypeGeometry},
-		{input: "invalid", want: DataTypeUnknown},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
-			got := DataTypeFromString(tc.input)
+			got, err := ToDataType(tc.input)
+			require.NoError(t, err)
 			require.Equal(t, tc.want, got)
 		})
 	}

@@ -152,7 +152,10 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		columns := m["column"].([]interface{})
 		for _, c := range columns {
 			cm := c.(map[string]interface{})
-			dt := sdk.DataTypeFromString(cm["type"].(string))
+			dt, err := sdk.ToDataType(cm["type"].(string))
+			if err != nil {
+				return err
+			}
 			signature = append(signature, sdk.TableColumnSignature{
 				Name: cm["name"].(string),
 				Type: dt,
@@ -160,9 +163,11 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	returns := sdk.DataTypeFromString(returnDataType)
-
-	opts := &sdk.MaskingPolicyCreateOptions{}
+	returns, err := sdk.ToDataType(returnDataType)
+	if err != nil {
+		return err
+	}
+	opts := &sdk.CreateMaskingPolicyOptions{}
 	if comment, ok := d.Get("comment").(string); ok {
 		opts.Comment = sdk.String(comment)
 	}
@@ -170,7 +175,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		opts.ExemptOtherPolicies = sdk.Bool(exemptOtherPolicies)
 	}
 
-	err := client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
+	err = client.MaskingPolicies.Create(ctx, objectIdentifier, signature, returns, expression, opts)
 	if err != nil {
 		return err
 	}
@@ -252,7 +257,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	if d.HasChange("masking_expression") {
-		alterOptions := &sdk.MaskingPolicyAlterOptions{}
+		alterOptions := &sdk.AlterMaskingPolicyOptions{}
 		_, n := d.GetChange("masking_expression")
 		alterOptions.Set = &sdk.MaskingPolicySet{
 			Body: sdk.String(n.(string)),
@@ -264,7 +269,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("comment") {
-		alterOptions := &sdk.MaskingPolicyAlterOptions{}
+		alterOptions := &sdk.AlterMaskingPolicyOptions{}
 		if v, ok := d.GetOk("comment"); ok {
 			alterOptions.Set = &sdk.MaskingPolicySet{
 				Comment: sdk.String(v.(string)),
@@ -284,7 +289,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		_, n := d.GetChange("name")
 		newName := n.(string)
 		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
-		alterOptions := &sdk.MaskingPolicyAlterOptions{
+		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			NewName: newID,
 		}
 		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)

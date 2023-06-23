@@ -9,3 +9,7 @@ type Schema struct {
 func (v *Schema) ID() SchemaIdentifier {
 	return NewSchemaIdentifier(v.DatabaseName, v.Name)
 }
+
+func (v *Schema) ObjectType() ObjectType {
+	return ObjectTypeSchema
+}

@@ -24,7 +24,7 @@ setup: ## setup development dependencies
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test ./pkg/resources -v -timeout 10m -sweep=prod
+	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
 
 lint:  ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"

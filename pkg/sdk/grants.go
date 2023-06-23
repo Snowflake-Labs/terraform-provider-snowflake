@@ -10,7 +10,7 @@ import (
 type Grants interface {
 	GrantPrivilegeToShare(ctx context.Context, objectPrivilege Privilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, objectPrivilege Privilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
-	Show(ctx context.Context, opts *ShowGrantsOptions) ([]*Grant, error)
+	Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error)
 }
 
 var _ Grants = (*grants)(nil)
@@ -67,10 +67,10 @@ func (row *grantRow) toGrant() (*Grant, error) {
 }
 
 type grantPrivilegeToShareOptions struct {
-	grant           bool                     `ddl:"static" db:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
+	grant           bool                     `ddl:"static" sql:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
 	objectPrivilege Privilege                `ddl:"keyword"`
-	On              *GrantPrivilegeToShareOn `ddl:"keyword" db:"ON"`
-	to              AccountObjectIdentifier  `ddl:"identifier" db:"TO SHARE"`
+	On              *GrantPrivilegeToShareOn `ddl:"keyword" sql:"ON"`
+	to              AccountObjectIdentifier  `ddl:"identifier" sql:"TO SHARE"`
 }
 
 func (opts *grantPrivilegeToShareOptions) validate() error {
@@ -87,11 +87,11 @@ func (opts *grantPrivilegeToShareOptions) validate() error {
 }
 
 type GrantPrivilegeToShareOn struct {
-	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
-	Function SchemaObjectIdentifier  `ddl:"identifier" db:"FUNCTION"`
+	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
+	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Function SchemaObjectIdentifier  `ddl:"identifier" sql:"FUNCTION"`
 	Table    *OnTable                `ddl:"-"`
-	View     SchemaObjectIdentifier  `ddl:"identifier" db:"VIEW"`
+	View     SchemaObjectIdentifier  `ddl:"identifier" sql:"VIEW"`
 }
 
 func (v *GrantPrivilegeToShareOn) validate() error {
@@ -107,8 +107,8 @@ func (v *GrantPrivilegeToShareOn) validate() error {
 }
 
 type OnTable struct {
-	Name        SchemaObjectIdentifier `ddl:"identifier" db:"TABLE"`
-	AllInSchema SchemaIdentifier       `ddl:"identifier" db:"ALL TABLES IN SCHEMA"`
+	Name        SchemaObjectIdentifier `ddl:"identifier" sql:"TABLE"`
+	AllInSchema SchemaIdentifier       `ddl:"identifier" sql:"ALL TABLES IN SCHEMA"`
 }
 
 func (v *OnTable) validate() error {
@@ -136,10 +136,10 @@ func (v *grants) GrantPrivilegeToShare(ctx context.Context, objectPrivilege Priv
 }
 
 type revokePrivilegeFromShareOptions struct {
-	revoke          bool                        `ddl:"static" db:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
+	revoke          bool                        `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
 	objectPrivilege Privilege                   `ddl:"keyword"`
-	On              *RevokePrivilegeFromShareOn `ddl:"keyword" db:"ON"`
-	from            AccountObjectIdentifier     `ddl:"identifier" db:"FROM SHARE"`
+	On              *RevokePrivilegeFromShareOn `ddl:"keyword" sql:"ON"`
+	from            AccountObjectIdentifier     `ddl:"identifier" sql:"FROM SHARE"`
 }
 
 func (opts *revokePrivilegeFromShareOptions) validate() error {
@@ -161,8 +161,8 @@ func (opts *revokePrivilegeFromShareOptions) validate() error {
 }
 
 type RevokePrivilegeFromShareOn struct {
-	Database AccountObjectIdentifier `ddl:"identifier" db:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" db:"SCHEMA"`
+	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
+	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
 	Table    *OnTable                `ddl:"-"`
 	View     *OnView                 `ddl:"-"`
 }
@@ -181,8 +181,8 @@ func (v *RevokePrivilegeFromShareOn) validate() error {
 }
 
 type OnView struct {
-	Name        SchemaObjectIdentifier `ddl:"identifier" db:"VIEW"`
-	AllInSchema SchemaIdentifier       `ddl:"identifier" db:"ALL VIEWS IN SCHEMA"`
+	Name        SchemaObjectIdentifier `ddl:"identifier" sql:"VIEW"`
+	AllInSchema SchemaIdentifier       `ddl:"identifier" sql:"ALL VIEWS IN SCHEMA"`
 }
 
 func (v *OnView) validate() error {
@@ -209,15 +209,15 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, objectPrivilege P
 	return err
 }
 
-type ShowGrantsOptions struct {
-	show   bool          `ddl:"static" db:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	grants bool          `ddl:"static" db:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
-	On     *ShowGrantsOn `ddl:"keyword" db:"ON"`
-	To     *ShowGrantsTo `ddl:"keyword" db:"TO"`
-	Of     *ShowGrantsOf `ddl:"keyword" db:"OF"`
+type ShowGrantOptions struct {
+	show   bool          `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
+	grants bool          `ddl:"static" sql:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
+	On     *ShowGrantsOn `ddl:"keyword" sql:"ON"`
+	To     *ShowGrantsTo `ddl:"keyword" sql:"TO"`
+	Of     *ShowGrantsOf `ddl:"keyword" sql:"OF"`
 }
 
-func (opts *ShowGrantsOptions) validate() error {
+func (opts *ShowGrantOptions) validate() error {
 	if everyValueNil(opts.On, opts.To, opts.Of) {
 		return fmt.Errorf("at least one of on, to, or of is required")
 	}
@@ -228,24 +228,24 @@ func (opts *ShowGrantsOptions) validate() error {
 }
 
 type ShowGrantsOn struct {
-	Account *bool `ddl:"keyword" db:"ACCOUNT"`
+	Account *bool `ddl:"keyword" sql:"ACCOUNT"`
 	Object  *Object
 }
 
 type ShowGrantsTo struct {
-	Role  AccountObjectIdentifier `ddl:"identifier" db:"ROLE"`
-	User  AccountObjectIdentifier `ddl:"identifier" db:"USER"`
-	Share AccountObjectIdentifier `ddl:"identifier" db:"SHARE"`
+	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
+	User  AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
+	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
 }
 
 type ShowGrantsOf struct {
-	Role  AccountObjectIdentifier `ddl:"identifier" db:"ROLE"`
-	Share AccountObjectIdentifier `ddl:"identifier" db:"SHARE"`
+	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
+	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
 }
 
-func (v *grants) Show(ctx context.Context, opts *ShowGrantsOptions) ([]*Grant, error) {
+func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error) {
 	if opts == nil {
-		opts = &ShowGrantsOptions{}
+		opts = &ShowGrantOptions{}
 	}
 	if err := opts.validate(); err != nil {
 		return nil, err

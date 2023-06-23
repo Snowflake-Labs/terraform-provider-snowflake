@@ -1,11 +1,13 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -101,7 +103,7 @@ var accountSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "[Snowflake Edition](https://docs.snowflake.com/en/user-guide/intro-editions.html) of the account. Valid values are: STANDARD | ENTERPRISE | BUSINESS_CRITICAL",
-		ValidateFunc: validation.StringInSlice([]string{"STANDARD", "ENTERPRISE", "BUSINESS_CRITICAL"}, false),
+		ValidateFunc: validation.StringInSlice([]string{string(sdk.EditionStandard), string(sdk.EditionEnterprise), string(sdk.EditionBusinessCritical)}, false),
 	},
 	"first_name": {
 		Type:        schema.TypeString,
@@ -188,7 +190,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the account.",
-		ForceNew:    true, // Apparently there is no API to change comments on accounts. ALTER ACCOUNT and COMMENT commands do not work
+		ForceNew:    true,
 	},
 	"is_org_admin": {
 		Type:        schema.TypeBool,
@@ -215,101 +217,114 @@ func Account() *schema.Resource {
 // CreateAccount implements schema.CreateFunc.
 func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	// get required fields.
-	name := d.Get("name").(string)
-	adminName := d.Get("admin_name").(string)
-	email := d.Get("email").(string)
-	edition := d.Get("edition").(string)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	builder := snowflake.NewCreateAccountBuilder(name, adminName, email, snowflake.AccountEdition(edition), db)
+	name := d.Get("name").(string)
+	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+
+	createOptions := &sdk.CreateAccountOptions{
+		AdminName: d.Get("admin_name").(string),
+		Email:     d.Get("email").(string),
+		Edition:   sdk.AccountEdition(d.Get("edition").(string)),
+	}
 
 	// get optional fields.
 	if v, ok := d.GetOk("admin_password"); ok {
-		builder.WithAdminPassword(v.(string))
+		createOptions.AdminPassword = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("admin_rsa_public_key"); ok {
-		builder.WithAdminRSAPublicKey(v.(string))
+		createOptions.AdminRSAPublicKey = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("first_name"); ok {
-		builder.WithFirstName(v.(string))
+		createOptions.FirstName = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("last_name"); ok {
-		builder.WithLastName(v.(string))
+		createOptions.LastName = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("must_change_password"); ok {
-		builder.WithMustChangePassword(v.(bool))
+		createOptions.MustChangePassword = sdk.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("region_group"); ok {
-		builder.WithRegionGroup(v.(string))
+		createOptions.RegionGroup = sdk.String(v.(string))
 	} else {
 		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
-		currentAccount, err := snowflake.ReadCurrentAccount(db)
+		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
 		if err != nil {
 			return err
 		}
-		regionParts := strings.Split(currentAccount.Region, ".")
+		regionParts := strings.Split(currentRegion, ".")
 		if len(regionParts) == 2 {
-			builder.WithRegionGroup(regionParts[0])
+			createOptions.RegionGroup = sdk.String(regionParts[0])
 		}
 	}
 	if v, ok := d.GetOk("region"); ok {
-		builder.WithRegion(v.(string))
+		createOptions.Region = sdk.String(v.(string))
 	} else {
 		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
-		currentAccount, err := snowflake.ReadCurrentAccount(db)
+		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
 		if err != nil {
 			return err
 		}
-		regionParts := strings.Split(currentAccount.Region, ".")
+		regionParts := strings.Split(currentRegion, ".")
 		if len(regionParts) == 2 {
-			builder.WithRegion(regionParts[1])
+			createOptions.Region = sdk.String(regionParts[1])
 		} else {
-			builder.WithRegion(currentAccount.Region)
+			createOptions.Region = sdk.String(currentRegion)
 		}
 	}
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createOptions.Comment = sdk.String(v.(string))
 	}
-	account, err := builder.Create()
+
+	err := client.Accounts.Create(ctx, objectIdentifier, createOptions)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(account.AccountLocator.String)
+	account, err := client.Accounts.ShowByID(ctx, objectIdentifier)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(helpers.EncodeSnowflakeID(account.AccountLocator))
 	return nil
 }
 
 // ReadAccount implements schema.ReadFunc.
 func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	accountLocator := d.Id()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	account, err := snowflake.ShowAccount(db, accountLocator)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	acc, err := client.Accounts.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error reading account: %w", err)
+		return err
 	}
-	err = d.Set("name", account.AccountName.String)
-	if err != nil {
+
+	if err = d.Set("name", acc.AccountName); err != nil {
 		return fmt.Errorf("error setting name: %w", err)
 	}
-	err = d.Set("edition", account.Edition.String)
-	if err != nil {
+
+	if err = d.Set("edition", acc.Edition); err != nil {
 		return fmt.Errorf("error setting edition: %w", err)
 	}
-	err = d.Set("region_group", account.RegionGroup.String)
-	if err != nil {
+
+	if err = d.Set("region_group", acc.RegionGroup); err != nil {
 		return fmt.Errorf("error setting region_group: %w", err)
 	}
-	err = d.Set("region", account.SnowflakeRegion.String)
-	if err != nil {
+
+	if err = d.Set("region", acc.SnowflakeRegion); err != nil {
 		return fmt.Errorf("error setting region: %w", err)
 	}
-	err = d.Set("comment", account.Comment.String)
-	if err != nil {
+
+	if err = d.Set("comment", acc.Comment); err != nil {
 		return fmt.Errorf("error setting comment: %w", err)
 	}
-	err = d.Set("is_org_admin", account.IsOrgAdmin.Bool)
-	if err != nil {
+
+	if err = d.Set("is_org_admin", acc.IsOrgAdmin); err != nil {
 		return fmt.Errorf("error setting is_org_admin: %w", err)
 	}
 
@@ -319,22 +334,33 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 // UpdateAccount implements schema.UpdateFunc.
 func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	accountLocator := d.Id()
-	account, err := snowflake.ShowAccount(db, accountLocator)
-	if err != nil {
-		return fmt.Errorf("error reading account: %w", err)
-	}
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	builder := snowflake.NewAlterAccountBuilder(account.AccountName.String, db)
-	if d.HasChange("comment") {
-		err := builder.SetComment(d.Get("comment").(string))
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	// Rename
+	if d.HasChange("name") {
+		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			Rename: &sdk.AccountRename{
+				Name:    id,
+				NewName: newID,
+			},
+		})
 		if err != nil {
 			return err
 		}
+		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
-	if d.HasChange("name") {
-		err := builder.Rename(d.Get("name").(string))
+	// Change comment
+	if d.HasChange("comment") {
+		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
+			ObjectType: sdk.ObjectTypeAccount,
+			ObjectName: id,
+			Value:      sdk.String(d.Get("comment").(string)),
+		})
 		if err != nil {
 			return err
 		}

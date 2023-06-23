@@ -1,10 +1,10 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -12,8 +12,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 var failoverGroupSchema = map[string]*schema.Schema{
@@ -153,10 +152,11 @@ func FailoverGroup() *schema.Resource {
 // CreateFailoverGroup implements schema.CreateFunc.
 func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	// getting required attributes
 	name := d.Get("name").(string)
-	builder := snowflake.NewFailoverGroupBuilder(name)
+	id := sdk.NewAccountObjectIdentifier(name)
 
 	// if from_replica is set, then we are creating a failover group from an existing replica
 	if v, ok := d.GetOk("from_replica"); ok {
@@ -164,10 +164,11 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		organizationName := fromReplica["organization_name"].(string)
 		sourceAccountName := fromReplica["source_account_name"].(string)
 		sourceFailoverGroupName := fromReplica["name"].(string)
-		fullyQualifiedFailoverGroupIdentifier := fmt.Sprintf("%s.%s.%s", organizationName, sourceAccountName, sourceFailoverGroupName)
-		stmt := builder.CreateFromReplica(fullyQualifiedFailoverGroupIdentifier)
-		if err := snowflake.Exec(db, stmt); err != nil {
-			return fmt.Errorf("error creating failover group %v err = %w", name, err)
+
+		primaryFailoverGroupID := sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier(organizationName, sourceAccountName), sdk.NewAccountObjectIdentifier(sourceFailoverGroupName))
+		err := client.FailoverGroups.CreateSecondaryReplicationGroup(ctx, id, primaryFailoverGroupID, nil)
+		if err != nil {
+			return err
 		}
 		d.SetId(name)
 		return ReadFailoverGroup(d, meta)
@@ -177,59 +178,59 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("object_types"); !ok {
 		return errors.New("object_types is required when not creating from a replica")
 	}
-	ot := d.Get("object_types").(*schema.Set).List()
-	objectTypes := make([]string, len(ot))
-	for i, v := range ot {
-		objectTypes[i] = v.(string)
+	objectTypesList := expandStringList(d.Get("object_types").(*schema.Set).List())
+	objectTypes := make([]sdk.PluralObjectType, len(objectTypesList))
+	for i, v := range objectTypesList {
+		objectTypes[i] = sdk.PluralObjectType(v)
 	}
-	builder.WithObjectTypes(objectTypes)
 
 	if _, ok := d.GetOk("allowed_accounts"); !ok {
 		return errors.New("allowed_accounts is required when not creating from a replica")
 	}
-	aa := d.Get("allowed_accounts").(*schema.Set).List()
-	allowedAccounts := make([]string, len(aa))
-	for i, v := range aa {
-		allowedAccounts[i] = v.(string)
+	aaList := expandStringList(d.Get("allowed_accounts").(*schema.Set).List())
+	allowedAccounts := make([]sdk.AccountIdentifier, len(aaList))
+	for i, v := range aaList {
 		// validation since we cannot do that in the ValidateFunc
-		parts := strings.Split(allowedAccounts[i], ".")
+		parts := strings.Split(v, ".")
 		if len(parts) != 2 {
-			return fmt.Errorf("allowed_account %s must be of the format <org_name>.<target_account_name>", allowedAccounts[i])
+			return fmt.Errorf("allowed_account %s cannot be an account locator and must be of the format <org_name>.<target_account_name>", allowedAccounts[i])
 		}
+		organizationName := parts[0]
+		accountName := parts[1]
+		allowedAccounts[i] = sdk.NewAccountIdentifier(organizationName, accountName)
 	}
-	builder.WithAllowedAccounts(allowedAccounts)
 
+	var opts sdk.CreateFailoverGroupOptions
 	// setting optional attributes
 	if v, ok := d.GetOk("allowed_databases"); ok {
-		ad := v.(*schema.Set).List()
-		allowedDatabases := make([]string, len(ad))
-		for i, v := range ad {
-			allowedDatabases[i] = v.(string)
+		allowedDatabasesList := expandStringList(v.(*schema.Set).List())
+		allowedDatabaseIdentifiers := make([]sdk.AccountObjectIdentifier, len(allowedDatabasesList))
+		for i, v := range allowedDatabasesList {
+			allowedDatabaseIdentifiers[i] = sdk.NewAccountObjectIdentifier(v)
 		}
-		builder.WithAllowedDatabases(allowedDatabases)
+		opts.AllowedDatabases = allowedDatabaseIdentifiers
 	}
 
 	if v, ok := d.GetOk("allowed_shares"); ok {
-		as := v.(*schema.Set).List()
-		allowedShares := make([]string, len(as))
-		for i, v := range as {
-			allowedShares[i] = v.(string)
+		allowedSharesList := expandStringList(v.(*schema.Set).List())
+		allowedShareIdentifiers := make([]sdk.AccountObjectIdentifier, len(allowedSharesList))
+		for i, v := range allowedSharesList {
+			allowedShareIdentifiers[i] = sdk.NewAccountObjectIdentifier(v)
 		}
-		builder.WithAllowedShares(allowedShares)
+		opts.AllowedShares = allowedShareIdentifiers
 	}
 
 	if v, ok := d.GetOk("allowed_integration_types"); ok {
-		aits := v.(*schema.Set).List()
-		allowedIntegrationTypes := make([]string, len(aits))
-		for i, v := range aits {
-			allowedIntegrationTypes[i] = v.(string)
+		allowedIntegrationTypesList := expandStringList(v.(*schema.Set).List())
+		allowedIntegrationTypes := make([]sdk.IntegrationType, len(allowedIntegrationTypesList))
+		for i, v := range allowedIntegrationTypesList {
+			allowedIntegrationTypes[i] = sdk.IntegrationType(v)
 		}
-
-		builder.WithAllowedIntegrationTypes(allowedIntegrationTypes)
+		opts.AllowedIntegrationTypes = allowedIntegrationTypes
 	}
 
 	if v, ok := d.GetOk("ignore_edition_check"); ok {
-		builder.WithIgnoreEditionCheck(v.(bool))
+		opts.IgnoreEditionCheck = sdk.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("replication_schedule"); ok {
@@ -239,24 +240,24 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			if len(c) > 0 {
 				cron := c[0].(map[string]interface{})
 				cronExpression := cron["expression"].(string)
-				builder.WithReplicationScheduleCronExpression(cronExpression)
 				if v, ok := cron["time_zone"]; ok {
 					timeZone := v.(string)
-					builder.WithReplicationScheduleTimeZone(timeZone)
+					cronExpression += " " + timeZone
 				}
+				opts.ReplicationSchedule = sdk.String("USING CRON " + cronExpression)
 			}
 		}
 		if v, ok := replicationSchedule["interval"]; ok {
 			interval := v.(int)
 			if interval > 1 {
-				builder.WithReplicationScheduleInterval(interval)
+				opts.ReplicationSchedule = sdk.String(fmt.Sprintf("%d MINUTE", interval))
 			}
 		}
 	}
 
-	q := builder.Create()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating failover group %v err = %w", name, err)
+	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &opts)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(name)
@@ -266,44 +267,24 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 // ReadFailoverGroup implements schema.ReadFunc.
 func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	name := d.Id()
-
-	stmt := "select current_account()"
-	row := db.QueryRow(stmt)
-	var accountLocator string
-	if err := row.Scan(&accountLocator); err != nil {
-		return fmt.Errorf("error getting current account err = %w", err)
-	}
-
-	failoverGroups, err := snowflake.ListFailoverGroups(db, accountLocator)
+	id := sdk.NewAccountObjectIdentifier(name)
+	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error listing failover groups err = %w", err)
+		return err
 	}
 
-	var failoverGroup snowflake.FailoverGroup
-	// find the failover group we are looking for by matching the name
-	for _, fg := range failoverGroups {
-		if strings.EqualFold(fg.Name.String, name) && strings.EqualFold(fg.AccountLocator.String, accountLocator) {
-			failoverGroup = fg
-		}
-	}
-
-	if failoverGroup.Name.String == "" {
-		log.Printf("[DEBUG] failover group (%v) not found when listing all failover groups in account", name)
-		d.SetId("")
-		return nil
-	}
-
-	if err := d.Set("name", failoverGroup.Name.String); err != nil {
+	if err := d.Set("name", failoverGroup.Name); err != nil {
 		return err
 	}
 	// if the failover group is created from a replica, then we do not want to get the other values
 	if _, ok := d.GetOk("from_replica"); ok {
-		log.Printf("[DEBUG] failover group %v is created from a replica, rest of values are computed\n", name)
 		return nil
 	}
 
-	replicationSchedule := failoverGroup.ReplicationSchedule.String
+	replicationSchedule := failoverGroup.ReplicationSchedule
 	if replicationSchedule != "" {
 		if strings.Contains(replicationSchedule, "MINUTE") {
 			interval, err := strconv.Atoi(strings.TrimSuffix(replicationSchedule, " MINUTE"))
@@ -337,76 +318,48 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-
-	objectTypes := helpers.StringListToList(failoverGroup.ObjectTypes.String)
-
-	// this is basically a hack to get around the fact that the API returns the object types in a different order than what is set
-	// this logic could also be put in the diff suppress function, but I think it is better to do it here.
-	currentObjectTypeList := d.Get("object_types").(*schema.Set).List()
-	if len(currentObjectTypeList) != len(objectTypes) {
-		log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)
-		if err := d.Set("object_types", objectTypes); err != nil {
-			return err
-		}
+	// object types
+	objectTypes := make([]interface{}, len(failoverGroup.ObjectTypes))
+	for i, v := range failoverGroup.ObjectTypes {
+		objectTypes[i] = string(v)
+	}
+	objectTypesSet := schema.NewSet(schema.HashString, objectTypes)
+	if err := d.Set("object_types", objectTypesSet); err != nil {
+		return err
 	}
 
-	for _, v := range currentObjectTypeList {
-		if !slices.Contains(objectTypes, v.(string)) {
-			log.Printf("[DEBUG] object types are different, current: %v, new: %v", currentObjectTypeList, objectTypes)
-			if err := d.Set("object_types", objectTypes); err != nil {
-				return err
-			}
-			break
-		}
+	// integration types
+	allowedIntegrationTypes := make([]interface{}, len(failoverGroup.AllowedIntegrationTypes))
+	for i, v := range failoverGroup.AllowedIntegrationTypes {
+		allowedIntegrationTypes[i] = string(v)
 	}
 
-	allowedIntegrationTypes := failoverGroup.AllowedIntegrationTypes.String
-	if allowedIntegrationTypes != "" {
-		aits := strings.Split(allowedIntegrationTypes, ",")
-		var allowedIntegrationTypes []interface{}
-		for _, v := range aits {
-			allowedIntegrationType := strings.TrimSpace(v)
-			if allowedIntegrationType == "" {
-				continue
-			}
-			if allowedIntegrationType == "SECURITY" {
-				allowedIntegrationType = "SECURITY INTEGRATIONS"
-			}
-			allowedIntegrationTypes = append(allowedIntegrationTypes, allowedIntegrationType)
-		}
-		allowedIntegrationTypesSet := schema.NewSet(schema.HashString, allowedIntegrationTypes)
-		if err := d.Set("allowed_integration_types", allowedIntegrationTypesSet); err != nil {
-			return err
-		}
+	allowedIntegrationsTypesSet := schema.NewSet(schema.HashString, allowedIntegrationTypes)
+	if err := d.Set("allowed_integration_types", allowedIntegrationsTypesSet); err != nil {
+		return err
 	}
 
-	allowedAccounts := failoverGroup.AllowedAccounts.String
-	if allowedAccounts != "" {
-		aa := strings.Split(allowedAccounts, ",")
-		var allowedAccounts []interface{}
-		for _, v := range aa {
-			allowedAccount := strings.TrimSpace(v)
-			if allowedAccount == "" {
-				continue
-			}
-			allowedAccounts = append(allowedAccounts, allowedAccount)
-		}
-		allowedAccountsSet := schema.NewSet(schema.HashString, allowedAccounts)
-		if err := d.Set("allowed_accounts", allowedAccountsSet); err != nil {
-			return err
-		}
+	// allowed accounts
+	allowedAccounts := make([]interface{}, len(failoverGroup.AllowedAccounts))
+	for i, v := range failoverGroup.AllowedAccounts {
+		allowedAccounts[i] = v.Name()
+	}
+	allowedAccountsSet := schema.NewSet(schema.HashString, allowedAccounts)
+	if err := d.Set("allowed_accounts", allowedAccountsSet); err != nil {
+		return err
 	}
 
-	allowedDatabases, err := snowflake.ShowDatabasesInFailoverGroup(name, db)
+	// allowed databases
+	databases, err := client.FailoverGroups.ShowDatabases(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error listing databases in failover group %v err = %w", name, err)
+		return err
 	}
+	allowedDatabases := make([]interface{}, len(databases))
+	for i, database := range databases {
+		allowedDatabases[i] = database.Name()
+	}
+	allowedDatabasesSet := schema.NewSet(schema.HashString, allowedDatabases)
 	if len(allowedDatabases) > 0 {
-		allowedDatabasesInterface := make([]interface{}, len(allowedDatabases))
-		for i, v := range allowedDatabases {
-			allowedDatabasesInterface[i] = v
-		}
-		allowedDatabasesSet := schema.NewSet(schema.HashString, allowedDatabasesInterface)
 		if err := d.Set("allowed_databases", allowedDatabasesSet); err != nil {
 			return err
 		}
@@ -416,73 +369,132 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	shares, err := snowflake.ShowSharesInFailoverGroup(name, db)
+	// allowed shares
+	shares, err := client.FailoverGroups.ShowShares(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error listing shares in failover group %v err = %w", name, err)
+		return err
 	}
-	if len(shares) > 0 {
-		sharesInterface := make([]interface{}, len(shares))
-		for i, v := range shares {
-			sharesInterface[i] = v
+	allowedShares := make([]interface{}, len(shares))
+	for i, share := range shares {
+		allowedShares[i] = share.Name()
+	}
+	allowedSharesSet := schema.NewSet(schema.HashString, allowedShares)
+	if len(allowedShares) > 0 {
+		if err := d.Set("allowed_shares", allowedSharesSet); err != nil {
+			return err
 		}
-		sharesSet := schema.NewSet(schema.HashString, sharesInterface)
-		if err := d.Set("allowed_shares", sharesSet); err != nil {
+	} else {
+		if err := d.Set("allowed_shares", nil); err != nil {
 			return err
 		}
 	}
-	if err := d.Set("allowed_shares", nil); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 // UpdateFailoverGroup implements schema.UpdateFunc.
 func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	name := d.Id()
-	builder := snowflake.NewFailoverGroupBuilder(name)
+	id := sdk.NewAccountObjectIdentifier(name)
+
+	// alter failover group <name> set ...
+	opts := &sdk.AlterSourceFailoverGroupOptions{
+		Set: &sdk.FailoverGroupSet{},
+	}
+	runSet := false
 
 	if d.HasChange("object_types") {
 		_, n := d.GetChange("object_types")
-		newObjectTypes := n.(*schema.Set).List()
-
-		var objectTypes []string
-		for _, v := range newObjectTypes {
-			objectTypes = append(objectTypes, v.(string))
+		newObjectTypes := expandStringList(n.(*schema.Set).List())
+		objectTypes := make([]sdk.PluralObjectType, len(newObjectTypes))
+		for i, v := range newObjectTypes {
+			objectTypes[i] = sdk.PluralObjectType(v)
 		}
-		stmt := builder.ChangeObjectTypes(objectTypes)
-		if err := snowflake.Exec(db, stmt); err != nil {
-			return fmt.Errorf("error updating object types for failover group %v err = %w", name, err)
+		opts.Set.ObjectTypes = objectTypes
+		if slices.Contains(objectTypes, sdk.PluralObjectTypeIntegrations) {
+			ait := expandStringList(d.Get("allowed_integration_types").(*schema.Set).List())
+			allowedIntegrationTypes := make([]sdk.IntegrationType, len(ait))
+			for i, v := range ait {
+				allowedIntegrationTypes[i] = sdk.IntegrationType(v)
+			}
+			opts.Set.AllowedIntegrationTypes = allowedIntegrationTypes
+		}
+		runSet = true
+	}
+
+	if d.HasChange("replication_schedule") {
+		_, n := d.GetChange("replication_schedule")
+		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
+		c := replicationSchedule["cron"].([]interface{})
+		if len(c) > 0 {
+			if len(c) > 0 {
+				cron := c[0].(map[string]interface{})
+				cronExpression := cron["expression"].(string)
+				cronExpression = "USING CRON " + cronExpression
+				if v, ok := cron["time_zone"]; ok {
+					timeZone := v.(string)
+					if timeZone != "" {
+						cronExpression = cronExpression + " " + timeZone
+					}
+				}
+				opts.Set.ReplicationSchedule = &cronExpression
+			}
+		} else {
+			opts.Set.ReplicationSchedule = sdk.String(fmt.Sprintf("%d MINUTE", replicationSchedule["interval"].(int)))
+		}
+		runSet = true
+	}
+
+	if d.HasChange("allowed_integration_types") {
+		_, n := d.GetChange("allowed_integration_types")
+		newAllowedIntegrationTypes := expandStringList(n.(*schema.Set).List())
+		allowedIntegrationTypes := make([]sdk.IntegrationType, len(newAllowedIntegrationTypes))
+		for i, v := range newAllowedIntegrationTypes {
+			allowedIntegrationTypes[i] = sdk.IntegrationType(v)
+		}
+		opts.Set.AllowedIntegrationTypes = allowedIntegrationTypes
+		runSet = true
+	}
+	if runSet {
+		if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
+			return err
 		}
 	}
 
 	if d.HasChange("allowed_databases") {
 		o, n := d.GetChange("allowed_databases")
-		oad := o.(*schema.Set).List()
-		oldAllowedDatabases := make([]string, len(oad))
+		oad := expandStringList(o.(*schema.Set).List())
+		oldAllowedDatabases := make([]sdk.AccountObjectIdentifier, len(oad))
 		for i, v := range oad {
-			oldAllowedDatabases[i] = v.(string)
+			oldAllowedDatabases[i] = sdk.NewAccountObjectIdentifier(v)
 		}
-		nad := n.(*schema.Set).List()
-		newAllowedDatabases := make([]string, len(nad))
+		nad := expandStringList(n.(*schema.Set).List())
+		newAllowedDatabases := make([]sdk.AccountObjectIdentifier, len(nad))
 		for i, v := range nad {
-			newAllowedDatabases[i] = v.(string)
+			newAllowedDatabases[i] = sdk.NewAccountObjectIdentifier(v)
 		}
 
-		var removedDatabases []string
+		var removedDatabases []sdk.AccountObjectIdentifier
 		for _, v := range oldAllowedDatabases {
 			if !slices.Contains(newAllowedDatabases, v) {
 				removedDatabases = append(removedDatabases, v)
 			}
 		}
 		if len(removedDatabases) > 0 {
-			stmt := builder.RemoveAllowedDatabases(removedDatabases)
-			if err := snowflake.Exec(db, stmt); err != nil {
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Remove: &sdk.FailoverGroupRemove{
+					AllowedDatabases: removedDatabases,
+				},
+			}
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
 				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", name, err)
 			}
 		}
 
-		var addedDatabases []string
+		var addedDatabases []sdk.AccountObjectIdentifier
 		for _, v := range newAllowedDatabases {
 			if !slices.Contains(oldAllowedDatabases, v) {
 				addedDatabases = append(addedDatabases, v)
@@ -490,40 +502,48 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedDatabases) > 0 {
-			stmt := builder.AddAllowedDatabases(addedDatabases)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error adding allowed databases for failover group %v err = %w", name, err)
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Add: &sdk.FailoverGroupAdd{
+					AllowedDatabases: addedDatabases,
+				},
+			}
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
+				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", name, err)
 			}
 		}
 	}
 
 	if d.HasChange("allowed_shares") {
 		o, n := d.GetChange("allowed_shares")
-		oad := o.(*schema.Set).List()
-		oldAllowedShares := make([]string, len(oad))
+		oad := expandStringList(o.(*schema.Set).List())
+		oldAllowedShares := make([]sdk.AccountObjectIdentifier, len(oad))
 		for i, v := range oad {
-			oldAllowedShares[i] = v.(string)
+			oldAllowedShares[i] = sdk.NewAccountObjectIdentifier(v)
 		}
-		nad := n.(*schema.Set).List()
-		newAllowedShares := make([]string, len(nad))
+		nad := expandStringList(n.(*schema.Set).List())
+		newAllowedShares := make([]sdk.AccountObjectIdentifier, len(nad))
 		for i, v := range nad {
-			newAllowedShares[i] = v.(string)
+			newAllowedShares[i] = sdk.NewAccountObjectIdentifier(v)
 		}
 
-		var removedShares []string
+		var removedShares []sdk.AccountObjectIdentifier
 		for _, v := range oldAllowedShares {
 			if !slices.Contains(newAllowedShares, v) {
 				removedShares = append(removedShares, v)
 			}
 		}
 		if len(removedShares) > 0 {
-			stmt := builder.RemoveAllowedShares(removedShares)
-			if err := snowflake.Exec(db, stmt); err != nil {
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Remove: &sdk.FailoverGroupRemove{
+					AllowedShares: removedShares,
+				},
+			}
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
 				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", name, err)
 			}
 		}
 
-		var addedShares []string
+		var addedShares []sdk.AccountObjectIdentifier
 		for _, v := range newAllowedShares {
 			if !slices.Contains(oldAllowedShares, v) {
 				addedShares = append(addedShares, v)
@@ -531,52 +551,56 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedShares) > 0 {
-			stmt := builder.AddAllowedShares(addedShares)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error adding allowed shares for failover group %v err = %w", name, err)
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Add: &sdk.FailoverGroupAdd{
+					AllowedShares: addedShares,
+				},
 			}
-		}
-	}
-
-	if d.HasChange("allowed_integration_types") {
-		ait := d.Get("allowed_integration_types").(*schema.Set).List()
-		allowedIntegrationTypes := make([]string, len(ait))
-		for i, v := range ait {
-			allowedIntegrationTypes[i] = v.(string)
-		}
-		stmt := builder.ChangeAllowedIntegrationTypes(allowedIntegrationTypes)
-		if err := snowflake.Exec(db, stmt); err != nil {
-			return fmt.Errorf("error updating allowed integration types for failover group %v err = %w", name, err)
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
+				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", name, err)
+			}
 		}
 	}
 
 	if d.HasChange("allowed_accounts") {
 		o, n := d.GetChange("allowed_accounts")
-		oad := o.(*schema.Set).List()
-		oldAllowedAccounts := make([]string, len(oad))
+		oad := expandStringList(o.(*schema.Set).List())
+		oldAllowedAccounts := make([]sdk.AccountIdentifier, len(oad))
 		for i, v := range oad {
-			oldAllowedAccounts[i] = v.(string)
+			parts := strings.Split(v, ".")
+			organizationName := parts[0]
+			accountName := parts[1]
+			accountIdentifier := sdk.NewAccountIdentifier(accountName, organizationName)
+			oldAllowedAccounts[i] = accountIdentifier
 		}
-		nad := n.(*schema.Set).List()
-		newAllowedAccounts := make([]string, len(nad))
+		nad := expandStringList(n.(*schema.Set).List())
+		newAllowedAccounts := make([]sdk.AccountIdentifier, len(nad))
 		for i, v := range nad {
-			newAllowedAccounts[i] = v.(string)
+			parts := strings.Split(v, ".")
+			organizationName := parts[0]
+			accountName := parts[1]
+			accountIdentifier := sdk.NewAccountIdentifier(accountName, organizationName)
+			newAllowedAccounts[i] = accountIdentifier
 		}
 
-		var removedAccounts []string
+		var removedAccounts []sdk.AccountIdentifier
 		for _, v := range oldAllowedAccounts {
 			if !slices.Contains(newAllowedAccounts, v) {
 				removedAccounts = append(removedAccounts, v)
 			}
 		}
 		if len(removedAccounts) > 0 {
-			stmt := builder.RemoveAllowedAccounts(removedAccounts)
-			if err := snowflake.Exec(db, stmt); err != nil {
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Remove: &sdk.FailoverGroupRemove{
+					AllowedAccounts: removedAccounts,
+				},
+			}
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
 				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", name, err)
 			}
 		}
 
-		var addedAccounts []string
+		var addedAccounts []sdk.AccountIdentifier
 		for _, v := range newAllowedAccounts {
 			if !slices.Contains(oldAllowedAccounts, v) {
 				addedAccounts = append(addedAccounts, v)
@@ -584,41 +608,13 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(addedAccounts) > 0 {
-			stmt := builder.AddAllowedAccounts(addedAccounts)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				if !strings.Contains(err.Error(), "Replication already enabled for account") {
-					return fmt.Errorf("error adding allowed accounts for failover group %v err = %w", name, err)
-				}
+			opts := &sdk.AlterSourceFailoverGroupOptions{
+				Add: &sdk.FailoverGroupAdd{
+					AllowedAccounts: addedAccounts,
+				},
 			}
-		}
-	}
-
-	if d.HasChange("replication_schedule") {
-		_, n := d.GetChange("replication_schedule")
-		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
-		log.Printf("[DEBUG] replicationSchedule: %v", replicationSchedule)
-		log.Printf("[DEBUG] replicationSchedule[cron]: %v", replicationSchedule["cron"])
-		c := replicationSchedule["cron"].([]interface{})
-		if len(c) > 0 {
-			if len(c) > 0 {
-				cron := c[0].(map[string]interface{})
-				cronExpression := cron["expression"].(string)
-
-				timeZone := ""
-				if v, ok := cron["time_zone"]; ok {
-					timeZone = v.(string)
-				}
-				stmt := builder.ChangeReplicationCronSchedule(cronExpression, timeZone)
-				if err := snowflake.Exec(db, stmt); err != nil {
-					return fmt.Errorf("error updating replication cron schedule for failover group %v err = %w", name, err)
-				}
-			}
-		} else {
-			log.Printf("[DEBUG] replicationSchedule[interval]: %v", replicationSchedule["interval"])
-			interval := replicationSchedule["interval"].(int)
-			stmt := builder.ChangeReplicationIntervalSchedule(interval)
-			if err := snowflake.Exec(db, stmt); err != nil {
-				return fmt.Errorf("error updating replication interval schedule for failover group %v err = %w", name, err)
+			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
+				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", name, err)
 			}
 		}
 	}
@@ -629,14 +625,15 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 // DeleteFailoverGroup implements schema.DeleteFunc.
 func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	name := d.Id()
-	builder := snowflake.NewFailoverGroupBuilder(name)
-	stmt := builder.Drop()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error deleting file format %v err = %w", d.Id(), err)
+	id := sdk.NewAccountObjectIdentifier(name)
+	ctx := context.Background()
+	err := client.FailoverGroups.Drop(ctx, id, &sdk.DropFailoverGroupOptions{IfExists: sdk.Bool(true)})
+	if err != nil {
+		return fmt.Errorf("error deleting failover group %v err = %w", name, err)
 	}
 
 	d.SetId("")
-
 	return nil
 }

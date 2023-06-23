@@ -25,7 +25,7 @@ func TestInt_GetTag(t *testing.T) {
 		t.Cleanup(maskingPolicyCleanup)
 
 		tagValue := randomString(t)
-		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &MaskingPolicyAlterOptions{
+		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &AlterMaskingPolicyOptions{
 			Set: &MaskingPolicySet{
 				Tag: []TagAssociation{
 					{

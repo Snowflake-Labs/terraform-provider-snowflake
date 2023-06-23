@@ -5,13 +5,18 @@ import (
 )
 
 func IsValidDataType(v string) bool {
-	dt := DataTypeFromString(v)
-	return dt != DataTypeUnknown
+	_, err := ToDataType(v)
+	return err == nil
+}
+
+func IsValidWarehouseSize(v string) bool {
+	_, err := ToWarehouseSize(v)
+	return err == nil
 }
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
 	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
-	l := len(objectIdentifier.FullyQualifiedName())
+	l := len(objectIdentifier.Name())
 	if l == 0 || l > 255 {
 		return false
 	}

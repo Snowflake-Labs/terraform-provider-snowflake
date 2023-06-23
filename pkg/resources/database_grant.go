@@ -12,6 +12,7 @@ import (
 )
 
 var validDatabasePrivileges = NewPrivilegeSet(
+	privilegeCreateDatabaseRole,
 	privilegeCreateSchema,
 	privilegeImportedPrivileges,
 	privilegeModify,
@@ -61,6 +62,16 @@ var databaseGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
 		Default:     false,
+	},
+	"revert_ownership_to_role_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
+		Default:     "",
+		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
+			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
+			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+		},
 	},
 }
 
@@ -129,17 +140,28 @@ func ReadDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 	shares := expandStringList(d.Get("shares").(*schema.Set).List())
 	withGrantOption := d.Get("with_grant_option").(bool)
 
-	// IMPORTED PRIVILEGES is not a real resource, so we can't actually verify
-	// that it is still there. However, it is needed to grant usage for the snowflake database to custom roles.
-	// Just exit for now
+	// IMPORTED PRIVILEGES is not a real resource but
+	// it is needed to grant usage for the snowflake database to custom roles.
+	// We have to set to usage to check Snowflake for the grant
 	if privilege == "IMPORTED PRIVILEGES" {
-		return nil
+		err := d.Set("privilege", "USAGE")
+		if err != nil {
+			return fmt.Errorf("error setting privilege to USAGE: %w", err)
+		}
 	}
 
 	builder := snowflake.DatabaseGrant(databaseName)
 	err := readGenericGrant(d, meta, databaseGrantSchema, builder, false, false, validDatabasePrivileges)
 	if err != nil {
 		return fmt.Errorf("error reading database grant: %w", err)
+	}
+
+	// Then set it back to imported privledges for Terraform to execute the grant.
+	if privilege == "IMPORTED PRIVILEGES" {
+		err := d.Set("privilege", "IMPORTED PRIVILEGES")
+		if err != nil {
+			return fmt.Errorf("error setting privilege to IMPORTED PRIVILEGES: %w", err)
+		}
 	}
 
 	grantID := helpers.EncodeSnowflakeID(databaseName, privilege, withGrantOption, roles, shares)
@@ -178,6 +200,7 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 
 	databaseName := d.Get("database_name").(string)
 	privilege := d.Get("privilege").(string)
+	reversionRole := d.Get("revert_ownership_to_role_name").(string)
 	withGrantOption := d.Get("with_grant_option").(bool)
 	// create the builder
 	builder := snowflake.DatabaseGrant(databaseName)
@@ -187,6 +210,7 @@ func UpdateDatabaseGrant(d *schema.ResourceData, meta interface{}) error {
 		meta,
 		builder,
 		privilege,
+		reversionRole,
 		rolesToRevoke,
 		sharesToRevoke,
 	); err != nil {

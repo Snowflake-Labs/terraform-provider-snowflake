@@ -55,6 +55,7 @@ func TestAcc_ApiIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "comment", "acceptance test"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_gcp_int", "created_on"),
 					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_gcp_int", "google_audience"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_gcp_int", "api_gcp_service_account"),
 				),
 			},
 		},

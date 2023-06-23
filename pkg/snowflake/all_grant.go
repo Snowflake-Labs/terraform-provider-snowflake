@@ -55,12 +55,12 @@ func getNameAndQualifiedNameForAllGrants(db, schema string) (string, string, All
 }
 
 // Name returns the object name for this FutureGrantBuilder.
-func (fgb *AllGrantBuilder) Name() string {
-	return fgb.name
+func (agb *AllGrantBuilder) Name() string {
+	return agb.name
 }
 
-func (fgb *AllGrantBuilder) GrantType() string {
-	return string(fgb.allGrantType)
+func (agb *AllGrantBuilder) GrantType() string {
+	return string(agb.allGrantType)
 }
 
 // AllSchemaGrant returns a pointer to a AllGrantBuilder for a schema.
@@ -195,22 +195,22 @@ func AllTaskGrant(db, schema string) GrantBuilder {
 }
 
 // Show returns the SQL that will show all privileges on the grant.
-func (fgb *AllGrantBuilder) Show() string {
-	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, fgb.allGrantTarget, fgb.qualifiedName)
+func (agb *AllGrantBuilder) Show() string {
+	return fmt.Sprintf(`SHOW ALL GRANTS IN %v %v`, agb.allGrantTarget, agb.qualifiedName)
 }
 
 // Role returns a pointer to a AllGrantExecutable for a role.
-func (fgb *AllGrantBuilder) Role(n string) GrantExecutable {
+func (agb *AllGrantBuilder) Role(n string) GrantExecutable {
 	return &AllGrantExecutable{
 		granteeName:    n,
-		grantName:      fgb.qualifiedName,
-		allGrantType:   fgb.allGrantType,
-		allGrantTarget: fgb.allGrantTarget,
+		grantName:      agb.qualifiedName,
+		allGrantType:   agb.allGrantType,
+		allGrantTarget: agb.allGrantTarget,
 	}
 }
 
 // Share is not implemented because all objects cannot be granted to shares.
-func (fgb *AllGrantBuilder) Share(_ string) GrantExecutable {
+func (agb *AllGrantBuilder) Share(_ string) GrantExecutable {
 	return nil
 }
 
@@ -224,7 +224,7 @@ type AllGrantExecutable struct {
 }
 
 // Grant returns the SQL that will grant all privileges on the grant to the grantee.
-func (fge *AllGrantExecutable) Grant(p string, w bool) string {
+func (ege *AllGrantExecutable) Grant(p string, w bool) string {
 	var template string
 	if w {
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v" WITH GRANT OPTION`
@@ -232,20 +232,30 @@ func (fge *AllGrantExecutable) Grant(p string, w bool) string {
 		template = `GRANT %v ON ALL %vS IN %v %v TO ROLE "%v"`
 	}
 	return fmt.Sprintf(template,
-		p, fge.allGrantType, fge.allGrantTarget, fge.grantName, fge.granteeName)
+		p, ege.allGrantType, ege.allGrantTarget, ege.grantName, ege.granteeName)
 }
 
 // Revoke returns the SQL that will revoke all privileges on the grant from the grantee.
-func (fge *AllGrantExecutable) Revoke(p string) []string {
+func (ege *AllGrantExecutable) Revoke(p string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{
 		fmt.Sprintf(`REVOKE %v ON ALL %vS IN %v %v FROM ROLE "%v"`,
-			p, fge.allGrantType, fge.allGrantTarget, fge.grantName, fge.granteeName),
+			p, ege.allGrantType, ege.allGrantTarget, ege.grantName, ege.granteeName),
+	}
+}
+
+// Revoke returns the SQL that will revoke ownership privileges on the grant from the grantee.
+// Note: returns the same SQL as Revoke.
+func (ege *AllGrantExecutable) RevokeOwnership(r string) []string {
+	// Note: has no effect for ALL GRANTS
+	return []string{
+		fmt.Sprintf(`REVOKE OWNERSHIP ON ALL %vS IN %v %v FROM ROLE "%v"`,
+			ege.allGrantType, ege.allGrantTarget, ege.grantName, ege.granteeName),
 	}
 }
 
 // Show returns the SQL that will show all grants on the schema.
-func (fge *AllGrantExecutable) Show() string {
+func (ege *AllGrantExecutable) Show() string {
 	// Note: There is no `SHOW ALL GRANTS IN \"test_db\"`, therefore changed the query to `SHOW ALL GRANTS IN \"test_db\"` to have a command, which runs in snowflake.
-	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, fge.allGrantTarget, fge.grantName)
+	return fmt.Sprintf(`SHOW GRANTS ON %v %v`, ege.allGrantTarget, ege.grantName)
 }

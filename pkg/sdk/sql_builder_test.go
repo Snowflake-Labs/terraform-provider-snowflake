@@ -9,13 +9,13 @@ import (
 )
 
 type unexportedTestHelper struct {
-	static bool `ddl:"static" db:"EXAMPLE_STATIC"`
+	static bool `ddl:"static" sql:"EXAMPLE_STATIC"`
 }
 
 func TestBuilder_parseField(t *testing.T) {
 	t.Run("test boolean keyword", func(t *testing.T) {
 		s := struct {
-			BooleanKeyword *bool `ddl:"keyword" db:"EXAMPLE_KEYWORD"`
+			BooleanKeyword *bool `ddl:"keyword" sql:"EXAMPLE_KEYWORD"`
 		}{
 			BooleanKeyword: Bool(true),
 		}
@@ -31,7 +31,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test boolean keyword with false value", func(t *testing.T) {
 		s := struct {
-			BooleanKeyword *bool `ddl:"keyword" db:"EXAMPLE_KEYWORD"`
+			BooleanKeyword *bool `ddl:"keyword" sql:"EXAMPLE_KEYWORD"`
 		}{
 			BooleanKeyword: Bool(false),
 		}
@@ -47,7 +47,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test boolean keyword with nil value", func(t *testing.T) {
 		s := struct {
-			BooleanKeyword *bool `ddl:"keyword" db:"EXAMPLE_KEYWORD"`
+			BooleanKeyword *bool `ddl:"keyword" sql:"EXAMPLE_KEYWORD"`
 		}{}
 		val := reflect.ValueOf(s)
 		typ := val.Type()
@@ -123,7 +123,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test static with value", func(t *testing.T) {
 		s := struct {
-			Static *bool `ddl:"static" db:"EXAMPLE_STATIC"`
+			Static *bool `ddl:"static" sql:"EXAMPLE_STATIC"`
 		}{
 			Static: Bool(true),
 		}
@@ -139,7 +139,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test static with nil value", func(t *testing.T) {
 		s := struct {
-			Static *bool `ddl:"static" db:"EXAMPLE_STATIC"`
+			Static *bool `ddl:"static" sql:"EXAMPLE_STATIC"`
 		}{}
 		val := reflect.ValueOf(s)
 		typ := val.Type()
@@ -153,7 +153,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with value", func(t *testing.T) {
 		s := struct {
-			Parameter *string `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
+			Parameter *string `ddl:"parameter" sql:"EXAMPLE_PARAMETER"`
 		}{
 			Parameter: String("example"),
 		}
@@ -169,7 +169,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with nil value", func(t *testing.T) {
 		s := struct {
-			Parameter *string `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
+			Parameter *string `ddl:"parameter" sql:"EXAMPLE_PARAMETER"`
 		}{}
 		val := reflect.ValueOf(s)
 		typ := val.Type()
@@ -183,7 +183,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with double quotes", func(t *testing.T) {
 		s := struct {
-			Parameter *string `ddl:"parameter,double_quotes" db:"EXAMPLE_PARAMETER"`
+			Parameter *string `ddl:"parameter,double_quotes" sql:"EXAMPLE_PARAMETER"`
 		}{
 			Parameter: String("example"),
 		}
@@ -199,7 +199,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with single quotes", func(t *testing.T) {
 		s := struct {
-			Parameter *string `ddl:"parameter,single_quotes" db:"EXAMPLE_PARAMETER"`
+			Parameter *string `ddl:"parameter,single_quotes" sql:"EXAMPLE_PARAMETER"`
 		}{
 			Parameter: String("example"),
 		}
@@ -215,7 +215,7 @@ func TestBuilder_parseField(t *testing.T) {
 
 	t.Run("test parameter with integer value", func(t *testing.T) {
 		s := struct {
-			Parameter *int `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
+			Parameter *int `ddl:"parameter" sql:"EXAMPLE_PARAMETER"`
 		}{
 			Parameter: Int(1),
 		}
@@ -348,9 +348,9 @@ func TestQuoteModifier(t *testing.T) {
 }
 
 type structTestHelper struct {
-	static bool                    `ddl:"static" db:"EXAMPLE_STATIC"`
+	static bool                    `ddl:"static" sql:"EXAMPLE_STATIC"`
 	name   AccountObjectIdentifier `ddl:"identifier"`
-	Param  *string                 `ddl:"parameter" db:"EXAMPLE_PARAMETER"`
+	Param  *string                 `ddl:"parameter" sql:"EXAMPLE_PARAMETER"`
 }
 
 func TestBuilder_parseStruct(t *testing.T) {
@@ -377,23 +377,23 @@ func TestBuilder_parseStruct(t *testing.T) {
 
 	t.Run("struct with a slice field using ddl: keyword", func(t *testing.T) {
 		type testListElement struct {
-			K  *string `ddl:"parameter,single_quotes" db:"KEY"`
-			K2 *string `ddl:"parameter,single_quotes" db:"KEY2"`
+			K  *string `ddl:"parameter,single_quotes" sql:"KEY"`
+			K2 *string `ddl:"parameter,single_quotes" sql:"KEY2"`
 		}
 		s := &struct {
-			List []testListElement `ddl:"keyword,parentheses" db:"TAG"`
+			List []testListElement `ddl:"keyword,parentheses" sql:"TAG"`
 		}{
 			List: []testListElement{{K: String("abc"), K2: String("def")}, {K: String("123"), K2: String("456")}},
 		}
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def',KEY = '123' KEY2 = '456')", clauses[0].String())
+		assert.Equal(t, "TAG (KEY = 'abc' KEY2 = 'def', KEY = '123' KEY2 = '456')", clauses[0].String())
 	})
 
 	t.Run("struct with a slice field using ddl: - (no elements)", func(t *testing.T) {
 		type testListElement struct {
-			K *string `ddl:"parameter,single_quotes" db:"KEY"`
+			K *string `ddl:"parameter,single_quotes" sql:"KEY"`
 		}
 		s := &struct {
 			List []testListElement `ddl:"-"`
@@ -405,7 +405,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 
 	t.Run("struct with a slice field using ddl: - (no_parentheses)", func(t *testing.T) {
 		type testListElement struct {
-			K *string `ddl:"parameter,single_quotes" db:"KEY"`
+			K *string `ddl:"parameter,single_quotes" sql:"KEY"`
 		}
 		s := &struct {
 			List []testListElement `ddl:"-,no_parentheses"`
@@ -415,14 +415,14 @@ func TestBuilder_parseStruct(t *testing.T) {
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "KEY = 'abc',KEY = '123'", clauses[0].String())
+		assert.Equal(t, "KEY = 'abc', KEY = '123'", clauses[0].String())
 	})
 
 	t.Run("struct with a struct list using ddl: list", func(t *testing.T) {
 		type testListElement struct {
-			A bool `ddl:"static" db:"A"`
-			B bool `ddl:"static" db:"B"`
-			C bool `ddl:"static" db:"C"`
+			A bool `ddl:"static" sql:"A"`
+			B bool `ddl:"static" sql:"B"`
+			C bool `ddl:"static" sql:"C"`
 		}
 		s := &struct {
 			List *testListElement `ddl:"list"`
@@ -432,7 +432,24 @@ func TestBuilder_parseStruct(t *testing.T) {
 		clauses, err := builder.parseStruct(s)
 		require.NoError(t, err)
 		assert.Len(t, clauses, 1)
-		assert.Equal(t, "A,B,C", clauses[0].String())
+		assert.Equal(t, "A, B, C", clauses[0].String())
+	})
+
+	t.Run("struct with a struct list using ddl: list,no_comma", func(t *testing.T) {
+		type testListElement struct {
+			A bool `ddl:"static" sql:"A"`
+			B bool `ddl:"static" sql:"B"`
+			C bool `ddl:"static" sql:"C"`
+		}
+		s := &struct {
+			List *testListElement `ddl:"list,no_comma"`
+		}{
+			List: &testListElement{A: true, B: true, C: true},
+		}
+		clauses, err := builder.parseStruct(s)
+		require.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "A B C", clauses[0].String())
 	})
 }
 

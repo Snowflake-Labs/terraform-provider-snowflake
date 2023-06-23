@@ -1,5 +1,76 @@
 # Changelog
 
+## [0.67.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.2...v0.67.0) (2023-06-22)
+
+
+### Features
+
+* account password policy attachment ([#1824](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1824)) ([f408828](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f408828fd023c2207ec41f702cec7dae524b1e93))
+
+
+### BugFixes
+
+* Generate security integration statements using double quoted names. ([#1897](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1897)) ([a21d44f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a21d44fc9109c589a7e4c78032e2f5a62b6ed514))
+* missing 'kind' field ([#1872](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1872)) ([59b7ef5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59b7ef5d791ecce366063a5cb8e2d68c68fb3e39))
+* support empty comments in oauth integrations ([#1900](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1900)) ([53d46b3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53d46b3a97680a4bf0e402d48c7db15c0d3c6f03))
+
+## [0.66.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.1...v0.66.2) (2023-06-13)
+
+
+### BugFixes
+
+* warehouse size validation ([#1873](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1873)) ([5bbe460](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5bbe4600e2768a66a83df67a16368888b7f1d76b))
+
+## [0.66.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.0...v0.66.1) (2023-06-03)
+
+
+### BugFixes
+
+* err when reading profile ([#1853](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1853)) ([29c4633](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/29c463383da5fbb8de0af5c957aa9f3a34572c6e))
+
+## [0.66.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.65.0...v0.66.0) (2023-06-02)
+
+
+### Features
+
+* databases sdk v2 ([#1840](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1840)) ([410b493](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/410b493ff75188b70cee91db56c60538d6823aac))
+
+
+### Misc
+
+* rename "db" symbol to "sql" and make input options more uniform in naming convention ([#1837](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1837)) ([244b5b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/244b5b45e22f66875f14be9bcb9af08ad41d37ca))
+
+## [0.65.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.64.0...v0.65.0) (2023-05-30)
+
+
+### Features
+
+* add failover groups to sdk v2, and add data source for failover groups ([#1825](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1825)) ([44e8c06](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/44e8c06ba4c665c81f0b909dbd3df90c4925e179))
+* add shares to sdk v2 ([#1813](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1813)) ([a814841](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a814841011f08857d8d37691fa5ff01cd9412176))
+* adding a subset of missing parameters ([#1828](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1828)) ([6d1a572](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6d1a572623438dd96139edbd698ce5974fa3df61))
+* adding CREATE STREAMLIT as privalege ([#1771](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1771)) ([7b112cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7b112cc94822807d3c25c78ec812ec2c2c66ea16))
+* alerts datasource ([#1727](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1727)) ([a1d0d2e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a1d0d2eeb9a8a03d4c347b9f153182e66c237a4f))
+* allow all priv on grants ([#1786](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1786)) ([aa3f873](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/aa3f873b4669c5942c10681151d6afd4ea03623f))
+* support custom ownership transfer for grants ([#1743](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1743)) ([eaa6e01](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/eaa6e01820cb04ffa3c647ecd893e479af8e35a1))
+
+
+### Misc
+
+* Account SDK ([#1822](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1822)) ([4c22b89](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4c22b89e82a608375fd78993134cf3a0b45b985b))
+* Migrate Warehouse resource + datasource to new SDK ([#1792](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1792)) ([a14b994](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a14b994d62f73c272cde72651c3c8c18ac4213cf))
+
+
+### BugFixes
+
+* 0.65 integration tests and minor linting fixes ([#1835](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1835)) ([8d7d663](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8d7d6636a67d272d5b87e02a178ae799b5b6d777))
+* add grant to sdk v2, better validation ([#1812](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1812)) ([76da3b8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/76da3b84d9d65493ae666fad6ea6d926b81add8f))
+* Add missing Google Cloud computed property api_gcp_service_account to the api integration resource ([#1776](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1776)) ([1dd0672](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1dd06724aa1add9b504c820583a2a752555c9bdb))
+* allow password_policy.max_age_days = 0 ([#1819](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1819)) ([eeaadfe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/eeaadfef5b8fc31f84304899c7b205c9a97d8852))
+* fixed enable_multiple_grants behaviour for role_grants ([#1816](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1816)) ([f508129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f50812910a679bdea2d3add65f92d7cebeaa345c))
+* gorelease freebsd ([#1790](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1790)) ([c87f74f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c87f74f0cdffba16108ee822f845d0e961205252))
+* reading warehouse with underscore in name ([#1793](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1793)) ([5e184fa](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5e184fab4cbabcf27f290eb79c01a0cd6cc79282))
+* warehouse for sdk v2 ([#1804](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1804)) ([99f7621](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/99f7621cad1aafa83f96a4ed52d0fd04d6dfb2ae))
+
 ## [0.64.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.63.0...v0.64.0) (2023-05-09)
 
 

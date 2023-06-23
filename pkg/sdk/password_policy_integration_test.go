@@ -93,7 +93,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	t.Run("test complete", func(t *testing.T) {
 		name := randomUUID(t)
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &PasswordPolicyCreateOptions{
+		err := client.PasswordPolicies.Create(ctx, id, &CreatePasswordPolicyOptions{
 			OrReplace:                 Bool(true),
 			PasswordMinLength:         Int(10),
 			PasswordMaxLength:         Int(20),
@@ -125,7 +125,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	t.Run("test if_not_exists", func(t *testing.T) {
 		name := randomUUID(t)
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &PasswordPolicyCreateOptions{
+		err := client.PasswordPolicies.Create(ctx, id, &CreatePasswordPolicyOptions{
 			OrReplace:                 Bool(false),
 			IfNotExists:               Bool(true),
 			PasswordMinLength:         Int(10),
@@ -204,7 +204,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	t.Run("when setting new values", func(t *testing.T) {
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
+		alterOptions := &AlterPasswordPolicyOptions{
 			Set: &PasswordPolicySet{
 				PasswordMinLength: Int(10),
 				PasswordMaxLength: Int(20),
@@ -225,7 +225,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		t.Cleanup(passwordPolicyCleanup)
 		newName := randomUUID(t)
 		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
-		alterOptions := &PasswordPolicyAlterOptions{
+		alterOptions := &AlterPasswordPolicyOptions{
 			NewName: newID,
 		}
 		err := client.PasswordPolicies.Alter(ctx, oldID, alterOptions)
@@ -234,7 +234,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		// rename back to original name so it can be cleaned up
 		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
-		alterOptions = &PasswordPolicyAlterOptions{
+		alterOptions = &AlterPasswordPolicyOptions{
 			NewName: oldID,
 		}
 		err = client.PasswordPolicies.Alter(ctx, newID, alterOptions)
@@ -242,21 +242,21 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when unsetting values", func(t *testing.T) {
-		createOptions := &PasswordPolicyCreateOptions{
+		createOptions := &CreatePasswordPolicyOptions{
 			Comment:            String("test comment"),
 			PasswordMaxRetries: Int(10),
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
+		alterOptions := &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
 				PasswordMaxRetries: Bool(true),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
-		alterOptions = &PasswordPolicyAlterOptions{
+		alterOptions = &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
 				Comment: Bool(true),
 			},
@@ -271,14 +271,14 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
-		createOptions := &PasswordPolicyCreateOptions{
+		createOptions := &CreatePasswordPolicyOptions{
 			Comment:            String("test comment"),
 			PasswordMaxRetries: Int(10),
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &PasswordPolicyAlterOptions{
+		alterOptions := &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
 				Comment:            Bool(true),
 				PasswordMaxRetries: Bool(true),
@@ -317,7 +317,7 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
 		passwordPolicy, _ := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		id := passwordPolicy.ID()
-		dropOptions := &PasswordPolicyDropOptions{IfExists: Bool(true)}
+		dropOptions := &DropPasswordPolicyOptions{IfExists: Bool(true)}
 		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)

@@ -8,9 +8,10 @@
     "go.testFlags": [
         "-v"
     ],
-    "go.testTimeout": "300s",
+    "go.testTimeout": "600s",
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
         "--fast"
     ],
+    "files.trimTrailingWhitespace": true,
 }

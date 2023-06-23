@@ -9,12 +9,24 @@ import (
 func TestIsValidDataType(t *testing.T) {
 	t.Run("with valid data type", func(t *testing.T) {
 		ok := IsValidDataType("VARCHAR")
-		assert.Equal(t, ok, true)
+		assert.True(t, ok)
 	})
 
 	t.Run("with invalid data type", func(t *testing.T) {
 		ok := IsValidDataType("foo")
-		assert.Equal(t, ok, false)
+		assert.False(t, ok)
+	})
+}
+
+func TestIsValidWarehouseSize(t *testing.T) {
+	t.Run("with valid warehouse size", func(t *testing.T) {
+		ok := IsValidWarehouseSize("XSMALL")
+		assert.True(t, ok)
+	})
+
+	t.Run("with invalid warehouse size", func(t *testing.T) {
+		ok := IsValidWarehouseSize("foo")
+		assert.False(t, ok)
 	})
 }
 
@@ -30,8 +42,13 @@ func TestValidObjectidentifier(t *testing.T) {
 	})
 
 	t.Run("over 255 characters", func(t *testing.T) {
-		ok := validObjectidentifier(NewAccountObjectIdentifier(randomStringRange(t, 256, 256)))
+		ok := validObjectidentifier(NewAccountObjectIdentifier(randomStringN(t, 256)))
 		assert.Equal(t, ok, false)
+	})
+
+	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
+		ok := validObjectidentifier(NewSchemaObjectIdentifier(randomStringN(t, 255), randomStringN(t, 255), randomStringN(t, 255)))
+		assert.Equal(t, ok, true)
 	})
 }
 
@@ -141,6 +158,14 @@ func TestValueSet(t *testing.T) {
 
 	t.Run("with invalid identifier", func(t *testing.T) {
 		ok := valueSet(NewAccountObjectIdentifier(""))
+		assert.Equal(t, ok, false)
+	})
+
+	t.Run("with zero ObjectType", func(t *testing.T) {
+		s := struct {
+			ot *ObjectType
+		}{}
+		ok := valueSet(s.ot)
 		assert.Equal(t, ok, false)
 	})
 }
