@@ -356,7 +356,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &AlterAlertOptions{
-			Action: &Resume,
+			Action: &AlertActionResume,
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -371,10 +371,10 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == AlertStarted)
+		assert.True(t, alerts[0].State == AlertStateStarted)
 
 		alterOptions = &AlterAlertOptions{
-			Action: &Suspend,
+			Action: &AlertActionSuspend,
 		}
 
 		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
@@ -389,7 +389,7 @@ func TestInt_AlertAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == AlertSuspended)
+		assert.True(t, alerts[0].State == AlertStateSuspended)
 	})
 }
 

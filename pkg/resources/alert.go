@@ -136,7 +136,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("enabled", alert.State == sdk.AlertStarted); err != nil {
+	if err := d.Set("enabled", alert.State == sdk.AlertStateStarted); err != nil {
 		return err
 	}
 
@@ -240,7 +240,7 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 	enabled := d.Get("enabled").(bool)
 
 	if enabled {
-		opts := sdk.AlterAlertOptions{Action: &sdk.Resume}
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
 		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
 		if err != nil {
 			return err
