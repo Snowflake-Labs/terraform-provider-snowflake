@@ -3,7 +3,7 @@
 page_title: "snowflake_user Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
- 
+  
 ---
 
 # snowflake_user (Resource)
