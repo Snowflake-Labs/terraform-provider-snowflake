@@ -31,6 +31,9 @@ provider "snowflake" {
   role      = "..."
   host      = "..."
   warehouse = "..."
+  session_params = {
+    query_tag = "..."
+  }
 }
 
 
@@ -67,6 +70,7 @@ provider snowflake {
 - `protocol` (String) Support custom protocols to snowflake go driver. Can be sourced from `SNOWFLAKE_PROTOCOL` environment variable.
 - `region` (String) [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.
 - `role` (String) Snowflake role to use for operations. If left unset, default role for user will be used. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.
+- `session_params` (Map of String) Sets session parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)
 - `username` (String) Username for username+password authentication. Can come from the `SNOWFLAKE_USER` environment variable. Required unless using profile.
 - `warehouse` (String) Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.
 

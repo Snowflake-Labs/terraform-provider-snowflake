@@ -186,8 +186,8 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROFILE", "default"),
 			},
 			"session_params": {
-				Type:        schema.TypeString,
-				Description: "Sets session parameters ",
+				Type:        schema.TypeMap,
+				Description: "Sets session parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)",
 				Optional:    true,
 			},
 		},
@@ -354,7 +354,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	warehouse := s.Get("warehouse").(string)
 	insecureMode := s.Get("insecure_mode").(bool)
 	profile := s.Get("profile").(string)
-	query_tag := s.Get("query_tag").(string)
+	session_params := s.Get("session_params").(map[string]interface{})
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -365,8 +365,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	}
 
 	params := make(map[string]*string)
-	if query_tag != "default" {
-		params["query_tag"] = &query_tag
+	for key, value := range session_params {
+		strKey := fmt.Sprintf("%v", key)
+		strValue := fmt.Sprintf("%v", value)
+
+		params[strKey] = &strValue
 	}
 
 	dsn, err := DSN(
@@ -396,15 +399,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
-<<<<<<< HEAD
-	log.Printf("[INFO] account: %s\n", account)
-	log.Printf("[INFO] user: %s\n", user)
-	log.Printf("[INFO] role: %s\n", role)
-	log.Printf("[INFO] warehouse: %s\n", warehouse)
-	log.Printf("[INFO] dsn: %s\n", dsn)
-	log.Printf("[INFO] query_tag: %s\n", query_tag)
-=======
->>>>>>> origin/main
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
@@ -453,7 +447,6 @@ func DSN(
 		Protocol:     protocol,
 		InsecureMode: insecureMode,
 		Params:       params,
-		// Params: make(map[string]*string),
 	}
 
 	// If host is set trust it and do not use the region value
@@ -637,12 +630,8 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
 	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
 	profile := os.Getenv("SNOWFLAKE_PROFILE")
-	query_tag := os.Getenv("SNOWFLAKE_QUERY_TAG")
 
 	params := make(map[string]*string)
-	if query_tag != "default" && query_tag != "" {
-		params["query_tag"] = &query_tag
-	}
 
 	if profile == "" {
 		profile = "default"
