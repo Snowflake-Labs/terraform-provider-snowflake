@@ -51,7 +51,7 @@ resource "snowflake_user" "user" {
 - `default_warehouse` (String) Specifies the virtual warehouse that is active by default for the user’s session upon login.
 - `disabled` (Boolean)
 - `display_name` (String) Name displayed for the user in the Snowflake web interface.
-- `email` (String, Sensitive) Email address for the user.
+- `email` (String) Email address for the user.
 - `first_name` (String) First name of the user.
 - `last_name` (String) Last name of the user.
 - `login_name` (String) The name users use to log in. If not supplied, snowflake will use name instead.
