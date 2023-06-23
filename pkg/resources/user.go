@@ -36,14 +36,12 @@ var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Sensitive:   true,
 		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
 	},
 	"login_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Sensitive:   true,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
 		DiffSuppressFunc: diffCaseInsensitive,
@@ -111,26 +109,22 @@ var userSchema = map[string]*schema.Schema{
 	"email": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "Email address for the user.",
 	},
 	"display_name": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "Name displayed for the user in the Snowflake web interface.",
 	},
 	"first_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "First name of the user.",
 	},
 	"last_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "Last name of the user.",
 	},
 	"tag": tagReferenceSchema,

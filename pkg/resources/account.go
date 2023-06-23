@@ -83,7 +83,6 @@ var accountSchema = map[string]*schema.Schema{
 	"email": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Sensitive:    true,
 		Description:  "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
 		ValidateFunc: snowflakeValidation.ValidateEmail,
 		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though it's not ideal
@@ -108,7 +107,6 @@ var accountSchema = map[string]*schema.Schema{
 	"first_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "First name of the initial administrative user of the account",
 		// We have no way of assuming a role into this account to change the admin first name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
@@ -125,7 +123,6 @@ var accountSchema = map[string]*schema.Schema{
 	"last_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
 		Description: "Last name of the initial administrative user of the account",
 		// We have no way of assuming a role into this account to change the admin last name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
