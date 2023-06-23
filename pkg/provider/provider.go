@@ -185,11 +185,10 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROFILE", "default"),
 			},
-			"query_tag": {
+			"session_params": {
 				Type:        schema.TypeString,
-				Description: "Sets the query tag for the sessions",
+				Description: "Sets session parameters ",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_QUERY_TAG", "default"),
 			},
 		},
 		ResourcesMap:   getResources(),
