@@ -85,17 +85,17 @@ func (v *alerts) Create(ctx context.Context, id SchemaObjectIdentifier, warehous
 type AlertAction string
 
 var (
-	// Resume makes a suspended alert active.
-	Resume AlertAction = "RESUME"
-	// Suspend puts the alert into a “Suspended” state.
-	Suspend AlertAction = "SUSPEND"
+	// AlertActionResume makes a suspended alert active.
+	AlertActionResume AlertAction = "RESUME"
+	// AlertActionSuspend puts the alert into a “Suspended” state.
+	AlertActionSuspend AlertAction = "SUSPEND"
 )
 
 type AlertState string
 
 var (
-	AlertStarted   AlertState = "started"
-	AlertSuspended AlertState = "suspended"
+	AlertStateStarted   AlertState = "started"
+	AlertStateSuspended AlertState = "suspended"
 )
 
 type AlterAlertOptions struct {
