@@ -31,13 +31,15 @@ type resourceMonitors struct {
 type ResourceMonitor struct {
 	Name                     string
 	CreditQuota              float64
+	UsedCredits              float64
+	RemainingCredits         float64
 	Frequency                Frequency
 	StartTime                string
 	EndTime                  string
 	SuspendTriggers          []TriggerDefinition
 	SuspendImmediateTriggers []TriggerDefinition
 	NotifyTriggers           []TriggerDefinition
-	SetForAccount            bool
+	Level                    ResourceMonitorLevel
 	Comment                  string
 	NotifyUsers              []string
 }
@@ -70,6 +72,21 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 		}
 		resourceMonitor.CreditQuota = creditQuota
 	}
+	if row.UsedCredits.Valid {
+		usedCredits, err := strconv.ParseFloat(row.UsedCredits.String, 64)
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.UsedCredits = usedCredits
+	}
+	if row.RemainingCredits.Valid {
+		remainingCredits, err := strconv.ParseFloat(row.RemainingCredits.String, 64)
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.RemainingCredits = remainingCredits
+	}
+
 	if row.Frequency.Valid {
 		frequency, err := FrequencyFromString(row.Frequency.String)
 		if err != nil {
@@ -83,17 +100,17 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 	if row.EndTime.Valid {
 		resourceMonitor.EndTime = row.EndTime.String
 	}
-	suspendTriggers, err := extractTriggers(row.SuspendAt, Suspend)
+	suspendTriggers, err := extractTriggers(row.SuspendAt, TriggerActionSuspend)
 	if err != nil {
 		return nil, err
 	}
 	resourceMonitor.SuspendTriggers = suspendTriggers
-	suspendImmediateTriggers, err := extractTriggers(row.SuspendImmediateAt, SuspendImmediate)
+	suspendImmediateTriggers, err := extractTriggers(row.SuspendImmediateAt, TriggerActionSuspendImmediate)
 	if err != nil {
 		return nil, err
 	}
 	resourceMonitor.SuspendImmediateTriggers = suspendImmediateTriggers
-	notifyTriggers, err := extractTriggers(row.NotifyAt, Notify)
+	notifyTriggers, err := extractTriggers(row.NotifyAt, TriggerActionNotify)
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +120,15 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 	}
 	resourceMonitor.NotifyUsers = extractUsers(row.NotifyUsers)
 
-	if row.Level.Valid && row.Level.String == "ACCOUNT" {
-		resourceMonitor.SetForAccount = true
-	} else {
-		resourceMonitor.SetForAccount = false
+	if row.Level.Valid {
+		switch row.Level.String {
+		case "ACCOUNT":
+			resourceMonitor.Level = ResourceMonitorLevelAccount
+		case "WAREHOUSE":
+			resourceMonitor.Level = ResourceMonitorLevelWarehouse
+		default:
+			resourceMonitor.Level = ResourceMonitorLevelNull
+		}
 	}
 
 	return resourceMonitor, nil
@@ -114,7 +136,7 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 
 // extractTriggerInts converts the triggers in the DB (stored as a comma
 // separated string with trailing %s) into a slice of TriggerDefinitions.
-func extractTriggers(s sql.NullString, trigger triggerAction) ([]TriggerDefinition, error) {
+func extractTriggers(s sql.NullString, trigger TriggerAction) ([]TriggerDefinition, error) {
 	// Check if this is NULL
 	if !s.Valid {
 		return []TriggerDefinition{}, nil
@@ -153,7 +175,7 @@ type CreateResourceMonitorOptions struct {
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
 	name            AccountObjectIdentifier `ddl:"identifier"`
-	With            *bool                   `ddl:"keyword" sql:"WITH"` //lint:ignore U1000 This is used in the ddl tag
+	With            *bool                   `ddl:"keyword" sql:"WITH"`
 
 	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
@@ -197,20 +219,25 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 	return err
 }
 
-type TriggerDefinition struct {
-	on            bool          `ddl:"static" sql:"ON"`      //lint:ignore U1000 This is used in the ddl tag
-	Threshold     int           `ddl:"keyword"`              //lint:ignore U1000 This is used in the ddl tag
-	percent       bool          `ddl:"static" sql:"PERCENT"` //lint:ignore U1000 This is used in the ddl tag
-	do            bool          `ddl:"static" sql:"DO"`      //lint:ignore U1000 This is used in the ddl tag
-	TriggerAction triggerAction `ddl:"keyword" `             //lint:ignore U1000 This is used in the ddl tag
-}
-
-type triggerAction string
+type ResourceMonitorLevel int
 
 const (
-	Suspend          triggerAction = "SUSPEND"
-	SuspendImmediate triggerAction = "SUSPEND_IMMEDIATE"
-	Notify           triggerAction = "NOTIFY"
+	ResourceMonitorLevelAccount = iota
+	ResourceMonitorLevelWarehouse
+	ResourceMonitorLevelNull
+)
+
+type TriggerDefinition struct {
+	Threshold     int           `ddl:"parameter,no_equals" sql:"ON"`
+	TriggerAction TriggerAction `ddl:"parameter,no_equals" sql:"PERCENT DO"`
+}
+
+type TriggerAction string
+
+const (
+	TriggerActionSuspend          TriggerAction = "SUSPEND"
+	TriggerActionSuspendImmediate TriggerAction = "SUSPEND_IMMEDIATE"
+	TriggerActionNotify           TriggerAction = "NOTIFY"
 )
 
 type NotifyUsers struct {
@@ -225,30 +252,30 @@ type Frequency string
 
 func FrequencyFromString(s string) (*Frequency, error) {
 	s = strings.ToUpper(s)
-	if monthly := string(Monthly); monthly == s {
+	if monthly := string(FrequencyMonthly); monthly == s {
 		return (*Frequency)(&monthly), nil
 	}
-	if daily := string(Daily); daily == s {
+	if daily := string(FrequencyDaily); daily == s {
 		return (*Frequency)(&daily), nil
 	}
-	if weekly := string(Weekly); weekly == s {
+	if weekly := string(FrequencyWeekly); weekly == s {
 		return (*Frequency)(&weekly), nil
 	}
-	if yearly := string(Yearly); yearly == s {
+	if yearly := string(FrequencyYearly); yearly == s {
 		return (*Frequency)(&yearly), nil
 	}
-	if never := string(Never); never == s {
+	if never := string(FrequencyNever); never == s {
 		return (*Frequency)(&never), nil
 	}
 	return nil, fmt.Errorf("Invalid frequency type: %s", s)
 }
 
 const (
-	Monthly Frequency = "MONTHLY"
-	Daily   Frequency = "DAILY"
-	Weekly  Frequency = "WEEKLY"
-	Yearly  Frequency = "YEARLY"
-	Never   Frequency = "NEVER"
+	FrequencyMonthly Frequency = "MONTHLY"
+	FrequencyDaily   Frequency = "DAILY"
+	FrequencyWeekly  Frequency = "WEEKLY"
+	FrequencyYearly  Frequency = "YEARLY"
+	FrequencyNever   Frequency = "NEVER"
 )
 
 // AlterResourceMonitorOptions contains options for altering a resource monitor.
@@ -297,8 +324,8 @@ type ResourceMonitorSet struct {
 	// at least one
 	CreditQuota    *int       `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimeStamp *string    `ddl:"parameter,equals" sql:"START_TIMESTAMP"`
-	EndTimeStamp   *string    `ddl:"parameter,equals" sql:"END_TIMESTAMP"`
+	StartTimeStamp *string    `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimeStamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 }
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.

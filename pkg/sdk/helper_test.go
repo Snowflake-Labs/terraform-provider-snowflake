@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
@@ -202,11 +203,11 @@ func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func
 		Triggers: &[]TriggerDefinition{
 			{
 				Threshold:     100,
-				TriggerAction: Suspend,
+				TriggerAction: TriggerActionSuspend,
 			},
 			{
 				Threshold:     90,
-				TriggerAction: Notify,
+				TriggerAction: TriggerActionNotify,
 			},
 		},
 	})
@@ -445,4 +446,14 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 	}
 	expression := "REPLACE('X', 1, 2)"
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
+}
+
+func ParseTimestampWithOffset(s string) (*time.Time, error) {
+	t, err := time.Parse("2006-01-02T15:04:05-07:00", s)
+	if err != nil {
+		return nil, err
+	}
+	_, offset := t.Zone()
+	adjustedTime := t.Add(-time.Duration(offset) * time.Second)
+	return &adjustedTime, nil
 }

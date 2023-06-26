@@ -23,18 +23,18 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	t.Run("with complete options", func(t *testing.T) {
 		creditQuota := Int(100)
-		frequency := Monthly
+		frequency := FrequencyMonthly
 		startTimeStamp := "IMMIEDIATELY"
 		endTimeStamp := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC).String()
 		notifiedUsers := []NotifiedUser{{Name: "FIRST_USER"}, {Name: "SECOND_USER"}}
 		triggers := []TriggerDefinition{
 			{
 				Threshold:     50,
-				TriggerAction: SuspendImmediate,
+				TriggerAction: TriggerActionSuspendImmediate,
 			},
 			{
 				Threshold:     100,
-				TriggerAction: Notify,
+				TriggerAction: TriggerActionNotify,
 			},
 		}
 
@@ -105,7 +105,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 
 	t.Run("with a multitple set", func(t *testing.T) {
 		newCreditQuota := Int(50)
-		newFrequency := Yearly
+		newFrequency := FrequencyYearly
 		newStartTimeStamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).String()
 		opts := &AlterResourceMonitorOptions{
 			name: id,

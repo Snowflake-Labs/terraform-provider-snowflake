@@ -331,7 +331,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Account level
-	if err := d.Set("set_for_account", resourceMonitor.SetForAccount); err != nil {
+	if err := d.Set("set_for_account", resourceMonitor.Level == sdk.ResourceMonitorLevelAccount); err != nil {
 		return err
 	}
 
@@ -491,7 +491,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 	if v, ok := d.GetOk("suspend_trigger"); ok {
 		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 			Threshold:     v.(int),
-			TriggerAction: sdk.Suspend,
+			TriggerAction: sdk.TriggerActionSuspend,
 		})
 	}
 
@@ -500,14 +500,14 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 		for _, t := range siTrigs {
 			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 				Threshold:     t,
-				TriggerAction: sdk.Suspend,
+				TriggerAction: sdk.TriggerActionSuspend,
 			})
 		}
 	}
 	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
 		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 			Threshold:     v.(int),
-			TriggerAction: sdk.SuspendImmediate,
+			TriggerAction: sdk.TriggerActionSuspendImmediate,
 		})
 	}
 	// Support deprecated suspend_immediate_triggers.
@@ -516,7 +516,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 		for _, t := range sTrigs {
 			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 				Threshold:     t,
-				TriggerAction: sdk.SuspendImmediate,
+				TriggerAction: sdk.TriggerActionSuspendImmediate,
 			})
 		}
 	}
@@ -524,7 +524,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 	for _, t := range nTrigs {
 		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
 			Threshold:     t,
-			TriggerAction: sdk.Notify,
+			TriggerAction: sdk.TriggerActionNotify,
 		})
 	}
 	return suspendTriggers

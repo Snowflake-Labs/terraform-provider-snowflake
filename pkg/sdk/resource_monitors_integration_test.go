@@ -58,11 +58,11 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		triggers := []TriggerDefinition{
 			{
 				Threshold:     50,
-				TriggerAction: SuspendImmediate,
+				TriggerAction: TriggerActionSuspendImmediate,
 			},
 			{
 				Threshold:     100,
-				TriggerAction: Notify,
+				TriggerAction: TriggerActionNotify,
 			},
 		}
 		err = client.ResourceMonitors.Create(ctx, id, &CreateResourceMonitorOptions{
@@ -123,7 +123,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.Empty(t, resourceMonitor.EndTime)
 		assert.Empty(t, resourceMonitor.CreditQuota)
-		assert.Equal(t, Monthly, resourceMonitor.Frequency)
+		assert.Equal(t, FrequencyMonthly, resourceMonitor.Frequency)
 		assert.Empty(t, resourceMonitor.NotifyUsers)
 		assert.Empty(t, resourceMonitor.NotifyTriggers)
 		assert.Empty(t, resourceMonitor.SuspendImmediateTriggers)
@@ -149,7 +149,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		oldTriggers = append(oldTriggers, resourceMonitor.SuspendTriggers...)
 		oldTriggers = append(oldTriggers, resourceMonitor.SuspendImmediateTriggers...)
 		newTriggers := oldTriggers
-		newTriggers = append(newTriggers, TriggerDefinition{Threshold: 30, TriggerAction: Notify})
+		newTriggers = append(newTriggers, TriggerDefinition{Threshold: 30, TriggerAction: TriggerActionNotify})
 		alterOptions := &AlterResourceMonitorOptions{
 			Triggers: &newTriggers,
 		}
@@ -189,6 +189,39 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+	})
+	t.Run("when changing scheduling info", func(t *testing.T) {
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		t.Cleanup(resourceMonitorCleanup)
+		frequency, err := FrequencyFromString("NEVER")
+		require.NoError(t, err)
+		startTimeStamp := "2025-01-01 12:34"
+		endTimeStamp := "2026-01-01 12:34"
+
+		alterOptions := &AlterResourceMonitorOptions{
+			Set: &ResourceMonitorSet{
+				Frequency:      frequency,
+				StartTimeStamp: &startTimeStamp,
+				EndTimeStamp:   &endTimeStamp,
+			},
+		}
+		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		require.NoError(t, err)
+		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &ShowResourceMonitorOptions{
+			Like: &Like{
+				Pattern: String(resourceMonitor.Name),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(resourceMonitors))
+		resourceMonitor = resourceMonitors[0]
+		assert.Equal(t, *frequency, resourceMonitor.Frequency)
+		startTime, err := ParseTimestampWithOffset(resourceMonitor.StartTime)
+		require.NoError(t, err)
+		endTime, err := ParseTimestampWithOffset(resourceMonitor.EndTime)
+		require.NoError(t, err)
+		assert.Equal(t, startTimeStamp, startTime.Format("2006-01-01 15:04"))
+		assert.Equal(t, endTimeStamp, endTime.Format("2006-01-01 15:04"))
 	})
 }
 
