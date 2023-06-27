@@ -26,7 +26,7 @@ func TestCreateExternalOauthIntegration3(t *testing.T) {
 	r.Nil(err)
 	createStmt, err := mb.Create(input)
 	r.Nil(err)
-	r.Equal(`CREATE SECURITY INTEGRATION azure type = 'EXTERNAL_OAUTH' EXTERNAL_OAUTH_TYPE = 'AZURE';`, createStmt)
+	r.Equal(`CREATE SECURITY INTEGRATION "azure" type = 'EXTERNAL_OAUTH' EXTERNAL_OAUTH_TYPE = 'AZURE';`, createStmt)
 }
 
 func TestAlterExternalOauthIntegration3(t *testing.T) {
@@ -52,7 +52,7 @@ func TestAlterExternalOauthIntegration3(t *testing.T) {
 	alterStmt, err := mb.Update(input)
 	r.Nil(err)
 	r.Equal(
-		`ALTER SECURITY INTEGRATION IF EXISTS azure SET EXTERNAL_OAUTH_ISSUER = 'someissuer' EXTERNAL_OAUTH_BLOCKED_ROLES_LIST = ('a', 'b');`,
+		`ALTER SECURITY INTEGRATION IF EXISTS "azure" SET EXTERNAL_OAUTH_ISSUER = 'someissuer' EXTERNAL_OAUTH_BLOCKED_ROLES_LIST = ('a', 'b');`,
 		alterStmt,
 	)
 }
@@ -74,7 +74,7 @@ func TestUnsetExternalOauthIntegration3(t *testing.T) {
 	unsetStmt, err := mb.Unset(input)
 	r.Nil(err)
 	r.Equal(
-		`ALTER SECURITY INTEGRATION azure UNSET EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM;`,
+		`ALTER SECURITY INTEGRATION "azure" UNSET EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM;`,
 		unsetStmt,
 	)
 }
@@ -92,7 +92,7 @@ func TestDeleteExternalOauthIntegration3(t *testing.T) {
 	r.Nil(err)
 	dropStmt, err := mb.Delete(input)
 	r.Nil(err)
-	r.Equal(`DROP SECURITY INTEGRATION azure;`, dropStmt)
+	r.Equal(`DROP SECURITY INTEGRATION "azure";`, dropStmt)
 }
 
 func TestReadDescribeExternalOauthIntegration3(t *testing.T) {
@@ -106,7 +106,7 @@ func TestReadDescribeExternalOauthIntegration3(t *testing.T) {
 	r.Nil(err)
 	describeStmt, err := mb.ReadDescribe(input)
 	r.Nil(err)
-	r.Equal(`DESCRIBE SECURITY INTEGRATION azure;`, describeStmt)
+	r.Equal(`DESCRIBE SECURITY INTEGRATION "azure";`, describeStmt)
 }
 
 func TestReadShowExternalOauthIntegration3(t *testing.T) {

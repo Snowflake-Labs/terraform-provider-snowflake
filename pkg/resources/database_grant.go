@@ -12,6 +12,7 @@ import (
 )
 
 var validDatabasePrivileges = NewPrivilegeSet(
+	privilegeCreateDatabaseRole,
 	privilegeCreateSchema,
 	privilegeImportedPrivileges,
 	privilegeModify,
