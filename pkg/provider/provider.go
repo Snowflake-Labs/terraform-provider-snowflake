@@ -113,13 +113,13 @@ func Provider() *schema.Provider {
 				Sensitive:     false,
 				ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
-      "cache_temporary_credential": {
-        Type:         schema.TypeBool,
-        Description:  "Cache the ID token from oauth or browser auth. This is not secure on Linux. Must be enabled on your Snowflake account.",
-        Optional:     true,
-        DefaultFunc:  schema.EnvDefaultFunc("SNOWFLAKE_CACHE_TEMPORARY_CREDENTIALS", nil),
-        Sensitive:    false,
-      },
+			"cache_temporary_credential": {
+				Type:        schema.TypeBool,
+				Description: "Cache the ID token from oauth or browser auth. This is not secure on Linux. Must be enabled on your Snowflake account.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_CACHE_TEMPORARY_CREDENTIALS", nil),
+				Sensitive:   false,
+			},
 			"private_key_path": {
 				Type:          schema.TypeString,
 				Description:   "Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.",
@@ -339,7 +339,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	user := s.Get("username").(string)
 	password := s.Get("password").(string)
 	browserAuth := s.Get("browser_auth").(bool)
-  cacheTemporaryCredential := s.Get("cache_temporary_credential").(bool) 
+	cacheTemporaryCredential := s.Get("cache_temporary_credential").(bool)
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
@@ -371,7 +371,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		user,
 		password,
 		browserAuth,
-    cacheTemporaryCredential,
+		cacheTemporaryCredential,
 		privateKeyPath,
 		privateKey,
 		privateKeyPassphrase,
@@ -411,7 +411,7 @@ func DSN(
 	user string,
 	password string,
 	browserAuth bool,
-  cacheTemporaryCredential bool,
+	cacheTemporaryCredential bool,
 	privateKeyPath string,
 	privateKey string,
 	privateKeyPassphrase string,
@@ -499,11 +499,11 @@ func DSN(
 		}
 	}
 
-  if browserAuth || oauthAccessToken != "" {
-    if cacheTemporaryCredential {
-      config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolTrue
-    }
-  }
+	if browserAuth || oauthAccessToken != "" {
+		if cacheTemporaryCredential {
+			config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolTrue
+		}
+	}
 
 	config.Application = "terraform-provider-snowflake"
 	return gosnowflake.DSN(config)
@@ -618,7 +618,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	user := os.Getenv("SNOWFLAKE_USER")
 	password := os.Getenv("SNOWFLAKE_PASSWORD")
 	browserAuth := os.Getenv("SNOWFLAKE_BROWSER_AUTH") == "true"
-  cacheTemporaryCredential := os.Getenv("SNOWFLAKE_CACHE_TEMPORARY_CREDENTIAL") == "true"
+	cacheTemporaryCredential := os.Getenv("SNOWFLAKE_CACHE_TEMPORARY_CREDENTIAL") == "true"
 	privateKeyPath := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
 	privateKey := os.Getenv("SNOWFLAKE_PRIVATE_KEY")
 	privateKeyPassphrase := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
@@ -641,7 +641,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		user,
 		password,
 		browserAuth,
-    cacheTemporaryCredential,
+		cacheTemporaryCredential,
 		privateKeyPath,
 		privateKey,
 		privateKeyPassphrase,

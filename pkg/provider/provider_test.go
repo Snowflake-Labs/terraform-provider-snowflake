@@ -37,19 +37,19 @@ func TestDSN(t *testing.T) {
 	os.Setenv("SNOWFLAKE_CONFIG_PATH", path)
 
 	type args struct {
-		account      string
-		user         string
-		password     string
-		browserAuth  bool
-    cacheTemporaryCredential bool
-		region       string
-		role         string
-		host         string
-		protocol     string
-		port         int
-		warehouse    string
-		insecureMode bool
-		profile      string
+		account                  string
+		user                     string
+		password                 string
+		browserAuth              bool
+		cacheTemporaryCredential bool
+		region                   string
+		role                     string
+		host                     string
+		protocol                 string
+		port                     int
+		warehouse                string
+		insecureMode             bool
+		profile                  string
 	}
 	tests := []struct {
 		name    string
@@ -82,17 +82,16 @@ func TestDSN(t *testing.T) {
 			args{"", "", "", false, false, "", "", "", "", 0, "", false, "default"},
 			"TEST_USER:abcd1234@TEST_ACCOUNT.snowflakecomputing.com:443?application=terraform-provider-snowflake&ocspFailOpen=true&role=ACCOUNTADMIN&validateDefaultParameters=true", false,
 		},
-    {
-      "externalbrowser",
-      args{"acct", "user", "", true, false, "region", "role", "", "https", 443, "", false, "default"},
-      "user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=externalbrowser&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false,
-    },
-    {
-      "externalbrowser_with_cache",
-      args{"acct", "user", "", true, true, "region", "role", "", "https", 443, "", false, "default"},
-      "user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=externalbrowser&clientStoreTemporaryCredential=true&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false,
-
-    },
+		{
+			"externalbrowser",
+			args{"acct", "user", "", true, false, "region", "role", "", "https", 443, "", false, "default"},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=externalbrowser&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false,
+		},
+		{
+			"externalbrowser_with_cache",
+			args{"acct", "user", "", true, true, "region", "role", "", "https", 443, "", false, "default"},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=externalbrowser&clientStoreTemporaryCredential=true&ocspFailOpen=true&region=region&role=role&validateDefaultParameters=true", false,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -112,15 +111,15 @@ func TestDSN(t *testing.T) {
 // nolint: gosec
 func TestOAuthDSN(t *testing.T) {
 	type args struct {
-		account          string
-		user             string
-		oauthAccessToken string
-    cacheTemporaryCredential bool
-		region           string
-		role             string
-		host             string
-		protocol         string
-		port             int
+		account                  string
+		user                     string
+		oauthAccessToken         string
+		cacheTemporaryCredential bool
+		region                   string
+		role                     string
+		host                     string
+		protocol                 string
+		port                     int
 	}
 	pseudorandomAccessToken := "ETMsjLOLvQ-C/bzGmmdvbEM/RSQFFX-a+sefbQeQoJqwdFNXZ+ftBIdwlasApA+/MItZLNRRW-rYJiEZMvAAdzpGLxaghIoww+vDOuIeAFBDUxTAY-I+qGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj+LMsKDXzLd-guSlm-mmv+="
 	tests := []struct {
@@ -139,11 +138,11 @@ func TestOAuthDSN(t *testing.T) {
 			args{"acct", "user", pseudorandomAccessToken, false, "region", "role", "", "https", 443},
 			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false,
 		},
-    {
-      "simple_oauth_with_cache",
-      args{"acct", "user", pseudorandomAccessToken, true, "region", "role", "", "https", 443},
-      "user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&clientStoreTemporaryCredential=true&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false,
-    },
+		{
+			"simple_oauth_with_cache",
+			args{"acct", "user", pseudorandomAccessToken, true, "region", "role", "", "https", 443},
+			"user:@acct.region.snowflakecomputing.com:443?application=terraform-provider-snowflake&authenticator=oauth&clientStoreTemporaryCredential=true&ocspFailOpen=true&region=region&role=role&token=ETMsjLOLvQ-C%2FbzGmmdvbEM%2FRSQFFX-a%2BsefbQeQoJqwdFNXZ%2BftBIdwlasApA%2B%2FMItZLNRRW-rYJiEZMvAAdzpGLxaghIoww%2BvDOuIeAFBDUxTAY-I%2BqGbQOXipkNcmzwuAaugjYtlTjPXGjqKw-OSsVacQXzsQyAMnbMyUrbdhRQEETIqTAdMuDqJBeaSj%2BLMsKDXzLd-guSlm-mmv%2B%3D&validateDefaultParameters=true", false,
+		},
 		{
 			"empty_token_no_password_errors_out",
 			args{"acct", "user", "", false, "region", "role", "", "https", 443},
