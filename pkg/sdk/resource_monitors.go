@@ -129,6 +129,8 @@ func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
 		default:
 			resourceMonitor.Level = ResourceMonitorLevelNull
 		}
+	} else {
+		resourceMonitor.Level = ResourceMonitorLevelNull
 	}
 
 	return resourceMonitor, nil

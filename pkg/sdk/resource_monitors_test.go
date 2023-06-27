@@ -117,7 +117,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = %s", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
+		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
 		assert.Equal(t, expected, actual)
 	})
 }
