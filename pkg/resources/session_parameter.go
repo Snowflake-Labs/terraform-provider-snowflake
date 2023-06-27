@@ -116,6 +116,30 @@ func setSessionParameter(parameter sdk.SessionParameter, value string) (*sdk.Alt
 		opts.Set.Parameters.SessionParameters.BinaryInputFormat = sdk.Pointer(sdk.BinaryInputFormat(value))
 	case sdk.SessionParameterBinaryOutputFormat:
 		opts.Set.Parameters.SessionParameters.BinaryOutputFormat = sdk.Pointer(sdk.BinaryOutputFormat(value))
+	case sdk.SessionParameterClientMetadataRequestUseConnectionCtx:
+		if value == "true" {
+			opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = sdk.Bool(true)
+		} else if value == "false" {
+			opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = sdk.Bool(false)
+		} else {
+			return nil, fmt.Errorf("CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX session parameter is a boolean value, got: %v", value)
+		}
+	case sdk.SessionParameterClientMetadataUseSessionDatabase:
+		if value == "true" {
+			opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = sdk.Bool(true)
+		} else if value == "false" {
+			opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = sdk.Bool(false)
+		} else {
+			return nil, fmt.Errorf("CLIENT_METADATA_USE_SESSION_DATABASE session parameter is a boolean value, got: %v", value)
+		}
+	case sdk.SessionParameterClientResultColumnCaseInsensitive:
+		if value == "true" {
+			opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = sdk.Bool(true)
+		} else if value == "false" {
+			opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = sdk.Bool(false)
+		} else {
+			return nil, fmt.Errorf("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE session parameter is a boolean value, got: %v", value)
+		}
 	case sdk.SessionParameterDateInputFormat:
 		opts.Set.Parameters.SessionParameters.DateInputFormat = &value
 	case sdk.SessionParameterDateOutputFormat:
@@ -150,8 +174,23 @@ func setSessionParameter(parameter sdk.SessionParameter, value string) (*sdk.Alt
 			return nil, fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
 		}
 		opts.Set.Parameters.SessionParameters.LockTimeout = sdk.Pointer(v)
+	case sdk.SessionParameterMultiStatementCount:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return nil, fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.MultiStatementCount = sdk.Pointer(v)
+
 	case sdk.SessionParameterQueryTag:
 		opts.Set.Parameters.SessionParameters.QueryTag = &value
+	case sdk.SessionParameterQuotedIdentifiersIgnoreCase:
+		if value == "true" {
+			opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = sdk.Bool(true)
+		} else if value == "false" {
+			opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = sdk.Bool(false)
+		} else {
+			return nil, fmt.Errorf("QUOTED_IDENTIFIERS_IGNORE_CASE session parameter is a boolean value, got: %v", value)
+		}
 	case sdk.SessionParameterRowsPerResultset:
 		v, err := strconv.Atoi(value)
 		if err != nil {
