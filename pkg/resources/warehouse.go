@@ -419,7 +419,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return nil
+	return ReadWarehouse(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc.
@@ -435,5 +435,5 @@ func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return nil
+	return ReadWarehouse(d, meta)
 }

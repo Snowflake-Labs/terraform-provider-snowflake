@@ -65,7 +65,7 @@ func ToWarehouseSize(s string) (WarehouseSize, error) {
 		return WarehouseSizeLarge, nil
 	case "XLARGE", "X-LARGE":
 		return WarehouseSizeXLarge, nil
-	case "XXLARGE", "X2LARGE", "2X-LARGE":
+	case "XXLARGE", "X2LARGE", "2X-LARGE", "2XLARGE":
 		return WarehouseSizeXXLarge, nil
 	case "XXXLARGE", "X3LARGE", "3X-LARGE":
 		return WarehouseSizeXXXLarge, nil
