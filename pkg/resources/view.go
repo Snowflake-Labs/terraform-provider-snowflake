@@ -65,6 +65,12 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"change_tracking": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Specifies whether to enable change tracking for the view. Defaults false.",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -178,6 +184,10 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		builder.WithComment(v.(string))
 	}
 
+	if v, ok := d.GetOk("change_tracking"); ok {
+		builder.WithChangeTracking(v.(bool))
+	}
+
 	if v, ok := d.GetOk("tag"); ok {
 		tags := getTags(v)
 		builder.WithTags(tags.toSnowflakeTagValues())
@@ -242,6 +252,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err = d.Set("schema", v.SchemaName.String); err != nil {
+		return err
+	}
+	if err = d.Set("change_tracking", (v.ChangeTracking.String == "ON")); err != nil {
 		return err
 	}
 
@@ -334,6 +347,17 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting secure for view %v", d.Id())
 			}
+		}
+	}
+	if d.HasChange("change_tracking") {
+		nct := d.Get("change_tracking")
+
+		q, err := builder.ChangeChangeTracking(nct.(bool))
+		if err != nil {
+			return err
+		}
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error changing property on %v", d.Id())
 		}
 	}
 	tagChangeErr := handleTagChanges(db, d, builder)

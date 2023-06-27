@@ -12,15 +12,16 @@ import (
 
 // ViewBuilder abstracts the creation of SQL queries for a Snowflake View.
 type ViewBuilder struct {
-	name       string
-	db         string
-	schema     string
-	secure     bool
-	replace    bool
-	copyGrants bool
-	comment    string
-	statement  string
-	tags       []TagValue
+	name           string
+	db             string
+	schema         string
+	secure         bool
+	replace        bool
+	copyGrants     bool
+	comment        string
+	statement      string
+	changeTracking bool
+	tags           []TagValue
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely.
@@ -72,6 +73,12 @@ func (vb *ViewBuilder) WithSecure() *ViewBuilder {
 // WithStatement adds the SQL statement to be used for the view.
 func (vb *ViewBuilder) WithStatement(s string) *ViewBuilder {
 	vb.statement = s
+	return vb
+}
+
+// WithChangeTracking sets the change tracking on the ViewBuilder.
+func (vb *ViewBuilder) WithChangeTracking(changeTracking bool) *ViewBuilder {
+	vb.changeTracking = changeTracking
 	return vb
 }
 
@@ -144,6 +151,8 @@ func (vb *ViewBuilder) Create() (string, error) {
 		q.WriteString(fmt.Sprintf(" COMMENT = '%v'", EscapeString(vb.comment)))
 	}
 
+	q.WriteString(fmt.Sprintf(" CHANGE_TRACKING = %v", vb.changeTracking))
+
 	q.WriteString(fmt.Sprintf(" AS %v", vb.statement))
 
 	return q.String(), nil
@@ -194,6 +203,16 @@ func (vb *ViewBuilder) ChangeComment(c string) (string, error) {
 	return fmt.Sprintf(`ALTER VIEW %v SET COMMENT = '%v'`, qn, EscapeString(c)), nil
 }
 
+// ChangeChangeTracking returns the SQL query that will update the CHANGE_TRACKING on the view.
+func (vb *ViewBuilder) ChangeChangeTracking(changeTracking bool) (string, error) {
+	qn, err := vb.QualifiedName()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(`ALTER VIEW %v SET CHANGE_TRACKING = %t`, qn, changeTracking), nil
+}
+
 // RemoveComment returns the SQL query that will remove the comment on the view.
 // Note that comment is the only parameter, if more are released this should be
 // abstracted as per the generic builder.
@@ -220,12 +239,13 @@ func (vb *ViewBuilder) Drop() (string, error) {
 }
 
 type View struct {
-	Comment      sql.NullString `db:"comment"`
-	IsSecure     bool           `db:"is_secure"`
-	Name         sql.NullString `db:"name"`
-	SchemaName   sql.NullString `db:"schema_name"`
-	Text         sql.NullString `db:"text"`
-	DatabaseName sql.NullString `db:"database_name"`
+	Comment        sql.NullString `db:"comment"`
+	IsSecure       bool           `db:"is_secure"`
+	Name           sql.NullString `db:"name"`
+	SchemaName     sql.NullString `db:"schema_name"`
+	Text           sql.NullString `db:"text"`
+	DatabaseName   sql.NullString `db:"database_name"`
+	ChangeTracking sql.NullString `db:"change_tracking"`
 }
 
 func ScanView(row *sqlx.Row) (*View, error) {
