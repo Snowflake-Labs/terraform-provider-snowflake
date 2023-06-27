@@ -32,6 +32,7 @@ type Client struct {
 	FailoverGroups   FailoverGroups
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
+	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	ResourceMonitors ResourceMonitors
 	Roles            Roles

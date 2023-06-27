@@ -1,6 +1,373 @@
 package sdk
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"strconv"
+)
+
+type Parameters interface {
+	SetAccountParameter(ctx context.Context, parameter AccountParameter, value string) error
+	SetSessionParameterForAccount(ctx context.Context, parameter SessionParameter, value string) error
+	SetObjectParameterForAccount(ctx context.Context, parameter ObjectParameter, value string) error
+}
+
+type parameters struct {
+	client *Client
+}
+
+func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter AccountParameter, value string) error {
+	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{AccountParameters: &AccountParameters{}}}}
+	switch parameter {
+	case AccountParameterAllowClientMFACaching:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.AllowClientMFACaching = b
+	case AccountParameterAllowIDToken:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.AllowIDToken = b
+	case AccountParameterClientEncryptionKeySize:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("CLIENT_ENCRYPTION_KEY_SIZE session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.AccountParameters.ClientEncryptionKeySize = Pointer(v)
+	case AccountParameterEnableInternalStagesPrivatelink:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.AllowIDToken = b
+	case AccountParameterEventTable:
+		opts.Set.Parameters.AccountParameters.EventTable = &value
+	case AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.ExternalOAuthAddPrivilegedRolesToBlockedList = b
+	case AccountParameterInitialReplicationSizeLimitInTB:
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("INITIAL_REPLICATION_SIZE_LIMIT_IN_TB session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.AccountParameters.InitialReplicationSizeLimitInTB = Pointer(v)
+
+	case AccountParameterMinDataRetentionTimeInDays:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("MIN_DATA_RETENTION_TIME_IN_DAYS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(v)
+	case AccountParameterNetworkPolicy:
+		opts.Set.Parameters.AccountParameters.NetworkPolicy = &value
+	case AccountParameterPeriodicDataRekeying:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.PeriodicDataRekeying = b
+	case AccountParameterPreventUnloadToInlineURL:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.PreventUnloadToInlineURL = b
+	case AccountParameterPreventUnloadToInternalStages:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.PreventUnloadToInternalStages = b
+	case AccountParameterRequireStorageIntegrationForStageCreation:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.RequireStorageIntegrationForStageCreation = b
+	case AccountParameterRequireStorageIntegrationForStageOperation:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.RequireStorageIntegrationForStageOperation = b
+	case AccountParameterSSOLoginPage:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.SSOLoginPage = b
+	default:
+		return fmt.Errorf("Invalid account parameter: %v", string(parameter))
+	}
+	if err := parameters.client.Accounts.Alter(ctx, &opts); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context, parameter SessionParameter, value string) error {
+	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{SessionParameters: &SessionParameters{}}}}
+	switch parameter {
+	case SessionParameterAbortDetachedQuery:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.AbortDetachedQuery = b
+	case SessionParameterAutocommit:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.Autocommit = b
+	case SessionParameterBinaryInputFormat:
+		opts.Set.Parameters.SessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
+	case SessionParameterBinaryOutputFormat:
+		opts.Set.Parameters.SessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
+	case SessionParameterClientMetadataRequestUseConnectionCtx:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = b
+	case SessionParameterClientMetadataUseSessionDatabase:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = b
+	case SessionParameterClientResultColumnCaseInsensitive:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = b
+	case SessionParameterDateInputFormat:
+		opts.Set.Parameters.SessionParameters.DateInputFormat = &value
+	case SessionParameterDateOutputFormat:
+		opts.Set.Parameters.SessionParameters.DateOutputFormat = &value
+	case SessionParameterErrorOnNondeterministicMerge:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicMerge = b
+	case SessionParameterErrorOnNondeterministicUpdate:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicUpdate = b
+	case SessionParameterGeographyOutputFormat:
+		opts.Set.Parameters.SessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
+	case SessionParameterJSONIndent:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("JSON_INDENT session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.JSONIndent = Pointer(v)
+	case SessionParameterLockTimeout:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.LockTimeout = Pointer(v)
+	case SessionParameterMultiStatementCount:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.MultiStatementCount = Pointer(v)
+
+	case SessionParameterQueryTag:
+		opts.Set.Parameters.SessionParameters.QueryTag = &value
+	case SessionParameterQuotedIdentifiersIgnoreCase:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = b
+	case SessionParameterRowsPerResultset:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.RowsPerResultset = Pointer(v)
+	case SessionParameterSimulatedDataSharingConsumer:
+		opts.Set.Parameters.SessionParameters.SimulatedDataSharingConsumer = &value
+	case SessionParameterStatementTimeoutInSeconds:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.StatementTimeoutInSeconds = Pointer(v)
+	case SessionParameterStrictJSONOutput:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.StrictJSONOutput = b
+	case SessionParameterTimestampDayIsAlways24h:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.TimestampDayIsAlways24h = b
+	case SessionParameterTimestampInputFormat:
+		opts.Set.Parameters.SessionParameters.TimestampInputFormat = &value
+	case SessionParameterTimestampLTZOutputFormat:
+		opts.Set.Parameters.SessionParameters.TimestampLTZOutputFormat = &value
+	case SessionParameterTimestampNTZOutputFormat:
+		opts.Set.Parameters.SessionParameters.TimestampNTZOutputFormat = &value
+	case SessionParameterTimestampOutputFormat:
+		opts.Set.Parameters.SessionParameters.TimestampOutputFormat = &value
+	case SessionParameterTimestampTypeMapping:
+		opts.Set.Parameters.SessionParameters.TimestampTypeMapping = &value
+	case SessionParameterTimestampTZOutputFormat:
+		opts.Set.Parameters.SessionParameters.TimestampTZOutputFormat = &value
+	case SessionParameterTimezone:
+		opts.Set.Parameters.SessionParameters.Timezone = &value
+	case SessionParameterTimeInputFormat:
+		opts.Set.Parameters.SessionParameters.TimeInputFormat = &value
+	case SessionParameterTimeOutputFormat:
+		opts.Set.Parameters.SessionParameters.TimeOutputFormat = &value
+	case SessionParameterTransactionDefaultIsolationLevel:
+		opts.Set.Parameters.SessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
+	case SessionParameterTwoDigitCenturyStart:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("TWO_DIGIT_CENTURY_START session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.TwoDigitCenturyStart = Pointer(v)
+	case SessionParameterUnsupportedDDLAction:
+		opts.Set.Parameters.SessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
+	case SessionParameterUseCachedResult:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.SessionParameters.UseCachedResult = b
+	case SessionParameterWeekOfYearPolicy:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("WEEK_OF_YEAR_POLICY session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.WeekOfYearPolicy = Pointer(v)
+	case SessionParameterWeekStart:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.SessionParameters.WeekStart = Pointer(v)
+	default:
+		return fmt.Errorf("Invalid session parameter: %v", string(parameter))
+	}
+	err := parameters.client.Accounts.Alter(ctx, &opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, parameter ObjectParameter, value string) error {
+	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{ObjectParameters: &ObjectParameters{}}}}
+	switch parameter {
+	case ObjectParameterDataRetentionTimeInDays:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("DATA_RETENTION_TIME_IN_DAYS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.DataRetentionTimeInDays = Pointer(v)
+	case ObjectParameterDefaultDDLCollation:
+		opts.Set.Parameters.ObjectParameters.DefaultDDLCollation = &value
+	case ObjectParameterLogLevel:
+		opts.Set.Parameters.ObjectParameters.LogLevel = Pointer(LogLevel(value))
+	case ObjectParameterMaxConcurrencyLevel:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("MAX_CONCURRENCY_LEVEL session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.MaxConcurrencyLevel = Pointer(v)
+	case ObjectParameterMaxDataExtensionTimeInDays:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("MAX_DATA_EXTENSION_TIME_IN_DAYS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.MaxDataExtensionTimeInDays = Pointer(v)
+	case ObjectParameterPipeExecutionPaused:
+		switch value {
+		case "true":
+			opts.Set.Parameters.ObjectParameters.PipeExecutionPaused = Bool(true)
+		case "false":
+			opts.Set.Parameters.ObjectParameters.PipeExecutionPaused = Bool(false)
+		default:
+			return fmt.Errorf("PIPE_EXECUTION_PAUSED session parameter is a boolean value, got: %v", value)
+		}
+	case ObjectParameterPreventUnloadToInternalStages:
+		switch value {
+		case "true":
+			opts.Set.Parameters.ObjectParameters.PreventUnloadToInternalStages = Bool(true)
+		case "false":
+			opts.Set.Parameters.ObjectParameters.PreventUnloadToInternalStages = Bool(false)
+		default:
+			return fmt.Errorf("PREVENT_UNLOAD_TO_INTERNAL_STAGES session parameter is a boolean value, got: %v", value)
+		}
+	case ObjectParameterStatementQueuedTimeoutInSeconds:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("STATEMENT_QUEUED_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.StatementQueuedTimeoutInSeconds = Pointer(v)
+	case ObjectParameterNetworkPolicy:
+		opts.Set.Parameters.ObjectParameters.NetworkPolicy = &value
+	case ObjectParameterShareRestrictions:
+		switch value {
+		case "true":
+			opts.Set.Parameters.ObjectParameters.ShareRestrictions = Bool(true)
+		case "false":
+			opts.Set.Parameters.ObjectParameters.ShareRestrictions = Bool(false)
+		default:
+			return fmt.Errorf("SHARE_RESTRICTIONS session parameter is a boolean value, got: %v", value)
+		}
+	case ObjectParameterSuspendTaskAfterNumFailures:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("SUSPEND_TASK_AFTER_NUM_FAILURES session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.SuspendTaskAfterNumFailures = Pointer(v)
+	case ObjectParameterTraceLevel:
+		opts.Set.Parameters.ObjectParameters.TraceLevel = Pointer(TraceLevel(value))
+	case ObjectParameterUserTaskManagedInitialWarehouseSize:
+		opts.Set.Parameters.ObjectParameters.UserTaskManagedInitialWarehouseSize = Pointer(WarehouseSize(value))
+	case ObjectParameterUserTaskTimeoutMs:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("USER_TASK_TIMEOUT_MS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.UserTaskTimeoutMs = Pointer(v)
+	default:
+		return fmt.Errorf("Invalid object parameter: %v", string(parameter))
+	}
+	err := parameters.client.Accounts.Alter(ctx, &opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func parseBooleanParameter(parameter, value string) (_ *bool, err error) {
+	b, err := strconv.ParseBool(value)
+	if err != nil {
+		return nil, fmt.Errorf("Boolean value (\"true\"/\"false\") expected for %v parameter, got %v instead", parameter, value)
+	}
+	return &b, nil
+}
 
 type AccountParameter string
 
@@ -38,7 +405,7 @@ const (
 	AccountParameterDateOutputFormat                      AccountParameter = "DATE_OUTPUT_FORMAT"
 	AccountParameterErrorOnNondeterministicMerge          AccountParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
 	AccountParameterErrorOnNondeterministicUpdate         AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
-	AccountParameterJsonIndent                            AccountParameter = "JSON_INDENT"
+	AccountParameterJSONIndent                            AccountParameter = "JSON_INDENT"
 	AccountParameterLockTimeout                           AccountParameter = "LOCK_TIMEOUT"
 	AccountParameterMultiStatementCount                   AccountParameter = "MULTI_STATEMENT_COUNT"
 	AccountParameterQueryTag                              AccountParameter = "QUERY_TAG"
@@ -46,7 +413,7 @@ const (
 	AccountParameterRowsPerResultset                      AccountParameter = "ROWS_PER_RESULTSET"
 	AccountParameterSimulatedDataSharingConsumer          AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
 	AccountParameterStatementTimeoutInSeconds             AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
-	AccountParameterStrictJsonOutput                      AccountParameter = "STRICT_JSON_OUTPUT"
+	AccountParameterStrictJSONOutput                      AccountParameter = "STRICT_JSON_OUTPUT"
 	AccountParameterTimeInputFormat                       AccountParameter = "TIME_INPUT_FORMAT"
 	AccountParameterTimeOutputFormat                      AccountParameter = "TIME_OUTPUT_FORMAT"
 	AccountParameterTimestampDayIsAlways24h               AccountParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"

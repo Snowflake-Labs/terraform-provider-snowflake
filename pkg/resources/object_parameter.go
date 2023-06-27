@@ -1,11 +1,13 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -91,6 +93,9 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameter := sdk.ObjectParameter(key)
 
 	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
 	if parameterDefault.Validate != nil {
@@ -106,12 +111,6 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	builder := snowflake.NewObjectParameter(key, value, db)
-
-	onAccount := d.Get("on_account").(bool)
-	if onAccount {
-		builder.SetOnAccount(onAccount)
-	}
-
 	var fullyQualifierObjectIdentifier string
 	if v, ok := d.GetOk("object_identifier"); ok {
 		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
@@ -128,10 +127,20 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		builder.WithObjectType(objectType)
 	}
 
-	err := builder.SetParameter()
-	if err != nil {
-		return fmt.Errorf("error creating object parameter err = %w", err)
+	onAccount := d.Get("on_account").(bool)
+	if onAccount {
+		err := client.Parameters.SetObjectParameterForAccount(ctx, parameter, value)
+		if err != nil {
+			return fmt.Errorf("error creating object parameter err = %w", err)
+		}
+	} else {
+		err := builder.SetParameter()
+		if err != nil {
+			return fmt.Errorf("error creating object parameter err = %w", err)
+		}
 	}
+
+	var err error
 	id := fmt.Sprintf("%v|%v|%v", key, objectType, fullyQualifierObjectIdentifier)
 	d.SetId(id)
 	var p *snowflake.Parameter
