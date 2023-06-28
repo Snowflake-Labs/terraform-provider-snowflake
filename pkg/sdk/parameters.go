@@ -22,13 +22,13 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	case AccountParameterAllowClientMFACaching:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.AllowClientMFACaching = b
 	case AccountParameterAllowIDToken:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.AllowIDToken = b
 	case AccountParameterClientEncryptionKeySize:
@@ -40,7 +40,7 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	case AccountParameterEnableInternalStagesPrivatelink:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.AllowIDToken = b
 	case AccountParameterEventTable:
@@ -48,13 +48,13 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	case AccountParameterEnableUnredactedQuerySyntaxError:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.EnableUnredactedQuerySyntaxError = b
 	case AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.ExternalOAuthAddPrivilegedRolesToBlockedList = b
 	case AccountParameterInitialReplicationSizeLimitInTB:
@@ -75,43 +75,43 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	case AccountParameterPeriodicDataRekeying:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.PeriodicDataRekeying = b
 	case AccountParameterPreventLoadFromInlineURL:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.PreventLoadFromInlineURL = b
 	case AccountParameterPreventUnloadToInlineURL:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.PreventUnloadToInlineURL = b
 	case AccountParameterPreventUnloadToInternalStages:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.PreventUnloadToInternalStages = b
 	case AccountParameterRequireStorageIntegrationForStageCreation:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.RequireStorageIntegrationForStageCreation = b
 	case AccountParameterRequireStorageIntegrationForStageOperation:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.RequireStorageIntegrationForStageOperation = b
 	case AccountParameterSSOLoginPage:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.AccountParameters.SSOLoginPage = b
 	default:
@@ -129,13 +129,13 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterAbortDetachedQuery:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.AbortDetachedQuery = b
 	case SessionParameterAutocommit:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.Autocommit = b
 	case SessionParameterBinaryInputFormat:
@@ -145,19 +145,19 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = b
 	case SessionParameterClientMetadataUseSessionDatabase:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = b
 	case SessionParameterClientResultColumnCaseInsensitive:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = b
 	case SessionParameterDateInputFormat:
@@ -167,13 +167,13 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterErrorOnNondeterministicMerge:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicMerge = b
 	case SessionParameterErrorOnNondeterministicUpdate:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicUpdate = b
 	case SessionParameterGeographyOutputFormat:
@@ -202,7 +202,7 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterQuotedIdentifiersIgnoreCase:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = b
 	case SessionParameterRowsPerResultset:
@@ -222,13 +222,13 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterStrictJSONOutput:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.StrictJSONOutput = b
 	case SessionParameterTimestampDayIsAlways24h:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.TimestampDayIsAlways24h = b
 	case SessionParameterTimestampInputFormat:
@@ -262,7 +262,7 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	case SessionParameterUseCachedResult:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.SessionParameters.UseCachedResult = b
 	case SessionParameterWeekOfYearPolicy:
@@ -313,23 +313,17 @@ func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, 
 		}
 		opts.Set.Parameters.ObjectParameters.MaxDataExtensionTimeInDays = Pointer(v)
 	case ObjectParameterPipeExecutionPaused:
-		switch value {
-		case "true":
-			opts.Set.Parameters.ObjectParameters.PipeExecutionPaused = Bool(true)
-		case "false":
-			opts.Set.Parameters.ObjectParameters.PipeExecutionPaused = Bool(false)
-		default:
-			return fmt.Errorf("PIPE_EXECUTION_PAUSED session parameter is a boolean value, got: %v", value)
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
 		}
+		opts.Set.Parameters.ObjectParameters.PipeExecutionPaused = b
 	case ObjectParameterPreventUnloadToInternalStages:
-		switch value {
-		case "true":
-			opts.Set.Parameters.ObjectParameters.PreventUnloadToInternalStages = Bool(true)
-		case "false":
-			opts.Set.Parameters.ObjectParameters.PreventUnloadToInternalStages = Bool(false)
-		default:
-			return fmt.Errorf("PREVENT_UNLOAD_TO_INTERNAL_STAGES session parameter is a boolean value, got: %v", value)
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
 		}
+		opts.Set.Parameters.ObjectParameters.PreventUnloadToInternalStages = b
 	case ObjectParameterStatementQueuedTimeoutInSeconds:
 		v, err := strconv.Atoi(value)
 		if err != nil {
@@ -339,14 +333,11 @@ func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, 
 	case ObjectParameterNetworkPolicy:
 		opts.Set.Parameters.ObjectParameters.NetworkPolicy = &value
 	case ObjectParameterShareRestrictions:
-		switch value {
-		case "true":
-			opts.Set.Parameters.ObjectParameters.ShareRestrictions = Bool(true)
-		case "false":
-			opts.Set.Parameters.ObjectParameters.ShareRestrictions = Bool(false)
-		default:
-			return fmt.Errorf("SHARE_RESTRICTIONS session parameter is a boolean value, got: %v", value)
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
 		}
+		opts.Set.Parameters.ObjectParameters.ShareRestrictions = b
 	case ObjectParameterSuspendTaskAfterNumFailures:
 		v, err := strconv.Atoi(value)
 		if err != nil {
@@ -366,7 +357,7 @@ func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, 
 	case ObjectParameterEnableUnredactedQuerySyntaxError:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
-			return nil
+			return err
 		}
 		opts.Set.Parameters.ObjectParameters.EnableUnredactedQuerySyntaxError = b
 	default:
