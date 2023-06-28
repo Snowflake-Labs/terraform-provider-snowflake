@@ -21,6 +21,7 @@ const (
 	ObjectTypeAccountParameter ObjectType = "ACCOUNT PARAMETER"
 	ObjectTypeDatabase         ObjectType = "DATABASE"
 	ObjectTypeFailoverGroup    ObjectType = "FAILOVER GROUP"
+	ObjectTypeFileFormat       ObjectType = "FILE FORMAT"
 	ObjectTypeIntegration      ObjectType = "INTEGRATION"
 	ObjectTypeMaskingPolicy    ObjectType = "MASKING POLICY"
 	ObjectTypeNetworkPolicy    ObjectType = "NETWORK POLICY"
