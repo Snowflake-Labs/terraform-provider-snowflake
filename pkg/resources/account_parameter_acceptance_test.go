@@ -48,4 +48,3 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 		},
 	})
 }
-
