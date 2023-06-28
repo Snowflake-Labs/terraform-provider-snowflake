@@ -123,6 +123,7 @@ func (c *Client) initialize() {
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}

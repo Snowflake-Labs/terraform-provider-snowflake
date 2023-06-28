@@ -134,7 +134,6 @@ func UpdateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSessionParameter implements schema.DeleteFunc.
 func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
-
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	client := sdk.NewClientFromDB(db)
