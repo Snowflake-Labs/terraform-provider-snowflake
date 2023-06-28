@@ -72,6 +72,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return nil
 		}
 		opts.Set.Parameters.AccountParameters.PeriodicDataRekeying = b
+	case AccountParameterPreventLoadFromInlineURL:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.PreventLoadFromInlineURL = b
 	case AccountParameterPreventUnloadToInlineURL:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -386,6 +392,7 @@ const (
 	AccountParameterMinDataRetentionTimeInDays                   AccountParameter = "MIN_DATA_RETENTION_TIME_IN_DAYS"
 	AccountParameterNetworkPolicy                                AccountParameter = "NETWORK_POLICY"
 	AccountParameterPeriodicDataRekeying                         AccountParameter = "PERIODIC_DATA_REKEYING"
+	AccountParameterPreventLoadFromInlineURL                     AccountParameter = "PREVENT_LOAD_FROM_INLINE_URL"
 	AccountParameterPreventUnloadToInlineURL                     AccountParameter = "PREVENT_UNLOAD_TO_INLINE_URL"
 	AccountParameterPreventUnloadToInternalStages                AccountParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
 	AccountParameterRequireStorageIntegrationForStageCreation    AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"
@@ -572,6 +579,7 @@ type AccountParameters struct {
 	MinDataRetentionTimeInDays                   *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
 	NetworkPolicy                                *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
 	PeriodicDataRekeying                         *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
+	PreventLoadFromInlineURL                     *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
 	PreventUnloadToInlineURL                     *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
 	PreventUnloadToInternalStages                *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
 	RequireStorageIntegrationForStageCreation    *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
