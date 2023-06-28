@@ -45,6 +45,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 		opts.Set.Parameters.AccountParameters.AllowIDToken = b
 	case AccountParameterEventTable:
 		opts.Set.Parameters.AccountParameters.EventTable = &value
+	case AccountParameterEnableUnredactedQuerySyntaxError:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.AccountParameters.EnableUnredactedQuerySyntaxError = b
 	case AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -357,6 +363,12 @@ func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, 
 			return fmt.Errorf("USER_TASK_TIMEOUT_MS session parameter is an integer, got %v", value)
 		}
 		opts.Set.Parameters.ObjectParameters.UserTaskTimeoutMs = Pointer(v)
+	case ObjectParameterEnableUnredactedQuerySyntaxError:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return nil
+		}
+		opts.Set.Parameters.ObjectParameters.EnableUnredactedQuerySyntaxError = b
 	default:
 		return fmt.Errorf("Invalid object parameter: %v", string(parameter))
 	}
@@ -573,6 +585,7 @@ type AccountParameters struct {
 	AllowIDToken                                 *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
 	ClientEncryptionKeySize                      *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
 	EnableInternalStagesPrivatelink              *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnableUnredactedQuerySyntaxError             *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	EventTable                                   *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
 	ExternalOAuthAddPrivilegedRolesToBlockedList *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB              *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
@@ -807,6 +820,7 @@ const (
 type ObjectParameters struct {
 	DataRetentionTimeInDays             *int           `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	DefaultDDLCollation                 *string        `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	EnableUnredactedQuerySyntaxError    *bool          `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	LogLevel                            *LogLevel      `ddl:"parameter" sql:"LOG_LEVEL"`
 	MaxConcurrencyLevel                 *int           `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
 	MaxDataExtensionTimeInDays          *int           `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
