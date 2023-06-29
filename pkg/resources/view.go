@@ -65,6 +65,11 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The timestamp at which the view was created.",
+	},
 	"tag": tagReferenceSchema,
 }
 
@@ -242,6 +247,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err = d.Set("schema", v.SchemaName.String); err != nil {
+		return err
+	}
+	if err = d.Set("created_on", v.CreatedOn.String()); err != nil {
 		return err
 	}
 
