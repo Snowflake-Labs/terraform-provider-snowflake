@@ -58,6 +58,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
         run: make lint-ci
 
       - name: make test-acceptance integration
@@ -69,6 +70,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
           SNOWFLAKE_ACCOUNT_SECOND: ${{ secrets.SNOWFLAKE_ACCOUNT_SECOND }}
           SNOWFLAKE_ACCOUNT_THIRD: ${{ secrets.SNOWFLAKE_ACCOUNT_THIRD }}
         run: make test-acceptance
@@ -82,6 +84,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
         run: make sweep
 
       - name: find comment
