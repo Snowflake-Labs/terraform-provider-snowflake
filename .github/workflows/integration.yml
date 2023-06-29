@@ -11,10 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     environment:
-      name: ${{ github.ref_name == 'qa-tests' && 'QA' || 'Legacy' }}
+      name: ${{ (github.ref_name == 'qa-tests' || github.head_ref == 'qa-tests' ) && 'QA' || 'Legacy' }}
     steps:
       - id: debug-outputs
         run: |
+          echo ${{ github.ref_name }}
+          echo ${{ github.github.head_ref }}
           echo ${{ github.event_name }}
           echo ${{ github.event.client_payload }}
 
