@@ -53,7 +53,7 @@ func TestAlertAlter(t *testing.T) {
 		newComment := randomString(t)
 		opts := &AlterAlertOptions{
 			name:   id,
-			Action: &Resume,
+			Action: &AlertActionResume,
 			Set: &AlertSet{
 				Comment: String(newComment),
 			},
@@ -65,7 +65,7 @@ func TestAlertAlter(t *testing.T) {
 	t.Run("with resume", func(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name:   id,
-			Action: &Resume,
+			Action: &AlertActionResume,
 		}
 
 		err := opts.validate()
@@ -79,7 +79,7 @@ func TestAlertAlter(t *testing.T) {
 	t.Run("with suspend", func(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name:   id,
-			Action: &Suspend,
+			Action: &AlertActionSuspend,
 		}
 
 		err := opts.validate()
