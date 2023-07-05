@@ -11,7 +11,7 @@ func TestFileFormatsCreate(t *testing.T) {
 	t.Run("minimal", func(t *testing.T) {
 		opts := &CreateFileFormatOptions{
 			name: NewSchemaObjectIdentifier("db1", "schema2", "format3"),
-			Type: FileFormatTypeCsv,
+			Type: FileFormatTypeCSV,
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -25,33 +25,33 @@ func TestFileFormatsCreate(t *testing.T) {
 			Temporary:   Bool(true),
 			name:        NewSchemaObjectIdentifier("db4", "schema5", "format6"),
 			IfNotExists: Bool(true),
-			Type:        FileFormatTypeCsv,
+			Type:        FileFormatTypeCSV,
 
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				CsvCompression:               &CsvCompressionBz2,
-				CsvRecordDelimiter:           String("-"),
-				CsvFieldDelimiter:            String(":"),
-				CsvFileExtension:             String("csv"),
-				CsvParseHeader:               Bool(true),
-				CsvSkipHeader:                Int(5),
-				CsvSkipBlankLines:            Bool(true),
-				CsvDateFormat:                String("YYYY-MM-DD"),
-				CsvTimeFormat:                String("HH:mm:SS"),
-				CsvTimestampFormat:           String("time"),
-				CsvBinaryFormat:              &BinaryFormatUtf8,
-				CsvEscape:                    String("\\"),
-				CsvEscapeUnenclosedField:     String("§"),
-				CsvTrimSpace:                 Bool(true),
-				CsvFieldOptionallyEnclosedBy: String("&"),
-				CsvNullIf: &[]NullString{
+				CSVCompression:               &CSVCompressionBz2,
+				CSVRecordDelimiter:           String("-"),
+				CSVFieldDelimiter:            String(":"),
+				CSVFileExtension:             String("csv"),
+				CSVParseHeader:               Bool(true),
+				CSVSkipHeader:                Int(5),
+				CSVSkipBlankLines:            Bool(true),
+				CSVDateFormat:                String("YYYY-MM-DD"),
+				CSVTimeFormat:                String("HH:mm:SS"),
+				CSVTimestampFormat:           String("time"),
+				CSVBinaryFormat:              &BinaryFormatUTF8,
+				CSVEscape:                    String("\\"),
+				CSVEscapeUnenclosedField:     String("§"),
+				CSVTrimSpace:                 Bool(true),
+				CSVFieldOptionallyEnclosedBy: String("&"),
+				CSVNullIf: &[]NullString{
 					{"nul"},
 					{"nulll"},
 				},
-				CsvErrorOnColumnCountMismatch: Bool(true),
-				CsvReplaceInvalidCharacters:   Bool(true),
-				CsvEmptyFieldAsNull:           Bool(true),
-				CsvSkipByteOrderMark:          Bool(true),
-				CsvEncoding:                   &CsvEncodingISO2022KR,
+				CSVErrorOnColumnCountMismatch: Bool(true),
+				CSVReplaceInvalidCharacters:   Bool(true),
+				CSVEmptyFieldAsNull:           Bool(true),
+				CSVSkipByteOrderMark:          Bool(true),
+				CSVEncoding:                   &CSVEncodingISO2022KR,
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -66,27 +66,27 @@ func TestFileFormatsCreate(t *testing.T) {
 			Temporary:   Bool(true),
 			name:        NewSchemaObjectIdentifier("db4", "schema5", "format6"),
 			IfNotExists: Bool(true),
-			Type:        FileFormatTypeJson,
+			Type:        FileFormatTypeJSON,
 
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				JsonCompression:     &JsonCompressionBrotli,
-				JsonDateFormat:      String("YYYY-MM-DD"),
-				JsonTimeFormat:      String("HH:mm:SS"),
-				JsonTimestampFormat: String("aze"),
-				JsonBinaryFormat:    &BinaryFormatHex,
-				JsonTrimSpace:       Bool(true),
-				JsonNullIf: &[]NullString{
+				JSONCompression:     &JSONCompressionBrotli,
+				JSONDateFormat:      String("YYYY-MM-DD"),
+				JSONTimeFormat:      String("HH:mm:SS"),
+				JSONTimestampFormat: String("aze"),
+				JSONBinaryFormat:    &BinaryFormatHex,
+				JSONTrimSpace:       Bool(true),
+				JSONNullIf: &[]NullString{
 					{"c1"},
 					{"c2"},
 				},
-				JsonFileExtension:            String("json"),
-				JsonEnableOctal:              Bool(true),
-				JsonAllowDuplicate:           Bool(true),
-				JsonStripOuterArray:          Bool(true),
-				JsonStripNullValues:          Bool(true),
-				JsonReplaceInvalidCharacters: Bool(true),
-				JsonIgnoreUtf8Errors:         Bool(true),
-				JsonSkipByteOrderMark:        Bool(true),
+				JSONFileExtension:            String("json"),
+				JSONEnableOctal:              Bool(true),
+				JSONAllowDuplicate:           Bool(true),
+				JSONStripOuterArray:          Bool(true),
+				JSONStripNullValues:          Bool(true),
+				JSONReplaceInvalidCharacters: Bool(true),
+				JSONIgnoreUTF8Errors:         Bool(true),
+				JSONSkipByteOrderMark:        Bool(true),
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -116,18 +116,18 @@ func TestFileFormatsCreate(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("complete Orc", func(t *testing.T) {
+	t.Run("complete ORC", func(t *testing.T) {
 		opts := &CreateFileFormatOptions{
 			OrReplace:   Bool(true),
 			Temporary:   Bool(true),
 			name:        NewSchemaObjectIdentifier("db4", "schema5", "format6"),
 			IfNotExists: Bool(true),
-			Type:        FileFormatTypeOrc,
+			Type:        FileFormatTypeORC,
 
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				OrcTrimSpace:                Bool(true),
-				OrcReplaceInvalidCharacters: Bool(true),
-				OrcNullIf:                   &[]NullString{{"nul"}},
+				ORCTrimSpace:                Bool(true),
+				ORCReplaceInvalidCharacters: Bool(true),
+				ORCNullIf:                   &[]NullString{{"nul"}},
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -165,17 +165,17 @@ func TestFileFormatsCreate(t *testing.T) {
 			Temporary:   Bool(true),
 			name:        NewSchemaObjectIdentifier("db4", "schema5", "format6"),
 			IfNotExists: Bool(true),
-			Type:        FileFormatTypeXml,
+			Type:        FileFormatTypeXML,
 
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				XmlCompression:              &XmlCompressionZstd,
-				XmlIgnoreUtf8Errors:         Bool(true),
-				XmlPreserveSpace:            Bool(true),
-				XmlStripOuterElement:        Bool(true),
-				XmlDisableSnowflakeData:     Bool(true),
-				XmlDisableAutoConvert:       Bool(true),
-				XmlReplaceInvalidCharacters: Bool(true),
-				XmlSkipByteOrderMark:        Bool(true),
+				XMLCompression:              &XMLCompressionZstd,
+				XMLIgnoreUTF8Errors:         Bool(true),
+				XMLPreserveSpace:            Bool(true),
+				XMLStripOuterElement:        Bool(true),
+				XMLDisableSnowflakeData:     Bool(true),
+				XMLDisableAutoConvert:       Bool(true),
+				XMLReplaceInvalidCharacters: Bool(true),
+				XMLSkipByteOrderMark:        Bool(true),
 
 				Comment: String("test file format"),
 			},
@@ -189,16 +189,16 @@ func TestFileFormatsCreate(t *testing.T) {
 	t.Run("previous test", func(t *testing.T) {
 		opts := &CreateFileFormatOptions{
 			name: NewSchemaObjectIdentifier("test_db", "test_schema", "test_file_format"),
-			Type: FileFormatTypeCsv,
+			Type: FileFormatTypeCSV,
 
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				CsvNullIf:                     &[]NullString{{"NULL"}},
-				CsvSkipBlankLines:             Bool(false),
-				CsvTrimSpace:                  Bool(false),
-				CsvErrorOnColumnCountMismatch: Bool(true),
-				CsvReplaceInvalidCharacters:   Bool(false),
-				CsvEmptyFieldAsNull:           Bool(false),
-				CsvSkipByteOrderMark:          Bool(false),
+				CSVNullIf:                     &[]NullString{{"NULL"}},
+				CSVSkipBlankLines:             Bool(false),
+				CSVTrimSpace:                  Bool(false),
+				CSVErrorOnColumnCountMismatch: Bool(true),
+				CSVReplaceInvalidCharacters:   Bool(false),
+				CSVEmptyFieldAsNull:           Bool(false),
+				CSVSkipByteOrderMark:          Bool(false),
 
 				Comment: String("great comment"),
 			},

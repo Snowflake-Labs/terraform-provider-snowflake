@@ -20,28 +20,28 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	t.Run("CSV", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
 		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeCsv,
+			Type: FileFormatTypeCSV,
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				CsvCompression:                &CsvCompressionBz2,
-				CsvRecordDelimiter:            String("\\123"),
-				CsvFieldDelimiter:             String("0x42"),
-				CsvFileExtension:              String("c"),
-				CsvParseHeader:                Bool(true),
-				CsvSkipBlankLines:             Bool(true),
-				CsvDateFormat:                 String("d"),
-				CsvTimeFormat:                 String("e"),
-				CsvTimestampFormat:            String("f"),
-				CsvBinaryFormat:               &BinaryFormatBase64,
-				CsvEscape:                     String(`\`),
-				CsvEscapeUnenclosedField:      String("h"),
-				CsvTrimSpace:                  Bool(true),
-				CsvFieldOptionallyEnclosedBy:  String("'"),
-				CsvNullIf:                     &[]NullString{{"j"}, {"k"}},
-				CsvErrorOnColumnCountMismatch: Bool(true),
-				CsvReplaceInvalidCharacters:   Bool(true),
-				CsvEmptyFieldAsNull:           Bool(true),
-				CsvSkipByteOrderMark:          Bool(true),
-				CsvEncoding:                   &CsvEncodingGB18030,
+				CSVCompression:                &CSVCompressionBz2,
+				CSVRecordDelimiter:            String("\\123"),
+				CSVFieldDelimiter:             String("0x42"),
+				CSVFileExtension:              String("c"),
+				CSVParseHeader:                Bool(true),
+				CSVSkipBlankLines:             Bool(true),
+				CSVDateFormat:                 String("d"),
+				CSVTimeFormat:                 String("e"),
+				CSVTimestampFormat:            String("f"),
+				CSVBinaryFormat:               &BinaryFormatBase64,
+				CSVEscape:                     String(`\`),
+				CSVEscapeUnenclosedField:      String("h"),
+				CSVTrimSpace:                  Bool(true),
+				CSVFieldOptionallyEnclosedBy:  String("'"),
+				CSVNullIf:                     &[]NullString{{"j"}, {"k"}},
+				CSVErrorOnColumnCountMismatch: Bool(true),
+				CSVReplaceInvalidCharacters:   Bool(true),
+				CSVEmptyFieldAsNull:           Bool(true),
+				CSVSkipByteOrderMark:          Bool(true),
+				CSVEncoding:                   &CSVEncodingGB18030,
 
 				Comment: String("test comment"),
 			},
@@ -57,74 +57,74 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeCsv, result.Type)
+		assert.Equal(t, FileFormatTypeCSV, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "", result.OwnerRoleType)
-		assert.Equal(t, &CsvCompressionBz2, result.Options.CsvCompression)
-		assert.Equal(t, "S", *result.Options.CsvRecordDelimiter) // o123 == 83 == 'S' (ASCII)
-		assert.Equal(t, "B", *result.Options.CsvFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
-		assert.Equal(t, "c", *result.Options.CsvFileExtension)
-		assert.Equal(t, true, *result.Options.CsvParseHeader)
-		assert.Equal(t, true, *result.Options.CsvSkipBlankLines)
-		assert.Equal(t, "d", *result.Options.CsvDateFormat)
-		assert.Equal(t, "e", *result.Options.CsvTimeFormat)
-		assert.Equal(t, "f", *result.Options.CsvTimestampFormat)
-		assert.Equal(t, &BinaryFormatBase64, result.Options.CsvBinaryFormat)
-		assert.Equal(t, `\`, *result.Options.CsvEscape)
-		assert.Equal(t, "h", *result.Options.CsvEscapeUnenclosedField)
-		assert.Equal(t, true, *result.Options.CsvTrimSpace)
-		assert.Equal(t, String("'"), result.Options.CsvFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, result.Options.CsvNullIf)
-		assert.Equal(t, true, *result.Options.CsvErrorOnColumnCountMismatch)
-		assert.Equal(t, true, *result.Options.CsvReplaceInvalidCharacters)
-		assert.Equal(t, true, *result.Options.CsvEmptyFieldAsNull)
-		assert.Equal(t, true, *result.Options.CsvSkipByteOrderMark)
-		assert.Equal(t, &CsvEncodingGB18030, result.Options.CsvEncoding)
+		assert.Equal(t, &CSVCompressionBz2, result.Options.CSVCompression)
+		assert.Equal(t, "S", *result.Options.CSVRecordDelimiter) // o123 == 83 == 'S' (ASCII)
+		assert.Equal(t, "B", *result.Options.CSVFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
+		assert.Equal(t, "c", *result.Options.CSVFileExtension)
+		assert.Equal(t, true, *result.Options.CSVParseHeader)
+		assert.Equal(t, true, *result.Options.CSVSkipBlankLines)
+		assert.Equal(t, "d", *result.Options.CSVDateFormat)
+		assert.Equal(t, "e", *result.Options.CSVTimeFormat)
+		assert.Equal(t, "f", *result.Options.CSVTimestampFormat)
+		assert.Equal(t, &BinaryFormatBase64, result.Options.CSVBinaryFormat)
+		assert.Equal(t, `\`, *result.Options.CSVEscape)
+		assert.Equal(t, "h", *result.Options.CSVEscapeUnenclosedField)
+		assert.Equal(t, true, *result.Options.CSVTrimSpace)
+		assert.Equal(t, String("'"), result.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, result.Options.CSVNullIf)
+		assert.Equal(t, true, *result.Options.CSVErrorOnColumnCountMismatch)
+		assert.Equal(t, true, *result.Options.CSVReplaceInvalidCharacters)
+		assert.Equal(t, true, *result.Options.CSVEmptyFieldAsNull)
+		assert.Equal(t, true, *result.Options.CSVSkipByteOrderMark)
+		assert.Equal(t, &CSVEncodingGB18030, result.Options.CSVEncoding)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeCsv, describeResult.Type)
-		assert.Equal(t, &CsvCompressionBz2, describeResult.Options.CsvCompression)
-		assert.Equal(t, "S", *describeResult.Options.CsvRecordDelimiter) // o123 == 83 == 'S' (ASCII)
-		assert.Equal(t, "B", *describeResult.Options.CsvFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
-		assert.Equal(t, "c", *describeResult.Options.CsvFileExtension)
-		assert.Equal(t, true, *describeResult.Options.CsvParseHeader)
-		assert.Equal(t, true, *describeResult.Options.CsvSkipBlankLines)
-		assert.Equal(t, "d", *describeResult.Options.CsvDateFormat)
-		assert.Equal(t, "e", *describeResult.Options.CsvTimeFormat)
-		assert.Equal(t, "f", *describeResult.Options.CsvTimestampFormat)
-		assert.Equal(t, &BinaryFormatBase64, describeResult.Options.CsvBinaryFormat)
-		assert.Equal(t, `\\`, *describeResult.Options.CsvEscape) // Describe does not un-escape backslashes, but show does ....
-		assert.Equal(t, "h", *describeResult.Options.CsvEscapeUnenclosedField)
-		assert.Equal(t, true, *describeResult.Options.CsvTrimSpace)
-		assert.Equal(t, String("'"), describeResult.Options.CsvFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, describeResult.Options.CsvNullIf)
-		assert.Equal(t, true, *describeResult.Options.CsvErrorOnColumnCountMismatch)
-		assert.Equal(t, true, *describeResult.Options.CsvReplaceInvalidCharacters)
-		assert.Equal(t, true, *describeResult.Options.CsvEmptyFieldAsNull)
-		assert.Equal(t, true, *describeResult.Options.CsvSkipByteOrderMark)
-		assert.Equal(t, &CsvEncodingGB18030, describeResult.Options.CsvEncoding)
+		assert.Equal(t, FileFormatTypeCSV, describeResult.Type)
+		assert.Equal(t, &CSVCompressionBz2, describeResult.Options.CSVCompression)
+		assert.Equal(t, "S", *describeResult.Options.CSVRecordDelimiter) // o123 == 83 == 'S' (ASCII)
+		assert.Equal(t, "B", *describeResult.Options.CSVFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
+		assert.Equal(t, "c", *describeResult.Options.CSVFileExtension)
+		assert.Equal(t, true, *describeResult.Options.CSVParseHeader)
+		assert.Equal(t, true, *describeResult.Options.CSVSkipBlankLines)
+		assert.Equal(t, "d", *describeResult.Options.CSVDateFormat)
+		assert.Equal(t, "e", *describeResult.Options.CSVTimeFormat)
+		assert.Equal(t, "f", *describeResult.Options.CSVTimestampFormat)
+		assert.Equal(t, &BinaryFormatBase64, describeResult.Options.CSVBinaryFormat)
+		assert.Equal(t, `\\`, *describeResult.Options.CSVEscape) // Describe does not un-escape backslashes, but show does ....
+		assert.Equal(t, "h", *describeResult.Options.CSVEscapeUnenclosedField)
+		assert.Equal(t, true, *describeResult.Options.CSVTrimSpace)
+		assert.Equal(t, String("'"), describeResult.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, describeResult.Options.CSVNullIf)
+		assert.Equal(t, true, *describeResult.Options.CSVErrorOnColumnCountMismatch)
+		assert.Equal(t, true, *describeResult.Options.CSVReplaceInvalidCharacters)
+		assert.Equal(t, true, *describeResult.Options.CSVEmptyFieldAsNull)
+		assert.Equal(t, true, *describeResult.Options.CSVSkipByteOrderMark)
+		assert.Equal(t, &CSVEncodingGB18030, describeResult.Options.CSVEncoding)
 	})
 	t.Run("JSON", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
 		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeJson,
+			Type: FileFormatTypeJSON,
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				JsonCompression:       &JsonCompressionBrotli,
-				JsonDateFormat:        String("a"),
-				JsonTimeFormat:        String("b"),
-				JsonTimestampFormat:   String("c"),
-				JsonBinaryFormat:      &BinaryFormatHex,
-				JsonTrimSpace:         Bool(true),
-				JsonNullIf:            &[]NullString{{"d"}, {"e"}},
-				JsonFileExtension:     String("f"),
-				JsonEnableOctal:       Bool(true),
-				JsonAllowDuplicate:    Bool(true),
-				JsonStripOuterArray:   Bool(true),
-				JsonStripNullValues:   Bool(true),
-				JsonIgnoreUtf8Errors:  Bool(true),
-				JsonSkipByteOrderMark: Bool(true),
+				JSONCompression:       &JSONCompressionBrotli,
+				JSONDateFormat:        String("a"),
+				JSONTimeFormat:        String("b"),
+				JSONTimestampFormat:   String("c"),
+				JSONBinaryFormat:      &BinaryFormatHex,
+				JSONTrimSpace:         Bool(true),
+				JSONNullIf:            &[]NullString{{"d"}, {"e"}},
+				JSONFileExtension:     String("f"),
+				JSONEnableOctal:       Bool(true),
+				JSONAllowDuplicate:    Bool(true),
+				JSONStripOuterArray:   Bool(true),
+				JSONStripNullValues:   Bool(true),
+				JSONIgnoreUTF8Errors:  Bool(true),
+				JSONSkipByteOrderMark: Bool(true),
 
 				Comment: String("test comment"),
 			},
@@ -140,43 +140,43 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeJson, result.Type)
+		assert.Equal(t, FileFormatTypeJSON, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "", result.OwnerRoleType)
 
-		assert.Equal(t, JsonCompressionBrotli, *result.Options.JsonCompression)
-		assert.Equal(t, "a", *result.Options.JsonDateFormat)
-		assert.Equal(t, "b", *result.Options.JsonTimeFormat)
-		assert.Equal(t, "c", *result.Options.JsonTimestampFormat)
-		assert.Equal(t, BinaryFormatHex, *result.Options.JsonBinaryFormat)
-		assert.Equal(t, true, *result.Options.JsonTrimSpace)
-		assert.Equal(t, []NullString{{"d"}, {"e"}}, *result.Options.JsonNullIf)
-		assert.Equal(t, "f", *result.Options.JsonFileExtension)
-		assert.Equal(t, true, *result.Options.JsonEnableOctal)
-		assert.Equal(t, true, *result.Options.JsonAllowDuplicate)
-		assert.Equal(t, true, *result.Options.JsonStripOuterArray)
-		assert.Equal(t, true, *result.Options.JsonStripNullValues)
-		assert.Equal(t, true, *result.Options.JsonIgnoreUtf8Errors)
-		assert.Equal(t, true, *result.Options.JsonSkipByteOrderMark)
+		assert.Equal(t, JSONCompressionBrotli, *result.Options.JSONCompression)
+		assert.Equal(t, "a", *result.Options.JSONDateFormat)
+		assert.Equal(t, "b", *result.Options.JSONTimeFormat)
+		assert.Equal(t, "c", *result.Options.JSONTimestampFormat)
+		assert.Equal(t, BinaryFormatHex, *result.Options.JSONBinaryFormat)
+		assert.Equal(t, true, *result.Options.JSONTrimSpace)
+		assert.Equal(t, []NullString{{"d"}, {"e"}}, *result.Options.JSONNullIf)
+		assert.Equal(t, "f", *result.Options.JSONFileExtension)
+		assert.Equal(t, true, *result.Options.JSONEnableOctal)
+		assert.Equal(t, true, *result.Options.JSONAllowDuplicate)
+		assert.Equal(t, true, *result.Options.JSONStripOuterArray)
+		assert.Equal(t, true, *result.Options.JSONStripNullValues)
+		assert.Equal(t, true, *result.Options.JSONIgnoreUTF8Errors)
+		assert.Equal(t, true, *result.Options.JSONSkipByteOrderMark)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeJson, describeResult.Type)
-		assert.Equal(t, JsonCompressionBrotli, *describeResult.Options.JsonCompression)
-		assert.Equal(t, "a", *describeResult.Options.JsonDateFormat)
-		assert.Equal(t, "b", *describeResult.Options.JsonTimeFormat)
-		assert.Equal(t, "c", *describeResult.Options.JsonTimestampFormat)
-		assert.Equal(t, BinaryFormatHex, *describeResult.Options.JsonBinaryFormat)
-		assert.Equal(t, true, *describeResult.Options.JsonTrimSpace)
-		assert.Equal(t, []NullString{{"d"}, {"e"}}, *describeResult.Options.JsonNullIf)
-		assert.Equal(t, "f", *describeResult.Options.JsonFileExtension)
-		assert.Equal(t, true, *describeResult.Options.JsonEnableOctal)
-		assert.Equal(t, true, *describeResult.Options.JsonAllowDuplicate)
-		assert.Equal(t, true, *describeResult.Options.JsonStripOuterArray)
-		assert.Equal(t, true, *describeResult.Options.JsonStripNullValues)
-		assert.Equal(t, true, *describeResult.Options.JsonIgnoreUtf8Errors)
-		assert.Equal(t, true, *describeResult.Options.JsonSkipByteOrderMark)
+		assert.Equal(t, FileFormatTypeJSON, describeResult.Type)
+		assert.Equal(t, JSONCompressionBrotli, *describeResult.Options.JSONCompression)
+		assert.Equal(t, "a", *describeResult.Options.JSONDateFormat)
+		assert.Equal(t, "b", *describeResult.Options.JSONTimeFormat)
+		assert.Equal(t, "c", *describeResult.Options.JSONTimestampFormat)
+		assert.Equal(t, BinaryFormatHex, *describeResult.Options.JSONBinaryFormat)
+		assert.Equal(t, true, *describeResult.Options.JSONTrimSpace)
+		assert.Equal(t, []NullString{{"d"}, {"e"}}, *describeResult.Options.JSONNullIf)
+		assert.Equal(t, "f", *describeResult.Options.JSONFileExtension)
+		assert.Equal(t, true, *describeResult.Options.JSONEnableOctal)
+		assert.Equal(t, true, *describeResult.Options.JSONAllowDuplicate)
+		assert.Equal(t, true, *describeResult.Options.JSONStripOuterArray)
+		assert.Equal(t, true, *describeResult.Options.JSONStripNullValues)
+		assert.Equal(t, true, *describeResult.Options.JSONIgnoreUTF8Errors)
+		assert.Equal(t, true, *describeResult.Options.JSONSkipByteOrderMark)
 	})
 	t.Run("AVRO", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
@@ -223,11 +223,11 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	t.Run("ORC", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
 		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeOrc,
+			Type: FileFormatTypeORC,
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				OrcTrimSpace:                Bool(true),
-				OrcReplaceInvalidCharacters: Bool(true),
-				OrcNullIf:                   &[]NullString{{"a"}, {"b"}},
+				ORCTrimSpace:                Bool(true),
+				ORCReplaceInvalidCharacters: Bool(true),
+				ORCNullIf:                   &[]NullString{{"a"}, {"b"}},
 
 				Comment: String("test comment"),
 			},
@@ -243,21 +243,21 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeOrc, result.Type)
+		assert.Equal(t, FileFormatTypeORC, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "", result.OwnerRoleType)
 
-		assert.Equal(t, true, *result.Options.OrcTrimSpace)
-		assert.Equal(t, true, *result.Options.OrcReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *result.Options.OrcNullIf)
+		assert.Equal(t, true, *result.Options.ORCTrimSpace)
+		assert.Equal(t, true, *result.Options.ORCReplaceInvalidCharacters)
+		assert.Equal(t, []NullString{{"a"}, {"b"}}, *result.Options.ORCNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeOrc, describeResult.Type)
-		assert.Equal(t, true, *describeResult.Options.OrcTrimSpace)
-		assert.Equal(t, true, *describeResult.Options.OrcReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *describeResult.Options.OrcNullIf)
+		assert.Equal(t, FileFormatTypeORC, describeResult.Type)
+		assert.Equal(t, true, *describeResult.Options.ORCTrimSpace)
+		assert.Equal(t, true, *describeResult.Options.ORCReplaceInvalidCharacters)
+		assert.Equal(t, []NullString{{"a"}, {"b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
@@ -307,15 +307,15 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	t.Run("XML", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
 		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeXml,
+			Type: FileFormatTypeXML,
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				XmlCompression:          &XmlCompressionDeflate,
-				XmlIgnoreUtf8Errors:     Bool(true),
-				XmlPreserveSpace:        Bool(true),
-				XmlStripOuterElement:    Bool(true),
-				XmlDisableSnowflakeData: Bool(true),
-				XmlDisableAutoConvert:   Bool(true),
-				XmlSkipByteOrderMark:    Bool(true),
+				XMLCompression:          &XMLCompressionDeflate,
+				XMLIgnoreUTF8Errors:     Bool(true),
+				XMLPreserveSpace:        Bool(true),
+				XMLStripOuterElement:    Bool(true),
+				XMLDisableSnowflakeData: Bool(true),
+				XMLDisableAutoConvert:   Bool(true),
+				XMLSkipByteOrderMark:    Bool(true),
 
 				Comment: String("test comment"),
 			},
@@ -331,29 +331,29 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeXml, result.Type)
+		assert.Equal(t, FileFormatTypeXML, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "", result.OwnerRoleType)
 
-		assert.Equal(t, XmlCompressionDeflate, *result.Options.XmlCompression)
-		assert.Equal(t, true, *result.Options.XmlIgnoreUtf8Errors)
-		assert.Equal(t, true, *result.Options.XmlPreserveSpace)
-		assert.Equal(t, true, *result.Options.XmlStripOuterElement)
-		assert.Equal(t, true, *result.Options.XmlDisableSnowflakeData)
-		assert.Equal(t, true, *result.Options.XmlDisableAutoConvert)
-		assert.Equal(t, true, *result.Options.XmlSkipByteOrderMark)
+		assert.Equal(t, XMLCompressionDeflate, *result.Options.XMLCompression)
+		assert.Equal(t, true, *result.Options.XMLIgnoreUTF8Errors)
+		assert.Equal(t, true, *result.Options.XMLPreserveSpace)
+		assert.Equal(t, true, *result.Options.XMLStripOuterElement)
+		assert.Equal(t, true, *result.Options.XMLDisableSnowflakeData)
+		assert.Equal(t, true, *result.Options.XMLDisableAutoConvert)
+		assert.Equal(t, true, *result.Options.XMLSkipByteOrderMark)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeXml, describeResult.Type)
-		assert.Equal(t, XmlCompressionDeflate, *describeResult.Options.XmlCompression)
-		assert.Equal(t, true, *describeResult.Options.XmlIgnoreUtf8Errors)
-		assert.Equal(t, true, *describeResult.Options.XmlPreserveSpace)
-		assert.Equal(t, true, *describeResult.Options.XmlStripOuterElement)
-		assert.Equal(t, true, *describeResult.Options.XmlDisableSnowflakeData)
-		assert.Equal(t, true, *describeResult.Options.XmlDisableAutoConvert)
-		assert.Equal(t, true, *describeResult.Options.XmlSkipByteOrderMark)
+		assert.Equal(t, FileFormatTypeXML, describeResult.Type)
+		assert.Equal(t, XMLCompressionDeflate, *describeResult.Options.XMLCompression)
+		assert.Equal(t, true, *describeResult.Options.XMLIgnoreUTF8Errors)
+		assert.Equal(t, true, *describeResult.Options.XMLPreserveSpace)
+		assert.Equal(t, true, *describeResult.Options.XMLStripOuterElement)
+		assert.Equal(t, true, *describeResult.Options.XMLDisableSnowflakeData)
+		assert.Equal(t, true, *describeResult.Options.XMLDisableAutoConvert)
+		assert.Equal(t, true, *describeResult.Options.XMLSkipByteOrderMark)
 	})
 }
 
@@ -397,26 +397,26 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 
 	t.Run("set", func(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, schemaTest.ID(), &CreateFileFormatOptions{
-			Type: FileFormatTypeCsv,
+			Type: FileFormatTypeCSV,
 			FileFormatTypeOptions: FileFormatTypeOptions{
-				CsvCompression: &CsvCompressionAuto,
-				CsvParseHeader: Bool(false),
+				CSVCompression: &CSVCompressionAuto,
+				CSVParseHeader: Bool(false),
 			},
 		})
 		t.Cleanup(fileFormatCleanup)
 
 		err := client.FileFormats.Alter(ctx, fileFormat.ID(), &AlterFileFormatOptions{
 			Set: &FileFormatTypeOptions{
-				CsvCompression: &CsvCompressionBz2,
-				CsvParseHeader: Bool(true),
+				CSVCompression: &CSVCompressionBz2,
+				CSVParseHeader: Bool(true),
 			},
 		})
 		require.NoError(t, err)
 
 		result, err := client.FileFormats.ShowByID(ctx, fileFormat.ID())
 		require.NoError(t, err)
-		assert.Equal(t, CsvCompressionBz2, *result.Options.CsvCompression)
-		assert.Equal(t, true, *result.Options.CsvParseHeader)
+		assert.Equal(t, CSVCompressionBz2, *result.Options.CSVCompression)
+		assert.Equal(t, true, *result.Options.CSVParseHeader)
 	})
 }
 

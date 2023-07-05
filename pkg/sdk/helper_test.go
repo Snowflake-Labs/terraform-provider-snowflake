@@ -261,7 +261,7 @@ func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptio
 func createFileFormat(t *testing.T, client *Client, schema SchemaIdentifier) (*FileFormat, func()) {
 	t.Helper()
 	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
-		Type: FileFormatTypeCsv,
+		Type: FileFormatTypeCSV,
 	})
 }
 

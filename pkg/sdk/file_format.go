@@ -81,7 +81,7 @@ type ShowFileFormatsOptionsResult struct {
 	NullIf                     []string `json:"NULL_IF"`
 	Compression                string   `json:"COMPRESSION"`
 	ErrorOnColumnCountMismatch bool     `json:"ERROR_ON_COLUMN_COUNT_MISMATCH"`
-	ValidateUtf8               bool     `json:"VALIDATE_UTF8"`
+	ValidateUTF8               bool     `json:"VALIDATE_UTF8"`
 	SkipBlankLines             bool     `json:"SKIP_BLANK_LINES"`
 	ReplaceInvalidCharacters   bool     `json:"REPLACE_INVALID_CHARACTERS"`
 	EmptyFieldAsNull           bool     `json:"EMPTY_FIELD_AS_NULL"`
@@ -93,7 +93,7 @@ type ShowFileFormatsOptionsResult struct {
 	AllowDuplicate   bool `json:"ALLOW_DUPLICATE"`
 	StripOuterArray  bool `json:"STRIP_OUTER_ARRAY"`
 	StripNullValues  bool `json:"STRIP_NULL_VALUES"`
-	IgnoreUtf8Errors bool `json:"IGNORE_UTF8_ERRORS"`
+	IgnoreUTF8Errors bool `json:"IGNORE_UTF8_ERRORS"`
 
 	// Parquet fields
 	BinaryAsText bool `json:"BINARY_AS_TEXT"`
@@ -129,68 +129,68 @@ func (row *FileFormatRow) toFileFormat() *FileFormat {
 	}
 
 	switch ff.Type {
-	case FileFormatTypeCsv:
-		ff.Options.CsvCompression = (*CsvCompression)(&inputOptions.Compression)
-		ff.Options.CsvRecordDelimiter = &inputOptions.RecordDelimiter
-		ff.Options.CsvFieldDelimiter = &inputOptions.FieldDelimiter
-		ff.Options.CsvFileExtension = &inputOptions.FileExtension
-		ff.Options.CsvParseHeader = &inputOptions.ParseHeader
-		ff.Options.CsvSkipHeader = &inputOptions.SkipHeader
-		ff.Options.CsvSkipBlankLines = &inputOptions.SkipBlankLines
-		ff.Options.CsvDateFormat = &inputOptions.DateFormat
-		ff.Options.CsvTimeFormat = &inputOptions.TimeFormat
-		ff.Options.CsvTimestampFormat = &inputOptions.TimestampFormat
-		ff.Options.CsvBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
-		ff.Options.CsvEscape = &inputOptions.Escape
-		ff.Options.CsvEscapeUnenclosedField = &inputOptions.EscapeUnenclosedField
-		ff.Options.CsvTrimSpace = &inputOptions.TrimSpace
-		ff.Options.CsvFieldOptionallyEnclosedBy = &inputOptions.FieldOptionallyEnclosedBy
-		ff.Options.CsvNullIf = &newNullIf
-		ff.Options.CsvErrorOnColumnCountMismatch = &inputOptions.ErrorOnColumnCountMismatch
-		ff.Options.CsvReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-		ff.Options.CsvEmptyFieldAsNull = &inputOptions.EmptyFieldAsNull
-		ff.Options.CsvSkipByteOrderMark = &inputOptions.SkipByteOrderMark
-		ff.Options.CsvEncoding = (*CsvEncoding)(&inputOptions.Encoding)
-	case FileFormatTypeJson:
-		ff.Options.JsonCompression = (*JsonCompression)(&inputOptions.Compression)
-		ff.Options.JsonDateFormat = &inputOptions.DateFormat
-		ff.Options.JsonTimeFormat = &inputOptions.TimeFormat
-		ff.Options.JsonTimestampFormat = &inputOptions.TimestampFormat
-		ff.Options.JsonBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
-		ff.Options.JsonTrimSpace = &inputOptions.TrimSpace
-		ff.Options.JsonNullIf = &newNullIf
-		ff.Options.JsonFileExtension = &inputOptions.FileExtension
-		ff.Options.JsonEnableOctal = &inputOptions.EnableOctal
-		ff.Options.JsonAllowDuplicate = &inputOptions.AllowDuplicate
-		ff.Options.JsonStripOuterArray = &inputOptions.StripOuterArray
-		ff.Options.JsonStripNullValues = &inputOptions.StripNullValues
-		ff.Options.JsonReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-		ff.Options.JsonIgnoreUtf8Errors = &inputOptions.IgnoreUtf8Errors
-		ff.Options.JsonSkipByteOrderMark = &inputOptions.SkipByteOrderMark
+	case FileFormatTypeCSV:
+		ff.Options.CSVCompression = (*CSVCompression)(&inputOptions.Compression)
+		ff.Options.CSVRecordDelimiter = &inputOptions.RecordDelimiter
+		ff.Options.CSVFieldDelimiter = &inputOptions.FieldDelimiter
+		ff.Options.CSVFileExtension = &inputOptions.FileExtension
+		ff.Options.CSVParseHeader = &inputOptions.ParseHeader
+		ff.Options.CSVSkipHeader = &inputOptions.SkipHeader
+		ff.Options.CSVSkipBlankLines = &inputOptions.SkipBlankLines
+		ff.Options.CSVDateFormat = &inputOptions.DateFormat
+		ff.Options.CSVTimeFormat = &inputOptions.TimeFormat
+		ff.Options.CSVTimestampFormat = &inputOptions.TimestampFormat
+		ff.Options.CSVBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
+		ff.Options.CSVEscape = &inputOptions.Escape
+		ff.Options.CSVEscapeUnenclosedField = &inputOptions.EscapeUnenclosedField
+		ff.Options.CSVTrimSpace = &inputOptions.TrimSpace
+		ff.Options.CSVFieldOptionallyEnclosedBy = &inputOptions.FieldOptionallyEnclosedBy
+		ff.Options.CSVNullIf = &newNullIf
+		ff.Options.CSVErrorOnColumnCountMismatch = &inputOptions.ErrorOnColumnCountMismatch
+		ff.Options.CSVReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
+		ff.Options.CSVEmptyFieldAsNull = &inputOptions.EmptyFieldAsNull
+		ff.Options.CSVSkipByteOrderMark = &inputOptions.SkipByteOrderMark
+		ff.Options.CSVEncoding = (*CSVEncoding)(&inputOptions.Encoding)
+	case FileFormatTypeJSON:
+		ff.Options.JSONCompression = (*JSONCompression)(&inputOptions.Compression)
+		ff.Options.JSONDateFormat = &inputOptions.DateFormat
+		ff.Options.JSONTimeFormat = &inputOptions.TimeFormat
+		ff.Options.JSONTimestampFormat = &inputOptions.TimestampFormat
+		ff.Options.JSONBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
+		ff.Options.JSONTrimSpace = &inputOptions.TrimSpace
+		ff.Options.JSONNullIf = &newNullIf
+		ff.Options.JSONFileExtension = &inputOptions.FileExtension
+		ff.Options.JSONEnableOctal = &inputOptions.EnableOctal
+		ff.Options.JSONAllowDuplicate = &inputOptions.AllowDuplicate
+		ff.Options.JSONStripOuterArray = &inputOptions.StripOuterArray
+		ff.Options.JSONStripNullValues = &inputOptions.StripNullValues
+		ff.Options.JSONReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
+		ff.Options.JSONIgnoreUTF8Errors = &inputOptions.IgnoreUTF8Errors
+		ff.Options.JSONSkipByteOrderMark = &inputOptions.SkipByteOrderMark
 	case FileFormatTypeAvro:
 		ff.Options.AvroTrimSpace = &inputOptions.TrimSpace
 		ff.Options.AvroNullIf = &newNullIf
 		ff.Options.AvroCompression = (*AvroCompression)(&inputOptions.Compression)
 		ff.Options.AvroReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-	case FileFormatTypeOrc:
-		ff.Options.OrcTrimSpace = &inputOptions.TrimSpace
-		ff.Options.OrcReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-		ff.Options.OrcNullIf = &newNullIf
+	case FileFormatTypeORC:
+		ff.Options.ORCTrimSpace = &inputOptions.TrimSpace
+		ff.Options.ORCReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
+		ff.Options.ORCNullIf = &newNullIf
 	case FileFormatTypeParquet:
 		ff.Options.ParquetTrimSpace = &inputOptions.TrimSpace
 		ff.Options.ParquetNullIf = &newNullIf
 		ff.Options.ParquetCompression = (*ParquetCompression)(&inputOptions.Compression)
 		ff.Options.ParquetBinaryAsText = &inputOptions.BinaryAsText
 		ff.Options.ParquetReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-	case FileFormatTypeXml:
-		ff.Options.XmlCompression = (*XmlCompression)(&inputOptions.Compression)
-		ff.Options.XmlIgnoreUtf8Errors = &inputOptions.IgnoreUtf8Errors
-		ff.Options.XmlPreserveSpace = &inputOptions.PreserveSpace
-		ff.Options.XmlStripOuterElement = &inputOptions.StripOuterElement
-		ff.Options.XmlDisableSnowflakeData = &inputOptions.DisableSnowflakeData
-		ff.Options.XmlDisableAutoConvert = &inputOptions.DisableAutoConvert
-		ff.Options.XmlReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
-		ff.Options.XmlSkipByteOrderMark = &inputOptions.SkipByteOrderMark
+	case FileFormatTypeXML:
+		ff.Options.XMLCompression = (*XMLCompression)(&inputOptions.Compression)
+		ff.Options.XMLIgnoreUTF8Errors = &inputOptions.IgnoreUTF8Errors
+		ff.Options.XMLPreserveSpace = &inputOptions.PreserveSpace
+		ff.Options.XMLStripOuterElement = &inputOptions.StripOuterElement
+		ff.Options.XMLDisableSnowflakeData = &inputOptions.DisableSnowflakeData
+		ff.Options.XMLDisableAutoConvert = &inputOptions.DisableAutoConvert
+		ff.Options.XMLReplaceInvalidCharacters = &inputOptions.ReplaceInvalidCharacters
+		ff.Options.XMLSkipByteOrderMark = &inputOptions.SkipByteOrderMark
 	}
 
 	return ff
@@ -199,12 +199,12 @@ func (row *FileFormatRow) toFileFormat() *FileFormat {
 type FileFormatType string
 
 const (
-	FileFormatTypeCsv     FileFormatType = "CSV"
-	FileFormatTypeJson    FileFormatType = "JSON"
+	FileFormatTypeCSV     FileFormatType = "CSV"
+	FileFormatTypeJSON    FileFormatType = "JSON"
 	FileFormatTypeAvro    FileFormatType = "AVRO"
-	FileFormatTypeOrc     FileFormatType = "ORC"
+	FileFormatTypeORC     FileFormatType = "ORC"
 	FileFormatTypeParquet FileFormatType = "PARQUET"
-	FileFormatTypeXml     FileFormatType = "XML"
+	FileFormatTypeXML     FileFormatType = "XML"
 )
 
 type BinaryFormat string
@@ -212,71 +212,71 @@ type BinaryFormat string
 var (
 	BinaryFormatHex    BinaryFormat = "HEX"
 	BinaryFormatBase64 BinaryFormat = "BASE64"
-	BinaryFormatUtf8   BinaryFormat = "UTF8"
+	BinaryFormatUTF8   BinaryFormat = "UTF8"
 )
 
-type CsvCompression string
+type CSVCompression string
 
 var (
-	CsvCompressionAuto       CsvCompression = "AUTO"
-	CsvCompressionGzip       CsvCompression = "GZIP"
-	CsvCompressionBz2        CsvCompression = "BZ2"
-	CsvCompressionBrotli     CsvCompression = "BROTLI"
-	CsvCompressionZstd       CsvCompression = "ZSTD"
-	CsvCompressionDeflate    CsvCompression = "DEFLATE"
-	CsvCompressionRawDeflate CsvCompression = "RAW_DEFLATE"
-	CsvCompressionNone       CsvCompression = "NONE"
+	CSVCompressionAuto       CSVCompression = "AUTO"
+	CSVCompressionGzip       CSVCompression = "GZIP"
+	CSVCompressionBz2        CSVCompression = "BZ2"
+	CSVCompressionBrotli     CSVCompression = "BROTLI"
+	CSVCompressionZstd       CSVCompression = "ZSTD"
+	CSVCompressionDeflate    CSVCompression = "DEFLATE"
+	CSVCompressionRawDeflate CSVCompression = "RAW_DEFLATE"
+	CSVCompressionNone       CSVCompression = "NONE"
 )
 
-type CsvEncoding string
+type CSVEncoding string
 
 var (
-	CsvEncodingBIG5        CsvEncoding = "BIG5"
-	CsvEncodingEUCJP       CsvEncoding = "EUCJP"
-	CsvEncodingEUCKR       CsvEncoding = "EUCKR"
-	CsvEncodingGB18030     CsvEncoding = "GB18030"
-	CsvEncodingIBM420      CsvEncoding = "IBM420"
-	CsvEncodingIBM424      CsvEncoding = "IBM424"
-	CsvEncodingISO2022CN   CsvEncoding = "ISO2022CN"
-	CsvEncodingISO2022JP   CsvEncoding = "ISO2022JP"
-	CsvEncodingISO2022KR   CsvEncoding = "ISO2022KR"
-	CsvEncodingISO88591    CsvEncoding = "ISO88591"
-	CsvEncodingISO88592    CsvEncoding = "ISO88592"
-	CsvEncodingISO88595    CsvEncoding = "ISO88595"
-	CsvEncodingISO88596    CsvEncoding = "ISO88596"
-	CsvEncodingISO88597    CsvEncoding = "ISO88597"
-	CsvEncodingISO88598    CsvEncoding = "ISO88598"
-	CsvEncodingISO88599    CsvEncoding = "ISO88599"
-	CsvEncodingISO885915   CsvEncoding = "ISO885915"
-	CsvEncodingKOI8R       CsvEncoding = "KOI8R"
-	CsvEncodingSHIFTJIS    CsvEncoding = "SHIFTJIS"
-	CsvEncodingUTF8        CsvEncoding = "UTF8"
-	CsvEncodingUTF16       CsvEncoding = "UTF16"
-	CsvEncodingUTF16BE     CsvEncoding = "UTF16BE"
-	CsvEncodingUTF16LE     CsvEncoding = "UTF16LE"
-	CsvEncodingUTF32       CsvEncoding = "UTF32"
-	CsvEncodingUTF32BE     CsvEncoding = "UTF32BE"
-	CsvEncodingUTF32LE     CsvEncoding = "UTF32LE"
-	CsvEncodingWINDOWS1250 CsvEncoding = "WINDOWS1250"
-	CsvEncodingWINDOWS1251 CsvEncoding = "WINDOWS1251"
-	CsvEncodingWINDOWS1252 CsvEncoding = "WINDOWS1252"
-	CsvEncodingWINDOWS1253 CsvEncoding = "WINDOWS1253"
-	CsvEncodingWINDOWS1254 CsvEncoding = "WINDOWS1254"
-	CsvEncodingWINDOWS1255 CsvEncoding = "WINDOWS1255"
-	CsvEncodingWINDOWS1256 CsvEncoding = "WINDOWS1256"
+	CSVEncodingBIG5        CSVEncoding = "BIG5"
+	CSVEncodingEUCJP       CSVEncoding = "EUCJP"
+	CSVEncodingEUCKR       CSVEncoding = "EUCKR"
+	CSVEncodingGB18030     CSVEncoding = "GB18030"
+	CSVEncodingIBM420      CSVEncoding = "IBM420"
+	CSVEncodingIBM424      CSVEncoding = "IBM424"
+	CSVEncodingISO2022CN   CSVEncoding = "ISO2022CN"
+	CSVEncodingISO2022JP   CSVEncoding = "ISO2022JP"
+	CSVEncodingISO2022KR   CSVEncoding = "ISO2022KR"
+	CSVEncodingISO88591    CSVEncoding = "ISO88591"
+	CSVEncodingISO88592    CSVEncoding = "ISO88592"
+	CSVEncodingISO88595    CSVEncoding = "ISO88595"
+	CSVEncodingISO88596    CSVEncoding = "ISO88596"
+	CSVEncodingISO88597    CSVEncoding = "ISO88597"
+	CSVEncodingISO88598    CSVEncoding = "ISO88598"
+	CSVEncodingISO88599    CSVEncoding = "ISO88599"
+	CSVEncodingISO885915   CSVEncoding = "ISO885915"
+	CSVEncodingKOI8R       CSVEncoding = "KOI8R"
+	CSVEncodingSHIFTJIS    CSVEncoding = "SHIFTJIS"
+	CSVEncodingUTF8        CSVEncoding = "UTF8"
+	CSVEncodingUTF16       CSVEncoding = "UTF16"
+	CSVEncodingUTF16BE     CSVEncoding = "UTF16BE"
+	CSVEncodingUTF16LE     CSVEncoding = "UTF16LE"
+	CSVEncodingUTF32       CSVEncoding = "UTF32"
+	CSVEncodingUTF32BE     CSVEncoding = "UTF32BE"
+	CSVEncodingUTF32LE     CSVEncoding = "UTF32LE"
+	CSVEncodingWINDOWS1250 CSVEncoding = "WINDOWS1250"
+	CSVEncodingWINDOWS1251 CSVEncoding = "WINDOWS1251"
+	CSVEncodingWINDOWS1252 CSVEncoding = "WINDOWS1252"
+	CSVEncodingWINDOWS1253 CSVEncoding = "WINDOWS1253"
+	CSVEncodingWINDOWS1254 CSVEncoding = "WINDOWS1254"
+	CSVEncodingWINDOWS1255 CSVEncoding = "WINDOWS1255"
+	CSVEncodingWINDOWS1256 CSVEncoding = "WINDOWS1256"
 )
 
-type JsonCompression string
+type JSONCompression string
 
 var (
-	JsonCompressionAuto       JsonCompression = "AUTO"
-	JsonCompressionGzip       JsonCompression = "GZIP"
-	JsonCompressionBz2        JsonCompression = "BZ2"
-	JsonCompressionBrotli     JsonCompression = "BROTLI"
-	JsonCompressionZstd       JsonCompression = "ZSTD"
-	JsonCompressionDeflate    JsonCompression = "DEFLATE"
-	JsonCompressionRawDeflate JsonCompression = "RAW_DEFLATE"
-	JsonCompressionNone       JsonCompression = "NONE"
+	JSONCompressionAuto       JSONCompression = "AUTO"
+	JSONCompressionGzip       JSONCompression = "GZIP"
+	JSONCompressionBz2        JSONCompression = "BZ2"
+	JSONCompressionBrotli     JSONCompression = "BROTLI"
+	JSONCompressionZstd       JSONCompression = "ZSTD"
+	JSONCompressionDeflate    JSONCompression = "DEFLATE"
+	JSONCompressionRawDeflate JSONCompression = "RAW_DEFLATE"
+	JSONCompressionNone       JSONCompression = "NONE"
 )
 
 type AvroCompression string
@@ -300,17 +300,17 @@ var (
 	ParquetCompressionNone   ParquetCompression = "NONE"
 )
 
-type XmlCompression string
+type XMLCompression string
 
 var (
-	XmlCompressionAuto       XmlCompression = "AUTO"
-	XmlCompressionGzip       XmlCompression = "GZIP"
-	XmlCompressionBz2        XmlCompression = "BZ2"
-	XmlCompressionBrotli     XmlCompression = "BROTLI"
-	XmlCompressionZstd       XmlCompression = "ZSTD"
-	XmlCompressionDeflate    XmlCompression = "DEFLATE"
-	XmlCompressionRawDeflate XmlCompression = "RAW_DEFLATE"
-	XmlCompressionNone       XmlCompression = "NONE"
+	XMLCompressionAuto       XMLCompression = "AUTO"
+	XMLCompressionGzip       XMLCompression = "GZIP"
+	XMLCompressionBz2        XMLCompression = "BZ2"
+	XMLCompressionBrotli     XMLCompression = "BROTLI"
+	XMLCompressionZstd       XMLCompression = "ZSTD"
+	XMLCompressionDeflate    XMLCompression = "DEFLATE"
+	XMLCompressionRawDeflate XMLCompression = "RAW_DEFLATE"
+	XMLCompressionNone       XMLCompression = "NONE"
 )
 
 type NullString struct {
@@ -394,44 +394,44 @@ type AlterFileFormatRenameOptions struct {
 
 type FileFormatTypeOptions struct {
 	// CSV type options
-	CsvCompression                *CsvCompression `ddl:"parameter" sql:"COMPRESSION"`
-	CsvRecordDelimiter            *string         `ddl:"parameter,single_quotes" sql:"RECORD_DELIMITER"`
-	CsvFieldDelimiter             *string         `ddl:"parameter,single_quotes" sql:"FIELD_DELIMITER"`
-	CsvFileExtension              *string         `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
-	CsvParseHeader                *bool           `ddl:"parameter" sql:"PARSE_HEADER"`
-	CsvSkipHeader                 *int            `ddl:"parameter" sql:"SKIP_HEADER"`
-	CsvSkipBlankLines             *bool           `ddl:"parameter" sql:"SKIP_BLANK_LINES"`
-	CsvDateFormat                 *string         `ddl:"parameter,single_quotes" sql:"DATE_FORMAT"`
-	CsvTimeFormat                 *string         `ddl:"parameter,single_quotes" sql:"TIME_FORMAT"`
-	CsvTimestampFormat            *string         `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
-	CsvBinaryFormat               *BinaryFormat   `ddl:"parameter" sql:"BINARY_FORMAT"`
-	CsvEscape                     *string         `ddl:"parameter,single_quotes" sql:"ESCAPE"`
-	CsvEscapeUnenclosedField      *string         `ddl:"parameter,single_quotes" sql:"ESCAPE_UNENCLOSED_FIELD"`
-	CsvTrimSpace                  *bool           `ddl:"parameter" sql:"TRIM_SPACE"`
-	CsvFieldOptionallyEnclosedBy  *string         `ddl:"parameter,single_quotes" sql:"FIELD_OPTIONALLY_ENCLOSED_BY"`
-	CsvNullIf                     *[]NullString   `ddl:"parameter,parentheses" sql:"NULL_IF"`
-	CsvErrorOnColumnCountMismatch *bool           `ddl:"parameter" sql:"ERROR_ON_COLUMN_COUNT_MISMATCH"`
-	CsvReplaceInvalidCharacters   *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	CsvEmptyFieldAsNull           *bool           `ddl:"parameter" sql:"EMPTY_FIELD_AS_NULL"`
-	CsvSkipByteOrderMark          *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
-	CsvEncoding                   *CsvEncoding    `ddl:"parameter,single_quotes" sql:"ENCODING"`
+	CSVCompression                *CSVCompression `ddl:"parameter" sql:"COMPRESSION"`
+	CSVRecordDelimiter            *string         `ddl:"parameter,single_quotes" sql:"RECORD_DELIMITER"`
+	CSVFieldDelimiter             *string         `ddl:"parameter,single_quotes" sql:"FIELD_DELIMITER"`
+	CSVFileExtension              *string         `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
+	CSVParseHeader                *bool           `ddl:"parameter" sql:"PARSE_HEADER"`
+	CSVSkipHeader                 *int            `ddl:"parameter" sql:"SKIP_HEADER"`
+	CSVSkipBlankLines             *bool           `ddl:"parameter" sql:"SKIP_BLANK_LINES"`
+	CSVDateFormat                 *string         `ddl:"parameter,single_quotes" sql:"DATE_FORMAT"`
+	CSVTimeFormat                 *string         `ddl:"parameter,single_quotes" sql:"TIME_FORMAT"`
+	CSVTimestampFormat            *string         `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
+	CSVBinaryFormat               *BinaryFormat   `ddl:"parameter" sql:"BINARY_FORMAT"`
+	CSVEscape                     *string         `ddl:"parameter,single_quotes" sql:"ESCAPE"`
+	CSVEscapeUnenclosedField      *string         `ddl:"parameter,single_quotes" sql:"ESCAPE_UNENCLOSED_FIELD"`
+	CSVTrimSpace                  *bool           `ddl:"parameter" sql:"TRIM_SPACE"`
+	CSVFieldOptionallyEnclosedBy  *string         `ddl:"parameter,single_quotes" sql:"FIELD_OPTIONALLY_ENCLOSED_BY"`
+	CSVNullIf                     *[]NullString   `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	CSVErrorOnColumnCountMismatch *bool           `ddl:"parameter" sql:"ERROR_ON_COLUMN_COUNT_MISMATCH"`
+	CSVReplaceInvalidCharacters   *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	CSVEmptyFieldAsNull           *bool           `ddl:"parameter" sql:"EMPTY_FIELD_AS_NULL"`
+	CSVSkipByteOrderMark          *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
+	CSVEncoding                   *CSVEncoding    `ddl:"parameter,single_quotes" sql:"ENCODING"`
 
 	// JSON type options
-	JsonCompression              *JsonCompression `ddl:"parameter" sql:"COMPRESSION"`
-	JsonDateFormat               *string          `ddl:"parameter,single_quotes" sql:"DATE_FORMAT"`
-	JsonTimeFormat               *string          `ddl:"parameter,single_quotes" sql:"TIME_FORMAT"`
-	JsonTimestampFormat          *string          `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
-	JsonBinaryFormat             *BinaryFormat    `ddl:"parameter" sql:"BINARY_FORMAT"`
-	JsonTrimSpace                *bool            `ddl:"parameter" sql:"TRIM_SPACE"`
-	JsonNullIf                   *[]NullString    `ddl:"parameter,parentheses" sql:"NULL_IF"`
-	JsonFileExtension            *string          `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
-	JsonEnableOctal              *bool            `ddl:"parameter" sql:"ENABLE_OCTAL"`
-	JsonAllowDuplicate           *bool            `ddl:"parameter" sql:"ALLOW_DUPLICATE"`
-	JsonStripOuterArray          *bool            `ddl:"parameter" sql:"STRIP_OUTER_ARRAY"`
-	JsonStripNullValues          *bool            `ddl:"parameter" sql:"STRIP_NULL_VALUES"`
-	JsonReplaceInvalidCharacters *bool            `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	JsonIgnoreUtf8Errors         *bool            `ddl:"parameter" sql:"IGNORE_UTF8_ERRORS"`
-	JsonSkipByteOrderMark        *bool            `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
+	JSONCompression              *JSONCompression `ddl:"parameter" sql:"COMPRESSION"`
+	JSONDateFormat               *string          `ddl:"parameter,single_quotes" sql:"DATE_FORMAT"`
+	JSONTimeFormat               *string          `ddl:"parameter,single_quotes" sql:"TIME_FORMAT"`
+	JSONTimestampFormat          *string          `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
+	JSONBinaryFormat             *BinaryFormat    `ddl:"parameter" sql:"BINARY_FORMAT"`
+	JSONTrimSpace                *bool            `ddl:"parameter" sql:"TRIM_SPACE"`
+	JSONNullIf                   *[]NullString    `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	JSONFileExtension            *string          `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
+	JSONEnableOctal              *bool            `ddl:"parameter" sql:"ENABLE_OCTAL"`
+	JSONAllowDuplicate           *bool            `ddl:"parameter" sql:"ALLOW_DUPLICATE"`
+	JSONStripOuterArray          *bool            `ddl:"parameter" sql:"STRIP_OUTER_ARRAY"`
+	JSONStripNullValues          *bool            `ddl:"parameter" sql:"STRIP_NULL_VALUES"`
+	JSONReplaceInvalidCharacters *bool            `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	JSONIgnoreUTF8Errors         *bool            `ddl:"parameter" sql:"IGNORE_UTF8_ERRORS"`
+	JSONSkipByteOrderMark        *bool            `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
 
 	// AVRO type options
 	AvroCompression              *AvroCompression `ddl:"parameter" sql:"COMPRESSION"`
@@ -440,9 +440,9 @@ type FileFormatTypeOptions struct {
 	AvroNullIf                   *[]NullString    `ddl:"parameter,parentheses" sql:"NULL_IF"`
 
 	// ORC type options
-	OrcTrimSpace                *bool         `ddl:"parameter" sql:"TRIM_SPACE"`
-	OrcReplaceInvalidCharacters *bool         `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	OrcNullIf                   *[]NullString `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	ORCTrimSpace                *bool         `ddl:"parameter" sql:"TRIM_SPACE"`
+	ORCReplaceInvalidCharacters *bool         `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	ORCNullIf                   *[]NullString `ddl:"parameter,parentheses" sql:"NULL_IF"`
 
 	// PARQUET type options
 	ParquetCompression              *ParquetCompression `ddl:"parameter" sql:"COMPRESSION"`
@@ -453,59 +453,59 @@ type FileFormatTypeOptions struct {
 	ParquetNullIf                   *[]NullString       `ddl:"parameter,parentheses" sql:"NULL_IF"`
 
 	// XML type options
-	XmlCompression              *XmlCompression `ddl:"parameter" sql:"COMPRESSION"`
-	XmlIgnoreUtf8Errors         *bool           `ddl:"parameter" sql:"IGNORE_UTF8_ERRORS"`
-	XmlPreserveSpace            *bool           `ddl:"parameter" sql:"PRESERVE_SPACE"`
-	XmlStripOuterElement        *bool           `ddl:"parameter" sql:"STRIP_OUTER_ELEMENT"`
-	XmlDisableSnowflakeData     *bool           `ddl:"parameter" sql:"DISABLE_SNOWFLAKE_DATA"`
-	XmlDisableAutoConvert       *bool           `ddl:"parameter" sql:"DISABLE_AUTO_CONVERT"`
-	XmlReplaceInvalidCharacters *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	XmlSkipByteOrderMark        *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
+	XMLCompression              *XMLCompression `ddl:"parameter" sql:"COMPRESSION"`
+	XMLIgnoreUTF8Errors         *bool           `ddl:"parameter" sql:"IGNORE_UTF8_ERRORS"`
+	XMLPreserveSpace            *bool           `ddl:"parameter" sql:"PRESERVE_SPACE"`
+	XMLStripOuterElement        *bool           `ddl:"parameter" sql:"STRIP_OUTER_ELEMENT"`
+	XMLDisableSnowflakeData     *bool           `ddl:"parameter" sql:"DISABLE_SNOWFLAKE_DATA"`
+	XMLDisableAutoConvert       *bool           `ddl:"parameter" sql:"DISABLE_AUTO_CONVERT"`
+	XMLReplaceInvalidCharacters *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	XMLSkipByteOrderMark        *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
 
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
 	return map[FileFormatType][]any{
-		FileFormatTypeCsv: {
-			opts.CsvCompression,
-			opts.CsvRecordDelimiter,
-			opts.CsvFieldDelimiter,
-			opts.CsvFileExtension,
-			opts.CsvParseHeader,
-			opts.CsvSkipHeader,
-			opts.CsvSkipBlankLines,
-			opts.CsvDateFormat,
-			opts.CsvTimeFormat,
-			opts.CsvTimestampFormat,
-			opts.CsvBinaryFormat,
-			opts.CsvEscape,
-			opts.CsvEscapeUnenclosedField,
-			opts.CsvTrimSpace,
-			opts.CsvFieldOptionallyEnclosedBy,
-			opts.CsvNullIf,
-			opts.CsvErrorOnColumnCountMismatch,
-			opts.CsvReplaceInvalidCharacters,
-			opts.CsvEmptyFieldAsNull,
-			opts.CsvSkipByteOrderMark,
-			opts.CsvEncoding,
+		FileFormatTypeCSV: {
+			opts.CSVCompression,
+			opts.CSVRecordDelimiter,
+			opts.CSVFieldDelimiter,
+			opts.CSVFileExtension,
+			opts.CSVParseHeader,
+			opts.CSVSkipHeader,
+			opts.CSVSkipBlankLines,
+			opts.CSVDateFormat,
+			opts.CSVTimeFormat,
+			opts.CSVTimestampFormat,
+			opts.CSVBinaryFormat,
+			opts.CSVEscape,
+			opts.CSVEscapeUnenclosedField,
+			opts.CSVTrimSpace,
+			opts.CSVFieldOptionallyEnclosedBy,
+			opts.CSVNullIf,
+			opts.CSVErrorOnColumnCountMismatch,
+			opts.CSVReplaceInvalidCharacters,
+			opts.CSVEmptyFieldAsNull,
+			opts.CSVSkipByteOrderMark,
+			opts.CSVEncoding,
 		},
-		FileFormatTypeJson: {
-			opts.JsonCompression,
-			opts.JsonDateFormat,
-			opts.JsonTimeFormat,
-			opts.JsonTimestampFormat,
-			opts.JsonBinaryFormat,
-			opts.JsonTrimSpace,
-			opts.JsonNullIf,
-			opts.JsonFileExtension,
-			opts.JsonEnableOctal,
-			opts.JsonAllowDuplicate,
-			opts.JsonStripOuterArray,
-			opts.JsonStripNullValues,
-			opts.JsonReplaceInvalidCharacters,
-			opts.JsonIgnoreUtf8Errors,
-			opts.JsonSkipByteOrderMark,
+		FileFormatTypeJSON: {
+			opts.JSONCompression,
+			opts.JSONDateFormat,
+			opts.JSONTimeFormat,
+			opts.JSONTimestampFormat,
+			opts.JSONBinaryFormat,
+			opts.JSONTrimSpace,
+			opts.JSONNullIf,
+			opts.JSONFileExtension,
+			opts.JSONEnableOctal,
+			opts.JSONAllowDuplicate,
+			opts.JSONStripOuterArray,
+			opts.JSONStripNullValues,
+			opts.JSONReplaceInvalidCharacters,
+			opts.JSONIgnoreUTF8Errors,
+			opts.JSONSkipByteOrderMark,
 		},
 		FileFormatTypeAvro: {
 			opts.AvroCompression,
@@ -513,10 +513,10 @@ func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
 			opts.AvroReplaceInvalidCharacters,
 			opts.AvroNullIf,
 		},
-		FileFormatTypeOrc: {
-			opts.OrcTrimSpace,
-			opts.OrcReplaceInvalidCharacters,
-			opts.OrcNullIf,
+		FileFormatTypeORC: {
+			opts.ORCTrimSpace,
+			opts.ORCReplaceInvalidCharacters,
+			opts.ORCNullIf,
 		},
 		FileFormatTypeParquet: {
 			opts.ParquetCompression,
@@ -526,15 +526,15 @@ func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
 			opts.ParquetReplaceInvalidCharacters,
 			opts.ParquetNullIf,
 		},
-		FileFormatTypeXml: {
-			opts.XmlCompression,
-			opts.XmlIgnoreUtf8Errors,
-			opts.XmlPreserveSpace,
-			opts.XmlStripOuterElement,
-			opts.XmlDisableSnowflakeData,
-			opts.XmlDisableAutoConvert,
-			opts.XmlReplaceInvalidCharacters,
-			opts.XmlSkipByteOrderMark,
+		FileFormatTypeXML: {
+			opts.XMLCompression,
+			opts.XMLIgnoreUTF8Errors,
+			opts.XMLPreserveSpace,
+			opts.XMLStripOuterElement,
+			opts.XMLDisableSnowflakeData,
+			opts.XMLDisableAutoConvert,
+			opts.XMLReplaceInvalidCharacters,
+			opts.XMLSkipByteOrderMark,
 		},
 	}
 }
@@ -552,25 +552,25 @@ func (opts *FileFormatTypeOptions) validate() error {
 		}
 	}
 
-	if everyValueSet(opts.CsvParseHeader, opts.CsvSkipHeader) && *opts.CsvParseHeader {
+	if everyValueSet(opts.CSVParseHeader, opts.CSVSkipHeader) && *opts.CSVParseHeader {
 		return fmt.Errorf("ParseHeader and SkipHeader cannot be set simultaneously")
 	}
 
-	if everyValueSet(opts.JsonIgnoreUtf8Errors, opts.JsonReplaceInvalidCharacters) && *opts.JsonIgnoreUtf8Errors && *opts.JsonReplaceInvalidCharacters {
-		return fmt.Errorf("IgnoreUtf8Errors and ReplaceInvalidCharacters cannot be set simultaneously")
+	if everyValueSet(opts.JSONIgnoreUTF8Errors, opts.JSONReplaceInvalidCharacters) && *opts.JSONIgnoreUTF8Errors && *opts.JSONReplaceInvalidCharacters {
+		return fmt.Errorf("IgnoreUTF8Errors and ReplaceInvalidCharacters cannot be set simultaneously")
 	}
 
 	if everyValueSet(opts.ParquetCompression, opts.ParquetSnappyCompression) && *opts.ParquetSnappyCompression {
 		return fmt.Errorf("Compression and SnappyCompression cannot be set simultaneously")
 	}
 
-	if everyValueSet(opts.XmlIgnoreUtf8Errors, opts.XmlReplaceInvalidCharacters) && *opts.XmlIgnoreUtf8Errors && *opts.XmlReplaceInvalidCharacters {
-		return fmt.Errorf("IgnoreUtf8Errors and ReplaceInvalidCharacters cannot be set simultaneously")
+	if everyValueSet(opts.XMLIgnoreUTF8Errors, opts.XMLReplaceInvalidCharacters) && *opts.XMLIgnoreUTF8Errors && *opts.XMLReplaceInvalidCharacters {
+		return fmt.Errorf("IgnoreUTF8Errors and ReplaceInvalidCharacters cannot be set simultaneously")
 	}
 
 	validEnclosedBy := []string{"null", "'", `"`}
-	if valueSet(opts.CsvFieldOptionallyEnclosedBy) && !slices.Contains(validEnclosedBy, *opts.CsvFieldOptionallyEnclosedBy) {
-		return fmt.Errorf("CsvFieldOptionallyEnclosedBy must be one of %v", validEnclosedBy)
+	if valueSet(opts.CSVFieldOptionallyEnclosedBy) && !slices.Contains(validEnclosedBy, *opts.CSVFieldOptionallyEnclosedBy) {
+		return fmt.Errorf("CSVFieldOptionallyEnclosedBy must be one of %v", validEnclosedBy)
 	}
 	return nil
 }
@@ -713,7 +713,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 	}
 
 	switch details.Type {
-	case FileFormatTypeCsv:
+	case FileFormatTypeCSV:
 		for _, row := range rows {
 			if row.Property_Value == "" {
 				continue
@@ -721,60 +721,60 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			v := row.Property_Value
 			switch row.Property {
 			case "RECORD_DELIMITER":
-				details.Options.CsvRecordDelimiter = &v
+				details.Options.CSVRecordDelimiter = &v
 			case "FIELD_DELIMITER":
-				details.Options.CsvFieldDelimiter = &v
+				details.Options.CSVFieldDelimiter = &v
 			case "FILE_EXTENSION":
-				details.Options.CsvFileExtension = &v
+				details.Options.CSVFileExtension = &v
 			case "SKIP_HEADER":
 				i, err := strconv.ParseInt(v, 10, 0)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_HEADER value "%s" to int: %w`, v, err)
 				}
 				i0 := int(i)
-				details.Options.CsvSkipHeader = &i0
+				details.Options.CSVSkipHeader = &i0
 			case "PARSE_HEADER":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_HEADER value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvParseHeader = &b
+				details.Options.CSVParseHeader = &b
 			case "DATE_FORMAT":
-				details.Options.CsvDateFormat = &v
+				details.Options.CSVDateFormat = &v
 			case "TIME_FORMAT":
-				details.Options.CsvTimeFormat = &v
+				details.Options.CSVTimeFormat = &v
 			case "TIMESTAMP_FORMAT":
-				details.Options.CsvTimestampFormat = &v
+				details.Options.CSVTimestampFormat = &v
 			case "BINARY_FORMAT":
 				bf := BinaryFormat(v)
-				details.Options.CsvBinaryFormat = &bf
+				details.Options.CSVBinaryFormat = &bf
 			case "ESCAPE":
-				details.Options.CsvEscape = &v
+				details.Options.CSVEscape = &v
 			case "ESCAPE_UNENCLOSED_FIELD":
-				details.Options.CsvEscapeUnenclosedField = &v
+				details.Options.CSVEscapeUnenclosedField = &v
 			case "TRIM_SPACE":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast TRIM_SPACE value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvTrimSpace = &b
+				details.Options.CSVTrimSpace = &b
 			case "FIELD_OPTIONALLY_ENCLOSED_BY":
-				details.Options.CsvFieldOptionallyEnclosedBy = &v
+				details.Options.CSVFieldOptionallyEnclosedBy = &v
 			case "NULL_IF":
 				newNullIf := []NullString{}
 				for _, s := range strings.Split(strings.Trim(v, "[]"), ", ") {
 					newNullIf = append(newNullIf, NullString{s})
 				}
-				details.Options.CsvNullIf = &newNullIf
+				details.Options.CSVNullIf = &newNullIf
 			case "COMPRESSION":
-				comp := CsvCompression(v)
-				details.Options.CsvCompression = &comp
+				comp := CSVCompression(v)
+				details.Options.CSVCompression = &comp
 			case "ERROR_ON_COLUMN_COUNT_MISMATCH":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast ERROR_ON_COLUMN_COUNT_MISMATCH value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvErrorOnColumnCountMismatch = &b
+				details.Options.CSVErrorOnColumnCountMismatch = &b
 			// case "VALIDATE_UTF8":
 			// 	details.Options.C = &v
 			case "SKIP_BLANK_LINES":
@@ -782,31 +782,31 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_BLANK_LINES value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvSkipBlankLines = &b
+				details.Options.CSVSkipBlankLines = &b
 			case "REPLACE_INVALID_CHARACTERS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast REPLACE_INVALID_CHARACTERS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvReplaceInvalidCharacters = &b
+				details.Options.CSVReplaceInvalidCharacters = &b
 			case "EMPTY_FIELD_AS_NULL":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast EMPTY_FIELD_AS_NULL value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvEmptyFieldAsNull = &b
+				details.Options.CSVEmptyFieldAsNull = &b
 			case "SKIP_BYTE_ORDER_MARK":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_BYTE_ORDER_MARK value "%s" to bool: %w`, v, err)
 				}
-				details.Options.CsvSkipByteOrderMark = &b
+				details.Options.CSVSkipByteOrderMark = &b
 			case "ENCODING":
-				enc := CsvEncoding(v)
-				details.Options.CsvEncoding = &enc
+				enc := CSVEncoding(v)
+				details.Options.CSVEncoding = &enc
 			}
 		}
-	case FileFormatTypeJson:
+	case FileFormatTypeJSON:
 		for _, row := range rows {
 			if row.Property_Value == "" {
 				continue
@@ -814,73 +814,73 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			v := row.Property_Value
 			switch row.Property {
 			case "FILE_EXTENSION":
-				details.Options.JsonFileExtension = &v
+				details.Options.JSONFileExtension = &v
 			case "DATE_FORMAT":
-				details.Options.JsonDateFormat = &v
+				details.Options.JSONDateFormat = &v
 			case "TIME_FORMAT":
-				details.Options.JsonTimeFormat = &v
+				details.Options.JSONTimeFormat = &v
 			case "TIMESTAMP_FORMAT":
-				details.Options.JsonTimestampFormat = &v
+				details.Options.JSONTimestampFormat = &v
 			case "BINARY_FORMAT":
 				bf := BinaryFormat(v)
-				details.Options.JsonBinaryFormat = &bf
+				details.Options.JSONBinaryFormat = &bf
 			case "TRIM_SPACE":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast TRIM_SPACE value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonTrimSpace = &b
+				details.Options.JSONTrimSpace = &b
 			case "NULL_IF":
 				newNullIf := []NullString{}
 				for _, s := range strings.Split(strings.Trim(v, "[]"), ", ") {
 					newNullIf = append(newNullIf, NullString{s})
 				}
-				details.Options.JsonNullIf = &newNullIf
+				details.Options.JSONNullIf = &newNullIf
 			case "COMPRESSION":
-				comp := JsonCompression(v)
-				details.Options.JsonCompression = &comp
+				comp := JSONCompression(v)
+				details.Options.JSONCompression = &comp
 			case "ENABLE_OCTAL":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast ENABLE_OCTAL value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonEnableOctal = &b
+				details.Options.JSONEnableOctal = &b
 			case "ALLOW_DUPLICATE":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast ALLOW_DUPLICATE value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonAllowDuplicate = &b
+				details.Options.JSONAllowDuplicate = &b
 			case "STRIP_OUTER_ARRAY":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast STRIP_OUTER_ARRAY value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonStripOuterArray = &b
+				details.Options.JSONStripOuterArray = &b
 			case "STRIP_NULL_VALUES":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast STRIP_NULL_VALUES value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonStripNullValues = &b
+				details.Options.JSONStripNullValues = &b
 			case "IGNORE_UTF8_ERRORS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast IGNORE_UTF8_ERRORS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonIgnoreUtf8Errors = &b
+				details.Options.JSONIgnoreUTF8Errors = &b
 			case "REPLACE_INVALID_CHARACTERS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast REPLACE_INVALID_CHARACTERS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonReplaceInvalidCharacters = &b
+				details.Options.JSONReplaceInvalidCharacters = &b
 			case "SKIP_BYTE_ORDER_MARK":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_BYTE_ORDER_MARK value "%s" to bool: %w`, v, err)
 				}
-				details.Options.JsonSkipByteOrderMark = &b
+				details.Options.JSONSkipByteOrderMark = &b
 			}
 		}
 	case FileFormatTypeAvro:
@@ -913,7 +913,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				details.Options.AvroReplaceInvalidCharacters = &b
 			}
 		}
-	case FileFormatTypeOrc:
+	case FileFormatTypeORC:
 		for _, row := range rows {
 			if row.Property_Value == "" {
 				continue
@@ -925,19 +925,19 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast TRIM_SPACE value "%s" to bool: %w`, v, err)
 				}
-				details.Options.OrcTrimSpace = &b
+				details.Options.ORCTrimSpace = &b
 			case "NULL_IF":
 				newNullIf := []NullString{}
 				for _, s := range strings.Split(strings.Trim(v, "[]"), ", ") {
 					newNullIf = append(newNullIf, NullString{s})
 				}
-				details.Options.OrcNullIf = &newNullIf
+				details.Options.ORCNullIf = &newNullIf
 			case "REPLACE_INVALID_CHARACTERS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast REPLACE_INVALID_CHARACTERS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.OrcReplaceInvalidCharacters = &b
+				details.Options.ORCReplaceInvalidCharacters = &b
 			}
 		}
 	case FileFormatTypeParquet:
@@ -976,7 +976,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				details.Options.ParquetReplaceInvalidCharacters = &b
 			}
 		}
-	case FileFormatTypeXml:
+	case FileFormatTypeXML:
 		for _, row := range rows {
 			if row.Property_Value == "" {
 				continue
@@ -984,50 +984,50 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			v := row.Property_Value
 			switch row.Property {
 			case "COMPRESSION":
-				comp := XmlCompression(v)
-				details.Options.XmlCompression = &comp
+				comp := XMLCompression(v)
+				details.Options.XMLCompression = &comp
 			case "IGNORE_UTF8_ERRORS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast IGNORE_UTF8_ERRORS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlIgnoreUtf8Errors = &b
+				details.Options.XMLIgnoreUTF8Errors = &b
 			case "PRESERVE_SPACE":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast PRESERVE_SPACE value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlPreserveSpace = &b
+				details.Options.XMLPreserveSpace = &b
 			case "STRIP_OUTER_ELEMENT":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast STRIP_OUTER_ELEMENT value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlStripOuterElement = &b
+				details.Options.XMLStripOuterElement = &b
 			case "DISABLE_SNOWFLAKE_DATA":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast DISABLE_SNOWFLAKE_DATA value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlDisableSnowflakeData = &b
+				details.Options.XMLDisableSnowflakeData = &b
 			case "DISABLE_AUTO_CONVERT":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast DISABLE_AUTO_CONVERT value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlDisableAutoConvert = &b
+				details.Options.XMLDisableAutoConvert = &b
 			case "REPLACE_INVALID_CHARACTERS":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast REPLACE_INVALID_CHARACTERS value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlReplaceInvalidCharacters = &b
+				details.Options.XMLReplaceInvalidCharacters = &b
 			case "SKIP_BYTE_ORDER_MARK":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
 					return nil, fmt.Errorf(`cannot cast SKIP_BYTE_ORDER_MARK value "%s" to bool: %w`, v, err)
 				}
-				details.Options.XmlSkipByteOrderMark = &b
+				details.Options.XMLSkipByteOrderMark = &b
 			}
 		}
 	default:
