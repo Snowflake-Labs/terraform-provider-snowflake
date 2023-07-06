@@ -49,6 +49,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		ConflictsWith: []string{"on_account", "on_schema", "on_schema_object"},
 		Description:   "Specifies the account object on which privileges will be granted ",
+		ForceNew:      true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"object_type": {
@@ -79,6 +80,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		ConflictsWith: []string{"on_account", "on_account_object", "on_schema_object"},
 		Description:   "Specifies the schema on which privileges will be granted.",
+		ForceNew:      true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"schema_name": {
@@ -111,6 +113,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		ConflictsWith: []string{"on_account", "on_account_object", "on_schema"},
 		Description:   "Specifies the schema object on which privileges will be granted.",
+		ForceNew:      true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"object_type": {
