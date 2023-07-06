@@ -62,7 +62,7 @@ type FileFormatRow struct {
 	OwnerRoleType string    `db:"owner_role_type"`
 }
 
-type ShowFileFormatsOptionsResult struct {
+type showFileFormatsOptionsResult struct {
 	// CSV + shared fields
 	Type                       string   `json:"TYPE"`
 	RecordDelimiter            string   `json:"RECORD_DELIMITER"`
@@ -106,7 +106,7 @@ type ShowFileFormatsOptionsResult struct {
 }
 
 func (row *FileFormatRow) toFileFormat() *FileFormat {
-	inputOptions := ShowFileFormatsOptionsResult{}
+	inputOptions := showFileFormatsOptionsResult{}
 	err := json.Unmarshal([]byte(row.FormatOptions), &inputOptions)
 	if err != nil {
 		fmt.Printf("%s", err)
