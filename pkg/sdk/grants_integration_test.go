@@ -210,7 +210,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			}
 		}
 		assert.NotNil(t, shareGrant)
-		assert.Equal(t, ObjectPrivilegeUsage, shareGrant.Privilege)
+		assert.Equal(t, string(ObjectPrivilegeUsage), shareGrant.Privilege)
 		assert.Equal(t, ObjectTypeDatabase, shareGrant.GrantedOn)
 		assert.Equal(t, ObjectTypeShare, shareGrant.GrantedTo)
 		assert.Equal(t, databaseTest.ID().Name(), shareGrant.Name.Name())
