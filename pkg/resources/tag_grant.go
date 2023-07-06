@@ -80,12 +80,12 @@ var tagGrantSchema = map[string]*schema.Schema{
 func TagGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateTagGrant,
-			Read:   ReadTagGrant,
-			Update: UpdateTagGrant,
-			Delete: DeleteTagGrant,
-
-			Schema: tagGrantSchema,
+			Create:             CreateTagGrant,
+			Read:               ReadTagGrant,
+			Update:             UpdateTagGrant,
+			Delete:             DeleteTagGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             tagGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
