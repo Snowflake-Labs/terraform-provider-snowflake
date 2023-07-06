@@ -199,7 +199,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			ExternalOauthScopeMappingAttribute:           d.Get("scope_mapping_attribute").(string),
 			ExternalOauthScopeMappingAttributeOk:         isOk(d.GetOk("scope_mapping_attribute")),
 
-			Comment:   d.Get("comment").(string),
+			Comment:   sql.NullString{String: d.Get("comment").(string)},
 			CommentOk: isOk(d.GetOk("comment")),
 		},
 	}
@@ -210,7 +210,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	}
 
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
+	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing create statement: %w", err)
 	}
@@ -258,7 +258,7 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("enabled", showOutput.Enabled); err != nil {
 		return fmt.Errorf("error setting enabled: %w", err)
 	}
-	if err := d.Set("comment", showOutput.Comment); err != nil {
+	if err := d.Set("comment", showOutput.Comment.String); err != nil {
 		return fmt.Errorf("error setting comment: %w", err)
 	}
 	// if err := d.Set("created_on", showOutput.CreatedOn.String); err != nil {
@@ -271,13 +271,13 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("couldn't generate describe statement: %w", err)
 	}
 
-	rows, err := db.Query(stmt)
+	rows, err := snowflake.Query(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error querying external oauth integration: %w", err)
 	}
 
 	defer rows.Close()
-	describeOutput, err := manager.ParseDescribe(rows)
+	describeOutput, err := manager.ParseDescribe(rows.Rows)
 	if err != nil {
 		return fmt.Errorf("failed to parse result of describe: %w", err)
 	}
@@ -508,7 +508,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("comment") {
 		val, ok := d.GetOk("comment")
 		if ok {
-			alterInput.Comment = val.(string)
+			alterInput.Comment.String = val.(string)
 			alterInput.CommentOk = true
 			runAlter = true
 		} else {
@@ -525,7 +525,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("couldn't generate alter statement for external oauth integration: %w", err)
 		}
 
-		_, err = db.Exec(stmt)
+		err = snowflake.Exec(db, stmt)
 		if err != nil {
 			return fmt.Errorf("error executing alter statement: %w", err)
 		}
@@ -537,7 +537,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("couldn't generate unset statement for external oauth integration: %w", err)
 		}
 
-		_, err = db.Exec(stmt)
+		err = snowflake.Exec(db, stmt)
 		if err != nil {
 			return fmt.Errorf("error executing unset statement: %w", err)
 		}
@@ -565,7 +565,7 @@ func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	}
 
 	db := meta.(*sql.DB)
-	_, err = db.Exec(stmt)
+	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing drop statement: %w", err)
 	}

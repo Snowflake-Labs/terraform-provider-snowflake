@@ -464,3 +464,58 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 	expression := "REPLACE('X', 1, 2)"
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
 }
+
+func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule string, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
+	t.Helper()
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	var warehouseCleanup func()
+	if warehouse == nil {
+		warehouse, warehouseCleanup = createWarehouse(t, client)
+	}
+
+	name := randomString(t)
+	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	ctx := context.Background()
+	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
+	require.NoError(t, err)
+
+	showOptions := &ShowAlertOptions{
+		Like: &Like{
+			Pattern: String(name),
+		},
+		In: &In{
+			Schema: schema.ID(),
+		},
+	}
+	alertList, err := client.Alerts.Show(ctx, showOptions)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(alertList))
+	return alertList[0], func() {
+		err := client.Alerts.Drop(ctx, id)
+		require.NoError(t, err)
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+		if warehouseCleanup != nil {
+			warehouseCleanup()
+		}
+	}
+}
+
+func createAlert(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse) (*Alert, func()) {
+	t.Helper()
+	schedule := "USING CRON * * * * * UTC"
+	condition := "SELECT 1"
+	action := "SELECT 1"
+	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
+}
