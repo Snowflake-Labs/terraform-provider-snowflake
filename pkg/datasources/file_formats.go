@@ -1,12 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,31 +62,32 @@ func FileFormats() *schema.Resource {
 
 func ReadFileFormats(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentFileFormats, err := snowflake.ListFileFormats(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] file formats in schema (%s) not found", d.Id())
+	result, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
+		In: &sdk.In{
+			Schema: sdk.NewSchemaIdentifier(databaseName, schemaName),
+		},
+	})
+	if err != nil {
 		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse file formats in schema (%s)", d.Id())
-		d.SetId("")
-		return nil
+		return err
 	}
 
 	fileFormats := []map[string]interface{}{}
 
-	for _, fileFormat := range currentFileFormats {
+	for _, fileFormat := range result {
 		fileFormatMap := map[string]interface{}{}
 
-		fileFormatMap["name"] = fileFormat.FileFormatName.String
-		fileFormatMap["database"] = fileFormat.DatabaseName.String
-		fileFormatMap["schema"] = fileFormat.SchemaName.String
-		fileFormatMap["comment"] = fileFormat.Comment.String
-		fileFormatMap["format_type"] = fileFormat.FormatType.String
+		fileFormatMap["name"] = fileFormat.Name.Name()
+		fileFormatMap["database"] = fileFormat.Name.DatabaseName()
+		fileFormatMap["schema"] = fileFormat.Name.SchemaName()
+		fileFormatMap["comment"] = fileFormat.Comment
+		fileFormatMap["format_type"] = fileFormat.Type
 
 		fileFormats = append(fileFormats, fileFormatMap)
 	}

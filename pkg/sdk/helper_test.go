@@ -258,6 +258,27 @@ func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptio
 	}
 }
 
+func createFileFormat(t *testing.T, client *Client, schema SchemaIdentifier) (*FileFormat, func()) {
+	t.Helper()
+	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
+		Type: FileFormatTypeCSV,
+	})
+}
+
+func createFileFormatWithOptions(t *testing.T, client *Client, schema SchemaIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
+	t.Helper()
+	id := NewSchemaObjectIdentifier(schema.databaseName, schema.schemaName, randomString(t))
+	ctx := context.Background()
+	err := client.FileFormats.Create(ctx, id, opts)
+	require.NoError(t, err)
+	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return fileFormat, func() {
+		err := client.FileFormats.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
 	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
