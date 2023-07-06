@@ -15,9 +15,6 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 	resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 	t.Cleanup(resourceMonitorCleanup)
 
-	_, resourceMonitorCleanup2 := createResourceMonitor(t, client)
-	t.Cleanup(resourceMonitorCleanup2)
-
 	t.Run("with like", func(t *testing.T) {
 		showOptions := &ShowResourceMonitorOptions{
 			Like: &Like{
@@ -69,8 +66,8 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 			OrReplace:      Bool(true),
 			Frequency:      frequency,
 			CreditQuota:    &creditQuota,
-			StartTimeStamp: &startTimeStamp,
-			EndTimeStamp:   &endTimeStamp,
+			StartTimestamp: &startTimeStamp,
+			EndTimestamp:   &endTimeStamp,
 			// Users' emails need to be verified in order to use them for notification
 			NotifyUsers: nil,
 			Triggers:    &triggers,
@@ -201,8 +198,8 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		alterOptions := &AlterResourceMonitorOptions{
 			Set: &ResourceMonitorSet{
 				Frequency:      frequency,
-				StartTimeStamp: &startTimeStamp,
-				EndTimeStamp:   &endTimeStamp,
+				StartTimestamp: &startTimeStamp,
+				EndTimestamp:   &endTimeStamp,
 			},
 		}
 		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)

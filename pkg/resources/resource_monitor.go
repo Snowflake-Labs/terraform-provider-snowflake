@@ -152,7 +152,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("credit_quota"); ok {
-		opts.CreditQuota = sdk.Pointer(v.(int))
+		opts.CreditQuota = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("frequency"); ok {
 		frequency, err := sdk.FrequencyFromString(v.(string))
@@ -163,10 +163,10 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("start_timestamp"); ok {
-		opts.StartTimeStamp = sdk.Pointer(v.(string))
+		opts.StartTimestamp = sdk.Pointer(v.(string))
 	}
 	if v, ok := d.GetOk("end_timestamp"); ok {
-		opts.EndTimeStamp = sdk.Pointer(v.(string))
+		opts.EndTimestamp = sdk.Pointer(v.(string))
 	}
 
 	triggers := collectResourceMonitorTriggers(d)
@@ -400,12 +400,12 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("start_timestamp") {
 		runSetStatement = true
-		opts.Set.StartTimeStamp = sdk.Pointer(d.Get("start_timestamp").(string))
+		opts.Set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
 	}
 
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
-		opts.Set.EndTimeStamp = sdk.Pointer(d.Get("end_timestamp").(string))
+		opts.Set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
 	}
 
 	// If ANY of the triggers changed, we collect all triggers and set them

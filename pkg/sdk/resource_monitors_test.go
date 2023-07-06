@@ -44,24 +44,17 @@ func TestResourceMonitorCreate(t *testing.T) {
 			name:           id,
 			CreditQuota:    creditQuota,
 			Frequency:      &frequency,
-			StartTimeStamp: &startTimeStamp,
-			EndTimeStamp:   &endTimeStamp,
+			StartTimestamp: &startTimeStamp,
+			EndTimestamp:   &endTimeStamp,
 			NotifyUsers:    &NotifyUsers{notifiedUsers},
 			Triggers:       &triggers,
 		}
 
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s' END_TIMESTAMP = '%s' NOTIFY_USERS = ("FIRST_USER", "SECOND_USER") TRIGGERS ON %d PERCENT DO %s ON %d PERCENT DO %s`,
+		expected := fmt.Sprintf(`CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = 100 FREQUENCY = MONTHLY START_TIMESTAMP = 'IMMIEDIATELY' END_TIMESTAMP = '%s' NOTIFY_USERS = ("FIRST_USER", "SECOND_USER") TRIGGERS ON 50 PERCENT DO SUSPEND_IMMEDIATE ON 100 PERCENT DO NOTIFY`,
 			id.FullyQualifiedName(),
-			*creditQuota,
-			frequency,
-			startTimeStamp,
 			endTimeStamp,
-			triggers[0].Threshold,
-			triggers[0].TriggerAction,
-			triggers[1].Threshold,
-			triggers[1].TriggerAction,
 		)
 
 		assert.Equal(t, expected, actual)
@@ -112,7 +105,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 			Set: &ResourceMonitorSet{
 				CreditQuota:    newCreditQuota,
 				Frequency:      &newFrequency,
-				StartTimeStamp: &newStartTimeStamp,
+				StartTimestamp: &newStartTimeStamp,
 			},
 		}
 		actual, err := structToSQL(opts)

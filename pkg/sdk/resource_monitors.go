@@ -181,8 +181,8 @@ type CreateResourceMonitorOptions struct {
 
 	CreditQuota    *int                 `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency           `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimeStamp *string              `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
-	EndTimeStamp   *string              `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	StartTimestamp *string              `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimestamp   *string              `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 	NotifyUsers    *NotifyUsers         `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 	Triggers       *[]TriggerDefinition `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
@@ -198,8 +198,8 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 	if opts == nil || everyValueNil(
 		opts.CreditQuota,
 		opts.Frequency,
-		opts.StartTimeStamp,
-		opts.EndTimeStamp,
+		opts.StartTimestamp,
+		opts.EndTimestamp,
 		opts.NotifyUsers,
 		opts.Triggers,
 	) {
@@ -254,22 +254,13 @@ type Frequency string
 
 func FrequencyFromString(s string) (*Frequency, error) {
 	s = strings.ToUpper(s)
-	if monthly := string(FrequencyMonthly); monthly == s {
-		return (*Frequency)(&monthly), nil
+	f := Frequency(s)
+	switch f {
+	case FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly, FrequencyNever:
+		return &f, nil
+	default:
+		return nil, fmt.Errorf("Invalid frequency type: %s", s)
 	}
-	if daily := string(FrequencyDaily); daily == s {
-		return (*Frequency)(&daily), nil
-	}
-	if weekly := string(FrequencyWeekly); weekly == s {
-		return (*Frequency)(&weekly), nil
-	}
-	if yearly := string(FrequencyYearly); yearly == s {
-		return (*Frequency)(&yearly), nil
-	}
-	if never := string(FrequencyNever); never == s {
-		return (*Frequency)(&never), nil
-	}
-	return nil, fmt.Errorf("Invalid frequency type: %s", s)
 }
 
 const (
@@ -298,7 +289,7 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 	if opts.Set == nil {
 		return nil
 	}
-	if (opts.Set.Frequency != nil && opts.Set.StartTimeStamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimeStamp != nil) {
+	if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
 		return errors.New("must specify frequency and start time together")
 	}
 
@@ -326,8 +317,8 @@ type ResourceMonitorSet struct {
 	// at least one
 	CreditQuota    *int       `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
 	Frequency      *Frequency `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimeStamp *string    `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
-	EndTimeStamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	StartTimestamp *string    `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimestamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 }
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
