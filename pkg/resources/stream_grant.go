@@ -97,12 +97,12 @@ var streamGrantSchema = map[string]*schema.Schema{
 func StreamGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateStreamGrant,
-			Read:   ReadStreamGrant,
-			Delete: DeleteStreamGrant,
-			Update: UpdateStreamGrant,
-
-			Schema: streamGrantSchema,
+			Create:             CreateStreamGrant,
+			Read:               ReadStreamGrant,
+			Delete:             DeleteStreamGrant,
+			Update:             UpdateStreamGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             streamGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

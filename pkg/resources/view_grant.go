@@ -102,12 +102,12 @@ var viewGrantSchema = map[string]*schema.Schema{
 func ViewGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateViewGrant,
-			Read:   ReadViewGrant,
-			Delete: DeleteViewGrant,
-			Update: UpdateViewGrant,
-
-			Schema: viewGrantSchema,
+			Create:             CreateViewGrant,
+			Read:               ReadViewGrant,
+			Delete:             DeleteViewGrant,
+			Update:             UpdateViewGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             viewGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
