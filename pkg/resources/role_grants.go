@@ -49,8 +49,8 @@ func RoleGrants() *schema.Resource {
 			"enable_multiple_grants": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "When this is set to false, multiple grants of the same type cannot be created. This will cause Terraform to revoke grants applied to roles and objects outside Terraform.",
-				Default:     true,
+				Description: "When this is set to true, multiple grants of the same type can be created. This will cause Terraform to not revoke grants applied to roles and objects outside Terraform.",
+				Default:     false,
 			},
 		},
 
@@ -147,24 +147,16 @@ func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
 	for _, grant := range grants {
 		switch grant.GrantedTo.String {
 		case "ROLE":
-			if d.Get("enable_multiple_grants").(bool) {
-				for _, tfRole := range d.Get("roles").(*schema.Set).List() {
-					if tfRole == grant.GranteeName.String {
-						roles = append(roles, grant.GranteeName.String)
-					}
+			for _, tfRole := range d.Get("roles").(*schema.Set).List() {
+				if tfRole == grant.GranteeName.String {
+					roles = append(roles, grant.GranteeName.String)
 				}
-			} else {
-				roles = append(roles, grant.GranteeName.String)
 			}
 		case "USER":
-			if d.Get("enable_multiple_grants").(bool) {
-				for _, tfUser := range d.Get("users").(*schema.Set).List() {
-					if tfUser == grant.GranteeName.String {
-						users = append(users, grant.GranteeName.String)
-					}
+			for _, tfUser := range d.Get("users").(*schema.Set).List() {
+				if tfUser == grant.GranteeName.String {
+					users = append(users, grant.GranteeName.String)
 				}
-			} else {
-				users = append(users, grant.GranteeName.String)
 			}
 		default:
 			log.Printf("[WARN] Ignoring unknown grant type %s", grant.GrantedTo.String)
