@@ -17,6 +17,9 @@ provider "snowflake" {
   role      = "..."
   host      = "..."
   warehouse = "..."
+  session_params = {
+    query_tag = "..."
+  }
 }
 
 
