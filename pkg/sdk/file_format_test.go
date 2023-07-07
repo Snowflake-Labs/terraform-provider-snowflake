@@ -293,14 +293,18 @@ func TestFileFormatsShow(t *testing.T) {
 
 func TestFileFormatsShowById(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
+		id := NewSchemaObjectIdentifier("db", "schema", "ff")
 		opts := &ShowFileFormatsOptions{
 			Like: &Like{
-				Pattern: String(NewSchemaObjectIdentifier("db", "schema", "ff").Name()),
+				Pattern: String(id.Name()),
+			},
+			In: &In{
+				Schema: NewSchemaIdentifier(id.databaseName, id.schemaName),
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `SHOW FILE FORMATS LIKE 'ff'`
+		expected := `SHOW FILE FORMATS LIKE 'ff' IN SCHEMA "db"."schema"`
 		assert.Equal(t, expected, actual)
 	})
 }
