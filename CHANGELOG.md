@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.68.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.0...v0.68.1) (2023-07-07)
+
+
+### BugFixes
+
+* reading file formats with no default schema ([#1936](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1936)) ([c5602f5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c5602f5f01e09fc90a82aa2fbb8e116648f04c58))
+
 ## [0.68.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.67.0...v0.68.0) (2023-07-06)
 
 
