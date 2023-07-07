@@ -654,6 +654,9 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
+		In: &In{
+			Schema: NewSchemaIdentifier(id.databaseName, id.schemaName),
+		},
 	})
 	if err != nil {
 		return nil, err
