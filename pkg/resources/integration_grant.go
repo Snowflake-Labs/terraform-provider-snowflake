@@ -68,12 +68,12 @@ var integrationGrantSchema = map[string]*schema.Schema{
 func IntegrationGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateIntegrationGrant,
-			Read:   ReadIntegrationGrant,
-			Delete: DeleteIntegrationGrant,
-			Update: UpdateIntegrationGrant,
-
-			Schema: integrationGrantSchema,
+			Create:             CreateIntegrationGrant,
+			Read:               ReadIntegrationGrant,
+			Delete:             DeleteIntegrationGrant,
+			Update:             UpdateIntegrationGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             integrationGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

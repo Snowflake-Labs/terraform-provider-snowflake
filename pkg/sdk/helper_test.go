@@ -258,6 +258,27 @@ func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptio
 	}
 }
 
+func createFileFormat(t *testing.T, client *Client, schema SchemaIdentifier) (*FileFormat, func()) {
+	t.Helper()
+	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
+		Type: FileFormatTypeCSV,
+	})
+}
+
+func createFileFormatWithOptions(t *testing.T, client *Client, schema SchemaIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
+	t.Helper()
+	id := NewSchemaObjectIdentifier(schema.databaseName, schema.schemaName, randomString(t))
+	ctx := context.Background()
+	err := client.FileFormats.Create(ctx, id, opts)
+	require.NoError(t, err)
+	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return fileFormat, func() {
+		err := client.FileFormats.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
 func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 	t.Helper()
 	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
@@ -308,6 +329,22 @@ func createSchema(t *testing.T, client *Client, database *Database) (*Schema, fu
 			Name:         name,
 		}, func() {
 			_, err := client.exec(ctx, fmt.Sprintf("DROP SCHEMA \"%s\".\"%s\"", database.Name, name))
+			require.NoError(t, err)
+		}
+}
+
+func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
+	require.NoError(t, err)
+	return &Table{
+			DatabaseName: database.Name,
+			SchemaName:   schema.Name,
+			Name:         name,
+		}, func() {
+			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 			require.NoError(t, err)
 		}
 }
@@ -416,6 +453,20 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	}
 }
 
+func createRole(t *testing.T, client *Client) (*Role, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Roles.Create(ctx, id, nil)
+	require.NoError(t, err)
+	return &Role{
+			Name: id.Name(),
+		}, func() {
+			err := client.Roles.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+}
+
 func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
 	t.Helper()
 	signature := []TableColumnSignature{
@@ -433,4 +484,59 @@ func createMaskingPolicy(t *testing.T, client *Client, database *Database, schem
 	}
 	expression := "REPLACE('X', 1, 2)"
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
+}
+
+func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule string, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
+	t.Helper()
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	var warehouseCleanup func()
+	if warehouse == nil {
+		warehouse, warehouseCleanup = createWarehouse(t, client)
+	}
+
+	name := randomString(t)
+	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	ctx := context.Background()
+	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
+	require.NoError(t, err)
+
+	showOptions := &ShowAlertOptions{
+		Like: &Like{
+			Pattern: String(name),
+		},
+		In: &In{
+			Schema: schema.ID(),
+		},
+	}
+	alertList, err := client.Alerts.Show(ctx, showOptions)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(alertList))
+	return alertList[0], func() {
+		err := client.Alerts.Drop(ctx, id)
+		require.NoError(t, err)
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+		if warehouseCleanup != nil {
+			warehouseCleanup()
+		}
+	}
+}
+
+func createAlert(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse) (*Alert, func()) {
+	t.Helper()
+	schedule := "USING CRON * * * * * UTC"
+	condition := "SELECT 1"
+	action := "SELECT 1"
+	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
 }

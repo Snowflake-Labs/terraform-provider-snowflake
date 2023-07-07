@@ -198,6 +198,158 @@ func TestAcc_FileFormatXML(t *testing.T) {
 	})
 }
 
+// The following tests check that Terraform will accept the default values generated at creation and not drift.
+// See https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1706
+func TestAcc_FileFormatCSVDefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "CSV"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "CSV"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_FileFormatJSONDefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "JSON"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "JSON"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_FileFormatAVRODefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "AVRO"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "AVRO"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_FileFormatORCDefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "ORC"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "ORC"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_FileFormatPARQUETDefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "PARQUET"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "PARQUET"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_FileFormatXMLDefaults(t *testing.T) {
+	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(accName, "XML"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "format_type", "XML"),
+				),
+			},
+			{
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func fileFormatConfigCSV(n string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
@@ -229,11 +381,11 @@ resource "snowflake_file_format" "test" {
 	escape = "\\"
 	escape_unenclosed_field = "!"
 	trim_space = true
-	field_optionally_enclosed_by = "'" 
+	field_optionally_enclosed_by = "'"
 	null_if = ["NULL", ""]
 	error_on_column_count_mismatch = true
 	replace_invalid_characters = true
-	empty_field_as_null = false 
+	empty_field_as_null = false
 	skip_byte_order_mark = false
 	encoding = "UTF-16"
 	comment = "Terraform acceptance test"
@@ -384,4 +536,26 @@ resource "snowflake_file_format" "test" {
 	comment = "Terraform acceptance test"
 }
 `, n, n, n)
+}
+
+func fileFormatConfigFullDefaults(n, formatType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%v"
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test" {
+	name = "%v"
+	database = snowflake_database.test.name
+	comment = "Terraform acceptance test"
+}
+
+resource "snowflake_file_format" "test" {
+	name = "%v"
+	database = snowflake_database.test.name
+	schema = snowflake_schema.test.name
+	format_type = "%s"
+}
+`, n, n, n, formatType)
 }

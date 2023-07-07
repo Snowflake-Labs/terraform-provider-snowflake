@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -226,6 +227,7 @@ type View struct {
 	SchemaName   sql.NullString `db:"schema_name"`
 	Text         sql.NullString `db:"text"`
 	DatabaseName sql.NullString `db:"database_name"`
+	CreatedOn    time.Time      `db:"created_on"`
 }
 
 func ScanView(row *sqlx.Row) (*View, error) {
