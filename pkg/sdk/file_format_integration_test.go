@@ -493,3 +493,33 @@ func TestInt_FileFormatsShow(t *testing.T) {
 		assert.Contains(t, fileFormats, fileFormatTest2)
 	})
 }
+
+func TestInt_FileFormatsShowById(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	databaseTest, cleanupDatabase := createDatabase(t, client)
+	t.Cleanup(cleanupDatabase)
+	schemaTest, cleanupSchema := createSchema(t, client, databaseTest)
+	t.Cleanup(cleanupSchema)
+	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, schemaTest.ID())
+	t.Cleanup(cleanupFileFormat)
+
+	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
+	t.Cleanup(cleanupDatabase2)
+	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
+	t.Cleanup(cleanupSchema2)
+
+	t.Run("show format in different schema", func(t *testing.T) {
+		err := client.Sessions.UseDatabase(ctx, databaseTest2.ID())
+		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, schemaTest2.ID())
+		require.NoError(t, err)
+
+		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
+		require.NoError(t, err)
+		assert.Equal(t, databaseTest.Name, fileFormat.Name.databaseName)
+		assert.Equal(t, schemaTest.Name, fileFormat.Name.schemaName)
+		assert.Equal(t, fileFormatTest.Name.name, fileFormat.Name.name)
+	})
+}
