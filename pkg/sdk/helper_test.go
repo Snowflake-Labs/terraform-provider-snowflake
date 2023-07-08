@@ -199,15 +199,21 @@ func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjec
 func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
 	t.Helper()
 	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{
-		CreditQuota: Pointer(100),
-		Triggers: &[]TriggerDefinition{
-			{
-				Threshold:     100,
-				TriggerAction: TriggerActionSuspend,
-			},
-			{
-				Threshold:     90,
-				TriggerAction: TriggerActionNotify,
+		With: &ResourceMonitorWith{
+			CreditQuota: Pointer(100),
+			Triggers: []TriggerDefinition{
+				{
+					Threshold:     100,
+					TriggerAction: TriggerActionSuspend,
+				},
+				{
+					Threshold:     70,
+					TriggerAction: TriggerActionSuspendImmediate,
+				},
+				{
+					Threshold:     90,
+					TriggerAction: TriggerActionNotify,
+				},
 			},
 		},
 	})

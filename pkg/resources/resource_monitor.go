@@ -55,14 +55,14 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"suspend_trigger": {
 		Type:          schema.TypeInt,
 		Optional:      true,
-		Description:   "The number that represents the percentage threshold at which to suspend all warehouses.",
+		Description:   "The number that represents the percentage threshold at which to suspend all warehouses. In case `suspend_triggers` is also defined, the lowest threshold from `suspend_trigger` and `suspend_triggers` will be used",
 		ConflictsWith: []string{"suspend_triggers"},
 	},
 	"suspend_triggers": {
 		Type:          schema.TypeSet,
 		Elem:          &schema.Schema{Type: schema.TypeInt},
 		Optional:      true,
-		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		Description:   "A list of percentage thresholds at which to suspend all warehouses. In case `suspend_trigger` is also defined, the lowest threshold from `suspend_trigger` and `suspend_triggers` will be used",
 		ConflictsWith: []string{"suspend_trigger"},
 		Deprecated:    "Use suspend_trigger instead",
 	},
@@ -148,29 +148,47 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		for _, name := range userNames {
 			users = append(users, sdk.NotifiedUser{Name: name})
 		}
-		opts.NotifyUsers = &sdk.NotifyUsers{Users: users}
+		if opts.With == nil {
+			opts.With = &sdk.ResourceMonitorWith{}
+		}
+		opts.With.NotifyUsers = &sdk.NotifyUsers{Users: users}
 	}
 
 	if v, ok := d.GetOk("credit_quota"); ok {
-		opts.CreditQuota = sdk.Int(v.(int))
+		if opts.With == nil {
+			opts.With = &sdk.ResourceMonitorWith{}
+		}
+		opts.With.CreditQuota = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("frequency"); ok {
 		frequency, err := sdk.FrequencyFromString(v.(string))
 		if err != nil {
 			return err
 		}
-		opts.Frequency = frequency
+		if opts.With == nil {
+			opts.With = &sdk.ResourceMonitorWith{}
+		}
+		opts.With.Frequency = frequency
 	}
 
 	if v, ok := d.GetOk("start_timestamp"); ok {
-		opts.StartTimestamp = sdk.Pointer(v.(string))
+		if opts.With == nil {
+			opts.With = &sdk.ResourceMonitorWith{}
+		}
+		opts.With.StartTimestamp = sdk.Pointer(v.(string))
 	}
 	if v, ok := d.GetOk("end_timestamp"); ok {
-		opts.EndTimestamp = sdk.Pointer(v.(string))
+		if opts.With == nil {
+			opts.With = &sdk.ResourceMonitorWith{}
+		}
+		opts.With.EndTimestamp = sdk.Pointer(v.(string))
 	}
 
 	triggers := collectResourceMonitorTriggers(d)
-	opts.Triggers = &triggers
+	if opts.With == nil {
+		opts.With = &sdk.ResourceMonitorWith{}
+	}
+	opts.With.Triggers = triggers
 
 	err := client.ResourceMonitors.Create(ctx, objectIdentifier, opts)
 	if err != nil {
@@ -248,85 +266,27 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Triggers
-	sTrig := resourceMonitor.SuspendTriggers
-	var setSuspendTrigger bool
-	if _, ok := d.GetOk("suspend_trigger"); ok {
-		if len(sTrig) > 0 {
-			if err := d.Set("suspend_trigger", sTrig[0].Threshold); err != nil {
-				return err
-			}
-			setSuspendTrigger = true
-		} else {
-			if err := d.Set("suspend_trigger", nil); err != nil {
-				return err
-			}
-			setSuspendTrigger = true
-		}
-	}
-	if _, ok := d.GetOk("suspend_triggers"); ok {
-		thresholds := []int{}
-		for _, trig := range sTrig {
-			thresholds = append(thresholds, trig.Threshold)
-		}
-		if err := d.Set("suspend_triggers", thresholds); err != nil {
+	if resourceMonitor.SuspendAt != nil {
+		if err := d.Set("suspend_trigger", *resourceMonitor.SuspendAt); err != nil {
 			return err
 		}
-		setSuspendTrigger = true
-	}
-	if !setSuspendTrigger {
-		if len(sTrig) > 0 {
-			if err := d.Set("suspend_trigger", sTrig[0].Threshold); err != nil {
-				return err
-			}
-		} else {
-			if err := d.Set("suspend_trigger", nil); err != nil {
-				return err
-			}
+	} else {
+		if err := d.Set("suspend_trigger", nil); err != nil {
+			return err
 		}
 	}
 
-	siTrig := resourceMonitor.SuspendImmediateTriggers
-	var setSuspendImmediateTrigger bool
-	if _, ok := d.GetOk("suspend_immediate_trigger"); ok {
-		if len(siTrig) > 0 {
-			if err := d.Set("suspend_immediate_trigger", siTrig[0].Threshold); err != nil {
-				return err
-			}
-			setSuspendImmediateTrigger = true
-		} else {
-			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
-				return err
-			}
-			setSuspendImmediateTrigger = true
-		}
-	}
-	if _, ok := d.GetOk("suspend_immediate_triggers"); ok {
-		thresholds := []int{}
-		for _, trig := range siTrig {
-			thresholds = append(thresholds, trig.Threshold)
-		}
-		if err := d.Set("suspend_immediate_triggers", thresholds); err != nil {
+	if resourceMonitor.SuspendImmediateAt != nil {
+		if err := d.Set("suspend_immediate_trigger", *resourceMonitor.SuspendImmediateAt); err != nil {
 			return err
 		}
-		setSuspendImmediateTrigger = true
-	}
-	if !setSuspendImmediateTrigger {
-		if len(siTrig) > 0 {
-			if err := d.Set("suspend_immediate_trigger", siTrig[0].Threshold); err != nil {
-				return err
-			}
-		} else {
-			if err := d.Set("suspend_immediate_trigger", nil); err != nil {
-				return err
-			}
+	} else {
+		if err := d.Set("suspend_immediate_trigger", nil); err != nil {
+			return err
 		}
 	}
 
-	thresholds := []int{}
-	for _, trig := range resourceMonitor.NotifyTriggers {
-		thresholds = append(thresholds, trig.Threshold)
-	}
-	if err := d.Set("notify_triggers", thresholds); err != nil {
+	if err := d.Set("notify_triggers", resourceMonitor.NotifyTriggers); err != nil {
 		return err
 	}
 
@@ -416,7 +376,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		d.HasChange("notify_triggers") {
 		runSetStatement = true
 		triggers := collectResourceMonitorTriggers(d)
-		opts.Triggers = &triggers
+		opts.Triggers = triggers
 	}
 
 	if runSetStatement {
@@ -487,47 +447,61 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 }
 
 func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinition {
-	suspendTriggers := []sdk.TriggerDefinition{}
+	triggers := []sdk.TriggerDefinition{}
+	var suspendTrigger *sdk.TriggerDefinition
 	if v, ok := d.GetOk("suspend_trigger"); ok {
-		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+		suspendTrigger = &sdk.TriggerDefinition{
 			Threshold:     v.(int),
 			TriggerAction: sdk.TriggerActionSuspend,
-		})
+		}
 	}
 
 	if v, ok := d.GetOk("suspend_triggers"); ok {
 		siTrigs := expandIntList(v.(*schema.Set).List())
-		for _, t := range siTrigs {
-			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
-				Threshold:     t,
-				TriggerAction: sdk.TriggerActionSuspend,
-			})
+		for _, threshold := range siTrigs {
+			if suspendTrigger == nil || suspendTrigger.Threshold > threshold {
+				suspendTrigger = &sdk.TriggerDefinition{
+					Threshold:     threshold,
+					TriggerAction: sdk.TriggerActionSuspend,
+				}
+			}
 		}
 	}
+	if suspendTrigger != nil {
+		triggers = append(triggers, *suspendTrigger)
+	}
+	var suspendImmediateTrigger *sdk.TriggerDefinition
+
 	if v, ok := d.GetOk("suspend_immediate_trigger"); ok {
-		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+		suspendImmediateTrigger = &sdk.TriggerDefinition{
 			Threshold:     v.(int),
 			TriggerAction: sdk.TriggerActionSuspendImmediate,
-		})
-	}
-	// Support deprecated suspend_immediate_triggers.
-	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
-		sTrigs := expandIntList(v.(*schema.Set).List())
-		for _, t := range sTrigs {
-			suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
-				Threshold:     t,
-				TriggerAction: sdk.TriggerActionSuspendImmediate,
-			})
 		}
 	}
+
+	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
+		siTrigs := expandIntList(v.(*schema.Set).List())
+		for _, threshold := range siTrigs {
+			if suspendImmediateTrigger == nil || suspendTrigger.Threshold > threshold {
+				suspendImmediateTrigger = &sdk.TriggerDefinition{
+					Threshold:     threshold,
+					TriggerAction: sdk.TriggerActionSuspendImmediate,
+				}
+			}
+		}
+	}
+	if suspendImmediateTrigger != nil {
+		triggers = append(triggers, *suspendImmediateTrigger)
+	}
+
 	nTrigs := expandIntList(d.Get("notify_triggers").(*schema.Set).List())
 	for _, t := range nTrigs {
-		suspendTriggers = append(suspendTriggers, sdk.TriggerDefinition{
+		triggers = append(triggers, sdk.TriggerDefinition{
 			Threshold:     t,
 			TriggerAction: sdk.TriggerActionNotify,
 		})
 	}
-	return suspendTriggers
+	return triggers
 }
 
 // DeleteResourceMonitor implements schema.DeleteFunc.

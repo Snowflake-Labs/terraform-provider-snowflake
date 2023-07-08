@@ -54,6 +54,10 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 
 		triggers := []TriggerDefinition{
 			{
+				Threshold:     30,
+				TriggerAction: TriggerActionSuspend,
+			},
+			{
 				Threshold:     50,
 				TriggerAction: TriggerActionSuspendImmediate,
 			},
@@ -63,14 +67,16 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 			},
 		}
 		err = client.ResourceMonitors.Create(ctx, id, &CreateResourceMonitorOptions{
-			OrReplace:      Bool(true),
-			Frequency:      frequency,
-			CreditQuota:    &creditQuota,
-			StartTimestamp: &startTimeStamp,
-			EndTimestamp:   &endTimeStamp,
-			// Users' emails need to be verified in order to use them for notification
-			NotifyUsers: nil,
-			Triggers:    &triggers,
+			OrReplace: Bool(true),
+			With: &ResourceMonitorWith{
+				Frequency:      frequency,
+				CreditQuota:    &creditQuota,
+				StartTimestamp: &startTimeStamp,
+				EndTimestamp:   &endTimeStamp,
+				// Users' emails need to be verified in order to use them for notification
+				NotifyUsers: nil,
+				Triggers:    triggers,
+			},
 		})
 
 		require.NoError(t, err)
@@ -88,11 +94,16 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.NotEmpty(t, resourceMonitor.EndTime)
-		allTriggers := resourceMonitor.SuspendTriggers
-		allTriggers = append(allTriggers, resourceMonitor.SuspendImmediateTriggers...)
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
-		allTriggers = append(allTriggers, resourceMonitor.NotifyTriggers...)
-		assert.Equal(t, triggers, allTriggers)
+		var allThresholds []int
+		allThresholds = append(allThresholds, *resourceMonitor.SuspendAt)
+		allThresholds = append(allThresholds, *resourceMonitor.SuspendImmediateAt)
+		allThresholds = append(allThresholds, resourceMonitor.NotifyTriggers...)
+		var thresholds []int
+		for _, trigger := range triggers {
+			thresholds = append(thresholds, trigger.Threshold)
+		}
+		assert.Equal(t, thresholds, allThresholds)
 
 		t.Cleanup(func() {
 			err = client.ResourceMonitors.Drop(ctx, id)
@@ -123,8 +134,8 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.Equal(t, FrequencyMonthly, resourceMonitor.Frequency)
 		assert.Empty(t, resourceMonitor.NotifyUsers)
 		assert.Empty(t, resourceMonitor.NotifyTriggers)
-		assert.Empty(t, resourceMonitor.SuspendImmediateTriggers)
-		assert.Empty(t, resourceMonitor.SuspendTriggers)
+		assert.Empty(t, resourceMonitor.SuspendAt)
+		assert.Empty(t, resourceMonitor.SuspendImmediateAt)
 
 		t.Cleanup(func() {
 			err = client.ResourceMonitors.Drop(ctx, id)
@@ -141,14 +152,19 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 
-		oldTriggers := []TriggerDefinition{}
-		oldTriggers = append(oldTriggers, resourceMonitor.NotifyTriggers...)
-		oldTriggers = append(oldTriggers, resourceMonitor.SuspendTriggers...)
-		oldTriggers = append(oldTriggers, resourceMonitor.SuspendImmediateTriggers...)
+		var oldNotifyTriggers []TriggerDefinition
+		for _, threshold := range resourceMonitor.NotifyTriggers {
+			oldNotifyTriggers = append(oldNotifyTriggers, TriggerDefinition{Threshold: threshold, TriggerAction: TriggerActionNotify})
+		}
+
+		var oldTriggers []TriggerDefinition
+		oldTriggers = append(oldTriggers, oldNotifyTriggers...)
+		oldTriggers = append(oldTriggers, TriggerDefinition{Threshold: *resourceMonitor.SuspendAt, TriggerAction: TriggerActionSuspend})
+		oldTriggers = append(oldTriggers, TriggerDefinition{Threshold: *resourceMonitor.SuspendImmediateAt, TriggerAction: TriggerActionSuspendImmediate})
 		newTriggers := oldTriggers
 		newTriggers = append(newTriggers, TriggerDefinition{Threshold: 30, TriggerAction: TriggerActionNotify})
 		alterOptions := &AlterResourceMonitorOptions{
-			Triggers: &newTriggers,
+			Triggers: newTriggers,
 		}
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
 		require.NoError(t, err)
@@ -160,9 +176,14 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = resourceMonitors[0]
-		allTriggers := resourceMonitor.SuspendImmediateTriggers
-		allTriggers = append(allTriggers, resourceMonitor.NotifyTriggers...)
-		allTriggers = append(allTriggers, resourceMonitor.SuspendTriggers...)
+		var newNotifyTriggers []TriggerDefinition
+		for _, threshold := range resourceMonitor.NotifyTriggers {
+			newNotifyTriggers = append(newNotifyTriggers, TriggerDefinition{Threshold: threshold, TriggerAction: TriggerActionNotify})
+		}
+		var allTriggers []TriggerDefinition
+		allTriggers = append(allTriggers, newNotifyTriggers...)
+		allTriggers = append(allTriggers, TriggerDefinition{Threshold: *resourceMonitor.SuspendAt, TriggerAction: TriggerActionSuspend})
+		allTriggers = append(allTriggers, TriggerDefinition{Threshold: *resourceMonitor.SuspendImmediateAt, TriggerAction: TriggerActionSuspendImmediate})
 		assert.ElementsMatch(t, newTriggers, allTriggers)
 	})
 

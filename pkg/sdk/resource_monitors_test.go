@@ -39,15 +39,16 @@ func TestResourceMonitorCreate(t *testing.T) {
 		}
 
 		opts := &CreateResourceMonitorOptions{
-			OrReplace:      Bool(true),
-			With:           Bool(true),
-			name:           id,
-			CreditQuota:    creditQuota,
-			Frequency:      &frequency,
-			StartTimestamp: &startTimeStamp,
-			EndTimestamp:   &endTimeStamp,
-			NotifyUsers:    &NotifyUsers{notifiedUsers},
-			Triggers:       &triggers,
+			OrReplace: Bool(true),
+			With: &ResourceMonitorWith{
+				CreditQuota:    creditQuota,
+				Frequency:      &frequency,
+				StartTimestamp: &startTimeStamp,
+				EndTimestamp:   &endTimeStamp,
+				NotifyUsers:    &NotifyUsers{notifiedUsers},
+				Triggers:       triggers,
+			},
+			name: id,
 		}
 
 		actual, err := structToSQL(opts)
