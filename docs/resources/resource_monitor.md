@@ -45,10 +45,10 @@ resource "snowflake_resource_monitor" "monitor" {
 - `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors.
 - `set_for_account` (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).
 - `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
-- `suspend_immediate_trigger` (Number) The number that represents the percentage threshold at which to immediately suspend all warehouses.
-- `suspend_immediate_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
-- `suspend_trigger` (Number) The number that represents the percentage threshold at which to suspend all warehouses.
-- `suspend_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
+- `suspend_immediate_trigger` (Number) The number that represents the percentage threshold at which to immediately suspend all warehouses. In case `suspend_immediate_triggers` is also defined, the lowest threshold from `suspend_immediate_trigger` and `suspend_immediate_triggers` will be used.
+- `suspend_immediate_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to immediately suspend all warehouses. In case `suspend_immediate_trigger` is also defined, the lowest threshold from `suspend_immediate_trigger` and `suspend_immediate_triggers` will be used.
+- `suspend_trigger` (Number) The number that represents the percentage threshold at which to suspend all warehouses. In case `suspend_triggers` is also defined, the lowest threshold from `suspend_trigger` and `suspend_triggers` will be used.
+- `suspend_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses. In case `suspend_trigger` is also defined, the lowest threshold from `suspend_trigger` and `suspend_triggers` will be used.
 - `warehouses` (Set of String) A list of warehouses to apply the resource monitor to.
 
 ### Read-Only

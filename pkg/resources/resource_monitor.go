@@ -69,14 +69,14 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"suspend_immediate_trigger": {
 		Type:          schema.TypeInt,
 		Optional:      true,
-		Description:   "The number that represents the percentage threshold at which to immediately suspend all warehouses.",
+		Description:   "The number that represents the percentage threshold at which to immediately suspend all warehouses. In case `suspend_immediate_triggers` is also defined, the lowest threshold from `suspend_immediate_trigger` and `suspend_immiediate_triggers` will be used",
 		ConflictsWith: []string{"suspend_immediate_triggers"},
 	},
 	"suspend_immediate_triggers": {
 		Type:          schema.TypeSet,
 		Elem:          &schema.Schema{Type: schema.TypeInt},
 		Optional:      true,
-		Description:   "A list of percentage thresholds at which to suspend all warehouses.",
+		Description:   "A list of percentage thresholds at which to suspend all warehouses. In case `suspend_immediate_trigger` is also defined, the lowest threshold from `suspend_immediate_trigger` and `suspend_immediate_triggers` will be used",
 		ConflictsWith: []string{"suspend_immediate_trigger"},
 		Deprecated:    "Use suspend_immediate_trigger instead",
 	},
