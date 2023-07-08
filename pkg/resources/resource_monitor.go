@@ -185,10 +185,10 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	triggers := collectResourceMonitorTriggers(d)
-	if opts.With == nil {
+	if opts.With == nil && len(triggers) > 0 {
 		opts.With = &sdk.ResourceMonitorWith{}
+		opts.With.Triggers = triggers
 	}
-	opts.With.Triggers = triggers
 
 	err := client.ResourceMonitors.Create(ctx, objectIdentifier, opts)
 	if err != nil {
