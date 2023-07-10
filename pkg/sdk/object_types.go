@@ -21,10 +21,12 @@ const (
 	ObjectTypeAccountParameter ObjectType = "ACCOUNT PARAMETER"
 	ObjectTypeDatabase         ObjectType = "DATABASE"
 	ObjectTypeFailoverGroup    ObjectType = "FAILOVER GROUP"
+	ObjectTypeFileFormat       ObjectType = "FILE FORMAT"
 	ObjectTypeIntegration      ObjectType = "INTEGRATION"
 	ObjectTypeMaskingPolicy    ObjectType = "MASKING POLICY"
 	ObjectTypeNetworkPolicy    ObjectType = "NETWORK POLICY"
 	ObjectTypePasswordPolicy   ObjectType = "PASSWORD POLICY"
+	ObjectTypeReplicationGroup ObjectType = "REPLICATION GROUP"
 	ObjectTypeResourceMonitor  ObjectType = "RESOURCE MONITOR"
 	ObjectTypeRole             ObjectType = "ROLE"
 	ObjectTypeSchema           ObjectType = "SCHEMA"
@@ -50,6 +52,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeMaskingPolicy:    PluralObjectTypeMaskingPolicies,
 		ObjectTypeNetworkPolicy:    PluralObjectTypeNetworkPolicies,
 		ObjectTypePasswordPolicy:   PluralObjectTypePasswordPolicies,
+		ObjectTypeReplicationGroup: PluralObjectTypeReplicationGroups,
 		ObjectTypeResourceMonitor:  PluralObjectTypeResourceMonitors,
 		ObjectTypeRole:             PluralObjectTypeRoles,
 		ObjectTypeSchema:           PluralObjectTypeSchemas,
@@ -115,6 +118,7 @@ const (
 	PluralObjectTypeMaskingPolicies    PluralObjectType = "MASKING POLICIES"
 	PluralObjectTypeNetworkPolicies    PluralObjectType = "NETWORK POLICIES"
 	PluralObjectTypePasswordPolicies   PluralObjectType = "PASSWORD POLICIES"
+	PluralObjectTypeReplicationGroups  PluralObjectType = "REPLICATION GROUPS"
 	PluralObjectTypeResourceMonitors   PluralObjectType = "RESOURCE MONITORS"
 	PluralObjectTypeRoles              PluralObjectType = "ROLES"
 	PluralObjectTypeSchemas            PluralObjectType = "SCHEMAS"

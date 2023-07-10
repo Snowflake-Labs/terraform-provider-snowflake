@@ -100,12 +100,12 @@ var stageGrantSchema = map[string]*schema.Schema{
 func StageGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateStageGrant,
-			Read:   ReadStageGrant,
-			Delete: DeleteStageGrant,
-			Update: UpdateStageGrant,
-
-			Schema: stageGrantSchema,
+			Create:             CreateStageGrant,
+			Read:               ReadStageGrant,
+			Delete:             DeleteStageGrant,
+			Update:             UpdateStageGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             stageGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

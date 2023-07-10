@@ -31,6 +31,7 @@ type Client struct {
 	Comments         Comments
 	Databases        Databases
 	FailoverGroups   FailoverGroups
+	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
@@ -122,6 +123,7 @@ func (c *Client) initialize() {
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
+	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}

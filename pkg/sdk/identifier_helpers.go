@@ -114,6 +114,11 @@ func NewAccountObjectIdentifier(name string) AccountObjectIdentifier {
 	return AccountObjectIdentifier{name: name}
 }
 
+func NewAccountObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) AccountObjectIdentifier {
+	name := strings.Trim(fullyQualifiedName, `"`)
+	return AccountObjectIdentifier{name: name}
+}
+
 func (i AccountObjectIdentifier) Name() string {
 	return i.name
 }
