@@ -206,31 +206,31 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("min_length", passwordPolicyDetails.PasswordMinLength.Value); err != nil {
+	if err := d.Set("min_length", *passwordPolicyDetails.PasswordMinLength.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_length", passwordPolicyDetails.PasswordMaxLength.Value); err != nil {
+	if err := d.Set("max_length", *passwordPolicyDetails.PasswordMaxLength.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars.Value); err != nil {
+	if err := d.Set("min_upper_case_chars", *passwordPolicyDetails.PasswordMinUpperCaseChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars.Value); err != nil {
+	if err := d.Set("min_lower_case_chars", *passwordPolicyDetails.PasswordMinLowerCaseChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars.Value); err != nil {
+	if err := d.Set("min_numeric_chars", *passwordPolicyDetails.PasswordMinNumericChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars.Value); err != nil {
+	if err := d.Set("min_special_chars", *passwordPolicyDetails.PasswordMinSpecialChars.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_age_days", passwordPolicyDetails.PasswordMaxAgeDays.Value); err != nil {
+	if err := d.Set("max_age_days", *passwordPolicyDetails.PasswordMaxAgeDays.Value); err != nil {
 		return err
 	}
-	if err := d.Set("max_retries", passwordPolicyDetails.PasswordMaxRetries.Value); err != nil {
+	if err := d.Set("max_retries", *passwordPolicyDetails.PasswordMaxRetries.Value); err != nil {
 		return err
 	}
-	if err := d.Set("lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins.Value); err != nil {
+	if err := d.Set("lockout_time_mins", *passwordPolicyDetails.PasswordLockoutTimeMins.Value); err != nil {
 		return err
 	}
 	return nil

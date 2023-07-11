@@ -125,164 +125,164 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 
 func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context, parameter SessionParameter, value string) error {
 	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{SessionParameters: &SessionParameters{}}}}
+	return setSessionParameter(ctx, opts.Set.Parameters.SessionParameters, parameter, value)
+}
+
+func setSessionParameter(ctx context.Context, sessionParameters *SessionParameters, parameter SessionParameter, value string) error {
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.AbortDetachedQuery = b
+		sessionParameters.AbortDetachedQuery = b
 	case SessionParameterAutocommit:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.Autocommit = b
+		sessionParameters.Autocommit = b
 	case SessionParameterBinaryInputFormat:
-		opts.Set.Parameters.SessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
+		sessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
 	case SessionParameterBinaryOutputFormat:
-		opts.Set.Parameters.SessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
+		sessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = b
+		sessionParameters.ClientMetadataRequestUseConnectionCtx = b
 	case SessionParameterClientMetadataUseSessionDatabase:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = b
+		sessionParameters.ClientMetadataUseSessionDatabase = b
 	case SessionParameterClientResultColumnCaseInsensitive:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = b
+		sessionParameters.ClientResultColumnCaseInsensitive = b
 	case SessionParameterDateInputFormat:
-		opts.Set.Parameters.SessionParameters.DateInputFormat = &value
+		sessionParameters.DateInputFormat = &value
 	case SessionParameterDateOutputFormat:
-		opts.Set.Parameters.SessionParameters.DateOutputFormat = &value
+		sessionParameters.DateOutputFormat = &value
 	case SessionParameterErrorOnNondeterministicMerge:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicMerge = b
+		sessionParameters.ErrorOnNondeterministicMerge = b
 	case SessionParameterErrorOnNondeterministicUpdate:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicUpdate = b
+		sessionParameters.ErrorOnNondeterministicUpdate = b
 	case SessionParameterGeographyOutputFormat:
-		opts.Set.Parameters.SessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
+		sessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
 	case SessionParameterJSONIndent:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("JSON_INDENT session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.JSONIndent = Pointer(v)
+		sessionParameters.JSONIndent = Pointer(v)
 	case SessionParameterLockTimeout:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.LockTimeout = Pointer(v)
+		sessionParameters.LockTimeout = Pointer(v)
 	case SessionParameterMultiStatementCount:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.MultiStatementCount = Pointer(v)
+		sessionParameters.MultiStatementCount = Pointer(v)
 
 	case SessionParameterQueryTag:
-		opts.Set.Parameters.SessionParameters.QueryTag = &value
+		sessionParameters.QueryTag = &value
 	case SessionParameterQuotedIdentifiersIgnoreCase:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = b
+		sessionParameters.QuotedIdentifiersIgnoreCase = b
 	case SessionParameterRowsPerResultset:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.RowsPerResultset = Pointer(v)
+		sessionParameters.RowsPerResultset = Pointer(v)
 	case SessionParameterSimulatedDataSharingConsumer:
-		opts.Set.Parameters.SessionParameters.SimulatedDataSharingConsumer = &value
+		sessionParameters.SimulatedDataSharingConsumer = &value
 	case SessionParameterStatementTimeoutInSeconds:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.StatementTimeoutInSeconds = Pointer(v)
+		sessionParameters.StatementTimeoutInSeconds = Pointer(v)
 	case SessionParameterStrictJSONOutput:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.StrictJSONOutput = b
+		sessionParameters.StrictJSONOutput = b
 	case SessionParameterTimestampDayIsAlways24h:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.TimestampDayIsAlways24h = b
+		sessionParameters.TimestampDayIsAlways24h = b
 	case SessionParameterTimestampInputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampInputFormat = &value
+		sessionParameters.TimestampInputFormat = &value
 	case SessionParameterTimestampLTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampLTZOutputFormat = &value
+		sessionParameters.TimestampLTZOutputFormat = &value
 	case SessionParameterTimestampNTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampNTZOutputFormat = &value
+		sessionParameters.TimestampNTZOutputFormat = &value
 	case SessionParameterTimestampOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampOutputFormat = &value
+		sessionParameters.TimestampOutputFormat = &value
 	case SessionParameterTimestampTypeMapping:
-		opts.Set.Parameters.SessionParameters.TimestampTypeMapping = &value
+		sessionParameters.TimestampTypeMapping = &value
 	case SessionParameterTimestampTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampTZOutputFormat = &value
+		sessionParameters.TimestampTZOutputFormat = &value
 	case SessionParameterTimezone:
-		opts.Set.Parameters.SessionParameters.Timezone = &value
+		sessionParameters.Timezone = &value
 	case SessionParameterTimeInputFormat:
-		opts.Set.Parameters.SessionParameters.TimeInputFormat = &value
+		sessionParameters.TimeInputFormat = &value
 	case SessionParameterTimeOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimeOutputFormat = &value
+		sessionParameters.TimeOutputFormat = &value
 	case SessionParameterTransactionDefaultIsolationLevel:
-		opts.Set.Parameters.SessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
+		sessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
 	case SessionParameterTwoDigitCenturyStart:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("TWO_DIGIT_CENTURY_START session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.TwoDigitCenturyStart = Pointer(v)
+		sessionParameters.TwoDigitCenturyStart = Pointer(v)
 	case SessionParameterUnsupportedDDLAction:
-		opts.Set.Parameters.SessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
+		sessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
 	case SessionParameterUseCachedResult:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.UseCachedResult = b
+		sessionParameters.UseCachedResult = b
 	case SessionParameterWeekOfYearPolicy:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("WEEK_OF_YEAR_POLICY session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.WeekOfYearPolicy = Pointer(v)
+		sessionParameters.WeekOfYearPolicy = Pointer(v)
 	case SessionParameterWeekStart:
 		v, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
 		}
-		opts.Set.Parameters.SessionParameters.WeekStart = Pointer(v)
+		sessionParameters.WeekStart = Pointer(v)
 	default:
 		return fmt.Errorf("Invalid session parameter: %v", string(parameter))
-	}
-	err := parameters.client.Accounts.Alter(ctx, &opts)
-	if err != nil {
-		return err
 	}
 	return nil
 }

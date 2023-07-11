@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"errors"
+	"strconv"
 	"time"
 )
 
@@ -69,10 +70,17 @@ type StringProperty struct {
 }
 
 type IntProperty struct {
-	Value        int
-	DefaultValue int
+	Value        *int
+	DefaultValue *int
 	Description  string
 }
+
+type BoolProperty struct {
+	Value        bool
+	DefaultValue bool
+	Description  string
+}
+
 
 type propertyRow struct {
 	Property     string `db:"property"`
@@ -96,9 +104,31 @@ func (row *propertyRow) toStringProperty() *StringProperty {
 }
 
 func (row *propertyRow) toIntProperty() *IntProperty {
+	var value *int
+	var defaultValue *int
+	v, err := strconv.Atoi(row.Value)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
+	}
+	v, err = strconv.Atoi(row.DefaultValue)
+	if err == nil {
+		defaultValue = &v
+	} else {
+		defaultValue = nil
+	}
 	return &IntProperty{
-		Value:        toInt(row.Value),
-		DefaultValue: toInt(row.DefaultValue),
+		Value:        value,
+		DefaultValue: defaultValue,
+		Description:  row.Description,
+	}
+}
+
+func (row *propertyRow) toBoolProperty() *BoolProperty {
+	return &BoolProperty{
+		Value:        toBool(row.Value),
+		DefaultValue: toBool(row.DefaultValue),
 		Description:  row.Description,
 	}
 }

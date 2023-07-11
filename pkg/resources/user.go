@@ -1,12 +1,16 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
@@ -133,9 +137,6 @@ var userSchema = map[string]*schema.Schema{
 		Sensitive:   true,
 		Description: "Last name of the user.",
 	},
-	"tag": tagReferenceSchema,
-
-	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
 	//    DAYS_TO_EXPIRY = <integer>
@@ -162,15 +163,87 @@ func User() *schema.Resource {
 }
 
 func CreateUser(d *schema.ResourceData, meta interface{}) error {
-	return CreateResource("user", userProperties, userSchema, snowflake.NewUserBuilder, ReadUser)(d, meta)
+
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	opts := &sdk.CreateUserOptions{}
+	name := d.Get("name").(string)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+
+	if loginName, ok := d.GetOk("login_name"); ok {
+		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
+	}
+
+	if comment, ok := d.GetOk("comment"); ok {
+		opts.ObjectProperties.Comment = sdk.String(comment.(string))
+	}
+	if password, ok := d.GetOk("password"); ok {
+		opts.ObjectProperties.Password = sdk.String(password.(string))
+	}
+	if v, ok := d.GetOk("disabled"); ok {
+		disabled, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return err
+		}
+		opts.ObjectProperties.Disable = &disabled
+	}
+	if defaultWarehouse, ok := d.GetOk("default_warehouse"); ok {
+		opts.ObjectProperties.DefaultWarehosue = sdk.String(defaultWarehouse.(string))
+	}
+	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
+		opts.ObjectProperties.DefaultNamespace = sdk.String(defaultNamespace.(string))
+	}
+	if defaultRole, ok := d.GetOk("default_role"); ok {
+		opts.ObjectProperties.DefaultRole = sdk.String(defaultRole.(string))
+	}
+	if v, ok := d.GetOk("default_secondary_roles"); ok {
+		roles := expandStringList(v.([]interface{}))
+		secondaryRoles := []sdk.SecondaryRole{}
+		for _, role := range roles {
+			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
+		}
+		opts.ObjectProperties.DefaultSeconaryRoles = secondaryRoles
+	}
+	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
+		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
+	}
+	if rsaPublicKey2, ok := d.GetOk("rsa_public_key2"); ok {
+		opts.ObjectProperties.RSAPublicKey2 = sdk.String(rsaPublicKey2.(string))
+	}
+	if v, ok := d.GetOk("must_change_password"); ok {
+		mustChangePassword, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return err
+		}
+		opts.ObjectProperties.MustChangePassword = &mustChangePassword
+	}
+	if email, ok := d.GetOk("email"); ok {
+		opts.ObjectProperties.Email = sdk.String(email.(string))
+	}
+	if firstName, ok := d.GetOk("first_name"); ok {
+		opts.ObjectProperties.FirstName = sdk.String(firstName.(string))
+	}
+	if lastName, ok := d.GetOk("last_name"); ok {
+		opts.ObjectProperties.LastName = sdk.String(lastName.(string))
+	}
+	err := client.Users.Create(ctx, objectIdentifier, opts)
+	if err != nil {
+		return err
+	}
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+	return ReadUser(d, meta)
 }
 
 func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
 	// requires the "MANAGE GRANTS" global privilege
-	stmt := snowflake.NewUserBuilder(d.Id()).Describe()
-	rows, err := snowflake.Query(db, stmt)
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	ctx := context.Background()
+	user, err := client.Users.Describe(ctx, objectIdentifier)
 	if err != nil {
 		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
 			// If not found, mark resource to be removed from state file during apply or refresh
@@ -181,61 +254,189 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	u, err := snowflake.ScanUserDescription(rows)
-	if err != nil {
+	if err = d.Set("name", user.Name.Value); err != nil {
 		return err
 	}
-	if err = d.Set("name", u.Name.String); err != nil {
+	if err = d.Set("comment", user.Comment.Value); err != nil {
 		return err
 	}
-	if err = d.Set("comment", u.Comment.String); err != nil {
+	if err = d.Set("login_name", user.LoginName.Value); err != nil {
 		return err
 	}
-	if err = d.Set("login_name", u.LoginName.String); err != nil {
+	if err = d.Set("disabled", user.Disabled); err != nil {
 		return err
 	}
-	if err = d.Set("disabled", u.Disabled); err != nil {
-		return err
-	}
-	if err = d.Set("default_role", u.DefaultRole.String); err != nil {
+	if err = d.Set("default_role", user.DefaultRole.Value); err != nil {
 		return err
 	}
 
 	var defaultSecondaryRoles []string
-	if len(u.DefaultSecondaryRoles.String) > 0 {
-		defaultSecondaryRoles = strings.Split(u.DefaultSecondaryRoles.String, ",")
+	if len(user.DefaultSecondaryRoles.Value) > 0 {
+		defaultSecondaryRoles = strings.Split(user.DefaultSecondaryRoles.Value, ",")
 	}
 	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 		return err
 	}
-	if err = d.Set("default_namespace", u.DefaultNamespace.String); err != nil {
+	if err = d.Set("default_namespace", user.DefaultNamespace.Value); err != nil {
 		return err
 	}
-	if err = d.Set("default_warehouse", u.DefaultWarehouse.String); err != nil {
+	if err = d.Set("default_warehouse", user.DefaultWarehouse.Value); err != nil {
 		return err
 	}
-	if err = d.Set("has_rsa_public_key", u.HasRsaPublicKey); err != nil {
+	if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
 		return err
 	}
-	if err = d.Set("email", u.Email.String); err != nil {
+	if err = d.Set("email", user.Email.Value); err != nil {
 		return err
 	}
-	if err = d.Set("display_name", u.DisplayName.String); err != nil {
+	if err = d.Set("display_name", user.DisplayName.Value); err != nil {
 		return err
 	}
-	if err = d.Set("first_name", u.FirstName.String); err != nil {
+	if err = d.Set("first_name", user.FirstName.Value); err != nil {
 		return err
 	}
-	if err = d.Set("last_name", u.LastName.String); err != nil {
+	if err = d.Set("last_name", user.LastName.Value); err != nil {
 		return err
 	}
 	return nil
 }
 
 func UpdateUser(d *schema.ResourceData, meta interface{}) error {
-	return UpdateResource("user", userProperties, userSchema, snowflake.NewUserBuilder, ReadUser)(d, meta)
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	name := d.Get("name").(string)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+
+	if d.HasChange("name") {
+		_, n := d.GetChange("name")
+		newName := n.(string)
+		newID := sdk.NewAccountObjectIdentifier(newName)
+		alterOptions := &sdk.AlterUserOptions{
+			NewName: newID,
+		}
+		err := client.Users.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+		d.SetId(helpers.EncodeSnowflakeID(newID))
+	}
+	runSet := false
+	alterOptions := &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserObjectProperties{},
+		},
+	}
+	if d.HasChange("login_name") {
+		runSet = true
+		_, n := d.GetChange("login_name")
+		alterOptions.Set.ObjectProperties.LoginName = sdk.String(n.(string))
+	}
+	if d.HasChange("comment") {
+		runSet = true
+		_, n := d.GetChange("comment")
+		alterOptions.Set.ObjectProperties.Comment = sdk.String(n.(string))
+	}
+	if d.HasChange("password") {
+		runSet = true
+		_, n := d.GetChange("password")
+		alterOptions.Set.ObjectProperties.Password = sdk.String(n.(string))
+	}
+
+	if d.HasChange("disabled") {
+		runSet = true
+		_, n := d.GetChange("disabled")
+		disabled, err := strconv.ParseBool(n.(string))
+		if err != nil {
+			return err
+		}
+		alterOptions.Set.ObjectProperties.Disable = &disabled
+	}
+	if d.HasChange("default_warehouse") {
+		runSet = true
+		_, n := d.GetChange("default_warehouse")
+		alterOptions.Set.ObjectProperties.DefaultWarehosue = sdk.String(n.(string))
+	}
+	if d.HasChange("default_namespace") {
+		runSet = true
+		_, n := d.GetChange("default_namespace")
+		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.String(n.(string))
+	}
+	if d.HasChange("default_role") {
+		runSet = true
+		_, n := d.GetChange("default_role")
+		alterOptions.Set.ObjectProperties.DefaultRole = sdk.String(n.(string))
+	}
+	if d.HasChange("default_secondary_roles") {
+		runSet = true
+		_, n := d.GetChange("default_secondary_roles")
+		roles := expandStringList(n.([]interface{}))
+		secondaryRoles := []sdk.SecondaryRole{}
+		for _, role := range roles {
+			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
+		}
+		alterOptions.Set.ObjectProperties.DefaultSeconaryRoles = secondaryRoles
+	}
+	if d.HasChange("rsa_public_key") {
+		runSet = true
+		_, n := d.GetChange("rsa_public_key")
+		alterOptions.Set.ObjectProperties.RSAPublicKey = sdk.String(n.(string))
+	}
+	if d.HasChange("rsa_public_key_2") {
+		runSet = true
+		_, n := d.GetChange("rsa_public_key_2")
+		alterOptions.Set.ObjectProperties.RSAPublicKey2 = sdk.String(n.(string))
+	}
+	if d.HasChange("must_change_password") {
+		runSet = true
+		_, n := d.GetChange("must_change_password")
+		mustChangePassword, err := strconv.ParseBool(n.(string))
+		if err != nil {
+			return err
+		}
+		alterOptions.Set.ObjectProperties.MustChangePassword = &mustChangePassword
+	}
+	if d.HasChange("email") {
+		runSet = true
+		_, n := d.GetChange("email")
+		alterOptions.Set.ObjectProperties.Email = sdk.String(n.(string))
+	}
+	if d.HasChange("display_name") {
+		runSet = true
+		_, n := d.GetChange("display_name")
+		alterOptions.Set.ObjectProperties.DisplayName = sdk.String(n.(string))
+	}
+	if d.HasChange("first_name") {
+		runSet = true
+		_, n := d.GetChange("first_name")
+		alterOptions.Set.ObjectProperties.FirstName = sdk.String(n.(string))
+	}
+	if d.HasChange("last_name") {
+		runSet = true
+		_, n := d.GetChange("last_name")
+		alterOptions.Set.ObjectProperties.LastName = sdk.String(n.(string))
+	}
+	if runSet {
+		err := client.Users.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func DeleteUser(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("user", snowflake.NewUserBuilder)(d, meta)
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.Users.Drop(ctx, objectIdentifier)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }
