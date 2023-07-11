@@ -1,3 +1,3 @@
-data snowflake_database_roles "db_roles" {
+data "snowflake_database_roles" "db_roles" {
   database = "MYDB"
 }

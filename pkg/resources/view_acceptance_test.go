@@ -72,6 +72,79 @@ func TestAcc_ViewWithCopyGrants(t *testing.T) {
 	})
 }
 
+// Checks that copy_grants changes don't trigger a drop
+func TestAcc_ViewChangeCopyGrants(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	var createdOn string
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
+					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
+						createdOn = value
+						return nil
+					}),
+					checkBool("snowflake_view.test", "is_secure", true),
+				),
+			},
+			{
+				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("View was recreated")
+						}
+						return nil
+					}),
+					checkBool("snowflake_view.test", "is_secure", true),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	var createdOn string
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
+					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
+						createdOn = value
+						return nil
+					}),
+					checkBool("snowflake_view.test", "is_secure", true),
+				),
+			},
+			{
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("View was recreated")
+						}
+						return nil
+					}),
+					checkBool("snowflake_view.test", "is_secure", true),
+				),
+			},
+		},
+	})
+}
+
 func viewConfig(n string, copyGrants bool, q string) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {

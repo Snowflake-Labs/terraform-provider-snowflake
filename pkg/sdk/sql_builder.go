@@ -49,6 +49,22 @@ const (
 	SingleQuotes quoteModifier = "single_quotes"
 )
 
+// cf. https://docs.snowflake.com/en/sql-reference/data-types-text#single-quoted-string-constants
+var singleQuoteEscapes = []struct {
+	original    string
+	replacement string
+}{
+	{original: `\`, replacement: `\\`},
+	{original: `'`, replacement: `\'`},
+	{original: `"`, replacement: `\"`},
+	{original: "\b", replacement: `\b`},
+	{original: "\f", replacement: `\f`},
+	{original: "\n", replacement: `\n`},
+	{original: "\r", replacement: `\r`},
+	{original: "\t", replacement: `\t`},
+	{original: string(rune(0)), replacement: `\0`}, // NUL character
+}
+
 func (qm quoteModifier) Modify(v any) string {
 	s := fmt.Sprintf("%v", v)
 	switch qm {
@@ -58,10 +74,10 @@ func (qm quoteModifier) Modify(v any) string {
 		escapedString := strings.ReplaceAll(s, qm.String(), qm.String()+qm.String())
 		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
 	case SingleQuotes:
-		// https://docs.snowflake.com/en/sql-reference/data-types-text#single-quoted-string-constants
-		// replace all single quotes with \'
-		escapedString := strings.ReplaceAll(s, qm.String(), `\'`)
-		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
+		for _, pair := range singleQuoteEscapes {
+			s = strings.ReplaceAll(s, pair.original, pair.replacement)
+		}
+		return fmt.Sprintf(`%v%v%v`, qm.String(), s, qm.String())
 	default:
 		return s
 	}

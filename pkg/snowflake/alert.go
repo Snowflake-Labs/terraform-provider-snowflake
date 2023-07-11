@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -295,52 +297,47 @@ func ListAlerts(databaseName, schemaName, pattern string, db *sql.DB) ([]Alert, 
 	return dbs, nil
 }
 
-func WaitResumeAlert(db *sql.DB, name string, database string, schema string) error {
-	builder := NewAlertBuilder(name, database, schema)
-
+func WaitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
 	// try to resume the alert, and verify that it was resumed.
 	// if it's not resumed then try again up until a maximum of 5 times
 	for i := 0; i < 5; i++ {
-		q := builder.Resume()
-		if err := Exec(db, q); err != nil {
-			return fmt.Errorf("error resuming alert %v err = %w", name, err)
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error resuming alert %v err = %w", id.Name(), err)
 		}
 
-		q = builder.Show()
-		row := QueryRow(db, q)
-		t, err := ScanAlert(row)
+		alert, err := client.Alerts.ShowByID(ctx, id)
 		if err != nil {
 			return err
 		}
-		if t.IsEnabled() {
+		if alert.State == sdk.AlertStateStarted {
 			return nil
 		}
 		time.Sleep(10 * time.Second)
 	}
-	return fmt.Errorf("unable to resume alert %v after 5 attempts", name)
+	return fmt.Errorf("unable to resume alert %v after 5 attempts", id.Name())
 }
 
-func WaitSuspendAlert(db *sql.DB, name string, database string, schema string) error {
-	builder := NewAlertBuilder(name, database, schema)
+func WaitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionSuspend}
 
 	// try to suspend the alert, and verify that it was suspended.
 	// if it's not suspended then try again up until a maximum of 5 times
 	for i := 0; i < 5; i++ {
-		q := builder.Suspend()
-		if err := Exec(db, q); err != nil {
-			return fmt.Errorf("error suspending alert %v err = %w", name, err)
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error suspending alert %v err = %w", id.Name(), err)
 		}
 
-		q = builder.Show()
-		row := QueryRow(db, q)
-		alert, err := ScanAlert(row)
+		alert, err := client.Alerts.ShowByID(ctx, id)
 		if err != nil {
 			return err
 		}
-		if alert.IsSuspended() {
+		if alert.State == sdk.AlertStateSuspended {
 			return nil
 		}
 		time.Sleep(10 * time.Second)
 	}
-	return fmt.Errorf("unable to suspend alert %v after 5 attempts", name)
+	return fmt.Errorf("unable to suspend alert %v after 5 attempts", id.Name())
 }

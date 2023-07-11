@@ -80,12 +80,12 @@ var rowAccessPolicyGrantSchema = map[string]*schema.Schema{
 func RowAccessPolicyGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateRowAccessPolicyGrant,
-			Read:   ReadRowAccessPolicyGrant,
-			Delete: DeleteRowAccessPolicyGrant,
-			Update: UpdateRowAccessPolicyGrant,
-
-			Schema: rowAccessPolicyGrantSchema,
+			Create:             CreateRowAccessPolicyGrant,
+			Read:               ReadRowAccessPolicyGrant,
+			Delete:             DeleteRowAccessPolicyGrant,
+			Update:             UpdateRowAccessPolicyGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             rowAccessPolicyGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

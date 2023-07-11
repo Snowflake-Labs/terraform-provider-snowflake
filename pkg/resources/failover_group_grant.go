@@ -70,12 +70,11 @@ var failoverGroupGrantSchema = map[string]*schema.Schema{
 func FailoverGroupGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateFailoverGroupGrant,
-			Read:   ReadFailoverGroupGrant,
-			Delete: DeleteFailoverGroupGrant,
-			Update: UpdateFailoverGroupGrant,
-
-			Schema: failoverGroupGrantSchema,
+			Create:             CreateFailoverGroupGrant,
+			Read:               ReadFailoverGroupGrant,
+			Delete:             DeleteFailoverGroupGrant,
+			Update:             UpdateFailoverGroupGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.", Schema: failoverGroupGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
