@@ -166,7 +166,11 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	opts := &sdk.CreateUserOptions{}
+	opts := &sdk.CreateUserOptions{
+		ObjectProperties:  &sdk.UserObjectProperties{},
+		ObjectParameters:  &sdk.UserObjectParameters{},
+		SessionParameters: &sdk.SessionParameters{},
+	}
 	name := d.Get("name").(string)
 	ctx := context.Background()
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
@@ -182,10 +186,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		opts.ObjectProperties.Password = sdk.String(password.(string))
 	}
 	if v, ok := d.GetOk("disabled"); ok {
-		disabled, err := strconv.ParseBool(v.(string))
-		if err != nil {
-			return err
-		}
+		disabled := v.(bool)
 		opts.ObjectProperties.Disable = &disabled
 	}
 	if defaultWarehouse, ok := d.GetOk("default_warehouse"); ok {
@@ -193,6 +194,9 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	}
 	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
 		opts.ObjectProperties.DefaultNamespace = sdk.String(defaultNamespace.(string))
+	}
+	if displayName, ok := d.GetOk("display_name"); ok {
+		opts.ObjectProperties.DisplayName = sdk.String(displayName.(string))
 	}
 	if defaultRole, ok := d.GetOk("default_role"); ok {
 		opts.ObjectProperties.DefaultRole = sdk.String(defaultRole.(string))
@@ -208,14 +212,11 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
 	}
-	if rsaPublicKey2, ok := d.GetOk("rsa_public_key2"); ok {
+	if rsaPublicKey2, ok := d.GetOk("rsa_public_key_2"); ok {
 		opts.ObjectProperties.RSAPublicKey2 = sdk.String(rsaPublicKey2.(string))
 	}
 	if v, ok := d.GetOk("must_change_password"); ok {
-		mustChangePassword, err := strconv.ParseBool(v.(string))
-		if err != nil {
-			return err
-		}
+		mustChangePassword := v.(bool)
 		opts.ObjectProperties.MustChangePassword = &mustChangePassword
 	}
 	if email, ok := d.GetOk("email"); ok {
@@ -253,49 +254,73 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err = d.Set("name", user.Name.Value); err != nil {
-		return err
+	if user.Name != nil {
+		if err = d.Set("name", user.Name.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("comment", user.Comment.Value); err != nil {
-		return err
+	if user.Comment != nil {
+		if err = d.Set("comment", user.Comment.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("login_name", user.LoginName.Value); err != nil {
-		return err
+	if user.LoginName != nil {
+		if err = d.Set("login_name", user.LoginName.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("disabled", user.Disabled); err != nil {
-		return err
+	if user.Disabled != nil {
+		if err = d.Set("disabled", user.Disabled.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("default_role", user.DefaultRole.Value); err != nil {
-		return err
+	if user.DefaultRole != nil {
+		if err = d.Set("default_role", user.DefaultRole.Value); err != nil {
+			return err
+		}
 	}
 
 	var defaultSecondaryRoles []string
-	if len(user.DefaultSecondaryRoles.Value) > 0 {
+	if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
 		defaultSecondaryRoles = strings.Split(user.DefaultSecondaryRoles.Value, ",")
 	}
 	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 		return err
 	}
-	if err = d.Set("default_namespace", user.DefaultNamespace.Value); err != nil {
-		return err
+	if user.DefaultNamespace != nil {
+		if err = d.Set("default_namespace", user.DefaultNamespace.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("default_warehouse", user.DefaultWarehouse.Value); err != nil {
-		return err
+	if user.DefaultWarehouse != nil {
+		if err = d.Set("default_warehouse", user.DefaultWarehouse.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
-		return err
+	if user.RsaPublicKeyFp != nil {
+		if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("email", user.Email.Value); err != nil {
-		return err
+	if user.Email != nil {
+		if err = d.Set("email", user.Email.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("display_name", user.DisplayName.Value); err != nil {
-		return err
+	if user.DisplayName != nil {
+		if err = d.Set("display_name", user.DisplayName.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("first_name", user.FirstName.Value); err != nil {
-		return err
+	if user.FirstName != nil {
+		if err = d.Set("first_name", user.FirstName.Value); err != nil {
+			return err
+		}
 	}
-	if err = d.Set("last_name", user.LastName.Value); err != nil {
-		return err
+	if user.LastName != nil {
+		if err = d.Set("last_name", user.LastName.Value); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -346,10 +371,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("disabled") {
 		runSet = true
 		_, n := d.GetChange("disabled")
-		disabled, err := strconv.ParseBool(n.(string))
-		if err != nil {
-			return err
-		}
+		disabled := n.(bool)
 		alterOptions.Set.ObjectProperties.Disable = &disabled
 	}
 	if d.HasChange("default_warehouse") {

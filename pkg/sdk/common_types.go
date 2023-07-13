@@ -125,9 +125,21 @@ func (row *propertyRow) toIntProperty() *IntProperty {
 }
 
 func (row *propertyRow) toBoolProperty() *BoolProperty {
+	var value bool
+	if row.Value != "" {
+		value = toBool(row.Value)
+	} else {
+		value = false
+	}
+	var defaultValue bool
+	if row.DefaultValue != "" {
+		defaultValue = toBool(row.DefaultValue)
+	} else {
+		defaultValue = false
+	}
 	return &BoolProperty{
-		Value:        toBool(row.Value),
-		DefaultValue: toBool(row.DefaultValue),
+		Value:        value,
+		DefaultValue: defaultValue,
 		Description:  row.Description,
 	}
 }
