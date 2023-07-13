@@ -117,6 +117,7 @@ func TestUserRead(t *testing.T) {
 		r.Nil(err2)
 	})
 }
+
 func TestUserDelete(t *testing.T) {
 	r := require.New(t)
 
