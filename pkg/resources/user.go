@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 var userProperties = []string{
@@ -245,7 +245,7 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	user, err := client.Users.Describe(ctx, objectIdentifier)
 	if err != nil {
-		if snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "User") {
+		if errors.Is(err, sql.ErrNoRows) {
 			// If not found, mark resource to be removed from state file during apply or refresh
 			log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
 			d.SetId("")
