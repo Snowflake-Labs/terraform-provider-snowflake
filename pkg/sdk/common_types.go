@@ -81,7 +81,6 @@ type BoolProperty struct {
 	Description  string
 }
 
-
 type propertyRow struct {
 	Property     string `db:"property"`
 	Value        string `db:"value"`

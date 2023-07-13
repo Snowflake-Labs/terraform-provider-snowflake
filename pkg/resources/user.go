@@ -163,7 +163,6 @@ func User() *schema.Resource {
 }
 
 func CreateUser(d *schema.ResourceData, meta interface{}) error {
-
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 

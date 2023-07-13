@@ -584,7 +584,6 @@ func (v sqlIdentifierClause) String() string {
 	// object identifiers need to be fully qualified
 	if _, ok := v.value.(ObjectIdentifier); ok {
 		name = v.value.(ObjectIdentifier).FullyQualifiedName()
-		fmt.Println(name)
 	} else {
 		name = DoubleQuotes.Modify(v.value.Name())
 	}

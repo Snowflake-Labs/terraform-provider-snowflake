@@ -96,7 +96,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 		err := client.PasswordPolicies.Create(ctx, id, &CreatePasswordPolicyOptions{
 			OrReplace:                 Bool(true),
 			PasswordMinLength:         Int(10),
-			// PasswordMaxLength:         Int(20),
+			PasswordMaxLength:         Int(20),
 			PasswordMinUpperCaseChars: Int(1),
 			PasswordMinLowerCaseChars: Int(1),
 			PasswordMinNumericChars:   Int(1),

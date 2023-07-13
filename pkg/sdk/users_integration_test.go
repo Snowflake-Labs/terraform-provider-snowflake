@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODOPBPLUMBA
-// ogarnij ten temat z fullu qualified name. Wydaje sie, ze ten user nie mogl dzialac poprawnie wczesniej
-// wez napisz testy integratycjne i to potwierdz, tam bedzie chbya uzyc tego qualified name tylko jakos te quoty wyciac chyba i tyle
 func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -82,7 +79,6 @@ func TestInt_UsersShow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(users))
 	})
-
 }
 
 func TestInt_UserCreate(t *testing.T) {
@@ -207,7 +203,6 @@ func TestInt_UserCreate(t *testing.T) {
 		assert.Equal(t, 1, len(user))
 		assert.Equal(t, id.name, user[0].Name)
 	})
-
 }
 
 func TestInt_UserDescribe(t *testing.T) {

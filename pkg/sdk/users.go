@@ -175,7 +175,6 @@ func (opts *CreateUserOptions) validate() error {
 }
 
 func (v *users) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error {
-
 	if opts == nil {
 		opts = &CreateUserOptions{}
 	}
@@ -337,7 +336,7 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 type UserSet struct {
 	PasswordPolicy    *string               `ddl:"parameter" sql:"PASSWORD POLICY"`
 	SessionPolicy     *string               `ddl:"parameter" sql:"SESSION POLICY"`
-	Tags              []TagAssociation     `ddl:"keyword,parentheses" sql:"TAG"`
+	Tags              []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 	ObjectProperties  *UserObjectProperties `ddl:"keyword"`
 	ObjectParameters  *UserObjectParameters `ddl:"keyword"`
 	SessionParameters *SessionParameters    `ddl:"keyword"`

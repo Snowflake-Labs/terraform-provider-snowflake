@@ -34,7 +34,6 @@ type Client struct {
 	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
-	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
@@ -128,7 +127,6 @@ func (c *Client) initialize() {
 	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
-	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}

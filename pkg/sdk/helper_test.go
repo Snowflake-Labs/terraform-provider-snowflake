@@ -553,6 +553,7 @@ func createUserWithName(t *testing.T, client *Client, name string) (*User, func(
 	id := NewAccountObjectIdentifier(name)
 	return createUserWithOptions(t, client, id, &CreateUserOptions{})
 }
+
 func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateUserOptions) (*User, func()) {
 	t.Helper()
 	ctx := context.Background()

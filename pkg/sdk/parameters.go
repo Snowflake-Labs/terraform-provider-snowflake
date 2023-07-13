@@ -253,13 +253,6 @@ const (
 	BinaryInputFormatUTF8   BinaryInputFormat = "UTF8"
 )
 
-type BinaryOutputFormat string
-
-const (
-	BinaryOutputFormatHex    BinaryOutputFormat = "HEX"
-	BinaryOutputFormatBase64 BinaryOutputFormat = "BASE64"
-)
-
 type TransactionDefaultIsolationLevel string
 
 const (
@@ -276,8 +269,8 @@ const (
 type SessionParameters struct {
 	AbortDetachedQuery               *bool                             `ddl:"parameter" sql:"ABORT_DETACHED_QUERY"`
 	Autocommit                       *bool                             `ddl:"parameter" sql:"AUTOCOMMIT"`
-	BinaryInputFormat                *BinaryInputFormat                `ddl:"parameter,single_quotes" sql:"BINARY_INPUT_FORMAT"`
-	BinaryOutputFormat               *BinaryOutputFormat               `ddl:"parameter,single_quotes" sql:"BINARY_OUTPUT_FORMAT"`
+	BinaryInputFormat                *string                           `ddl:"parameter,single_quotes" sql:"BINARY_INPUT_FORMAT"`
+	BinaryOutputFormat               *BinaryInputFormat                `ddl:"parameter,single_quotes" sql:"BINARY_OUTPUT_FORMAT"`
 	DateInputFormat                  *string                           `ddl:"parameter,single_quotes" sql:"DATE_INPUT_FORMAT"`
 	DateOutputFormat                 *string                           `ddl:"parameter,single_quotes" sql:"DATE_OUTPUT_FORMAT"`
 	ErrorOnNondeterministicMerge     *bool                             `ddl:"parameter" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
