@@ -21,12 +21,10 @@ func TestUserCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		tagName := "TAG1"
-		tagValue := randomString(t)
 		tags := []TagAssociation{
 			{
-				Name:  NewAccountObjectIdentifier(tagName),
-				Value: tagValue,
+				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Value: "v1",
 			},
 		}
 		password := randomString(t)
@@ -52,7 +50,7 @@ func TestUserCreate(t *testing.T) {
 
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = %s ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (TAG1 = '%s')`, id.FullyQualifiedName(), password, loginName, tagValue)
+		expected := fmt.Sprintf(`CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG ("db"."schema"."tag1" = 'v1')`, id.FullyQualifiedName(), password, loginName)
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -95,12 +93,12 @@ func TestUserAlter(t *testing.T) {
 	t.Run("with setting tags", func(t *testing.T) {
 		tags := []TagAssociation{
 			{
-				Name:  NewAccountObjectIdentifier("USER_TAG1"),
-				Value: randomString(t),
+				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Value: "v1",
 			},
 			{
-				Name:  NewAccountObjectIdentifier("USER_TAG2"),
-				Value: randomString(t),
+				Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+				Value: "v2",
 			},
 		}
 		opts := &AlterUserOptions{
@@ -111,7 +109,7 @@ func TestUserAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER USER %s SET TAG (%s = '%s', %s = '%s')", id.FullyQualifiedName(), tags[0].Name, tags[0].Value, tags[1].Name, tags[1].Value)
+		expected := fmt.Sprintf(`ALTER USER %s SET TAG ("db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2')`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with setting properties and parameters", func(t *testing.T) {

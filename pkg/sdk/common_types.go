@@ -111,9 +111,9 @@ func (row *propertyRow) toIntProperty() *IntProperty {
 	} else {
 		value = nil
 	}
-	v, err = strconv.Atoi(row.DefaultValue)
+	dv, err := strconv.Atoi(row.DefaultValue)
 	if err == nil {
-		defaultValue = &v
+		defaultValue = &dv
 	} else {
 		defaultValue = nil
 	}

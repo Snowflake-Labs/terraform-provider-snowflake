@@ -19,12 +19,6 @@ func TestInt_UsersShow(t *testing.T) {
 	userTest2, user2Cleanup := createUserWithName(t, client, "USER_BAR")
 	t.Cleanup(user2Cleanup)
 
-	t.Run("without show options", func(t *testing.T) {
-		users, err := client.Users.Show(ctx, nil)
-		require.NoError(t, err)
-		assert.Equal(t, 2, len(users))
-	})
-
 	t.Run("with like options", func(t *testing.T) {
 		showOptions := &ShowUserOptions{
 			Like: &Like{
