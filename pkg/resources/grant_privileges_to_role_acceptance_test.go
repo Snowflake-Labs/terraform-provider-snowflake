@@ -833,3 +833,66 @@ func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, privileg
 	}
 	`, name, name, name, privilegesString)
 }
+
+func TestAccGrantPrivilegesToRole_multipleResources(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: grantPrivilegesToRole_multipleResources(name, []string{"CREATE ACCOUNT", "CREATE ROLE"}, []string{"IMPORT SHARE", "MANAGE GRANTS"}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g1", "role_name", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g1", "privileges.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g1", "privileges.0", "CREATE ACCOUNT"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g1", "privileges.1", "CREATE ROLE"),
+
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g2", "role_name", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g2", "privileges.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g2", "privileges.0", "IMPORT SHARE"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g2", "privileges.1", "MANAGE GRANTS"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_grant_privileges_to_role.g",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func grantPrivilegesToRole_multipleResources(name string, privileges1, privileges2 []string) string {
+	doubleQuotePrivileges1 := make([]string, len(privileges1))
+	for i, p := range privileges1 {
+		doubleQuotePrivileges1[i] = fmt.Sprintf(`"%v"`, p)
+	}
+	privilegesString1 := strings.Join(doubleQuotePrivileges1, ",")
+
+	doubleQuotePrivileges2 := make([]string, len(privileges2))
+	for i, p := range privileges2 {
+		doubleQuotePrivileges2[i] = fmt.Sprintf(`"%v"`, p)
+	}
+	privilegesString2 := strings.Join(doubleQuotePrivileges2, ",")
+
+	return fmt.Sprintf(`
+	resource "snowflake_role" "r" {
+		name = "%v"
+	}
+
+	resource "snowflake_grant_privileges_to_role" "g1" {
+		role_name  = snowflake_role.r.name
+		privileges = [%s]
+		on_account = true
+	}
+
+	resource "snowflake_grant_privileges_to_role" "g2" {
+		role_name  = snowflake_role.r.name
+		privileges = [%s]
+		on_account = true
+	}
+	`, name, privilegesString1, privilegesString2)
+}
