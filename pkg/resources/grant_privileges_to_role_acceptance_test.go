@@ -857,7 +857,12 @@ func TestAccGrantPrivilegesToRole_multipleResources(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_grant_privileges_to_role.g",
+				ResourceName:      "snowflake_grant_privileges_to_role.g1",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "snowflake_grant_privileges_to_role.g2",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
