@@ -204,3 +204,43 @@ func TestFutureFileFormatGrant(t *testing.T) {
 	revoke = fvgd.Role("bob").Revoke("USAGE")
 	b.Equal([]string{`REVOKE USAGE ON FUTURE FILE FORMATS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
 }
+
+func TestFutureTaskGrant(t *testing.T) {
+	r := require.New(t)
+	fvg := snowflake.FutureTaskGrant("test_db", "PUBLIC")
+	r.Equal("PUBLIC", fvg.Name())
+
+	s := fvg.Show()
+	r.Equal(`SHOW FUTURE GRANTS IN SCHEMA "test_db"."PUBLIC"`, s)
+
+	s = fvg.Role("bob").Grant("USAGE", false)
+	r.Equal(`GRANT USAGE ON FUTURE TASKS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
+
+	revoke := fvg.Role("bob").Revoke("USAGE")
+	r.Equal([]string{`REVOKE USAGE ON FUTURE TASKS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
+
+	s = fvg.Role("bob").Grant("OWNERSHIP", false)
+	r.Equal(`GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA "test_db"."PUBLIC" TO ROLE "bob"`, s)
+
+	revoke = fvg.Role("bob").RevokeOwnership("OWNERSHIP")
+	r.Equal([]string{`REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA "test_db"."PUBLIC" FROM ROLE "bob"`}, revoke)
+
+	b := require.New(t)
+	fvgd := snowflake.FutureTaskGrant("test_db", "")
+	b.Equal("test_db", fvgd.Name())
+
+	s = fvgd.Show()
+	b.Equal(`SHOW FUTURE GRANTS IN DATABASE "test_db"`, s)
+
+	s = fvgd.Role("bob").Grant("USAGE", false)
+	b.Equal(`GRANT USAGE ON FUTURE TASKS IN DATABASE "test_db" TO ROLE "bob"`, s)
+
+	revoke = fvgd.Role("bob").Revoke("USAGE")
+	b.Equal([]string{`REVOKE USAGE ON FUTURE TASKS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
+
+	s = fvgd.Role("bob").Grant("OWNERSHIP", false)
+	b.Equal(`GRANT OWNERSHIP ON FUTURE TASKS IN DATABASE "test_db" TO ROLE "bob"`, s)
+
+	revoke = fvgd.Role("bob").RevokeOwnership("OWNERSHIP")
+	b.Equal([]string{`REVOKE OWNERSHIP ON FUTURE TASKS IN DATABASE "test_db" FROM ROLE "bob"`}, revoke)
+}

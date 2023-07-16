@@ -257,7 +257,7 @@ func (fge *FutureGrantExecutable) Revoke(p string) []string {
 func (fge *FutureGrantExecutable) RevokeOwnership(r string) []string {
 	// Note: has no effect for ALL GRANTS
 	return []string{
-		fmt.Sprintf(`REVOKE OWNERSHIP ON ALL %vS IN %v %v FROM ROLE "%v"`,
+		fmt.Sprintf(`REVOKE OWNERSHIP ON FUTURE %vS IN %v %v FROM ROLE "%v"`,
 			fge.futureGrantType, fge.futureGrantTarget, fge.grantName, fge.granteeName),
 	}
 }
