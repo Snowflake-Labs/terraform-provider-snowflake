@@ -60,7 +60,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeCSV, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 		assert.Equal(t, &CSVCompressionBz2, result.Options.CSVCompression)
 		assert.Equal(t, "S", *result.Options.CSVRecordDelimiter) // o123 == 83 == 'S' (ASCII)
 		assert.Equal(t, "B", *result.Options.CSVFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
@@ -143,7 +143,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeJSON, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, JSONCompressionBrotli, *result.Options.JSONCompression)
 		assert.Equal(t, "a", *result.Options.JSONDateFormat)
@@ -205,7 +205,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeAvro, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, AvroCompressionGzip, *result.Options.AvroCompression)
 		assert.Equal(t, true, *result.Options.AvroTrimSpace)
@@ -246,7 +246,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeORC, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, true, *result.Options.ORCTrimSpace)
 		assert.Equal(t, true, *result.Options.ORCReplaceInvalidCharacters)
@@ -287,7 +287,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeParquet, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, ParquetCompressionLzo, *result.Options.ParquetCompression)
 		assert.Equal(t, true, *result.Options.ParquetBinaryAsText)
@@ -334,7 +334,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, FileFormatTypeXML, result.Type)
 		assert.Equal(t, client.config.Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, "", result.OwnerRoleType)
+		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, XMLCompressionDeflate, *result.Options.XMLCompression)
 		assert.Equal(t, true, *result.Options.XMLIgnoreUTF8Errors)
