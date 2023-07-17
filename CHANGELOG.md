@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.68.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.1...v0.68.2) (2023-07-17)
+
+
+### BugFixes
+
+* support multiple grant_privilege_to_role resources on the same role ([#1953](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1953)) ([dfdd166](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dfdd166e20347deb6f464a5bbbe9c345287fcd6b))
+
 ## [0.68.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.0...v0.68.1) (2023-07-07)
 
 
