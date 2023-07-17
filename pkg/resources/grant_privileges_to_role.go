@@ -568,7 +568,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := readAccountRoleGrantPrivileges(ctx, client, grantOn, resourceID.Future, &opts, d)
+	err := readAccountRoleGrantPrivileges(ctx, client, grantOn, resourceID, &opts, d)
 	if err != nil {
 		return err
 	}
@@ -820,7 +820,7 @@ func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onA
 	return nil
 }
 
-func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, onFuture bool, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
+func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToAccountRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("error retrieving grants for account role: %w", err)
@@ -831,10 +831,15 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 	roleName := d.Get("role_name").(string)
 
 	for _, grant := range grants {
+		// Only consider privileges that are already present in the ID so we
+		// don't delete privileges managed by other resources.
+		if !slices.Contains(id.Privileges, grant.Privilege) {
+			continue
+		}
 		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == roleName {
 			// future grants do not have grantedBy, only current grants do. If grantedby
 			// is an empty string it means the grant could not have been created by terraform
-			if !onFuture && grant.GrantedBy.Name() == "" {
+			if !id.Future && grant.GrantedBy.Name() == "" {
 				continue
 			}
 			if grantedOn == grant.GrantedOn {
