@@ -3,13 +3,16 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
 	CurrentRole(ctx context.Context) (string, error)
+	CurrentSecondaryRoles(ctx context.Context) (*CurrentSecondaryRoles, error)
 	CurrentRegion(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
 	CurrentUser(ctx context.Context) (string, error)
@@ -47,6 +50,40 @@ func (c *contextFunctions) CurrentRole(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return s.CurrentRole, nil
+}
+
+type CurrentSecondaryRoles struct {
+	Roles []string
+	Value string
+}
+
+func (c *contextFunctions) CurrentSecondaryRoles(ctx context.Context) (*CurrentSecondaryRoles, error) {
+	s := &struct {
+		CurrentRole string `db:"CURRENT_ROLES"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_SECONDARY_ROLES() as CURRENT_ROLES")
+	if err != nil {
+		return nil, err
+	}
+
+	jsonRoles := &struct {
+		Roles string
+		Value string
+	}{}
+	err = json.Unmarshal([]byte(s.CurrentRole), jsonRoles)
+	if err != nil {
+		return nil, err
+	}
+
+	var roles []string
+	if len(jsonRoles.Roles) > 0 {
+		roles = strings.Split(jsonRoles.Roles, ",")
+	}
+	secondaryRoles := &CurrentSecondaryRoles{
+		Roles: roles,
+		Value: jsonRoles.Value,
+	}
+	return secondaryRoles, nil
 }
 
 func (c *contextFunctions) CurrentRegion(ctx context.Context) (string, error) {
