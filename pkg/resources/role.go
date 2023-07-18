@@ -1,29 +1,33 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	RoleNameKey    = "name"
+	RoleCommentKey = "comment"
+	RoleTagKey     = "tag"
+)
+
 var roleSchema = map[string]*schema.Schema{
-	"name": {
+	RoleNameKey: {
 		Type:     schema.TypeString,
 		Required: true,
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
 	},
-	"comment": {
+	RoleCommentKey: {
 		Type:     schema.TypeString,
 		Optional: true,
-		// TODO validation
 	},
-	"tag": tagReferenceSchema,
+	RoleTagKey: tagReferenceSchema,
 }
 
 func Role() *schema.Resource {
@@ -41,99 +45,129 @@ func Role() *schema.Resource {
 }
 
 func CreateRole(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
 	db := meta.(*sql.DB)
-	builder := snowflake.NewRoleBuilder(db, name)
-	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	ctx := context.Background()
+
+	tagList := d.Get(RoleTagKey).([]interface{})
+	tagAssociations := make([]sdk.TagAssociation, len(tagList))
+	for i, tag := range tagList {
+		t := tag.(map[string]interface{})
+		tagAssociations[i] = sdk.TagAssociation{
+			Name:  sdk.NewAccountObjectIdentifier(t["name"].(string)),
+			Value: t["value"].(string),
+		}
 	}
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
-	}
-	err := builder.Create()
+
+	err := client.Roles.Create(ctx, objectIdentifier, &sdk.RoleCreateOptions{
+		Comment: sdk.String(d.Get(RoleCommentKey).(string)),
+		Tag:     tagAssociations,
+	})
 	if err != nil {
 		return err
 	}
-	d.SetId(name)
+
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+
+	tags := make([]interface{}, len(tagAssociations))
+	for i, t := range tagAssociations {
+		tags[i] = map[string]interface{}{
+			"name":  t.Name,
+			"value": t.Value,
+		}
+	}
+
 	return ReadRole(d, meta)
 }
 
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
-	// If the name is not set (such as during import) then use the id
-	name := d.Get("name").(string)
-	if name == "" {
-		name = id
-	}
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	ctx := context.Background()
 
-	builder := snowflake.NewRoleBuilder(db, name)
-	role, err := builder.Show()
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[WARN] role (%s) not found", name)
+	role, err := client.Roles.ShowByID(ctx, objectIdentifier)
+	if err != nil {
+		// If not found, mark resource to be removed from state file during apply or refresh
+		log.Printf("[DEBUG] role (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
-	if err := d.Set("name", role.Name.String); err != nil {
-		return err
-	}
-	if err := d.Set("comment", role.Comment.String); err != nil {
-		return err
-	}
-	return nil
+
+	return errors.Join(
+		d.Set(RoleNameKey, role.Name),
+		d.Set(RoleCommentKey, role.Comment),
+	)
 }
 
 func UpdateRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.NewRoleBuilder(db, name)
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	ctx := context.Background()
 
-	if d.HasChange("name") {
-		o, n := d.GetChange("name")
-		builder.WithName(o.(string))
-		err := builder.Rename(n.(string))
+	if d.HasChange(RoleNameKey) {
+		oldName, newName := d.GetChange(RoleNameKey)
+		err := client.Roles.Alter(ctx, objectIdentifier, &sdk.RoleAlterOptions{
+			RenameTo: sdk.NewAccountObjectIdentifier(newName.(string)),
+		})
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to update role's name from %v to %v", oldName, newName)
 		}
-		builder.WithName(n.(string))
 	}
 
-	if d.HasChange("comment") {
-		o, n := d.GetChange("comment")
-		if n == nil || n.(string) == "" {
-			builder.WithComment(o.(string))
-			err := builder.UnsetComment()
-			if err != nil {
-				return err
-			}
+	if d.HasChange(RoleCommentKey) {
+		oldComment, newComment := d.GetChange(RoleCommentKey)
+		var err error
+		if newComment == nil || len(newComment.(string)) == 0 {
+			err = client.Roles.Alter(ctx, objectIdentifier, &sdk.RoleAlterOptions{
+				Unset: &sdk.RoleUnset{
+					Comment: sdk.Bool(true),
+				},
+			})
 		} else {
-			err := builder.SetComment(n.(string))
-			if err != nil {
-				return err
-			}
+			err = client.Roles.Alter(ctx, objectIdentifier, &sdk.RoleAlterOptions{
+				Set: &sdk.RoleSet{
+					Comment: sdk.String(newComment.(string)),
+				},
+			})
+		}
+		if err != nil {
+			return fmt.Errorf("Failed to update role's comment from %v to %v", oldComment, newComment)
 		}
 	}
 
-	if d.HasChange("tag") {
-		o, n := d.GetChange("tag")
-		removed, added, changed := getTags(o).diffs(getTags(n))
-		for _, tA := range removed {
-			err := builder.UnsetTag(tA.toSnowflakeTagValue())
+	if d.HasChange(RoleTagKey) {
+		oldTags, newTags := d.GetChange(RoleTagKey)
+		removed, added, changed := getTags(oldTags).diffs(getTags(newTags))
+
+		toSet := make([]tag, len(added)+len(changed))
+		copy(toSet, added)
+		copy(toSet[len(added):], changed)
+
+		for _, tag := range removed {
+			err := client.Roles.Alter(ctx, objectIdentifier, &sdk.RoleAlterOptions{
+				Unset: &sdk.RoleUnset{
+					Tag: []sdk.ObjectIdentifier{sdk.NewAccountObjectIdentifier(tag.name)},
+				},
+			})
 			if err != nil {
 				return err
 			}
 		}
-		for _, tA := range added {
-			err := builder.SetTag(tA.toSnowflakeTagValue())
-			if err != nil {
-				return err
-			}
-		}
-		for _, tA := range changed {
-			err := builder.ChangeTag(tA.toSnowflakeTagValue())
+
+		for _, tag := range toSet {
+			err := client.Roles.Alter(ctx, objectIdentifier, &sdk.RoleAlterOptions{
+				Set: &sdk.RoleSet{
+					Tag: []sdk.TagAssociation{
+						{
+							Name:  sdk.NewAccountObjectIdentifier(tag.name),
+							Value: tag.value,
+						},
+					},
+				},
+			})
 			if err != nil {
 				return err
 			}
@@ -145,8 +179,15 @@ func UpdateRole(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.NewRoleBuilder(db, name)
-	err := builder.Drop()
-	return err
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	ctx := context.Background()
+
+	err := client.Roles.Drop(ctx, objectIdentifier, nil)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }

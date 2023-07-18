@@ -132,9 +132,6 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return err
-	}
 
 	if err := d.Set("enabled", alert.State == sdk.AlertStateStarted); err != nil {
 		return err

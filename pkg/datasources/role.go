@@ -1,24 +1,30 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
-	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	RoleNameKey    = "name"
+	RoleCommentKey = "comment"
+)
+
 var roleSchema = map[string]*schema.Schema{
-	"name": {
+	RoleNameKey: {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The role for which to return metadata.",
 	},
-	"comment": {
+	RoleCommentKey: {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "The comment on the role",
+		Description: "The comment on the role.",
 	},
 }
 
@@ -36,24 +42,19 @@ func Role() *schema.Resource {
 // ReadRole Reads the database metadata information.
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := d.Get("name").(string)
-	role, err := snowflake.NewRoleBuilder(db, roleName).Show()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] role (%s) not found", roleName)
-		d.SetId("")
-		return nil
-	}
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	role, err := client.Roles.ShowByID(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(role.Name.String)
-	if err := d.Set("name", role.Name.String); err != nil {
-		return err
-	}
-	if err := d.Set("comment", role.Comment.String); err != nil {
-		return err
-	}
-	return nil
+	d.SetId(role.Name)
+
+	return errors.Join(
+		d.Set(RoleNameKey, role.Name),
+		d.Set(RoleCommentKey, role.Comment),
+	)
 }

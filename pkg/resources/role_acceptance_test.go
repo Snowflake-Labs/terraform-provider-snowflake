@@ -51,11 +51,10 @@ func TestAcc_Role(t *testing.T) {
 }
 
 func roleBasicConfig(name, comment string) string {
-	s := `
-resource "snowflake_role" "role" {
-	name = "%s"
-	comment = "%s"
-}
-`
-	return fmt.Sprintf(s, name, comment)
+	return fmt.Sprintf(`
+		resource "snowflake_role" "role" {
+			name = "%s"
+			comment = "%s"
+		}
+	`, name, comment)
 }
