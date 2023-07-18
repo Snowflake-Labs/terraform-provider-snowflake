@@ -19,6 +19,8 @@ type Sessions interface {
 	UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error
 	UseDatabase(ctx context.Context, database AccountObjectIdentifier) error
 	UseSchema(ctx context.Context, schema SchemaIdentifier) error
+	UseRole(ctx context.Context, role AccountObjectIdentifier) error
+	UseSecondaryRoles(ctx context.Context, opt SecondaryRoleOption) error
 }
 
 var _ Sessions = (*sessions)(nil)
@@ -283,6 +285,25 @@ func (v *sessions) UseDatabase(ctx context.Context, database AccountObjectIdenti
 
 func (v *sessions) UseSchema(ctx context.Context, schema SchemaIdentifier) error {
 	sql := fmt.Sprintf(`USE SCHEMA %s`, schema.FullyQualifiedName())
+	_, err := v.client.exec(ctx, sql)
+	return err
+}
+
+func (v *sessions) UseRole(ctx context.Context, role AccountObjectIdentifier) error {
+	sql := fmt.Sprintf(`USE ROLE %s`, role.FullyQualifiedName())
+	_, err := v.client.exec(ctx, sql)
+	return err
+}
+
+type SecondaryRoleOption string
+
+const (
+	SecondaryRolesAll  SecondaryRoleOption = "ALL"
+	SecondaryRolesNone SecondaryRoleOption = "NONE"
+)
+
+func (v *sessions) UseSecondaryRoles(ctx context.Context, opt SecondaryRoleOption) error {
+	sql := fmt.Sprintf(`USE SECONDARY ROLES %s`, opt)
 	_, err := v.client.exec(ctx, sql)
 	return err
 }
