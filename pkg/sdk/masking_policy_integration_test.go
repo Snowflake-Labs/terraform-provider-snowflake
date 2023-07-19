@@ -409,7 +409,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 		id := maskingPolicy.ID()
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)
-		_, err = client.PasswordPolicies.Describe(ctx, id)
+		_, err = client.MaskingPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 

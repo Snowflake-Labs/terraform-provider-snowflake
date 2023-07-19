@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
@@ -197,7 +198,25 @@ func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjec
 
 func createResourceMonitor(t *testing.T, client *Client) (*ResourceMonitor, func()) {
 	t.Helper()
-	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{})
+	return createResourceMonitorWithOptions(t, client, &CreateResourceMonitorOptions{
+		With: &ResourceMonitorWith{
+			CreditQuota: Pointer(100),
+			Triggers: []TriggerDefinition{
+				{
+					Threshold:     100,
+					TriggerAction: TriggerActionSuspend,
+				},
+				{
+					Threshold:     70,
+					TriggerAction: TriggerActionSuspendImmediate,
+				},
+				{
+					Threshold:     90,
+					TriggerAction: TriggerActionNotify,
+				},
+			},
+		},
+	})
 }
 
 func createResourceMonitorWithOptions(t *testing.T, client *Client, opts *CreateResourceMonitorOptions) (*ResourceMonitor, func()) {
@@ -539,4 +558,14 @@ func createAlert(t *testing.T, client *Client, database *Database, schema *Schem
 	condition := "SELECT 1"
 	action := "SELECT 1"
 	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
+}
+
+func ParseTimestampWithOffset(s string) (*time.Time, error) {
+	t, err := time.Parse("2006-01-02T15:04:05-07:00", s)
+	if err != nil {
+		return nil, err
+	}
+	_, offset := t.Zone()
+	adjustedTime := t.Add(-time.Duration(offset) * time.Second)
+	return &adjustedTime, nil
 }
