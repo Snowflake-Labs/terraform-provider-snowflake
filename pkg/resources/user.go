@@ -202,7 +202,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		opts.ObjectProperties.DefaultRole = sdk.String(defaultRole.(string))
 	}
 	if v, ok := d.GetOk("default_secondary_roles"); ok {
-		roles := expandStringList(v.([]interface{}))
+		roles := expandStringList(v.(*schema.Set).List())
 		secondaryRoles := []sdk.SecondaryRole{}
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
