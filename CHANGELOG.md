@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.68.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.1...v0.68.2) (2023-07-17)
+
+
+### BugFixes
+
+* support multiple grant_privilege_to_role resources on the same role ([#1953](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1953)) ([dfdd166](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dfdd166e20347deb6f464a5bbbe9c345287fcd6b))
+* supress warehouse size changes ([#1889](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889) ([daf2cc2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/daf2cc289bab892e5a0954f852a72a9f99e1b0c1))
+  
 ## [0.68.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.0...v0.68.1) (2023-07-07)
 
 
