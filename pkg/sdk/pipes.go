@@ -9,6 +9,8 @@ type Pipes interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *PipeCreateOptions) error
 	// Alter modifies an existing pipe.
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *PipeAlterOptions) error
+	// Drop removes a pipe.
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *PipeDropOptions) error
 }
 
 // PipeCreateOptions contains options for creating a pipe.
@@ -70,4 +72,12 @@ type PipeUnset struct {
 type PipeRefresh struct {
 	Prefix        *string `ddl:"parameter,single_quotes" sql:"PREFIX"`
 	ModifiedAfter *string `ddl:"parameter,single_quotes" sql:"MODIFIED_AFTER"`
+}
+
+// PipeDropOptions contains options for dropping a pipe.
+type PipeDropOptions struct {
+	drop     bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
+	pipe     bool                    `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }

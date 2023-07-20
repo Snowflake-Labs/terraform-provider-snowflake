@@ -244,3 +244,21 @@ func TestPipesAlter(t *testing.T) {
 		assertSqlEquals(t, opts, `ALTER PIPE IF EXISTS "existing_pipe" REFRESH PREFIX = '/d1' MODIFIED_AFTER = '2018-07-30T13:56:46-07:00'`)
 	})
 }
+
+func TestPipesDrop(t *testing.T) {
+	setUpOpts := func() *PipeDropOptions {
+		return &PipeDropOptions{
+			name: NewAccountObjectIdentifier("existing_pipe"),
+		}
+	}
+	t.Run("empty options", func(t *testing.T) {
+		opts := setUpOpts()
+		assertSqlEquals(t, opts, `DROP PIPE "existing_pipe"`)
+	})
+
+	t.Run("with if exists", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.IfExists = Bool(true)
+		assertSqlEquals(t, opts, `DROP PIPE IF EXISTS "existing_pipe"`)
+	})
+}
