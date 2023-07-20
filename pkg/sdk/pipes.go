@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"time"
 )
 
 type Pipes interface {
@@ -11,19 +12,16 @@ type Pipes interface {
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *PipeAlterOptions) error
 	// Drop removes a pipe.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *PipeDropOptions) error
+	// Show returns a list of pipes.
+	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
+	// ShowByID returns a pipe by ID.
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Pipe, error)
 }
 
-// PipeCreateOptions contains options for creating a pipe.
+// PipeCreateOptions contains options for creating a new pipe in the system for defining the COPY INTO <table> statement
+// used by Snowpipe to load data from an ingestion queue into tables.
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/create-pipe.
-//
-// CREATE [ OR REPLACE ] PIPE [ IF NOT EXISTS ] <name>
-// [ AUTO_INGEST = [ TRUE | FALSE ] ]
-// [ ERROR_INTEGRATION = <integration_name> ]
-// [ AWS_SNS_TOPIC = '<string>' ]
-// [ INTEGRATION = '<string>' ]
-// [ COMMENT = '<string_literal>' ]
-// AS <copy_statement>
 type PipeCreateOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -41,7 +39,7 @@ type PipeCreateOptions struct {
 	CopyStatement string `ddl:"keyword,no_quotes"`
 }
 
-// PipeAlterOptions contains options for altering a pipe.
+// PipeAlterOptions contains options for modifying a limited set of properties for an existing pipe object.
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
 type PipeAlterOptions struct {
@@ -74,10 +72,41 @@ type PipeRefresh struct {
 	ModifiedAfter *string `ddl:"parameter,single_quotes" sql:"MODIFIED_AFTER"`
 }
 
-// PipeDropOptions contains options for dropping a pipe.
+// PipeDropOptions contains options for removing the specified pipe from the current/specified schema.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-pipe.
 type PipeDropOptions struct {
 	drop     bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
 	pipe     bool                    `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
+}
+
+// PipeShowOptions contains options for showing pipes which user has access privilege to.
+//
+// https://docs.snowflake.com/en/sql-reference/sql/show-pipes
+type PipeShowOptions struct {
+	show  bool  `ddl:"static" sql:"SHOW"`  //lint:ignore U1000 This is used in the ddl tag
+	pipes bool  `ddl:"static" sql:"PIPES"` //lint:ignore U1000 This is used in the ddl tag
+	Like  *Like `ddl:"keyword" sql:"LIKE"`
+	In    *In   `ddl:"keyword" sql:"IN"`
+}
+
+// Pipe is a user-friendly result for a SHOW PIPES query.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/show-pipes#output.
+type Pipe struct {
+	CreatedOn           time.Time
+	Name                string
+	DatabaseName        string
+	SchemaName          string
+	Definition          string
+	Owner               string
+	NotificationChannel string
+	Comment             string
+	Integration         string
+	Pattern             string
+	ErrorIntegration    string
+	OwnerRoleType       string
+	InvalidReason       string
 }

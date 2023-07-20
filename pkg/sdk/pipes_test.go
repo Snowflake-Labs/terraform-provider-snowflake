@@ -251,6 +251,7 @@ func TestPipesDrop(t *testing.T) {
 			name: NewAccountObjectIdentifier("existing_pipe"),
 		}
 	}
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := setUpOpts()
 		assertSqlEquals(t, opts, `DROP PIPE "existing_pipe"`)
@@ -260,5 +261,85 @@ func TestPipesDrop(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		assertSqlEquals(t, opts, `DROP PIPE IF EXISTS "existing_pipe"`)
+	})
+}
+
+func TestPipesShow(t *testing.T) {
+	id := randomSchemaObjectIdentifier(t)
+	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
+	schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
+
+	setUpOpts := func() *PipeShowOptions {
+		return &PipeShowOptions{}
+	}
+
+	t.Run("empty options", func(t *testing.T) {
+		opts := setUpOpts()
+		assertSqlEquals(t, opts, `SHOW PIPES`)
+	})
+
+	t.Run("with like", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES LIKE '%s'`, id.Name())
+	})
+
+	t.Run("in account", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.In = &In{
+			Account: Bool(true),
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES IN ACCOUNT`)
+	})
+
+	t.Run("in database", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.In = &In{
+			Database: databaseIdentifier,
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES IN DATABASE %s`, databaseIdentifier.FullyQualifiedName())
+	})
+
+	t.Run("in schema", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.In = &In{
+			Schema: schemaIdentifier,
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES IN SCHEMA %s`, schemaIdentifier.FullyQualifiedName())
+	})
+
+	t.Run("with like and in account", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		opts.In = &In{
+			Account: Bool(true),
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES LIKE '%s' IN ACCOUNT`, id.Name())
+	})
+
+	t.Run("with like and in database", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		opts.In = &In{
+			Database: databaseIdentifier,
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES LIKE '%s' IN DATABASE %s`, id.Name(), databaseIdentifier.FullyQualifiedName())
+	})
+
+	t.Run("with like and in schema", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		opts.In = &In{
+			Schema: schemaIdentifier,
+		}
+		assertSqlEquals(t, opts, `SHOW PIPES LIKE '%s' IN SCHEMA %s`, id.Name(), schemaIdentifier.FullyQualifiedName())
 	})
 }
