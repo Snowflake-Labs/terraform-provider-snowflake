@@ -16,6 +16,8 @@ type Pipes interface {
 	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
 	// ShowByID returns a pipe by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Pipe, error)
+	// Describe returns the details of a pipe.
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PipeDetails, error)
 }
 
 // PipeCreateOptions contains options for creating a new pipe in the system for defining the COPY INTO <table> statement
@@ -108,5 +110,32 @@ type Pipe struct {
 	Pattern             string
 	ErrorIntegration    string
 	OwnerRoleType       string
+	InvalidReason       string
+}
+
+// describePipeOptions contains options for describing the properties specified for a pipe, as well as the default values of the properties.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe.
+type describePipeOptions struct {
+	describe bool                   `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
+	pipe     bool                   `ddl:"static" sql:"PIPE"`     //lint:ignore U1000 This is used in the ddl tag
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+
+// PipeDetails is a user-friendly result for a DESCRIBE PIPE query.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe#output.
+type PipeDetails struct {
+	CreatedOn           time.Time
+	Name                string
+	DatabaseName        string
+	SchemaName          string
+	Definition          string
+	Owner               string
+	NotificationChannel string
+	Comment             string
+	Integration         string
+	Pattern             string
+	ErrorIntegration    string
 	InvalidReason       string
 }

@@ -343,3 +343,14 @@ func TestPipesShow(t *testing.T) {
 		assertSqlEquals(t, opts, `SHOW PIPES LIKE '%s' IN SCHEMA %s`, id.Name(), schemaIdentifier.FullyQualifiedName())
 	})
 }
+
+func TestPipesDescribe(t *testing.T) {
+	id := randomSchemaObjectIdentifier(t)
+
+	t.Run("with name", func(t *testing.T) {
+		opts := &describePipeOptions{
+			name: id,
+		}
+		assertSqlEquals(t, opts, `DESCRIBE PIPE %s`, id.FullyQualifiedName())
+	})
+}
