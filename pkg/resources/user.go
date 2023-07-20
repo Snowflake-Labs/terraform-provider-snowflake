@@ -254,30 +254,20 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if user.Name != nil {
-		if err = d.Set("name", user.Name.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "name", user.Name); err != nil {
+		return err
 	}
-	if user.Comment != nil {
-		if err = d.Set("comment", user.Comment.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "comment", user.Comment); err != nil {
+		return err
 	}
-	if user.LoginName != nil {
-		if err = d.Set("login_name", user.LoginName.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
+		return err
 	}
-	if user.Disabled != nil {
-		if err = d.Set("disabled", user.Disabled.Value); err != nil {
-			return err
-		}
+	if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
+		return err
 	}
-	if user.DefaultRole != nil {
-		if err = d.Set("default_role", user.DefaultRole.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
+		return err
 	}
 
 	var defaultSecondaryRoles []string

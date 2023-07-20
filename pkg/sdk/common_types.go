@@ -126,13 +126,13 @@ func (row *propertyRow) toIntProperty() *IntProperty {
 
 func (row *propertyRow) toBoolProperty() *BoolProperty {
 	var value bool
-	if row.Value != "" {
+	if row.Value != "" && row.Value != "null" {
 		value = toBool(row.Value)
 	} else {
 		value = false
 	}
 	var defaultValue bool
-	if row.DefaultValue != "" {
+	if row.DefaultValue != "" && row.Value != "null" {
 		defaultValue = toBool(row.DefaultValue)
 	} else {
 		defaultValue = false
