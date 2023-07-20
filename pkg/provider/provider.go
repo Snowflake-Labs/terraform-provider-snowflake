@@ -185,6 +185,11 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROFILE", "default"),
 			},
+			"session_params": {
+				Type:        schema.TypeMap,
+				Description: "Sets session parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)",
+				Optional:    true,
+			},
 		},
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
@@ -225,6 +230,7 @@ func getResources() map[string]*schema.Resource {
 	// NOTE(): do not add grant resources here
 	others := map[string]*schema.Resource{
 		"snowflake_account":                                 resources.Account(),
+		"snowflake_account_password_policy_attachment":      resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                       resources.AccountParameter(),
 		"snowflake_alert":                                   resources.Alert(),
 		"snowflake_api_integration":                         resources.APIIntegration(),
@@ -237,6 +243,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_failover_group":                          resources.FailoverGroup(),
 		"snowflake_file_format":                             resources.FileFormat(),
 		"snowflake_function":                                resources.Function(),
+		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_managed_account":                         resources.ManagedAccount(),
 		"snowflake_masking_policy":                          resources.MaskingPolicy(),
 		"snowflake_materialized_view":                       resources.MaterializedView(),
@@ -348,6 +355,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	warehouse := s.Get("warehouse").(string)
 	insecureMode := s.Get("insecure_mode").(bool)
 	profile := s.Get("profile").(string)
+	session_params := s.Get("session_params").(map[string]interface{})
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -355,6 +363,14 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			return nil, fmt.Errorf("could not retrieve access token from refresh token")
 		}
 		oauthAccessToken = accessToken
+	}
+
+	params := make(map[string]*string)
+	for key, value := range session_params {
+		strKey := fmt.Sprintf("%v", key)
+		strValue := fmt.Sprintf("%v", value)
+
+		params[strKey] = &strValue
 	}
 
 	dsn, err := DSN(
@@ -374,6 +390,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		warehouse,
 		insecureMode,
 		profile,
+		params,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -384,7 +401,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("could not open snowflake database err = %w", err)
 	}
 	client := sdk.NewClientFromDB(db)
-	sessionID, err := client.ContextFunctions.CurrentSession(context.Background())
+	ctx := context.Background()
+	sessionID, err := client.ContextFunctions.CurrentSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve session id err = %w", err)
 	}
@@ -413,6 +431,7 @@ func DSN(
 	warehouse string,
 	insecureMode bool,
 	profile string,
+	params map[string]*string,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -428,6 +447,7 @@ func DSN(
 		Port:         port,
 		Protocol:     protocol,
 		InsecureMode: insecureMode,
+		Params:       params,
 	}
 
 	// If host is set trust it and do not use the region value
@@ -488,6 +508,7 @@ func DSN(
 		}
 	}
 	config.Application = "terraform-provider-snowflake"
+
 	return gosnowflake.DSN(config)
 }
 
@@ -610,6 +631,9 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 	warehouse := os.Getenv("SNOWFLAKE_WAREHOUSE")
 	protocol := os.Getenv("SNOWFLAKE_PROTOCOL")
 	profile := os.Getenv("SNOWFLAKE_PROFILE")
+
+	params := make(map[string]*string)
+
 	if profile == "" {
 		profile = "default"
 	}
@@ -634,6 +658,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		warehouse,
 		false,
 		profile,
+		params,
 	)
 	if err != nil {
 		return nil, err

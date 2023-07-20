@@ -48,7 +48,7 @@ func (v *Role) ObjectType() ObjectType {
 type RoleCreateOptions struct{}
 
 func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *RoleCreateOptions) error {
-	sql := fmt.Sprintf(`CREATE ROLE %v`, id)
+	sql := fmt.Sprintf(`CREATE ROLE %v`, id.FullyQualifiedName())
 	_, err := v.client.exec(ctx, sql)
 	return err
 }

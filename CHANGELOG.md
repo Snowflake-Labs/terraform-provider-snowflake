@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.68.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.1...v0.68.2) (2023-07-17)
+
+
+### BugFixes
+
+* support multiple grant_privilege_to_role resources on the same role ([#1953](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1953)) ([dfdd166](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dfdd166e20347deb6f464a5bbbe9c345287fcd6b))
+* supress warehouse size changes ([#1889](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889) ([daf2cc2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/daf2cc289bab892e5a0954f852a72a9f99e1b0c1))
+  
+## [0.68.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.0...v0.68.1) (2023-07-07)
+
+
+### BugFixes
+
+* reading file formats with no default schema ([#1936](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1936)) ([c5602f5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c5602f5f01e09fc90a82aa2fbb8e116648f04c58))
+
+## [0.68.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.67.0...v0.68.0) (2023-07-06)
+
+
+### Features
+
+* alerts sdk v2 ([#1871](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1871)) ([fcf0380](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fcf03800cf92e1acff7f89e59968914f1bcad4f4))
+* new grant resource "snowflake_grant_privileges_to_role"  ([#1929](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1929)) ([e241c22](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e241c223b0c5d159efc803b9fcd4671c8325ae00))
+* set query tag for terraform sessions  ([#1826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1826)) ([6629583](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6629583bc288e5c23cf02d8a53597adbadf55fce))
+
+
+### BugFixes
+
+* add missing option ([#1924](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1924)) ([2991a16](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2991a16fe45491d77a8212a3ce0aa9566882de4f))
+* do not set "query_acceleration_max_scale_factor" if Query Acceleration is not enabled on Warehouse creation ([#1866](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1866)) ([7679e0b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7679e0b0a480c6c6867f6e03051e7c3f97709edf))
+* file format now supports reading options ([#1917](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1917)) ([2596990](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2596990808d97a7b98fa459a74eb7a77edf25cd5))
+* prevent view drop when copy_grants attribute changes ([#1920](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1920)) ([0cf22d0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0cf22d04513e70b0c945cd402b41b964f4d14be0))
+
+## [0.67.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.2...v0.67.0) (2023-06-22)
+
+
+### Features
+
+* account password policy attachment ([#1824](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1824)) ([f408828](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f408828fd023c2207ec41f702cec7dae524b1e93))
+
+
+### BugFixes
+
+* Generate security integration statements using double quoted names. ([#1897](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1897)) ([a21d44f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a21d44fc9109c589a7e4c78032e2f5a62b6ed514))
+* missing 'kind' field ([#1872](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1872)) ([59b7ef5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59b7ef5d791ecce366063a5cb8e2d68c68fb3e39))
+* support empty comments in oauth integrations ([#1900](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1900)) ([53d46b3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53d46b3a97680a4bf0e402d48c7db15c0d3c6f03))
+
 ## [0.66.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.66.1...v0.66.2) (2023-06-13)
 
 

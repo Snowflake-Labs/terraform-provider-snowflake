@@ -66,7 +66,7 @@ type ExternalOauthIntegration3 struct {
 	ExternalOauthScopeMappingAttribute           string `pos:"parameter" db:"EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE"`
 	ExternalOauthScopeMappingAttributeOk         bool
 
-	Comment   string `pos:"parameter" db:"comment"`
+	Comment   sql.NullString `pos:"parameter" db:"comment"`
 	CommentOk bool
 }
 

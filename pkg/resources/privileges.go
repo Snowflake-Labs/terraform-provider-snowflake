@@ -21,6 +21,7 @@ const (
 	privilegeCreateAccount               Privilege = "CREATE ACCOUNT"
 	privilegeCreateCredential            Privilege = "CREATE CREDENTIAL" //#nosec G101-- This is a false positive.
 	privilegeCreateDatabase              Privilege = "CREATE DATABASE"
+	privilegeCreateDatabaseRole          Privilege = "CREATE DATABASE ROLE"
 	privilegeCreateDataExchangeListing   Privilege = "CREATE DATA EXCHANGE LISTING"
 	privilegeCreateExternalTable         Privilege = "CREATE EXTERNAL TABLE"
 	privilegeCreateFailoverGroup         Privilege = "CREATE FAILOVER GROUP"
