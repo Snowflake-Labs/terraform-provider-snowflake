@@ -48,6 +48,7 @@ SQL
 
 ### Read-Only
 
+- `created_on` (String) The timestamp at which the view was created.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--tag"></a>

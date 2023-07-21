@@ -548,6 +548,14 @@ func ParameterDefaults() map[string]ParameterDefault {
 				ObjectTypeFailoverGroup,
 			},
 		},
+		"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR": {
+			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
+			DefaultValue: false,
+			Validate:     validateBoolFunc,
+			AllowedObjectTypes: []ObjectType{
+				ObjectTypeUser,
+			},
+		},
 		"MAX_CONCURRENCY_LEVEL": {
 			TypeSet:      []ParameterType{ParameterTypeObject},
 			DefaultValue: 0,

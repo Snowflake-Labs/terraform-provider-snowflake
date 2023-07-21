@@ -45,7 +45,9 @@ var viewSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     false,
 		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
-		ForceNew:    true,
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return oldValue != "" && oldValue != newValue
+		},
 	},
 	"is_secure": {
 		Type:        schema.TypeBool,
@@ -64,6 +66,11 @@ var viewSchema = map[string]*schema.Schema{
 		Description:      "Specifies the query used to create the view.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
+	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "The timestamp at which the view was created.",
 	},
 	"tag": tagReferenceSchema,
 }
@@ -242,6 +249,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err = d.Set("schema", v.SchemaName.String); err != nil {
+		return err
+	}
+	if err = d.Set("created_on", v.CreatedOn.String()); err != nil {
 		return err
 	}
 
