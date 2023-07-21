@@ -40,7 +40,7 @@ resource "snowflake_user" "user" {
 
 ### Required
 
-- `name` (String, Sensitive) Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)
+- `name` (String) Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)
 
 ### Optional
 
@@ -50,11 +50,11 @@ resource "snowflake_user" "user" {
 - `default_secondary_roles` (Set of String) Specifies the set of secondary roles that are active for the user’s session upon login. Currently only ["ALL"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
 - `default_warehouse` (String) Specifies the virtual warehouse that is active by default for the user’s session upon login.
 - `disabled` (Boolean)
-- `display_name` (String, Sensitive) Name displayed for the user in the Snowflake web interface.
-- `email` (String, Sensitive) Email address for the user.
-- `first_name` (String, Sensitive) First name of the user.
-- `last_name` (String, Sensitive) Last name of the user.
-- `login_name` (String, Sensitive) The name users use to log in. If not supplied, snowflake will use name instead.
+- `display_name` (String) Name displayed for the user in the Snowflake web interface.
+- `email` (String) Email address for the user.
+- `first_name` (String) First name of the user.
+- `last_name` (String) Last name of the user.
+- `login_name` (String) The name users use to log in. If not supplied, snowflake will use name instead.
 - `must_change_password` (Boolean) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.
 - `password` (String, Sensitive) **WARNING:** this will put the password in the terraform state file. Use carefully.
 - `rsa_public_key` (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
