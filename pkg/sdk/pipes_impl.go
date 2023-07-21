@@ -71,6 +71,12 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 }
 
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
-	//TODO implement me
-	panic("implement me")
+	opts := &describePipeOptions{
+		name: id,
+	}
+	pipeRow, err := validateAndQueryOne[pipeDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return pipeRow.toPipe(), nil
 }

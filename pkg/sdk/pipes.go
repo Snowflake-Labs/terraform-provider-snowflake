@@ -42,7 +42,7 @@ type PipeCreateOptions struct {
 	CopyStatement string `ddl:"keyword,no_quotes"`
 }
 
-func (opts *PipeCreateOptions) validate() error {
+func (opts *PipeCreateOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -67,7 +67,7 @@ type PipeAlterOptions struct {
 	Refresh *PipeRefresh `ddl:"keyword" sql:"REFRESH"`
 }
 
-func (opts *PipeAlterOptions) validate() error {
+func (opts *PipeAlterOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -103,7 +103,7 @@ type PipeDropOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *PipeDropOptions) validate() error {
+func (opts *PipeDropOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -121,7 +121,7 @@ type PipeShowOptions struct {
 	In    *In   `ddl:"keyword" sql:"IN"`
 }
 
-func (p PipeShowOptions) validate() error {
+func (p PipeShowOptions) validateProp() error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -195,4 +195,9 @@ type describePipeOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
 	pipe     bool                   `ddl:"static" sql:"PIPE"`     //lint:ignore U1000 This is used in the ddl tag
 	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+
+func (opts *describePipeOptions) validateProp() error {
+	//TODO implement me
+	panic("implement me")
 }
