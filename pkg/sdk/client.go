@@ -42,6 +42,7 @@ type Client struct {
 	Sessions         Sessions
 	Shares           Shares
 	Users            Users
+	Schemas          Schemas
 	Warehouses       Warehouses
 }
 
@@ -136,6 +137,7 @@ func (c *Client) initialize() {
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
+	c.Schemas = &schemas{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}
