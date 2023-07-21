@@ -320,17 +320,17 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
 	t.Helper()
-	name := randomStringRange(t, 8, 28)
+	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
+	schemaID := NewSchemaIdentifier(database.Name, id.name)
+	err := client.Schemas.Create(ctx, schemaID, nil)
 	require.NoError(t, err)
-	return &Schema{
-			DatabaseName: database.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP SCHEMA \"%s\".\"%s\"", database.Name, name))
-			require.NoError(t, err)
-		}
+	schema, err := client.Schemas.ShowByID(ctx, NewSchemaIdentifier(database.Name, id.name))
+	require.NoError(t, err)
+	return schema, func() {
+		err := client.Schemas.Drop(ctx, schemaID, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
