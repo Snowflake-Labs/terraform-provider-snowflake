@@ -8,17 +8,17 @@ import (
 
 type Pipes interface {
 	// Create creates a pipe.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *PipeCreateOptions) error
+	Create(ctx context.Context, id SchemaObjectIdentifier, opts *PipeCreateOptions) error
 	// Alter modifies an existing pipe.
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *PipeAlterOptions) error
+	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error
 	// Drop removes a pipe.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *PipeDropOptions) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PipeDropOptions) error
 	// Show returns a list of pipes.
 	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
 	// ShowByID returns a pipe by ID.
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Pipe, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 	// Describe returns the details of a pipe.
-	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PipeDetails, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 }
 
 // PipeCreateOptions contains options for creating a new pipe in the system for defining the COPY INTO <table> statement
@@ -26,11 +26,11 @@ type Pipes interface {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/create-pipe.
 type PipeCreateOptions struct {
-	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	pipe        bool                    `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
-	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	pipe        bool                   `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
+	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        SchemaObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
 
 	AutoIngest       *bool   `ddl:"parameter" sql:"AUTO_INGEST"`
 	ErrorIntegration *string `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
@@ -56,10 +56,10 @@ func (opts *PipeCreateOptions) validate() error {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
 type PipeAlterOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	role     bool                    `ddl:"static" sql:"PIPE"`  //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name     AccountObjectIdentifier `ddl:"identifier"`
+	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	role     bool                   `ddl:"static" sql:"PIPE"`  //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
 	Set     *PipeSet     `ddl:"list,no_parentheses" sql:"SET"`
@@ -97,10 +97,10 @@ type PipeRefresh struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/drop-pipe.
 type PipeDropOptions struct {
-	drop     bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
-	pipe     bool                    `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name     AccountObjectIdentifier `ddl:"identifier"`
+	drop     bool                   `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
+	pipe     bool                   `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *PipeDropOptions) validate() error {
@@ -143,9 +143,9 @@ type pipeDBRow struct {
 	InvalidReason       string    `db:"invalid_reason"`
 }
 
-// Pipe is a user-friendly result for a SHOW PIPES query.
+// Pipe is a user-friendly result for a SHOW PIPES and DESCRIBE PIPE queries.
 //
-// Based on https://docs.snowflake.com/en/sql-reference/sql/show-pipes#output.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/show-pipes#output and https://docs.snowflake.com/en/sql-reference/sql/desc-pipe#output.
 type Pipe struct {
 	CreatedOn           time.Time
 	Name                string
@@ -195,22 +195,4 @@ type describePipeOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
 	pipe     bool                   `ddl:"static" sql:"PIPE"`     //lint:ignore U1000 This is used in the ddl tag
 	name     SchemaObjectIdentifier `ddl:"identifier"`
-}
-
-// PipeDetails is a user-friendly result for a DESCRIBE PIPE query.
-//
-// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe#output.
-type PipeDetails struct {
-	CreatedOn           time.Time
-	Name                string
-	DatabaseName        string
-	SchemaName          string
-	Definition          string
-	Owner               string
-	NotificationChannel string
-	Comment             string
-	Integration         string
-	Pattern             string
-	ErrorIntegration    string
-	InvalidReason       string
 }

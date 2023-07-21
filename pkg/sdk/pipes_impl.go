@@ -8,7 +8,7 @@ type pipes struct {
 	client *Client
 }
 
-func (v *pipes) Create(ctx context.Context, id AccountObjectIdentifier, opts *PipeCreateOptions) error {
+func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, opts *PipeCreateOptions) error {
 	if opts == nil {
 		opts = &PipeCreateOptions{}
 	}
@@ -16,7 +16,7 @@ func (v *pipes) Create(ctx context.Context, id AccountObjectIdentifier, opts *Pi
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Alter(ctx context.Context, id AccountObjectIdentifier, opts *PipeAlterOptions) error {
+func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error {
 	if opts == nil {
 		opts = &PipeAlterOptions{}
 	}
@@ -24,7 +24,7 @@ func (v *pipes) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Pip
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Drop(ctx context.Context, id AccountObjectIdentifier, opts *PipeDropOptions) error {
+func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PipeDropOptions) error {
 	if opts == nil {
 		opts = &PipeDropOptions{}
 	}
@@ -49,10 +49,13 @@ func (v *pipes) Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error
 	return resultList, nil
 }
 
-func (v *pipes) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Pipe, error) {
+func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
 	pipes, err := v.Show(ctx, &PipeShowOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
+		},
+		In: &In{
+			Schema: id.SchemaIdentifier(),
 		},
 	})
 	if err != nil {
@@ -67,7 +70,7 @@ func (v *pipes) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Pipe
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*PipeDetails, error) {
+func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
 	//TODO implement me
 	panic("implement me")
 }
