@@ -102,6 +102,17 @@ func TestPipesAlter(t *testing.T) {
 		}
 	}
 
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *PipeAlterOptions = nil
+		assertOptsInvalid(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+	})
+
 	t.Run("set error integration", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.Set = &PipeSet{
@@ -278,6 +289,17 @@ func TestPipesDrop(t *testing.T) {
 		}
 	}
 
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *PipeDropOptions = nil
+		assertOptsInvalid(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+	})
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := setUpOpts()
 		assertOptsValidAndSqlEquals(t, opts, `DROP PIPE %s`, id.FullyQualifiedName())
@@ -298,6 +320,11 @@ func TestPipesShow(t *testing.T) {
 	setUpOpts := func() *PipeShowOptions {
 		return &PipeShowOptions{}
 	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *PipeShowOptions = nil
+		assertOptsInvalid(t, opts, ErrNilOptions)
+	})
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := setUpOpts()
@@ -373,10 +400,25 @@ func TestPipesShow(t *testing.T) {
 func TestPipesDescribe(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	t.Run("with name", func(t *testing.T) {
-		opts := &describePipeOptions{
+	setUpOpts := func() *describePipeOptions {
+		return &describePipeOptions{
 			name: id,
 		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *describePipeOptions = nil
+		assertOptsInvalid(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("with name", func(t *testing.T) {
+		opts := setUpOpts()
 		assertOptsValidAndSqlEquals(t, opts, `DESCRIBE PIPE %s`, id.FullyQualifiedName())
 	})
 }

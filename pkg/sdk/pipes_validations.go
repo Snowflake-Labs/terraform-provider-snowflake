@@ -16,6 +16,9 @@ func (opts *PipeCreateOptions) validateProp() error {
 }
 
 func (opts *PipeAlterOptions) validateProp() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -24,21 +27,31 @@ func (opts *PipeAlterOptions) validateProp() error {
 }
 
 func (opts *PipeDropOptions) validateProp() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
+	}
+	return nil
+}
+
+func (opts *PipeShowOptions) validateProp() error {
+	if opts == nil {
+		return ErrNilOptions
 	}
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p PipeShowOptions) validateProp() error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (opts *describePipeOptions) validateProp() error {
-	//TODO implement me
-	panic("implement me")
+	if opts == nil {
+		return ErrNilOptions
+	}
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	return nil
 }
 
 var (
