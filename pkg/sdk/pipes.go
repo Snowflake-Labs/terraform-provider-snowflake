@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -41,6 +42,16 @@ type PipeCreateOptions struct {
 	CopyStatement string `ddl:"keyword,no_quotes"`
 }
 
+func (opts *PipeCreateOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	if opts.CopyStatement == "" {
+		return fmt.Errorf("copy statement is required")
+	}
+	return nil
+}
+
 // PipeAlterOptions contains options for modifying a limited set of properties for an existing pipe object.
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
@@ -54,6 +65,14 @@ type PipeAlterOptions struct {
 	Set     *PipeSet     `ddl:"list,no_parentheses" sql:"SET"`
 	Unset   *PipeUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
 	Refresh *PipeRefresh `ddl:"keyword" sql:"REFRESH"`
+}
+
+func (opts *PipeAlterOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	//TODO implement me
+	panic("implement me")
 }
 
 type PipeSet struct {
@@ -84,6 +103,14 @@ type PipeDropOptions struct {
 	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
+func (opts *PipeDropOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	//TODO implement me
+	panic("implement me")
+}
+
 // PipeShowOptions contains options for showing pipes which user has access privilege to.
 //
 // https://docs.snowflake.com/en/sql-reference/sql/show-pipes
@@ -92,6 +119,28 @@ type PipeShowOptions struct {
 	pipes bool  `ddl:"static" sql:"PIPES"` //lint:ignore U1000 This is used in the ddl tag
 	Like  *Like `ddl:"keyword" sql:"LIKE"`
 	In    *In   `ddl:"keyword" sql:"IN"`
+}
+
+func (p PipeShowOptions) validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+// pipeDBRow is used to decode the result of a SHOW PIPES query.
+type pipeDBRow struct {
+	CreatedOn           time.Time `db:"created_on"`
+	Name                string    `db:"name"`
+	DatabaseName        string    `db:"database_name"`
+	SchemaName          string    `db:"schema_name"`
+	Definition          string    `db:"definition"`
+	Owner               string    `db:"owner"`
+	NotificationChannel string    `db:"notification_channel"`
+	Comment             string    `db:"comment"`
+	Integration         string    `db:"integration"`
+	Pattern             string    `db:"pattern"`
+	ErrorIntegration    string    `db:"error_integration"`
+	OwnerRoleType       string    `db:"owner_role_type"`
+	InvalidReason       string    `db:"invalid_reason"`
 }
 
 // Pipe is a user-friendly result for a SHOW PIPES query.
@@ -111,6 +160,32 @@ type Pipe struct {
 	ErrorIntegration    string
 	OwnerRoleType       string
 	InvalidReason       string
+}
+
+func (v *Pipe) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+func (v *Pipe) ObjectType() ObjectType {
+	return ObjectTypePipe
+}
+
+func (row pipeDBRow) toPipe() *Pipe {
+	return &Pipe{
+		CreatedOn:           row.CreatedOn,
+		Name:                row.Name,
+		DatabaseName:        row.DatabaseName,
+		SchemaName:          row.SchemaName,
+		Definition:          row.Definition,
+		Owner:               row.Owner,
+		NotificationChannel: row.NotificationChannel,
+		Comment:             row.Comment,
+		Integration:         row.Integration,
+		Pattern:             row.Pattern,
+		ErrorIntegration:    row.ErrorIntegration,
+		OwnerRoleType:       row.OwnerRoleType,
+		InvalidReason:       row.InvalidReason,
+	}
 }
 
 // describePipeOptions contains options for describing the properties specified for a pipe, as well as the default values of the properties.
