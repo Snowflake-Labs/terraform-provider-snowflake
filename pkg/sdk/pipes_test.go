@@ -113,6 +113,22 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: no alter action", func(t *testing.T) {
+		opts := setUpOpts()
+		assertOptsInvalid(t, opts, errAlterNeedsExactlyOneAction)
+	})
+
+	t.Run("validation: multiple alter actions", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Set = &PipeSet{
+			ErrorIntegration: String("new_error_integration"),
+		}
+		opts.Unset = &PipeUnset{
+			Comment: Bool(true),
+		}
+		assertOptsInvalid(t, opts, errAlterNeedsExactlyOneAction)
+	})
+
 	t.Run("set error integration", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.Set = &PipeSet{
