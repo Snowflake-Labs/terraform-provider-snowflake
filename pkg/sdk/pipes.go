@@ -33,7 +33,7 @@ type PipeCreateOptions struct {
 	name        AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
 
 	AutoIngest       *bool   `ddl:"parameter" sql:"AUTO_INGEST"`
-	ErrorIntegration *string `ddl:"parameter,single_quotes" sql:"ERROR_INTEGRATION"`
+	ErrorIntegration *string `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
 	AwsSnsTopic      *string `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	Integration      *string `ddl:"parameter,single_quotes" sql:"INTEGRATION"`
 	Comment          *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -76,7 +76,7 @@ func (opts *PipeAlterOptions) validate() error {
 }
 
 type PipeSet struct {
-	ErrorIntegration    *string          `ddl:"parameter,single_quotes" sql:"ERROR_INTEGRATION"`
+	ErrorIntegration    *string          `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
 	PipeExecutionPaused *bool            `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
 	Tag                 []TagAssociation `ddl:"keyword" sql:"TAG"`
 	Comment             *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`

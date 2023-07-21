@@ -37,8 +37,8 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("error integration", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.ErrorIntegration = String("some error integration")
-		assertSqlEquals(t, opts, `CREATE PIPE "new_pipe" ERROR_INTEGRATION = 'some error integration' AS <copy_statement>`)
+		opts.ErrorIntegration = String("some_error_integration")
+		assertSqlEquals(t, opts, `CREATE PIPE "new_pipe" ERROR_INTEGRATION = some_error_integration AS <copy_statement>`)
 	})
 
 	t.Run("aws sns topic", func(t *testing.T) {
@@ -63,11 +63,11 @@ func TestPipesCreate(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfNotExists = Bool(true)
 		opts.AutoIngest = Bool(true)
-		opts.ErrorIntegration = String("some error integration")
+		opts.ErrorIntegration = String("some_error_integration")
 		opts.AwsSnsTopic = String("some aws sns topic")
 		opts.Integration = String("some integration")
 		opts.Comment = String("some comment")
-		assertSqlEquals(t, opts, `CREATE PIPE IF NOT EXISTS "new_pipe" AUTO_INGEST = true ERROR_INTEGRATION = 'some error integration' AWS_SNS_TOPIC = 'some aws sns topic' INTEGRATION = 'some integration' COMMENT = 'some comment' AS <copy_statement>`)
+		assertSqlEquals(t, opts, `CREATE PIPE IF NOT EXISTS "new_pipe" AUTO_INGEST = true ERROR_INTEGRATION = some_error_integration AWS_SNS_TOPIC = 'some aws sns topic' INTEGRATION = 'some integration' COMMENT = 'some comment' AS <copy_statement>`)
 	})
 }
 
@@ -81,9 +81,9 @@ func TestPipesAlter(t *testing.T) {
 	t.Run("set error integration", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.Set = &PipeSet{
-			ErrorIntegration: String("new error integration"),
+			ErrorIntegration: String("new_error_integration"),
 		}
-		assertSqlEquals(t, opts, `ALTER PIPE "existing_pipe" SET ERROR_INTEGRATION = 'new error integration'`)
+		assertSqlEquals(t, opts, `ALTER PIPE "existing_pipe" SET ERROR_INTEGRATION = new_error_integration`)
 	})
 
 	t.Run("set pipe execution paused: true", func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestPipesAlter(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &PipeSet{
-			ErrorIntegration:    String("new error integration"),
+			ErrorIntegration:    String("new_error_integration"),
 			PipeExecutionPaused: Bool(true),
 			Tag: []TagAssociation{
 				{
@@ -158,7 +158,7 @@ func TestPipesAlter(t *testing.T) {
 			},
 			Comment: String("new comment"),
 		}
-		assertSqlEquals(t, opts, `ALTER PIPE IF EXISTS "existing_pipe" SET ERROR_INTEGRATION = 'new error integration', PIPE_EXECUTION_PAUSED = true, TAG "tag_name1" = 'v1', "tag_name2" = 'v2', COMMENT = 'new comment'`)
+		assertSqlEquals(t, opts, `ALTER PIPE IF EXISTS "existing_pipe" SET ERROR_INTEGRATION = new_error_integration, PIPE_EXECUTION_PAUSED = true, TAG "tag_name1" = 'v1', "tag_name2" = 'v2', COMMENT = 'new comment'`)
 	})
 
 	t.Run("unset pipe execution paused", func(t *testing.T) {
