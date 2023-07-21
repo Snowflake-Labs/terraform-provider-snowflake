@@ -31,17 +31,28 @@ func (opts *PipeAlterOptions) validateProp() error {
 	); !ok {
 		return errAlterNeedsExactlyOneAction
 	}
-	if valueSet(opts.Set) {
-
-		return nil
+	if set := opts.Set; valueSet(set) {
+		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Tag, set.Comment) {
+			return errAlterNeedsAtLeastOneProperty
+		}
+		if valueSet(set.Tag) {
+			if !everyValueNil(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
+				return errCannotAlterOtherPropertyWithTag
+			}
+		}
 	}
-	if valueSet(opts.Unset) {
-
-		return nil
+	if unset := opts.Unset; valueSet(unset) {
+		if !anyValueSet(unset.PipeExecutionPaused, unset.Tag, unset.Comment) {
+			return errAlterNeedsAtLeastOneProperty
+		}
+		if valueSet(unset.Tag) {
+			if !everyValueNil(unset.PipeExecutionPaused, unset.Comment) {
+				return errCannotAlterOtherPropertyWithTag
+			}
+		}
 	}
 	if valueSet(opts.Refresh) {
-
-		return nil
+		// no validations needed
 	}
 	return nil
 }
@@ -75,6 +86,8 @@ func (opts *describePipeOptions) validateProp() error {
 }
 
 var (
-	errCopyStatementRequired      = errors.New("copy statement required")
-	errAlterNeedsExactlyOneAction = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errCopyStatementRequired           = errors.New("copy statement required")
+	errAlterNeedsExactlyOneAction      = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty    = errors.New("alter statement needs at least one property")
+	errCannotAlterOtherPropertyWithTag = errors.New("cannot alter both tag and other property in the same statement")
 )

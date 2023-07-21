@@ -129,6 +129,57 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsInvalid(t, opts, errAlterNeedsExactlyOneAction)
 	})
 
+	t.Run("validation: no property to set", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Set = &PipeSet{}
+		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
+	})
+
+	t.Run("validation: tags and other property set", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Set = &PipeSet{
+			Tag: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag_name1"),
+					Value: "v1",
+				},
+			},
+			Comment: String("new comment"),
+		}
+		assertOptsInvalid(t, opts, errCannotAlterOtherPropertyWithTag)
+	})
+
+	t.Run("validation: empty tags slice for set", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Set = &PipeSet{
+			Tag: []TagAssociation{},
+		}
+		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
+	})
+
+	t.Run("validation: no property to unset", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Unset = &PipeUnset{}
+		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
+	})
+
+	t.Run("validation: tags and other property unset", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Unset = &PipeUnset{
+			Tag:     []ObjectIdentifier{NewAccountObjectIdentifier("tag_name1")},
+			Comment: Bool(true),
+		}
+		assertOptsInvalid(t, opts, errCannotAlterOtherPropertyWithTag)
+	})
+
+	t.Run("validation: empty tags slice for unset", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Unset = &PipeUnset{
+			Tag: []ObjectIdentifier{},
+		}
+		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
+	})
+
 	t.Run("set error integration", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.Set = &PipeSet{
@@ -191,25 +242,15 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET COMMENT = 'new comment'`, id.FullyQualifiedName())
 	})
 
-	t.Run("set all", func(t *testing.T) {
+	t.Run("set more at the same time", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &PipeSet{
 			ErrorIntegration:    String("new_error_integration"),
 			PipeExecutionPaused: Bool(true),
-			Tag: []TagAssociation{
-				{
-					Name:  NewAccountObjectIdentifier("tag_name1"),
-					Value: "v1",
-				},
-				{
-					Name:  NewAccountObjectIdentifier("tag_name2"),
-					Value: "v2",
-				},
-			},
-			Comment: String("new comment"),
+			Comment:             String("new comment"),
 		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE IF EXISTS %s SET ERROR_INTEGRATION = new_error_integration, PIPE_EXECUTION_PAUSED = true, TAG "tag_name1" = 'v1', "tag_name2" = 'v2', COMMENT = 'new comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE IF EXISTS %s SET ERROR_INTEGRATION = new_error_integration, PIPE_EXECUTION_PAUSED = true, COMMENT = 'new comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset pipe execution paused", func(t *testing.T) {
@@ -249,18 +290,14 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s UNSET COMMENT`, id.FullyQualifiedName())
 	})
 
-	t.Run("unset all", func(t *testing.T) {
+	t.Run("unset more at the same time", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &PipeUnset{
 			PipeExecutionPaused: Bool(true),
-			Tag: []ObjectIdentifier{
-				NewAccountObjectIdentifier("tag_name1"),
-				NewAccountObjectIdentifier("tag_name2"),
-			},
-			Comment: Bool(true),
+			Comment:             Bool(true),
 		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE IF EXISTS %s UNSET PIPE_EXECUTION_PAUSED, TAG "tag_name1", "tag_name2", COMMENT`, id.FullyQualifiedName())
+		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE IF EXISTS %s UNSET PIPE_EXECUTION_PAUSED, COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("refresh", func(t *testing.T) {
