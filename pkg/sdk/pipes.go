@@ -7,11 +7,11 @@ import (
 
 type Pipes interface {
 	// Create creates a pipe.
-	Create(ctx context.Context, id SchemaObjectIdentifier, opts *PipeCreateOptions) error
+	Create(ctx context.Context, opts *PipeCreateOptions) error
 	// Alter modifies an existing pipe.
-	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error
+	Alter(ctx context.Context, opts *PipeAlterOptions) error
 	// Drop removes a pipe.
-	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PipeDropOptions) error
+	Drop(ctx context.Context, opts *PipeDropOptions) error
 	// Show returns a list of pipes.
 	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
 	// ShowByID returns a pipe by ID.

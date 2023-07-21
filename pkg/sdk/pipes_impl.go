@@ -8,37 +8,19 @@ type pipes struct {
 	client *Client
 }
 
-// Create uses now both id and opts (which contain id).
-//
-// If we make Create, Alter and others just having ctx and opts, implementation of all these methods will be really easy.
-func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, opts *PipeCreateOptions) error {
-	if opts == nil {
-		opts = &PipeCreateOptions{}
-	}
-	opts.name = id
+func (v *pipes) Create(ctx context.Context, opts *PipeCreateOptions) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error {
-	if opts == nil {
-		opts = &PipeAlterOptions{}
-	}
-	opts.name = id
+func (v *pipes) Alter(ctx context.Context, opts *PipeAlterOptions) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *PipeDropOptions) error {
-	if opts == nil {
-		opts = &PipeDropOptions{}
-	}
-	opts.name = id
+func (v *pipes) Drop(ctx context.Context, opts *PipeDropOptions) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *pipes) Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error) {
-	if opts == nil {
-		opts = &PipeShowOptions{}
-	}
 	dbRows, err := validateAndQuery[pipeDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
