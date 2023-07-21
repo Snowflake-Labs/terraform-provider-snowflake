@@ -8,6 +8,9 @@ type pipes struct {
 	client *Client
 }
 
+// Create uses now both id and opts (which contain id).
+//
+// If we make Create, Alter and others just having ctx and opts, implementation of all these methods will be really easy.
 func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, opts *PipeCreateOptions) error {
 	if opts == nil {
 		opts = &PipeCreateOptions{}
