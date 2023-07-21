@@ -401,6 +401,8 @@ func assertSqlEquals(t *testing.T, opts any, format string, args ...any) {
 	assert.Equal(t, fmt.Sprintf(format, args...), actual)
 }
 
+// assertOptsValidAndSqlEquals could be reused in tests for other interfaces in sdk package.
+// It's a shorthand for assertOptsValid and assertSqlEquals.
 func assertOptsValidAndSqlEquals(t *testing.T, opts validatableOpts, format string, args ...any) {
 	assertOptsValid(t, opts)
 	assertSqlEquals(t, opts, format, args...)

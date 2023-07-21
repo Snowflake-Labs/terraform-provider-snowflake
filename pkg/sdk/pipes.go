@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"errors"
 	"time"
 )
 
@@ -42,19 +41,6 @@ type PipeCreateOptions struct {
 	CopyStatement string `ddl:"keyword,no_quotes"`
 }
 
-func (opts *PipeCreateOptions) validateProp() error {
-	if opts == nil {
-		return ErrNilOptions
-	}
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	if opts.CopyStatement == "" {
-		return errCopyStatementRequired
-	}
-	return nil
-}
-
 // PipeAlterOptions contains options for modifying a limited set of properties for an existing pipe object.
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
@@ -68,14 +54,6 @@ type PipeAlterOptions struct {
 	Set     *PipeSet     `ddl:"list,no_parentheses" sql:"SET"`
 	Unset   *PipeUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
 	Refresh *PipeRefresh `ddl:"keyword" sql:"REFRESH"`
-}
-
-func (opts *PipeAlterOptions) validateProp() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	//TODO implement me
-	panic("implement me")
 }
 
 type PipeSet struct {
@@ -106,14 +84,6 @@ type PipeDropOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *PipeDropOptions) validateProp() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	//TODO implement me
-	panic("implement me")
-}
-
 // PipeShowOptions contains options for showing pipes which user has access privilege to.
 //
 // https://docs.snowflake.com/en/sql-reference/sql/show-pipes
@@ -122,11 +92,6 @@ type PipeShowOptions struct {
 	pipes bool  `ddl:"static" sql:"PIPES"` //lint:ignore U1000 This is used in the ddl tag
 	Like  *Like `ddl:"keyword" sql:"LIKE"`
 	In    *In   `ddl:"keyword" sql:"IN"`
-}
-
-func (p PipeShowOptions) validateProp() error {
-	//TODO implement me
-	panic("implement me")
 }
 
 // pipeDBRow is used to decode the result of a SHOW PIPES query.
@@ -199,12 +164,3 @@ type describePipeOptions struct {
 	pipe     bool                   `ddl:"static" sql:"PIPE"`     //lint:ignore U1000 This is used in the ddl tag
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
-
-func (opts *describePipeOptions) validateProp() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-var (
-	errCopyStatementRequired = errors.New("copy statement required")
-)
