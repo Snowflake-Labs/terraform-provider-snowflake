@@ -2,7 +2,7 @@ package sdk
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 )
 
@@ -43,11 +43,14 @@ type PipeCreateOptions struct {
 }
 
 func (opts *PipeCreateOptions) validateProp() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if opts.CopyStatement == "" {
-		return fmt.Errorf("copy statement is required")
+		return errCopyStatementRequired
 	}
 	return nil
 }
@@ -201,3 +204,7 @@ func (opts *describePipeOptions) validateProp() error {
 	//TODO implement me
 	panic("implement me")
 }
+
+var (
+	errCopyStatementRequired = errors.New("copy statement required")
+)
