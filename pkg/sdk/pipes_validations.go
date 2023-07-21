@@ -51,9 +51,6 @@ func (opts *PipeAlterOptions) validateProp() error {
 			}
 		}
 	}
-	if valueSet(opts.Refresh) {
-		// no validations needed
-	}
 	return nil
 }
 
