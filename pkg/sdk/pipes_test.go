@@ -379,6 +379,27 @@ func TestPipesShow(t *testing.T) {
 		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
+	t.Run("validation: empty like", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{}
+		assertOptsInvalid(t, opts, errPatternRequiredForLikeKeyword)
+	})
+
+	t.Run("validation: empty in", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.In = &In{}
+		assertOptsInvalid(t, opts, errScopeRequiredForInKeyword)
+	})
+
+	t.Run("validation: exactly one scope for in", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.In = &In{
+			Account:  Bool(true),
+			Database: databaseIdentifier,
+		}
+		assertOptsInvalid(t, opts, errScopeRequiredForInKeyword)
+	})
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := setUpOpts()
 		assertOptsValidAndSqlEquals(t, opts, `SHOW PIPES`)

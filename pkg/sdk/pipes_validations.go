@@ -71,8 +71,13 @@ func (opts *PipeShowOptions) validateProp() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	//TODO implement me
-	panic("implement me")
+	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
+		return errPatternRequiredForLikeKeyword
+	}
+	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
+		return errScopeRequiredForInKeyword
+	}
+	return nil
 }
 
 func (opts *describePipeOptions) validateProp() error {
@@ -87,6 +92,8 @@ func (opts *describePipeOptions) validateProp() error {
 
 var (
 	errCopyStatementRequired           = errors.New("copy statement required")
+	errPatternRequiredForLikeKeyword   = errors.New("pattern must be specified for like keyword")
+	errScopeRequiredForInKeyword       = errors.New("exactly one scope must be specified for in keyword")
 	errAlterNeedsExactlyOneAction      = errors.New("alter statement needs exactly one action from: set, unset, refresh")
 	errAlterNeedsAtLeastOneProperty    = errors.New("alter statement needs at least one property")
 	errCannotAlterOtherPropertyWithTag = errors.New("cannot alter both tag and other property in the same statement")
