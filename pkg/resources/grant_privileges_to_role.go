@@ -140,6 +140,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"STAGE",
 						"STREAM",
 						"TABLE",
+						"EXTERNAL TABLE",
 						"TASK",
 						"VIEW",
 						"MATERIALIZED VIEW",
@@ -183,6 +184,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"STAGES",
 									"STREAMS",
 									"TABLES",
+									"EXTERNAL TABLES",
 									"TASKS",
 									"VIEWS",
 									"MATERIALIZED VIEWS",
@@ -235,6 +237,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"STAGES",
 									"STREAMS",
 									"TABLES",
+									"EXTERNAL TABLES",
 									"TASKS",
 									"VIEWS",
 									"MATERIALIZED VIEWS",
@@ -842,7 +845,8 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 			if !id.Future && grant.GrantedBy.Name() == "" {
 				continue
 			}
-			if grantedOn == grant.GrantedOn {
+			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
+			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
 				privileges = append(privileges, grant.Privilege)
 			}
 		}
