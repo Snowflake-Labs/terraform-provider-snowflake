@@ -108,3 +108,7 @@ check-mod:
 .PHONY: fmt
 fmt: ## Run linter and apply formatting autofix
 	golangci-lint run ./... -v --fix
+
+generate:
+	go generate ./pkg/sdk/...
+.PHONY: generate
