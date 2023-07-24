@@ -1,3 +1,51 @@
 {
-  "name": "pipe"
+  "object": {
+    "name": "pipe"
+  },
+  "create": {
+    "docs": "https://docs.snowflake.com/en/sql-reference/sql/create-pipe",
+    "modifiers": {
+      "orReplace": true,
+      "ifNotExists": true
+    },
+    "fields": [
+      {
+        "name": "AUTO_INGEST",
+        "type": "bool",
+        "quotations": "no_quotes"
+      },
+      {
+        "name": "ERROR_INTEGRATION",
+        "type": "string",
+        "quotations": "no_quotes"
+      },
+      {
+        "name": "AWS_SNS_TOPIC",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "INTEGRATION",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "COMMENT",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "AS",
+        "type": "static",
+        "quotations": "no_quotes",
+        "fields": [
+          {
+            "name": "copy_statement",
+            "type": "keyword",
+            "quotations": "no_quotes"
+          }
+        ]
+      }
+    ]
+  }
 }

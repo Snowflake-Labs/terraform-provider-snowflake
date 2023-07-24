@@ -54,7 +54,29 @@ func loadBlueprint() *Blueprint {
 }
 
 type Blueprint struct {
-	Name string
+	Object Object `json:"object"`
+	Create Create `json:"create"`
+}
+
+type Object struct {
+	Name string `json:"name"`
+}
+
+type Create struct {
+	Docs      string          `json:"docs"`
+	Modifiers CreateModifiers `json:"modifiers"`
+	Fields    []CreateField   `json:"fields"`
+}
+
+type CreateModifiers struct {
+	OrReplace   bool `json:"orReplace"`
+	IfNotExists bool `json:"ifNotExists"`
+}
+
+type CreateField struct {
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Quotations string `json:"quotations"`
 }
 
 func setUpGenerator(blueprint *Blueprint) *Generator {
