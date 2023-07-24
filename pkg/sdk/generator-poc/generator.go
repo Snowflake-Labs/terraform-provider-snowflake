@@ -133,12 +133,21 @@ func (gen *Generator) addFilePreamble() {
 }
 
 // TODO: implement using go text/template or at least clean it
+// TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
 func (gen *Generator) generateCreate() {
 	gen.printf("// Based on %s\n", gen.blueprint.Create.Docs)
 	gen.printf("type %sCreateOptionsGen struct {\n", strings.Title(gen.blueprint.Object.Name))
 
 	// create section is almost the same everytime
 	gen.printf("create bool `ddl:\"static\" sql:\"CREATE\"` %s\n", lintIgnoreComment)
+	if gen.blueprint.Create.Modifiers.OrReplace {
+		gen.printf("orReplace *bool `ddl:\"keyword\" sql:\"OR REPLACE\"` \n")
+	}
+	gen.printf("%s bool `ddl:\"static\" sql:\"%s\"` %s\n", gen.blueprint.Object.Name, strings.ToUpper(gen.blueprint.Object.Name), lintIgnoreComment)
+	if gen.blueprint.Create.Modifiers.IfNotExists {
+		gen.printf("ifNotExists *bool `ddl:\"keyword\" sql:\"IF NOT EXISTS\"` \n")
+	}
+	gen.printf("name SchemaObjectIdentifier `ddl:\"identifier\"` \n")
 
 	gen.printf("}\n")
 	gen.printf("\n")
