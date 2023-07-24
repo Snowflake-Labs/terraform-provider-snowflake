@@ -15,6 +15,7 @@ import (
 
 var (
 	blueprintPath     = flag.String("blueprint", "", ".json file containing blueprint for generation; must be set")
+	genSuffix         = flag.String("genSuffix", "Gen", "suffix added to all generated types")
 	lintIgnoreComment = "//lint:ignore U1000 This is used in the ddl tag"
 )
 
@@ -28,6 +29,8 @@ func main() {
 	fmt.Printf("Generator set up for package \"%s\" with output name \"%s\".\n", gen.outputPackage, gen.outputName)
 
 	gen.addFilePreamble()
+	gen.generateImports()
+	gen.generateInterface()
 	gen.generateCreate()
 
 	src, errSrcFormat := format.Source(gen.Buffer.Bytes())
@@ -72,13 +75,15 @@ type Blueprint struct {
 }
 
 type Object struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Plural string `json:"plural"`
 }
 
 type Create struct {
-	Docs      string          `json:"docs"`
-	Modifiers CreateModifiers `json:"modifiers"`
-	Fields    []CreateField   `json:"fields"`
+	Docs        string          `json:"docs"`
+	Description string          `json:"description"`
+	Modifiers   CreateModifiers `json:"modifiers"`
+	Fields      []CreateField   `json:"fields"`
 }
 
 type CreateModifiers struct {
@@ -109,6 +114,7 @@ func setUpGenerator(blueprint *Blueprint) *Generator {
 		blueprint:     blueprint,
 		outputPackage: os.Getenv("GOPACKAGE"),
 		outputName:    outputName,
+		genSuffix:     *genSuffix,
 	}
 }
 
@@ -118,6 +124,7 @@ type Generator struct {
 	blueprint           *Blueprint
 	outputPackage       string
 	outputName          string
+	genSuffix           string
 }
 
 func (gen *Generator) printf(format string, args ...any) {
@@ -138,14 +145,30 @@ func (gen *Generator) addFilePreamble() {
 	gen.printf("\n")
 }
 
+func (gen *Generator) generateImports() {
+	gen.printf("import (\n")
+	gen.printf("\"context\"\n")
+	gen.printf(")\n")
+	gen.printf("\n")
+}
+
+func (gen *Generator) generateInterface() {
+	gen.printf("type %s%s interface {\n", strings.Title(gen.blueprint.Object.Plural), gen.genSuffix)
+	gen.printf("// Create creates a %s.\n", gen.blueprint.Object.Name)
+	gen.printf("Create(ctx context.Context, opts *%sCreateOptions%s) error\n", strings.Title(gen.blueprint.Object.Name), gen.genSuffix)
+	gen.printf("}\n")
+	gen.printf("\n")
+}
+
 // TODO: implement using go text/template or at least clean it
 // TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
 // TODO: add possibility to declare field as required or not
 // TODO: field names to CamelCase
 // TODO: handle additional structs better
 func (gen *Generator) generateCreate() {
-	gen.printf("// Based on %s\n", gen.blueprint.Create.Docs)
-	gen.printf("type %sCreateOptionsGen struct {\n", strings.Title(gen.blueprint.Object.Name))
+	gen.printf("// %sCreateOptions%s %s\n", strings.Title(gen.blueprint.Object.Name), gen.genSuffix, gen.blueprint.Create.Description)
+	gen.printf("//\n// Based on %s\n", gen.blueprint.Create.Docs)
+	gen.printf("type %sCreateOptions%s struct {\n", strings.Title(gen.blueprint.Object.Name), gen.genSuffix)
 
 	// create section is almost the same everytime
 	gen.printf("create bool `ddl:\"static\" sql:\"CREATE\"` %s\n", lintIgnoreComment)

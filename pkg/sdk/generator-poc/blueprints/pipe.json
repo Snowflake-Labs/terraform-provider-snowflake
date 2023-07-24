@@ -1,9 +1,11 @@
 {
   "object": {
-    "name": "pipe"
+    "name": "pipe",
+    "plural": "pipes"
   },
   "create": {
     "docs": "https://docs.snowflake.com/en/sql-reference/sql/create-pipe",
+    "description": "contains options for creating a new pipe in the system for defining the COPY INTO <table> statement used by Snowpipe to load data from an ingestion queue into tables.",
     "modifiers": {
       "orReplace": true,
       "ifNotExists": true
