@@ -38,11 +38,13 @@
       },
       {
         "name": "AS",
+        "required": true,
         "type": "complex",
         "quotations": "no_quotes",
         "fields": [
           {
             "name": "copy_statement",
+            "required": true,
             "type": "keyword",
             "quotations": "no_quotes"
           }

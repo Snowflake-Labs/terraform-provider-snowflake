@@ -93,6 +93,7 @@ type CreateModifiers struct {
 
 type CreateField struct {
 	Name       string        `json:"name"`
+	Required   bool          `json:"required"`
 	Type       string        `json:"type"`
 	Quotations string        `json:"quotations"`
 	Fields     []CreateField `json:"fields"`
@@ -162,7 +163,6 @@ func (gen *Generator) generateInterface() {
 
 // TODO: implement using go text/template or at least clean it
 // TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
-// TODO: add possibility to declare field as required or not
 // TODO: field names to CamelCase
 // TODO: handle additional structs better
 func (gen *Generator) generateCreate() {
@@ -199,15 +199,23 @@ func (gen *Generator) generateFields(fields []CreateField) []strings.Builder {
 
 func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 	var additionalStructs []strings.Builder
+	requiredString := func(required bool) string {
+		if required {
+			return ""
+		} else {
+			return "*"
+		}
+	}
+
 	for _, field := range fields {
 		lower := strings.ToLower(field.Name)
 		title := strings.Title(lower)
 		switch t := field.Type; t {
 		case "string", "bool":
-			printf(w, "%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", title, t, field.Quotations, field.Name)
+			printf(w, "%s %s%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", title, requiredString(field.Required), t, field.Quotations, field.Name)
 			break
 		case "complex":
-			printf(w, "\n%s %s `ddl:\"keyword\" sql:\"%s\"` \n", title, title, field.Name)
+			printf(w, "\n%s %s%s `ddl:\"keyword\" sql:\"%s\"` \n", title, requiredString(field.Required), title, field.Name)
 			var sb strings.Builder
 			as := generateStruct(&sb, title, field.Fields)
 			additionalStructs = append(additionalStructs, sb)
@@ -216,7 +224,7 @@ func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 			}
 			break
 		case "keyword":
-			printf(w, "%s string `ddl:\"keyword,%s\"` \n", title, field.Quotations)
+			printf(w, "%s %sstring `ddl:\"keyword,%s\"` \n", title, requiredString(field.Required), field.Quotations)
 			break
 		default:
 			log.Panicf("Field type %s is not supported.\n", t)

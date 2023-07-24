@@ -13,11 +13,13 @@
     "fields": [
       {
         "name": "WAREHOUSE",
+        "required": true,
         "type": "string",
         "quotations": "no_quotes"
       },
       {
         "name": "SCHEDULE",
+        "required": true,
         "type": "string",
         "quotations": "single_quotes"
       },
@@ -28,16 +30,19 @@
       },
       {
         "name": "IF",
+        "required": true,
         "type": "complex",
         "quotations": "no_quotes",
         "fields": [
           {
             "name": "exists",
+            "required": true,
             "type": "complex",
             "quotations": "no_quotes",
             "fields": [
               {
                 "name": "condition",
+                "required": true,
                 "type": "keyword",
                 "quotations": "no_quotes"
               }
@@ -47,11 +52,13 @@
       },
       {
         "name": "THEN",
+        "required": true,
         "type": "complex",
         "quotations": "no_quotes",
         "fields": [
           {
             "name": "action",
+            "required": true,
             "type": "keyword",
             "quotations": "no_quotes"
           }
