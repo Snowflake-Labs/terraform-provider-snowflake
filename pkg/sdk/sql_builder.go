@@ -49,6 +49,22 @@ const (
 	SingleQuotes quoteModifier = "single_quotes"
 )
 
+// cf. https://docs.snowflake.com/en/sql-reference/data-types-text#single-quoted-string-constants
+var singleQuoteEscapes = []struct {
+	original    string
+	replacement string
+}{
+	{original: `\`, replacement: `\\`},
+	{original: `'`, replacement: `\'`},
+	{original: `"`, replacement: `\"`},
+	{original: "\b", replacement: `\b`},
+	{original: "\f", replacement: `\f`},
+	{original: "\n", replacement: `\n`},
+	{original: "\r", replacement: `\r`},
+	{original: "\t", replacement: `\t`},
+	{original: string(rune(0)), replacement: `\0`}, // NUL character
+}
+
 func (qm quoteModifier) Modify(v any) string {
 	s := fmt.Sprintf("%v", v)
 	switch qm {
@@ -58,10 +74,10 @@ func (qm quoteModifier) Modify(v any) string {
 		escapedString := strings.ReplaceAll(s, qm.String(), qm.String()+qm.String())
 		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
 	case SingleQuotes:
-		// https://docs.snowflake.com/en/sql-reference/data-types-text#single-quoted-string-constants
-		// replace all single quotes with \'
-		escapedString := strings.ReplaceAll(s, qm.String(), `\'`)
-		return fmt.Sprintf(`%v%v%v`, qm.String(), escapedString, qm.String())
+		for _, pair := range singleQuoteEscapes {
+			s = strings.ReplaceAll(s, pair.original, pair.replacement)
+		}
+		return fmt.Sprintf(`%v%v%v`, qm.String(), s, qm.String())
 	default:
 		return s
 	}
@@ -328,24 +344,41 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 				pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 			})
 			return b.renderStaticClause(clauses...), nil
+		case "parameter":
+			// time is a weird struct - you don't want to parse it, just get the string value.
+			// since it is a built-in type we can't change anything about it
+			if tm, ok := reflectedValue.(time.Time); ok {
+				clause, err := b.parseInterface(tm, field.Tag)
+				if err != nil {
+					return nil, err
+				}
+				clauses = append(clauses, clause)
+			} else {
+				structClauses, err := b.parseStruct(reflectedValue)
+				if err != nil {
+					return nil, err
+				}
+				if len(structClauses) != 1 {
+					return nil, fmt.Errorf("expected 1 field in parameter struct, got %d", len(structClauses))
+				}
+				innerClause := structClauses[0]
+				clauses = append(clauses, sqlParameterClause{
+					key:   sqlTag,
+					value: innerClause,
+					qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+					rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+				})
+				return b.renderStaticClause(clauses...), nil
+			}
 		}
 	}
 
-	// time is a weird struct - you don't want to parse it, just get the string value.
-	// since it is a built-in type we can't change anything about it
-	if tm, ok := reflectedValue.(time.Time); ok {
-		clause, err := b.parseInterface(tm, field.Tag)
-		if err != nil {
-			return nil, err
-		}
-		clauses = append(clauses, clause)
-	} else {
-		fieldStructClauses, err := b.parseStruct(reflectedValue)
-		if err != nil {
-			return nil, err
-		}
-		clauses = append(clauses, fieldStructClauses...)
+	fieldStructClauses, err := b.parseStruct(reflectedValue)
+	if err != nil {
+		return nil, err
 	}
+	clauses = append(clauses, fieldStructClauses...)
 	return b.renderStaticClause(clauses...), nil
 }
 

@@ -1,4 +1,4 @@
-package resources
+package sdk
 
 import (
 	"database/sql"
@@ -16,11 +16,13 @@ func TestExtractTriggerInts(t *testing.T) {
 		t.Errorf("Expected 2 values, got %d", l)
 	}
 
-	if out[0] != 51 {
+	first := 51
+	if out[0] != first {
 		t.Errorf("Expected first value to be 51, got %d", out[0])
 	}
 
-	if out[1] != 63 {
+	second := 63
+	if out[1] != second {
 		t.Errorf("Expected second value to be 63, got %d", out[1])
 	}
 }
