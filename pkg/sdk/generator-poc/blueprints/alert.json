@@ -15,7 +15,7 @@
         "name": "WAREHOUSE",
         "required": true,
         "type": "string",
-        "quotations": "no_quotes"
+        "quotations": "double_quotes"
       },
       {
         "name": "SCHEDULE",
@@ -33,12 +33,14 @@
         "required": true,
         "type": "complex",
         "quotations": "no_quotes",
+        "parentheses": true,
         "fields": [
           {
-            "name": "exists",
+            "name": "EXISTS",
             "required": true,
             "type": "complex",
             "quotations": "no_quotes",
+            "parentheses": true,
             "fields": [
               {
                 "name": "condition",

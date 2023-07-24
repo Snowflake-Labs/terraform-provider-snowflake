@@ -92,11 +92,12 @@ type CreateModifiers struct {
 }
 
 type CreateField struct {
-	Name       string        `json:"name"`
-	Required   bool          `json:"required"`
-	Type       string        `json:"type"`
-	Quotations string        `json:"quotations"`
-	Fields     []CreateField `json:"fields"`
+	Name        string        `json:"name"`
+	Required    bool          `json:"required"`
+	Type        string        `json:"type"`
+	Quotations  string        `json:"quotations"`
+	Parentheses bool          `json:"parentheses"`
+	Fields      []CreateField `json:"fields"`
 }
 
 func setUpGenerator(blueprint *Blueprint) *Generator {
@@ -165,6 +166,7 @@ func (gen *Generator) generateInterface() {
 // TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
 // TODO: field names to CamelCase
 // TODO: handle additional structs better
+// TODO: support identifier field (with distinctions)
 func (gen *Generator) generateCreate() {
 	gen.printf("// %sCreateOptions%s %s\n", strings.Title(gen.blueprint.Object.Name), gen.genSuffix, gen.blueprint.Create.Description)
 	gen.printf("//\n// Based on %s\n", gen.blueprint.Create.Docs)
@@ -207,6 +209,14 @@ func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 		}
 	}
 
+	parenthesesString := func(p bool) string {
+		if p {
+			return ",parentheses"
+		} else {
+			return ""
+		}
+	}
+
 	for _, field := range fields {
 		lower := strings.ToLower(field.Name)
 		title := strings.Title(lower)
@@ -215,7 +225,7 @@ func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 			printf(w, "%s %s%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", title, requiredString(field.Required), t, field.Quotations, field.Name)
 			break
 		case "complex":
-			printf(w, "\n%s %s%s `ddl:\"keyword\" sql:\"%s\"` \n", title, requiredString(field.Required), title, field.Name)
+			printf(w, "\n%s %s%s `ddl:\"list%s\" sql:\"%s\"` \n", title, requiredString(field.Required), title, parenthesesString(field.Parentheses), field.Name)
 			var sb strings.Builder
 			as := generateStruct(&sb, title, field.Fields)
 			additionalStructs = append(additionalStructs, sb)
