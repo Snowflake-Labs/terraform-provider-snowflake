@@ -209,8 +209,11 @@ func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 		case "complex":
 			printf(w, "\n%s %s `ddl:\"keyword\" sql:\"%s\"` \n", title, title, field.Name)
 			var sb strings.Builder
-			generateStruct(&sb, title, field.Fields)
+			as := generateStruct(&sb, title, field.Fields)
 			additionalStructs = append(additionalStructs, sb)
+			for _, s := range as {
+				additionalStructs = append(additionalStructs, s)
+			}
 			break
 		case "keyword":
 			printf(w, "%s string `ddl:\"keyword,%s\"` \n", title, field.Quotations)
@@ -222,11 +225,13 @@ func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 	return additionalStructs
 }
 
-func generateStruct(str *strings.Builder, name string, fields []CreateField) {
+func generateStruct(str *strings.Builder, name string, fields []CreateField) []strings.Builder {
 	printf(str, "type %s struct {\n", name)
 
-	generateFields(str, fields)
+	as := generateFields(str, fields)
 
 	printf(str, "}\n")
 	printf(str, "\n")
+
+	return as
 }

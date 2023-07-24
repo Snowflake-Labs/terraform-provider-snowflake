@@ -1,0 +1,62 @@
+{
+  "object": {
+    "name": "alert",
+    "plural": "alerts"
+  },
+  "create": {
+    "docs": "https://docs.snowflake.com/en/sql-reference/sql/create-alert",
+    "description": "creates a new alert in the current schema.",
+    "modifiers": {
+      "orReplace": true,
+      "ifNotExists": true
+    },
+    "fields": [
+      {
+        "name": "WAREHOUSE",
+        "type": "string",
+        "quotations": "no_quotes"
+      },
+      {
+        "name": "SCHEDULE",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "COMMENT",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "IF",
+        "type": "complex",
+        "quotations": "no_quotes",
+        "fields": [
+          {
+            "name": "exists",
+            "type": "complex",
+            "quotations": "no_quotes",
+            "fields": [
+              {
+                "name": "condition",
+                "type": "keyword",
+                "quotations": "no_quotes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "THEN",
+        "type": "complex",
+        "quotations": "no_quotes",
+        "fields": [
+          {
+            "name": "action",
+            "type": "keyword",
+            "quotations": "no_quotes"
+          }
+        ]
+      }
+    ]
+  }
+}
