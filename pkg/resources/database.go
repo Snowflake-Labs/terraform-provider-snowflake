@@ -325,7 +325,7 @@ func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
 	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
-		IfExists: sdk.Bool(true),
+		IfExists: sdk.Bool(false),
 	})
 	if err != nil {
 		return err
