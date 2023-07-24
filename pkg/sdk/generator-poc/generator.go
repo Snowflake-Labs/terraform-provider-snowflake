@@ -150,11 +150,11 @@ func (gen *Generator) generateCreate() {
 	// create section is almost the same everytime
 	gen.printf("create bool `ddl:\"static\" sql:\"CREATE\"` %s\n", lintIgnoreComment)
 	if gen.blueprint.Create.Modifiers.OrReplace {
-		gen.printf("orReplace *bool `ddl:\"keyword\" sql:\"OR REPLACE\"` \n")
+		gen.printf("OrReplace *bool `ddl:\"keyword\" sql:\"OR REPLACE\"` \n")
 	}
 	gen.printf("%s bool `ddl:\"static\" sql:\"%s\"` %s\n", gen.blueprint.Object.Name, strings.ToUpper(gen.blueprint.Object.Name), lintIgnoreComment)
 	if gen.blueprint.Create.Modifiers.IfNotExists {
-		gen.printf("ifNotExists *bool `ddl:\"keyword\" sql:\"IF NOT EXISTS\"` \n")
+		gen.printf("IfNotExists *bool `ddl:\"keyword\" sql:\"IF NOT EXISTS\"` \n")
 	}
 	gen.printf("name SchemaObjectIdentifier `ddl:\"identifier\"` \n")
 	gen.printf("\n")
@@ -177,18 +177,20 @@ func (gen *Generator) generateFields(fields []CreateField) []strings.Builder {
 func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
 	var additionalStructs []strings.Builder
 	for _, field := range fields {
+		lower := strings.ToLower(field.Name)
+		title := strings.Title(lower)
 		switch t := field.Type; t {
 		case "string", "bool":
-			printf(w, "%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", strings.ToLower(field.Name), t, field.Quotations, field.Name)
+			printf(w, "%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", title, t, field.Quotations, field.Name)
 			break
 		case "complex":
-			printf(w, "\n%s %s `ddl:\"static\" sql:\"%s\"` \n", strings.ToLower(field.Name), strings.ToLower(field.Name), field.Name)
+			printf(w, "\n%s %s `ddl:\"keyword\" sql:\"%s\"` \n", title, title, field.Name)
 			var sb strings.Builder
-			generateStruct(&sb, strings.ToLower(field.Name), field.Fields)
+			generateStruct(&sb, title, field.Fields)
 			additionalStructs = append(additionalStructs, sb)
 			break
 		case "keyword":
-			printf(w, "%s string `ddl:\"keyword,%s\"` \n", strings.ToLower(field.Name), field.Quotations)
+			printf(w, "%s string `ddl:\"keyword,%s\"` \n", title, field.Quotations)
 			break
 		default:
 			log.Panicf("Field type %s is not supported.\n", t)
