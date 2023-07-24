@@ -134,6 +134,8 @@ func (gen *Generator) addFilePreamble() {
 
 // TODO: implement using go text/template or at least clean it
 // TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
+// TODO: add possibility to declare field as required or not
+// TODO: field names to CamelCase
 func (gen *Generator) generateCreate() {
 	gen.printf("// Based on %s\n", gen.blueprint.Create.Docs)
 	gen.printf("type %sCreateOptionsGen struct {\n", strings.Title(gen.blueprint.Object.Name))
@@ -148,7 +150,29 @@ func (gen *Generator) generateCreate() {
 		gen.printf("ifNotExists *bool `ddl:\"keyword\" sql:\"IF NOT EXISTS\"` \n")
 	}
 	gen.printf("name SchemaObjectIdentifier `ddl:\"identifier\"` \n")
+	gen.printf("\n")
+
+	// fields
+	gen.generateFields(gen.blueprint.Create.Fields)
 
 	gen.printf("}\n")
 	gen.printf("\n")
+}
+
+func (gen *Generator) generateFields(fields []CreateField) {
+	for _, field := range fields {
+		switch t := field.Type; t {
+		case "string", "bool":
+			gen.printf("%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", strings.ToLower(field.Name), t, field.Quotations, field.Name)
+			break
+		case "static":
+			gen.printf("\n%s bool `ddl:\"static\" sql:\"%s\"` \n", strings.ToLower(field.Name), field.Name)
+			break
+		case "keyword":
+			gen.printf("%s string `ddl:\"keyword,%s\"` \n", strings.ToLower(field.Name), field.Quotations)
+			break
+		default:
+			log.Panicf("Field type %s is not supported.\n", t)
+		}
+	}
 }
