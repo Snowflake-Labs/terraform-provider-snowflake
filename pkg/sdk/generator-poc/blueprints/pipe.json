@@ -36,7 +36,7 @@
       },
       {
         "name": "AS",
-        "type": "static",
+        "type": "complex",
         "quotations": "no_quotes",
         "fields": [
           {

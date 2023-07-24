@@ -87,9 +87,10 @@ type CreateModifiers struct {
 }
 
 type CreateField struct {
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Quotations string `json:"quotations"`
+	Name       string        `json:"name"`
+	Type       string        `json:"type"`
+	Quotations string        `json:"quotations"`
+	Fields     []CreateField `json:"fields"`
 }
 
 func setUpGenerator(blueprint *Blueprint) *Generator {
@@ -112,14 +113,19 @@ func setUpGenerator(blueprint *Blueprint) *Generator {
 }
 
 type Generator struct {
-	Buffer        bytes.Buffer
-	blueprint     *Blueprint
-	outputPackage string
-	outputName    string
+	Buffer              bytes.Buffer
+	helperStringBuilder strings.Builder
+	blueprint           *Blueprint
+	outputPackage       string
+	outputName          string
 }
 
 func (gen *Generator) printf(format string, args ...any) {
-	_, err := fmt.Fprintf(&gen.Buffer, format, args...)
+	printf(&gen.Buffer, format, args...)
+}
+
+func printf(w io.Writer, format string, args ...any) {
+	_, err := fmt.Fprintf(w, format, args...)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -136,6 +142,7 @@ func (gen *Generator) addFilePreamble() {
 // TODO: pick identifier type programmatically instead of hardcoded SchemaObjectIdentifier
 // TODO: add possibility to declare field as required or not
 // TODO: field names to CamelCase
+// TODO: handle additional structs better
 func (gen *Generator) generateCreate() {
 	gen.printf("// Based on %s\n", gen.blueprint.Create.Docs)
 	gen.printf("type %sCreateOptionsGen struct {\n", strings.Title(gen.blueprint.Object.Name))
@@ -153,26 +160,48 @@ func (gen *Generator) generateCreate() {
 	gen.printf("\n")
 
 	// fields
-	gen.generateFields(gen.blueprint.Create.Fields)
+	var additionalStructs = gen.generateFields(gen.blueprint.Create.Fields)
 
 	gen.printf("}\n")
 	gen.printf("\n")
+
+	for _, a := range additionalStructs {
+		gen.printf(a.String())
+	}
 }
 
-func (gen *Generator) generateFields(fields []CreateField) {
+func (gen *Generator) generateFields(fields []CreateField) []strings.Builder {
+	return generateFields(&gen.Buffer, fields)
+}
+
+func generateFields(w io.Writer, fields []CreateField) []strings.Builder {
+	var additionalStructs []strings.Builder
 	for _, field := range fields {
 		switch t := field.Type; t {
 		case "string", "bool":
-			gen.printf("%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", strings.ToLower(field.Name), t, field.Quotations, field.Name)
+			printf(w, "%s *%s `ddl:\"parameter,%s\" sql:\"%s\"` \n", strings.ToLower(field.Name), t, field.Quotations, field.Name)
 			break
-		case "static":
-			gen.printf("\n%s bool `ddl:\"static\" sql:\"%s\"` \n", strings.ToLower(field.Name), field.Name)
+		case "complex":
+			printf(w, "\n%s %s `ddl:\"static\" sql:\"%s\"` \n", strings.ToLower(field.Name), strings.ToLower(field.Name), field.Name)
+			var sb strings.Builder
+			generateStruct(&sb, strings.ToLower(field.Name), field.Fields)
+			additionalStructs = append(additionalStructs, sb)
 			break
 		case "keyword":
-			gen.printf("%s string `ddl:\"keyword,%s\"` \n", strings.ToLower(field.Name), field.Quotations)
+			printf(w, "%s string `ddl:\"keyword,%s\"` \n", strings.ToLower(field.Name), field.Quotations)
 			break
 		default:
 			log.Panicf("Field type %s is not supported.\n", t)
 		}
 	}
+	return additionalStructs
+}
+
+func generateStruct(str *strings.Builder, name string, fields []CreateField) {
+	printf(str, "type %s struct {\n", name)
+
+	generateFields(str, fields)
+
+	printf(str, "}\n")
+	printf(str, "\n")
 }
