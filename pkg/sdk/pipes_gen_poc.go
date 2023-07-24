@@ -1,3 +1,3 @@
 package sdk
 
-//go:generate go run ./generator-poc/generator.go arg1
+//go:generate go run ./generator-poc/generator.go -blueprint ./generator-poc/blueprints/pipe.json
