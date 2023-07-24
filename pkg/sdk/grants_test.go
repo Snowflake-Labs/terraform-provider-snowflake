@@ -8,12 +8,337 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGrantPrivilegesToAccountRole(t *testing.T) {
+	t.Run("on account", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				GlobalPrivileges: []GlobalPrivilege{GlobalPrivilegeMonitorUsage, GlobalPrivilegeApplyTag},
+			},
+			on: &AccountRoleGrantOn{
+				Account: Bool(true),
+			},
+			accountRole:     NewAccountObjectIdentifier("role1"),
+			WithGrantOption: Bool(true),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT MONITOR USAGE, APPLY TAG ON ACCOUNT TO ROLE "role1" WITH GRANT OPTION`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on account object", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					Database: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT ALL PRIVILEGES ON DATABASE "db1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+	t.Run("on schema", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					Schema: Pointer(NewSchemaIdentifier("db1", "schema1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT CREATE ALERT ON SCHEMA "db1"."schema1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on all schemas in database", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					AllSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT CREATE ALERT ON ALL SCHEMAS IN DATABASE "db1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on all future schemas in database", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					FutureSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT CREATE ALERT ON FUTURE SCHEMAS IN DATABASE "db1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on schema object", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					SchemaObject: &Object{
+						ObjectType: ObjectTypeTable,
+						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT APPLY ON TABLE "db1"."schema1"."table1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on future schema object in database", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InDatabase:       Pointer(NewAccountObjectIdentifier("db1")),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT APPLY ON FUTURE TABLES IN DATABASE "db1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on future schema object in schema", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InSchema:         Pointer(NewSchemaIdentifier("db1", "schema1")),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `GRANT APPLY ON FUTURE TABLES IN SCHEMA "db1"."schema1" TO ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+}
+
+func TestRevokePrivilegesFromAccountRole(t *testing.T) {
+	t.Run("on account", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				GlobalPrivileges: []GlobalPrivilege{GlobalPrivilegeMonitorUsage, GlobalPrivilegeApplyTag},
+			},
+			on: &AccountRoleGrantOn{
+				Account: Bool(true),
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE MONITOR USAGE, APPLY TAG ON ACCOUNT FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on account object", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					Database: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE ALL PRIVILEGES ON DATABASE "db1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on account object", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AccountObjectPrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole, AccountObjectPrivilegeModify},
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					Database: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE CREATE DATABASE ROLE, MODIFY ON DATABASE "db1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+	t.Run("on schema", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					Schema: Pointer(NewSchemaIdentifier("db1", "schema1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON SCHEMA "db1"."schema1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on all schemas in database + restrict", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					AllSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+			Restrict:    Bool(true),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON ALL SCHEMAS IN DATABASE "db1" FROM ROLE "role1" RESTRICT`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on all future schemas in database + cascade", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &AccountRoleGrantOn{
+				Schema: &GrantOnSchema{
+					FutureSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+			Cascade:     Bool(true),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON FUTURE SCHEMAS IN DATABASE "db1" FROM ROLE "role1" CASCADE`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on schema object", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					SchemaObject: &Object{
+						ObjectType: ObjectTypeTable,
+						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE SELECT, UPDATE ON TABLE "db1"."schema1"."table1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on future schema object in database", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InDatabase:       Pointer(NewAccountObjectIdentifier("db1")),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE SELECT, UPDATE ON FUTURE TABLES IN DATABASE "db1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("on future schema object in schema", func(t *testing.T) {
+		opts := &RevokePrivilegesFromAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &AccountRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InSchema:         Pointer(NewSchemaIdentifier("db1", "schema1")),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `REVOKE SELECT, UPDATE ON FUTURE TABLES IN SCHEMA "db1"."schema1" FROM ROLE "role1"`
+		assert.Equal(t, expected, actual)
+	})
+}
+
 func TestGrantPrivilegeToShare(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 	t.Run("on database", func(t *testing.T) {
 		otherID := randomAccountObjectIdentifier(t)
 		opts := &grantPrivilegeToShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
 				Database: otherID,
 			},
@@ -28,7 +353,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	t.Run("on schema", func(t *testing.T) {
 		otherID := randomSchemaIdentifier(t)
 		opts := &grantPrivilegeToShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
 				Schema: otherID,
 			},
@@ -43,7 +368,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	t.Run("on table", func(t *testing.T) {
 		otherID := randomSchemaObjectIdentifier(t)
 		opts := &grantPrivilegeToShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
 				Table: &OnTable{
 					Name: otherID,
@@ -60,7 +385,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	t.Run("on all tables", func(t *testing.T) {
 		otherID := randomSchemaIdentifier(t)
 		opts := &grantPrivilegeToShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
 				Table: &OnTable{
 					AllInSchema: otherID,
@@ -77,7 +402,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	t.Run("on view", func(t *testing.T) {
 		otherID := randomSchemaObjectIdentifier(t)
 		opts := &grantPrivilegeToShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
 				View: otherID,
 			},
@@ -95,7 +420,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on database", func(t *testing.T) {
 		otherID := randomAccountObjectIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				Database: otherID,
 			},
@@ -110,7 +435,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on schema", func(t *testing.T) {
 		otherID := randomSchemaIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				Schema: otherID,
 			},
@@ -125,7 +450,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on table", func(t *testing.T) {
 		otherID := randomSchemaObjectIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				Table: &OnTable{
 					Name: otherID,
@@ -142,7 +467,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on all tables", func(t *testing.T) {
 		otherID := randomSchemaIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				Table: &OnTable{
 					AllInSchema: otherID,
@@ -159,7 +484,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on view", func(t *testing.T) {
 		otherID := randomSchemaObjectIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				View: &OnView{
 					Name: otherID,
@@ -176,7 +501,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	t.Run("on all views", func(t *testing.T) {
 		otherID := randomSchemaIdentifier(t)
 		opts := &revokePrivilegeFromShareOptions{
-			objectPrivilege: PrivilegeUsage,
+			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
 				View: &OnView{
 					AllInSchema: otherID,

@@ -123,7 +123,7 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 	// case where the main db doesn't already exist, so it will need to be revoked
 	// before deleting the temp db. Where USAGE hasn't been already granted it is not
 	// an error to revoke it, so it's ok to just do the revoke every time.
-	err = client.Grants.GrantPrivilegeToShare(ctx, sdk.PrivilegeReferenceUsage, &sdk.GrantPrivilegeToShareOn{
+	err = client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeReferenceUsage, &sdk.GrantPrivilegeToShareOn{
 		Database: tempDatabaseID,
 	}, shareID)
 	if err != nil {
@@ -131,14 +131,14 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 	}
 	defer func() {
 		// revoke the REFERENCE_USAGE privilege during cleanup
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.PrivilegeReferenceUsage, &sdk.RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeReferenceUsage, &sdk.RevokePrivilegeFromShareOn{
 			Database: tempDatabaseID,
 		}, shareID)
 		if err != nil {
 			log.Printf("[WARN] error revoking privilege from share err = %v", err)
 		}
 		// revoke the maybe automatically granted USAGE privilege during cleanup
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.PrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
 			Database: tempDatabaseID,
 		}, shareID)
 		if err != nil {

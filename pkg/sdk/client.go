@@ -27,9 +27,11 @@ type Client struct {
 
 	// DDL Commands
 	Accounts         Accounts
+	Alerts           Alerts
 	Comments         Comments
 	Databases        Databases
 	FailoverGroups   FailoverGroups
+	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
@@ -115,11 +117,13 @@ func NewClientFromDB(db *sql.DB) *Client {
 
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
+	c.Alerts = &alerts{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
+	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}

@@ -67,13 +67,13 @@ func ToWarehouseSize(s string) (WarehouseSize, error) {
 		return WarehouseSizeXLarge, nil
 	case "XXLARGE", "X2LARGE", "2X-LARGE", "2XLARGE":
 		return WarehouseSizeXXLarge, nil
-	case "XXXLARGE", "X3LARGE", "3X-LARGE":
+	case "XXXLARGE", "X3LARGE", "3X-LARGE", "3XLARGE":
 		return WarehouseSizeXXXLarge, nil
-	case "X4LARGE", "4X-LARGE":
+	case "X4LARGE", "4X-LARGE", "4XLARGE":
 		return WarehouseSizeX4Large, nil
-	case "X5LARGE", "5X-LARGE":
+	case "X5LARGE", "5X-LARGE", "5XLARGE":
 		return WarehouseSizeX5Large, nil
-	case "X6LARGE", "6X-LARGE":
+	case "X6LARGE", "6X-LARGE", "6XLARGE":
 		return WarehouseSizeX6Large, nil
 	default:
 		return "", fmt.Errorf("invalid warehouse size: %s", s)

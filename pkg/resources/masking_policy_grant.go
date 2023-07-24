@@ -80,12 +80,12 @@ var maskingPolicyGrantSchema = map[string]*schema.Schema{
 func MaskingPolicyGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreateMaskingPolicyGrant,
-			Read:   ReadMaskingPolicyGrant,
-			Delete: DeleteMaskingPolicyGrant,
-			Update: UpdateMaskingPolicyGrant,
-
-			Schema: maskingPolicyGrantSchema,
+			Create:             CreateMaskingPolicyGrant,
+			Read:               ReadMaskingPolicyGrant,
+			Delete:             DeleteMaskingPolicyGrant,
+			Update:             UpdateMaskingPolicyGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             maskingPolicyGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)
