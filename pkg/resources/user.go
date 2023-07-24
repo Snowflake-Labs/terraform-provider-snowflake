@@ -271,9 +271,9 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var defaultSecondaryRoles []string
-	defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
-	defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
 	if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
+		defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
+		defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
 		defaultSecondaryRoles = strings.Split(defaultRoles, ",")
 	}
 	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
