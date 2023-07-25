@@ -43,7 +43,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Sensitive:   true,
+		Sensitive:   false,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
 		DiffSuppressFunc: diffCaseInsensitive,
