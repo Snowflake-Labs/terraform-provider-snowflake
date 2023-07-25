@@ -109,6 +109,9 @@ check-mod:
 fmt: ## Run linter and apply formatting autofix
 	golangci-lint run ./... -v --fix
 
-generate:
+generate-all:
 	go generate ./pkg/sdk/...
-.PHONY: generate
+.PHONY: generate-all
+
+generate-%: ./pkg/sdk/%_gen_poc.go
+	go generate $<
