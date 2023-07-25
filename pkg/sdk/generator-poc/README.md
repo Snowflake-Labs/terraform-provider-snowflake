@@ -9,6 +9,7 @@ For the sake of discussion only create statement was taken into consideration. F
 There are two files ready for generation:
 - [alerts_gen_poc.go](../alerts_gen_poc.go) with [blueprint json](blueprints/alert.json)
 - [pipes_gen_poc.go](../pipes_gen_poc.go) with [blueprint json](blueprints/pipe.json)
+which create files [alerts_gen_poc_generated.go](../alerts_gen_poc_generated.go) and [pipes_gen_poc_generated.go](../pipes_gen_poc_generated.go) respectively.
 
 To invoke both generations run:
 ```shell
@@ -24,6 +25,8 @@ or
 ```shell
 make generate-alerts
 ```
+
+To verify generated files run tests in [alerts_gen_test.go](../alerts_gen_test.go) and [pipes_gen_test.go](../pipes_gen_test.go).
 
 ### Next possible steps
 - generating validations: based on example from [blueprint](blueprints/alert_proposals.json) and [discussion file](../alerts_discussion.go)
