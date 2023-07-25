@@ -1,0 +1,127 @@
+{
+  "object": {
+    "name": "alert",
+    "plural": "alerts"
+  },
+  "create": {
+    "docs": "https://docs.snowflake.com/en/sql-reference/sql/create-alert",
+    "description": "creates a new alert in the current schema.",
+    "modifiers": {
+      "orReplace": true,
+      "ifNotExists": true
+    },
+    "fields": [
+      {
+        "name": "WAREHOUSE",
+        "required": true,
+        "type": "string",
+        "quotations": "double_quotes"
+      },
+      {
+        "name": "SCHEDULE",
+        "required": true,
+        "type": "complex",
+        "quotations": "no_quotes",
+        "validations": [
+          {
+            "type": "exactlyOne",
+            "fields": ["minute", "cron"]
+          }
+        ],
+        "fields": [
+          {
+            "name": "minute",
+            "type": "option",
+            "fields": [
+              {
+                "name": "n",
+                "type": "int",
+                "required": true,
+                "quotations": "no_quotes"
+              },
+              {
+                "name": "MINUTE",
+                "type": "keyword",
+                "required": true,
+                "quotations": "no_quotes"
+              }
+            ]
+          },
+          {
+            "name": "cron",
+            "type": "option",
+            "fields": [
+              {
+                "name": "USING",
+                "type": "static",
+                "required": true,
+                "quotations": "no_quotes"
+              },
+              {
+                "name": "USING",
+                "type": "static",
+                "required": true,
+                "quotations": "no_quotes"
+              },
+              {
+                "name": "expr",
+                "type": "string",
+                "required": true,
+                "quotations": "no_quotes"
+              },
+              {
+                "name": "timezone",
+                "type": "string",
+                "required": true,
+                "quotations": "no_quotes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "COMMENT",
+        "type": "string",
+        "quotations": "single_quotes"
+      },
+      {
+        "name": "IF",
+        "required": true,
+        "type": "complex",
+        "quotations": "no_quotes",
+        "parentheses": true,
+        "fields": [
+          {
+            "name": "EXISTS",
+            "required": true,
+            "type": "complex",
+            "quotations": "no_quotes",
+            "parentheses": true,
+            "fields": [
+              {
+                "name": "condition",
+                "required": true,
+                "type": "keyword",
+                "quotations": "no_quotes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "THEN",
+        "required": true,
+        "type": "complex",
+        "quotations": "no_quotes",
+        "fields": [
+          {
+            "name": "action",
+            "required": true,
+            "type": "keyword",
+            "quotations": "no_quotes"
+          }
+        ]
+      }
+    ]
+  }
+}
