@@ -9,6 +9,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	schemaIdentifier := NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	t.Cleanup(schemaCleanup)
+
+	table, tableCleanup := createTable(t, client, database, schema)
+	t.Cleanup(tableCleanup)
+
+	stageName := randomAlphanumericN(t, 20)
+	stage, stageCleanup := createStage(t, client, database, schema, stageName)
+	t.Cleanup(stageCleanup)
+
+	createCopyStatement := func(table *Table, stage *Stage) string {
+		require.NotNil(t, table, "table has to be created")
+		require.NotNil(t, stage, "stage has to be created")
+		return fmt.Sprintf("COPY INTO %s FROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName())
+	}
+
+	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
+		err := client.Pipes.Create(
+			ctx,
+			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
+			createCopyStatement(table, stage),
+			&PipeCreateOptions{},
+		)
+
+		require.ErrorContains(t, err, "(42000): SQL compilation error:\nsyntax error line 1 at position 141 unexpected ','")
+	})
+}
+
 func TestInt_PipesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
