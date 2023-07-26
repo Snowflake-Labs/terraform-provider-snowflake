@@ -11,7 +11,7 @@ func (opts *PipeCreateOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if opts.CopyStatement == "" {
+	if opts.copyStatement == "" {
 		return errCopyStatementRequired
 	}
 	return nil

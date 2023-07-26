@@ -2,21 +2,33 @@ package sdk
 
 import "context"
 
-var _ = (*pipes)(nil)
+var _ Pipes = (*pipes)(nil)
 
 type pipes struct {
 	client *Client
 }
 
-func (v *pipes) Create(ctx context.Context, opts *PipeCreateOptions) error {
+func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *PipeCreateOptions) error {
+	if opts == nil {
+		opts = &PipeCreateOptions{}
+	}
+	opts.name = id
+	opts.copyStatement = copyStatement
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Alter(ctx context.Context, opts *PipeAlterOptions) error {
+func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error {
+	if opts == nil {
+		opts = &PipeAlterOptions{}
+	}
+	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Drop(ctx context.Context, opts *PipeDropOptions) error {
+func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
+	opts := &PipeDropOptions{
+		name: id,
+	}
 	return validateAndExec(v.client, ctx, opts)
 }
 

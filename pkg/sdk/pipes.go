@@ -8,11 +8,11 @@ import (
 
 type Pipes interface {
 	// Create creates a pipe.
-	Create(ctx context.Context, opts *PipeCreateOptions) error
+	Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *PipeCreateOptions) error
 	// Alter modifies an existing pipe.
-	Alter(ctx context.Context, opts *PipeAlterOptions) error
+	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error
 	// Drop removes a pipe.
-	Drop(ctx context.Context, opts *PipeDropOptions) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of pipes.
 	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
 	// ShowByID returns a pipe by ID.
@@ -39,7 +39,7 @@ type PipeCreateOptions struct {
 	Comment          *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 
 	as            bool   `ddl:"static" sql:"AS"` //lint:ignore U1000 This is used in the ddl tag
-	CopyStatement string `ddl:"keyword,no_quotes"`
+	copyStatement string `ddl:"keyword,no_quotes"`
 }
 
 // PipeAlterOptions contains options for modifying a limited set of properties for an existing pipe object.

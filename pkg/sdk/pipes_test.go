@@ -15,7 +15,7 @@ func TestPipesCreate(t *testing.T) {
 	setUpOpts := func() *PipeCreateOptions {
 		return &PipeCreateOptions{
 			name:          id,
-			CopyStatement: "<copy_statement>",
+			copyStatement: "<copy_statement>",
 		}
 	}
 
@@ -32,7 +32,7 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("validation: copy statement required", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.CopyStatement = ""
+		opts.copyStatement = ""
 		assertOptsInvalid(t, opts, errCopyStatementRequired)
 	})
 
