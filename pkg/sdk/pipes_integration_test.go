@@ -13,10 +13,11 @@ func TestInt_PipesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	database, databaseCleanup := createDatabase(t, client)
+	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
 	t.Cleanup(schemaCleanup)
 
 	table1, table1Cleanup := createTable(t, client, database, schema)
@@ -25,7 +26,7 @@ func TestInt_PipesShow(t *testing.T) {
 	table2, table2Cleanup := createTable(t, client, database, schema)
 	t.Cleanup(table2Cleanup)
 
-	stageName := randomString(t)
+	stageName := randomAlphanumericN(t, 20)
 	stage, stageCleanup := createStage(t, client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
@@ -35,12 +36,12 @@ func TestInt_PipesShow(t *testing.T) {
 		return fmt.Sprintf("COPY INTO %s FROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName())
 	}
 
-	pipe1Name := randomString(t)
+	pipe1Name := randomAlphanumericN(t, 20)
 	pipe1CopyStatement := createCopyStatement(table1, stage)
 	pipe1, pipe1Cleanup := createPipe(t, client, database, schema, pipe1Name, pipe1CopyStatement)
 	t.Cleanup(pipe1Cleanup)
 
-	pipe2Name := randomString(t)
+	pipe2Name := randomAlphanumericN(t, 20)
 	pipe2CopyStatement := createCopyStatement(table2, stage)
 	pipe2, pipe2Cleanup := createPipe(t, client, database, schema, pipe2Name, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)

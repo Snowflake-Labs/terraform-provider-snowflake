@@ -53,6 +53,11 @@ func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
+func alphanumericSchemaIdentifier(t *testing.T) SchemaIdentifier {
+	t.Helper()
+	return NewSchemaIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
+}
+
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
 	return NewAccountObjectIdentifier(randomStringN(t, 12))
@@ -159,6 +164,11 @@ func randomString(t *testing.T) string {
 func randomStringN(t *testing.T, num int) string {
 	t.Helper()
 	return gofakeit.Password(true, true, true, true, false, num)
+}
+
+func randomAlphanumericN(t *testing.T, num int) string {
+	t.Helper()
+	return gofakeit.Password(true, true, true, false, false, num)
 }
 
 func randomStringRange(t *testing.T, min, max int) string {
@@ -320,12 +330,16 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWareho
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, &CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOptions) (*Database, func()) {
+func createDatabaseWithIdentifier(t *testing.T, client *Client, id string) (*Database, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	return createDatabaseWithOptions(t, client, AccountObjectIdentifier{id}, &CreateDatabaseOptions{})
+}
+
+func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, _ *CreateDatabaseOptions) (*Database, func()) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Databases.Create(ctx, id, nil)
 	require.NoError(t, err)
@@ -339,7 +353,11 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
 	t.Helper()
-	name := randomStringRange(t, 8, 28)
+	return createSchemaWithIdentifier(t, client, database, randomStringRange(t, 8, 28))
+}
+
+func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
+	t.Helper()
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
 	require.NoError(t, err)
