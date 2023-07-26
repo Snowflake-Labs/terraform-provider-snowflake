@@ -569,3 +569,57 @@ func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	adjustedTime := t.Add(-time.Duration(offset) * time.Second)
 	return &adjustedTime, nil
 }
+
+func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
+	t.Helper()
+	require.NotNil(t, database, "database has to be created")
+	require.NotNil(t, schema, "schema has to be created")
+
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	ctx := context.Background()
+
+	pipeCleanup := func() {
+		err := client.Pipes.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+
+	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	if err != nil {
+		return nil, pipeCleanup
+	}
+	require.NoError(t, err)
+
+	createdPipe, errDescribe := client.Pipes.Describe(ctx, id)
+	if errDescribe != nil {
+		return nil, pipeCleanup
+	}
+	require.NoError(t, errDescribe)
+
+	return createdPipe, pipeCleanup
+}
+
+func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
+	t.Helper()
+	require.NotNil(t, database, "database has to be created")
+	require.NotNil(t, schema, "schema has to be created")
+
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	ctx := context.Background()
+
+	stageCleanup := func() {
+		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
+		require.NoError(t, err)
+	}
+
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+
+	return &Stage{
+		DatabaseName: database.Name,
+		SchemaName:   schema.Name,
+		Name:         name,
+	}, stageCleanup
+}
