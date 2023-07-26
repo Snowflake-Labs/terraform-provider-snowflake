@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -29,7 +30,7 @@ type PipeCreateOptions struct {
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	pipe        bool                   `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        SchemaObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	name        SchemaObjectIdentifier `ddl:"identifier"`
 
 	AutoIngest       *bool   `ddl:"parameter" sql:"AUTO_INGEST"`
 	ErrorIntegration *string `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
@@ -96,19 +97,19 @@ type PipeShowOptions struct {
 
 // pipeDBRow is used to decode the result of a SHOW PIPES query.
 type pipeDBRow struct {
-	CreatedOn           time.Time `db:"created_on"`
-	Name                string    `db:"name"`
-	DatabaseName        string    `db:"database_name"`
-	SchemaName          string    `db:"schema_name"`
-	Definition          string    `db:"definition"`
-	Owner               string    `db:"owner"`
-	NotificationChannel string    `db:"notification_channel"`
-	Comment             string    `db:"comment"`
-	Integration         string    `db:"integration"`
-	Pattern             string    `db:"pattern"`
-	ErrorIntegration    string    `db:"error_integration"`
-	OwnerRoleType       string    `db:"owner_role_type"`
-	InvalidReason       string    `db:"invalid_reason"`
+	CreatedOn           time.Time      `db:"created_on"`
+	Name                string         `db:"name"`
+	DatabaseName        string         `db:"database_name"`
+	SchemaName          string         `db:"schema_name"`
+	Definition          string         `db:"definition"`
+	Owner               string         `db:"owner"`
+	NotificationChannel sql.NullString `db:"notification_channel"`
+	Comment             sql.NullString `db:"comment"`
+	Integration         sql.NullString `db:"integration"`
+	Pattern             sql.NullString `db:"pattern"`
+	ErrorIntegration    sql.NullString `db:"error_integration"`
+	OwnerRoleType       sql.NullString `db:"owner_role_type"`
+	InvalidReason       sql.NullString `db:"invalid_reason"`
 }
 
 // Pipe is a user-friendly result for a SHOW PIPES and DESCRIBE PIPE queries.
@@ -139,21 +140,36 @@ func (v *Pipe) ObjectType() ObjectType {
 }
 
 func (row pipeDBRow) toPipe() *Pipe {
-	return &Pipe{
-		CreatedOn:           row.CreatedOn,
-		Name:                row.Name,
-		DatabaseName:        row.DatabaseName,
-		SchemaName:          row.SchemaName,
-		Definition:          row.Definition,
-		Owner:               row.Owner,
-		NotificationChannel: row.NotificationChannel,
-		Comment:             row.Comment,
-		Integration:         row.Integration,
-		Pattern:             row.Pattern,
-		ErrorIntegration:    row.ErrorIntegration,
-		OwnerRoleType:       row.OwnerRoleType,
-		InvalidReason:       row.InvalidReason,
+	pipe := Pipe{
+		CreatedOn:    row.CreatedOn,
+		Name:         row.Name,
+		DatabaseName: row.DatabaseName,
+		SchemaName:   row.SchemaName,
+		Definition:   row.Definition,
+		Owner:        row.Owner,
 	}
+	if row.NotificationChannel.Valid {
+		pipe.NotificationChannel = row.NotificationChannel.String
+	}
+	if row.Comment.Valid {
+		pipe.Comment = row.Comment.String
+	}
+	if row.Integration.Valid {
+		pipe.Integration = row.Integration.String
+	}
+	if row.Pattern.Valid {
+		pipe.Pattern = row.Pattern.String
+	}
+	if row.ErrorIntegration.Valid {
+		pipe.ErrorIntegration = row.ErrorIntegration.String
+	}
+	if row.OwnerRoleType.Valid {
+		pipe.OwnerRoleType = row.OwnerRoleType.String
+	}
+	if row.InvalidReason.Valid {
+		pipe.InvalidReason = row.InvalidReason.String
+	}
+	return &pipe
 }
 
 // describePipeOptions contains options for describing the properties specified for a pipe, as well as the default values of the properties.
