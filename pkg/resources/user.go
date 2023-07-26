@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 
@@ -323,7 +322,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	ctx := context.Background()
-	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(name)
 
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
@@ -332,11 +331,12 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		alterOptions := &sdk.AlterUserOptions{
 			NewName: newID,
 		}
-		err := client.Users.Alter(ctx, objectIdentifier, alterOptions)
+		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
 			return err
 		}
 		d.SetId(helpers.EncodeSnowflakeID(newID))
+		id = newID
 	}
 	runSet := false
 	alterOptions := &sdk.AlterUserOptions{
