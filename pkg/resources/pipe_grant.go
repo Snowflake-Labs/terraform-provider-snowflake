@@ -42,7 +42,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future pipe. To grant all privileges, use the value `ALL PRIVILEGES`",
-		Default:      "USAGE",
+		Default:      "OPERATE",
 		ValidateFunc: validation.StringInSlice(validPipePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
