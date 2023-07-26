@@ -12,7 +12,7 @@ var _ validatableOpts = &describePipeOptions{}
 
 func (opts *PipeCreateOptions) validateProp() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -25,7 +25,7 @@ func (opts *PipeCreateOptions) validateProp() error {
 
 func (opts *PipeAlterOptions) validateProp() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -33,28 +33,30 @@ func (opts *PipeAlterOptions) validateProp() error {
 	if ok := exactlyOneValueSet(
 		opts.Set,
 		opts.Unset,
+		opts.SetTags,
+		opts.UnsetTags,
 		opts.Refresh,
 	); !ok {
 		return errAlterNeedsExactlyOneAction
 	}
 	if set := opts.Set; valueSet(set) {
-		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Tag, set.Comment) {
+		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
 			return errAlterNeedsAtLeastOneProperty
-		}
-		if valueSet(set.Tag) {
-			if !everyValueNil(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
-				return errCannotAlterOtherPropertyWithTag
-			}
 		}
 	}
 	if unset := opts.Unset; valueSet(unset) {
-		if !anyValueSet(unset.PipeExecutionPaused, unset.Tag, unset.Comment) {
+		if !anyValueSet(unset.PipeExecutionPaused, unset.Comment) {
 			return errAlterNeedsAtLeastOneProperty
 		}
-		if valueSet(unset.Tag) {
-			if !everyValueNil(unset.PipeExecutionPaused, unset.Comment) {
-				return errCannotAlterOtherPropertyWithTag
-			}
+	}
+	if setTags := opts.SetTags; valueSet(setTags) {
+		if !valueSet(setTags.Tag) {
+			return errAlterNeedsAtLeastOneProperty
+		}
+	}
+	if unsetTags := opts.UnsetTags; valueSet(unsetTags) {
+		if !valueSet(unsetTags.Tag) {
+			return errAlterNeedsAtLeastOneProperty
 		}
 	}
 	return nil
@@ -62,7 +64,7 @@ func (opts *PipeAlterOptions) validateProp() error {
 
 func (opts *PipeDropOptions) validateProp() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -72,7 +74,7 @@ func (opts *PipeDropOptions) validateProp() error {
 
 func (opts *PipeShowOptions) validateProp() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
 		return errPatternRequiredForLikeKeyword
@@ -85,7 +87,7 @@ func (opts *PipeShowOptions) validateProp() error {
 
 func (opts *describePipeOptions) validateProp() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -94,10 +96,10 @@ func (opts *describePipeOptions) validateProp() error {
 }
 
 var (
-	errCopyStatementRequired           = errors.New("copy statement required")
-	errPatternRequiredForLikeKeyword   = errors.New("pattern must be specified for like keyword")
-	errScopeRequiredForInKeyword       = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction      = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty    = errors.New("alter statement needs at least one property")
-	errCannotAlterOtherPropertyWithTag = errors.New("cannot alter both tag and other property in the same statement")
+	errNilOptions                    = errors.New("options cannot be nil")
+	errCopyStatementRequired         = errors.New("copy statement required")
+	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+	errScopeRequiredForInKeyword     = errors.New("exactly one scope must be specified for in keyword")
+	errAlterNeedsExactlyOneAction    = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty  = errors.New("alter statement needs at least one property")
 )

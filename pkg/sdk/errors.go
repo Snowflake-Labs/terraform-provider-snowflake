@@ -13,7 +13,6 @@ var (
 
 	// snowflake-sdk errors.
 	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
-	ErrNilOptions              = errors.New("options cannot be nil")
 )
 
 func decodeDriverError(err error) error {

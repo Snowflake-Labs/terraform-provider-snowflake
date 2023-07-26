@@ -52,22 +52,30 @@ type PipeAlterOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	Set     *PipeSet     `ddl:"list,no_parentheses" sql:"SET"`
-	Unset   *PipeUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
-	Refresh *PipeRefresh `ddl:"keyword" sql:"REFRESH"`
+	Set       *PipeSet       `ddl:"list,no_parentheses" sql:"SET"`
+	Unset     *PipeUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTags   *PipeSetTags   `ddl:"list,no_parentheses" sql:"SET TAG"`
+	UnsetTags *PipeUnsetTags `ddl:"list,no_parentheses" sql:"UNSET TAG"`
+	Refresh   *PipeRefresh   `ddl:"keyword" sql:"REFRESH"`
 }
 
 type PipeSet struct {
-	ErrorIntegration    *string          `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
-	PipeExecutionPaused *bool            `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
-	Tag                 []TagAssociation `ddl:"keyword" sql:"TAG"`
-	Comment             *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ErrorIntegration    *string `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
+	PipeExecutionPaused *bool   `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
+	Comment             *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type PipeUnset struct {
-	PipeExecutionPaused *bool              `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
-	Tag                 []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment             *bool              `ddl:"keyword" sql:"COMMENT"`
+	PipeExecutionPaused *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
+	Comment             *bool `ddl:"keyword" sql:"COMMENT"`
+}
+
+type PipeSetTags struct {
+	Tag []TagAssociation `ddl:"keyword"`
+}
+
+type PipeUnsetTags struct {
+	Tag []ObjectIdentifier `ddl:"keyword"`
 }
 
 type PipeRefresh struct {

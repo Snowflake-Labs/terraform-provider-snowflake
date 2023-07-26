@@ -1,12 +1,7 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestPipesCreate(t *testing.T) {
@@ -21,7 +16,7 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeCreateOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -39,48 +34,6 @@ func TestPipesCreate(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := setUpOpts()
 		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("if not exists", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.IfNotExists = Bool(true)
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE IF NOT EXISTS %s AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("auto ingest: true", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.AutoIngest = Bool(true)
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s AUTO_INGEST = true AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("auto ingest: false", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.AutoIngest = Bool(false)
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s AUTO_INGEST = false AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("error integration", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.ErrorIntegration = String("some_error_integration")
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s ERROR_INTEGRATION = some_error_integration AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("aws sns topic", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.AwsSnsTopic = String("some aws sns topic")
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s AWS_SNS_TOPIC = 'some aws sns topic' AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("integration", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Integration = String("some integration")
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s INTEGRATION = 'some integration' AS <copy_statement>`, id.FullyQualifiedName())
-	})
-
-	t.Run("comment", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Comment = String("some comment")
-		assertOptsValidAndSqlEquals(t, opts, `CREATE PIPE %s COMMENT = 'some comment' AS <copy_statement>`, id.FullyQualifiedName())
 	})
 
 	t.Run("all optional", func(t *testing.T) {
@@ -106,7 +59,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeAlterOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -137,23 +90,9 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 
-	t.Run("validation: tags and other property set", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Set = &PipeSet{
-			Tag: []TagAssociation{
-				{
-					Name:  NewAccountObjectIdentifier("tag_name1"),
-					Value: "v1",
-				},
-			},
-			Comment: String("new comment"),
-		}
-		assertOptsInvalid(t, opts, errCannotAlterOtherPropertyWithTag)
-	})
-
 	t.Run("validation: empty tags slice for set", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Set = &PipeSet{
+		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{},
 		}
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
@@ -165,50 +104,17 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 
-	t.Run("validation: tags and other property unset", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
-			Tag:     []ObjectIdentifier{NewAccountObjectIdentifier("tag_name1")},
-			Comment: Bool(true),
-		}
-		assertOptsInvalid(t, opts, errCannotAlterOtherPropertyWithTag)
-	})
-
 	t.Run("validation: empty tags slice for unset", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
+		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{},
 		}
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 
-	t.Run("set error integration", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Set = &PipeSet{
-			ErrorIntegration: String("new_error_integration"),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET ERROR_INTEGRATION = new_error_integration`, id.FullyQualifiedName())
-	})
-
-	t.Run("set pipe execution paused: true", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Set = &PipeSet{
-			PipeExecutionPaused: Bool(true),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET PIPE_EXECUTION_PAUSED = true`, id.FullyQualifiedName())
-	})
-
-	t.Run("set pipe execution paused: false", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Set = &PipeSet{
-			PipeExecutionPaused: Bool(false),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET PIPE_EXECUTION_PAUSED = false`, id.FullyQualifiedName())
-	})
-
 	t.Run("set tag: single", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Set = &PipeSet{
+		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{
 				{
 					Name:  NewAccountObjectIdentifier("tag_name1"),
@@ -221,7 +127,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("set tag: multiple", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Set = &PipeSet{
+		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{
 				{
 					Name:  NewAccountObjectIdentifier("tag_name1"),
@@ -236,15 +142,7 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET TAG "tag_name1" = 'v1', "tag_name2" = 'v2'`, id.FullyQualifiedName())
 	})
 
-	t.Run("set comment", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Set = &PipeSet{
-			Comment: String("new comment"),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s SET COMMENT = 'new comment'`, id.FullyQualifiedName())
-	})
-
-	t.Run("set more at the same time", func(t *testing.T) {
+	t.Run("set all", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &PipeSet{
@@ -255,17 +153,9 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE IF EXISTS %s SET ERROR_INTEGRATION = new_error_integration, PIPE_EXECUTION_PAUSED = true, COMMENT = 'new comment'`, id.FullyQualifiedName())
 	})
 
-	t.Run("unset pipe execution paused", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
-			PipeExecutionPaused: Bool(true),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s UNSET PIPE_EXECUTION_PAUSED`, id.FullyQualifiedName())
-	})
-
 	t.Run("unset tag: single", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
+		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag_name1"),
 			},
@@ -273,9 +163,9 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s UNSET TAG "tag_name1"`, id.FullyQualifiedName())
 	})
 
-	t.Run("unset tag: single", func(t *testing.T) {
+	t.Run("unset tag: multi", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
+		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag_name1"),
 				NewAccountObjectIdentifier("tag_name2"),
@@ -284,15 +174,7 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s UNSET TAG "tag_name1", "tag_name2"`, id.FullyQualifiedName())
 	})
 
-	t.Run("unset comment", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Unset = &PipeUnset{
-			Comment: Bool(true),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s UNSET COMMENT`, id.FullyQualifiedName())
-	})
-
-	t.Run("unset more at the same time", func(t *testing.T) {
+	t.Run("unset all", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &PipeUnset{
@@ -306,22 +188,6 @@ func TestPipesAlter(t *testing.T) {
 		opts := setUpOpts()
 		opts.Refresh = &PipeRefresh{}
 		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s REFRESH`, id.FullyQualifiedName())
-	})
-
-	t.Run("refresh with prefix", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Refresh = &PipeRefresh{
-			Prefix: String("/d1"),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s REFRESH PREFIX = '/d1'`, id.FullyQualifiedName())
-	})
-
-	t.Run("refresh with modify", func(t *testing.T) {
-		opts := setUpOpts()
-		opts.Refresh = &PipeRefresh{
-			ModifiedAfter: String("2018-07-30T13:56:46-07:00"),
-		}
-		assertOptsValidAndSqlEquals(t, opts, `ALTER PIPE %s REFRESH MODIFIED_AFTER = '2018-07-30T13:56:46-07:00'`, id.FullyQualifiedName())
 	})
 
 	t.Run("refresh with all", func(t *testing.T) {
@@ -346,7 +212,7 @@ func TestPipesDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeDropOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -378,7 +244,7 @@ func TestPipesShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeShowOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
@@ -484,7 +350,7 @@ func TestPipesDescribe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *describePipeOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -497,35 +363,4 @@ func TestPipesDescribe(t *testing.T) {
 		opts := setUpOpts()
 		assertOptsValidAndSqlEquals(t, opts, `DESCRIBE PIPE %s`, id.FullyQualifiedName())
 	})
-}
-
-// assertOptsInvalid could be reused in tests for other interfaces in sdk package.
-func assertOptsInvalid(t *testing.T, opts validatableOpts, expectedError error) {
-	t.Helper()
-	err := opts.validateProp()
-	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
-}
-
-// assertOptsValid could be reused in tests for other interfaces in sdk package.
-func assertOptsValid(t *testing.T, opts validatableOpts) {
-	t.Helper()
-	err := opts.validateProp()
-	assert.NoError(t, err)
-}
-
-// assertSqlEquals could be reused in tests for other interfaces in sdk package.
-func assertSqlEquals(t *testing.T, opts any, format string, args ...any) {
-	t.Helper()
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	assert.Equal(t, fmt.Sprintf(format, args...), actual)
-}
-
-// assertOptsValidAndSqlEquals could be reused in tests for other interfaces in sdk package.
-// It's a shorthand for assertOptsValid and assertSqlEquals.
-func assertOptsValidAndSqlEquals(t *testing.T, opts validatableOpts, format string, args ...any) {
-	t.Helper()
-	assertOptsValid(t, opts)
-	assertSqlEquals(t, opts, format, args...)
 }
