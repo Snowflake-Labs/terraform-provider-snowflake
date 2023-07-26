@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -207,7 +207,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		opts.ObjectProperties.DefaultSeconaryRoles = secondaryRoles
+		opts.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
@@ -384,12 +384,12 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("default_secondary_roles") {
 		runSet = true
 		_, n := d.GetChange("default_secondary_roles")
-		roles := expandStringList(n.([]interface{}))
+		roles := expandStringList(n.(*schema.Set).List())
 		secondaryRoles := []sdk.SecondaryRole{}
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		alterOptions.Set.ObjectProperties.DefaultSeconaryRoles = secondaryRoles
+		alterOptions.Set.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if d.HasChange("rsa_public_key") {
 		runSet = true
@@ -404,10 +404,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("must_change_password") {
 		runSet = true
 		_, n := d.GetChange("must_change_password")
-		mustChangePassword, err := strconv.ParseBool(n.(string))
-		if err != nil {
-			return err
-		}
+		mustChangePassword := n.(bool)
 		alterOptions.Set.ObjectProperties.MustChangePassword = &mustChangePassword
 	}
 	if d.HasChange("email") {
@@ -431,12 +428,13 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		alterOptions.Set.ObjectProperties.LastName = sdk.String(n.(string))
 	}
 	if runSet {
-		err := client.Users.Alter(ctx, objectIdentifier, alterOptions)
+		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+
+	return ReadUser(d, meta)
 }
 
 func DeleteUser(d *schema.ResourceData, meta interface{}) error {

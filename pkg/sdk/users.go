@@ -198,18 +198,25 @@ type UserObjectProperties struct {
 	MiddleName           *string         `ddl:"parameter,single_quotes" sql:"MIDDLE_NAME"`
 	LastName             *string         `ddl:"parameter,single_quotes" sql:"LAST_NAME"`
 	Email                *string         `ddl:"parameter,single_quotes" sql:"EMAIL"`
-	MustChangePassword   *bool           `ddl:"parameter,single_quotes" sql:"MUST_CHANGE_PASSWORD"`
-	Disable              *bool           `ddl:"parameter,single_quotes" sql:"DISABLED"`
+	MustChangePassword   *bool           `ddl:"parameter,no_quotes" sql:"MUST_CHANGE_PASSWORD"`
+	Disable              *bool           `ddl:"parameter,no_quotes" sql:"DISABLED"`
 	DaysToExpiry         *int            `ddl:"parameter,single_quotes" sql:"DAYS_TO_EXPIRY"`
 	MinsToUnlock         *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_UNLOCK"`
 	DefaultWarehosue     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_NAMESPACE"`
 	DefaultRole          *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_ROLE"`
-	DefaultSeconaryRoles []SecondaryRole `ddl:"parameter,equals,parentheses" sql:"DEFAULT_SECONDARY_ROLES"`
+	DefaultSeconaryRoles *SecondaryRoles `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA      *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey         *string         `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKey2        *string         `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2"`
 	Comment              *string         `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type SecondaryRoles struct {
+	equals     bool            `ddl:"static" sql:"="` //lint:ignore U1000 This is used in the ddl tag
+	leftParen  bool            `ddl:"static" sql:"("` //lint:ignore U1000 This is used in the ddl tag
+	Roles      []SecondaryRole `ddl:"list,no_parentheses"`
+	rightParen bool            `ddl:"static" sql:")"` //lint:ignore U1000 This is used in the ddl tag
 }
 
 type SecondaryRole struct {
@@ -248,10 +255,10 @@ type UserObjectParametersUnset struct {
 
 // AlterUserOptions contains options for altering a user.
 type AlterUserOptions struct {
-	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	user     bool                   `ddl:"static" sql:"USER"`  //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name     SchemaObjectIdentifier `ddl:"identifier"`
+	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	user     bool                    `ddl:"static" sql:"USER"`  //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 
 	// one of
 	NewName                      AccountObjectIdentifier       `ddl:"identifier" sql:"RENAME TO"`
@@ -268,6 +275,7 @@ func (opts *AlterUserOptions) validate() error {
 		return errors.New("invalid object identifier")
 	}
 	if ok := exactlyOneValueSet(
+		opts.NewName,
 		opts.ResetPassword,
 		opts.AbortAllQueries,
 		opts.AddDelegatedAuthorization,
@@ -300,6 +308,7 @@ func (v *users) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Alt
 	if opts == nil {
 		opts = &AlterUserOptions{}
 	}
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err
 	}
@@ -346,7 +355,7 @@ func (opts *UserSet) validate() error {
 	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return fmt.Errorf("at least one of password policy, tag, object properties, object parameters, or session parameters must be set")
 	}
-	if !exactlyOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
+	if moreThanOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
 		return fmt.Errorf("setting session policy, password policy and tags must be done separately")
 	}
 	if anyValueSet(opts.ObjectParameters, opts.SessionParameters, opts.ObjectProperties) {

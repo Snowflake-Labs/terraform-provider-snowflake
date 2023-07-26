@@ -56,7 +56,7 @@ func TestUserCreate(t *testing.T) {
 }
 
 func TestUserAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := randomAccountObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterUserOptions{}
@@ -116,7 +116,7 @@ func TestUserAlter(t *testing.T) {
 		password := randomString(t)
 		objectProperties := UserObjectProperties{
 			Password:             &password,
-			DefaultSeconaryRoles: []SecondaryRole{{Value: "ALL"}},
+			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
 		}
 		opts := &AlterUserOptions{
 			name: id,
@@ -126,7 +126,7 @@ func TestUserAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ('ALL')", id.FullyQualifiedName(), password)
+		expected := fmt.Sprintf("ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ( 'ALL' )", id.FullyQualifiedName(), password)
 		assert.Equal(t, expected, actual)
 
 		objectParameters := UserObjectParameters{
@@ -160,7 +160,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("reset password", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
+		id := randomAccountObjectIdentifier(t)
 		opts := &AlterUserOptions{
 			name:          id,
 			ResetPassword: Bool(true),
@@ -171,7 +171,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("abort all queries", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
+		id := randomAccountObjectIdentifier(t)
 		opts := &AlterUserOptions{
 			name:            id,
 			AbortAllQueries: Bool(true),
