@@ -4,11 +4,13 @@ import (
 	"errors"
 )
 
-var _ validatableOpts = &PipeCreateOptions{}
-var _ validatableOpts = &PipeAlterOptions{}
-var _ validatableOpts = &PipeDropOptions{}
-var _ validatableOpts = &PipeShowOptions{}
-var _ validatableOpts = &describePipeOptions{}
+var (
+	_ validatableOpts = &PipeCreateOptions{}
+	_ validatableOpts = &PipeAlterOptions{}
+	_ validatableOpts = &PipeDropOptions{}
+	_ validatableOpts = &PipeShowOptions{}
+	_ validatableOpts = &describePipeOptions{}
+)
 
 func (opts *PipeCreateOptions) validateProp() error {
 	if opts == nil {
