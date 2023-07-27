@@ -187,3 +187,91 @@ resource "snowflake_task_grant" "test" {
 `
 	return fmt.Sprintf(s, name, name, concurrency, taskNameConfig, privilege)
 }
+
+func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	new_name := name + "_NEW"
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// CREATE SCHEMA level FUTURE ownership grant to role <name>
+			{
+				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "on_future", "true"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OWNERSHIP"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", name),
+				),
+			},
+			// UPDATE SCHEMA level FUTURE OWNERSHIP grant to role <new_name>
+			{
+				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", new_name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "on_future", "true"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OWNERSHIP"),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", new_name),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:      "snowflake_task_grant.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
+				},
+			},
+		},
+	})
+}
+
+func taskOwnershipGrantConfig(name string, grantType grantType, privilege string, rolename string) string {
+	var taskNameConfig string
+	switch grantType {
+	case normal:
+		taskNameConfig = "task_name \t= snowflake_task.test.name"
+	case onFuture:
+		taskNameConfig = "on_future = true"
+	case onAll:
+		taskNameConfig = "on_all = true"
+	}
+
+	s := `
+resource "snowflake_database" "test" {
+  name = "%v"
+  comment = "Terraform acceptance test"
+}
+
+resource "snowflake_schema" "test" {
+  name = snowflake_database.test.name
+  database = snowflake_database.test.name
+  comment = "Terraform acceptance test"
+}
+
+resource "snowflake_role" "test" {
+  name = "%v"
+}
+
+resource "snowflake_role" "test_new" {
+	name = "%v_NEW"
+  }
+
+resource "snowflake_task_grant" "test" {
+  %s
+  database_name = snowflake_database.test.name
+  roles             = [ "%s" ]
+  schema_name       = snowflake_schema.test.name
+  privilege 	    = "%s"
+  with_grant_option = false
+}
+`
+	return fmt.Sprintf(s, name, name, name, taskNameConfig, rolename, privilege)
+}
