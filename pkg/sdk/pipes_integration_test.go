@@ -71,7 +71,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	})
 }
 
-func TestInt_PipesShow(t *testing.T) {
+func TestInt_PipesShowAndDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
@@ -102,7 +102,7 @@ func TestInt_PipesShow(t *testing.T) {
 	pipe2, pipe2Cleanup := createPipe(t, client, database, schema, pipe2Name, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)
 
-	t.Run("without show options", func(t *testing.T) {
+	t.Run("show: without options", func(t *testing.T) {
 		pipes, err := client.Pipes.Show(ctx, &PipeShowOptions{})
 
 		require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestInt_PipesShow(t *testing.T) {
 		assert.Contains(t, pipes, pipe2)
 	})
 
-	t.Run("show in schema", func(t *testing.T) {
+	t.Run("show: in schema", func(t *testing.T) {
 		showOptions := &PipeShowOptions{
 			In: &In{
 				Schema: schema.ID(),
@@ -125,7 +125,7 @@ func TestInt_PipesShow(t *testing.T) {
 		assert.Contains(t, pipes, pipe2)
 	})
 
-	t.Run("show like", func(t *testing.T) {
+	t.Run("show: like", func(t *testing.T) {
 		showOptions := &PipeShowOptions{
 			Like: &Like{
 				Pattern: String(pipe1Name),
@@ -138,7 +138,7 @@ func TestInt_PipesShow(t *testing.T) {
 		assert.Contains(t, pipes, pipe1)
 	})
 
-	t.Run("search for non-existent pipe", func(t *testing.T) {
+	t.Run("show: non-existent pipe", func(t *testing.T) {
 		showOptions := &PipeShowOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
@@ -148,6 +148,20 @@ func TestInt_PipesShow(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(pipes))
+	})
+
+	t.Run("describe: existing pipe", func(t *testing.T) {
+		pipe, err := client.Pipes.Describe(ctx, pipe1.ID())
+
+		require.NoError(t, err)
+		assert.Equal(t, pipe1.Name, pipe.Name)
+	})
+
+	t.Run("describe: non-existing pipe", func(t *testing.T) {
+		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+
+		_, err := client.Pipes.Describe(ctx, id)
+		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 }
 
@@ -230,5 +244,43 @@ func TestInt_PipeCreate(t *testing.T) {
 
 		require.NoError(t, err)
 		assertPipe(t, pipe, name, "")
+	})
+}
+
+func TestInt_PipeDrop(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	t.Cleanup(schemaCleanup)
+
+	table, tableCleanup := createTable(t, client, database, schema)
+	t.Cleanup(tableCleanup)
+
+	stageName := randomAlphanumericN(t, 20)
+	stage, stageCleanup := createStage(t, client, database, schema, stageName)
+	t.Cleanup(stageCleanup)
+
+	t.Run("pipe exists", func(t *testing.T) {
+		pipeName := randomAlphanumericN(t, 20)
+		pipeCopyStatement := createCopyStatement(t, table, stage)
+		pipe, _ := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
+
+		err := client.Pipes.Drop(ctx, pipe.ID())
+
+		require.NoError(t, err)
+		_, err = client.Pipes.Describe(ctx, pipe.ID())
+		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("pipe does not exist", func(t *testing.T) {
+		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+
+		err := client.Alerts.Drop(ctx, id)
+		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 }
