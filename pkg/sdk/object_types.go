@@ -20,6 +20,7 @@ const (
 	ObjectTypeAlert            ObjectType = "ALERT"
 	ObjectTypeAccountParameter ObjectType = "ACCOUNT PARAMETER"
 	ObjectTypeDatabase         ObjectType = "DATABASE"
+	ObjectTypeExternalTable    ObjectType = "EXTERNAL TABLE"
 	ObjectTypeFailoverGroup    ObjectType = "FAILOVER GROUP"
 	ObjectTypeFileFormat       ObjectType = "FILE FORMAT"
 	ObjectTypeIntegration      ObjectType = "INTEGRATION"
