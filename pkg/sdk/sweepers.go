@@ -10,11 +10,15 @@ import (
 
 func Sweep(client *Client, prefix string) error {
 	sweepers := []func() error{
+		getAccountPolicyAttachementsSweeper(client),
+		getResourceMonitorSweeper(client, prefix),
 		getFailoverGroupSweeper(client, prefix),
 		getShareSweeper(client, prefix),
 		getDatabaseSweeper(client, prefix),
 		getWarehouseSweeper(client, prefix),
 		getRoleSweeper(client, prefix),
+		// todo: users, integrations, replication groups, network policies
+		// getUserSweeper(client, prefix),
 	}
 	for _, sweeper := range sweepers {
 		if err := sweeper(); err != nil {
@@ -26,6 +30,32 @@ func Sweep(client *Client, prefix string) error {
 
 func SweepAll(client *Client) error {
 	return Sweep(client, "")
+}
+
+func getResourceMonitorSweeper(client *Client, prefix string) func() error {
+	return func() error {
+		if prefix == "" {
+			log.Printf("[DEBUG] Sweeping all resource monitors")
+		} else {
+			log.Printf("[DEBUG] Sweeping all resource monitors with prefix %s", prefix)
+		}
+		ctx := context.Background()
+		rms, err := client.ResourceMonitors.Show(ctx, nil)
+		if err != nil {
+			return err
+		}
+		for _, rm := range rms {
+			if prefix == "" || strings.HasPrefix(rm.Name, prefix) {
+				log.Printf("[DEBUG] Dropping resource monitor %s", rm.Name)
+				if err := client.ResourceMonitors.Drop(ctx, rm.ID()); err != nil {
+					return err
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping resource monitor %s", rm.Name)
+			}
+		}
+		return nil
+	}
 }
 
 func getFailoverGroupSweeper(client *Client, prefix string) func() error {
@@ -57,6 +87,20 @@ func getFailoverGroupSweeper(client *Client, prefix string) func() error {
 				log.Printf("[DEBUG] Skipping failover group %s", fg.Name)
 			}
 		}
+		return nil
+	}
+}
+
+func getUserSweeper(client *Client, prefix string) func() error {
+	return func() error {
+		/*ctx := context.Background()
+		users, client.Users.Show(ctx,nil) // LIKE '%TEST_%'
+		for _, user := range users {
+			err := client.Users.Drop(ctx, user.ID(), nil)
+			if err != nil {
+				return err
+			}
+		}*/
 		return nil
 	}
 }
@@ -161,6 +205,26 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 				log.Printf("[DEBUG] Skipping warehouse %s", wh.Name)
 			}
 		}
+		return nil
+	}
+}
+
+func getAccountPolicyAttachementsSweeper(client *Client) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Unsetting password and session policies set on the account level")
+		ctx := context.Background()
+		opts := &AlterAccountOptions{
+			Unset: &AccountUnset{
+				PasswordPolicy: Bool(true),
+			},
+		}
+		_ = client.Accounts.Alter(ctx, opts)
+		opts = &AlterAccountOptions{
+			Unset: &AccountUnset{
+				SessionPolicy: Bool(true),
+			},
+		}
+		_ = client.Accounts.Alter(ctx, opts)
 		return nil
 	}
 }
