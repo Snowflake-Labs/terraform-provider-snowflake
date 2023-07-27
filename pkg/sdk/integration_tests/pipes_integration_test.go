@@ -1,15 +1,16 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func createPipeCopyStatement(t *testing.T, table *Table, stage *Stage) string {
+func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) string {
 	t.Helper()
 	require.NotNil(t, table, "table has to be created")
 	require.NotNil(t, stage, "stage has to be created")
@@ -20,11 +21,11 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
+	schemaIdentifier := sdk.NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -37,9 +38,9 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
 		err := client.Pipes.Create(
 			ctx,
-			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
+			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
 			createPipeCopyStatement(t, table, stage),
-			&PipeCreateOptions{},
+			&sdk.PipeCreateOptions{},
 		)
 
 		require.ErrorContains(t, err, "(42000): SQL compilation error:\nsyntax error line")
@@ -53,7 +54,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 		useSchemaCleanup := useSchema(t, client, schema.ID())
 		t.Cleanup(useSchemaCleanup)
 
-		createCopyStatementWithoutQualifiersForStage := func(t *testing.T, table *Table, stage *Stage) string {
+		createCopyStatementWithoutQualifiersForStage := func(t *testing.T, table *sdk.Table, stage *sdk.Stage) string {
 			t.Helper()
 			require.NotNil(t, table, "table has to be created")
 			require.NotNil(t, stage, "stage has to be created")
@@ -62,9 +63,9 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 
 		err := client.Pipes.Create(
 			ctx,
-			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
+			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
-			&PipeCreateOptions{},
+			&sdk.PipeCreateOptions{},
 		)
 
 		require.NoError(t, err)
@@ -76,10 +77,10 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table1, table1Cleanup := createTable(t, client, database, schema)
@@ -103,7 +104,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Cleanup(pipe2Cleanup)
 
 	t.Run("show: without options", func(t *testing.T) {
-		pipes, err := client.Pipes.Show(ctx, &PipeShowOptions{})
+		pipes, err := client.Pipes.Show(ctx, &sdk.PipeShowOptions{})
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
@@ -112,8 +113,8 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: in schema", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
-			In: &In{
+		showOptions := &sdk.PipeShowOptions{
+			In: &sdk.In{
 				Schema: schema.ID(),
 			},
 		}
@@ -126,9 +127,9 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: like", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
-			Like: &Like{
-				Pattern: String(pipe1Name),
+		showOptions := &sdk.PipeShowOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(pipe1Name),
 			},
 		}
 		pipes, err := client.Pipes.Show(ctx, showOptions)
@@ -139,9 +140,9 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: non-existent pipe", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
+		showOptions := &sdk.PipeShowOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("non-existent"),
 			},
 		}
 		pipes, err := client.Pipes.Show(ctx, showOptions)
@@ -158,10 +159,10 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("describe: non-existing pipe", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
 
 		_, err := client.Pipes.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
@@ -170,10 +171,10 @@ func TestInt_PipeCreate(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -185,7 +186,7 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
 
-	assertPipe := func(t *testing.T, pipeDetails *Pipe, expectedName string, expectedComment string) {
+	assertPipe := func(t *testing.T, pipeDetails *sdk.Pipe, expectedName string, expectedComment string) {
 		t.Helper()
 		assert.NotEmpty(t, pipeDetails.CreatedOn)
 		assert.Equal(t, expectedName, pipeDetails.Name)
@@ -205,14 +206,14 @@ func TestInt_PipeCreate(t *testing.T) {
 	// TODO: test error integration, aws sns topic and integration when we have them in project
 	t.Run("test complete case", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		comment := randomComment(t)
 
-		err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{
-			OrReplace:   Bool(false),
-			IfNotExists: Bool(true),
-			AutoIngest:  Bool(false),
-			Comment:     String(comment),
+		err := client.Pipes.Create(ctx, id, copyStatement, &sdk.PipeCreateOptions{
+			OrReplace:   sdk.Bool(false),
+			IfNotExists: sdk.Bool(true),
+			AutoIngest:  sdk.Bool(false),
+			Comment:     sdk.String(comment),
 		})
 		require.NoError(t, err)
 
@@ -224,18 +225,18 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	t.Run("test if not exists and or replace are incompatible", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{
-			OrReplace:   Bool(true),
-			IfNotExists: Bool(true),
+		err := client.Pipes.Create(ctx, id, copyStatement, &sdk.PipeCreateOptions{
+			OrReplace:   sdk.Bool(true),
+			IfNotExists: sdk.Bool(true),
 		})
 		require.ErrorContains(t, err, "(0A000): SQL compilation error:\noptions IF NOT EXISTS and OR REPLACE are incompatible")
 	})
 
 	t.Run("test no options", func(t *testing.T) {
 		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.Pipes.Create(ctx, id, copyStatement, nil)
 		require.NoError(t, err)
@@ -252,10 +253,10 @@ func TestInt_PipeDrop(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -274,14 +275,14 @@ func TestInt_PipeDrop(t *testing.T) {
 
 		require.NoError(t, err)
 		_, err = client.Pipes.Describe(ctx, pipe.ID())
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("pipe does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
 
 		err := client.Alerts.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
@@ -290,10 +291,10 @@ func TestInt_PipeAlter(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -311,10 +312,10 @@ func TestInt_PipeAlter(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
-		alterOptions := &PipeAlterOptions{
-			Set: &PipeSet{
-				Comment:             String("new comment"),
-				PipeExecutionPaused: Bool(true),
+		alterOptions := &sdk.PipeAlterOptions{
+			Set: &sdk.PipeSet{
+				Comment:             sdk.String("new comment"),
+				PipeExecutionPaused: sdk.Bool(true),
 			},
 		}
 
@@ -326,10 +327,10 @@ func TestInt_PipeAlter(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredPipe.Comment)
 
-		alterOptions = &PipeAlterOptions{
-			Unset: &PipeUnset{
-				Comment:             Bool(true),
-				PipeExecutionPaused: Bool(true),
+		alterOptions = &sdk.PipeAlterOptions{
+			Unset: &sdk.PipeUnset{
+				Comment:             sdk.Bool(true),
+				PipeExecutionPaused: sdk.Bool(true),
 			},
 		}
 
@@ -351,9 +352,9 @@ func TestInt_PipeAlter(t *testing.T) {
 		t.Cleanup(pipeCleanup)
 
 		tagValue := "abc"
-		alterOptions := &PipeAlterOptions{
-			SetTags: &PipeSetTags{
-				Tag: []TagAssociation{
+		alterOptions := &sdk.PipeAlterOptions{
+			SetTags: &sdk.PipeSetTags{
+				Tag: []sdk.TagAssociation{
 					{
 						Name:  tag.ID(),
 						Value: tagValue,
@@ -365,14 +366,14 @@ func TestInt_PipeAlter(t *testing.T) {
 		err := client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), ObjectTypePipe)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), sdk.ObjectTypePipe)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
 
-		alterOptions = &PipeAlterOptions{
-			UnsetTags: &PipeUnsetTags{
-				Tag: []ObjectIdentifier{
+		alterOptions = &sdk.PipeAlterOptions{
+			UnsetTags: &sdk.PipeUnsetTags{
+				Tag: []sdk.ObjectIdentifier{
 					tag.ID(),
 				},
 			},
@@ -381,7 +382,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		err = client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), ObjectTypePipe)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), sdk.ObjectTypePipe)
 		assert.Error(t, err)
 	})
 
@@ -390,10 +391,10 @@ func TestInt_PipeAlter(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
-		alterOptions := &PipeAlterOptions{
-			Refresh: &PipeRefresh{
-				Prefix:        String("/d1"),
-				ModifiedAfter: String("2018-07-30T13:56:46-07:00"),
+		alterOptions := &sdk.PipeAlterOptions{
+			Refresh: &sdk.PipeRefresh{
+				Prefix:        sdk.String("/d1"),
+				ModifiedAfter: sdk.String("2018-07-30T13:56:46-07:00"),
 			},
 		}
 
