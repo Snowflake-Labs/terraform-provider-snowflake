@@ -284,3 +284,120 @@ func TestInt_PipeDrop(t *testing.T) {
 		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 }
+
+func TestInt_PipeAlter(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	t.Cleanup(schemaCleanup)
+
+	table, tableCleanup := createTable(t, client, database, schema)
+	t.Cleanup(tableCleanup)
+
+	stageName := randomAlphanumericN(t, 20)
+	stage, stageCleanup := createStage(t, client, database, schema, stageName)
+	t.Cleanup(stageCleanup)
+
+	pipeCopyStatement := createCopyStatement(t, table, stage)
+
+	// TODO: test error integration when we have them in project
+	t.Run("set value and unset value", func(t *testing.T) {
+		pipeName := randomAlphanumericN(t, 20)
+		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
+		t.Cleanup(pipeCleanup)
+
+		alterOptions := &PipeAlterOptions{
+			Set: &PipeSet{
+				Comment:             String("new comment"),
+				PipeExecutionPaused: Bool(true),
+			},
+		}
+
+		err := client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
+		require.NoError(t, err)
+
+		alteredPipe, err := client.Pipes.ShowByID(ctx, pipe.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, "new comment", alteredPipe.Comment)
+
+		alterOptions = &PipeAlterOptions{
+			Unset: &PipeUnset{
+				Comment:             Bool(true),
+				PipeExecutionPaused: Bool(true),
+			},
+		}
+
+		err = client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
+		require.NoError(t, err)
+
+		alteredPipe, err = client.Pipes.ShowByID(ctx, pipe.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, "", alteredPipe.Comment)
+	})
+
+	t.Run("set and unset tag", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, database, schema)
+		t.Cleanup(tagCleanup)
+
+		pipeName := randomAlphanumericN(t, 20)
+		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
+		t.Cleanup(pipeCleanup)
+
+		tagValue := "abc"
+		alterOptions := &PipeAlterOptions{
+			SetTags: &PipeSetTags{
+				Tag: []TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: tagValue,
+					},
+				},
+			},
+		}
+
+		err := client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), ObjectTypePipe)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		alterOptions = &PipeAlterOptions{
+			UnsetTags: &PipeUnsetTags{
+				Tag: []ObjectIdentifier{
+					tag.ID(),
+				},
+			},
+		}
+
+		err = client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), pipe.ID(), ObjectTypePipe)
+		assert.Error(t, err)
+	})
+
+	t.Run("refresh with all", func(t *testing.T) {
+		pipeName := randomAlphanumericN(t, 20)
+		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
+		t.Cleanup(pipeCleanup)
+
+		alterOptions := &PipeAlterOptions{
+			Refresh: &PipeRefresh{
+				Prefix:        String("/d1"),
+				ModifiedAfter: String("2018-07-30T13:56:46-07:00"),
+			},
+		}
+
+		err := client.Pipes.Alter(ctx, pipe.ID(), alterOptions)
+		require.NoError(t, err)
+	})
+}
