@@ -26,6 +26,7 @@ type Grant struct {
 	CreatedOn   time.Time
 	Privilege   string
 	GrantedOn   ObjectType
+	GrantOn     ObjectType
 	Name        ObjectIdentifier
 	GrantedTo   ObjectType
 	GranteeName AccountObjectIdentifier
@@ -50,7 +51,7 @@ type grantRow struct {
 }
 
 func (row *grantRow) toGrant() (*Grant, error) {
-	grantedTo := ObjectType(row.GrantedTo)
+	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	granteeName := NewAccountObjectIdentifier(row.GranteeName)
 	if grantedTo == ObjectTypeShare {
 		parts := strings.Split(row.GranteeName, ".")
@@ -60,16 +61,20 @@ func (row *grantRow) toGrant() (*Grant, error) {
 	grant := &Grant{
 		CreatedOn:   row.CreatedOn,
 		Privilege:   row.Privilege,
-		GrantedOn:   ObjectType(row.GrantedOn),
 		GrantedTo:   grantedTo,
 		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
 		GranteeName: granteeName,
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}
+
+	// true for current grants
+	if row.GrantedOn != "" {
+		grant.GrantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
+	}
 	// true for future grants
 	if row.GrantOn != "" {
-		grant.GrantedOn = ObjectType(row.GrantOn)
+		grant.GrantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
 	}
 	return grant, nil
 }
