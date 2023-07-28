@@ -2,7 +2,6 @@
 
 package main
 
-/*
 type (
 	OptionOne struct {
 		b int
@@ -15,14 +14,27 @@ type OneOf interface {
 	~*OptionOne | ~*OptionTwo | ~*OptionThree
 }
 
-func OneOfFunc[T OneOf](one T) {
+type (
+	Set    struct{}
+	TagSet struct {
+		Tags []string
+	}
+	NoAction struct{}
+)
+
+type OneOfAlterSet interface {
+	~*Set | ~*TagSet | ~*NoAction
 }
 
-func OneOfFunc2[T constraints.Ordered](one T) {
+type Alter[T OneOfAlterSet] struct {
+	AlterSet T
 }
 
 func Call() {
-	// Won't compile -> OneOfFunc[*OptionOne](&OptionTwo{})
-	OneOfFunc[*OptionOne](&OptionOne{})
+	alter := Alter[*TagSet]{
+		AlterSet: &TagSet{
+			Tags: []string{"one", "two"},
+		},
+	}
+	_ = alter
 }
-*/

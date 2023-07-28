@@ -2,12 +2,10 @@ package generator
 
 import (
 	"fmt"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/gen/builder"
 )
 
-func GenerateAll(api any, sb ...*builder.StructBuilder) {
+func GenerateAll(api any, sb ...fmt.Stringer) {
 	for _, b := range sb {
-		fmt.Printf("%s", b.String())
+		fmt.Printf("%s\n", b.String())
 	}
 }
