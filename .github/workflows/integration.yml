@@ -10,9 +10,13 @@ jobs:
   integration-trusted:
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    environment:
+      name: ${{ (github.ref_name == 'qa-tests' || github.head_ref == 'qa-tests' ) && 'QA' || 'Legacy' }}
     steps:
       - id: debug-outputs
         run: |
+          echo ${{ github.ref_name }}
+          echo ${{ github.github.head_ref }}
           echo ${{ github.event_name }}
           echo ${{ github.event.client_payload }}
 
@@ -58,6 +62,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
         run: make lint-ci
 
       - name: make test-acceptance integration
@@ -69,6 +74,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
           SNOWFLAKE_ACCOUNT_SECOND: ${{ secrets.SNOWFLAKE_ACCOUNT_SECOND }}
           SNOWFLAKE_ACCOUNT_THIRD: ${{ secrets.SNOWFLAKE_ACCOUNT_THIRD }}
         run: make test-acceptance
@@ -82,6 +88,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_HOST: ${{ secrets.SNOWFLAKE_HOST }}
         run: make sweep
 
       - name: find comment
