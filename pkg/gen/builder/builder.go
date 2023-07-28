@@ -98,37 +98,37 @@ func (s Struct) IntoFieldBuilder() []FieldBuilder {
 
 //// Enums
 
-type EnumBuilder struct {
+type EnumBuilder[T any] struct {
 	name   string
-	values []EnumValue
+	values []EnumValue[T]
 }
 
-type EnumValue struct {
+type EnumValue[T any] struct {
 	Name  string
-	Value any
+	Value T
 }
 
-func EnumType(name string) *EnumBuilder {
-	return &EnumBuilder{
+func EnumType[T any](name string) *EnumBuilder[T] {
+	return &EnumBuilder[T]{
 		name:   name,
-		values: make([]EnumValue, 0),
+		values: make([]EnumValue[T], 0),
 	}
 }
 
-func (eb *EnumBuilder) With(variableName string, value any) *EnumBuilder {
-	eb.values = append(eb.values, EnumValue{
+func (eb *EnumBuilder[T]) With(variableName string, value T) *EnumBuilder[T] {
+	eb.values = append(eb.values, EnumValue[T]{
 		Name:  variableName,
 		Value: value,
 	})
 	return eb
 }
 
-func (eb *EnumBuilder) String() string {
+func (eb *EnumBuilder[T]) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("type %s string\n\n", eb.name)) // TODO make generic to take in type or take in type when building EnumBuilder as string
 	sb.WriteString("const (\n")
 	for _, v := range eb.values {
-		switch v.Value.(type) {
+		switch any(v.Value).(type) {
 		case string:
 			sb.WriteString(fmt.Sprintf("\t%-20s %s = %s\n", v.Name, eb.name, fmt.Sprintf(`"%s"`, v.Value)))
 		default:
@@ -139,7 +139,7 @@ func (eb *EnumBuilder) String() string {
 	return sb.String()
 }
 
-func (eb *EnumBuilder) IntoFieldBuilder() []FieldBuilder {
+func (eb *EnumBuilder[T]) IntoFieldBuilder() []FieldBuilder {
 	return []FieldBuilder{
 		{
 			Name: eb.name,
@@ -166,15 +166,23 @@ func WithSQL(sql string) option {
 	return WithTag("sql", sql)
 }
 
+func WithSQLPrefix(sql string) option {
+	return WithTag("sql", sql)
+}
+
 func WithDDL(ddl string) option {
 	return WithTag("ddl", ddl)
+}
+
+func WithParen() option {
+	return WithDDL("parentheses")
 }
 
 func WithNoQuotes() option {
 	return WithDDL("no_quotes")
 }
 
-func WithNoEquals() option {
+func NoEquals() option {
 	return WithDDL("no_equals")
 }
 
@@ -184,6 +192,28 @@ type Kinder interface {
 
 func (sb StructBuilder) Kind() string {
 	return sb.Name
+}
+
+// func Optional(kinder Kinder) func(sb *StructBuilder, f *FieldBuilder) {
+// 	return withType("*" + kinder.Kind())
+// }
+
+func Number() func(sb *StructBuilder, f *FieldBuilder) {
+	return func(sb *StructBuilder, f *FieldBuilder) {
+		f.Type = TypeInt.Kind()
+	}
+}
+
+func Text() func(sb *StructBuilder, f *FieldBuilder) {
+	return func(sb *StructBuilder, f *FieldBuilder) {
+		f.Type = TypeInt.Kind()
+	}
+}
+
+func SingleQuotedText() func(sb *StructBuilder, f *FieldBuilder) {
+	return func(sb *StructBuilder, f *FieldBuilder) {
+		f.Type = TypeInt.Kind()
+	}
 }
 
 func WithType(kinder Kinder) func(sb *StructBuilder, f *FieldBuilder) {
@@ -233,7 +263,11 @@ func (sb *StructBuilder) Field(ddlValue string, fieldName string, options ...opt
 }
 
 // Static
-func (sb *StructBuilder) Static(fieldName string, options ...option) *StructBuilder {
+func (sb *StructBuilder) Static(fieldName string, sql string, options ...option) *StructBuilder {
+	return sb.Field("static", fieldName, options...)
+}
+
+func (sb *StructBuilder) SQL(sql string, options ...option) *StructBuilder {
 	return sb.Field("static", fieldName, options...)
 }
 
@@ -242,13 +276,58 @@ func (sb *StructBuilder) Create() *StructBuilder {
 }
 
 // Keyword
+func (sb *StructBuilder) Tag() *StructBuilder {
+	return sb
+}
+
 func (sb *StructBuilder) Keyword(fieldName string, options ...option) *StructBuilder {
 	// TODO add sql tag ?
 	return sb.Field("keyword", fieldName, options...)
 }
 
+func (sb *StructBuilder) OptionalAssignment(fieldName string, options ...option) *StructBuilder {
+	// TODO add sql tag ?
+	return sb.Field("keyword", fieldName, options...)
+}
+
+func (sb *StructBuilder) Assignment(fieldName string, options ...option) *StructBuilder {
+	// TODO add sql tag ?
+	return sb.Field("keyword", fieldName, options...)
+}
+
+func (sb *StructBuilder) OptionalValue(fieldName string, value any, options ...option) *StructBuilder {
+	// TODO add sql tag ?
+	return sb.Field("keyword", fieldName, options...)
+}
+
+func (sb *StructBuilder) Value(fieldName string, value any, options ...option) *StructBuilder {
+	// TODO add sql tag ?
+	return sb.Field("keyword", fieldName, options...)
+}
+
+func (sb *StructBuilder) OptionalSQL(sql string, options ...option) *StructBuilder {
+	// TODO add sql tag ?
+	return sb.Field("keyword", sql, options...)
+}
+
 func Keyword(fieldName string, options ...option) FieldBuilder {
 	fb := FieldBuilder{Name: fieldName, Type: TypeBoolPtr.Kind(), Tags: map[string][]string{"ddl": {"keyword"}}}
+	for _, opt := range options {
+		opt(nil, &fb)
+	}
+	return fb
+}
+
+func Value(fieldName string, options ...option) FieldBuilder {
+	fb := FieldBuilder{Name: fieldName, Type: TypeBoolPtr.Kind(), Tags: map[string][]string{"ddl": {"keyword"}}}
+	for _, opt := range options {
+		opt(nil, &fb)
+	}
+	return fb
+}
+
+func OptionalSQL(sql string, options ...option) FieldBuilder {
+	fb := FieldBuilder{Name: sql, Type: TypeBoolPtr.Kind(), Tags: map[string][]string{"ddl": {"keyword"}}}
 	for _, opt := range options {
 		opt(nil, &fb)
 	}
