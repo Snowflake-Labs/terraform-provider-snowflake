@@ -304,6 +304,9 @@ func (b sqlBuilder) parseStruct(s interface{}) ([]sqlClause, error) {
 }
 
 func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Value) (sqlClause, error) {
+	if field.Name == "StageFileFormat" {
+		fmt.Println("")
+	}
 	clauses := make([]sqlClause, 0)
 	// all this does is check if the field has a keyword or is an identifier type before digging into struct
 	ddlTag := field.Tag.Get("ddl")
