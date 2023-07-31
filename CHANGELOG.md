@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.69.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.2...v0.69.0) (2023-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* mark snowflake_user.login_name as non sensitive
+
+### Features
+
+* mark snowflake_user.login_name as non sensitive ([71c0a9c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/71c0a9c2897e07b2251680d619cbbcaeba5779b2))
+* resource monitor sdk v2 ([#1892](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1892)) ([707d723](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/707d7233bd867d60e13c8785d1c0adef558a5853))
+
+
+### BugFixes
+
+* 1969  change default privilege to OPERATE ([#1970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1970)) ([e8721f0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e8721f07dd27ce7a903c8c4d2b19fee77ce72cdc))
+* add external table grant to snowflake_grant_privileges_to_role resource ([#1967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1967)) ([8c84c4a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8c84c4a5f6eee7cf35b5ec2d77fac1c7fcee05df))
+* future ownership task grant ([#1954](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1954)) ([#1955](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1955)) ([81ac1a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/81ac1a396bba713b0a5ec808d72b880d59e17d47))
+
 ## [0.68.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.1...v0.68.2) (2023-07-17)
 
 
