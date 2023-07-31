@@ -124,19 +124,22 @@ const (
 
 func (rm reverseModifier) Modify(v any) string {
 	// v is []string{} type. result will be a joined string
-	v = v.([]string)
-	switch rm {
-	case NoReverse:
-		return strings.Join(v.([]string), " ")
-	case Reverse:
-		// reverse the order of the slice
-		for i := len(v.([]string))/2 - 1; i >= 0; i-- {
-			opp := len(v.([]string)) - 1 - i
-			v.([]string)[i], v.([]string)[opp] = v.([]string)[opp], v.([]string)[i]
+	if v, ok := v.([]string); ok {
+		switch rm {
+		case NoReverse:
+			return strings.Join(v, " ")
+		case Reverse:
+			// reverse the order of the slice
+			for i := len(v)/2 - 1; i >= 0; i-- {
+				opp := len(v) - 1 - i
+				v[i], v[opp] = v[opp], v[i]
+			}
+			return strings.Join(v, " ")
+		default:
+			return strings.Join(v, " ")
 		}
-		return strings.Join(v.([]string), " ")
-	default:
-		return strings.Join(v.([]string), " ")
+	} else {
+		panic("lul")
 	}
 }
 

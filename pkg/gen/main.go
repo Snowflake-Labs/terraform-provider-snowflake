@@ -30,29 +30,36 @@ var (
 )
 
 func main() {
-	columnIdentity := b.QueryStruct("ColumnIdentity").
-		Assignment("Start", b.Number(), b.NoEquals()).
-		Assignment("Increment", b.Number(), b.NoEquals())
+	//columnIdentity := b.QueryStruct("ColumnIdentity").
+	//	Number("Start", b.SQLPrefix("START")).
+	//	Number("Increment", b.SQLPrefix("INCREMENT")).
+	//
+	//columnDefaultValue := b.QueryStruct("ColumnDefaultValue").
+	//	OneOf(
+	//		b.OptionalText("Expression", b.SQLPrefix("DEFAULT")),
+	//		b.OptionalValue("Identity", columnIdentity, b.SQLPrefix("IDENTITY")),
+	//	)
 
-	columnDefaultValue := b.QueryStruct("ColumnDefaultValue").
-		OneOf(
-			b.Value("Expression", b.WithPointerType(b.TypeString), b.WithSQLPrefix("DEFAULT")),
-			b.Value("Identity", b.WithPointerType(columnIdentity), b.WithSQLPrefix("Identity")),
-		)
+	optsExample := b.QueryStruct("🥸").
+		Static2("", b.StaticOpts().Quotes()).
+		Keyword2(b.KeywordOpts().SQL("qafsd")).
+		Parameter2(b.ParameterOpts().Paren(true).Equals(false))
+
+	_ = optsExample
 
 	maskingPolicy := b.QueryStruct("ColumnMaskingPolicy").
 		SQL("MASKING POLICY").
 		Identifier("Name", b.WithTypeT[sdk.SchemaObjectIdentifier]()).
-		List("Using", b.WithSliceType(b.TypeString))
+		List("Using", b.TypeString)
 
 	tableColumn := b.QueryStruct("TableColumn").
-		Value("Name", b.WithType(b.TypeString)).
+		Text("Name").
 		Value("Type", b.WithTypeT[sdk.DataType]()).
-		OptionalAssignment("Collate", b.NoEquals(), b.SingleQuotedText()).
-		OptionalAssignment("Comment", b.NoEquals(), b.SingleQuotedText()).
-		OptionalValue("DefailtValue", columnDefaultValue).
+		OptionalText("Collate", b.SQLPrefix("COLLATE"), b.SingleQuotedText()).
+		OptionalText("Comment", b.SQLPrefix("COMMENT"), b.SingleQuotedText()).
+		OptionalValue("DefaultValue", columnDefaultValue).
 		OptionalSQL("NOT NULL").
-		OptionalValue("MaskingPolicy", maskingPolicy).
+		OptionalValue("MaskingPolicy", b.Link(maskingPolicy)).
 		Tag()
 
 	ts := b.EnumType[string]("TableScope").
@@ -62,23 +69,24 @@ func main() {
 	create := b.QueryStruct("CreateTableOptions").
 		Create().
 		OrReplace().
-		OneOf(
-			b.OneOf(
+		OneOf("field",
+			b.OneOf("scope",
 				b.OptionalSQL("LOCAL"),
 				b.OptionalSQL("GLOBAL"),
 			),
-			b.OneOf(ts),
-			b.OneOf(
+			b.OneOf("scopeV2", ts),
+			b.OneOf("fieldType",
 				b.OptionalSQL("TEMP"),
 				b.OptionalSQL("TEMPORARY"),
 				b.OptionalSQL("VOLATILE"),
 				b.OptionalSQL("TRANSIENT"),
 			),
 		).
-		SQL("TABLE"). // can we derive fieldname from sql or vice versa ?
+		SQL("TABLE"). // can we derive field name from sql or vice versa ?
 		IfNotExists().
 		Identifier("name", b.WithTypeT[sdk.SchemaObjectIdentifier]()).
-		List("Columns", b.WithSliceType(tableColumn))
+		List("Columns", tableColumn).
+		Assignment()
 
 	generator.GenerateAll(
 		b.API{},
