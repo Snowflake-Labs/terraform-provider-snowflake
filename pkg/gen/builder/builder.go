@@ -153,6 +153,10 @@ func (eb *EnumBuilder[T]) IntoFieldBuilder() []FieldBuilder {
 
 type option func(sb *StructBuilder, f *FieldBuilder)
 
+//type keywordOptions
+//type staticOptions
+//type parameterOptions
+
 func WithTag(tagName string, tagValue string) func(sb *StructBuilder, f *FieldBuilder) {
 	return func(sb *StructBuilder, f *FieldBuilder) {
 		if _, ok := f.Tags[tagName]; !ok {
@@ -210,6 +214,12 @@ func Text() func(sb *StructBuilder, f *FieldBuilder) {
 	}
 }
 
+func SQLPrefix(s string) func(sb *StructBuilder, f *FieldBuilder) {
+	return func(sb *StructBuilder, f *FieldBuilder) {
+		f.Type = TypeInt.Kind()
+	}
+}
+
 func SingleQuotedText() func(sb *StructBuilder, f *FieldBuilder) {
 	return func(sb *StructBuilder, f *FieldBuilder) {
 		f.Type = TypeInt.Kind()
@@ -240,7 +250,7 @@ func WithPointerType(kinder Kinder) func(sb *StructBuilder, f *FieldBuilder) {
 	return withType("*" + kinder.Kind())
 }
 
-func WithSliceType(kinder Kinder) func(sb *StructBuilder, f *FieldBuilder) {
+func ListOf(kinder Kinder) func(sb *StructBuilder, f *FieldBuilder) {
 	return withType("[]" + kinder.Kind())
 }
 
@@ -334,6 +344,22 @@ func OptionalSQL(sql string, options ...option) FieldBuilder {
 	return fb
 }
 
+func OptionalText(sql string, options ...option) FieldBuilder {
+	fb := FieldBuilder{Name: sql, Type: TypeBoolPtr.Kind(), Tags: map[string][]string{"ddl": {"keyword"}}}
+	for _, opt := range options {
+		opt(nil, &fb)
+	}
+	return fb
+}
+
+func OptionalValue(sql string, typeObj any, options ...option) FieldBuilder {
+	fb := FieldBuilder{Name: sql, Type: TypeBoolPtr.Kind(), Tags: map[string][]string{"ddl": {"keyword"}}}
+	for _, opt := range options {
+		opt(nil, &fb)
+	}
+	return fb
+}
+
 func (sb *StructBuilder) OrReplace() *StructBuilder {
 	return sb.Keyword("OrReplace", WithTypeBoolPtr())
 }
@@ -350,8 +376,20 @@ func (sb *StructBuilder) Transient() *StructBuilder {
 	return sb.Keyword("Transient", WithTypeBoolPtr())
 }
 
+func (sb *StructBuilder) Number(fieldName string, options ...option) *StructBuilder {
+	return sb.Field("identifier", fieldName, options...)
+}
+
+func (sb *StructBuilder) Text(fieldName string, options ...option) *StructBuilder {
+	return sb.Field("identifier", fieldName, options...)
+}
+
+func (sb *StructBuilder) OptionalText(fieldName string, options ...option) *StructBuilder {
+	return sb.Field("identifier", fieldName, options...)
+}
+
 // Identifier
-func (sb *StructBuilder) Identifier(fieldName string, options ...option) *StructBuilder {
+func (sb *StructBuilder) Identifier(fieldName string, typeObj any, options ...option) *StructBuilder {
 	return sb.Field("identifier", fieldName, options...)
 }
 
@@ -391,7 +429,7 @@ func (sb *StructBuilder) Parameter(fieldName string, options ...option) *StructB
 }
 
 // Parameter
-func (sb *StructBuilder) List(fieldName string, options ...option) *StructBuilder {
+func (sb *StructBuilder) List(fieldName string, typeObj any, options ...option) *StructBuilder {
 	// TODO add sql tag ?
 	return sb.Field("list", fieldName, options...)
 }
