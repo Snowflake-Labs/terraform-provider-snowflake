@@ -24,18 +24,18 @@ func assertOptsValid(t *testing.T, opts validatableOpts) {
 	assert.NoError(t, err)
 }
 
-// assertSqlEquals could be reused in tests for other interfaces in sdk package.
-func assertSqlEquals(t *testing.T, opts any, format string, args ...any) {
+// assertSQLEquals could be reused in tests for other interfaces in sdk package.
+func assertSQLEquals(t *testing.T, opts any, format string, args ...any) {
 	t.Helper()
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)
 	assert.Equal(t, fmt.Sprintf(format, args...), actual)
 }
 
-// assertOptsValidAndSqlEquals could be reused in tests for other interfaces in sdk package.
-// It's a shorthand for assertOptsValid and assertSqlEquals.
-func assertOptsValidAndSqlEquals(t *testing.T, opts validatableOpts, format string, args ...any) {
+// assertOptsValidAndSQLEquals could be reused in tests for other interfaces in sdk package.
+// It's a shorthand for assertOptsValid and assertSQLEquals.
+func assertOptsValidAndSQLEquals(t *testing.T, opts validatableOpts, format string, args ...any) {
 	t.Helper()
 	assertOptsValid(t, opts)
-	assertSqlEquals(t, opts, format, args...)
+	assertSQLEquals(t, opts, format, args...)
 }

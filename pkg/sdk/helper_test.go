@@ -333,9 +333,9 @@ func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithIdentifier(t *testing.T, client *Client, id string) (*Database, func()) {
+func createDatabaseWithIdentifier(t *testing.T, client *Client, id AccountObjectIdentifier) (*Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, AccountObjectIdentifier{id}, &CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, id, &CreateDatabaseOptions{})
 }
 
 func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, _ *CreateDatabaseOptions) (*Database, func()) {

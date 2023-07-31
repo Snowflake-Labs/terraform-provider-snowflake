@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createCopyStatement(t *testing.T, table *Table, stage *Stage) string {
+func createPipeCopyStatement(t *testing.T, table *Table, stage *Stage) string {
 	t.Helper()
 	require.NotNil(t, table, "table has to be created")
 	require.NotNil(t, stage, "stage has to be created")
@@ -21,7 +21,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
@@ -38,7 +38,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 		err := client.Pipes.Create(
 			ctx,
 			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
-			createCopyStatement(t, table, stage),
+			createPipeCopyStatement(t, table, stage),
 			&PipeCreateOptions{},
 		)
 
@@ -76,7 +76,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
@@ -93,12 +93,12 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Cleanup(stageCleanup)
 
 	pipe1Name := randomAlphanumericN(t, 20)
-	pipe1CopyStatement := createCopyStatement(t, table1, stage)
+	pipe1CopyStatement := createPipeCopyStatement(t, table1, stage)
 	pipe1, pipe1Cleanup := createPipe(t, client, database, schema, pipe1Name, pipe1CopyStatement)
 	t.Cleanup(pipe1Cleanup)
 
 	pipe2Name := randomAlphanumericN(t, 20)
-	pipe2CopyStatement := createCopyStatement(t, table2, stage)
+	pipe2CopyStatement := createPipeCopyStatement(t, table2, stage)
 	pipe2, pipe2Cleanup := createPipe(t, client, database, schema, pipe2Name, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)
 
@@ -170,7 +170,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
@@ -183,7 +183,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	stage, stageCleanup := createStage(t, client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
-	copyStatement := createCopyStatement(t, table, stage)
+	copyStatement := createPipeCopyStatement(t, table, stage)
 
 	assertPipe := func(t *testing.T, pipeDetails *Pipe, expectedName string, expectedComment string) {
 		t.Helper()
@@ -252,7 +252,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
@@ -267,7 +267,7 @@ func TestInt_PipeDrop(t *testing.T) {
 
 	t.Run("pipe exists", func(t *testing.T) {
 		pipeName := randomAlphanumericN(t, 20)
-		pipeCopyStatement := createCopyStatement(t, table, stage)
+		pipeCopyStatement := createPipeCopyStatement(t, table, stage)
 		pipe, _ := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
 
 		err := client.Pipes.Drop(ctx, pipe.ID())
@@ -290,7 +290,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	ctx := context.Background()
 
 	schemaIdentifier := alphanumericSchemaIdentifier(t)
-	database, databaseCleanup := createDatabaseWithIdentifier(t, client, schemaIdentifier.databaseName)
+	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
@@ -303,7 +303,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	stage, stageCleanup := createStage(t, client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
-	pipeCopyStatement := createCopyStatement(t, table, stage)
+	pipeCopyStatement := createPipeCopyStatement(t, table, stage)
 
 	// TODO: test error integration when we have them in project
 	t.Run("set value and unset value", func(t *testing.T) {

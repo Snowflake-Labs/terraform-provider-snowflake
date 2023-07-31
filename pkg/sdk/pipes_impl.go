@@ -9,18 +9,14 @@ type pipes struct {
 }
 
 func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *PipeCreateOptions) error {
-	if opts == nil {
-		opts = &PipeCreateOptions{}
-	}
+	opts = createIfNil[PipeCreateOptions](opts)
 	opts.name = id
 	opts.copyStatement = copyStatement
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error {
-	if opts == nil {
-		opts = &PipeAlterOptions{}
-	}
+	opts = createIfNil[PipeAlterOptions](opts)
 	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -76,4 +72,12 @@ func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 		return nil, err
 	}
 	return pipeRow.toPipe(), nil
+}
+
+func createIfNil[T any](t *T) *T {
+	if t == nil {
+		var s T
+		return &s
+	}
+	return t
 }

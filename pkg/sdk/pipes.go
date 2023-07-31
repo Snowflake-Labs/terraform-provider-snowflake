@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 type Pipes interface {
@@ -105,7 +104,7 @@ type PipeShowOptions struct {
 
 // pipeDBRow is used to decode the result of a SHOW PIPES query.
 type pipeDBRow struct {
-	CreatedOn           time.Time      `db:"created_on"`
+	CreatedOn           string         `db:"created_on"`
 	Name                string         `db:"name"`
 	DatabaseName        string         `db:"database_name"`
 	SchemaName          string         `db:"schema_name"`
@@ -124,7 +123,7 @@ type pipeDBRow struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/show-pipes#output and https://docs.snowflake.com/en/sql-reference/sql/desc-pipe#output.
 type Pipe struct {
-	CreatedOn           time.Time
+	CreatedOn           string
 	Name                string
 	DatabaseName        string
 	SchemaName          string
