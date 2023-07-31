@@ -11,6 +11,7 @@ import (
 func TestSchemasCreate(t *testing.T) {
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateSchemaOptions{
+			OrReplace: Bool(true),
 			Clone: &Clone{
 				SourceObject: NewAccountObjectIdentifier("sch1"),
 				At: &TimeTravel{
@@ -20,13 +21,12 @@ func TestSchemasCreate(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE SCHEMA CLONE "sch1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`
+		expected := `CREATE OR REPLACE SCHEMA CLONE "sch1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("complete", func(t *testing.T) {
 		opts := &CreateSchemaOptions{
-			OrReplace:                  Bool(true),
 			Transient:                  Bool(true),
 			IfNotExists:                Bool(true),
 			WithManagedAccess:          Bool(true),
@@ -43,7 +43,7 @@ func TestSchemasCreate(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE OR REPLACE TRANSIENT SCHEMA IF NOT EXISTS WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG ("db1"."schema1"."tag1" = 'v1') COMMENT = 'comment'`
+		expected := `CREATE TRANSIENT SCHEMA IF NOT EXISTS WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG ("db1"."schema1"."tag1" = 'v1') COMMENT = 'comment'`
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -157,7 +157,7 @@ func TestSchemasAlter(t *testing.T) {
 	t.Run("disable managed access", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
 			name:                 NewSchemaIdentifier("database_name", "schema_name"),
-			DisableMangaedAccess: Bool(true),
+			DisableManagedAccess: Bool(true),
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)

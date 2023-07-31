@@ -144,6 +144,11 @@ func TestInt_SchemasAlter(t *testing.T) {
 		t.Cleanup(cleanupSwapSchema)
 
 		table, _ := createTable(t, client, db, schema)
+		t.Cleanup(func() {
+			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", db.Name, swapSchema.Name, table.Name))
+			require.NoError(t, err)
+		})
+
 		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
 			SwapWith: swapSchema.ID(),
 		})
@@ -154,11 +159,6 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assert.Equal(t, 1, len(schemaDetails))
 		assert.Equal(t, "TABLE", schemaDetails[0].Kind)
 		assert.Equal(t, table.Name, schemaDetails[0].Name)
-
-		t.Cleanup(func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", db.Name, swapSchema.Name, table.Name))
-			require.NoError(t, err)
-		})
 	})
 
 	t.Run("set", func(t *testing.T) {
@@ -278,7 +278,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("enable manged access", func(t *testing.T) {
+	t.Run("enable managed access", func(t *testing.T) {
 		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
@@ -306,6 +306,29 @@ func TestInt_SchemasShow(t *testing.T) {
 
 	t.Run("no options", func(t *testing.T) {
 		schemas, err := client.Schemas.Show(ctx, nil)
+		require.NoError(t, err)
+		schemaNames := make([]string, len(schemas))
+		for i, s := range schemas {
+			schemaNames[i] = s.Name
+		}
+		assert.Contains(t, schemaNames, schema.Name)
+	})
+
+	t.Run("with options", func(t *testing.T) {
+		schemas, err := client.Schemas.Show(ctx, &ShowSchemaOptions{
+			Terse:   Bool(true),
+			History: Bool(true),
+			Like: &Like{
+				Pattern: String(schema.Name),
+			},
+			In: &InSchema{
+				Account: Bool(true),
+			},
+			StartsWith: String(schema.Name),
+			LimitFrom: &LimitFrom{
+				Rows: Int(1),
+			},
+		})
 		require.NoError(t, err)
 		schemaNames := make([]string, len(schemas))
 		for i, s := range schemas {

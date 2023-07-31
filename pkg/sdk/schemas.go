@@ -91,7 +91,7 @@ type CreateSchemaOptions struct {
 	Transient                  *bool            `ddl:"keyword" sql:"TRANSIENT"`
 	schema                     bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
 	IfNotExists                *bool            `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	name                       SchemaIdentifier `ddl:"identifier"`
 	Clone                      *Clone           `ddl:"-"`
 	WithManagedAccess          *bool            `ddl:"keyword" sql:"WITH MANAGED ACCESS"`
 	DataRetentionTimeInDays    *int             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
@@ -142,7 +142,7 @@ type AlterSchemaOptions struct {
 	Set                  *SchemaSet       `ddl:"list,no_parentheses" sql:"SET"`
 	Unset                *SchemaUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 	EnableManagedAccess  *bool            `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
-	DisableMangaedAccess *bool            `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
+	DisableManagedAccess *bool            `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
 }
 
 func (opts *AlterSchemaOptions) validate() error {
@@ -150,7 +150,7 @@ func (opts *AlterSchemaOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableMangaedAccess) {
+	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
 		errs = append(errs, errors.New("Only one of the fields [ NewName | SwapWith | Set | Unset | EnableManagedAcccess | DisableManagedAcccess ] can be set at once"))
 	}
 	if valueSet(opts.Set) {
@@ -176,7 +176,7 @@ type SchemaSet struct {
 
 func (v *SchemaSet) validate() error {
 	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("Tag cannot be set with other options")
+		return errors.New("Tag field cannot be set with other options")
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ type SchemaUnset struct {
 
 func (v *SchemaUnset) validate() error {
 	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("Tag cannot be set with other options")
+		return errors.New("Tag field cannot be set with other options")
 	}
 	return nil
 }
@@ -213,7 +213,7 @@ func (v *schemas) Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSch
 }
 
 type DropSchemaOptions struct {
-	drop     bool             `ddl:"static" sql:"DROP"`
+	drop     bool             `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
 	schema   bool             `ddl:"static" sql:"SCHEMA"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaIdentifier `ddl:"identifier"`
@@ -251,7 +251,7 @@ func (v *schemas) Drop(ctx context.Context, id SchemaIdentifier, opts *DropSchem
 type undropSchemaOptions struct {
 	undrop bool             `ddl:"static" sql:"UNDROP"` //lint:ignore U1000 This is used in the ddl tag
 	schema bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
-	name   SchemaIdentifier `ddl:"identifier"`          //lint:ignore U1000 This is used in the ddl tag
+	name   SchemaIdentifier `ddl:"identifier"`
 }
 
 func (opts *undropSchemaOptions) validate() error {
