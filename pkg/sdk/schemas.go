@@ -85,6 +85,7 @@ func (row schemaDBRow) toSchema() Schema {
 	}
 }
 
+// CreateSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-schema
 type CreateSchemaOptions struct {
 	create                     bool             `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace                  *bool            `ddl:"keyword" sql:"OR REPLACE"`
@@ -132,6 +133,7 @@ func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateS
 	return err
 }
 
+// AlterSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-schema
 type AlterSchemaOptions struct {
 	alter                bool             `ddl:"static" sql:"ALTER"`  //lint:ignore U1000 This is used in the ddl tag
 	schema               bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
@@ -212,6 +214,7 @@ func (v *schemas) Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSch
 	return err
 }
 
+// DropSchemaOptions Based on https://docs.snowflake.com/en/sql-reference/sql/drop-schema
 type DropSchemaOptions struct {
 	drop     bool             `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
 	schema   bool             `ddl:"static" sql:"SCHEMA"`
@@ -320,6 +323,7 @@ type InSchema struct {
 	Name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
+// ShowSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-schemas
 type ShowSchemaOptions struct {
 	show       bool       `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
 	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
