@@ -2,7 +2,10 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
+	"database/sql/driver"
 	"errors"
+	"time"
 )
 
 type ExternalTables interface {
@@ -22,9 +25,13 @@ type ExternalTables interface {
 	Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error)
 	// ShowByID returns an external table by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalTable, error)
-	// Describe returns the details of an external table.
-	Describe(ctx context.Context, id AccountObjectIdentifier, opts *DescribeExternalTableOptions) (*ExternalTableDetails, error)
+	// DescribeColumns returns the details of the external table's columns.
+	DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error)
+	// DescribeStage returns the details of the external table's stage.
+	DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error)
 }
+
+// TODO Infer schema
 
 var _ ExternalTables = (*externalTables)(nil)
 
@@ -33,7 +40,25 @@ type externalTables struct {
 }
 
 type ExternalTable struct {
-	Name string
+	CreatedOn           time.Time
+	Name                string
+	DatabaseName        string
+	SchemaName          string
+	Invalid             bool
+	InvalidReason       string
+	Owner               string
+	Comment             string
+	Stage               string
+	Location            string
+	FileFormatName      string
+	FileFormatType      string
+	Cloud               string
+	Region              string
+	NotificationChannel string
+	LastRefreshedOn     time.Time
+	TableFormat         string
+	LastRefreshDetails  string
+	OwnerRoleType       string
 }
 
 func (v *ExternalTable) ID() AccountObjectIdentifier {
@@ -45,47 +70,53 @@ func (v *ExternalTable) ObjectType() ObjectType {
 }
 
 type CreateExternalTableOpts struct {
-	create              bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists         *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier `ddl:"identifier"`
-	Columns             []ExternalTableColumn   `ddl:"keyword"`
-	CloudProviderParams CloudProviderParams     `ddl:"parameter"`
-	PartitionBy         []string                `ddl:"list,parentheses" sql:"PARTITION BY"`
-	Location            string                  `ddl:"parameter"`
-	RefreshOnCreate     *bool                   `ddl:"keyword" sql:"REFRESH_ON_CREATE = TRUE"`
-	AutoRefresh         *bool                   `ddl:"keyword" sql:"AUTO_REFRESH = TRUE"`
-	Pattern             *string                 `ddl:"parameter,single_quotes" sql:"PATTERN"`
-	FileFormat          ExternalTableFileFormat `ddl:"parameter"`
-	AwsSnsTopic         *string                 `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy     *RowAccessPolicy        `ddl:"parameter"`
-	Tag                 []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment             *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create              bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                      `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists         *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                AccountObjectIdentifier   `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	Columns             []ExternalTableColumn     `ddl:"list,parentheses"`
+	CloudProviderParams CloudProviderParams       // TODO Not required and used for notifications
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
+	FileFormat          []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO could be parameter ?
+	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
+	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateExternalTableOpts) validate() error {
-	// TODO
-	return nil
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !valueSet(opts.Columns) {
+		errs = append(errs, errors.New("no column provided")) // TODO message
+	}
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errors.New("no file format provided")) // TODO message
+	}
+	// TODO call fields validate functions
+	return errors.Join(errs...)
 }
 
 type ExternalTableColumn struct {
-	Name             string
-	Type             string
-	AsExpression     string
+	Name             string   `ddl:"keyword"`
+	Type             DataType `ddl:"keyword"`
+	AsExpression     string   `ddl:"parameter,parentheses,no_equals" sql:"AS"`
 	InlineConstraint *ExternalTableInlineConstraint
 }
 
 type ExternalTableInlineConstraint struct {
-	NotNull        *bool
-	ConstraintName *string
-}
-
-type ColumnInlineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type       ColumnConstraintType `ddl:"keyword"`
-	ForeignKey *InlineForeignKey    `ddl:"keyword" sql:"FOREIGN KEY"`
+	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
+	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Type       *ColumnConstraintType `ddl:"keyword"`
+	ForeignKey *InlineForeignKey     `ddl:"keyword" sql:"FOREIGN KEY"`
 
 	//optional
 	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
@@ -104,7 +135,7 @@ type ColumnInlineConstraint struct {
 
 type ColumnConstraintType string
 
-const (
+var (
 	ColumnConstraintTypeUnique     ColumnConstraintType = "UNIQUE"
 	ColumnConstraintTypePrimaryKey ColumnConstraintType = "PRIMARY KEY"
 	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
@@ -152,11 +183,10 @@ type MicrosoftAzureParams struct {
 	Integration *string `ddl:"parameter,single_quotes" sql:"INTEGRATION"`
 }
 
-type Location struct{}
-
 type ExternalTableFileFormat struct {
-	Name    *string
-	Type    *ExternalTableFileFormatType
+	Name *string                      `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
+	Type *ExternalTableFileFormatType `ddl:"parameter" sql:"TYPE"`
+	// TODO: Should be probably a new type because doesn't contain xml (or maybe FileFormatType should be divided into struct for every file format)
 	Options *FileFormatTypeOptions
 }
 
@@ -179,9 +209,8 @@ var (
 )
 
 type RowAccessPolicy struct {
-	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	Name            SchemaObjectIdentifier `ddl:"identifier"`
-	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+	Name SchemaObjectIdentifier `ddl:"identifier"`
+	On   []string               `ddl:"keyword,parentheses" sql:"ON"` // TODO What is correct (quoted values or no)
 }
 
 func (v *externalTables) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableOpts) error {
@@ -201,24 +230,21 @@ func (v *externalTables) Create(ctx context.Context, id AccountObjectIdentifier,
 }
 
 type CreateWithManualPartitioningExternalTableOpts struct {
-	create              bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists         *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier `ddl:"identifier"`
-	Columns             []ExternalTableColumn   `ddl:"keyword"`
-	CloudProviderParams CloudProviderParams     `ddl:"parameter"`
-	PartitionBy         []string                `ddl:"list,parentheses" sql:"PARTITION BY"`
-	Location            Location                `ddl:"parameter"`
-	RefreshOnCreate     *bool                   `ddl:"keyword" sql:"REFRESH_ON_CREATE = TRUE"`
-	AutoRefresh         *bool                   `ddl:"keyword" sql:"AUTO_REFRESH = TRUE"`
-	Pattern             *string                 `ddl:"parameter,single_quotes" sql:"PATTERN"`
-	FileFormat          ExternalTableFileFormat `ddl:"parameter"`
-	AwsSnsTopic         *string                 `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy     *RowAccessPolicy        `ddl:"parameter"`
-	Tag                 []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment             *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable              bool                      `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier   `ddl:"identifier"`
+	Columns                    []ExternalTableColumn     `ddl:"list,parentheses"`
+	CloudProviderParams        CloudProviderParams       `ddl:"keyword"`
+	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
@@ -243,7 +269,24 @@ func (v *externalTables) CreateWithManualPartitioning(ctx context.Context, id Ac
 }
 
 type CreateDeltaLakeExternalTableOpts struct {
-	name AccountObjectIdentifier
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable              bool                      `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier   `ddl:"identifier"`
+	Columns                    []ExternalTableColumn     `ddl:"list,parentheses"`
+	CloudProviderParams        CloudProviderParams       `ddl:"keyword"`
+	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
+	refreshOnCreate            bool                      `ddl:"static" sql:"REFRESH_ON_CREATE = FALSE"`
+	autoRefresh                bool                      `ddl:"static" sql:"AUTO_REFRESH = FALSE"`
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO
+	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
@@ -271,11 +314,19 @@ type AlterExternalTableOptions struct {
 	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name               AccountObjectIdentifier `ddl:"identifier"`
 	// One of
-	Refresh     *ExternalTableRefresh `ddl:"parameter" sql:"REFRESH"`
-	AddFiles    []string              `ddl:"list,parentheses" sql:"ADD FILES"`
-	RemoveFiles []string              `ddl:"list" sql:"REMOVE FILES"`
-	Set         *ExternalTableSet
-	Unset       *ExternalTableUnset
+	Refresh     *RefreshExternalTable `ddl:"keyword" sql:"REFRESH"`
+	AddFiles    []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"ADD FILES"`
+	RemoveFiles []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"REMOVE FILES"`
+	Set         *ExternalTableSet     `ddl:"keyword" sql:"SET"`
+	Unset       *ExternalTableUnset   `ddl:"keyword" sql:"UNSET"`
+}
+
+type RefreshExternalTable struct {
+	Path *string `ddl:"parameter,no_equals,single_quotes"`
+}
+
+type ExternalTableFile struct {
+	Name string `ddl:"keyword,single_quotes"`
 }
 
 func (opts *AlterExternalTableOptions) validate() error {
@@ -295,12 +346,12 @@ type ExternalTableRefresh struct {
 }
 
 type ExternalTableSet struct {
-	AutoRefresh *bool
-	Tag         []TagAssociation
+	AutoRefresh *bool            `ddl:"parameter" sql:"AUTO_REFRESH"`
+	Tag         []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type ExternalTableUnset struct {
-	Tag []ObjectIdentifier
+	Tag []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *externalTables) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error {
@@ -323,8 +374,9 @@ type AlterExternalTablePartitionOptions struct {
 	alterExternalTable bool                    `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
 	name               AccountObjectIdentifier `ddl:"identifier"`
 	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	AddPartitions      []Partition             `ddl:"list,parentheses" sql:"ADD PARTITION"`
-	DropPartition      *string                 `ddl:"parameter,single_quotes,no_equals" sql:"DROP PARTITION LOCATION"`
+	AddPartitions      []Partition             `ddl:"keyword,parentheses" sql:"ADD PARTITION"`
+	DropPartition      *bool                   `ddl:"keyword" sql:"DROP PARTITION"`
+	Location           string                  `ddl:"keyword,single_quotes" sql:"LOCATION"`
 }
 
 func (opts *AlterExternalTablePartitionOptions) validate() error {
@@ -333,7 +385,7 @@ func (opts *AlterExternalTablePartitionOptions) validate() error {
 }
 
 type Partition struct {
-	ColumnName string `ddl:"parameter"`
+	ColumnName string `ddl:"keyword,double_quotes"`
 	Value      string `ddl:"parameter,single_quotes"`
 }
 
@@ -354,10 +406,10 @@ func (v *externalTables) AlterPartitions(ctx context.Context, id AccountObjectId
 }
 
 type DropExternalTableOptions struct {
-	dropExternalTable bool                     `ddl:"static" sql:"DROP EXTERNAL TABLE"`
-	IfExists          *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name              AccountObjectIdentifier  `ddl:"identifier"`
-	DropOption        *ExternalTableDropOption `ddl:"parameter"`
+	dropExternalTable bool                    `ddl:"static" sql:"DROP EXTERNAL TABLE"`
+	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name              AccountObjectIdentifier `ddl:"identifier"`
+	DropOption        *ExternalTableDropOption
 }
 
 func (opts *DropExternalTableOptions) validate() error {
@@ -415,12 +467,57 @@ func (opts *ShowExternalTableOptions) validate() error {
 }
 
 type externalTableRow struct {
-	// TODO fill
+	CreatedOn           time.Time
+	Name                string
+	DatabaseName        string
+	SchemaName          string
+	Invalid             bool
+	InvalidReason       sql.NullString
+	Owner               string
+	Comment             string
+	Stage               string
+	Location            string
+	FileFormatName      string
+	FileFormatType      string
+	Cloud               string
+	Region              string
+	NotificationChannel sql.NullString
+	LastRefreshedOn     sql.NullTime
+	TableFormat         string
+	LastRefreshDetails  sql.NullString
+	OwnerRoleType       string
 }
 
-func (etr externalTableRow) ToExternalTable() ExternalTable {
-	// TODO
-	return ExternalTable{}
+func setIfNotNil[T any](value *T, valuer driver.Valuer) {
+	if v, err := valuer.Value(); err == nil {
+		typedValue := v.(T)
+		value = &typedValue
+	}
+}
+
+func (e externalTableRow) ToExternalTable() ExternalTable {
+	et := ExternalTable{
+		CreatedOn:      e.CreatedOn,
+		Name:           e.Name,
+		DatabaseName:   e.DatabaseName,
+		SchemaName:     e.DatabaseName,
+		Invalid:        e.Invalid,
+		Owner:          e.Owner,
+		Stage:          e.Stage,
+		Location:       e.Location,
+		FileFormatName: e.FileFormatName,
+		FileFormatType: e.FileFormatType,
+		Cloud:          e.Cloud,
+		Region:         e.Region,
+		TableFormat:    e.TableFormat,
+		OwnerRoleType:  e.OwnerRoleType,
+		Comment:        e.Comment,
+	}
+	setIfNotNil(&et.InvalidReason, e.InvalidReason)
+	setIfNotNil(&et.NotificationChannel, e.NotificationChannel)
+	setIfNotNil(&et.LastRefreshedOn, e.LastRefreshedOn)
+	setIfNotNil(&et.LastRefreshDetails, e.LastRefreshDetails)
+	return et
 }
 
 func (v *externalTables) Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error) {
@@ -463,58 +560,152 @@ func (v *externalTables) ShowByID(ctx context.Context, id AccountObjectIdentifie
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-type DescribeExternalTableOptions struct {
+type describeExternalTableColumns struct {
 	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"` //lint:ignore U1000 This is used in the ddl tag
 	name                  AccountObjectIdentifier `ddl:"identifier"`
-	ColumnsType           *bool                   `ddl:"keyword" sql:"TYPE = COLUMNS"`
-	StageType             *bool                   `ddl:"keyword" sql:"TYPE = STAGE"`
+	columnsType           bool                    `ddl:"static" sql:"TYPE = COLUMNS"`
 }
 
-func (opts *DescribeExternalTableOptions) validate() error {
-	if anyValueSet(opts.ColumnsType, opts.StageType) && !exactlyOneValueSet(opts.ColumnsType, opts.StageType) {
-		return errors.New("") // TODO exactly one value set
-	}
-	if validObjectidentifier(opts.name) {
+func (v *describeExternalTableColumns) validate() error {
+	if validObjectidentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-type ExternalTableDetails struct {
-	// TODO check if different than ExternalTable
+type ExternalTableColumnDetails struct {
+	Name       string
+	Type       DataType
+	Kind       string
+	IsNullable bool
+	Default    *string
+	IsPrimary  bool
+	IsUnique   bool
+	Check      *bool
+	Expression *string
+	Comment    *string
+	PolicyName *string
 }
 
-type externalTableDetailsRow struct {
-	// TODO
-	name AccountObjectIdentifier
+type externalTableColumnDetailsRow struct {
+	Name       string         `db:"name"`
+	Type       DataType       `db:"type"`
+	Kind       string         `db:"kind"`
+	IsNullable bool           `db:"null?"`
+	Default    sql.NullString `db:"default"`
+	IsPrimary  bool           `db:"primary key"`
+	IsUnique   bool           `db:"unique key"`
+	Check      sql.NullBool   `db:"check"` // ? BOOL ?
+	Expression sql.NullString `db:"expression"`
+	Comment    sql.NullString `db:"comment"`
+	PolicyName sql.NullString `db:"policy name"`
 }
 
-func (r *externalTableDetailsRow) toExternalTableDetails() *ExternalTableDetails {
-	// TODO
-	return &ExternalTableDetails{}
-}
-
-func (v *externalTables) Describe(ctx context.Context, id AccountObjectIdentifier, opts *DescribeExternalTableOptions) (*ExternalTableDetails, error) {
-	if opts == nil {
-		opts = &DescribeExternalTableOptions{}
+func (r *externalTableColumnDetailsRow) toExternalTableColumnDetails() ExternalTableColumnDetails {
+	details := ExternalTableColumnDetails{
+		Name:       r.Name,
+		Type:       r.Type,
+		Kind:       r.Kind,
+		IsNullable: r.IsNullable,
+		IsPrimary:  r.IsPrimary,
+		IsUnique:   r.IsUnique,
 	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
+	setIfNotNil(&details.Default, r.Default)
+	setIfNotNil(&details.Check, r.Check)
+	setIfNotNil(&details.Expression, r.Expression)
+	setIfNotNil(&details.Comment, r.Comment)
+	setIfNotNil(&details.PolicyName, r.PolicyName)
+	return details
+}
+
+func (v *externalTables) DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error) {
+	query := describeExternalTableColumns{
+		name: id,
+	}
+	if err := query.validate(); err != nil {
 		return nil, err
 	}
-	sql, err := structToSQL(opts)
+
+	sql, err := structToSQL(query)
 	if err != nil {
 		return nil, err
 	}
-	var rows []externalTableDetailsRow
+
+	var rows []externalTableColumnDetailsRow
 	err = v.client.query(ctx, &rows, sql)
 	if err != nil {
 		return nil, err
 	}
+
+	var result []ExternalTableColumnDetails
 	for _, r := range rows {
-		if r.name == id {
-			return r.toExternalTableDetails(), nil
-		}
+		result = append(result, r.toExternalTableColumnDetails())
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return result, nil
+}
+
+type describeExternalTableStage struct {
+	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	name                  AccountObjectIdentifier `ddl:"identifier"`
+	stageType             bool                    `ddl:"static" sql:"TYPE = STAGE"`
+}
+
+func (v *describeExternalTableStage) validate() error {
+	if validObjectidentifier(v.name) {
+		return ErrInvalidObjectIdentifier
+	}
+	return nil
+}
+
+type ExternalTableStageDetails struct {
+	parentProperty  string
+	property        string
+	propertyType    string
+	propertyValue   string
+	propertyDefault string
+}
+
+type externalTableStageDetailsRow struct {
+	parentProperty  string `db:"parent_property"`
+	property        string `db:"property"`
+	propertyType    string `db:"property_type"`
+	propertyValue   string `db:"property_value"`
+	propertyDefault string `db:"property_default"`
+}
+
+func (r externalTableStageDetailsRow) toExternalTableStageDetails() ExternalTableStageDetails {
+	return ExternalTableStageDetails{
+		parentProperty:  r.parentProperty,
+		property:        r.property,
+		propertyType:    r.propertyType,
+		propertyValue:   r.propertyValue,
+		propertyDefault: r.propertyDefault,
+	}
+}
+
+func (v *externalTables) DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error) {
+	query := describeExternalTableStage{
+		name: id,
+	}
+	if err := query.validate(); err != nil {
+		return nil, err
+	}
+
+	sql, err := structToSQL(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows []externalTableStageDetailsRow
+	err = v.client.query(ctx, &rows, sql)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []ExternalTableStageDetails
+	for _, r := range rows {
+		result = append(result, r.toExternalTableStageDetails())
+	}
+
+	return result, nil
 }

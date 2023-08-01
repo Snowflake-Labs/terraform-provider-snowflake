@@ -9,15 +9,19 @@ import (
 
 func TestExternalTablesCreate(t *testing.T) {
 	t.Run("basic options", func(t *testing.T) {
-		opts := CreateExternalTableOpts{
+		opts := &CreateExternalTableOpts{
 			IfNotExists: Bool(true),
 			name:        NewAccountObjectIdentifier("external_table"),
 			Columns: []ExternalTableColumn{
 				{
-					Name:             "column",
-					Type:             "varchar",
-					AsExpression:     "value::column::varchar",
-					InlineConstraint: nil,
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: "value::column::varchar",
+					InlineConstraint: &ExternalTableInlineConstraint{
+						Name:    String("my_constraint"),
+						NotNull: Bool(true),
+						Type:    &ColumnConstraintTypeUnique,
+					},
 				},
 			},
 			CloudProviderParams: CloudProviderParams{
@@ -26,45 +30,49 @@ func TestExternalTablesCreate(t *testing.T) {
 				},
 			},
 			Location: "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE EXTERNAL TABLE "external_table" (column varchar as (value::column::varchar)) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS ROW ACCESS POLICY "123" ON ("value") TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+		expected := `CREATE EXTERNAL TABLE IF NOT EXISTS "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`
 		assert.Equal(t, expected, actual)
 	})
 
 	t.Run("every optional field", func(t *testing.T) {
-		opts := CreateExternalTableOpts{
+		opts := &CreateExternalTableOpts{
 			OrReplace: Bool(true),
 			name:      NewAccountObjectIdentifier("external_table"),
 			Columns: []ExternalTableColumn{
 				{
-					Name:             "column",
-					Type:             "varchar",
-					AsExpression:     "value::column::varchar",
-					InlineConstraint: nil,
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: "value::column::varchar",
+					InlineConstraint: &ExternalTableInlineConstraint{
+						Name:    String("my_constraint"),
+						NotNull: Bool(true),
+						Type:    &ColumnConstraintTypeUnique,
+					},
 				},
 			},
 			CloudProviderParams: CloudProviderParams{
-				MicrosoftAzure: &MicrosoftAzureParams{
+				GoogleCloudStorage: &GoogleCloudStorageParams{
 					Integration: String("123"),
 				},
 			},
-			PartitionBy:     []string{"column"},
-			Location:        "@s1/logs",
-			RefreshOnCreate: Bool(true),
-			AutoRefresh:     Bool(true),
-			Pattern:         String("some_pattern"),
-			FileFormat: ExternalTableFileFormat{
-				Name: String("JSON"),
+			Location: "@s1/logs/",
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
 			AwsSnsTopic: String("aws_sns_topic"),
 			CopyGrants:  Bool(true),
 			RowAccessPolicy: &RowAccessPolicy{
-				Name: randomSchemaObjectIdentifier(t),
+				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
 			Tag: []TagAssociation{
@@ -81,25 +89,131 @@ func TestExternalTablesCreate(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE EXTERNAL TABLE "external_table" (column varchar as (value::column::varchar)) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS ROW ACCESS POLICY "123" ON ("value1", "value2") TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+		expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
 		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
+	opts := &CreateWithManualPartitioningExternalTableOpts{
+		OrReplace: Bool(true),
+		name:      NewAccountObjectIdentifier("external_table"),
+		Columns: []ExternalTableColumn{
+			{
+				Name:         "column",
+				Type:         "varchar",
+				AsExpression: "value::column::varchar",
+				InlineConstraint: &ExternalTableInlineConstraint{
+					Name:    String("my_constraint"),
+					NotNull: Bool(true),
+					Type:    &ColumnConstraintTypeUnique,
+				},
+			},
+		},
+		CloudProviderParams: CloudProviderParams{
+			GoogleCloudStorage: &GoogleCloudStorageParams{
+				Integration: String("123"),
+			},
+		},
+		Location:                   "@s1/logs/",
+		UserSpecifiedPartitionType: Bool(true),
+		FileFormat: []ExternalTableFileFormat{
+			{
+				Type: &ExternalTableFileFormatTypeJSON,
+			},
+		},
+		CopyGrants: Bool(true),
+		RowAccessPolicy: &RowAccessPolicy{
+			Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
+			On:   []string{"value1", "value2"},
+		},
+		Tag: []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag2"),
+				Value: "value2",
+			},
+		},
+		Comment: String("some_comment"),
+	}
+	actual, err := structToSQL(opts)
+	require.NoError(t, err)
+	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON) COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+	assert.Equal(t, expected, actual)
 }
 
 func TestExternalTablesCreateDeltaLake(t *testing.T) {
-
+	opts := &CreateDeltaLakeExternalTableOpts{
+		OrReplace: Bool(true),
+		name:      NewAccountObjectIdentifier("external_table"),
+		Columns: []ExternalTableColumn{
+			{
+				Name:             "column",
+				Type:             "varchar",
+				AsExpression:     "value::column::varchar",
+				InlineConstraint: nil,
+			},
+		},
+		CloudProviderParams: CloudProviderParams{
+			MicrosoftAzure: &MicrosoftAzureParams{
+				Integration: String("123"),
+			},
+		},
+		PartitionBy:                []string{"column"},
+		Location:                   "@s1/logs/",
+		UserSpecifiedPartitionType: Bool(true),
+		FileFormat: []ExternalTableFileFormat{
+			{
+				Name: String("JSON"),
+			},
+		},
+		DeltaTableFormat: Bool(true),
+		CopyGrants:       Bool(true),
+		RowAccessPolicy: &RowAccessPolicy{
+			Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
+			On:   []string{"value1", "value2"},
+		},
+		Tag: []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag2"),
+				Value: "value2",
+			},
+		},
+		Comment: String("some_comment"),
+	}
+	actual, err := structToSQL(opts)
+	require.NoError(t, err)
+	// TODO with line break to read / edit / review - write util to trim newline characters and double spaces
+	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar)) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (FORMAT_NAME = 'JSON') TABLE_FORMAT = DELTA COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+	assert.Equal(t, expected, actual)
 }
 
 func TestExternalTablesAlter(t *testing.T) {
-	t.Run("refresh", func(t *testing.T) {
-		opts := AlterExternalTableOptions{
+	t.Run("refresh without path", func(t *testing.T) {
+		opts := &AlterExternalTableOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("external_table"),
-			Refresh: &ExternalTableRefresh{
-				RelativePath: String("some/path"),
+			Refresh:  &RefreshExternalTable{},
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `ALTER EXTERNAL TABLE IF EXISTS "external_table" REFRESH`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("refresh with path", func(t *testing.T) {
+		opts := &AlterExternalTableOptions{
+			IfExists: Bool(true),
+			name:     NewAccountObjectIdentifier("external_table"),
+			Refresh: &RefreshExternalTable{
+				Path: String("some/path"),
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -109,9 +223,12 @@ func TestExternalTablesAlter(t *testing.T) {
 	})
 
 	t.Run("add files", func(t *testing.T) {
-		opts := AlterExternalTableOptions{
-			name:     NewAccountObjectIdentifier("external_table"),
-			AddFiles: []string{"one/file.txt", "second/file.txt"},
+		opts := &AlterExternalTableOptions{
+			name: NewAccountObjectIdentifier("external_table"),
+			AddFiles: []ExternalTableFile{
+				{Name: "one/file.txt"},
+				{Name: "second/file.txt"},
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -120,9 +237,12 @@ func TestExternalTablesAlter(t *testing.T) {
 	})
 
 	t.Run("remove files", func(t *testing.T) {
-		opts := AlterExternalTableOptions{
-			name:        NewAccountObjectIdentifier("external_table"),
-			RemoveFiles: []string{"one/file.txt", "scond/file.txt"},
+		opts := &AlterExternalTableOptions{
+			name: NewAccountObjectIdentifier("external_table"),
+			RemoveFiles: []ExternalTableFile{
+				{Name: "one/file.txt"},
+				{Name: "second/file.txt"},
+			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -131,7 +251,7 @@ func TestExternalTablesAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		opts := AlterExternalTableOptions{
+		opts := &AlterExternalTableOptions{
 			name: NewAccountObjectIdentifier("external_table"),
 			Set: &ExternalTableSet{
 				AutoRefresh: Bool(true),
@@ -154,7 +274,7 @@ func TestExternalTablesAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		opts := AlterExternalTableOptions{
+		opts := &AlterExternalTableOptions{
 			name: NewAccountObjectIdentifier("external_table"),
 			Unset: &ExternalTableUnset{
 				Tag: []ObjectIdentifier{
@@ -172,7 +292,7 @@ func TestExternalTablesAlter(t *testing.T) {
 
 func TestExternalTablesAlterPartitions(t *testing.T) {
 	t.Run("add partition", func(t *testing.T) {
-		opts := AlterExternalTablePartitionOptions{
+		opts := &AlterExternalTablePartitionOptions{
 			name:     NewAccountObjectIdentifier("external_table"),
 			IfExists: Bool(true),
 			AddPartitions: []Partition{
@@ -193,7 +313,7 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 	})
 
 	t.Run("remove partition", func(t *testing.T) {
-		opts := AlterExternalTablePartitionOptions{
+		opts := &AlterExternalTablePartitionOptions{
 			name:          NewAccountObjectIdentifier("external_table"),
 			IfExists:      Bool(true),
 			DropPartition: String("partition_location"),
@@ -207,7 +327,7 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 
 func TestExternalTablesDrop(t *testing.T) {
 	t.Run("restrict", func(t *testing.T) {
-		opts := DropExternalTableOptions{
+		opts := &DropExternalTableOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("external_table"),
 			DropOption: &ExternalTableDropOption{
@@ -221,7 +341,7 @@ func TestExternalTablesDrop(t *testing.T) {
 	})
 
 	t.Run("cascade", func(t *testing.T) {
-		opts := DropExternalTableOptions{
+		opts := &DropExternalTableOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("external_table"),
 			DropOption: &ExternalTableDropOption{
@@ -237,7 +357,7 @@ func TestExternalTablesDrop(t *testing.T) {
 
 func TestExternalTablesShow(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
-		opts := ShowExternalTableOptions{
+		opts := &ShowExternalTableOptions{
 			Terse: Bool(true),
 			Like: &Like{
 				Pattern: String("some_pattern"),
@@ -258,7 +378,7 @@ func TestExternalTablesShow(t *testing.T) {
 	})
 
 	t.Run("in database", func(t *testing.T) {
-		opts := ShowExternalTableOptions{
+		opts := &ShowExternalTableOptions{
 			Terse: Bool(true),
 			In: &In{
 				Database: NewAccountObjectIdentifier("database_name"),
@@ -271,7 +391,7 @@ func TestExternalTablesShow(t *testing.T) {
 	})
 
 	t.Run("in schema", func(t *testing.T) {
-		opts := ShowExternalTableOptions{
+		opts := &ShowExternalTableOptions{
 			Terse: Bool(true),
 			In: &In{
 				Schema: NewSchemaIdentifier("database_name", "schema_name"),
@@ -286,7 +406,7 @@ func TestExternalTablesShow(t *testing.T) {
 
 func TestExternalTablesDescribe(t *testing.T) {
 	t.Run("type columns", func(t *testing.T) {
-		opts := DescribeExternalTableOptions{
+		opts := &DescribeExternalTableOptions{
 			name:        NewAccountObjectIdentifier("external_table"),
 			ColumnsType: Bool(true),
 		}
@@ -297,7 +417,7 @@ func TestExternalTablesDescribe(t *testing.T) {
 	})
 
 	t.Run("type stage", func(t *testing.T) {
-		opts := DescribeExternalTableOptions{
+		opts := &DescribeExternalTableOptions{
 			name:      NewAccountObjectIdentifier("external_table"),
 			StageType: Bool(true),
 		}

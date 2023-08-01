@@ -231,6 +231,7 @@ func (b sqlBuilder) parseInterface(v interface{}, tag reflect.StructTag) (sqlCla
 			qm:    b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.getModifier(tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 			rm:    b.getModifier(tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			pm:    b.getModifier(tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 		}, nil
 	case "keyword":
 		return sqlKeywordClause{
@@ -368,6 +369,7 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 					qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 					rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+					pm:    b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 				})
 				return b.renderStaticClause(clauses...), nil
 			}
@@ -453,6 +455,7 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 			rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			pm:    b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 		}, nil
 	case "keyword":
 		return b.renderStaticClause(sqlKeywordClause{
@@ -525,6 +528,16 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
 	case "parameter":
+		if boolValue, ok := reflectedValue.(bool); ok {
+			return b.renderStaticClause(append(clauses, sqlParameterClause{
+				key:   sqlTag,
+				value: strings.ToUpper(fmt.Sprintf("%v", boolValue)),
+				em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
+				qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
+				rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+				pm:    b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
+			})...), nil
+		}
 		if _, ok := reflectedValue.(ObjectType); ok {
 			if reflectedValue.(ObjectType).String() == "" {
 				return nil, nil
@@ -536,6 +549,7 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
 			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
+			pm:    b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
 		}
 	default:
 		return nil, nil
@@ -619,6 +633,7 @@ type sqlParameterClause struct {
 	qm quoteModifier
 	em equalsModifier
 	rm reverseModifier
+	pm parenModifier
 }
 
 func (v sqlParameterClause) String() string {
@@ -633,6 +648,8 @@ func (v sqlParameterClause) String() string {
 		return s
 	}
 	// key = "value"
-	s += v.qm.Modify(v.value)
+	value := v.qm.Modify(v.value)
+	// key = ("value")
+	s += v.pm.Modify(value)
 	return s
 }

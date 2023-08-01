@@ -30,7 +30,7 @@ func TestAlertCreate(t *testing.T) {
 		}
 
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf(`CREATE ALERT %s WAREHOUSE = "%s" SCHEDULE = '%s' COMMENT = '%s' IF (EXISTS (%s)) THEN %s`, id.FullyQualifiedName(), warehouse.name, schedule, newComment, existsCondition, action)
@@ -69,7 +69,7 @@ func TestAlertAlter(t *testing.T) {
 		}
 
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s RESUME", id.FullyQualifiedName())
@@ -83,7 +83,7 @@ func TestAlertAlter(t *testing.T) {
 		}
 
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s SUSPEND", id.FullyQualifiedName())
@@ -99,7 +99,7 @@ func TestAlertAlter(t *testing.T) {
 			},
 		}
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
@@ -114,7 +114,7 @@ func TestAlertAlter(t *testing.T) {
 			},
 		}
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s UNSET COMMENT", id.FullyQualifiedName())
@@ -128,7 +128,7 @@ func TestAlertAlter(t *testing.T) {
 			ModifyCondition: &[]string{modifyCondition},
 		}
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS (%s)", id.FullyQualifiedName(), modifyCondition)
@@ -141,7 +141,7 @@ func TestAlertAlter(t *testing.T) {
 			ModifyAction: modifyAction,
 		}
 		err := opts.validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER ALERT %s MODIFY ACTION %s", id.FullyQualifiedName(), *modifyAction)

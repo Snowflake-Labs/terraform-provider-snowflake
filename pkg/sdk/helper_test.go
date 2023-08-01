@@ -695,3 +695,31 @@ func createStage(t *testing.T, client *Client, database *Database, schema *Schem
 		Name:         name,
 	}, stageCleanup
 }
+
+func createStage(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+	require.NoError(t, err)
+
+	// TODO: Migrate stage to the new SDK and return stage interface
+	return nil, func() {
+		_, err := client.exec(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+		require.NoError(t, err)
+	}
+}
+
+// TODO Use stage interface when after migration to the new SDK
+func createExternalTableWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *Stage, opts *CreateExternalTableOpts) (*ExternalTable, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.ExternalTables.Create(ctx, id, opts)
+	require.NoError(t, err)
+	externalTable, err := client.ExternalTables.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return externalTable, func() {
+		err := client.ExternalTables.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
