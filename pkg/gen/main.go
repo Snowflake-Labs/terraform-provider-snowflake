@@ -23,74 +23,63 @@ import (
 // Common types
 var (
 	tagAssociation = b.QueryStruct("TagAssociation").
-		Identifier("Name", b.WithTypeT[sdk.AccountObjectIdentifier]()).
-		Parameter("Value", b.WithType(b.TypeString), b.WithSQL("single_quotes"))
+		Identifier("Name", b.TypeT[sdk.AccountObjectIdentifier]()).
+		AssignText("Value", b.ParameterOptions().SingleQuotes())
 
 	// ...
 )
 
 func main() {
-	//columnIdentity := b.QueryStruct("ColumnIdentity").
-	//	Number("Start", b.SQLPrefix("START")).
-	//	Number("Increment", b.SQLPrefix("INCREMENT")).
-	//
-	//columnDefaultValue := b.QueryStruct("ColumnDefaultValue").
-	//	OneOf(
-	//		b.OptionalText("Expression", b.SQLPrefix("DEFAULT")),
-	//		b.OptionalValue("Identity", columnIdentity, b.SQLPrefix("IDENTITY")),
-	//	)
+	columnIdentity := b.QueryStruct("ColumnIdentity").
+		AssignNumber("Start", b.ParameterOptions().NoQuotes().NoEquals()).
+		AssignNumber("Increment", b.ParameterOptions().NoQuotes().NoEquals())
 
-	optsExample := b.QueryStruct("🥸").
-		Static2("", b.StaticOpts().Quotes()).
-		Keyword2(b.KeywordOpts().SQL("qafsd")).
-		Parameter2(b.ParameterOpts().Paren(true).Equals(false))
-
-	_ = optsExample
+	columnDefaultValue := b.QueryStruct("ColumnDefaultValue").
+		OneOf(
+			b.OptionalText("Expression", b.KeywordOptions().SQLPrefix("DEFAULT")),
+			b.OptionalValue("Identity", b.TypeOfQueryStruct(columnIdentity), b.KeywordOptions().SQLPrefix("IDENTITY")),
+		)
 
 	maskingPolicy := b.QueryStruct("ColumnMaskingPolicy").
 		SQL("MASKING POLICY").
-		Identifier("Name", b.WithTypeT[sdk.SchemaObjectIdentifier]()).
-		List("Using", b.TypeString)
+		Identifier("Name", b.TypeT[sdk.SchemaObjectIdentifier]()).
+		List("Using", b.TypeString, nil)
 
 	tableColumn := b.QueryStruct("TableColumn").
-		Text("Name").
-		Value("Type", b.WithTypeT[sdk.DataType]()).
-		OptionalText("Collate", b.SQLPrefix("COLLATE"), b.SingleQuotedText()).
-		OptionalText("Comment", b.SQLPrefix("COMMENT"), b.SingleQuotedText()).
-		OptionalValue("DefaultValue", columnDefaultValue).
-		OptionalSQL("NOT NULL").
-		OptionalValue("MaskingPolicy", b.Link(maskingPolicy)).
-		Tag()
+		Text("Name", nil).
+		Value("Typer", b.TypeT[sdk.DataType](), nil).
+		OptionalText("Collate", b.KeywordOptions().SQLPrefix("COLLATE").SingleQuotes()).
+		OptionalText("Comment", b.KeywordOptions().SQLPrefix("COMMENT").SingleQuotes()).
+		OptionalValue("DefaultValue", b.TypeOfQueryStruct(columnDefaultValue), nil).
+		OptionalSQL("NOT NULL", nil).
+		OptionalValue("MaskingPolicy", b.TypeOfQueryStruct(maskingPolicy), nil).
+		List("Tag", b.TypeOfQueryStruct(tagAssociation), b.ListOptions().Parentheses())
 
 	ts := b.EnumType[string]("TableScope").
 		With("GlobalTableScope", "GLOBAL").
 		With("LocalTableScope", "LOCAL")
 
+	kind := b.EnumType[string]("TableKind").
+		With("TableKindTemp", "TEMP").
+		With("LocalTableTemporary", "TEMPORARY").
+		With("LocalTableVolatile", "VOLATILE").
+		With("LocalTableTransient", "TRANSIENT")
+
 	create := b.QueryStruct("CreateTableOptions").
 		Create().
 		OrReplace().
-		OneOf("field",
-			b.OneOf("scope",
-				b.OptionalSQL("LOCAL"),
-				b.OptionalSQL("GLOBAL"),
-			),
-			b.OneOf("scopeV2", ts),
-			b.OneOf("fieldType",
-				b.OptionalSQL("TEMP"),
-				b.OptionalSQL("TEMPORARY"),
-				b.OptionalSQL("VOLATILE"),
-				b.OptionalSQL("TRANSIENT"),
-			),
+		OneOf(
+			b.OneOf("Scope", ts),
+			b.OneOf("Kind", kind),
 		).
-		SQL("TABLE"). // can we derive field name from sql or vice versa ?
+		SQL("TABLE").
 		IfNotExists().
-		Identifier("name", b.WithTypeT[sdk.SchemaObjectIdentifier]()).
-		List("Columns", tableColumn).
-		Assignment()
+		Identifier("name", b.TypeT[*sdk.SchemaObjectIdentifier]()).
+		List("Columns", b.TypeOfQueryStruct(tableColumn), nil)
 
 	generator.GenerateAll(
-		b.API{},
 		ts,
+		kind,
 		tagAssociation,
 		columnIdentity,
 		columnDefaultValue,
