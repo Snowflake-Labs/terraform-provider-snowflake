@@ -136,6 +136,7 @@ var userSchema = map[string]*schema.Schema{
 		Sensitive:   true,
 		Description: "Last name of the user.",
 	},
+	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
 	//    DAYS_TO_EXPIRY = <integer>
