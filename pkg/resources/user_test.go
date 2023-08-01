@@ -45,7 +45,7 @@ func TestUserCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		name := "good_name"
-		q := fmt.Sprintf(`^CREATE USER "%s" PASSWORD = 'awesomepassword' LOGIN_NAME = 'gname' DISPLAY_NAME = 'Display Name' FIRST_NAME = 'Marcin' LAST_NAME = 'Zukowski' EMAIL = 'fake@email.com' MUST_CHANGE_PASSWORD = 'true' DISABLED = 'true' DEFAULT_WAREHOUSE = 'mywarehouse' DEFAULT_NAMESPACE = 'mynamespace' DEFAULT_ROLE = 'bestrole' RSA_PUBLIC_KEY = 'asdf' RSA_PUBLIC_KEY_2 = 'asdf2' COMMENT = 'great comment'$`, name)
+		q := fmt.Sprintf(`^CREATE USER "%s" PASSWORD = 'awesomepassword' LOGIN_NAME = 'gname' DISPLAY_NAME = 'Display Name' FIRST_NAME = 'Marcin' LAST_NAME = 'Zukowski' EMAIL = 'fake@email.com' MUST_CHANGE_PASSWORD = true DISABLED = true DEFAULT_WAREHOUSE = 'mywarehouse' DEFAULT_NAMESPACE = 'mynamespace' DEFAULT_ROLE = 'bestrole' RSA_PUBLIC_KEY = 'asdf' RSA_PUBLIC_KEY_2 = 'asdf2' COMMENT = 'great comment'$`, name)
 		mock.ExpectExec(q).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUser(mock, name)
 		err := resources.CreateUser(d, db)

@@ -321,9 +321,8 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	name := d.Get("name").(string)
 	ctx := context.Background()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
