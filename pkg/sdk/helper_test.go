@@ -338,10 +338,10 @@ func createDatabaseWithIdentifier(t *testing.T, client *Client, id AccountObject
 	return createDatabaseWithOptions(t, client, id, &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, _ *CreateDatabaseOptions) (*Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateDatabaseOptions) (*Database, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, nil)
+	err := client.Databases.Create(ctx, id, opts)
 	require.NoError(t, err)
 	database, err := client.Databases.ShowByID(ctx, id)
 	require.NoError(t, err)

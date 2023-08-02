@@ -59,3 +59,10 @@ func validateAndQueryOne[T any](client *Client, ctx context.Context, opts valida
 	}
 	return &dest, nil
 }
+
+func createIfNil[T any](t *T) *T {
+	if t == nil {
+		return new(T)
+	}
+	return t
+}

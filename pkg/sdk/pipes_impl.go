@@ -73,10 +73,3 @@ func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 	}
 	return pipeRow.toPipe(), nil
 }
-
-func createIfNil[T any](t *T) *T {
-	if t == nil {
-		return new(T)
-	}
-	return t
-}
