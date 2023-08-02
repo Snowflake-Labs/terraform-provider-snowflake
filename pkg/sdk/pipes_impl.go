@@ -76,8 +76,7 @@ func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 
 func createIfNil[T any](t *T) *T {
 	if t == nil {
-		var s T
-		return &s
+		return new(T)
 	}
 	return t
 }
