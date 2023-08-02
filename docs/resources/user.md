@@ -54,7 +54,7 @@ resource "snowflake_user" "user" {
 - `email` (String, Sensitive) Email address for the user.
 - `first_name` (String, Sensitive) First name of the user.
 - `last_name` (String, Sensitive) Last name of the user.
-- `login_name` (String, Sensitive) The name users use to log in. If not supplied, snowflake will use name instead.
+- `login_name` (String) The name users use to log in. If not supplied, snowflake will use name instead.
 - `must_change_password` (Boolean) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.
 - `password` (String, Sensitive) **WARNING:** this will put the password in the terraform state file. Use carefully.
 - `rsa_public_key` (String) Specifies the user’s RSA public key; used for key-pair authentication. Must be on 1 line without header and trailer.
