@@ -9,7 +9,7 @@ import (
 
 func TestRolesCreate(t *testing.T) {
 	t.Run("if not exists", func(t *testing.T) {
-		opts := &RoleCreateOptions{
+		opts := &CreateRoleOptions{
 			name:        NewAccountObjectIdentifier("new_role"),
 			IfNotExists: Bool(true),
 		}
@@ -20,7 +20,7 @@ func TestRolesCreate(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		opts := &RoleCreateOptions{
+		opts := &CreateRoleOptions{
 			name:      NewAccountObjectIdentifier("new_role"),
 			OrReplace: Bool(true),
 			Tag: []TagAssociation{
@@ -40,7 +40,7 @@ func TestRolesCreate(t *testing.T) {
 
 func TestRolesDrop(t *testing.T) {
 	t.Run("no options", func(t *testing.T) {
-		opts := &RoleDropOptions{
+		opts := &DropRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 		}
 		actual, err := structToSQL(opts)
@@ -50,7 +50,7 @@ func TestRolesDrop(t *testing.T) {
 	})
 
 	t.Run("if exists", func(t *testing.T) {
-		opts := &RoleDropOptions{
+		opts := &DropRoleOptions{
 			name:     NewAccountObjectIdentifier("new_role"),
 			IfExists: Bool(true),
 		}
@@ -63,7 +63,7 @@ func TestRolesDrop(t *testing.T) {
 
 func TestRolesAlter(t *testing.T) {
 	t.Run("rename to", func(t *testing.T) {
-		opts := &RoleAlterOptions{
+		opts := &AlterRoleOptions{
 			name:     NewAccountObjectIdentifier("new_role"),
 			RenameTo: NewAccountObjectIdentifier("new_role123"),
 		}
@@ -74,7 +74,7 @@ func TestRolesAlter(t *testing.T) {
 	})
 
 	t.Run("set comment", func(t *testing.T) {
-		opts := &RoleAlterOptions{
+		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 			Set: &RoleSet{
 				Comment: String("some comment"),
@@ -87,7 +87,7 @@ func TestRolesAlter(t *testing.T) {
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
-		opts := &RoleAlterOptions{
+		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 			Unset: &RoleUnset{
 				Comment: Bool(true),
@@ -100,7 +100,7 @@ func TestRolesAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		opts := &RoleAlterOptions{
+		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 			Set: &RoleSet{
 				Tag: []TagAssociation{
@@ -122,7 +122,7 @@ func TestRolesAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		opts := &RoleAlterOptions{
+		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 			Unset: &RoleUnset{
 				Tag: []ObjectIdentifier{
@@ -140,7 +140,7 @@ func TestRolesAlter(t *testing.T) {
 
 func TestRolesShow(t *testing.T) {
 	t.Run("no options", func(t *testing.T) {
-		opts := &RoleShowOptions{}
+		opts := &ShowRoleOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := `SHOW ROLES`
@@ -148,7 +148,7 @@ func TestRolesShow(t *testing.T) {
 	})
 
 	t.Run("like", func(t *testing.T) {
-		opts := &RoleShowOptions{
+		opts := &ShowRoleOptions{
 			Like: &Like{
 				Pattern: String("new_role"),
 			},

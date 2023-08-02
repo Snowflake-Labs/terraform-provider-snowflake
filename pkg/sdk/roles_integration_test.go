@@ -27,7 +27,7 @@ func TestInt_RolesCreate(t *testing.T) {
 
 	t.Run("if not exists", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		opts := &RoleCreateOptions{
+		opts := &CreateRoleOptions{
 			IfNotExists: Bool(true),
 		}
 		err := client.Roles.Create(ctx, roleID, opts)
@@ -54,7 +54,7 @@ func TestInt_RolesCreate(t *testing.T) {
 		t.Cleanup(tag2Cleanup)
 		comment := randomComment(t)
 
-		opts := &RoleCreateOptions{
+		opts := &CreateRoleOptions{
 			OrReplace: Bool(true),
 			Tag: []TagAssociation{
 				{
@@ -107,7 +107,7 @@ func TestInt_RolesAlter(t *testing.T) {
 		role, _ := createRole(t, client)
 		newName := randomAccountObjectIdentifier(t)
 
-		err := client.Roles.Alter(ctx, role.ID(), &RoleAlterOptions{
+		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
 			RenameTo: newName,
 		})
 		require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestInt_RolesAlter(t *testing.T) {
 		require.Error(t, err)
 
 		tagValue := "new-tag-value"
-		err = client.Roles.Alter(ctx, roleID, &RoleAlterOptions{
+		err = client.Roles.Alter(ctx, roleID, &AlterRoleOptions{
 			Set: &RoleSet{
 				Tag: []TagAssociation{
 					{
@@ -155,7 +155,7 @@ func TestInt_RolesAlter(t *testing.T) {
 	t.Run("unsetting tags", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
 		tagValue := "tagvalue"
-		err := client.Roles.Create(ctx, roleID, &RoleCreateOptions{
+		err := client.Roles.Create(ctx, roleID, &CreateRoleOptions{
 			Tag: []TagAssociation{
 				{
 					Name:  tag.ID(),
@@ -169,7 +169,7 @@ func TestInt_RolesAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, value)
 
-		err = client.Roles.Alter(ctx, roleID, &RoleAlterOptions{
+		err = client.Roles.Alter(ctx, roleID, &AlterRoleOptions{
 			Unset: &RoleUnset{
 				Tag: []ObjectIdentifier{tag.ID()},
 			},
@@ -190,7 +190,7 @@ func TestInt_RolesAlter(t *testing.T) {
 		t.Cleanup(cleanupRole)
 
 		comment := randomComment(t)
-		err := client.Roles.Alter(ctx, role.ID(), &RoleAlterOptions{
+		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
 			Set: &RoleSet{
 				Comment: &comment,
 			},
@@ -205,12 +205,12 @@ func TestInt_RolesAlter(t *testing.T) {
 	t.Run("unsetting comment", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
 		comment := randomComment(t)
-		err := client.Roles.Create(ctx, roleID, &RoleCreateOptions{
+		err := client.Roles.Create(ctx, roleID, &CreateRoleOptions{
 			Comment: &comment,
 		})
 		require.NoError(t, err)
 
-		err = client.Roles.Alter(ctx, roleID, &RoleAlterOptions{
+		err = client.Roles.Alter(ctx, roleID, &AlterRoleOptions{
 			Unset: &RoleUnset{
 				Comment: Bool(true),
 			},
@@ -264,7 +264,7 @@ func TestInt_RolesShow(t *testing.T) {
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		roles, err := client.Roles.Show(ctx, &RoleShowOptions{
+		roles, err := client.Roles.Show(ctx, &ShowRoleOptions{
 			Like: &Like{
 				Pattern: String(role.Name),
 			},

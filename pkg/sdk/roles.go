@@ -9,13 +9,13 @@ import (
 
 type Roles interface {
 	// Create creates a role.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *RoleCreateOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateRoleOptions) error
 	// Alter modifies an existing role
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *RoleAlterOptions) error
+	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterRoleOptions) error
 	// Drop removes a role.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *RoleDropOptions) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropRoleOptions) error
 	// Show returns a list of roles.
-	Show(ctx context.Context, opts *RoleShowOptions) ([]*Role, error)
+	Show(ctx context.Context, opts *ShowRoleOptions) ([]*Role, error)
 	// ShowByID returns a user by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error)
 	// Grant grants privileges on a role.
@@ -25,7 +25,7 @@ type Roles interface {
 	// Use sets the active role for the current session.
 	Use(ctx context.Context, id AccountObjectIdentifier) error
 	// UseSecondary specifies the active/current secondary roles for the session.
-	UseSecondary(ctx context.Context, opt SecondaryRoleOption) error
+	UseSecondary(ctx context.Context, opts SecondaryRoleOption) error
 }
 
 var _ Roles = (*roles)(nil)
@@ -95,8 +95,8 @@ func (row *roleDBRow) toRole() *Role {
 	return &role
 }
 
-// RoleCreateOptions contains options for creating a role.
-type RoleCreateOptions struct {
+// CreateRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-role
+type CreateRoleOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	role        bool                    `ddl:"static" sql:"ROLE"` //lint:ignore U1000 This is used in the ddl tag
@@ -106,7 +106,7 @@ type RoleCreateOptions struct {
 	Tag         []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
-func (opts *RoleCreateOptions) validate() error {
+func (opts *CreateRoleOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
@@ -116,9 +116,9 @@ func (opts *RoleCreateOptions) validate() error {
 	return nil
 }
 
-func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *RoleCreateOptions) error {
+func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateRoleOptions) error {
 	if opts == nil {
-		opts = &RoleCreateOptions{}
+		opts = &CreateRoleOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -132,8 +132,8 @@ func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *Ro
 	return err
 }
 
-// RoleAlterOptions contains options for altering a user.
-type RoleAlterOptions struct {
+// AlterRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-role
+type AlterRoleOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
 	role     bool                    `ddl:"static" sql:"ROLE"`  //lint:ignore U1000 This is used in the ddl tag
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
@@ -145,7 +145,7 @@ type RoleAlterOptions struct {
 	Unset    *RoleUnset              `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-func (opts *RoleAlterOptions) validate() error {
+func (opts *AlterRoleOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
@@ -153,7 +153,7 @@ func (opts *RoleAlterOptions) validate() error {
 		return errors.New("No alter action specified")
 	}
 	if !exactlyOneValueSet(opts.RenameTo, opts.Set, opts.Unset) {
-		return errors.New("You can use one action at a time (RENAME TO, SET or UNSET)")
+		return errors.New("you can use one action at a time (RENAME TO, SET or UNSET)")
 	}
 	return nil
 }
@@ -168,7 +168,7 @@ type RoleUnset struct {
 	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
-func (v *roles) Alter(ctx context.Context, id AccountObjectIdentifier, opts *RoleAlterOptions) error {
+func (v *roles) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterRoleOptions) error {
 	if opts == nil {
 		return errors.New("alter alert options cannot be empty")
 	}
@@ -184,25 +184,25 @@ func (v *roles) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Rol
 	return err
 }
 
-// TODO - RoleDropOptions vs DropRoleOptions
-// RoleDropOptions contains options for dropping a role.
-type RoleDropOptions struct {
+// TODO - DropRoleOptions vs DropRoleOptions
+// DropRoleOptions contains options for dropping a role.
+type DropRoleOptions struct {
 	drop     bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
 	roles    bool                    `ddl:"static" sql:"ROLE"` //lint:ignore U1000 This is used in the ddl tag
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
 }
 
-func (opts *RoleDropOptions) validate() error {
+func (opts *DropRoleOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (v *roles) Drop(ctx context.Context, id AccountObjectIdentifier, opts *RoleDropOptions) error {
+func (v *roles) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropRoleOptions) error {
 	if opts == nil {
-		opts = &RoleDropOptions{}
+		opts = &DropRoleOptions{}
 	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
@@ -216,16 +216,16 @@ func (v *roles) Drop(ctx context.Context, id AccountObjectIdentifier, opts *Role
 	return err
 }
 
-// RoleShowOptions contains options for listing roles.
-type RoleShowOptions struct {
+// ShowRoleOptions contains options for listing roles.
+type ShowRoleOptions struct {
 	show  bool  `ddl:"static" sql:"SHOW"`  //lint:ignore U1000 This is used in the ddl tag
 	roles bool  `ddl:"static" sql:"ROLES"` //lint:ignore U1000 This is used in the ddl tag
 	Like  *Like `ddl:"keyword" sql:"LIKE"`
 }
 
-func (v *roles) Show(ctx context.Context, opts *RoleShowOptions) ([]*Role, error) {
+func (v *roles) Show(ctx context.Context, opts *ShowRoleOptions) ([]*Role, error) {
 	if opts == nil {
-		opts = &RoleShowOptions{}
+		opts = &ShowRoleOptions{}
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {
@@ -244,7 +244,7 @@ func (v *roles) Show(ctx context.Context, opts *RoleShowOptions) ([]*Role, error
 }
 
 func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
-	roles, err := v.client.Roles.Show(ctx, &RoleShowOptions{
+	roles, err := v.client.Roles.Show(ctx, &ShowRoleOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
