@@ -22,6 +22,8 @@ type Schemas interface {
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
 	// ShowByID returns a schema by ID.
 	ShowByID(ctx context.Context, id SchemaIdentifier) (*Schema, error)
+	// Use sets the active schema for the current session.
+	Use(ctx context.Context, id SchemaIdentifier) error
 }
 
 var _ Schemas = (*schemas)(nil)
@@ -103,18 +105,19 @@ type CreateSchemaOptions struct {
 }
 
 func (opts *CreateSchemaOptions) validate() error {
+	var errs []error
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Clone) {
 		if err := opts.Clone.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		return errors.New("IF NOT EXISTS and OR REPLACE are incompatible.")
+		errs = append(errs, errOneOf("IfNotExists", "OrReplace"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateSchemaOptions) error {
@@ -135,16 +138,17 @@ func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateS
 
 // AlterSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-schema
 type AlterSchemaOptions struct {
-	alter                bool             `ddl:"static" sql:"ALTER"`  //lint:ignore U1000 This is used in the ddl tag
-	schema               bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists             *bool            `ddl:"keyword" sql:"IF EXISTS"`
-	name                 SchemaIdentifier `ddl:"identifier"`
-	NewName              SchemaIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith             SchemaIdentifier `ddl:"identifier" sql:"SWAP WITH"`
-	Set                  *SchemaSet       `ddl:"list,no_parentheses" sql:"SET"`
-	Unset                *SchemaUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
-	EnableManagedAccess  *bool            `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
-	DisableManagedAccess *bool            `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
+	alter    bool             `ddl:"static" sql:"ALTER"`  //lint:ignore U1000 This is used in the ddl tag
+	schema   bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaIdentifier `ddl:"identifier"`
+	NewName  SchemaIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith SchemaIdentifier `ddl:"identifier" sql:"SWAP WITH"`
+	Set      *SchemaSet       `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *SchemaUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
+	// One of
+	EnableManagedAccess  *bool `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
+	DisableManagedAccess *bool `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
 }
 
 func (opts *AlterSchemaOptions) validate() error {
@@ -153,7 +157,7 @@ func (opts *AlterSchemaOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
-		errs = append(errs, errors.New("Only one of the fields [ NewName | SwapWith | Set | Unset | EnableManagedAcccess | DisableManagedAcccess ] can be set at once"))
+		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "EnableManagedAccess", "DisableManagedAccess"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -178,7 +182,7 @@ type SchemaSet struct {
 
 func (v *SchemaSet) validate() error {
 	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("Tag field cannot be set with other options")
+		return errors.New("tag field cannot be set with other options")
 	}
 	return nil
 }
@@ -193,7 +197,7 @@ type SchemaUnset struct {
 
 func (v *SchemaUnset) validate() error {
 	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("Tag field cannot be set with other options")
+		return errors.New("tag field cannot be set with other options")
 	}
 	return nil
 }
@@ -220,8 +224,9 @@ type DropSchemaOptions struct {
 	schema   bool             `ddl:"static" sql:"SCHEMA"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaIdentifier `ddl:"identifier"`
-	Cascade  *bool            `ddl:"static" sql:"CASCADE"`
-	Restrict *bool            `ddl:"static" sql:"RESTRICT"`
+	// one of
+	Cascade  *bool `ddl:"static" sql:"CASCADE"`
+	Restrict *bool `ddl:"static" sql:"RESTRICT"`
 }
 
 func (opts *DropSchemaOptions) validate() error {
@@ -230,7 +235,7 @@ func (opts *DropSchemaOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
-		errs = append(errs, errors.New("Only one of the fields [ Cascade | Restrict ] can be set at once"))
+		errs = append(errs, errors.New("only one of the fields [ Cascade | Restrict ] can be set at once"))
 	}
 	return errors.Join(errs...)
 }
@@ -374,4 +379,8 @@ func (v *schemas) ShowByID(ctx context.Context, id SchemaIdentifier) (*Schema, e
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *schemas) Use(ctx context.Context, id SchemaIdentifier) error {
+	return v.client.Sessions.UseSchema(ctx, id)
 }
