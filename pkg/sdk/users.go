@@ -149,6 +149,7 @@ func (v *User) ObjectType() ObjectType {
 }
 
 // CreateUserOptions contains options for creating a user.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
 type CreateUserOptions struct {
 	create            bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace         *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -254,6 +255,7 @@ type UserObjectParametersUnset struct {
 }
 
 // AlterUserOptions contains options for altering a user.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
 type AlterUserOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
 	user     bool                    `ddl:"static" sql:"USER"`  //lint:ignore U1000 This is used in the ddl tag
@@ -383,6 +385,7 @@ func (opts *UserUnset) validate() error {
 }
 
 // DropUserOptions contains options for dropping a user.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
 type DropUserOptions struct {
 	drop bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
 	user bool                    `ddl:"static" sql:"USER"` //lint:ignore U1000 This is used in the ddl tag
@@ -517,6 +520,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 	return v
 }
 
+// describeUserOptions contains options for describing the properties specified for users, as well as the default values of the properties.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
 type describeUserOptions struct {
 	describe bool                    `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
 	user     bool                    `ddl:"static" sql:"USER"`     //lint:ignore U1000 This is used in the ddl tag
@@ -552,6 +557,7 @@ func (v *users) Describe(ctx context.Context, id AccountObjectIdentifier) (*User
 }
 
 // ShowUserOptions contains options for listing users.
+// Based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
 type ShowUserOptions struct {
 	show       bool    `ddl:"static" sql:"SHOW"`  //lint:ignore U1000 This is used in the ddl tag
 	Terse      *bool   `ddl:"static" sql:"TERSE"` //lint:ignore U1000 This is used in the ddl tag
