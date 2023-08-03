@@ -4,7 +4,7 @@ export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
 
-all: test docs install
+all: test docs
 .PHONY: all
 
 setup: ## setup development dependencies
@@ -59,10 +59,6 @@ test-acceptance: ## runs all tests, including the acceptance tests which create 
 deps:
 	go mod tidy -compat=1.20
 .PHONY: deps
-
-install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
-	go install .
-.PHONY: install
 
 install-tf: build ## installs plugin where terraform can find it
 	mkdir -p $(HOME)/.terraform.d/plugins
