@@ -13,6 +13,10 @@ setup: ## setup development dependencies
 	@which ./bin/reviewdog || curl -sSfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ./bin v0.14.2
 .PHONY: setup
 
+cleanup: ## cleanup development dependencies
+	rm -rf bin/*
+.PHONY: cleanup
+
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
