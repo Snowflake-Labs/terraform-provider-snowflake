@@ -21,17 +21,9 @@ sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
 
-lint:  ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
-.PHONY: lint
-
 lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
-
-lint-all:  ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
-.PHONY: lint-all
 
 lint-missing-acceptance-tests:
 	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
