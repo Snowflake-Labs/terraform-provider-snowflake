@@ -25,10 +25,6 @@ lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
-build: ## build the binary
-	go build -o $(BASE_BINARY_NAME) .
-.PHONY: build
-
 test:  ## run the tests (except sdk tests)
 	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/resources/...
 	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/provider/...
@@ -43,7 +39,11 @@ deps:
 	go mod tidy -compat=1.20
 .PHONY: deps
 
-install-tf: build ## installs plugin where terraform can find it
+build-local: ## build the binary locally
+	go build -o $(BASE_BINARY_NAME) .
+.PHONY: build
+
+install-tf: build-local ## installs plugin where terraform can find it
 	mkdir -p $(HOME)/.terraform.d/plugins
 	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
 .PHONY: install-tf
