@@ -71,6 +71,12 @@ var taskSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(0, 86400000),
 		Description:  "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
 	},
+	"suspend_task_after_num_failures": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "Specifies the number of consecutive failed task runs after which the current task is suspended automatically.",
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -321,6 +327,13 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				fieldParameters["user_task_timeout_ms"] = timeout
+			case "SUSPEND_TASK_AFTER_NUM_FAILURES":
+				number, err := strconv.ParseUint(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["suspend_task_after_num_failures"] = number
 			default:
 				sessionParameters[param.Key] = param.Value
 			}
@@ -374,6 +387,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
 		builder.WithTimeout(v.(int))
+	}
+
+	if v, ok := d.GetOk("suspend_task_after_num_failures"); ok {
+		builder.WithSuspendTaskAfterNumFailures(v.(int))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -620,6 +637,19 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		if err := snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error updating user task timeout on task %v", d.Id())
+		}
+	}
+
+	if d.HasChange("suspend_task_after_num_failures") {
+		var q string
+		o, n := d.GetChange("suspend_task_after_num_failures")
+		if o.(int) > 0 && n.(int) == 0 {
+			q = builder.RemoveSuspendTaskAfterNumFailures()
+		} else {
+			q = builder.ChangeSuspendTaskAfterNumFailures(n.(int))
+		}
+		if err := snowflake.Exec(db, q); err != nil {
+			return fmt.Errorf("error updating suspend_task_after_num_failures on task %v", d.Id())
 		}
 	}
 
