@@ -53,6 +53,11 @@ func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
+func alphanumericSchemaIdentifier(t *testing.T) SchemaIdentifier {
+	t.Helper()
+	return NewSchemaIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
+}
+
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
 	return NewAccountObjectIdentifier(randomStringN(t, 12))
@@ -159,6 +164,11 @@ func randomString(t *testing.T) string {
 func randomStringN(t *testing.T, num int) string {
 	t.Helper()
 	return gofakeit.Password(true, true, true, true, false, num)
+}
+
+func randomAlphanumericN(t *testing.T, num int) string {
+	t.Helper()
+	return gofakeit.Password(true, true, true, false, false, num)
 }
 
 func randomStringRange(t *testing.T, min, max int) string {
@@ -320,14 +330,18 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWareho
 
 func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, &CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOptions) (*Database, func()) {
+func createDatabaseWithIdentifier(t *testing.T, client *Client, id AccountObjectIdentifier) (*Database, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	return createDatabaseWithOptions(t, client, id, &CreateDatabaseOptions{})
+}
+
+func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateDatabaseOptions) (*Database, func()) {
+	t.Helper()
 	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, nil)
+	err := client.Databases.Create(ctx, id, opts)
 	require.NoError(t, err)
 	database, err := client.Databases.ShowByID(ctx, id)
 	require.NoError(t, err)
@@ -339,7 +353,11 @@ func createDatabaseWithOptions(t *testing.T, client *Client, _ *CreateDatabaseOp
 
 func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
 	t.Helper()
-	name := randomStringRange(t, 8, 28)
+	return createSchemaWithIdentifier(t, client, database, randomStringRange(t, 8, 28))
+}
+
+func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
+	t.Helper()
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
 	require.NoError(t, err)
@@ -568,4 +586,58 @@ func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	_, offset := t.Zone()
 	adjustedTime := t.Add(-time.Duration(offset) * time.Second)
 	return &adjustedTime, nil
+}
+
+func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
+	t.Helper()
+	require.NotNil(t, database, "database has to be created")
+	require.NotNil(t, schema, "schema has to be created")
+
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	ctx := context.Background()
+
+	pipeCleanup := func() {
+		err := client.Pipes.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+
+	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	if err != nil {
+		return nil, pipeCleanup
+	}
+	require.NoError(t, err)
+
+	createdPipe, errDescribe := client.Pipes.Describe(ctx, id)
+	if errDescribe != nil {
+		return nil, pipeCleanup
+	}
+	require.NoError(t, errDescribe)
+
+	return createdPipe, pipeCleanup
+}
+
+func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
+	t.Helper()
+	require.NotNil(t, database, "database has to be created")
+	require.NotNil(t, schema, "schema has to be created")
+
+	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	ctx := context.Background()
+
+	stageCleanup := func() {
+		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
+		require.NoError(t, err)
+	}
+
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+
+	return &Stage{
+		DatabaseName: database.Name,
+		SchemaName:   schema.Name,
+		Name:         name,
+	}, stageCleanup
 }
