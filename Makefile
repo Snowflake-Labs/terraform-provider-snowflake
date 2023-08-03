@@ -9,8 +9,8 @@ help: ## display help for this makefile
 .PHONY: help
 
 setup: ## setup development dependencies
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
-	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
+	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
+	@which ./bin/reviewdog || curl -sSfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ./bin v0.14.2
 .PHONY: setup
 
 sweep:
