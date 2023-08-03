@@ -1,17 +1,8 @@
-SHA=$(shell git rev-parse --short HEAD)
-export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
 export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
-
-go_test ?= -
-ifeq (, $(shell which gotest))
-	go_test=go test
-else
-	go_test=gotest
-endif
 
 all: test docs install
 .PHONY: all
@@ -47,7 +38,7 @@ lint-missing-acceptance-tests:
 .PHONY: lint-missing-acceptance-tests
 
 build: ## build the binary
-	go build ${LDFLAGS} -o $(BASE_BINARY_NAME) .
+	go build -o $(BASE_BINARY_NAME) .
 .PHONY: build
 
 coverage: ## run the go coverage tool, reading file coverage.out
@@ -55,14 +46,14 @@ coverage: ## run the go coverage tool, reading file coverage.out
 .PHONY: coverage
 
 test:  ## run the tests (except sdk tests)
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/resources/...
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/provider/...
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/snowflake/...
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/resources/...
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/provider/...
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/snowflake/...
 
 .PHONY: test
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 $(go_test) -timeout 1200s -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
+	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 1200s -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
 .PHONY: test-acceptance
 
 deps:
@@ -70,7 +61,7 @@ deps:
 .PHONY: deps
 
 install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
-	go install ${LDFLAGS} .
+	go install .
 .PHONY: install
 
 install-tf: build ## installs plugin where terraform can find it
