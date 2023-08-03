@@ -321,7 +321,7 @@ func TestInt_SchemasShow(t *testing.T) {
 			Like: &Like{
 				Pattern: String(schema.Name),
 			},
-			In: &InSchema{
+			In: &SchemaIn{
 				Account: Bool(true),
 			},
 			StartsWith: String(schema.Name),

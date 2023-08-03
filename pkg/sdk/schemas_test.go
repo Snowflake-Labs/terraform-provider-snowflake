@@ -230,7 +230,7 @@ func TestSchemasShow(t *testing.T) {
 		opts := &ShowSchemaOptions{
 			Terse:   Bool(true),
 			History: Bool(true),
-			In: &InSchema{
+			In: &SchemaIn{
 				Account: Bool(true),
 				Name:    NewAccountObjectIdentifier("account_name"),
 			},
@@ -245,7 +245,7 @@ func TestSchemasShow(t *testing.T) {
 		opts := &ShowSchemaOptions{
 			Terse:   Bool(true),
 			History: Bool(true),
-			In: &InSchema{
+			In: &SchemaIn{
 				Database: Bool(true),
 				Name:     NewAccountObjectIdentifier("database_name"),
 			},

@@ -322,7 +322,7 @@ func (v *schemas) Describe(ctx context.Context, id SchemaIdentifier) ([]SchemaDe
 	return details, err
 }
 
-type InSchema struct {
+type SchemaIn struct {
 	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
 	Database *bool                   `ddl:"keyword" sql:"DATABASE"`
 	Name     AccountObjectIdentifier `ddl:"identifier"`
@@ -335,7 +335,7 @@ type ShowSchemaOptions struct {
 	schemas    bool       `ddl:"static" sql:"SCHEMAS"` //lint:ignore U1000 This is used in the ddl tag
 	History    *bool      `ddl:"keyword" sql:"HISTORY"`
 	Like       *Like      `ddl:"keyword" sql:"LIKE"`
-	In         *InSchema  `ddl:"keyword" sql:"IN"`
+	In         *SchemaIn  `ddl:"keyword" sql:"IN"`
 	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	LimitFrom  *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
