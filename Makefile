@@ -48,9 +48,9 @@ install-tf: build ## installs plugin where terraform can find it
 	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
 .PHONY: install-tf
 
-uninstall-tf: build ## uninstalls plugin from where terraform can find it
+uninstall-tf: ## uninstalls plugin from where terraform can find it
 	rm $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME) 2>/dev/null
-.PHONY: install-tf
+.PHONY: uninstall-tf
 
 clean: ## clean the repo
 	rm terraform-provider-snowflake 2>/dev/null || true
