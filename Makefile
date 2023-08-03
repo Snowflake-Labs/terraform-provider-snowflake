@@ -4,6 +4,10 @@ export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
 
+help: ## display help for this makefile
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+.PHONY: help
+
 all: test docs
 .PHONY: all
 
@@ -68,10 +72,6 @@ install-tf: build ## installs plugin where terraform can find it
 uninstall-tf: build ## uninstalls plugin from where terraform can find it
 	rm $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME) 2>/dev/null
 .PHONY: install-tf
-
-help: ## display help for this makefile
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-.PHONY: help
 
 clean: ## clean the repo
 	rm terraform-provider-snowflake 2>/dev/null || true
