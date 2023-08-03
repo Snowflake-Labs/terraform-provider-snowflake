@@ -25,14 +25,6 @@ lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
 .PHONY: lint-ci
 
-lint-missing-acceptance-tests:
-	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
-		if [ ! -f pkg/resources/"$$r"_acceptance_test.go ]; then \
-			echo $$r; \
-		fi; \
-	done
-.PHONY: lint-missing-acceptance-tests
-
 build: ## build the binary
 	go build -o $(BASE_BINARY_NAME) .
 .PHONY: build
