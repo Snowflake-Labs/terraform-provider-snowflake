@@ -23,6 +23,7 @@ type TaskBuilder struct {
 	schedule                            string
 	sessionParameters                   map[string]interface{}
 	userTaskTimeoutMS                   int
+	suspendTaskAfterNumFailures			int
 	comment                             string
 	after                               []string
 	when                                string
@@ -85,6 +86,12 @@ func (tb *TaskBuilder) WithAllowOverlappingExecution(flag bool) *TaskBuilder {
 // WithTimeout adds a timeout to the TaskBuilder.
 func (tb *TaskBuilder) WithTimeout(t int) *TaskBuilder {
 	tb.userTaskTimeoutMS = t
+	return tb
+}
+
+// WithSuspendTaskAfterNumFailures adds SuspendTaskAfterNumFailures to the TaskBuilder.
+func (tb *TaskBuilder) WithSuspendTaskAfterNumFailures(t int) *TaskBuilder {
+	tb.suspendTaskAfterNumFailures = t
 	return tb
 }
 
@@ -183,6 +190,10 @@ func (tb *TaskBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` USER_TASK_TIMEOUT_MS = %v`, tb.userTaskTimeoutMS))
 	}
 
+	if tb.suspendTaskAfterNumFailures > 0 {
+		q.WriteString(fmt.Sprintf(` SUSPEND_TASK_AFTER_NUM_FAILURES = %v`, tb.suspendTaskAfterNumFailures))
+	}
+
 	if len(tb.after) > 0 {
 		after := make([]string, 0)
 		for _, a := range tb.after {
@@ -235,6 +246,16 @@ func (tb *TaskBuilder) ChangeTimeout(newTimeout int) string {
 // RemoveTimeout returns the sql that will remove the user task timeout for the task.
 func (tb *TaskBuilder) RemoveTimeout() string {
 	return fmt.Sprintf(`ALTER TASK %v UNSET USER_TASK_TIMEOUT_MS`, tb.QualifiedName())
+}
+
+// ChangeSuspendTaskAfterNumFailures returns the sql that will change SuspendTaskAfterNumFailures for the task.
+func (tb *TaskBuilder) ChangeSuspendTaskAfterNumFailures(newSuspendTaskAfterNumFailures int) string {
+	return fmt.Sprintf(`ALTER TASK %v SET SUSPEND_TASK_AFTER_NUM_FAILURES = %v`, tb.QualifiedName(), newTimeout)
+}
+
+// RemoveSuspendTaskAfterNumFailures returns the sql that will remove SuspendTaskAfterNumFailures for the task.
+func (tb *TaskBuilder) RemoveSuspendTaskAfterNumFailures() string {
+	return fmt.Sprintf(`ALTER TASK %v UNSET SUSPEND_TASK_AFTER_NUM_FAILURES`, tb.QualifiedName())
 }
 
 // ChangeComment returns the sql that will change the comment for the task.
