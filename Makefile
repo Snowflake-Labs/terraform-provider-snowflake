@@ -49,7 +49,7 @@ install-tf: build-local ## installs plugin where terraform can find it
 .PHONY: install-tf
 
 uninstall-tf: ## uninstalls plugin from where terraform can find it
-	rm $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME) 2>/dev/null
+	rm -f $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
 .PHONY: uninstall-tf
 
 clean: ## clean the repo
