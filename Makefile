@@ -29,10 +29,6 @@ build: ## build the binary
 	go build -o $(BASE_BINARY_NAME) .
 .PHONY: build
 
-coverage: ## run the go coverage tool, reading file coverage.out
-	go tool cover -html=coverage.txt
-.PHONY: coverage
-
 test:  ## run the tests (except sdk tests)
 	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/resources/...
 	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/provider/...
