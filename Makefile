@@ -9,7 +9,6 @@ help: ## display help for this makefile
 .PHONY: help
 
 setup: ## setup development dependencies
-	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
 .PHONY: setup
