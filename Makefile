@@ -71,6 +71,10 @@ check-mod:
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
 
+check-fmt: ## Check formatting
+	./bin/golangci-lint run ./... -v
 .PHONY: fmt
-fmt: ## Run linter and apply formatting autofix
-	golangci-lint run ./... -v --fix
+
+fix-fmt: ## Check and fix formatting
+	./bin/golangci-lint run ./... -v --fix
+.PHONY: fmt
