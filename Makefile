@@ -20,7 +20,7 @@ cleanup: ## cleanup development dependencies
 	rm -rf bin/*
 .PHONY: cleanup
 
-sweep:
+sweep: ## destroy architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
 .PHONY: sweep
