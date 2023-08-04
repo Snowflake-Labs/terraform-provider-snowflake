@@ -1,8 +1,11 @@
-export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+
+BASE_BINARY_NAME=terraform-provider-snowflake
+TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
+TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
 
 help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -44,12 +47,12 @@ build-local: ## build the binary locally
 .PHONY: build
 
 install-tf: build-local ## installs plugin where terraform can find it
-	mkdir -p $(HOME)/.terraform.d/plugins
-	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
+	mkdir -p $(TERRAFORM_PLUGINS_DIR)
+	cp ./$(BASE_BINARY_NAME) $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
 .PHONY: install-tf
 
 uninstall-tf: ## uninstalls plugin from where terraform can find it
-	rm -f $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
+	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
 .PHONY: uninstall-tf
 
 clean: ## clean the repo
