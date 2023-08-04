@@ -38,10 +38,6 @@ test-acceptance: ## runs all tests, including the acceptance tests which create 
 	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 1200s -v -coverprofile=coverage.txt -covermode=atomic ./...
 .PHONY: test-acceptance
 
-deps:
-	go mod tidy -compat=1.20
-.PHONY: deps
-
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
 .PHONY: build
@@ -69,8 +65,11 @@ check-docs: docs ## check that docs have been generated
 	git diff --exit-code -- docs
 .PHONY: check-docs
 
-check-mod:
+mod: ## add missing and remove unused modules
 	go mod tidy -compat=1.20
+.PHONY: mod
+
+check-mod: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 .PHONY: check-mod
 
