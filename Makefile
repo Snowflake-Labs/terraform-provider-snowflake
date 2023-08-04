@@ -23,6 +23,7 @@ cleanup: ## cleanup development dependencies
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
+.PHONY: sweep
 
 lint-ci: ## run the fast go linters
 	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
@@ -40,7 +41,7 @@ test-acceptance: ## runs all tests, including the acceptance tests which create 
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
-.PHONY: build
+.PHONY: build-local
 
 install-tf: build-local ## installs plugin where terraform can find it
 	mkdir -p $(TERRAFORM_PLUGINS_DIR)
@@ -75,8 +76,8 @@ check-mod: mod ## check if there are any missing/unused modules
 
 check-fmt: ## Check formatting
 	./bin/golangci-lint run ./... -v
-.PHONY: fmt
+.PHONY: check-fmt
 
 fix-fmt: ## Check and fix formatting
 	./bin/golangci-lint run ./... -v --fix
-.PHONY: fmt
+.PHONY: fix-fmt
