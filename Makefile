@@ -57,7 +57,7 @@ clean: ## clean the repo
 	rm -rf dist
 .PHONY: clean
 
-docs:
+docs: ## generate docs for terraform plugin
 	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
