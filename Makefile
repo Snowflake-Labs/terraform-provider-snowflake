@@ -22,7 +22,11 @@ cleanup: ## cleanup development dependencies
 
 sweep: ## destroy architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
+	@read -p "Are you sure? [y/n]" -n 1 REPLY; echo; \
+		if [[ $$REPLY =~ ^[yY]$$ ]]; then \
+		  SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
+		  else echo "Aborting..."; \
+		fi;
 .PHONY: sweep
 
 lint-ci: ## run the fast go linters
