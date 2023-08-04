@@ -52,9 +52,10 @@ uninstall-tf: ## uninstalls plugin from where terraform can find it
 	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
 .PHONY: uninstall-tf
 
-clean: ## clean the repo
-	rm terraform-provider-snowflake 2>/dev/null || true
+clean: ## clean local binaries
+	rm -f $(BASE_BINARY_NAME)
 	go clean
+	@#dist dir is removed because goreleaser puts artifacts there: https://goreleaser.com/customization/dist/
 	rm -rf dist
 .PHONY: clean
 
