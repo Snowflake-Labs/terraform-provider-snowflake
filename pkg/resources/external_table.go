@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -37,7 +38,7 @@ var externalTableSchema = map[string]*schema.Schema{
 	},
 	"column": {
 		Type:        schema.TypeList,
-		Required:    true,
+		Optional:    true,
 		MinItems:    1,
 		ForceNew:    true,
 		Description: "Definitions of a column to create in the external table. Minimum one required.",
@@ -128,6 +129,12 @@ var externalTableSchema = map[string]*schema.Schema{
 		Description: "Name of the role that owns the external table.",
 	},
 	"tag": tagReferenceSchema,
+	"infer_schema": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		ForceNew: true,
+	},
 }
 
 func ExternalTable() *schema.Resource {
@@ -195,21 +202,37 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	database := d.Get("database").(string)
 	dbSchema := d.Get("schema").(string)
 	name := d.Get("name").(string)
-
-	// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
-	// for data types in the HCL2ValueFromConfigValue method.
-	columns := []map[string]string{}
-	for _, column := range d.Get("column").([]interface{}) {
-		columnDef := map[string]string{}
-		for key, val := range column.(map[string]interface{}) {
-			columnDef[key] = val.(string)
-		}
-		columns = append(columns, columnDef)
-	}
+	inferSchema := d.Get("infer_schema").(bool)
+	definedColumns := d.Get("column").([]interface{})
+	fileFormat := d.Get("file_format").(string)
+	location := d.Get("location").(string)
 	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
-	builder.WithColumns(columns)
-	builder.WithFileFormat(d.Get("file_format").(string))
-	builder.WithLocation(d.Get("location").(string))
+
+	if inferSchema == (len(definedColumns) > 0) {
+		return errors.New("either 'infer_schema' or 'column's must be defined")
+	}
+
+	if inferSchema && (location == "" || fileFormat == "") {
+		return errors.New("'file_format' and 'location' must be specified when inferring schema")
+	}
+
+	if inferSchema {
+		builder.WithInferSchema(inferSchema)
+	} else {
+		// This type conversion is due to the test framework in the terraform-plugin-sdk having limited support
+		// for data types in the HCL2ValueFromConfigValue method.
+		columns := []map[string]string{}
+		for _, column := range definedColumns {
+			columnDef := map[string]string{}
+			for key, val := range column.(map[string]interface{}) {
+				columnDef[key] = val.(string)
+			}
+			columns = append(columns, columnDef)
+		}
+		builder.WithColumns(columns)
+	}
+	builder.WithFileFormat(fileFormat)
+	builder.WithLocation(location)
 
 	builder.WithAutoRefresh(d.Get("auto_refresh").(bool))
 	builder.WithRefreshOnCreate(d.Get("refresh_on_create").(bool))

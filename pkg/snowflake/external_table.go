@@ -26,6 +26,7 @@ type ExternalTableBuilder struct {
 	awsSNSTopic     string
 	comment         string
 	tags            []TagValue
+	inferSchema     bool
 }
 
 // QualifiedName prepends the db and schema if set and escapes everything nicely.
@@ -107,6 +108,13 @@ func (tb *ExternalTableBuilder) WithTags(tags []TagValue) *ExternalTableBuilder 
 	return tb
 }
 
+// WithInferSchema sets whether to infer the schema
+// https://docs.snowflake.com/en/sql-reference/sql/create-external-table#external-table-created-with-detected-column-definitions
+func (tb *ExternalTableBuilder) WithInferSchema(c bool) *ExternalTableBuilder {
+	tb.inferSchema = c
+	return tb
+}
+
 // ExternalexternalTable returns a pointer to a Builder that abstracts the DDL operations for a externalTable.
 //
 // Supported DDL operations are:
@@ -127,13 +135,26 @@ func (tb *ExternalTableBuilder) Create() string {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE EXTERNAL TABLE %v`, tb.QualifiedName()))
 
-	q.WriteString(` (`)
-	columnDefinitions := []string{}
-	for _, columnDefinition := range tb.columns {
-		columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
+	if len(tb.columns) > 0 {
+		q.WriteString(` (`)
+		columnDefinitions := []string{}
+		for _, columnDefinition := range tb.columns {
+			columnDefinitions = append(columnDefinitions, fmt.Sprintf(`"%v" %v AS %v`, EscapeString(columnDefinition["name"]), EscapeString(columnDefinition["type"]), columnDefinition["as"]))
+		}
+		q.WriteString(strings.Join(columnDefinitions, ", "))
+		q.WriteString(`)`)
+	} else {
+		q.WriteString(` USING TEMPLATE (`)
+		q.WriteString(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) `)
+		q.WriteString(`FROM TABLE(`)
+		q.WriteString(`INFER_SCHEMA(`)
+		q.WriteString(fmt.Sprintf("LOCATION=>'@%s',", tb.location))
+		q.WriteString(fmt.Sprintf("FILE_FORMAT=>'%s',", tb.fileFormat))
+		q.WriteString(`IGNORE_CASE => true`)
+		q.WriteString(`)`)
+		q.WriteString(`)`)
+		q.WriteString(`)`)
 	}
-	q.WriteString(strings.Join(columnDefinitions, ", "))
-	q.WriteString(`)`)
 
 	if len(tb.partitionBys) > 0 {
 		q.WriteString(` PARTITION BY ( `)

@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"database/sql"
+	"regexp"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -34,6 +35,34 @@ func TestExternalTableCreate(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`CREATE EXTERNAL TABLE "database_name"."schema_name"."good_name" \("column1" OBJECT AS a, "column2" VARCHAR AS b\) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true PATTERN = 'pattern' FILE_FORMAT = \( FORMAT_NAME = 'format' \) COMMENT = 'great comment'`).WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectExternalTableRead(mock)
+		err := resources.CreateExternalTable(d, db)
+		r.NoError(err)
+		r.Equal("good_name", d.Get("name").(string))
+	})
+}
+
+func TestExternalTableCreateInferringSchema(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":         "good_name",
+		"database":     "database_name",
+		"schema":       "schema_name",
+		"comment":      "great comment",
+		"infer_schema": true,
+		"location":     "location",
+		"file_format":  "FORMAT_NAME = 'format'",
+		"pattern":      "pattern",
+	}
+	d := externalTable(t, "database_name|schema_name|good_name", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		expectedSQL := `CREATE EXTERNAL TABLE "database_name"."schema_name"."good_name" USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE(INFER_SCHEMA(LOCATION=>'@location',FILE_FORMAT=>'FORMAT_NAME = 'format'',IGNORE_CASE => true))) WITH LOCATION = location REFRESH_ON_CREATE = true AUTO_REFRESH = true PATTERN = 'pattern' FILE_FORMAT = ( FORMAT_NAME = 'format' ) COMMENT = 'great comment'`
+		// Need to escape regular expression special characters as DataDog's sqlmock uses regular expression to match expected queries.
+		// https://stackoverflow.com/questions/59652031/sqlmock-is-not-matching-query-but-query-is-identical-and-log-output-shows-the-s
+		mock.ExpectExec(regexp.QuoteMeta(expectedSQL)).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectExternalTableRead(mock)
 		err := resources.CreateExternalTable(d, db)

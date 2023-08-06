@@ -26,7 +26,11 @@ func TestAcc_ExternalTable(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "comment", "Terraform acceptance test"), resource.TestCheckResourceAttr("snowflake_external_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_parquet_table", "database", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_parquet_table", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_parquet_table", "infer_schema", "true"),
+					resource.TestCheckResourceAttr("snowflake_external_table.test_parquet_table", "comment", "Terraform acceptance external table schema inference test"),
 				),
 			},
 		},
@@ -80,6 +84,17 @@ resource "snowflake_external_table" "test_table" {
   file_format = "TYPE = CSV"
   location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"
 }
+
+resource "snowflake_external_table" "test_parquet_table" {
+	database     = snowflake_database.test.name
+	schema       = snowflake_schema.test.name
+    infer_schema = true
+	name         = "%v"
+	comment      = "Terraform acceptance external table schema inference test"
+
+  file_format = "TYPE = PARQUET"
+  location = "s3://com.example.bucket/prefix"
+}
 `
-	return fmt.Sprintf(s, name, name, name, name, locations, name)
+	return fmt.Sprintf(s, name, name, name, name, locations, name, name)
 }

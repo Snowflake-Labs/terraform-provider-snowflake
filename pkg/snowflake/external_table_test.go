@@ -21,6 +21,21 @@ func TestExternalTableCreate(t *testing.T) {
 	r.Equal(`CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( TYPE = CSV FIELD_DELIMITER = '|' ) COMMENT = 'Test Comment'`, s.Create())
 }
 
+func TestExternalTableCreateInferringSchema(t *testing.T) {
+	r := require.New(t)
+	s := NewExternalTableBuilder("test_table", "test_db", "test_schema")
+	s.WithInferSchema(true)
+	s.WithLocation("location")
+	s.WithPattern("pattern")
+	s.WithFileFormat("FORMAT_NAME = PARQUET")
+	r.Equal(`"test_db"."test_schema"."test_table"`, s.QualifiedName())
+
+	r.Equal(`CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE(INFER_SCHEMA(LOCATION=>'@location',FILE_FORMAT=>'FORMAT_NAME = PARQUET',IGNORE_CASE => true))) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( FORMAT_NAME = PARQUET )`, s.Create())
+
+	s.WithComment("Test Comment")
+	r.Equal(`CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE(INFER_SCHEMA(LOCATION=>'@location',FILE_FORMAT=>'FORMAT_NAME = PARQUET',IGNORE_CASE => true))) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( FORMAT_NAME = PARQUET ) COMMENT = 'Test Comment'`, s.Create())
+}
+
 func TestExternalTableUpdate(t *testing.T) {
 	r := require.New(t)
 	s := NewExternalTableBuilder("test_table", "test_db", "test_schema")
