@@ -35,6 +35,7 @@ type Client struct {
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	PasswordPolicies PasswordPolicies
+	Pipes            Pipes
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
 	SessionPolicies  SessionPolicies
@@ -128,6 +129,7 @@ func (c *Client) initialize() {
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
+	c.Pipes = &pipes{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
