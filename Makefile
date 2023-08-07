@@ -69,22 +69,22 @@ docs: ## generate docs for terraform plugin
 	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
-check-docs: docs ## check that docs have been generated
+docs-check: docs ## check that docs have been generated
 	git diff --exit-code -- docs
-.PHONY: check-docs
+.PHONY: docs-check
 
 mod: ## add missing and remove unused modules
 	go mod tidy -compat=1.20
 .PHONY: mod
 
-check-mod: mod ## check if there are any missing/unused modules
+mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
-.PHONY: check-mod
+.PHONY: mod-check
 
-check-fmt: ## Check formatting
+fmt-check: ## Check formatting
 	./bin/golangci-lint run ./... -v
-.PHONY: check-fmt
+.PHONY: fmt-check
 
-fix-fmt: ## Check and fix formatting
+fmt-fix: ## Check and fix formatting
 	./bin/golangci-lint run ./... -v --fix
-.PHONY: fix-fmt
+.PHONY: fmt-fix
