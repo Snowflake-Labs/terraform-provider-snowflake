@@ -279,40 +279,28 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 		return err
 	}
-	if user.DefaultNamespace != nil {
-		if err = d.Set("default_namespace", user.DefaultNamespace.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
+		return err
 	}
-	if user.DefaultWarehouse != nil {
-		if err = d.Set("default_warehouse", user.DefaultWarehouse.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
+		return err
 	}
 	if user.RsaPublicKeyFp != nil {
 		if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
 			return err
 		}
 	}
-	if user.Email != nil {
-		if err = d.Set("email", user.Email.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "email", user.Email); err != nil {
+		return err
 	}
-	if user.DisplayName != nil {
-		if err = d.Set("display_name", user.DisplayName.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
+		return err
 	}
-	if user.FirstName != nil {
-		if err = d.Set("first_name", user.FirstName.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
+		return err
 	}
-	if user.LastName != nil {
-		if err = d.Set("last_name", user.LastName.Value); err != nil {
-			return err
-		}
+	if err := setStringProperty(d, "last_name", user.LastName); err != nil {
+		return err
 	}
 	return nil
 }
