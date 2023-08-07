@@ -319,13 +319,6 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewStageBuilder(stage, dbName, schema)
 
 	db := meta.(*sql.DB)
-	if d.HasChange("url") {
-		url := d.Get("url")
-		q := builder.ChangeURL(url.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage url on %v", d.Id())
-		}
-	}
 
 	if d.HasChange("credentials") {
 		credentials := d.Get("credentials")
@@ -335,11 +328,28 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("storage_integration") {
+	if d.HasChange("storage_integration") && d.HasChange("url") {
 		si := d.Get("storage_integration")
-		q := builder.ChangeStorageIntegration(si.(string))
+		url := d.Get("url")
+		q := builder.ChangeStorageIntegrationAndUrl(si.(string), url.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage storage integration on %v", d.Id())
+			return fmt.Errorf("error updating stage storage integration and url on %v", d.Id())
+		}
+	} else {
+		if d.HasChange("storage_integration") {
+			si := d.Get("storage_integration")
+			q := builder.ChangeStorageIntegration(si.(string))
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating stage storage integration on %v", d.Id())
+			}
+		}
+
+		if d.HasChange("url") {
+			url := d.Get("url")
+			q := builder.ChangeURL(url.(string))
+			if err := snowflake.Exec(db, q); err != nil {
+				return fmt.Errorf("error updating stage url on %v", d.Id())
+			}
 		}
 	}
 
