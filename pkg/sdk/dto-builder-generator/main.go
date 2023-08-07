@@ -113,16 +113,16 @@ func (gen *Generator) addConstructorsAndBuilderMethods() {
 			for _, spec := range node.(*ast.GenDecl).Specs {
 				if _, ok := spec.(*ast.TypeSpec); ok {
 					if _, ok := spec.(*ast.TypeSpec).Type.(*ast.StructType); ok {
-						var fields []*structField
+						var fields []*fieldDef
 						for _, field := range spec.(*ast.TypeSpec).Type.(*ast.StructType).Fields.List {
 							for _, name := range field.Names {
-								fs := newFieldStruct(name, field)
+								fs := newFieldDef(name, field)
 								fields = append(fields, fs)
 							}
 						}
-						b := structBuilder{spec.(*ast.TypeSpec).Name.Name, fields, gen}
-						b.generateConstructor()
-						b.generateBuilderMethods()
+						def := newStructDef(spec.(*ast.TypeSpec), fields)
+						gen.generateConstructor(def)
+						gen.generateBuilderMethods(def)
 					}
 				}
 			}
@@ -130,75 +130,81 @@ func (gen *Generator) addConstructorsAndBuilderMethods() {
 	}
 }
 
-type structBuilder struct {
-	name      string
-	fields    []*structField
-	generator *Generator
+type structDef struct {
+	name   string
+	fields []*fieldDef
 }
 
-type structField struct {
+func newStructDef(ts *ast.TypeSpec, fields []*fieldDef) *structDef {
+	return &structDef{
+		name:   ts.Name.Name,
+		fields: fields,
+	}
+}
+
+type fieldDef struct {
 	name       string
 	typeString string
 	isRequired bool
 }
 
-func (fs *structField) String() string {
+func (fs *fieldDef) String() string {
 	return fmt.Sprintf("Field: name=%s type=%s is required=%t", fs.name, fs.typeString, fs.isRequired)
 }
 
-func newFieldStruct(name *ast.Ident, field *ast.Field) *structField {
-	return &structField{
+func newFieldDef(name *ast.Ident, field *ast.Field) *fieldDef {
+	return &fieldDef{
 		name:       name.Name,
 		typeString: types.ExprString(field.Type),
 		isRequired: strings.TrimSpace(field.Comment.Text()) == "required",
 	}
 }
 
-func (b *structBuilder) generateConstructor() {
-	b.generator.printf("func New%s(", b.name)
-	var requiredFields []*structField
-	for _, field := range b.fields {
+func (gen *Generator) generateConstructor(d *structDef) {
+	gen.printf("func New%s(", d.name)
+	var requiredFields []*fieldDef
+	for _, field := range d.fields {
 		if field.isRequired {
 			requiredFields = append(requiredFields, field)
 		}
 	}
 	if len(requiredFields) != 0 {
-		b.generator.printf("\n")
+		gen.printf("\n")
 		for _, field := range requiredFields {
-			b.generator.printf("%s %s,\n", field.name, field.typeString)
+			gen.printf("%s %s,\n", field.name, field.typeString)
 		}
 	}
 
-	b.generator.printf(") *%s {\n", b.name)
+	gen.printf(") *%s {\n", d.name)
 
 	var returnStatement string
 	if len(requiredFields) != 0 {
-		b.generator.printf("s := %s{}\n", b.name)
+		gen.printf("s := %s{}\n", d.name)
 		for _, field := range requiredFields {
-			b.generator.printf("s.%s = %s\n", field.name, field.name)
+			gen.printf("s.%s = %s\n", field.name, field.name)
 		}
 		returnStatement = "&s"
 	} else {
-		returnStatement = fmt.Sprintf("&%s{}", b.name)
+		returnStatement = fmt.Sprintf("&%s{}", d.name)
 	}
 
-	b.generator.printf("return %s\n", returnStatement)
-	b.generator.printf("}\n\n")
+	gen.printf("return %s\n", returnStatement)
+	gen.printf("}\n\n")
 }
 
-func (b *structBuilder) generateBuilderMethods() {
-	var optionalFields []*structField
-	for _, field := range b.fields {
+func (gen *Generator) generateBuilderMethods(d *structDef) {
+	var optionalFields []*fieldDef
+	for _, field := range d.fields {
 		if !field.isRequired {
 			optionalFields = append(optionalFields, field)
 		}
 	}
 
 	for _, field := range optionalFields {
-		b.generator.printf("func (s *%s) With%s(%s %s) *%s {\n", b.name, toTitle(field.name), field.name, field.typeString, b.name)
-		b.generator.printf("s.%s = %s\n", field.name, field.name)
-		b.generator.printf("return s\n")
-		b.generator.printf("}\n\n")
+		gen.printf("func (s *%s) With%s(%s %s) *%s {\n", d.name, toTitle(field.name), field.name, field.typeString, d.name)
+		gen.printf("s.%s = %s\n", field.name, field.name)
+		gen.printf("return s\n")
+		gen.printf("}\n\n")
 	}
 }
 
