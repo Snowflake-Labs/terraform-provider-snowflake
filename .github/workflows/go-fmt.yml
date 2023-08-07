@@ -35,4 +35,4 @@ jobs:
         run: make setup
 
       - name: Run golangci-lint
-        run: make check-fmt
+        run: make fmt-check

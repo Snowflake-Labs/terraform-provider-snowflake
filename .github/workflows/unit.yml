@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - check-docs
+          - docs-check
           - test
     steps:
       - uses: actions/checkout@v3
