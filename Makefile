@@ -88,3 +88,6 @@ fmt-check: ## Check formatting
 fmt-fix: ## Check and fix formatting
 	./bin/golangci-lint run ./... -v --fix
 .PHONY: fmt-fix
+
+pre-push: mod-check docs-check fmt-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+.PHONY: pre-push
