@@ -83,3 +83,10 @@ lint-fix: ## Run static code analysis, check formatting and try to fix findings
 
 pre-push: mod-check docs-check lint-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 .PHONY: pre-push
+
+generate-all-dto:
+	go generate ./pkg/sdk/*_dto.go
+.PHONY: generate-all
+
+generate-dto-%: ./pkg/sdk/%_dto.go
+	go generate $<
