@@ -119,12 +119,6 @@ func (opts *CreateWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if valueSet(opts.MaxClusterCount) && !validateIntInRange(*opts.MaxClusterCount, 1, 10) {
-		return fmt.Errorf("MaxClusterCount must be between 1 and 10")
-	}
-	if valueSet(opts.MinClusterCount) && !validateIntInRange(*opts.MinClusterCount, 1, 10) {
-		return fmt.Errorf("MinClusterCount must be between 1 and 10")
-	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 	}
@@ -225,14 +219,9 @@ type WarehouseSet struct {
 }
 
 func (v *WarehouseSet) validate() error {
-	if v.MaxClusterCount != nil {
-		if ok := validateIntInRange(*v.MaxClusterCount, 1, 10); !ok {
-			return fmt.Errorf("MaxClusterCount must be between 1 and 10")
-		}
-	}
 	if v.MinClusterCount != nil {
-		if ok := validateIntInRange(*v.MinClusterCount, 1, 10); !ok {
-			return fmt.Errorf("MinClusterCount must be between 1 and 10")
+		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
+			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}
 	if v.AutoSuspend != nil {
