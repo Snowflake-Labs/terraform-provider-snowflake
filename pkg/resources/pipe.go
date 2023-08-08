@@ -1,10 +1,8 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
@@ -105,51 +103,6 @@ func pipeCopyStatementDiffSuppress(_, o, n string, _ *schema.ResourceData) bool 
 
 	// trim off any trailing line endings
 	return strings.TrimRight(o, ";\r\n") == strings.TrimRight(n, ";\r\n")
-}
-
-type pipeID struct {
-	DatabaseName string
-	SchemaName   string
-	PipeName     string
-}
-
-// String() takes in a pipeID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|PipeName.
-func (si *pipeID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = pipeIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.PipeName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strPipeID := strings.TrimSpace(buf.String())
-	return strPipeID, nil
-}
-
-// pipeIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|PipeName
-// and returns a pipeID object.
-func pipeIDFromString(stringID string) (*pipeID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = pipeIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per pipe")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	pipeResult := &pipeID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		PipeName:     lines[0][2],
-	}
-	return pipeResult, nil
 }
 
 // CreatePipe implements schema.CreateFunc.
