@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -9,6 +10,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -154,53 +157,46 @@ func pipeIDFromString(stringID string) (*pipeID, error) {
 // CreatePipe implements schema.CreateFunc.
 func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	database := d.Get("database").(string)
-	schema := d.Get("schema").(string)
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	builder := snowflake.NewPipeBuilder(name, database, schema)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
+	opts := &sdk.PipeCreateOptions{}
+
+	copyStatement := d.Get("copy_statement").(string)
 
 	// Set optionals
-	if v, ok := d.GetOk("copy_statement"); ok {
-		builder.WithCopyStatement(v.(string))
-	}
-
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		opts.Comment = sdk.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("auto_ingest"); ok && v.(bool) {
-		builder.WithAutoIngest()
+		opts.AutoIngest = sdk.Bool(true)
 	}
 
 	if v, ok := d.GetOk("aws_sns_topic_arn"); ok {
-		builder.WithAwsSnsTopicArn(v.(string))
+		opts.AwsSnsTopic = sdk.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("integration"); ok {
-		builder.WithIntegration(v.(string))
+		opts.Integration = sdk.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("error_integration"); ok {
-		builder.WithErrorIntegration((v.(string)))
+		opts.ErrorIntegration = sdk.String(v.(string))
 	}
 
-	q := builder.Create()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating pipe %v err = %w", name, err)
-	}
-
-	pipeID := &pipeID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		PipeName:     name,
-	}
-	dataIDInput, err := pipeID.String()
+	err := client.Pipes.Create(ctx, objectIdentifier, copyStatement, opts)
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
+
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
 	return ReadPipe(d, meta)
 }
