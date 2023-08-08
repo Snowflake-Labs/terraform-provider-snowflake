@@ -2,12 +2,12 @@ package resources_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -58,7 +58,7 @@ func TestPipeRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Test when resource is not found, checking if state will be empty
 		r.NotEmpty(d.State())
-		q := snowflake.NewPipeBuilder("test_pipe", "test_db", "test_schema").Show()
+		q := fmt.Sprintf(`SHOW PIPES LIKE '%v' IN SCHEMA "%v"."%v"`, "test_pipe", "test_db", "test_schema")
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
 		err := resources.ReadPipe(d, db)
 		r.Empty(d.State())
