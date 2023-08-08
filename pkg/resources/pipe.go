@@ -207,7 +207,6 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 
 	ctx := context.Background()
 	pipe, err := client.Pipes.ShowByID(ctx, objectIdentifier)
-
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
