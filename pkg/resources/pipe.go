@@ -11,7 +11,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -314,22 +313,15 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 // DeletePipe implements schema.DeleteFunc.
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.Pipes.Drop(ctx, objectIdentifier)
 	if err != nil {
 		return err
 	}
 
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
-
-	q := snowflake.NewPipeBuilder(pipe, dbName, schema).Drop()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
-	}
-
 	d.SetId("")
-
 	return nil
 }
