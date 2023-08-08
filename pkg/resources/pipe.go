@@ -262,35 +262,49 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePipe implements schema.UpdateFunc.
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
-	pipeID, err := pipeIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	pipe := pipeID.PipeName
-
-	builder := snowflake.NewPipeBuilder(pipe, dbName, schema)
-
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	ctx := context.Background()
+
+	pipeSet := &sdk.PipeSet{}
+	pipeUnset := &sdk.PipeUnset{}
+	var runSetStatement bool
+	var runUnsetStatement bool
+
 	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		q := builder.ChangeComment(comment.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating pipe comment on %v", d.Id())
+		if comment, ok := d.GetOk("comment"); ok {
+			runSetStatement = true
+			pipeSet.Comment = sdk.String(comment.(string))
+		} else {
+			runUnsetStatement = true
+			pipeUnset.Comment = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("error_integration") {
-		var q string
 		if errorIntegration, ok := d.GetOk("error_integration"); ok {
-			q = builder.ChangeErrorIntegration(errorIntegration.(string))
+			runSetStatement = true
+			pipeSet.Comment = sdk.String(errorIntegration.(string))
 		} else {
-			q = builder.RemoveErrorIntegration()
+			runUnsetStatement = true
+			pipeUnset.Comment = sdk.Bool(true)
 		}
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating pipe error_integration on %v", d.Id())
+	}
+
+	if runSetStatement {
+		options := &sdk.PipeAlterOptions{Set: pipeSet}
+		err := client.Pipes.Alter(ctx, objectIdentifier, options)
+		if err != nil {
+			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)
+		}
+	}
+
+	if runUnsetStatement {
+		options := &sdk.PipeAlterOptions{Unset: pipeUnset}
+		err := client.Pipes.Alter(ctx, objectIdentifier, options)
+		if err != nil {
+			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)
 		}
 	}
 
