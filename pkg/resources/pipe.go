@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -204,26 +203,17 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 // ReadPipe implements schema.ReadFunc.
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	pipeID, err := pipeIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	ctx := context.Background()
+	pipe, err := client.Pipes.ShowByID(ctx, objectIdentifier)
+
 	if err != nil {
-		return err
-	}
-
-	dbName := pipeID.DatabaseName
-	schema := pipeID.SchemaName
-	name := pipeID.PipeName
-
-	sq := snowflake.NewPipeBuilder(name, dbName, schema).Show()
-	row := snowflake.QueryRow(db, sq)
-	pipe, err := snowflake.ScanPipe(row)
-	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
-		return err
 	}
 
 	if err := d.Set("name", pipe.Name); err != nil {
@@ -254,22 +244,20 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("auto_ingest", pipe.NotificationChannel != nil); err != nil {
+	if err := d.Set("auto_ingest", pipe.NotificationChannel != ""); err != nil {
 		return err
 	}
 
-	if pipe.NotificationChannel != nil && strings.Contains(*pipe.NotificationChannel, "arn:aws:sns:") {
+	if pipe.NotificationChannel != "" && strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
 		err = d.Set("aws_sns_topic_arn", pipe.NotificationChannel)
 		return err
 	}
 
-	// The "DESCRIBE PIPE ..." command returns the string "null" for error_integration
-	if pipe.ErrorIntegration.String == "null" {
-		pipe.ErrorIntegration.Valid = false
-		pipe.ErrorIntegration.String = ""
+	if err := d.Set("error_integration", pipe.ErrorIntegration); err != nil {
+		return err
 	}
-	err = d.Set("error_integration", pipe.ErrorIntegration.String)
-	return err
+
+	return nil
 }
 
 // UpdatePipe implements schema.UpdateFunc.
