@@ -42,6 +42,26 @@ func TestAccountCreate(t *testing.T) {
 		expected := `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = 's3cr3tk3y' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`
 		assert.Equal(t, expected, actual)
 	})
+
+	t.Run("static password", func(t *testing.T) {
+		opts := &CreateAccountOptions{
+			name:               NewAccountObjectIdentifier("newaccount"),
+			AdminName:          "someadmin",
+			AdminPassword:      String("v3rys3cr3t"),
+			FirstName:          String("Ad"),
+			LastName:           String("Min"),
+			Email:              "admin@example.com",
+			MustChangePassword: Bool(false),
+			Edition:            EditionBusinessCritical,
+			RegionGroup:        String("groupid"),
+			Region:             String("regionid"),
+			Comment:            String("Test account"),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`
+		assert.Equal(t, expected, actual)
+	})
 }
 
 func TestAccountAlter(t *testing.T) {
