@@ -242,9 +242,11 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("last_name"); ok {
 		createOptions.LastName = sdk.String(v.(string))
 	}
-	if v, ok := d.GetOk("must_change_password"); ok {
-		createOptions.MustChangePassword = sdk.Bool(v.(bool))
-	}
+
+	// Has default, don't fetch with GetOk because this can be falsey and valid
+	v := d.Get("must_change_password")
+	createOptions.MustChangePassword = sdk.Bool(v.(bool))
+
 	if v, ok := d.GetOk("region_group"); ok {
 		createOptions.RegionGroup = sdk.String(v.(string))
 	} else {

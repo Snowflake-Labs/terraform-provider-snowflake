@@ -86,6 +86,13 @@ func TestStageChangeStorageIntegration(t *testing.T) {
 	r.Equal(`ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = "MY_INTEGRATION"`, s.ChangeStorageIntegration("MY_INTEGRATION"))
 }
 
+func TestStageChangeStorageIntegrationAndUrl(t *testing.T) {
+	r := require.New(t)
+	s := NewStageBuilder("test_stage", "test_db", "test_schema")
+
+	r.Equal(`ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = "MY_INTEGRATION" URL = 's3://load/test'`, s.ChangeStorageIntegrationAndUrl("MY_INTEGRATION", "s3://load/test"))
+}
+
 func TestStageChangeCopyOptions(t *testing.T) {
 	r := require.New(t)
 	s := NewStageBuilder("test_stage", "test_db", "test_schema")
