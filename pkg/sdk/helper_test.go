@@ -696,13 +696,13 @@ func createStage(t *testing.T, client *Client, database *Database, schema *Schem
 	}, stageCleanup
 }
 
-func createStage(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
+func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
 	t.Helper()
 	ctx := context.Background()
 	_, err := client.exec(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
 	require.NoError(t, err)
 
-	// TODO: Migrate stage to the new SDK and return stage interface
+	// TODO: Migrate createStageWithURL to the new SDK (createStageWithOpts) and return stage interface
 	return nil, func() {
 		_, err := client.exec(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
 		require.NoError(t, err)

@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"database/sql/driver"
-	"errors"
 	"time"
 )
 
@@ -32,12 +30,6 @@ type ExternalTables interface {
 }
 
 // TODO Infer schema
-
-var _ ExternalTables = (*externalTables)(nil)
-
-type externalTables struct {
-	client *Client
-}
 
 type ExternalTable struct {
 	CreatedOn           time.Time
@@ -74,9 +66,9 @@ type CreateExternalTableOpts struct {
 	OrReplace           *bool                     `ddl:"keyword" sql:"OR REPLACE"`
 	externalTable       bool                      `ddl:"static" sql:"EXTERNAL TABLE"`
 	IfNotExists         *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier   `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	name                AccountObjectIdentifier   `ddl:"identifier"`
 	Columns             []ExternalTableColumn     `ddl:"list,parentheses"`
-	CloudProviderParams CloudProviderParams       // TODO Not required and used for notifications
+	CloudProviderParams *CloudProviderParams      // TODO Not required and used for notifications
 	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location            string                    `ddl:"parameter" sql:"LOCATION"`
 	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
@@ -90,21 +82,7 @@ type CreateExternalTableOpts struct {
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *CreateExternalTableOpts) validate() error {
-	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
-	}
-	if !valueSet(opts.Columns) {
-		errs = append(errs, errors.New("no column provided")) // TODO message
-	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errors.New("no file format provided")) // TODO message
-	}
-	// TODO call fields validate functions
-	return errors.Join(errs...)
-}
-
+// TODO Validate
 type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
@@ -112,6 +90,7 @@ type ExternalTableColumn struct {
 	InlineConstraint *ExternalTableInlineConstraint
 }
 
+// TODO common type ? + Validate
 type ExternalTableInlineConstraint struct {
 	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
 	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
@@ -141,6 +120,7 @@ var (
 	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
 )
 
+// TODO Common Type ? + Validate
 type InlineForeignKey struct {
 	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
 	ColumnName []string            `ddl:"keyword,parentheses"`
@@ -156,23 +136,17 @@ var (
 	PartialMatchType MatchType = "PARTIAL"
 )
 
+// TODO Validate
 type ForeignKeyOnAction struct {
 	OnUpdate *bool `ddl:"parameter,no_equals" sql:"ON UPDATE"`
 	OnDelete *bool `ddl:"parameter,no_equals" sql:"ON DELETE"`
 }
 
+// TODO Validate + Rename ? Used mainly for notifications
 type CloudProviderParams struct {
 	// One of
-	GoogleCloudStorage *GoogleCloudStorageParams
+	GoogleCloudStorage *GoogleCloudStorageParams // TODO Unwrap type ?
 	MicrosoftAzure     *MicrosoftAzureParams
-}
-
-func (cpp *CloudProviderParams) validate() error {
-	// TODO
-	if anyValueSet(cpp.GoogleCloudStorage, cpp.MicrosoftAzure) && exactlyOneValueSet(cpp.GoogleCloudStorage, cpp.MicrosoftAzure) {
-		return errors.New("")
-	}
-	return nil
 }
 
 type GoogleCloudStorageParams struct {
@@ -183,19 +157,12 @@ type MicrosoftAzureParams struct {
 	Integration *string `ddl:"parameter,single_quotes" sql:"INTEGRATION"`
 }
 
+// TODO New type
 type ExternalTableFileFormat struct {
 	Name *string                      `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
 	Type *ExternalTableFileFormatType `ddl:"parameter" sql:"TYPE"`
 	// TODO: Should be probably a new type because doesn't contain xml (or maybe FileFormatType should be divided into struct for every file format)
 	Options *FileFormatTypeOptions
-}
-
-func (opts *ExternalTableFileFormat) validate() error {
-	// TODO error message
-	if valueSet(opts.Name) && anyValueSet(opts.Type, opts.Options) {
-		return errors.New("")
-	}
-	return nil
 }
 
 type ExternalTableFileFormatType string
@@ -208,25 +175,10 @@ var (
 	ExternalTableFileFormatTypeParquet ExternalTableFileFormatType = "PARQUET"
 )
 
+// TODO Is it common type ?
 type RowAccessPolicy struct {
 	Name SchemaObjectIdentifier `ddl:"identifier"`
 	On   []string               `ddl:"keyword,parentheses" sql:"ON"` // TODO What is correct (quoted values or no)
-}
-
-func (v *externalTables) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableOpts) error {
-	if opts == nil {
-		opts = &CreateExternalTableOpts{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
 }
 
 type CreateWithManualPartitioningExternalTableOpts struct {
@@ -245,27 +197,6 @@ type CreateWithManualPartitioningExternalTableOpts struct {
 	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
 	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-}
-
-func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
-	return nil
-}
-
-// TODO: ChangeName
-func (v *externalTables) CreateWithManualPartitioning(ctx context.Context, id AccountObjectIdentifier, opts *CreateWithManualPartitioningExternalTableOpts) error {
-	if opts == nil {
-		opts = &CreateWithManualPartitioningExternalTableOpts{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
 }
 
 type CreateDeltaLakeExternalTableOpts struct {
@@ -289,26 +220,6 @@ type CreateDeltaLakeExternalTableOpts struct {
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
-	return nil
-}
-
-func (v *externalTables) CreateDeltaLake(ctx context.Context, id AccountObjectIdentifier, opts *CreateDeltaLakeExternalTableOpts) error {
-	if opts == nil {
-		opts = &CreateDeltaLakeExternalTableOpts{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
-}
-
 type AlterExternalTableOptions struct {
 	alterExternalTable bool                    `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
 	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
@@ -322,87 +233,35 @@ type AlterExternalTableOptions struct {
 }
 
 type RefreshExternalTable struct {
-	Path *string `ddl:"parameter,no_equals,single_quotes"`
+	Path string `ddl:"parameter,no_equals,single_quotes"`
 }
 
 type ExternalTableFile struct {
 	Name string `ddl:"keyword,single_quotes"`
 }
 
-func (opts *AlterExternalTableOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	if anyValueSet(opts.Refresh, opts.AddFiles, opts.RemoveFiles, opts.Set, opts.Unset) &&
-		!exactlyOneValueSet(opts.Refresh, opts.AddFiles, opts.RemoveFiles, opts.Set, opts.Unset) {
-		return errors.New("") // TODO
-	}
-	return nil
-}
-
-type ExternalTableRefresh struct {
-	refresh      bool    `ddl:"static" sql:"REFRESH"`
-	RelativePath *string `ddl:"parameter,single_quote"`
-}
-
+// TODO Cannot set both ?
 type ExternalTableSet struct {
 	AutoRefresh *bool            `ddl:"parameter" sql:"AUTO_REFRESH"`
-	Tag         []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
+	Tag         []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
 type ExternalTableUnset struct {
 	Tag []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
-func (v *externalTables) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error {
-	if opts == nil {
-		opts = &AlterExternalTableOptions{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
-}
-
 type AlterExternalTablePartitionOptions struct {
 	alterExternalTable bool                    `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
-	name               AccountObjectIdentifier `ddl:"identifier"`
 	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name               AccountObjectIdentifier `ddl:"identifier"`
 	AddPartitions      []Partition             `ddl:"keyword,parentheses" sql:"ADD PARTITION"`
 	DropPartition      *bool                   `ddl:"keyword" sql:"DROP PARTITION"`
-	Location           string                  `ddl:"keyword,single_quotes" sql:"LOCATION"`
-}
-
-func (opts *AlterExternalTablePartitionOptions) validate() error {
-	// TODO identifier etc
-	return nil
+	Location           string                  `ddl:"parameter,no_equals,single_quotes" sql:"LOCATION"`
 }
 
 type Partition struct {
-	ColumnName string `ddl:"keyword,double_quotes"`
+	ColumnName string `ddl:"keyword"`
 	Value      string `ddl:"parameter,single_quotes"`
-}
-
-func (v *externalTables) AlterPartitions(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTablePartitionOptions) error {
-	if opts == nil {
-		opts = &AlterExternalTablePartitionOptions{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
 }
 
 type DropExternalTableOptions struct {
@@ -412,44 +271,9 @@ type DropExternalTableOptions struct {
 	DropOption        *ExternalTableDropOption
 }
 
-func (opts *DropExternalTableOptions) validate() error {
-	if valueSet(opts.DropOption) {
-		if err := opts.DropOption.validate(); err != nil {
-			return err
-		}
-	}
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	return nil
-}
-
 type ExternalTableDropOption struct {
 	Restrict *bool `ddl:"keyword" sql:"RESTRICT"`
 	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
-}
-
-func (opts *ExternalTableDropOption) validate() error {
-	if anyValueSet(opts.Restrict, opts.Cascade) && !exactlyOneValueSet(opts.Restrict, opts.Cascade) {
-		return errors.New("") // TODO error message
-	}
-	return nil
-}
-
-func (v *externalTables) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropExternalTableOptions) error {
-	if opts == nil {
-		opts = &DropExternalTableOptions{}
-	}
-	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
 }
 
 type ShowExternalTableOptions struct {
@@ -460,10 +284,6 @@ type ShowExternalTableOptions struct {
 	In             *In        `ddl:"keyword" sql:"IN"`
 	StartsWith     *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	LimitFrom      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
-}
-
-func (opts *ShowExternalTableOptions) validate() error {
-	return nil
 }
 
 type externalTableRow struct {
@@ -488,13 +308,6 @@ type externalTableRow struct {
 	OwnerRoleType       string
 }
 
-func setIfNotNil[T any](value *T, valuer driver.Valuer) {
-	if v, err := valuer.Value(); err == nil {
-		typedValue := v.(T)
-		value = &typedValue
-	}
-}
-
 func (e externalTableRow) ToExternalTable() ExternalTable {
 	et := ExternalTable{
 		CreatedOn:      e.CreatedOn,
@@ -513,64 +326,25 @@ func (e externalTableRow) ToExternalTable() ExternalTable {
 		OwnerRoleType:  e.OwnerRoleType,
 		Comment:        e.Comment,
 	}
-	setIfNotNil(&et.InvalidReason, e.InvalidReason)
-	setIfNotNil(&et.NotificationChannel, e.NotificationChannel)
-	setIfNotNil(&et.LastRefreshedOn, e.LastRefreshedOn)
-	setIfNotNil(&et.LastRefreshDetails, e.LastRefreshDetails)
+	if e.InvalidReason.Valid {
+		et.InvalidReason = e.InvalidReason.String
+	}
+	if e.NotificationChannel.Valid {
+		et.NotificationChannel = e.NotificationChannel.String
+	}
+	if e.LastRefreshedOn.Valid {
+		et.LastRefreshedOn = e.LastRefreshedOn.Time
+	}
+	if e.LastRefreshDetails.Valid {
+		et.LastRefreshDetails = e.LastRefreshDetails.String
+	}
 	return et
 }
 
-func (v *externalTables) Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error) {
-	if opts == nil {
-		opts = &ShowExternalTableOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return nil, err
-	}
-	var rows []externalTableRow
-	err = v.client.query(ctx, &rows, sql)
-	externalTables := make([]ExternalTable, len(rows))
-	for i, row := range rows {
-		externalTables[i] = row.ToExternalTable()
-	}
-	return externalTables, err
-}
-
-func (v *externalTables) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalTable, error) {
-	if !validObjectidentifier(id) {
-		return nil, ErrInvalidObjectIdentifier
-	}
-	externalTables, err := v.client.ExternalTables.Show(ctx, &ShowExternalTableOptions{
-		Like: &Like{
-			Pattern: String(id.Name()),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, t := range externalTables {
-		if t.ID() == id {
-			return &t, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
-}
-
 type describeExternalTableColumns struct {
-	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
 	name                  AccountObjectIdentifier `ddl:"identifier"`
 	columnsType           bool                    `ddl:"static" sql:"TYPE = COLUMNS"`
-}
-
-func (v *describeExternalTableColumns) validate() error {
-	if validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	return nil
 }
 
 type ExternalTableColumnDetails struct {
@@ -591,11 +365,11 @@ type externalTableColumnDetailsRow struct {
 	Name       string         `db:"name"`
 	Type       DataType       `db:"type"`
 	Kind       string         `db:"kind"`
-	IsNullable bool           `db:"null?"`
+	IsNullable string         `db:"null?"`
 	Default    sql.NullString `db:"default"`
-	IsPrimary  bool           `db:"primary key"`
-	IsUnique   bool           `db:"unique key"`
-	Check      sql.NullBool   `db:"check"` // ? BOOL ?
+	IsPrimary  string         `db:"primary key"`
+	IsUnique   string         `db:"unique key"`
+	Check      sql.NullBool   `db:"check"` // ? Bool / String ?
 	Expression sql.NullString `db:"expression"`
 	Comment    sql.NullString `db:"comment"`
 	PolicyName sql.NullString `db:"policy name"`
@@ -606,106 +380,56 @@ func (r *externalTableColumnDetailsRow) toExternalTableColumnDetails() ExternalT
 		Name:       r.Name,
 		Type:       r.Type,
 		Kind:       r.Kind,
-		IsNullable: r.IsNullable,
-		IsPrimary:  r.IsPrimary,
-		IsUnique:   r.IsUnique,
+		IsNullable: r.IsNullable == "Y",
+		IsPrimary:  r.IsPrimary == "Y",
+		IsUnique:   r.IsUnique == "Y",
 	}
-	setIfNotNil(&details.Default, r.Default)
-	setIfNotNil(&details.Check, r.Check)
-	setIfNotNil(&details.Expression, r.Expression)
-	setIfNotNil(&details.Comment, r.Comment)
-	setIfNotNil(&details.PolicyName, r.PolicyName)
+	if r.Default.Valid {
+		details.Default = String(r.Default.String)
+	}
+	if r.Check.Valid {
+		details.Check = Bool(r.Check.Bool)
+	}
+	if r.Expression.Valid {
+		details.Expression = String(r.Expression.String)
+	}
+	if r.Comment.Valid {
+		details.Comment = String(r.Comment.String)
+	}
+	if r.PolicyName.Valid {
+		details.PolicyName = String(r.PolicyName.String)
+	}
 	return details
 }
 
-func (v *externalTables) DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error) {
-	query := describeExternalTableColumns{
-		name: id,
-	}
-	if err := query.validate(); err != nil {
-		return nil, err
-	}
-
-	sql, err := structToSQL(query)
-	if err != nil {
-		return nil, err
-	}
-
-	var rows []externalTableColumnDetailsRow
-	err = v.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []ExternalTableColumnDetails
-	for _, r := range rows {
-		result = append(result, r.toExternalTableColumnDetails())
-	}
-	return result, nil
-}
-
 type describeExternalTableStage struct {
-	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
 	name                  AccountObjectIdentifier `ddl:"identifier"`
 	stageType             bool                    `ddl:"static" sql:"TYPE = STAGE"`
 }
 
-func (v *describeExternalTableStage) validate() error {
-	if validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	return nil
-}
-
 type ExternalTableStageDetails struct {
-	parentProperty  string
-	property        string
-	propertyType    string
-	propertyValue   string
-	propertyDefault string
+	ParentProperty  string
+	Property        string
+	PropertyType    string
+	PropertyValue   string
+	PropertyDefault string
 }
 
 type externalTableStageDetailsRow struct {
-	parentProperty  string `db:"parent_property"`
-	property        string `db:"property"`
-	propertyType    string `db:"property_type"`
-	propertyValue   string `db:"property_value"`
-	propertyDefault string `db:"property_default"`
+	ParentProperty  string `db:"parent_property"`
+	Property        string `db:"property"`
+	PropertyType    string `db:"property_type"`
+	PropertyValue   string `db:"property_value"`
+	PropertyDefault string `db:"property_default"`
 }
 
 func (r externalTableStageDetailsRow) toExternalTableStageDetails() ExternalTableStageDetails {
 	return ExternalTableStageDetails{
-		parentProperty:  r.parentProperty,
-		property:        r.property,
-		propertyType:    r.propertyType,
-		propertyValue:   r.propertyValue,
-		propertyDefault: r.propertyDefault,
+		ParentProperty:  r.ParentProperty,
+		Property:        r.Property,
+		PropertyType:    r.PropertyType,
+		PropertyValue:   r.PropertyValue,
+		PropertyDefault: r.PropertyDefault,
 	}
-}
-
-func (v *externalTables) DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error) {
-	query := describeExternalTableStage{
-		name: id,
-	}
-	if err := query.validate(); err != nil {
-		return nil, err
-	}
-
-	sql, err := structToSQL(query)
-	if err != nil {
-		return nil, err
-	}
-
-	var rows []externalTableStageDetailsRow
-	err = v.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []ExternalTableStageDetails
-	for _, r := range rows {
-		result = append(result, r.toExternalTableStageDetails())
-	}
-
-	return result, nil
 }

@@ -187,7 +187,7 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
-		return fmt.Errorf("validate drop options: %w", err)
+		return fmt.Errorf("validateProp drop options: %w", err)
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {

@@ -24,7 +24,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					},
 				},
 			},
-			CloudProviderParams: CloudProviderParams{
+			CloudProviderParams: &CloudProviderParams{
 				GoogleCloudStorage: &GoogleCloudStorageParams{
 					Integration: String("123"),
 				},
@@ -58,7 +58,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					},
 				},
 			},
-			CloudProviderParams: CloudProviderParams{
+			CloudProviderParams: &CloudProviderParams{
 				GoogleCloudStorage: &GoogleCloudStorageParams{
 					Integration: String("123"),
 				},
@@ -213,7 +213,7 @@ func TestExternalTablesAlter(t *testing.T) {
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("external_table"),
 			Refresh: &RefreshExternalTable{
-				Path: String("some/path"),
+				Path: "some/path",
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -316,7 +316,8 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 		opts := &AlterExternalTablePartitionOptions{
 			name:          NewAccountObjectIdentifier("external_table"),
 			IfExists:      Bool(true),
-			DropPartition: String("partition_location"),
+			DropPartition: Bool(true),
+			Location:      "partition_location",
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -406,9 +407,8 @@ func TestExternalTablesShow(t *testing.T) {
 
 func TestExternalTablesDescribe(t *testing.T) {
 	t.Run("type columns", func(t *testing.T) {
-		opts := &DescribeExternalTableOptions{
-			name:        NewAccountObjectIdentifier("external_table"),
-			ColumnsType: Bool(true),
+		opts := &describeExternalTableColumns{
+			name: NewAccountObjectIdentifier("external_table"),
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -417,9 +417,8 @@ func TestExternalTablesDescribe(t *testing.T) {
 	})
 
 	t.Run("type stage", func(t *testing.T) {
-		opts := &DescribeExternalTableOptions{
-			name:      NewAccountObjectIdentifier("external_table"),
-			StageType: Bool(true),
+		opts := &describeExternalTableStage{
+			name: NewAccountObjectIdentifier("external_table"),
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)

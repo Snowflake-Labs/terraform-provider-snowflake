@@ -23,7 +23,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	stageID := NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
 	stageLocation := "@external_table_stage"
-	_, _ = createStage(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
+	_, _ = createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
 
 	tag, _ := createTag(t, client, db, schema)
 
@@ -74,6 +74,28 @@ func TestInt_ExternalTables(t *testing.T) {
 		},
 	}
 
+	createExternalTableWithManualPartitioning := CreateWithManualPartitioningExternalTableOpts{
+		OrReplace: Bool(true),
+		Columns:   columnsWithPartition,
+		// TODO Cloud provider params
+		PartitionBy:                []string{"part_date"},
+		Location:                   stageLocation,
+		UserSpecifiedPartitionType: Bool(true),
+		FileFormat: []ExternalTableFileFormat{
+			{
+				Type: &ExternalTableFileFormatTypeJSON,
+			},
+		},
+		CopyGrants: Bool(true),
+		Comment:    String("some_comment"),
+		Tag: []TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: "tag-value",
+			},
+		},
+	}
+
 	t.Run("Create: minimal", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		opts := minimalCreateExternalTableOpts
@@ -116,28 +138,6 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
-
-	createExternalTableWithManualPartitioning := CreateWithManualPartitioningExternalTableOpts{
-		OrReplace: Bool(true),
-		Columns:   columnsWithPartition,
-		// TODO Cloud provider params
-		PartitionBy:                []string{"part_date"},
-		Location:                   stageLocation,
-		UserSpecifiedPartitionType: Bool(true),
-		FileFormat: []ExternalTableFileFormat{
-			{
-				Type: &ExternalTableFileFormatTypeJSON,
-			},
-		},
-		CopyGrants: Bool(true),
-		Comment:    String("some_comment"),
-		Tag: []TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: "tag-value",
-			},
-		},
-	}
 
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
@@ -190,7 +190,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
 			IfExists: Bool(true),
 			Refresh: &RefreshExternalTable{
-				Path: nil,
+				Path: "weather-nyc",
 			},
 		})
 		require.NoError(t, err)
@@ -242,7 +242,22 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Alter: set auto refresh + tags", func(t *testing.T) {
+	t.Run("Alter: set auto refresh", func(t *testing.T) {
+		externalTableID := randomAccountObjectIdentifier(t)
+		opts := minimalCreateExternalTableOpts
+		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		require.NoError(t, err)
+
+		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
+			IfExists: Bool(true),
+			Set: &ExternalTableSet{
+				AutoRefresh: Bool(true),
+			},
+		})
+		require.NoError(t, err)
+	})
+
+	t.Run("Alter: set tags", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		opts := minimalCreateExternalTableOpts
 		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
@@ -252,7 +267,6 @@ func TestInt_ExternalTables(t *testing.T) {
 		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
 			IfExists: Bool(true),
 			Set: &ExternalTableSet{
-				AutoRefresh: Bool(true),
 				Tag: []TagAssociation{
 					{
 						Name:  tag.ID(),
@@ -284,7 +298,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
 			IfExists: Bool(true),
 			Unset: &ExternalTableUnset{
-				Tag: []ObjectIdentifier{tag.ID()},
+				Tag: []ObjectIdentifier{NewAccountObjectIdentifier(tag.ID().Name())},
 			},
 		})
 		require.NoError(t, err)
@@ -296,7 +310,6 @@ func TestInt_ExternalTables(t *testing.T) {
 	t.Run("Alter: add partitions", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		opts := createExternalTableWithManualPartitioning
-		opts.PartitionBy = []string{}
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, externalTableID, &opts)
 		require.NoError(t, err)
 
@@ -304,7 +317,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			IfExists: Bool(true),
 			AddPartitions: []Partition{
 				{
-					ColumnName: "weather_date",
+					ColumnName: "part_date",
 					Value:      "2019-06-25",
 				},
 			},
@@ -323,7 +336,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			IfExists: Bool(true),
 			AddPartitions: []Partition{
 				{
-					ColumnName: "weather_date",
+					ColumnName: "part_date",
 					Value:      "2019-06-25",
 				},
 			},
@@ -367,7 +380,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		et, err := client.ExternalTables.Show(ctx, &ShowExternalTableOptions{
 			Terse: Bool(true),
 			Like: &Like{
-				Pattern: String(""),
+				Pattern: String(externalTableID.Name()),
 			},
 			In: &In{
 				Database: db.ID(),
@@ -391,18 +404,18 @@ func TestInt_ExternalTables(t *testing.T) {
 		d, err := client.ExternalTables.DescribeColumns(ctx, externalTableID)
 		require.NoError(t, err)
 
-		assert.Equal(t, len(opts.Columns), len(d))
+		assert.Equal(t, len(opts.Columns)+1, len(d)) // + 1 - because there's underlying Value column
 		assert.Contains(t, d, ExternalTableColumnDetails{
-			Name:       "filename",
-			Type:       "VARCHAR(16777216)",
-			Kind:       "VIRTUAL",
+			Name:       "VALUE",
+			Type:       "VARIANT",
+			Kind:       "COLUMN",
 			IsNullable: true,
 			Default:    nil,
 			IsPrimary:  false,
 			IsUnique:   false,
 			Check:      nil,
-			Expression: String("metadata$filename"),
-			Comment:    nil,
+			Expression: nil,
+			Comment:    String("The value of this row"),
 			PolicyName: nil,
 		})
 	})
@@ -417,11 +430,15 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Contains(t, d, ExternalTableStageDetails{
-			parentProperty:  "STAGE_FILE_FORMAT",
-			property:        "TIME_FORMAT",
-			propertyType:    "String",
-			propertyValue:   "AUTO",
-			propertyDefault: "AUTO",
+			ParentProperty:  "STAGE_FILE_FORMAT",
+			Property:        "TIME_FORMAT",
+			PropertyType:    "String",
+			PropertyValue:   "AUTO",
+			PropertyDefault: "AUTO",
 		})
+	})
+
+	t.Run("Create: infer schema", func(t *testing.T) {
+		// TODO
 	})
 }
