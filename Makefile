@@ -55,8 +55,6 @@ uninstall-tf: ## uninstalls plugin from where terraform can find it
 clean: ## clean local binaries
 	rm -f $(BASE_BINARY_NAME)
 	go clean
-	@#dist dir is removed because goreleaser puts artifacts there: https://goreleaser.com/customization/dist/
-	rm -rf dist
 .PHONY: clean
 
 docs: ## generate docs for terraform plugin
