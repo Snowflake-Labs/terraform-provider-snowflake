@@ -48,6 +48,11 @@ func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
 }
 
+func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+	t.Helper()
+	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
+}
+
 func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
 	t.Helper()
 	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
