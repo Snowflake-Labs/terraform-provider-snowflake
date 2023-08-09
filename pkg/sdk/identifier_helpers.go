@@ -165,6 +165,41 @@ func (i SchemaIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.schemaName)
 }
 
+type DatabaseObjectIdentifier struct {
+	databaseName string
+	name         string
+}
+
+func NewDatabaseObjectIdentifier(databaseName, name string) DatabaseObjectIdentifier {
+	return DatabaseObjectIdentifier{
+		databaseName: strings.Trim(databaseName, `"`),
+		name:         strings.Trim(name, `"`),
+	}
+}
+
+func NewDatabaseObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) DatabaseObjectIdentifier {
+	parts := strings.Split(fullyQualifiedName, ".")
+	return DatabaseObjectIdentifier{
+		databaseName: strings.Trim(parts[0], `"`),
+		name:         strings.Trim(parts[1], `"`),
+	}
+}
+
+func (i DatabaseObjectIdentifier) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i DatabaseObjectIdentifier) Name() string {
+	return i.name
+}
+
+func (i DatabaseObjectIdentifier) FullyQualifiedName() string {
+	if i.databaseName == "" && i.name == "" {
+		return ""
+	}
+	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.name)
+}
+
 type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
