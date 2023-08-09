@@ -166,3 +166,43 @@ func TestDatabaseRoleDrop(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE ROLE IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
+
+func TestDatabaseRolesShow(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	setUpOpts := func() *ShowDatabaseRoleOptions {
+		return &ShowDatabaseRoleOptions{
+			database: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *PipeShowOptions = nil
+		assertOptsInvalid(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.database = NewAccountObjectIdentifier("")
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: empty like", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{}
+		assertOptsInvalid(t, opts, errPatternRequiredForLikeKeyword)
+	})
+
+	t.Run("show", func(t *testing.T) {
+		opts := setUpOpts()
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES IN DATABASE %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("show with like", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES LIKE '%s' IN DATABASE %s`, id.Name(), id.FullyQualifiedName())
+	})
+}

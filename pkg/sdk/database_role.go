@@ -1,11 +1,16 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type DatabaseRoles interface {
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateDatabaseRoleOptions) error
 	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterDatabaseRoleOptions) error
 	Drop(ctx context.Context, id DatabaseObjectIdentifier) error
+	Show(ctx context.Context, opts *ShowDatabaseRoleOptions) ([]*DatabaseRole, error)
+	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
 }
 
 // CreateDatabaseRoleOptions contains options for creating a new database role or replace an existing database role in the system.
@@ -25,10 +30,10 @@ type CreateDatabaseRoleOptions struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-database-role.
 type AlterDatabaseRoleOptions struct {
-	alter    bool                     `ddl:"static" sql:"ALTER"`         //lint:ignore U1000 This is used in the ddl tag
-	role     bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name     DatabaseObjectIdentifier `ddl:"identifier"`
+	alter        bool                     `ddl:"static" sql:"ALTER"`         //lint:ignore U1000 This is used in the ddl tag
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
 
 	// One of
 	Rename *DatabaseRoleRename `ddl:"list,no_parentheses" sql:"RENAME TO"`
@@ -52,8 +57,51 @@ type DatabaseRoleUnset struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/drop-database-role.
 type DropDatabaseRoleOptions struct {
-	drop     bool                     `ddl:"static" sql:"DROP"`          //lint:ignore U1000 This is used in the ddl tag
-	pipe     bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name     DatabaseObjectIdentifier `ddl:"identifier"`
+	drop         bool                     `ddl:"static" sql:"DROP"`          //lint:ignore U1000 This is used in the ddl tag
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowDatabaseRoleOptions contains options for showing database roles in given database.
+// At the time of writing LIKE is not visible in the docs, but it works.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/show-database-roles.
+type ShowDatabaseRoleOptions struct {
+	show          bool                    `ddl:"static" sql:"SHOW"`           //lint:ignore U1000 This is used in the ddl tag
+	databaseRoles bool                    `ddl:"static" sql:"DATABASE ROLES"` //lint:ignore U1000 This is used in the ddl tag
+	Like          *Like                   `ddl:"keyword" sql:"LIKE"`
+	in            bool                    `ddl:"static" sql:"IN DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	database      AccountObjectIdentifier `ddl:"identifier"`
+}
+
+// databaseRoleDBRow is used to decode the result of a SHOW DATABASE ROLES query.
+type databaseRoleDBRow struct {
+	CreatedOn              string         `db:"created_on"`
+	Name                   string         `db:"name"`
+	IsDefault              sql.NullString `db:"is_default"`
+	IsCurrent              sql.NullString `db:"is_current"`
+	IsInherited            sql.NullString `db:"is_inherited"`
+	GrantedToRoles         sql.NullString `db:"granted_to_roles"`
+	GrantedToDatabaseRoles sql.NullString `db:"granted_to_database_roles"`
+	GrantedDatabaseRoles   sql.NullString `db:"granted_database_roles"`
+	Owner                  string         `db:"owner"`
+	Comment                sql.NullString `db:"comment"`
+	OwnerRoleType          sql.NullString `db:"owner_role_type"`
+}
+
+// DatabaseRole is a user-friendly result for a SHOW DATABASE ROLES query.
+// At the time of writing there is no format specified in the docs.
+type DatabaseRole struct {
+	CreatedOn              string
+	Name                   string
+	IsDefault              bool
+	IsCurrent              bool
+	IsInherited            bool
+	GrantedToRoles         string
+	GrantedToDatabaseRoles string
+	GrantedDatabaseRoles   string
+	Owner                  string
+	Comment                string
+	OwnerRoleType          string
 }

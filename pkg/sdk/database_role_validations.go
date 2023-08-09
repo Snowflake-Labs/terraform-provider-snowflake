@@ -6,6 +6,7 @@ var (
 	_ validatableOpts = new(CreateDatabaseRoleOptions)
 	_ validatableOpts = new(AlterDatabaseRoleOptions)
 	_ validatableOpts = new(DropDatabaseRoleOptions)
+	_ validatableOpts = new(ShowDatabaseRoleOptions)
 )
 
 var (
@@ -58,6 +59,19 @@ func (opts *DropDatabaseRoleOptions) validateProp() error {
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
+	}
+	return nil
+}
+
+func (opts *ShowDatabaseRoleOptions) validateProp() error {
+	if opts == nil {
+		return errNilOptions
+	}
+	if !validObjectidentifier(opts.database) {
+		return ErrInvalidObjectIdentifier
+	}
+	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
+		return errPatternRequiredForLikeKeyword
 	}
 	return nil
 }
