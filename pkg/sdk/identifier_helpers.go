@@ -200,6 +200,10 @@ func (i SchemaObjectIdentifier) Name() string {
 	return i.name
 }
 
+func (i SchemaObjectIdentifier) SchemaIdentifier() SchemaIdentifier {
+	return NewSchemaIdentifier(i.databaseName, i.schemaName)
+}
+
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""
