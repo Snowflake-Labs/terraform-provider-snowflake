@@ -1,6 +1,20 @@
 package sdk
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type TableCreateDto struct {
+	OrReplace             bool
+	Scope                 *TableScope
+	Kind                  *TableKind
+	IfNotExists           bool
+	Name                  SchemaObjectIdentifier
+	ClusterBy             []string
+	EnableSchemaEvolution *bool
+	tageFileFormat        []StageFileFormat
+	tageCopyOptions       []StageCopyOptions
+}
 
 type TableCreateOptions struct {
 	create                     bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
@@ -213,7 +227,7 @@ func (StageCopyOptionsOnErrorSkipFile) String() string {
 }
 
 type StageCopyOptionsOnErrorSkipFileNum struct {
-	Value int 
+	Value int
 }
 
 func (StageCopyOptionsOnErrorSkipFileNum) stageCopyOptionsOnError() {}
@@ -249,15 +263,16 @@ const (
 )
 
 type TableAlterOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	table    bool                    `ddl:"static" sql:"TABLE"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name     SchemaObjectIdentifier  `ddl:"identifier"`
-	NewName  SchemaObjectIdentifier  `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith AccountObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
-
-	Set   *MaskingPolicySet   `ddl:"keyword" sql:"SET"`
-	Unset *MaskingPolicyUnset `ddl:"keyword" sql:"UNSET"`
+	alter               bool                      `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	table               bool                      `ddl:"static" sql:"TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists            *bool                     `ddl:"keyword" sql:"IF EXISTS"`
+	name                SchemaObjectIdentifier    `ddl:"identifier"`
+	NewName             SchemaObjectIdentifier    `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith            SchemaObjectIdentifier    `ddl:"identifier" sql:"SWAP WITH"`
+	ClusteringAction    *TableClusteringAction    `ddl:"keyword"`
+	ColumnAction        *TableColumnAction        `ddl:"keyword"`
+	ConstraintAction    *TableConstraintAction    `ddl:"keyword"`
+	ExternalTableAction *TableExternalTableAction `ddl:"keyword"`
 }
 
 type TableClusteringAction struct {
@@ -285,24 +300,32 @@ const (
 )
 
 type TableColumnAction struct {
-	Add *TableColumnAddAction `ddl:"keyword" sql:"ADD"`
+	Add                *TableColumnAddAction                     `ddl:"keyword" sql:"ADD"`
+	Rename             *TableColumnRenameAction                  `ddl:"keyword"`
+	Alter              []TableColumnAlterAction                  `ddl:"keyword" sql:"ALTER"`
+	SetMaskingPolicy   *TableColumnAlterSetMaskingPolicyAction   `ddl:"keyword"`
+	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyAction `ddl:"keyword"`
+	SetTags            *TableColumnAlterSetTagsAction            `ddl:"keyword"`
+	UnsetTags          *TableColumnAlterUnsetTagsAction          `ddl:"keyword"`
+	DropColumns        *TableColumnAlterDropColumns              `ddl:"keyword"`
 }
 
 type TableColumnAddAction struct {
-	Column       *bool               `ddl:"keyword" sql:"COLUMN"`
-	Name         string              `ddl:"keyword"`
-	Type         DataType            `ddl:"keyword"`
-	DefaultValue *ColumnDefaultValue `ddl:"keyword"`
+	Column           *bool                           `ddl:"keyword" sql:"COLUMN"`
+	Name             string                          `ddl:"keyword"`
+	Type             DataType                        `ddl:"keyword"`
+	DefaultValue     *ColumnDefaultValue             `ddl:"keyword"`
+	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
+	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
+	With             *bool                           `ddl:"keyword" sql:"WITH"`
+	Tags             []TagAssociation                `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type TableColumnAddInlineConstraint struct {
-	NotNull       *bool                `ddl:"keyword" sql:"NOT NULL"`
-	Name          string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type          ColumnConstraintType `ddl:"keyword"`
-	ForeignKey    *ColumnAddForeignKey `ddl:"keyword"`
-	MaskingPolicy *ColumnMaskingPolicy `ddl:"keyword"`
-	With          *bool                `ddl:"keyword" sql:"WITH"`
-	Tags          []TagAssociation     `ddl:"keyword,parentheses" sql:"TAG"`
+	NotNull    *bool                `ddl:"keyword" sql:"NOT NULL"`
+	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Type       ColumnConstraintType `ddl:"keyword"`
+	ForeignKey *ColumnAddForeignKey `ddl:"keyword"`
 }
 type ColumnAddForeignKey struct {
 	TableName  string `ddl:"keyword" sql:"REFERENCES"`
@@ -310,25 +333,128 @@ type ColumnAddForeignKey struct {
 }
 
 type TableColumnRenameAction struct {
-	OldName string `ddl:"keyword" sql:"RENAME COLUMN"`
-	NewName string `ddl:"keyword" sql:"TO"`
+	OldName string `ddl:"parameter,no_equals" sql:"RENAME COLUMN"`
+	NewName string `ddl:"parameter,no_equals" sql:"TO"`
 }
 
 type TableColumnAlterAction struct {
-	// alter bool `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	Column      *bool        `ddl:"keyword" sql:"COLUMN"`
-	Name        string       `ddl:"keyword"`
-	DropDefault *bool        `ddl:"keyword" sql:"DROP DEFAULT"`
-	SetDefault  SequenceName `ddl:"keyword" sql:"SET DEFAULT"`
+	Column *bool  `ddl:"keyword" sql:"COLUMN"`
+	Name   string `ddl:"keyword"`
+
+	//One of
+	DropDefault       *bool         `ddl:"keyword" sql:"DROP DEFAULT"`
+	SetDefault        *SequenceName `ddl:"parameter,no_equals" sql:"SET DEFAULT"`
+	NotNullConstraint *TableColumnNotNullConstraint
+	Type              *DataType `ddl:"parameter,no_equals" sql:"SET DATA TYPE"`
+	//todo sprawdcz czy mozna jedno po drugim tutaj
+	Comment      *string `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
+	UnsetComment *bool   `ddl:"keyword" sql:"UNSET COMMENT"`
+}
+type TableColumnAlterSetMaskingPolicyAction struct {
+	alter             bool                   `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	ColumnName        string                 `ddl:"keyword"`
+	setMaskingPolicy  bool                   `ddl:"static" sql:"SET MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	MaskingPolicyName SchemaObjectIdentifier `ddl:"identifier"`
+	Using             []string               `ddl:"keyword,parentheses" sql:"USING"`
+	Force             *bool                  `ddl:"keyword" sql:"FORCE"`
+}
+type TableColumnAlterUnsetMaskingPolicyAction struct {
+	alter             bool                   `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	ColumnName        string                 `ddl:"keyword"`
+	setMaskingPolicy  bool                   `ddl:"static" sql:"UNSET MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	MaskingPolicyName SchemaObjectIdentifier `ddl:"identifier"`
+}
+type TableColumnAlterSetTagsAction struct {
+	alter      bool             `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	ColumnName string           `ddl:"keyword"`
+	set        bool             `ddl:"static" sql:"SET"` //lint:ignore U1000 This is used in the ddl tag
+	Tags       []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
-type SequenceNameInterfaceFooChangeName interface {
+type TableColumnAlterUnsetTagsAction struct {
+	alter      bool               `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	ColumnName string             `ddl:"keyword"`
+	unset      bool               `ddl:"static" sql:"UNSET"` //lint:ignore U1000 This is used in the ddl tag
+	Tags       []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+}
+type TableColumnAlterDropColumns struct {
+	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	Columns    []string `ddl:"keyword"`                  //lint:ignore U1000 This is used in the ddl tag
+}
+
+type TableColumnAlterSequenceName interface {
 	String() string
 }
 type SequenceName string
 
 func (sn SequenceName) String() string {
 	return fmt.Sprintf("%s.NEXTVAL", string(sn))
+}
+
+type TableColumnNotNullConstraint struct {
+	Set  *bool `ddl:"keyword" sql:"SET NOT NULL"`
+	Drop *bool `ddl:"keyword" sql:"DROP NOT NULL"`
+}
+type TableConstraintAction struct {
+	Add    *OutOfLineConstraint         `ddl:"keyword" sql:"ADD"`
+	Rename *TableConstraintRenameAction `ddl:"keyword" sql:"RENAME CONSTRAINT"`
+	Alter  *TableConstraintAlterAction  `ddl:"keyword" sql:"ALTER"`
+	Drop   *TableConstraintDropAction   `ddl:"keyword" sql:"DROP"`
+}
+type TableConstraintRenameAction struct {
+	OldName string `ddl:"keyword"`
+	NewName string `ddl:"parameter,no_equals" sql:"TO"`
+}
+type TableConstraintAlterAction struct {
+	// One of
+	ConstraintName *string `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	PrimaryKey     *bool   `ddl:"keyword" sql:"PRIMARY KEY"`
+	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
+	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
+
+	Columns []string `ddl:"keyword,parentheses"`
+	// Optional
+	Enforced    *bool `ddl:"keyword" sql:"ENFORCED"`
+	NotEnforced *bool `ddl:"keyword" sql:"NOT ENFORCED"`
+	Valiate     *bool `ddl:"keyword" sql:"VALIDATE"`
+	NoValidate  *bool `ddl:"keyword" sql:"NOVALIDATE"`
+	Rely        *bool `ddl:"keyword" sql:"RELY"`
+	NoRely      *bool `ddl:"keyword" sql:"NORELY"`
+}
+type TableConstraintDropAction struct {
+	// One of
+	ConstraintName *string `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	PrimaryKey     *bool   `ddl:"keyword" sql:"PRIMARY KEY"`
+	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
+	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
+
+	Columns []string `ddl:"keyword,parentheses"`
+
+	// Optional
+	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
+	Restrict *bool `ddl:"keyword" sql:"RESTRICT"`
+}
+
+type TableExternalTableAction struct {
+	// One of
+	Add    *TableExternalTableColumnAddAction    `ddl:"keyword"`
+	Rename *TableExternalTableColumnRenameAction `ddl:"keyword"`
+	Drop   *TableExternalTableColumnDropAction   `ddl:"keyword"`
+}
+
+type TableExternalTableColumnAddAction struct {
+	addColumn  bool     `ddl:"static" sql:"ADD COLUMN"`
+	Name       string   `ddl:"keyword"`
+	Type       DataType `ddl:"keyword"`
+	Expression []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
+}
+type TableExternalTableColumnRenameAction struct {
+	OldName string `ddl:"parameter,no_equals" sql:"RENAME COLUMN"`
+	NewName string `ddl:"parameter,no_equals" sql:"TO"`
+}
+
+type TableExternalTableColumnDropAction struct {
+	Columns []string `ddl:"keyword" sql:"DROP COLUMN"`
 }
 
 type TableSet struct {
