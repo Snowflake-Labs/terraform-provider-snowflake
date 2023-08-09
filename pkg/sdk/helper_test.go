@@ -588,6 +588,32 @@ func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	return &adjustedTime, nil
 }
 
+func createUser(t *testing.T, client *Client) (*User, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+}
+
+func createUserWithName(t *testing.T, client *Client, name string) (*User, func()) {
+	t.Helper()
+	id := NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+}
+
+func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateUserOptions) (*User, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Users.Create(ctx, id, opts)
+	require.NoError(t, err)
+	user, err := client.Users.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return user, func() {
+		err := client.Users.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
 func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
 	t.Helper()
 	require.NotNil(t, database, "database has to be created")
