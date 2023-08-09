@@ -134,3 +134,35 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 	})
 }
+
+func TestDatabaseRoleDrop(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+
+	setUpOpts := func() *DropDatabaseRoleOptions {
+		return &DropDatabaseRoleOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DropDatabaseRoleOptions = nil
+		assertOptsInvalid(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewDatabaseObjectIdentifier("", "")
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("empty options", func(t *testing.T) {
+		opts := setUpOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE ROLE %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("with if exists", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE ROLE IF EXISTS %s`, id.FullyQualifiedName())
+	})
+}

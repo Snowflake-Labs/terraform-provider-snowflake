@@ -5,6 +5,7 @@ import "context"
 type DatabaseRoles interface {
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateDatabaseRoleOptions) error
 	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterDatabaseRoleOptions) error
+	Drop(ctx context.Context, id DatabaseObjectIdentifier) error
 }
 
 // CreateDatabaseRoleOptions contains options for creating a new database role or replace an existing database role in the system.
@@ -45,4 +46,14 @@ type DatabaseRoleSet struct {
 
 type DatabaseRoleUnset struct {
 	Comment bool `ddl:"keyword" sql:"COMMENT"`
+}
+
+// DropDatabaseRoleOptions contains options for removing the specified database role.
+//
+// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-database-role.
+type DropDatabaseRoleOptions struct {
+	drop     bool                     `ddl:"static" sql:"DROP"`          //lint:ignore U1000 This is used in the ddl tag
+	pipe     bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name     DatabaseObjectIdentifier `ddl:"identifier"`
 }

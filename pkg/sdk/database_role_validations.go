@@ -5,6 +5,7 @@ import "errors"
 var (
 	_ validatableOpts = new(CreateDatabaseRoleOptions)
 	_ validatableOpts = new(AlterDatabaseRoleOptions)
+	_ validatableOpts = new(DropDatabaseRoleOptions)
 )
 
 var (
@@ -47,6 +48,16 @@ func (opts *AlterDatabaseRoleOptions) validateProp() error {
 		if !unset.Comment {
 			return errAlterNeedsAtLeastOneProperty
 		}
+	}
+	return nil
+}
+
+func (opts *DropDatabaseRoleOptions) validateProp() error {
+	if opts == nil {
+		return errNilOptions
+	}
+	if !validObjectidentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
