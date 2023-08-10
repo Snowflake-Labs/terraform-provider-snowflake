@@ -1,6 +1,9 @@
 package sdk
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	_ validatableOpts = (*CreateExternalTableOpts)(nil)
@@ -137,10 +140,20 @@ func (cpp *CloudProviderParams) validate() error {
 }
 
 func (opts *ExternalTableFileFormat) validate() error {
+	var errs []error
 	if everyValueSet(opts.Name, opts.Type) {
-		return errOneOf("ExternalTableFileFormat", "Name", "Type")
+		errs = append(errs, errOneOf("ExternalTableFileFormat", "Name", "Type"))
 	}
-	return nil
+	fields := externalTableFileFormatTypeOptionsFieldsByType(opts.Options)
+	for formatType := range fields {
+		if *opts.Type == formatType {
+			continue
+		}
+		if anyValueSet(fields[formatType]...) {
+			errs = append(errs, fmt.Errorf("cannot set %s fields when TYPE = %s", formatType, *opts.Type))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (opts *ExternalTableDropOption) validate() error {
@@ -148,4 +161,43 @@ func (opts *ExternalTableDropOption) validate() error {
 		return errOneOf("ExternalTableDropOption", "Restrict", "Cascade")
 	}
 	return nil
+}
+
+func externalTableFileFormatTypeOptionsFieldsByType(opts *ExternalTableFileFormatTypeOptions) map[ExternalTableFileFormatType][]any {
+	return map[ExternalTableFileFormatType][]any{
+		ExternalTableFileFormatTypeCSV: {
+			opts.CSVCompression,
+			opts.CSVRecordDelimiter,
+			opts.CSVFieldDelimiter,
+			opts.CSVSkipHeader,
+			opts.CSVSkipBlankLines,
+			opts.CSVEscapeUnenclosedField,
+			opts.CSVTrimSpace,
+			opts.CSVFieldOptionallyEnclosedBy,
+			opts.CSVNullIf,
+			opts.CSVEmptyFieldAsNull,
+			opts.CSVEncoding,
+		},
+		ExternalTableFileFormatTypeJSON: {
+			opts.JSONCompression,
+			opts.JSONAllowDuplicate,
+			opts.JSONStripOuterArray,
+			opts.JSONStripNullValues,
+			opts.JSONReplaceInvalidCharacters,
+		},
+		ExternalTableFileFormatTypeAvro: {
+			opts.AvroCompression,
+			opts.AvroReplaceInvalidCharacters,
+		},
+		ExternalTableFileFormatTypeORC: {
+			opts.ORCTrimSpace,
+			opts.ORCReplaceInvalidCharacters,
+			opts.ORCNullIf,
+		},
+		ExternalTableFileFormatTypeParquet: {
+			opts.ParquetCompression,
+			opts.ParquetBinaryAsText,
+			opts.ParquetReplaceInvalidCharacters,
+		},
+	}
 }

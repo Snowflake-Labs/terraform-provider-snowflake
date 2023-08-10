@@ -129,6 +129,67 @@ func (row *propertyRow) toIntProperty() *IntProperty {
 	}
 }
 
+type RowAccessPolicy struct {
+	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
+	Name            SchemaObjectIdentifier `ddl:"identifier"`
+	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+}
+
+// TODO Validate
+type ColumnInlineConstraint struct {
+	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
+	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Type       *ColumnConstraintType `ddl:"keyword"`
+	ForeignKey *InlineForeignKey     `ddl:"keyword" sql:"FOREIGN KEY"`
+
+	// optional
+	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
+	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
+	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
+	NotDeferrable      *bool `ddl:"keyword" sql:"NOT DEFERRABLE"`
+	InitiallyDeferred  *bool `ddl:"keyword" sql:"INITIALLY DEFERRED"`
+	InitiallyImmediate *bool `ddl:"keyword" sql:"INITIALLY IMMEDIATE"`
+	Enable             *bool `ddl:"keyword" sql:"ENABLE"`
+	Disable            *bool `ddl:"keyword" sql:"DISABLE"`
+	Validate           *bool `ddl:"keyword" sql:"VALIDATE"`
+	NoValidate         *bool `ddl:"keyword" sql:"NOVALIDATE"`
+	Rely               *bool `ddl:"keyword" sql:"RELY"`
+	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
+}
+
+type ColumnConstraintType string
+
+var (
+	ColumnConstraintTypeUnique     ColumnConstraintType = "UNIQUE"
+	ColumnConstraintTypePrimaryKey ColumnConstraintType = "PRIMARY KEY"
+	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
+)
+
+// TODO Complete + Validate
+type InlineForeignKey struct {
+	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
+	ColumnName []string            `ddl:"keyword,parentheses"`
+	Match      *MatchType          `ddl:"keyword" sql:"MATCH"`
+	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
+}
+
+func (v *InlineForeignKey) validate() error {
+	return nil
+}
+
+type MatchType string
+
+var (
+	FullMatchType    MatchType = "FULL"
+	SimpleMatchType  MatchType = "SIMPLE"
+	PartialMatchType MatchType = "PARTIAL"
+)
+
+type ForeignKeyOnAction struct {
+	OnUpdate *bool `ddl:"parameter,no_equals" sql:"ON UPDATE"`
+	OnDelete *bool `ddl:"parameter,no_equals" sql:"ON DELETE"`
+}
+
 func (row *propertyRow) toBoolProperty() *BoolProperty {
 	var value bool
 	if row.Value != "" && row.Value != "null" {

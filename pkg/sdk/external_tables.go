@@ -62,24 +62,24 @@ func (v *ExternalTable) ObjectType() ObjectType {
 }
 
 type CreateExternalTableOpts struct {
-	create              bool                      `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                     `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable       bool                      `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists         *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier   `ddl:"identifier"`
-	Columns             []ExternalTableColumn     `ddl:"list,parentheses"`
-	CloudProviderParams *CloudProviderParams      // TODO Not required and used for notifications
+	create              bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists         *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                AccountObjectIdentifier `ddl:"identifier"`
+	Columns             []ExternalTableColumn   `ddl:"list,parentheses"`
+	CloudProviderParams *CloudProviderParams
 	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location            string                    `ddl:"parameter" sql:"LOCATION"`
 	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
-	FileFormat          []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO could be parameter ?
+	FileFormat          []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO make not array, could be parameter ?
 	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
-	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // TODO Validate
@@ -87,65 +87,12 @@ type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
 	AsExpression     string   `ddl:"parameter,parentheses,no_equals" sql:"AS"`
-	InlineConstraint *ExternalTableInlineConstraint
+	InlineConstraint *ColumnInlineConstraint
 }
 
-// TODO common type ? + Validate
-type ExternalTableInlineConstraint struct {
-	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
-	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type       *ColumnConstraintType `ddl:"keyword"`
-	ForeignKey *InlineForeignKey     `ddl:"keyword" sql:"FOREIGN KEY"`
-
-	//optional
-	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
-	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
-	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
-	NotDeferrable      *bool `ddl:"keyword" sql:"NOT DEFERRABLE"`
-	InitiallyDeferred  *bool `ddl:"keyword" sql:"INITIALLY DEFERRED"`
-	InitiallyImmediate *bool `ddl:"keyword" sql:"INITIALLY IMMEDIATE"`
-	Enable             *bool `ddl:"keyword" sql:"ENABLE"`
-	Disable            *bool `ddl:"keyword" sql:"DISABLE"`
-	Validate           *bool `ddl:"keyword" sql:"VALIDATE"`
-	NoValidate         *bool `ddl:"keyword" sql:"NOVALIDATE"`
-	Rely               *bool `ddl:"keyword" sql:"RELY"`
-	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
-}
-
-type ColumnConstraintType string
-
-var (
-	ColumnConstraintTypeUnique     ColumnConstraintType = "UNIQUE"
-	ColumnConstraintTypePrimaryKey ColumnConstraintType = "PRIMARY KEY"
-	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
-)
-
-// TODO Common Type ? + Validate
-type InlineForeignKey struct {
-	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
-	ColumnName []string            `ddl:"keyword,parentheses"`
-	Match      *MatchType          `ddl:"keyword" sql:"MATCH"`
-	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
-}
-
-type MatchType string
-
-var (
-	FullMatchType    MatchType = "FULL"
-	SimpleMatchType  MatchType = "SIMPLE"
-	PartialMatchType MatchType = "PARTIAL"
-)
-
-// TODO Validate
-type ForeignKeyOnAction struct {
-	OnUpdate *bool `ddl:"parameter,no_equals" sql:"ON UPDATE"`
-	OnDelete *bool `ddl:"parameter,no_equals" sql:"ON DELETE"`
-}
-
-// TODO Validate + Rename ? Used mainly for notifications
 type CloudProviderParams struct {
 	// One of
-	GoogleCloudStorage *GoogleCloudStorageParams // TODO Unwrap type ?
+	GoogleCloudStorage *GoogleCloudStorageParams
 	MicrosoftAzure     *MicrosoftAzureParams
 }
 
@@ -157,12 +104,10 @@ type MicrosoftAzureParams struct {
 	Integration *string `ddl:"parameter,single_quotes" sql:"INTEGRATION"`
 }
 
-// TODO New type
 type ExternalTableFileFormat struct {
-	Name *string                      `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
-	Type *ExternalTableFileFormatType `ddl:"parameter" sql:"TYPE"`
-	// TODO: Should be probably a new type because doesn't contain xml (or maybe FileFormatType should be divided into struct for every file format)
-	Options *FileFormatTypeOptions
+	Name    *string                      `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
+	Type    *ExternalTableFileFormatType `ddl:"parameter" sql:"TYPE"`
+	Options *ExternalTableFileFormatTypeOptions
 }
 
 type ExternalTableFileFormatType string
@@ -175,11 +120,88 @@ var (
 	ExternalTableFileFormatTypeParquet ExternalTableFileFormatType = "PARQUET"
 )
 
-// TODO Is it common type ?
-type RowAccessPolicy struct {
-	Name SchemaObjectIdentifier `ddl:"identifier"`
-	On   []string               `ddl:"keyword,parentheses" sql:"ON"` // TODO What is correct (quoted values or no)
+type ExternalTableFileFormatTypeOptions struct {
+	// CSV type options
+	CSVCompression               *ExternalTableCsvCompression `ddl:"parameter" sql:"COMPRESSION"`
+	CSVRecordDelimiter           *string                      `ddl:"parameter,single_quotes" sql:"RECORD_DELIMITER"`
+	CSVFieldDelimiter            *string                      `ddl:"parameter,single_quotes" sql:"FIELD_DELIMITER"`
+	CSVSkipHeader                *int                         `ddl:"parameter" sql:"SKIP_HEADER"`
+	CSVSkipBlankLines            *bool                        `ddl:"parameter" sql:"SKIP_BLANK_LINES"`
+	CSVEscapeUnenclosedField     *string                      `ddl:"parameter,single_quotes" sql:"ESCAPE_UNENCLOSED_FIELD"`
+	CSVTrimSpace                 *bool                        `ddl:"parameter" sql:"TRIM_SPACE"`
+	CSVFieldOptionallyEnclosedBy *string                      `ddl:"parameter,single_quotes" sql:"FIELD_OPTIONALLY_ENCLOSED_BY"`
+	CSVNullIf                    *[]NullString                `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	CSVEmptyFieldAsNull          *bool                        `ddl:"parameter" sql:"EMPTY_FIELD_AS_NULL"`
+	CSVEncoding                  *CSVEncoding                 `ddl:"parameter,single_quotes" sql:"ENCODING"`
+
+	// JSON type options
+	JSONCompression              *ExternalTableJsonCompression `ddl:"parameter" sql:"COMPRESSION"`
+	JSONAllowDuplicate           *bool                         `ddl:"parameter" sql:"ALLOW_DUPLICATE"`
+	JSONStripOuterArray          *bool                         `ddl:"parameter" sql:"STRIP_OUTER_ARRAY"`
+	JSONStripNullValues          *bool                         `ddl:"parameter" sql:"STRIP_NULL_VALUES"`
+	JSONReplaceInvalidCharacters *bool                         `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+
+	// AVRO type options
+	AvroCompression              *ExternalTableAvroCompression `ddl:"parameter" sql:"COMPRESSION"`
+	AvroReplaceInvalidCharacters *bool                         `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+
+	// ORC type options
+	ORCTrimSpace                *bool         `ddl:"parameter" sql:"TRIM_SPACE"`
+	ORCReplaceInvalidCharacters *bool         `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	ORCNullIf                   *[]NullString `ddl:"parameter,parentheses" sql:"NULL_IF"`
+
+	// PARQUET type options
+	ParquetCompression              *ExternalTableParquetCompression `ddl:"parameter" sql:"COMPRESSION"`
+	ParquetBinaryAsText             *bool                            `ddl:"parameter" sql:"BINARY_AS_TEXT"`
+	ParquetReplaceInvalidCharacters *bool                            `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
 }
+
+type ExternalTableCsvCompression string
+
+var (
+	ExternalTableCsvCompressionAuto       ExternalTableCsvCompression = "AUTO"
+	ExternalTableCsvCompressionGzip       ExternalTableCsvCompression = "GZIP"
+	ExternalTableCsvCompressionBz2        ExternalTableCsvCompression = "BZ2"
+	ExternalTableCsvCompressionBrotli     ExternalTableCsvCompression = "BROTLI"
+	ExternalTableCsvCompressionZstd       ExternalTableCsvCompression = "ZSTD"
+	ExternalTableCsvCompressionDeflate    ExternalTableCsvCompression = "DEFLATE"
+	ExternalTableCsvCompressionRawDeflate ExternalTableCsvCompression = "RAW_DEFALTE"
+	ExternalTableCsvCompressionNone       ExternalTableCsvCompression = "NONE"
+)
+
+type ExternalTableJsonCompression string
+
+var (
+	ExternalTableJsonCompressionAuto       ExternalTableJsonCompression = "AUTO"
+	ExternalTableJsonCompressionGzip       ExternalTableJsonCompression = "GZIP"
+	ExternalTableJsonCompressionBz2        ExternalTableJsonCompression = "BZ2"
+	ExternalTableJsonCompressionBrotli     ExternalTableJsonCompression = "BROTLI"
+	ExternalTableJsonCompressionZstd       ExternalTableJsonCompression = "ZSTD"
+	ExternalTableJsonCompressionDeflate    ExternalTableJsonCompression = "DEFLATE"
+	ExternalTableJsonCompressionRawDeflate ExternalTableJsonCompression = "RAW_DEFLATE"
+	ExternalTableJsonCompressionNone       ExternalTableJsonCompression = "NONE"
+)
+
+type ExternalTableAvroCompression string
+
+var (
+	ExternalTableAvroCompressionAuto       ExternalTableAvroCompression = "AUTO"
+	ExternalTableAvroCompressionGzip       ExternalTableAvroCompression = "GZIP"
+	ExternalTableAvroCompressionBz2        ExternalTableAvroCompression = "BZ2"
+	ExternalTableAvroCompressionBrotli     ExternalTableAvroCompression = "BROTLI"
+	ExternalTableAvroCompressionZstd       ExternalTableAvroCompression = "ZSTD"
+	ExternalTableAvroCompressionDeflate    ExternalTableAvroCompression = "DEFLATE"
+	ExternalTableAvroCompressionRawDeflate ExternalTableAvroCompression = "RAW_DEFLATE"
+	ExternalTableAvroCompressionNone       ExternalTableAvroCompression = "NONE"
+)
+
+type ExternalTableParquetCompression string
+
+var (
+	ExternalTableParquetCompressionAuto   ExternalTableParquetCompression = "AUTO"
+	ExternalTableParquetCompressionSnappy ExternalTableParquetCompression = "SNAPPY"
+	ExternalTableParquetCompressionNone   ExternalTableParquetCompression = "NONE"
+)
 
 type CreateWithManualPartitioningExternalTableOpts struct {
 	create                     bool                      `ddl:"static" sql:"CREATE"`
@@ -188,15 +210,15 @@ type CreateWithManualPartitioningExternalTableOpts struct {
 	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       AccountObjectIdentifier   `ddl:"identifier"`
 	Columns                    []ExternalTableColumn     `ddl:"list,parentheses"`
-	CloudProviderParams        CloudProviderParams       `ddl:"keyword"`
+	CloudProviderParams        *CloudProviderParams      `ddl:"keyword"`
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO same as normal
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type CreateDeltaLakeExternalTableOpts struct {
@@ -206,18 +228,16 @@ type CreateDeltaLakeExternalTableOpts struct {
 	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       AccountObjectIdentifier   `ddl:"identifier"`
 	Columns                    []ExternalTableColumn     `ddl:"list,parentheses"`
-	CloudProviderParams        CloudProviderParams       `ddl:"keyword"`
+	CloudProviderParams        *CloudProviderParams      `ddl:"keyword"`
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	refreshOnCreate            bool                      `ddl:"static" sql:"REFRESH_ON_CREATE = FALSE"`
-	autoRefresh                bool                      `ddl:"static" sql:"AUTO_REFRESH = FALSE"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO same as normal
 	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword" sql:"ROW ACCESS POLICY"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type AlterExternalTableOptions struct {
@@ -240,7 +260,7 @@ type ExternalTableFile struct {
 	Name string `ddl:"keyword,single_quotes"`
 }
 
-// TODO Cannot set both ?
+// TODO Can set both ?
 type ExternalTableSet struct {
 	AutoRefresh *bool            `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Tag         []TagAssociation `ddl:"keyword" sql:"TAG"`

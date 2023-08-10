@@ -17,7 +17,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: "value::column::varchar",
-					InlineConstraint: &ExternalTableInlineConstraint{
+					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
 						Type:    &ColumnConstraintTypeUnique,
@@ -51,7 +51,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: "value::column::varchar",
-					InlineConstraint: &ExternalTableInlineConstraint{
+					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
 						Type:    &ColumnConstraintTypeUnique,
@@ -103,7 +103,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				Name:         "column",
 				Type:         "varchar",
 				AsExpression: "value::column::varchar",
-				InlineConstraint: &ExternalTableInlineConstraint{
+				InlineConstraint: &ColumnInlineConstraint{
 					Name:    String("my_constraint"),
 					NotNull: Bool(true),
 					Type:    &ColumnConstraintTypeUnique,

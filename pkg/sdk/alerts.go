@@ -191,7 +191,7 @@ func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
-		return fmt.Errorf("validateProp alert options: %w", err)
+		return fmt.Errorf("validate alert options: %w", err)
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {
