@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version-file: './go.mod'
+          go-version-file: ./go.mod
       - name: Install dependencies
         run: make setup
       - name: make ${{ matrix.target }}
