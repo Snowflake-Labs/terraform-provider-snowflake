@@ -48,7 +48,7 @@ jobs:
           go-version-file: ./go.mod
 
       - name: Install dependencies
-        run: make setup
+        run: make dev-setup
 
       - name: make lint-ci integration
         env:
@@ -82,7 +82,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-        run: make sweep
+        run: echo y | make sweep
 
       - name: find comment
         if: ${{ always() }}

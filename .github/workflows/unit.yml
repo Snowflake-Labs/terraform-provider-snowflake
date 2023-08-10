@@ -9,14 +9,14 @@ jobs:
     strategy:
       matrix:
         target:
-          - check-docs
-          - test
+          - docs-check
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
       - name: Install dependencies
-        run: make setup
+        run: make dev-setup
       - name: make ${{ matrix.target }}
         run: make ${{ matrix.target }}
