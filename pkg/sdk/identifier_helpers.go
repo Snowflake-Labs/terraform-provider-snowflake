@@ -169,6 +169,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
+	arguments    []DataType
 }
 
 func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObjectIdentifier {
@@ -179,13 +180,39 @@ func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObje
 	}
 }
 
+func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, arguments []DataType) SchemaObjectIdentifier {
+	return SchemaObjectIdentifier{
+		databaseName: strings.Trim(databaseName, `"`),
+		schemaName:   strings.Trim(schemaName, `"`),
+		name:         strings.Trim(name, `"`),
+		arguments:    arguments,
+	}
+}
+
 func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
-	return SchemaObjectIdentifier{
-		databaseName: strings.Trim(parts[0], `"`),
-		schemaName:   strings.Trim(parts[1], `"`),
-		name:         strings.Trim(parts[2], `"`),
+	id := SchemaObjectIdentifier{}
+	id.databaseName = strings.Trim(parts[0], `"`)
+	id.schemaName = strings.Trim(parts[1], `"`)
+
+	// this is either a function or procedure
+	if strings.HasSuffix(parts[2], ")") {
+		idx := strings.LastIndex(parts[2], "(")
+		id.name = strings.Trim(parts[2][:idx], `"`)
+		strArgs := strings.Split(strings.Trim(parts[2][idx+1:], `)`), ",")
+		id.arguments = make([]DataType, 0)
+		for _, arg := range strArgs {
+			trimmedArg := strings.TrimSpace(strings.Trim(arg, `"`))
+			if trimmedArg == "" {
+				continue
+			}
+			dt, _ := ToDataType(trimmedArg)
+			id.arguments = append(id.arguments, dt)
+		}
+	} else { // this is every other kind of schema object
+		id.name = strings.Trim(parts[2], `"`)
 	}
+	return id
 }
 
 func (i SchemaObjectIdentifier) DatabaseName() string {
@@ -200,6 +227,10 @@ func (i SchemaObjectIdentifier) Name() string {
 	return i.name
 }
 
+func (i SchemaObjectIdentifier) Arguments() []DataType {
+	return i.arguments
+}
+
 func (i SchemaObjectIdentifier) SchemaIdentifier() SchemaIdentifier {
 	return NewSchemaIdentifier(i.databaseName, i.schemaName)
 }
@@ -208,7 +239,15 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
+	if len(i.arguments) == 0 {
+		return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
+	}
+	// if this is a function or procedure, we need to include the arguments
+	args := make([]string, len(i.arguments))
+	for i, arg := range i.arguments {
+		args[i] = string(arg)
+	}
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(args, ", "))
 }
 
 type TableColumnIdentifier struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -662,7 +663,7 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 		return nil, err
 	}
 	for _, FileFormat := range fileFormats {
-		if FileFormat.ID() == id {
+		if reflect.DeepEqual(FileFormat.ID(), id) {
 			return FileFormat, nil
 		}
 	}
