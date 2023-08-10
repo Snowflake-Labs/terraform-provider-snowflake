@@ -32,7 +32,7 @@ jobs:
           cache: true
 
       - name: Install golangci-lint
-        run: make setup
+        run: make dev-setup
 
       - name: Run golangci-lint
-        run: make fmt-check
+        run: make lint-check

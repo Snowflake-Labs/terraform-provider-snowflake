@@ -13,16 +13,16 @@ help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
 
-setup: ## setup development dependencies
+dev-setup: ## setup development dependencies
 	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
 	@which ./bin/reviewdog || curl -sSfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ./bin v0.14.2
-.PHONY: setup
+.PHONY: dev-setup
 
-cleanup: ## cleanup development dependencies
+dev-cleanup: ## cleanup development dependencies
 	rm -rf bin/*
-.PHONY: cleanup
+.PHONY: dev-cleanup
 
-sweep: ## destroy architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
+sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	@read -p "Are you sure? [y/n]" -n 1 REPLY; echo; \
 		if [[ $$REPLY =~ ^[yY]$$ ]]; then \
@@ -73,13 +73,13 @@ mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 .PHONY: mod-check
 
-fmt-check: ## Check formatting
+lint-check: ## Run static code analysis and check formatting
 	./bin/golangci-lint run ./... -v
-.PHONY: fmt-check
+.PHONY: lint-check
 
-fmt-fix: ## Check and fix formatting
+lint-fix: ## Run static code analysis, check formatting and try to fix findings
 	./bin/golangci-lint run ./... -v --fix
-.PHONY: fmt-fix
+.PHONY: lint-fix
 
-pre-push: mod-check docs-check fmt-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: mod-check docs-check lint-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 .PHONY: pre-push
