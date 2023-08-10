@@ -42,6 +42,16 @@ func exactlyOneValueSet(values ...interface{}) bool {
 	return count == 1
 }
 
+func moreThanOneValueSet(values ...interface{}) bool {
+	var count int
+	for _, v := range values {
+		if valueSet(v) {
+			count++
+		}
+	}
+	return count > 1
+}
+
 func everyValueSet(values ...interface{}) bool {
 	for _, v := range values {
 		if !valueSet(v) {
