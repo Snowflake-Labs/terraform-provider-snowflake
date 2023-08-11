@@ -67,8 +67,8 @@ func (c *contextFunctions) CurrentSecondaryRoles(ctx context.Context) (*CurrentS
 	}
 
 	jsonRoles := &struct {
-		Roles string
-		Value string
+		Roles string `json:"roles"`
+		Value string `json:"value"`
 	}{}
 	err = json.Unmarshal([]byte(s.CurrentRole), jsonRoles)
 	if err != nil {

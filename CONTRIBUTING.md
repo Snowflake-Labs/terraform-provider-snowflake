@@ -40,7 +40,6 @@ account='TESTACCOUNT'
 user='TEST_USER'
 password='hunter2'
 role='ACCOUNTADMIN'
-host='TEST_HOST'
 ```
 
 **Note: PRs for new resources will not be accepted without passing acceptance tests.**

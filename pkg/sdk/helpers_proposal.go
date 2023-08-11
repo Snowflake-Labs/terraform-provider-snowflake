@@ -24,7 +24,7 @@ func validateAndExec(client *Client, ctx context.Context, opts validatable) erro
 }
 
 // validateAndQuery is just a proposal how we can remove some of the boilerplate.
-func validateAndQuery[T any](client *Client, ctx context.Context, opts validatable) (*[]T, error) {
+func validateAndQuery[T any](client *Client, ctx context.Context, opts validatable) ([]T, error) {
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func validateAndQuery[T any](client *Client, ctx context.Context, opts validatab
 	if err != nil {
 		return nil, err
 	}
-	return &dest, nil
+	return dest, nil
 }
 
 // validateAndQueryOne is just a proposal how we can remove some of the boilerplate.

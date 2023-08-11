@@ -492,16 +492,21 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 
 func createRole(t *testing.T, client *Client) (*Role, func()) {
 	t.Helper()
+	return createRoleWithOptions(t, client, nil)
+}
+
+func createRoleWithOptions(t *testing.T, client *Client, opts *CreateRoleOptions) (*Role, func()) {
+	t.Helper()
 	id := randomAccountObjectIdentifier(t)
 	ctx := context.Background()
-	err := client.Roles.Create(ctx, id, nil)
+	err := client.Roles.Create(ctx, id, opts)
 	require.NoError(t, err)
-	return &Role{
-			Name: id.Name(),
-		}, func() {
-			err := client.Roles.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
+	role, err := client.Roles.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return role, func() {
+		err = client.Roles.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
