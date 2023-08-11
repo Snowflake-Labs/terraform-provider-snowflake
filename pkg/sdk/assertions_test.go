@@ -17,6 +17,16 @@ func assertOptsInvalid(t *testing.T, opts validatableOpts, expectedError error) 
 	assert.Equal(t, expectedError, err)
 }
 
+// assertOptsInvalidJoinedErrors could be reused in tests for other interfaces in sdk package.
+func assertOptsInvalidJoinedErrors(t *testing.T, opts validatableOpts, expectedErrors ...error) {
+	t.Helper()
+	err := opts.validateProp()
+	assert.Error(t, err)
+	for _, expectedError := range expectedErrors {
+		assert.Contains(t, err.Error(), expectedError.Error())
+	}
+}
+
 // assertOptsValid could be reused in tests for other interfaces in sdk package.
 func assertOptsValid(t *testing.T, opts validatableOpts) {
 	t.Helper()

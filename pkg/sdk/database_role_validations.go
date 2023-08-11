@@ -15,63 +15,70 @@ var (
 
 func (opts *CreateDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
-		return errNilOptions
+		return errors.Join(errNilOptions)
 	}
+	var errs []error
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return nil
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+	}
+	return errors.Join(errs...)
 }
 
 func (opts *AlterDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
-		return errNilOptions
+		return errors.Join(errNilOptions)
 	}
+	var errs []error
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
 		opts.Rename,
 		opts.Set,
 		opts.Unset,
 	); !ok {
-		return errAlterNeedsExactlyOneAction
+		errs = append(errs, errAlterNeedsExactlyOneAction)
 	}
 	if rename := opts.Rename; valueSet(rename) {
 		if !validObjectidentifier(rename.Name) {
-			return ErrInvalidObjectIdentifier
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 		if opts.name.DatabaseName() != rename.Name.DatabaseName() {
-			return errDifferentDatabase
+			errs = append(errs, errDifferentDatabase)
 		}
 	}
 	if unset := opts.Unset; valueSet(unset) {
 		if !unset.Comment {
-			return errAlterNeedsAtLeastOneProperty
+			errs = append(errs, errAlterNeedsAtLeastOneProperty)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *DropDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
-		return errNilOptions
+		return errors.Join(errNilOptions)
 	}
+	var errs []error
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *ShowDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
-		return errNilOptions
+		return errors.Join(errNilOptions)
 	}
+	var errs []error
 	if !validObjectidentifier(opts.Database) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		return errPatternRequiredForLikeKeyword
+		errs = append(errs, errPatternRequiredForLikeKeyword)
 	}
-	return nil
+	return errors.Join(errs...)
 }
