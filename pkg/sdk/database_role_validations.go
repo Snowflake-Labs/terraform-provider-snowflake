@@ -9,9 +9,7 @@ var (
 	_ validatableOpts = new(ShowDatabaseRoleOptions)
 )
 
-var (
-	errDifferentDatabase = errors.New("database must be the same")
-)
+var errDifferentDatabase = errors.New("database must be the same")
 
 func (opts *CreateDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
