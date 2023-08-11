@@ -105,3 +105,36 @@ type DatabaseRole struct {
 	Comment                string
 	OwnerRoleType          string
 }
+
+func (row databaseRoleDBRow) toDatabaseRole() *DatabaseRole {
+	databaseRole := DatabaseRole{
+		CreatedOn: row.CreatedOn,
+		Name:      row.Name,
+		Owner:     row.Owner,
+	}
+	if row.IsDefault.Valid {
+		databaseRole.IsDefault = row.IsDefault.String == "Y"
+	}
+	if row.IsCurrent.Valid {
+		databaseRole.IsCurrent = row.IsCurrent.String == "Y"
+	}
+	if row.IsInherited.Valid {
+		databaseRole.IsInherited = row.IsInherited.String == "Y"
+	}
+	if row.GrantedToRoles.Valid {
+		databaseRole.GrantedToRoles = row.GrantedToRoles.String
+	}
+	if row.GrantedToDatabaseRoles.Valid {
+		databaseRole.GrantedToDatabaseRoles = row.GrantedToDatabaseRoles.String
+	}
+	if row.GrantedDatabaseRoles.Valid {
+		databaseRole.GrantedDatabaseRoles = row.GrantedDatabaseRoles.String
+	}
+	if row.Comment.Valid {
+		databaseRole.Comment = row.Comment.String
+	}
+	if row.OwnerRoleType.Valid {
+		databaseRole.OwnerRoleType = row.OwnerRoleType.String
+	}
+	return &databaseRole
+}
