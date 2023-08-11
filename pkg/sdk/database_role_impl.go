@@ -46,7 +46,7 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
-		database: NewAccountObjectIdentifier(id.DatabaseName()),
+		Database: NewAccountObjectIdentifier(id.DatabaseName()),
 	})
 	if err != nil {
 		return nil, err

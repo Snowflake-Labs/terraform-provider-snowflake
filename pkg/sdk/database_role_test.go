@@ -172,7 +172,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 
 	setUpOpts := func() *ShowDatabaseRoleOptions {
 		return &ShowDatabaseRoleOptions{
-			database: id,
+			Database: id,
 		}
 	}
 
@@ -183,7 +183,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.database = NewAccountObjectIdentifier("")
+		opts.Database = NewAccountObjectIdentifier("")
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 

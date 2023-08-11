@@ -72,7 +72,7 @@ type ShowDatabaseRoleOptions struct {
 	databaseRoles bool                    `ddl:"static" sql:"DATABASE ROLES"` //lint:ignore U1000 This is used in the ddl tag
 	Like          *Like                   `ddl:"keyword" sql:"LIKE"`
 	in            bool                    `ddl:"static" sql:"IN DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	database      AccountObjectIdentifier `ddl:"identifier"`
+	Database      AccountObjectIdentifier `ddl:"identifier"`
 }
 
 // databaseRoleDBRow is used to decode the result of a SHOW DATABASE ROLES query.

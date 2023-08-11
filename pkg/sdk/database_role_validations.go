@@ -67,7 +67,7 @@ func (opts *ShowDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
 		return errNilOptions
 	}
-	if !validObjectidentifier(opts.database) {
+	if !validObjectidentifier(opts.Database) {
 		return ErrInvalidObjectIdentifier
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
