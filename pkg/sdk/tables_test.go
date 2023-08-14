@@ -11,7 +11,7 @@ import (
 func TestTableCreate(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &TableCreateOptions{}
+		opts := &CreateTableOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "CREATE TABLE ( )"
@@ -85,7 +85,7 @@ func TestTableCreate(t *testing.T) {
 			Name: randomSchemaObjectIdentifier(t),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
-		opts := &TableCreateOptions{
+		opts := &CreateTableOptions{
 			name: id,
 			Columns: []TableColumn{{
 				Name:    columnName,
@@ -139,7 +139,7 @@ func TestTableAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &TableAlterOptions{}
+		opts := &AlterTableOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "ALTER TABLE"
@@ -147,7 +147,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("rename table", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 		}
 		actual, err := structToSQL(opts)
@@ -158,7 +158,7 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name:    id,
 			NewName: newID,
 		}
@@ -169,7 +169,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("swap with", func(t *testing.T) {
 		targetTableId := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name:     id,
 			SwapWith: targetTableId,
 		}
@@ -180,7 +180,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("cluster by", func(t *testing.T) {
 		clusterByColumns := []string{"date", "id"}
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ClusteringAction: &TableClusteringAction{
 				ClusterBy: clusterByColumns,
@@ -193,7 +193,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("recluster", func(t *testing.T) {
 		condition := "name = 'John'"
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ClusteringAction: &TableClusteringAction{
 				Recluster: &TableReclusterAction{
@@ -208,7 +208,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("suspend recluster", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ClusteringAction: &TableClusteringAction{
 				ChangeReclusterState: &TableReclusterChangeState{
@@ -223,7 +223,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("drop clustering key", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ClusteringAction: &TableClusteringAction{
 				DropClusteringKey: Bool(true),
@@ -237,7 +237,7 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("add new column", func(t *testing.T) {
 		columnName := "NEXT_COLUMN"
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				Add: &TableColumnAddAction{
@@ -262,7 +262,7 @@ func TestTableAlter(t *testing.T) {
 	t.Run("rename column", func(t *testing.T) {
 		oldColumn := "OLD_NAME"
 		newColumnName := "NEW_NAME"
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				Rename: &TableColumnRenameAction{
@@ -322,7 +322,7 @@ func TestTableAlter(t *testing.T) {
 		actions = append(actions, alterActionsForColumnOne...)
 		actions = append(actions, alterActionsForColumnTwo...)
 
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				Alter: actions,
@@ -335,7 +335,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("alter: unset masking policy", func(t *testing.T) {
 		maskingPolicyName := randomSchemaObjectIdentifier(t)
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				SetMaskingPolicy: &TableColumnAlterSetMaskingPolicyAction{
@@ -353,7 +353,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("alter: unset masking policy", func(t *testing.T) {
 		maskingPolicyName := randomSchemaObjectIdentifier(t)
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				UnsetMaskingPolicy: &TableColumnAlterUnsetMaskingPolicyAction{
@@ -378,7 +378,7 @@ func TestTableAlter(t *testing.T) {
 				Value: "v2",
 			},
 		}
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				SetTags: &TableColumnAlterSetTagsAction{
@@ -397,7 +397,7 @@ func TestTableAlter(t *testing.T) {
 			NewSchemaObjectIdentifier("db", "schema", "column_tag1"),
 			NewSchemaObjectIdentifier("db", "schema", "column_tag2"),
 		}
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				UnsetTags: &TableColumnAlterUnsetTagsAction{
@@ -413,7 +413,7 @@ func TestTableAlter(t *testing.T) {
 	})
 	t.Run("alter: drop columns", func(t *testing.T) {
 		columns := []string{"COLUMN_1", "COLUMN_2"}
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
 				DropColumns: &TableColumnAlterDropColumns{
@@ -441,7 +441,7 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ConstraintAction: &TableConstraintAction{
 				Add: &outOfLineConstraint,
@@ -454,7 +454,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter constraint: rename", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ConstraintAction: &TableConstraintAction{
 				Rename: &TableConstraintRenameAction{
@@ -470,7 +470,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter constraint: alter", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ConstraintAction: &TableConstraintAction{
 				Alter: &TableConstraintAlterAction{
@@ -489,7 +489,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter constraint: drop", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ConstraintAction: &TableConstraintAction{
 				Drop: &TableConstraintDropAction{
@@ -505,7 +505,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("external table: add", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ExternalTableAction: &TableExternalTableAction{
 				Add: &TableExternalTableColumnAddAction{
@@ -521,7 +521,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("external table: rename", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ExternalTableAction: &TableExternalTableAction{
 				Rename: &TableExternalTableColumnRenameAction{
@@ -536,7 +536,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("external table: drop", func(t *testing.T) {
-		opts := &TableAlterOptions{
+		opts := &AlterTableOptions{
 			name: id,
 			ExternalTableAction: &TableExternalTableAction{
 				Drop: &TableExternalTableColumnDropAction{

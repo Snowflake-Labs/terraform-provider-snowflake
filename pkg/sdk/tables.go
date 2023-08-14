@@ -1,8 +1,16 @@
 package sdk
 
 import (
+	"context"
 	"fmt"
 )
+
+type Tables interface {
+	Create(ctx context.Context, id SchemaObjectIdentifier, columns []TableColumn, opts *CreateTableOptions) error
+	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterTableOptions) error
+}
+
+var _ Tables = (*tables)(nil)
 
 type TableCreateDto struct {
 	OrReplace             bool
@@ -16,7 +24,7 @@ type TableCreateDto struct {
 	tageCopyOptions       []StageCopyOptions
 }
 
-type TableCreateOptions struct {
+type CreateTableOptions struct {
 	create                     bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
 	OrReplace                  *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	Scope                      *TableScope            `ddl:"keyword"`
@@ -51,17 +59,16 @@ type RowAccessPolicy struct {
 type TableScope string
 
 const (
-	GlobalTableScope = "GLOBAL"
-	LocalTableScope  = "LOCAL"
+	GlobalTableScope TableScope = "GLOBAL"
+	LocalTableScope  TableScope = "LOCAL"
 )
 
 type TableKind string
 
 const (
-	TempTableKind      = "TEMP"
-	TemporaryTableKind = "TEMPORARY"
-	VolatileTableKind  = "VOLATILE"
-	TransientTableKind = "TRANSIENT"
+	TemporaryTableKind TableKind = "TEMPORARY"
+	VolatileTableKind  TableKind = "VOLATILE"
+	TransientTableKind TableKind = "TRANSIENT"
 )
 
 type TableColumn struct {
@@ -262,7 +269,22 @@ const (
 	CopyOptionsMatchByColumnNameNone            StageCopyOptionsMatchByColumnName = "NONE"
 )
 
-type TableAlterOptions struct {
+// TODO przerób to na ten styl z wieloma plikami.
+type tables struct {
+	client *Client
+}
+
+func (v *tables) Create(ctx context.Context, id SchemaObjectIdentifier, columns []TableColumn, opts *CreateTableOptions) error {
+	opts = createIfNil[CreateTableOptions](opts)
+	return nil
+
+}
+func (v *tables) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterTableOptions) error {
+	return nil
+
+}
+
+type AlterTableOptions struct {
 	alter               bool                      `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
 	table               bool                      `ddl:"static" sql:"TABLE"` //lint:ignore U1000 This is used in the ddl tag
 	IfExists            *bool                     `ddl:"keyword" sql:"IF EXISTS"`
