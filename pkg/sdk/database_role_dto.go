@@ -43,3 +43,11 @@ type ShowDatabaseRoleRequest struct {
 	like     *Like
 	database AccountObjectIdentifier // required
 }
+
+type GrantDatabaseRoleRequest struct{}
+
+type RevokeDatabaseRoleRequest struct{}
+
+type GrantDatabaseRoleToShareRequest struct{}
+
+type RevokeDatabaseRoleFromShareRequest struct{}

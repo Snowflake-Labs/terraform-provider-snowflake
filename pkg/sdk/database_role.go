@@ -13,6 +13,11 @@ type DatabaseRoles interface {
 	Drop(ctx context.Context, request *DropDatabaseRoleRequest) error
 	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
+
+	Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error
+	Revoke(ctx context.Context, request *RevokeDatabaseRoleRequest) error
+	GrantToShare(ctx context.Context, request *GrantDatabaseRoleToShareRequest) error
+	RevokeFromShare(ctx context.Context, request *RevokeDatabaseRoleFromShareRequest) error
 }
 
 // createDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database-role.

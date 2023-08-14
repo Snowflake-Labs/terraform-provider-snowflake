@@ -45,6 +45,26 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 	return findOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
+func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, *opts)
+}
+
+func (v *databaseRoles) Revoke(ctx context.Context, request *RevokeDatabaseRoleRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, *opts)
+}
+
+func (v *databaseRoles) GrantToShare(ctx context.Context, request *GrantDatabaseRoleToShareRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, *opts)
+}
+
+func (v *databaseRoles) RevokeFromShare(ctx context.Context, request *RevokeDatabaseRoleFromShareRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, *opts)
+}
+
 func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
 	return &createDatabaseRoleOptions{
 		OrReplace:   Bool(s.orReplace),
@@ -83,4 +103,20 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 		Like:     s.like,
 		Database: s.database,
 	}
+}
+
+func (s *GrantDatabaseRoleRequest) toOpts() *validatableOpts {
+	return nil
+}
+
+func (s *RevokeDatabaseRoleRequest) toOpts() *validatableOpts {
+	return nil
+}
+
+func (s *GrantDatabaseRoleToShareRequest) toOpts() *validatableOpts {
+	return nil
+}
+
+func (s *RevokeDatabaseRoleFromShareRequest) toOpts() *validatableOpts {
+	return nil
 }
