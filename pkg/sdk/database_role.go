@@ -9,7 +9,7 @@ type DatabaseRoles interface {
 	Create(ctx context.Context, request *CreateDatabaseRoleRequest) error
 	Alter(ctx context.Context, request *AlterDatabaseRoleRequest) error
 	Drop(ctx context.Context, request *DropDatabaseRoleRequest) error
-	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]*DatabaseRole, error)
+	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
 }
 

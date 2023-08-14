@@ -23,16 +23,16 @@ func (v *databaseRoles) Drop(ctx context.Context, request *DropDatabaseRoleReque
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]*DatabaseRole, error) {
+func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[databaseRoleDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	resultList := make([]*DatabaseRole, len(*dbRows))
+	resultList := make([]DatabaseRole, len(*dbRows))
 	for i, row := range *dbRows {
-		resultList[i] = row.toDatabaseRole()
+		resultList[i] = *(row.toDatabaseRole())
 	}
 
 	return resultList, nil
@@ -47,7 +47,7 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 
 	for _, databaseRole := range databaseRoles {
 		if databaseRole.Name == id.Name() {
-			return databaseRole, nil
+			return &databaseRole, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized

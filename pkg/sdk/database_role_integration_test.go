@@ -179,8 +179,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 2, len(returnedDatabaseRoles))
-		assert.Contains(t, returnedDatabaseRoles, role1)
-		assert.Contains(t, returnedDatabaseRoles, role2)
+		assert.Contains(t, returnedDatabaseRoles, *role1)
+		assert.Contains(t, returnedDatabaseRoles, *role2)
 	})
 
 	t.Run("show database_role: with like", func(t *testing.T) {
@@ -192,8 +192,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(returnedDatabaseRoles))
-		assert.Contains(t, returnedDatabaseRoles, role1)
-		assert.NotContains(t, returnedDatabaseRoles, role2)
+		assert.Contains(t, returnedDatabaseRoles, *role1)
+		assert.NotContains(t, returnedDatabaseRoles, *role2)
 	})
 
 	t.Run("show database_role: no matches", func(t *testing.T) {
