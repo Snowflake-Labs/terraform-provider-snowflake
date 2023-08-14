@@ -106,17 +106,49 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 }
 
 func (s *GrantDatabaseRoleRequest) toOpts() *grantDatabaseRoleOptions {
-	return nil
+	opts := grantDatabaseRoleOptions{
+		name: s.name,
+	}
+
+	grantToRole := grantOrRevokeDatabaseRoleObject{}
+	if s.databaseRole != nil {
+		grantToRole.DatabaseRoleName = s.databaseRole
+	}
+	if s.accountRole != nil {
+		grantToRole.AccountRoleName = s.accountRole
+	}
+	opts.Role = grantToRole
+
+	return &opts
 }
 
 func (s *RevokeDatabaseRoleRequest) toOpts() *revokeDatabaseRoleOptions {
-	return nil
+	opts := revokeDatabaseRoleOptions{
+		name: s.name,
+	}
+
+	revokeFromRole := grantOrRevokeDatabaseRoleObject{}
+	if s.databaseRole != nil {
+		revokeFromRole.DatabaseRoleName = s.databaseRole
+	}
+	if s.accountRole != nil {
+		revokeFromRole.AccountRoleName = s.accountRole
+	}
+	opts.Role = revokeFromRole
+
+	return &opts
 }
 
 func (s *GrantDatabaseRoleToShareRequest) toOpts() *grantDatabaseRoleToShareOptions {
-	return nil
+	return &grantDatabaseRoleToShareOptions{
+		name:  s.name,
+		Share: s.share,
+	}
 }
 
 func (s *RevokeDatabaseRoleFromShareRequest) toOpts() *revokeDatabaseRoleFromShareOptions {
-	return nil
+	return &revokeDatabaseRoleFromShareOptions{
+		name:  s.name,
+		Share: s.share,
+	}
 }
