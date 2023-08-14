@@ -107,3 +107,67 @@ func TestStageRead(t *testing.T) {
 		r.Nil(err)
 	})
 }
+
+func TestStageUpdateWithSIAndURL(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":                "test_stage",
+		"database":            "test_db",
+		"schema":              "test_schema",
+		"url":                 "s3://changed_url",
+		"storage_integration": "changed_integration",
+	}
+
+	d := stage(t, "test_db|test_schema|test_stage", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = "changed_integration" URL = 's3://changed_url'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadStage(mock)
+		expectReadStageShow(mock)
+		err := resources.UpdateStage(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestStageUpdateWithJustURL(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":     "test_stage",
+		"database": "test_db",
+		"schema":   "test_schema",
+		"url":      "s3://changed_url",
+	}
+
+	d := stage(t, "test_db|test_schema|test_stage", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`ALTER STAGE "test_db"."test_schema"."test_stage" SET URL = 's3://changed_url'`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadStage(mock)
+		expectReadStageShow(mock)
+		err := resources.UpdateStage(d, db)
+		r.NoError(err)
+	})
+}
+
+func TestStageUpdateWithJustSI(t *testing.T) {
+	r := require.New(t)
+
+	in := map[string]interface{}{
+		"name":                "test_stage",
+		"database":            "test_db",
+		"schema":              "test_schema",
+		"storage_integration": "changed_integration",
+	}
+
+	d := stage(t, "test_db|test_schema|test_stage", in)
+
+	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+		mock.ExpectExec(`ALTER STAGE "test_db"."test_schema"."test_stage" SET STORAGE_INTEGRATION = "changed_integration"`).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectReadStage(mock)
+		expectReadStageShow(mock)
+		err := resources.UpdateStage(d, db)
+		r.NoError(err)
+	})
+}

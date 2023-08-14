@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Pallinder/go-randomdata"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -33,7 +32,7 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(randomdata.Email())
+	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")

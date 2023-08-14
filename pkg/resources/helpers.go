@@ -34,3 +34,30 @@ func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
+
+func setIntProperty(d *schema.ResourceData, key string, property *sdk.IntProperty) error {
+	if property != nil && property.Value != nil {
+		if err := d.Set(key, *property.Value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setStringProperty(d *schema.ResourceData, key string, property *sdk.StringProperty) error {
+	if property != nil {
+		if err := d.Set(key, property.Value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setBoolProperty(d *schema.ResourceData, key string, property *sdk.BoolProperty) error {
+	if property != nil {
+		if err := d.Set(key, property.Value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
