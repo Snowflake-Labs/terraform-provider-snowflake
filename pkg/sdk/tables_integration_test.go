@@ -16,8 +16,6 @@ func TestInt_TableCreate(t *testing.T) {
 	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
 	t.Cleanup(schemaCleanup)
 
-	//TODO tego typu testy nie maja sensu, bo przecież to może być i powinno być zwalidowane na pozimoie optsów
-	//TODO dodaj testy jednostkowe które beda to walidowac
 	t.Run("test complete", func(t *testing.T) {
 		tableName := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, tableName)

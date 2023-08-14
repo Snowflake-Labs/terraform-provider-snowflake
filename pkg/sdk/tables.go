@@ -269,7 +269,6 @@ const (
 	CopyOptionsMatchByColumnNameNone            StageCopyOptionsMatchByColumnName = "NONE"
 )
 
-// TODO przerób to na ten styl z wieloma plikami.
 type tables struct {
 	client *Client
 }
