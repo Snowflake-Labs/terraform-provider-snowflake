@@ -53,8 +53,8 @@ func (c *contextFunctions) CurrentRole(ctx context.Context) (string, error) {
 }
 
 type CurrentSecondaryRoles struct {
-	Roles []string
-	Value string
+	Roles []AccountObjectIdentifier
+	Value SecondaryRoleOption
 }
 
 func (c *contextFunctions) CurrentSecondaryRoles(ctx context.Context) (*CurrentSecondaryRoles, error) {
@@ -75,13 +75,16 @@ func (c *contextFunctions) CurrentSecondaryRoles(ctx context.Context) (*CurrentS
 		return nil, err
 	}
 
-	var roles []string
+	var roles []AccountObjectIdentifier
 	if len(jsonRoles.Roles) > 0 {
-		roles = strings.Split(jsonRoles.Roles, ",")
+		stringRoles := strings.Split(jsonRoles.Roles, ",")
+		for _, role := range stringRoles {
+			roles = append(roles, NewAccountObjectIdentifier(role))
+		}
 	}
 	secondaryRoles := &CurrentSecondaryRoles{
 		Roles: roles,
-		Value: jsonRoles.Value,
+		Value: SecondaryRoleOption(jsonRoles.Value),
 	}
 	return secondaryRoles, nil
 }

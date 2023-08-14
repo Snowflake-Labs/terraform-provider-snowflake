@@ -8,6 +8,9 @@ import (
 )
 
 var (
+	ErrNilOptions                    = errors.New("options cannot be nil")
+	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+
 	// go-snowflake errors.
 	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
 	ErrAccountIsEmpty             = errors.New("account is empty")

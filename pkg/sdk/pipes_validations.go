@@ -14,7 +14,7 @@ var (
 
 func (opts *PipeCreateOptions) validate() error {
 	if opts == nil {
-		return errNilOptions
+		return ErrNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -27,7 +27,7 @@ func (opts *PipeCreateOptions) validate() error {
 
 func (opts *PipeAlterOptions) validate() error {
 	if opts == nil {
-		return errNilOptions
+		return ErrNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -66,7 +66,7 @@ func (opts *PipeAlterOptions) validate() error {
 
 func (opts *PipeDropOptions) validate() error {
 	if opts == nil {
-		return errNilOptions
+		return ErrNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -76,10 +76,10 @@ func (opts *PipeDropOptions) validate() error {
 
 func (opts *PipeShowOptions) validate() error {
 	if opts == nil {
-		return errNilOptions
+		return ErrNilOptions
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		return errPatternRequiredForLikeKeyword
+		return ErrPatternRequiredForLikeKeyword
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
 		return errScopeRequiredForInKeyword
@@ -89,7 +89,7 @@ func (opts *PipeShowOptions) validate() error {
 
 func (opts *describePipeOptions) validate() error {
 	if opts == nil {
-		return errNilOptions
+		return ErrNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
@@ -98,10 +98,8 @@ func (opts *describePipeOptions) validate() error {
 }
 
 var (
-	errNilOptions                    = errors.New("options cannot be nil")
-	errCopyStatementRequired         = errors.New("copy statement required")
-	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
-	errScopeRequiredForInKeyword     = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction    = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty  = errors.New("alter statement needs at least one property")
+	errCopyStatementRequired        = errors.New("copy statement required")
+	errScopeRequiredForInKeyword    = errors.New("exactly one scope must be specified for in keyword")
+	errAlterNeedsExactlyOneAction   = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty = errors.New("alter statement needs at least one property")
 )

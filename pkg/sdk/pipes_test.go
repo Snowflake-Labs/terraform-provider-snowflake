@@ -16,7 +16,7 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeCreateOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeAlterOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -212,7 +212,7 @@ func TestPipesDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeDropOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -244,13 +244,13 @@ func TestPipesShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeShowOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalid(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalid(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: empty in", func(t *testing.T) {
@@ -350,7 +350,7 @@ func TestPipesDescribe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *describePipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {

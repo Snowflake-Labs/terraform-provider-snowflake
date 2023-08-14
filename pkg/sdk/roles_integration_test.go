@@ -117,12 +117,10 @@ func TestInt_Roles(t *testing.T) {
 
 		tagValue := "new-tag-value"
 		err = client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			Set: &RoleSet{
-				Tag: []TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: tagValue,
-					},
+			SetTags: []TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: tagValue,
 				},
 			},
 		})
@@ -150,9 +148,7 @@ func TestInt_Roles(t *testing.T) {
 		assert.Equal(t, tagValue, value)
 
 		err = client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			Unset: &RoleUnset{
-				Tag: []ObjectIdentifier{tag.ID()},
-			},
+			UnsetTags: []ObjectIdentifier{tag.ID()},
 		})
 		require.NoError(t, err)
 
@@ -166,9 +162,7 @@ func TestInt_Roles(t *testing.T) {
 
 		comment := randomComment(t)
 		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			Set: &RoleSet{
-				Comment: &comment,
-			},
+			SetComment: &comment,
 		})
 		require.NoError(t, err)
 
@@ -185,9 +179,7 @@ func TestInt_Roles(t *testing.T) {
 		t.Cleanup(cleanup)
 
 		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			Unset: &RoleUnset{
-				Comment: Bool(true),
-			},
+			UnsetComment: Bool(true),
 		})
 		require.NoError(t, err)
 
@@ -238,6 +230,23 @@ func TestInt_Roles(t *testing.T) {
 		assert.Equal(t, 1, len(roles))
 		assert.Equal(t, role.Name, roles[0].Name)
 	})
+
+	// TODO Test class
+	//t.Run("in class", func(t *testing.T) {
+	//	// TODO Add to class
+	//	role, cleanup := createRole(t, client)
+	//	t.Cleanup(cleanup)
+	//
+	//	class, cleanup := createClass()
+	//	t.Cleanup(cleanup)
+	//
+	//	roles, err := client.Roles.Show(ctx, &ShowRoleOptions{
+	//		InClass: String(class.ID().Name()),
+	//	})
+	//	require.NoError(t, err)
+	//	assert.Equal(t, 1, len(roles))
+	//	assert.Equal(t, role.Name, roles[0].Name)
+	//})
 
 	t.Run("show by id", func(t *testing.T) {
 		role, cleanup := createRole(t, client)

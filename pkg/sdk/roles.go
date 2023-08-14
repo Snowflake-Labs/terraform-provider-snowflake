@@ -8,23 +8,23 @@ import (
 
 type Roles interface {
 	// Create creates a role.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateRoleOptions) error
+	Create(ctx context.Context, req *CreateRoleRequest) error
 	// Alter modifies an existing role
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterRoleOptions) error
+	Alter(ctx context.Context, req *AlterRoleRequest) error
 	// Drop removes a role.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropRoleOptions) error
+	Drop(ctx context.Context, req *DropRoleRequest) error
 	// Show returns a list of roles.
-	Show(ctx context.Context, opts *ShowRoleOptions) ([]Role, error)
+	Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error)
 	// ShowByID returns a user by ID
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error)
+	ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error)
 	// Grant grants privileges on a role.
-	Grant(ctx context.Context, id AccountObjectIdentifier, opts *GrantRoleOptions) error
+	Grant(ctx context.Context, req *GrantRoleRequest) error
 	// Revoke revokes privileges on a role.
-	Revoke(ctx context.Context, id AccountObjectIdentifier, opts *RevokeRoleOptions) error
+	Revoke(ctx context.Context, req *RevokeRoleRequest) error
 	// Use sets the active role for the current session.
-	Use(ctx context.Context, id AccountObjectIdentifier) error
+	Use(ctx context.Context, req UseRoleRequest) error
 	// UseSecondary specifies the active/current secondary roles for the session.
-	UseSecondary(ctx context.Context, opts SecondaryRoleOption) error
+	UseSecondary(ctx context.Context, req UseSecondaryRolesRequest) error
 }
 
 type Role struct {
@@ -106,19 +106,11 @@ type AlterRoleOptions struct {
 	name     AccountObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	RenameTo AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set      *RoleSet                `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *RoleUnset              `ddl:"list,no_parentheses" sql:"UNSET"`
-}
-
-type RoleSet struct {
-	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag     []TagAssociation `ddl:"keyword" sql:"TAG"`
-}
-
-type RoleUnset struct {
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	RenameTo     *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SetComment   *string                  `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	SetTags      []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	UnsetComment *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
+	UnsetTags    []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 // DropRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/drop-role
@@ -131,13 +123,14 @@ type DropRoleOptions struct {
 
 // ShowRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-roles
 type ShowRoleOptions struct {
-	show  bool  `ddl:"static" sql:"SHOW"`
-	roles bool  `ddl:"static" sql:"ROLES"`
-	Like  *Like `ddl:"keyword" sql:"LIKE"`
+	show    bool          `ddl:"static" sql:"SHOW"`
+	roles   bool          `ddl:"static" sql:"ROLES"`
+	Like    *Like         `ddl:"keyword" sql:"LIKE"`
+	InClass *RolesInClass `ddl:"keyword" sql:"IN CLASS"`
 }
 
-func (opts *ShowRoleOptions) validateProp() error {
-	return nil
+type RolesInClass struct {
+	Class *AccountObjectIdentifier `ddl:"identifier"`
 }
 
 // GrantRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/grant-role

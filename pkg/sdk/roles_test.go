@@ -1,10 +1,8 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRolesCreate(t *testing.T) {
@@ -13,10 +11,7 @@ func TestRolesCreate(t *testing.T) {
 			name:        NewAccountObjectIdentifier("new_role"),
 			IfNotExists: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE ROLE IF NOT EXISTS "new_role"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ROLE IF NOT EXISTS "new_role"`)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -31,10 +26,23 @@ func TestRolesCreate(t *testing.T) {
 			},
 			Comment: String("comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE ROLE "new_role" COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE ROLE "new_role" COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := &CreateRoleOptions{
+			name: NewAccountObjectIdentifier(""),
+		}
+		assertOptsInvalidErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: one of OrReplace, IfNotExists", func(t *testing.T) {
+		opts := &CreateRoleOptions{
+			name:        randomAccountObjectIdentifier(t),
+			IfNotExists: Bool(true),
+			OrReplace:   Bool(true),
+		}
+		assertOptsInvalidErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
 	})
 }
 
@@ -43,10 +51,7 @@ func TestRolesDrop(t *testing.T) {
 		opts := &DropRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP ROLE "new_role"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP ROLE "new_role"`)
 	})
 
 	t.Run("if exists", func(t *testing.T) {
@@ -54,10 +59,14 @@ func TestRolesDrop(t *testing.T) {
 			name:     NewAccountObjectIdentifier("new_role"),
 			IfExists: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP ROLE IF EXISTS "new_role"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP ROLE IF EXISTS "new_role"`)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := &DropRoleOptions{
+			name: NewAccountObjectIdentifier(""),
+		}
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 }
 
@@ -67,84 +76,81 @@ func TestRolesAlter(t *testing.T) {
 			name:     NewAccountObjectIdentifier("new_role"),
 			RenameTo: NewAccountObjectIdentifier("new_role123"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ROLE "new_role" RENAME TO "new_role123"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ROLE "new_role" RENAME TO "new_role123"`)
 	})
 
 	t.Run("set comment", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name: NewAccountObjectIdentifier("new_role"),
-			Set: &RoleSet{
-				Comment: String("some comment"),
-			},
+			name:       NewAccountObjectIdentifier("new_role"),
+			SetComment: String("some comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ROLE "new_role" SET COMMENT = 'some comment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ROLE "new_role" SET COMMENT = 'some comment'`)
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name: NewAccountObjectIdentifier("new_role"),
-			Unset: &RoleUnset{
-				Comment: Bool(true),
-			},
+			name:         NewAccountObjectIdentifier("new_role"),
+			UnsetComment: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ROLE "new_role" UNSET COMMENT`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ROLE "new_role" UNSET COMMENT`)
 	})
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
-			Set: &RoleSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewAccountObjectIdentifier("tag-name"),
-						Value: "tag-value",
-					},
-					{
-						Name:  NewAccountObjectIdentifier("tag-name2"),
-						Value: "tag-value2",
-					},
+			SetTags: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag-name"),
+					Value: "tag-value",
+				},
+				{
+					Name:  NewAccountObjectIdentifier("tag-name2"),
+					Value: "tag-value2",
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ROLE "new_role" SET TAG "tag-name" = 'tag-value', "tag-name2" = 'tag-value2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ROLE "new_role" SET TAG "tag-name" = 'tag-value', "tag-name2" = 'tag-value2'`)
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
 		opts := &AlterRoleOptions{
 			name: NewAccountObjectIdentifier("new_role"),
-			Unset: &RoleUnset{
-				Tag: []ObjectIdentifier{
-					NewAccountObjectIdentifier("tag-name"),
-					NewAccountObjectIdentifier("tag-name2"),
-				},
+			UnsetTags: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag-name"),
+				NewAccountObjectIdentifier("tag-name2"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ROLE "new_role" UNSET TAG "tag-name", "tag-name2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ROLE "new_role" UNSET TAG "tag-name", "tag-name2"`)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := &AlterRoleOptions{
+			name:         NewAccountObjectIdentifier(""),
+			UnsetComment: Bool(true),
+		}
+		assertOptsInvalidErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: no alter action specified", func(t *testing.T) {
+		opts := &AlterRoleOptions{
+			name: randomAccountObjectIdentifier(t),
+		}
+		assertOptsInvalidErrors(t, opts, errors.New("no alter action specified"))
+	})
+
+	t.Run("validation: more than one alter action specified", func(t *testing.T) {
+		opts := &AlterRoleOptions{
+			name:         randomAccountObjectIdentifier(t),
+			SetComment:   String("comment"),
+			UnsetComment: Bool(true),
+		}
+		assertOptsInvalidErrors(t, opts, errOneOf("RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	})
 }
 
 func TestRolesShow(t *testing.T) {
 	t.Run("no options", func(t *testing.T) {
-		opts := &ShowRoleOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW ROLES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, &ShowRoleOptions{}, `SHOW ROLES`)
 	})
 
 	t.Run("like", func(t *testing.T) {
@@ -153,10 +159,34 @@ func TestRolesShow(t *testing.T) {
 				Pattern: String("new_role"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW ROLES LIKE 'new_role'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ROLES LIKE 'new_role'`)
+	})
+
+	t.Run("in class", func(t *testing.T) {
+		class := NewAccountObjectIdentifier("some_class")
+		opts := &ShowRoleOptions{
+			InClass: &RolesInClass{
+				Class: &class,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ROLES IN CLASS "some_class"`)
+	})
+
+	t.Run("validation: like with no pattern", func(t *testing.T) {
+		opts := &ShowRoleOptions{
+			Like: &Like{},
+		}
+		assertOptsInvalidErrors(t, opts, ErrPatternRequiredForLikeKeyword)
+	})
+
+	t.Run("validation: invalid class name", func(t *testing.T) {
+		class := NewAccountObjectIdentifier("")
+		opts := &ShowRoleOptions{
+			InClass: &RolesInClass{
+				Class: &class,
+			},
+		}
+		assertOptsInvalidErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 }
 
@@ -168,10 +198,7 @@ func TestRolesGrant(t *testing.T) {
 				User: &AccountObjectIdentifier{name: "some_user"},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `GRANT ROLE "new_role" TO USER "some_user"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ROLE "new_role" TO USER "some_user"`)
 	})
 
 	t.Run("role grant", func(t *testing.T) {
@@ -181,10 +208,36 @@ func TestRolesGrant(t *testing.T) {
 				Role: &AccountObjectIdentifier{name: "parent_role"},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `GRANT ROLE "new_role" TO ROLE "parent_role"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ROLE "new_role" TO ROLE "parent_role"`)
+	})
+
+	t.Run("validation: invalid object identifier and no grant option", func(t *testing.T) {
+		opts := &GrantRoleOptions{
+			name: NewAccountObjectIdentifier(""),
+		}
+		assertOptsInvalidErrors(t, opts, ErrInvalidObjectIdentifier, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
+	})
+
+	t.Run("validation: invalid object identifier for granted role", func(t *testing.T) {
+		id := NewAccountObjectIdentifier("")
+		opts := &GrantRoleOptions{
+			name: randomAccountObjectIdentifier(t),
+			Grant: GrantRole{
+				Role: &id,
+			},
+		}
+		assertOptsInvalidErrors(t, opts, errors.New("invalid object identifier for granted role"))
+	})
+
+	t.Run("validation: invalid object identifier for granted user", func(t *testing.T) {
+		id := NewAccountObjectIdentifier("")
+		opts := &GrantRoleOptions{
+			name: randomAccountObjectIdentifier(t),
+			Grant: GrantRole{
+				User: &id,
+			},
+		}
+		assertOptsInvalidErrors(t, opts, errors.New("invalid object identifier for granted user"))
 	})
 }
 
@@ -196,10 +249,7 @@ func TestRolesRevoke(t *testing.T) {
 				User: &AccountObjectIdentifier{name: "some_user"},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `REVOKE ROLE "new_role" FROM USER "some_user"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE ROLE "new_role" FROM USER "some_user"`)
 	})
 
 	t.Run("revoke role", func(t *testing.T) {
@@ -209,9 +259,13 @@ func TestRolesRevoke(t *testing.T) {
 				Role: &AccountObjectIdentifier{name: "parent_role"},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `REVOKE ROLE "new_role" FROM ROLE "parent_role"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE ROLE "new_role" FROM ROLE "parent_role"`)
+	})
+
+	t.Run("validation: invalid object identifier and no option set", func(t *testing.T) {
+		opts := &GrantRoleOptions{
+			name: NewAccountObjectIdentifier(""),
+		}
+		assertOptsInvalidErrors(t, opts, ErrInvalidObjectIdentifier, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
 	})
 }

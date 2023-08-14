@@ -43,17 +43,13 @@ func (v *roles) Show(ctx context.Context, opts *ShowRoleOptions) ([]Role, error)
 	return roles, nil
 }
 
-func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
-	roles, err := v.client.Roles.Show(ctx, &ShowRoleOptions{
-		Like: &Like{
-			Pattern: String(id.Name()),
-		},
-	})
+func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error) {
+	roles, err := v.client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(req.id.Name())))
 	if err != nil {
 		return nil, err
 	}
 	for _, role := range roles {
-		if role.ID() == id {
+		if role.ID() == req.id {
 			return &role, nil
 		}
 	}
