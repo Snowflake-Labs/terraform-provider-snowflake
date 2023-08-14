@@ -2,12 +2,15 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -141,30 +144,27 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // CreateDatabaseRole implements schema.CreateFunc.
 func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	var err error
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
 	databaseName := d.Get("database").(string)
 	roleName := d.Get("name").(string)
 
-	builder := snowflake.NewDatabaseRoleBuilder(roleName, databaseName)
+	ctx := context.Background()
+	objectIdentifier := sdk.NewDatabaseObjectIdentifier(databaseName, roleName)
+
+	createRequest := sdk.NewCreateDatabaseRoleRequest(objectIdentifier)
+
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	qry := builder.Create()
-	if err := snowflake.Exec(db, qry); err != nil {
-		return fmt.Errorf("error creating database role %v err = %w", roleName, err)
-	}
-
-	dbRoleID := &databaseRoleID{
-		DatabaseName: databaseName,
-		RoleName:     roleName,
-	}
-	dataIDInput, err := dbRoleID.String()
+	err := client.DatabaseRoles.Create(ctx, createRequest)
 	if err != nil {
 		return err
 	}
-	d.SetId(dataIDInput)
+
+	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
 	return ReadDatabaseRole(d, meta)
 }
