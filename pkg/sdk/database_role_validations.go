@@ -86,21 +86,57 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 }
 
 func (opts *grantDatabaseRoleOptions) validateProp() error {
-	// TODO: implement me
-	return nil
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.Role.DatabaseRoleName, opts.Role.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
 }
 
 func (opts *revokeDatabaseRoleOptions) validateProp() error {
-	// TODO: implement me
-	return nil
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.Role.DatabaseRoleName, opts.Role.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
 }
 
 func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
-	// TODO: implement me
-	return nil
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
 }
 
 func (opts *revokeDatabaseRoleFromShareOptions) validateProp() error {
-	// TODO: implement me
-	return nil
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
 }
