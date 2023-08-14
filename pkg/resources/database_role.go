@@ -1,21 +1,14 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-const (
-	databaseRoleIDDelimiter = '|'
 )
 
 var databaseRoleSchema = map[string]*schema.Schema{
@@ -36,48 +29,6 @@ var databaseRoleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database role.",
 	},
-}
-
-type databaseRoleID struct {
-	DatabaseName string
-	RoleName     string
-}
-
-// String() takes in a databaseRoleID object and returns a pipe-delimited string:
-// DatabaseName|RoleName.
-func (id *databaseRoleID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = databaseRoleIDDelimiter
-	dataIdentifiers := [][]string{{id.DatabaseName, id.RoleName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strDbRoleID := strings.TrimSpace(buf.String())
-	return strDbRoleID, nil
-}
-
-// databaseRoleIDFromString() takes in a pipe-delimited string: DatabaseName|RoleName
-// and returns a databaseRoleID object.
-func databaseRoleIDFromString(stringID string) (*databaseRoleID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = pipeIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per database role")
-	}
-	if len(lines[0]) != 2 {
-		return nil, fmt.Errorf("2 fields allowed")
-	}
-
-	dbRoleResult := &databaseRoleID{
-		DatabaseName: lines[0][0],
-		RoleName:     lines[0][1],
-	}
-	return dbRoleResult, nil
 }
 
 // DatabaseRole returns a pointer to the resource representing a database role.
