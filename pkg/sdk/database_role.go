@@ -138,3 +138,45 @@ func (row databaseRoleDBRow) convert() *DatabaseRole {
 	}
 	return &databaseRole
 }
+
+// grantDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role.
+type grantDatabaseRoleOptions struct {
+	grant        bool                            `ddl:"static" sql:"GRANT"`
+	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier        `ddl:"identifier"`
+	toRole       bool                            `ddl:"static" sql:"TO ROLE"`
+	Role         grantOrRevokeDatabaseRoleObject `ddl:"-"`
+}
+
+// revokeDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-database-role.
+type revokeDatabaseRoleOptions struct {
+	revoke       bool                            `ddl:"static" sql:"REVOKE"`
+	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier        `ddl:"identifier"`
+	fromRole     bool                            `ddl:"static" sql:"FROM ROLE"`
+	Role         grantOrRevokeDatabaseRoleObject `ddl:"-"`
+}
+
+type grantOrRevokeDatabaseRoleObject struct {
+	// One of
+	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier"`
+	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier"`
+}
+
+// grantDatabaseRoleToShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role-share.
+type grantDatabaseRoleToShareOptions struct {
+	grant        bool                     `ddl:"static" sql:"GRANT"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	toShare      bool                     `ddl:"static" sql:"TO SHARE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier"`
+}
+
+// revokeDatabaseRoleFromShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role-share.
+type revokeDatabaseRoleFromShareOptions struct {
+	revoke       bool                     `ddl:"static" sql:"REVOKE"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	fromShare    bool                     `ddl:"static" sql:"FROM SHARE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier"`
+}

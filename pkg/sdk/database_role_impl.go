@@ -47,22 +47,22 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {
 	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, *opts)
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *databaseRoles) Revoke(ctx context.Context, request *RevokeDatabaseRoleRequest) error {
 	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, *opts)
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *databaseRoles) GrantToShare(ctx context.Context, request *GrantDatabaseRoleToShareRequest) error {
 	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, *opts)
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *databaseRoles) RevokeFromShare(ctx context.Context, request *RevokeDatabaseRoleFromShareRequest) error {
 	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, *opts)
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
@@ -105,18 +105,18 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 	}
 }
 
-func (s *GrantDatabaseRoleRequest) toOpts() *validatableOpts {
+func (s *GrantDatabaseRoleRequest) toOpts() *grantDatabaseRoleOptions {
 	return nil
 }
 
-func (s *RevokeDatabaseRoleRequest) toOpts() *validatableOpts {
+func (s *RevokeDatabaseRoleRequest) toOpts() *revokeDatabaseRoleOptions {
 	return nil
 }
 
-func (s *GrantDatabaseRoleToShareRequest) toOpts() *validatableOpts {
+func (s *GrantDatabaseRoleToShareRequest) toOpts() *grantDatabaseRoleToShareOptions {
 	return nil
 }
 
-func (s *RevokeDatabaseRoleFromShareRequest) toOpts() *validatableOpts {
+func (s *RevokeDatabaseRoleFromShareRequest) toOpts() *revokeDatabaseRoleFromShareOptions {
 	return nil
 }

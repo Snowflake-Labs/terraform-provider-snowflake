@@ -7,6 +7,10 @@ var (
 	_ validatableOpts = new(alterDatabaseRoleOptions)
 	_ validatableOpts = new(dropDatabaseRoleOptions)
 	_ validatableOpts = new(showDatabaseRoleOptions)
+	_ validatableOpts = new(grantDatabaseRoleOptions)
+	_ validatableOpts = new(revokeDatabaseRoleOptions)
+	_ validatableOpts = new(grantDatabaseRoleToShareOptions)
+	_ validatableOpts = new(revokeDatabaseRoleFromShareOptions)
 )
 
 var errDifferentDatabase = errors.New("database must be the same")
@@ -79,4 +83,24 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 		errs = append(errs, errPatternRequiredForLikeKeyword)
 	}
 	return errors.Join(errs...)
+}
+
+func (opts *grantDatabaseRoleOptions) validateProp() error {
+	// TODO: implement me
+	panic("implement me")
+}
+
+func (opts *revokeDatabaseRoleOptions) validateProp() error {
+	// TODO: implement me
+	panic("implement me")
+}
+
+func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
+	// TODO: implement me
+	panic("implement me")
+}
+
+func (opts *revokeDatabaseRoleFromShareOptions) validateProp() error {
+	// TODO: implement me
+	panic("implement me")
 }
