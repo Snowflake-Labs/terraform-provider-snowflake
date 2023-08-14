@@ -11,7 +11,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -100,6 +99,7 @@ func DatabaseRole() *schema.Resource {
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
+
 	// TODO: what to do with decode snowflake id method in case of SchemaIdentifier and DatabaseObjectIdentifier?
 	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
 	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
@@ -135,15 +135,14 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database").(string)
 	roleName := d.Get("name").(string)
 
-	ctx := context.Background()
 	objectIdentifier := sdk.NewDatabaseObjectIdentifier(databaseName, roleName)
-
 	createRequest := sdk.NewCreateDatabaseRoleRequest(objectIdentifier)
 
 	if v, ok := d.GetOk("comment"); ok {
 		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
+	ctx := context.Background()
 	err := client.DatabaseRoles.Create(ctx, createRequest)
 	if err != nil {
 		return err
@@ -162,11 +161,10 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
 	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
 
-	ctx := context.Background()
-
 	if d.HasChange("comment") {
 		_, newVal := d.GetChange("comment")
 
+		ctx := context.Background()
 		alterRequest := sdk.NewAlterDatabaseRoleRequest(objectIdentifier).WithSet(sdk.NewDatabaseRoleSetRequest(newVal.(string)))
 		err := client.DatabaseRoles.Alter(ctx, alterRequest)
 		if err != nil {
@@ -180,17 +178,16 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 // DeleteDatabaseRole implements schema.DeleteFunc.
 func DeleteDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbRoleID, err := databaseRoleIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+
+	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
+	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+
+	ctx := context.Background()
+	dropRequest := sdk.NewDropDatabaseRoleRequest(objectIdentifier)
+	err := client.DatabaseRoles.Drop(ctx, dropRequest)
 	if err != nil {
 		return err
-	}
-
-	roleName := dbRoleID.RoleName
-	databaseName := dbRoleID.DatabaseName
-
-	q := snowflake.NewDatabaseRoleBuilder(roleName, databaseName).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting database role %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")
