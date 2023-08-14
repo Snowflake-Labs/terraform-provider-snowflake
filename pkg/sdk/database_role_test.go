@@ -1,6 +1,9 @@
 package sdk
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestDatabaseRoleCreate(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
@@ -220,5 +223,20 @@ func TestDatabaseRolesShow(t *testing.T) {
 			Pattern: String(id.Name()),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES LIKE '%s' IN DATABASE %s`, id.Name(), id.FullyQualifiedName())
+	})
+}
+
+func TestDatabaseRoleBuilder(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+
+	t.Run("should remove other optionals", func(t *testing.T) {
+		request := NewAlterDatabaseRoleRequest(id).
+			WithSet(NewDatabaseRoleSetRequest("comment")).
+			WithRename(NewDatabaseRoleRenameRequest(randomDatabaseObjectIdentifier(t))).
+			WithUnsetComment()
+
+		assert.Nil(t, request.set)
+		assert.Nil(t, request.rename)
+		assert.NotNil(t, request.unset)
 	})
 }
