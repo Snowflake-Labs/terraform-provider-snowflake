@@ -99,31 +99,16 @@ func DatabaseRole() *schema.Resource {
 // ReadDatabaseRole implements schema.ReadFunc.
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	dbRoleID, err := databaseRoleIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	// TODO: what to do with decode snowflake id method in case of SchemaIdentifier and DatabaseObjectIdentifier?
+	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
+	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+
+	ctx := context.Background()
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, objectIdentifier)
 	if err != nil {
-		return err
-	}
-
-	databaseName := dbRoleID.DatabaseName
-	roleName := dbRoleID.RoleName
-
-	roles, err := snowflake.ListDatabaseRoles(databaseName, db)
-	if err != nil {
-		return fmt.Errorf("error listing database roles err = %w", err)
-	}
-
-	var databaseRole snowflake.DatabaseRole
-	// find the db role we are looking for by matching the name and db name
-	for _, dbRole := range roles {
-		if strings.EqualFold(dbRole.Name, roleName) {
-			databaseRole = dbRole
-			databaseRole.DatabaseName = databaseName // needs to be set as it's not included in the SHOW stmt results
-			break
-		}
-	}
-
-	if databaseRole.Name == "" {
-		log.Printf("[DEBUG] database role (%v) not found when listing all database roles in database (%v)", roleName, databaseName)
+		// If not found, mark resource to be removed from state file during apply or refresh
+		log.Printf("[DEBUG] database role (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -132,7 +117,7 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("database", databaseRole.DatabaseName); err != nil {
+	if err := d.Set("database", objectIdentifier.DatabaseName()); err != nil {
 		return err
 	}
 
