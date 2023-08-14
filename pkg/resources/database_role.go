@@ -116,7 +116,7 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		_, newVal := d.GetChange("comment")
 
 		ctx := context.Background()
-		alterRequest := sdk.NewAlterDatabaseRoleRequest(objectIdentifier).WithSet(sdk.NewDatabaseRoleSetRequest(newVal.(string)))
+		alterRequest := sdk.NewAlterDatabaseRoleRequest(objectIdentifier).WithSetComment(newVal.(string))
 		err := client.DatabaseRoles.Alter(ctx, alterRequest)
 		if err != nil {
 			return fmt.Errorf("error updating database role %v: %w", objectIdentifier.Name(), err)
