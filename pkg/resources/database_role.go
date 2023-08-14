@@ -156,22 +156,21 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateDatabaseRole implements schema.UpdateFunc.
 func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	dbRoleID, err := databaseRoleIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
 	db := meta.(*sql.DB)
-	databaseName := dbRoleID.DatabaseName
-	roleName := dbRoleID.RoleName
-	builder := snowflake.NewDatabaseRoleBuilder(roleName, databaseName)
+	client := sdk.NewClientFromDB(db)
+
+	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
+	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+
+	ctx := context.Background()
 
 	if d.HasChange("comment") {
-		var q string
 		_, newVal := d.GetChange("comment")
-		q = builder.ChangeComment(newVal.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating comment on database role %v", d.Id())
+
+		alterRequest := sdk.NewAlterDatabaseRoleRequest(objectIdentifier).WithSet(sdk.NewDatabaseRoleSetRequest(newVal.(string)))
+		err := client.DatabaseRoles.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating database role %v: %w", objectIdentifier.Name(), err)
 		}
 	}
 
