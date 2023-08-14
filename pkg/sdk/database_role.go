@@ -145,7 +145,7 @@ type grantDatabaseRoleOptions struct {
 	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
 	name         DatabaseObjectIdentifier        `ddl:"identifier"`
 	toRole       bool                            `ddl:"static" sql:"TO ROLE"`
-	Role         grantOrRevokeDatabaseRoleObject `ddl:"-"`
+	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
 }
 
 // revokeDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-database-role.
@@ -154,7 +154,7 @@ type revokeDatabaseRoleOptions struct {
 	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
 	name         DatabaseObjectIdentifier        `ddl:"identifier"`
 	fromRole     bool                            `ddl:"static" sql:"FROM ROLE"`
-	Role         grantOrRevokeDatabaseRoleObject `ddl:"-"`
+	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
 }
 
 type grantOrRevokeDatabaseRoleObject struct {

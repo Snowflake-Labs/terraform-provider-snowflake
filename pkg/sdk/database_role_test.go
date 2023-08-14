@@ -254,21 +254,21 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 
 	t.Run("validation: multiple roles", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.DatabaseRoleName = &databaseRoleId
-		opts.Role.AccountRoleName = &accountRoleId
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
 	})
 
 	t.Run("grant to database role", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
 
 		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 
 	t.Run("grant to account role", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.AccountRoleName = &accountRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
 
 		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO ROLE %s`, id.FullyQualifiedName(), accountRoleId.FullyQualifiedName())
 	})
@@ -303,21 +303,21 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: multiple roles", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.DatabaseRoleName = &databaseRoleId
-		opts.Role.AccountRoleName = &accountRoleId
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
 	})
 
 	t.Run("revoke from database role", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
 
 		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 
 	t.Run("revoke from account role", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Role.AccountRoleName = &accountRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
 
 		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM ROLE %s`, id.FullyQualifiedName(), accountRoleId.FullyQualifiedName())
 	})

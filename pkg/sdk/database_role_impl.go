@@ -117,7 +117,7 @@ func (s *GrantDatabaseRoleRequest) toOpts() *grantDatabaseRoleOptions {
 	if s.accountRole != nil {
 		grantToRole.AccountRoleName = s.accountRole
 	}
-	opts.Role = grantToRole
+	opts.ParentRole = grantToRole
 
 	return &opts
 }
@@ -134,7 +134,7 @@ func (s *RevokeDatabaseRoleRequest) toOpts() *revokeDatabaseRoleOptions {
 	if s.accountRole != nil {
 		revokeFromRole.AccountRoleName = s.accountRole
 	}
-	opts.Role = revokeFromRole
+	opts.ParentRole = revokeFromRole
 
 	return &opts
 }

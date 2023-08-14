@@ -93,7 +93,7 @@ func (opts *grantDatabaseRoleOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(opts.Role.DatabaseRoleName, opts.Role.AccountRoleName); !ok {
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
 		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
 	}
 	return errors.Join(errs...)
@@ -107,7 +107,7 @@ func (opts *revokeDatabaseRoleOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(opts.Role.DatabaseRoleName, opts.Role.AccountRoleName); !ok {
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
 		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
 	}
 	return errors.Join(errs...)
