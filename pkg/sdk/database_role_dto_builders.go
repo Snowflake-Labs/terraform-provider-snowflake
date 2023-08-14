@@ -107,15 +107,15 @@ func NewGrantDatabaseRoleRequest(
 	return &s
 }
 
-func (s *GrantDatabaseRoleRequest) WithDatabaseRole(databaseRole *DatabaseObjectIdentifier) *GrantDatabaseRoleRequest {
+func (s *GrantDatabaseRoleRequest) WithDatabaseRole(databaseRole DatabaseObjectIdentifier) *GrantDatabaseRoleRequest {
 	s.accountRole = nil
-	s.databaseRole = databaseRole
+	s.databaseRole = &databaseRole
 	return s
 }
 
-func (s *GrantDatabaseRoleRequest) WithAccountRole(accountRole *AccountObjectIdentifier) *GrantDatabaseRoleRequest {
+func (s *GrantDatabaseRoleRequest) WithAccountRole(accountRole AccountObjectIdentifier) *GrantDatabaseRoleRequest {
 	s.databaseRole = nil
-	s.accountRole = accountRole
+	s.accountRole = &accountRole
 	return s
 }
 
@@ -127,15 +127,15 @@ func NewRevokeDatabaseRoleRequest(
 	return &s
 }
 
-func (s *RevokeDatabaseRoleRequest) WithDatabaseRole(databaseRole *DatabaseObjectIdentifier) *RevokeDatabaseRoleRequest {
+func (s *RevokeDatabaseRoleRequest) WithDatabaseRole(databaseRole DatabaseObjectIdentifier) *RevokeDatabaseRoleRequest {
 	s.accountRole = nil
-	s.databaseRole = databaseRole
+	s.databaseRole = &databaseRole
 	return s
 }
 
-func (s *RevokeDatabaseRoleRequest) WithAccountRole(accountRole *AccountObjectIdentifier) *RevokeDatabaseRoleRequest {
+func (s *RevokeDatabaseRoleRequest) WithAccountRole(accountRole AccountObjectIdentifier) *RevokeDatabaseRoleRequest {
 	s.databaseRole = nil
-	s.accountRole = accountRole
+	s.accountRole = &accountRole
 	return s
 }
 
