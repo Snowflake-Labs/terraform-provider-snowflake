@@ -87,20 +87,20 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 
 func (opts *grantDatabaseRoleOptions) validateProp() error {
 	// TODO: implement me
-	panic("implement me")
+	return nil
 }
 
 func (opts *revokeDatabaseRoleOptions) validateProp() error {
 	// TODO: implement me
-	panic("implement me")
+	return nil
 }
 
 func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
 	// TODO: implement me
-	panic("implement me")
+	return nil
 }
 
 func (opts *revokeDatabaseRoleFromShareOptions) validateProp() error {
 	// TODO: implement me
-	panic("implement me")
+	return nil
 }
