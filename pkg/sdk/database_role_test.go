@@ -5,14 +5,14 @@ import "testing"
 func TestDatabaseRoleCreate(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *CreateDatabaseRoleOptions {
-		return &CreateDatabaseRoleOptions{
+	setUpOpts := func() *createDatabaseRoleOptions {
+		return &createDatabaseRoleOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateDatabaseRoleOptions = nil
+		var opts *createDatabaseRoleOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
@@ -54,14 +54,14 @@ func TestDatabaseRoleCreate(t *testing.T) {
 func TestDatabaseRoleAlter(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *AlterDatabaseRoleOptions {
-		return &AlterDatabaseRoleOptions{
+	setUpOpts := func() *alterDatabaseRoleOptions {
+		return &alterDatabaseRoleOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterDatabaseRoleOptions = nil
+		var opts *alterDatabaseRoleOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
@@ -154,14 +154,14 @@ func TestDatabaseRoleAlter(t *testing.T) {
 func TestDatabaseRoleDrop(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *DropDatabaseRoleOptions {
-		return &DropDatabaseRoleOptions{
+	setUpOpts := func() *dropDatabaseRoleOptions {
+		return &dropDatabaseRoleOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *DropDatabaseRoleOptions = nil
+		var opts *dropDatabaseRoleOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
@@ -186,8 +186,8 @@ func TestDatabaseRoleDrop(t *testing.T) {
 func TestDatabaseRolesShow(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
-	setUpOpts := func() *ShowDatabaseRoleOptions {
-		return &ShowDatabaseRoleOptions{
+	setUpOpts := func() *showDatabaseRoleOptions {
+		return &showDatabaseRoleOptions{
 			Database: id,
 		}
 	}

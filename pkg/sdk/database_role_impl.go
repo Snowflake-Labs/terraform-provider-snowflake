@@ -53,8 +53,8 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-func (s *CreateDatabaseRoleRequest) toOpts() *CreateDatabaseRoleOptions {
-	return &CreateDatabaseRoleOptions{
+func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
+	return &createDatabaseRoleOptions{
 		OrReplace:   Bool(s.orReplace),
 		IfNotExists: Bool(s.ifNotExists),
 		name:        s.name,
@@ -62,8 +62,8 @@ func (s *CreateDatabaseRoleRequest) toOpts() *CreateDatabaseRoleOptions {
 	}
 }
 
-func (s *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
-	opts := AlterDatabaseRoleOptions{
+func (s *AlterDatabaseRoleRequest) toOpts() *alterDatabaseRoleOptions {
+	opts := alterDatabaseRoleOptions{
 		IfExists: Bool(s.ifExists),
 		name:     s.name,
 	}
@@ -79,15 +79,15 @@ func (s *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
 	return &opts
 }
 
-func (s *DropDatabaseRoleRequest) toOpts() *DropDatabaseRoleOptions {
-	return &DropDatabaseRoleOptions{
+func (s *DropDatabaseRoleRequest) toOpts() *dropDatabaseRoleOptions {
+	return &dropDatabaseRoleOptions{
 		IfExists: Bool(s.ifExists),
 		name:     s.name,
 	}
 }
 
-func (s *ShowDatabaseRoleRequest) toOpts() *ShowDatabaseRoleOptions {
-	return &ShowDatabaseRoleOptions{
+func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
+	return &showDatabaseRoleOptions{
 		Like:     s.like,
 		Database: s.database,
 	}

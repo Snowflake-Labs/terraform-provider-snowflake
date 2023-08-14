@@ -3,15 +3,15 @@ package sdk
 import "errors"
 
 var (
-	_ validatableOpts = new(CreateDatabaseRoleOptions)
-	_ validatableOpts = new(AlterDatabaseRoleOptions)
-	_ validatableOpts = new(DropDatabaseRoleOptions)
-	_ validatableOpts = new(ShowDatabaseRoleOptions)
+	_ validatableOpts = new(createDatabaseRoleOptions)
+	_ validatableOpts = new(alterDatabaseRoleOptions)
+	_ validatableOpts = new(dropDatabaseRoleOptions)
+	_ validatableOpts = new(showDatabaseRoleOptions)
 )
 
 var errDifferentDatabase = errors.New("database must be the same")
 
-func (opts *CreateDatabaseRoleOptions) validateProp() error {
+func (opts *createDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -25,7 +25,7 @@ func (opts *CreateDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *AlterDatabaseRoleOptions) validateProp() error {
+func (opts *alterDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -56,7 +56,7 @@ func (opts *AlterDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *DropDatabaseRoleOptions) validateProp() error {
+func (opts *dropDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -67,7 +67,7 @@ func (opts *DropDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *ShowDatabaseRoleOptions) validateProp() error {
+func (opts *showDatabaseRoleOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
