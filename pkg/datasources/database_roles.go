@@ -1,11 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -52,34 +52,30 @@ func DatabaseRoles() *schema.Resource {
 // ReadDatabaseRoles Reads the database metadata information.
 func ReadDatabaseRoles(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	d.SetId("database_roles_read")
+
 	databaseName := d.Get("database").(string)
 
-	listRoles, err := snowflake.ListDatabaseRoles(databaseName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] no roles found in database (%s)", databaseName)
+	ctx := context.Background()
+	showRequest := sdk.NewShowDatabaseRoleRequest(sdk.NewAccountObjectIdentifier(databaseName))
+	extractedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
+	if err != nil {
+		log.Printf("[DEBUG] unable to show database roles in db (%s)", databaseName)
 		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Println("[DEBUG] failed to list roles")
-		d.SetId("")
-		return nil
-	}
-
-	log.Printf("[DEBUG] list roles: %v", listRoles)
-
-	roles := []map[string]interface{}{}
-	for _, role := range listRoles {
-		roleMap := map[string]interface{}{}
-
-		roleMap["name"] = role.Name
-		roleMap["comment"] = role.Comment
-		roleMap["owner"] = role.Owner
-		roles = append(roles, roleMap)
-	}
-
-	if err := d.Set("database_roles", roles); err != nil {
 		return err
 	}
-	return nil
+
+	databaseRoles := make([]map[string]any, 0, len(extractedDatabaseRoles))
+	for _, databaseRole := range extractedDatabaseRoles {
+		databaseRoleMap := map[string]any{}
+
+		databaseRoleMap["name"] = databaseRole.Name
+		databaseRoleMap["comment"] = databaseRole.Comment
+		databaseRoleMap["owner"] = databaseRole.Owner
+
+		databaseRoles = append(databaseRoles, databaseRoleMap)
+	}
+
+	return d.Set("database_roles", databaseRoles)
 }
