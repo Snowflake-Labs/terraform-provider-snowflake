@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -101,4 +102,42 @@ func validateIntInRange(value int, min int, max int) bool {
 
 func validateIntGreaterThanOrEqual(value int, min int) bool {
 	return value >= min
+}
+
+func validateAll(errs ...error) error {
+	return errors.Join(errs...)
+}
+
+func validateOneOfGroup(groups ...bool) error {
+	var set []bool // group
+	for _, g := range groups {
+		if g {
+			set = append(set, true)
+		}
+	}
+
+	if len(set) > 1 {
+		return errors.New("one of") // TODO
+	}
+	if len(set) == 0 {
+		return errors.New("none of") // TODO ??
+	}
+	return nil
+}
+
+// TODO Return group struct
+func group(fields ...any) bool {
+	for _, f := range fields {
+		if f != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func validateObjectIdentifier(id ObjectIdentifier) error {
+	if !validObjectidentifier(id) {
+		return ErrInvalidObjectIdentifier
+	}
+	return nil
 }

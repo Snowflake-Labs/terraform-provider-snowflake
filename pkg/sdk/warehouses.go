@@ -263,10 +263,15 @@ type WarehouseUnset struct {
 }
 
 func (v *WarehouseUnset) validate() error {
-	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
-		return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
-	}
-	return nil
+	//if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+	//	return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
+	//}
+	return validateAll(
+		validateOneOfGroup(
+			group(v.Tag),
+			group(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor),
+		),
+	)
 }
 
 func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterWarehouseOptions) error {
@@ -293,10 +298,11 @@ type DropWarehouseOptions struct {
 }
 
 func (opts *DropWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
-	}
-	return nil
+	//if !validObjectidentifier(opts.name) {
+	//	return ErrInvalidObjectIdentifier
+	//}
+	//return nil
+	return validateAll(validateObjectIdentifier(opts.name))
 }
 
 func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error {
