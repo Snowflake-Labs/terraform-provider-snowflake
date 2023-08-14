@@ -16,7 +16,7 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageIntegrationConfig(name, "si1", "s3://foo/"),
+				Config: stageIntegrationConfig(name, "si1", "s3://foo/", "ff1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
@@ -24,7 +24,7 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 				Destroy: false,
 			},
 			{
-				Config: stageIntegrationConfig(name, "changed", "s3://changed/"),
+				Config: stageIntegrationConfig(name, "changed", "s3://changed/", "ff2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
@@ -34,7 +34,7 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	})
 }
 
-func stageIntegrationConfig(name string, siNameSuffix string, url string) string {
+func stageIntegrationConfig(name string, siNameSuffix string, url string, ffName string) string {
 	resources := `
 resource "snowflake_database" "test" {
 	name = "%s"
@@ -61,8 +61,18 @@ resource "snowflake_stage" "test" {
 	storage_integration = snowflake_storage_integration.test.name
 	schema = snowflake_schema.test.name
 	database = snowflake_database.test.name
+	file_format = snowflake_file_format.test.name
+}
+
+resource "snowflake_file_format" "test" {
+	database             = snowflake_database.test.name
+	schema               = snowflake_schema.test.name
+	name                 = "%s"
+	format_type          = "JSON"
+	compression          = "GZIP"
+	skip_byte_order_mark = true
 }
 `
 
-	return fmt.Sprintf(resources, name, name, name, siNameSuffix, url, name, url)
+	return fmt.Sprintf(resources, name, name, name, siNameSuffix, url, name, url, ffName)
 }
