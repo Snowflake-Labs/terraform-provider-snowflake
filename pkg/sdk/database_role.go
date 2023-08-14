@@ -6,10 +6,10 @@ import (
 )
 
 type DatabaseRoles interface {
-	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateDatabaseRoleOptions) error
-	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterDatabaseRoleOptions) error
-	Drop(ctx context.Context, id DatabaseObjectIdentifier) error
-	Show(ctx context.Context, opts *ShowDatabaseRoleOptions) ([]*DatabaseRole, error)
+	Create(ctx context.Context, request *CreateDatabaseRoleRequest) error
+	Alter(ctx context.Context, request *AlterDatabaseRoleRequest) error
+	Drop(ctx context.Context, request *DropDatabaseRoleRequest) error
+	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]*DatabaseRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
 }
 

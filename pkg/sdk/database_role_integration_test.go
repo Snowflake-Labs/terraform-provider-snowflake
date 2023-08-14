@@ -25,7 +25,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	cleanupDatabaseRoleProvider := func(id DatabaseObjectIdentifier) func() {
 		return func() {
-			err := client.DatabaseRoles.Drop(ctx, id)
+			err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
 			require.NoError(t, err)
 		}
 	}
@@ -35,7 +35,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
@@ -50,11 +50,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 		comment := randomComment(t)
 
-		err := client.DatabaseRoles.Create(ctx, id, &CreateDatabaseRoleOptions{
-			OrReplace:   Bool(false),
-			IfNotExists: Bool(true),
-			Comment:     String(comment),
-		})
+		request := NewCreateDatabaseRoleRequest(id).WithComment(&comment).WithIfNotExists(true)
+		err := client.DatabaseRoles.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
@@ -64,11 +61,11 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assertDatabaseRole(t, databaseRole, name, comment)
 	})
 
-	t.Run("create database_role: no options", func(t *testing.T) {
+	t.Run("create database_role: no optionals", func(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
@@ -82,10 +79,10 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 
-		err = client.DatabaseRoles.Drop(ctx, id)
+		err = client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
 		require.NoError(t, err)
 
 		_, err = client.DatabaseRoles.ShowByID(ctx, id)
@@ -95,7 +92,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	t.Run("drop database_role: non-existing", func(t *testing.T) {
 		id := NewDatabaseObjectIdentifier(database.Name, "does_not_exist")
 
-		err := client.DatabaseRoles.Drop(ctx, id)
+		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
 		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 
@@ -103,17 +100,12 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
-		alterOptions := &AlterDatabaseRoleOptions{
-			Set: &DatabaseRoleSet{
-				Comment: "new comment",
-			},
-		}
-
-		err = client.DatabaseRoles.Alter(ctx, id, alterOptions)
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithSet(NewDatabaseRoleSetRequest("new comment"))
+		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredDatabaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
@@ -121,13 +113,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredDatabaseRole.Comment)
 
-		alterOptions = &AlterDatabaseRoleOptions{
-			Unset: &DatabaseRoleUnset{
-				Comment: true,
-			},
-		}
-
-		err = client.DatabaseRoles.Alter(ctx, id, alterOptions)
+		alterRequest = NewAlterDatabaseRoleRequest(id).WithUnsetComment()
+		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredDatabaseRole, err = client.DatabaseRoles.ShowByID(ctx, id)
@@ -140,18 +127,14 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 
 		newName := randomString(t)
 		newId := NewDatabaseObjectIdentifier(database.Name, newName)
-		alterOptions := &AlterDatabaseRoleOptions{
-			Rename: &DatabaseRoleRename{
-				Name: newId,
-			},
-		}
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(NewDatabaseRoleRenameRequest(newId))
 
-		err = client.DatabaseRoles.Alter(ctx, id, alterOptions)
+		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		if err != nil {
 			t.Cleanup(cleanupDatabaseRoleProvider(id))
 		} else {
@@ -175,19 +158,15 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		name := randomString(t)
 		id := NewDatabaseObjectIdentifier(database.Name, name)
 
-		err := client.DatabaseRoles.Create(ctx, id, nil)
+		err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
 		newName := randomString(t)
 		newId := NewDatabaseObjectIdentifier(secondDatabase.Name, newName)
-		alterOptions := &AlterDatabaseRoleOptions{
-			Rename: &DatabaseRoleRename{
-				Name: newId,
-			},
-		}
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(NewDatabaseRoleRenameRequest(newId))
 
-		err = client.DatabaseRoles.Alter(ctx, id, alterOptions)
+		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		assert.ErrorIs(t, err, errDifferentDatabase)
 	})
 
@@ -195,10 +174,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showOptions := &ShowDatabaseRoleOptions{
-			Database: database.ID(),
-		}
-		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showOptions)
+		showRequest := NewShowDatabaseRoleRequest(database.ID())
+		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 		require.NoError(t, err)
 
 		assert.Equal(t, 2, len(returnedDatabaseRoles))
@@ -210,13 +187,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showOptions := &ShowDatabaseRoleOptions{
-			Like: &Like{
-				Pattern: String(role1.Name),
-			},
-			Database: database.ID(),
-		}
-		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showOptions)
+		showRequest := NewShowDatabaseRoleRequest(database.ID()).WithLike(role1.Name)
+		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(returnedDatabaseRoles))
@@ -225,13 +197,8 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("show database_role: no matches", func(t *testing.T) {
-		showOptions := &ShowDatabaseRoleOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
-			},
-			Database: database.ID(),
-		}
-		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showOptions)
+		showRequest := NewShowDatabaseRoleRequest(database.ID()).WithLike("non-existent")
+		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(returnedDatabaseRoles))
