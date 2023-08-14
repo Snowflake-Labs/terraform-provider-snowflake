@@ -15,9 +15,9 @@ type DatabaseRoles interface {
 
 // createDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database-role.
 type createDatabaseRoleOptions struct {
-	create       bool                     `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create       bool                     `ddl:"static" sql:"CREATE"`
 	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfNotExists  *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
 
@@ -26,8 +26,8 @@ type createDatabaseRoleOptions struct {
 
 // alterDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database-role.
 type alterDatabaseRoleOptions struct {
-	alter        bool                     `ddl:"static" sql:"ALTER"`         //lint:ignore U1000 This is used in the ddl tag
-	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	alter        bool                     `ddl:"static" sql:"ALTER"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
 
@@ -51,8 +51,8 @@ type DatabaseRoleUnset struct {
 
 // dropDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-database-role.
 type dropDatabaseRoleOptions struct {
-	drop         bool                     `ddl:"static" sql:"DROP"`          //lint:ignore U1000 This is used in the ddl tag
-	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"` //lint:ignore U1000 This is used in the ddl tag
+	drop         bool                     `ddl:"static" sql:"DROP"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
 }
@@ -60,10 +60,10 @@ type dropDatabaseRoleOptions struct {
 // showDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-database-roles.
 // At the time of writing LIKE is not visible in the docs, but it works.
 type showDatabaseRoleOptions struct {
-	show          bool                    `ddl:"static" sql:"SHOW"`           //lint:ignore U1000 This is used in the ddl tag
-	databaseRoles bool                    `ddl:"static" sql:"DATABASE ROLES"` //lint:ignore U1000 This is used in the ddl tag
+	show          bool                    `ddl:"static" sql:"SHOW"`
+	databaseRoles bool                    `ddl:"static" sql:"DATABASE ROLES"`
 	Like          *Like                   `ddl:"keyword" sql:"LIKE"`
-	in            bool                    `ddl:"static" sql:"IN DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	in            bool                    `ddl:"static" sql:"IN DATABASE"`
 	Database      AccountObjectIdentifier `ddl:"identifier"`
 }
 
