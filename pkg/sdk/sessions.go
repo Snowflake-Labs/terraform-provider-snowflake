@@ -28,8 +28,8 @@ type sessions struct {
 }
 
 type AlterSessionOptions struct {
-	alter   bool          `ddl:"static" sql:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
-	session bool          `ddl:"static" sql:"SESSION"` //lint:ignore U1000 This is used in the ddl tag
+	alter   bool          `ddl:"static" sql:"ALTER"`
+	session bool          `ddl:"static" sql:"SESSION"`
 	Set     *SessionSet   `ddl:"keyword" sql:"SET"`
 	Unset   *SessionUnset `ddl:"keyword" sql:"UNSET"`
 }
@@ -89,8 +89,8 @@ func (v *sessions) AlterSession(ctx context.Context, opts *AlterSessionOptions) 
 }
 
 type ShowParametersOptions struct {
-	show       bool          `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	parameters bool          `ddl:"static" sql:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool          `ddl:"static" sql:"SHOW"`
+	parameters bool          `ddl:"static" sql:"PARAMETERS"`
 	Like       *Like         `ddl:"keyword" sql:"LIKE"`
 	In         *ParametersIn `ddl:"keyword" sql:"IN"`
 }

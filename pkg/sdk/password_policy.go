@@ -33,9 +33,9 @@ type passwordPolicies struct {
 }
 
 type CreatePasswordPolicyOptions struct {
-	create         bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create         bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace      *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfNotExists    *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -77,8 +77,8 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 }
 
 type AlterPasswordPolicyOptions struct {
-	alter          bool                   `ddl:"static" sql:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	alter          bool                   `ddl:"static" sql:"ALTER"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 	NewName        SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -205,8 +205,8 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 }
 
 type DropPasswordPolicyOptions struct {
-	drop           bool                   `ddl:"static" sql:"DROP"`            //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	drop           bool                   `ddl:"static" sql:"DROP"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
@@ -236,8 +236,8 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 
 // PasswordPolicyShowOptions represents the options for listing password policies.
 type PasswordPolicyShowOptions struct {
-	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+	show             bool  `ddl:"static" sql:"SHOW"`
+	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
 	In               *In   `ddl:"keyword" sql:"IN"`
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
@@ -339,8 +339,8 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 }
 
 type describePasswordPolicyOptions struct {
-	describe       bool                   `ddl:"static" sql:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	describe       bool                   `ddl:"static" sql:"DESCRIBE"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
