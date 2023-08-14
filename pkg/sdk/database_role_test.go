@@ -45,6 +45,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 	t.Run("all optional", func(t *testing.T) {
 		opts := setUpOpts()
 		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(false)
 		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE ROLE IF NOT EXISTS %s COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})

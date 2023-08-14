@@ -19,7 +19,7 @@ func (opts *CreateDatabaseRoleOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
 		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
 	}
 	return errors.Join(errs...)
