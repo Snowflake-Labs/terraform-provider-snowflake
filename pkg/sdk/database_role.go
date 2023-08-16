@@ -5,6 +5,8 @@ import (
 	"database/sql"
 )
 
+var _ convertibleRow[DatabaseRole] = new(databaseRoleDBRow)
+
 type DatabaseRoles interface {
 	Create(ctx context.Context, request *CreateDatabaseRoleRequest) error
 	Alter(ctx context.Context, request *AlterDatabaseRoleRequest) error
@@ -21,6 +23,7 @@ type createDatabaseRoleOptions struct {
 	IfNotExists  *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
 
+	// Optional
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -98,7 +101,7 @@ type DatabaseRole struct {
 	OwnerRoleType          string
 }
 
-func (row databaseRoleDBRow) toDatabaseRole() *DatabaseRole {
+func (row databaseRoleDBRow) convert() *DatabaseRole {
 	databaseRole := DatabaseRole{
 		CreatedOn: row.CreatedOn,
 		Name:      row.Name,

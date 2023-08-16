@@ -1,5 +1,12 @@
 package sdk
 
+var (
+	_ optionsProvider[createDatabaseRoleOptions] = new(CreateDatabaseRoleRequest)
+	_ optionsProvider[alterDatabaseRoleOptions]  = new(AlterDatabaseRoleRequest)
+	_ optionsProvider[dropDatabaseRoleOptions]   = new(DropDatabaseRoleRequest)
+	_ optionsProvider[showDatabaseRoleOptions]   = new(ShowDatabaseRoleRequest)
+)
+
 type CreateDatabaseRoleRequest struct {
 	orReplace   bool
 	ifNotExists bool

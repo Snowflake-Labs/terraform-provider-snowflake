@@ -30,10 +30,7 @@ func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleReque
 		return nil, err
 	}
 
-	resultList := make([]DatabaseRole, len(*dbRows))
-	for i, row := range *dbRows {
-		resultList[i] = *(row.toDatabaseRole())
-	}
+	resultList := convertRows[databaseRoleDBRow, DatabaseRole](dbRows)
 
 	return resultList, nil
 }
@@ -45,12 +42,7 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 		return nil, err
 	}
 
-	for _, databaseRole := range databaseRoles {
-		if databaseRole.Name == id.Name() {
-			return &databaseRole, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return findOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
 func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {

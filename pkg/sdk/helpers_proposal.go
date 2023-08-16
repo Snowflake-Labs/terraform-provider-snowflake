@@ -66,3 +66,19 @@ func createIfNil[T any](t *T) *T {
 	}
 	return t
 }
+
+type convertibleRow[T any] interface {
+	convert() *T
+}
+
+func convertRows[T convertibleRow[U], U any](dbRows *[]T) []U {
+	resultList := make([]U, len(*dbRows))
+	for i, row := range *dbRows {
+		resultList[i] = *(row.convert())
+	}
+	return resultList
+}
+
+type optionsProvider[T any] interface {
+	toOpts() *T
+}

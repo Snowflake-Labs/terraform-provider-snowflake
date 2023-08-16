@@ -36,28 +36,18 @@ func (s *AlterDatabaseRoleRequest) WithIfExists(ifExists bool) *AlterDatabaseRol
 	return s
 }
 
-func (s *AlterDatabaseRoleRequest) WithRename(rename *DatabaseRoleRenameRequest) *AlterDatabaseRoleRequest {
-	s.clearForOneOf()
-	s.rename = rename
+func (s *AlterDatabaseRoleRequest) WithRename(name DatabaseObjectIdentifier) *AlterDatabaseRoleRequest {
+	s.rename = NewDatabaseRoleRenameRequest(name)
 	return s
 }
 
-func (s *AlterDatabaseRoleRequest) WithSet(set *DatabaseRoleSetRequest) *AlterDatabaseRoleRequest {
-	s.clearForOneOf()
-	s.set = set
+func (s *AlterDatabaseRoleRequest) WithSetComment(comment string) *AlterDatabaseRoleRequest {
+	s.set = NewDatabaseRoleSetRequest(comment)
 	return s
 }
 
 func (s *AlterDatabaseRoleRequest) WithUnsetComment() *AlterDatabaseRoleRequest {
-	s.clearForOneOf()
 	s.unset = NewDatabaseRoleUnsetRequest()
-	return s
-}
-
-func (s *AlterDatabaseRoleRequest) clearForOneOf() *AlterDatabaseRoleRequest {
-	s.rename = nil
-	s.set = nil
-	s.unset = nil
 	return s
 }
 

@@ -104,7 +104,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
-		alterRequest := NewAlterDatabaseRoleRequest(id).WithSet(NewDatabaseRoleSetRequest("new comment"))
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithSetComment("new comment")
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -132,7 +132,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		newName := randomString(t)
 		newId := NewDatabaseObjectIdentifier(database.Name, newName)
-		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(NewDatabaseRoleRenameRequest(newId))
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(newId)
 
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		if err != nil {
@@ -164,7 +164,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		newName := randomString(t)
 		newId := NewDatabaseObjectIdentifier(secondDatabase.Name, newName)
-		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(NewDatabaseRoleRenameRequest(newId))
+		alterRequest := NewAlterDatabaseRoleRequest(id).WithRename(newId)
 
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		assert.ErrorIs(t, err, errDifferentDatabase)

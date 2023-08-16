@@ -107,8 +107,8 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
-		assert.Contains(t, pipes, pipe1)
-		assert.Contains(t, pipes, pipe2)
+		assert.Contains(t, pipes, *pipe1)
+		assert.Contains(t, pipes, *pipe2)
 	})
 
 	t.Run("show: in schema", func(t *testing.T) {
@@ -121,8 +121,8 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
-		assert.Contains(t, pipes, pipe1)
-		assert.Contains(t, pipes, pipe2)
+		assert.Contains(t, pipes, *pipe1)
+		assert.Contains(t, pipes, *pipe2)
 	})
 
 	t.Run("show: like", func(t *testing.T) {
@@ -135,7 +135,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(pipes))
-		assert.Contains(t, pipes, pipe1)
+		assert.Contains(t, pipes, *pipe1)
 	})
 
 	t.Run("show: non-existent pipe", func(t *testing.T) {

@@ -28,16 +28,13 @@ func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error) {
+func (v *pipes) Show(ctx context.Context, opts *PipeShowOptions) ([]Pipe, error) {
 	dbRows, err := validateAndQuery[pipeDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	resultList := make([]*Pipe, len(*dbRows))
-	for i, row := range *dbRows {
-		resultList[i] = row.toPipe()
-	}
+	resultList := convertRows[pipeDBRow, Pipe](dbRows)
 
 	return resultList, nil
 }
@@ -57,7 +54,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 
 	for _, pipe := range pipes {
 		if pipe.ID().name == id.Name() {
-			return pipe, nil
+			return &pipe, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -71,5 +68,5 @@ func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 	if err != nil {
 		return nil, err
 	}
-	return pipeRow.toPipe(), nil
+	return pipeRow.convert(), nil
 }
