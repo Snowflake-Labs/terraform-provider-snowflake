@@ -21,6 +21,9 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assert.Equal(t, expectedName, databaseRole.Name)
 		assert.Equal(t, "ACCOUNTADMIN", databaseRole.Owner)
 		assert.Equal(t, expectedComment, databaseRole.Comment)
+		assert.Equal(t, 0, databaseRole.GrantedToRoles)
+		assert.Equal(t, 0, databaseRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, databaseRole.GrantedDatabaseRoles)
 	}
 
 	cleanupDatabaseRoleProvider := func(id DatabaseObjectIdentifier) func() {
@@ -214,6 +217,18 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		err := client.DatabaseRoles.Grant(ctx, grantRequest)
 		require.NoError(t, err)
 
+		extractedRole, err := client.DatabaseRoles.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		assert.Equal(t, 0, extractedRole.GrantedToRoles)
+		assert.Equal(t, 1, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, extractedRole.GrantedDatabaseRoles)
+
+		extractedRole, err = client.DatabaseRoles.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		assert.Equal(t, 0, extractedRole.GrantedToRoles)
+		assert.Equal(t, 0, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 1, extractedRole.GrantedDatabaseRoles)
+
 		revokeRequest := NewRevokeDatabaseRoleRequest(id1).WithDatabaseRole(id2)
 		err = client.DatabaseRoles.Revoke(ctx, revokeRequest)
 		require.NoError(t, err)
@@ -229,6 +244,12 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		grantRequest := NewGrantDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())
 		err := client.DatabaseRoles.Grant(ctx, grantRequest)
 		require.NoError(t, err)
+
+		extractedRole, err := client.DatabaseRoles.ShowByID(ctx, roleId)
+		require.NoError(t, err)
+		assert.Equal(t, 1, extractedRole.GrantedToRoles)
+		assert.Equal(t, 0, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, extractedRole.GrantedDatabaseRoles)
 
 		revokeRequest := NewRevokeDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())
 		err = client.DatabaseRoles.Revoke(ctx, revokeRequest)

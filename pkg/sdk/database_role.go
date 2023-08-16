@@ -82,9 +82,9 @@ type databaseRoleDBRow struct {
 	IsDefault              sql.NullString `db:"is_default"`
 	IsCurrent              sql.NullString `db:"is_current"`
 	IsInherited            sql.NullString `db:"is_inherited"`
-	GrantedToRoles         sql.NullString `db:"granted_to_roles"`
-	GrantedToDatabaseRoles sql.NullString `db:"granted_to_database_roles"`
-	GrantedDatabaseRoles   sql.NullString `db:"granted_database_roles"`
+	GrantedToRoles         int            `db:"granted_to_roles"`
+	GrantedToDatabaseRoles int            `db:"granted_to_database_roles"`
+	GrantedDatabaseRoles   int            `db:"granted_database_roles"`
 	Owner                  string         `db:"owner"`
 	Comment                sql.NullString `db:"comment"`
 	OwnerRoleType          sql.NullString `db:"owner_role_type"`
@@ -98,9 +98,9 @@ type DatabaseRole struct {
 	IsDefault              bool
 	IsCurrent              bool
 	IsInherited            bool
-	GrantedToRoles         string
-	GrantedToDatabaseRoles string
-	GrantedDatabaseRoles   string
+	GrantedToRoles         int
+	GrantedToDatabaseRoles int
+	GrantedDatabaseRoles   int
 	Owner                  string
 	Comment                string
 	OwnerRoleType          string
@@ -108,9 +108,12 @@ type DatabaseRole struct {
 
 func (row databaseRoleDBRow) convert() *DatabaseRole {
 	databaseRole := DatabaseRole{
-		CreatedOn: row.CreatedOn,
-		Name:      row.Name,
-		Owner:     row.Owner,
+		CreatedOn:              row.CreatedOn,
+		Name:                   row.Name,
+		Owner:                  row.Owner,
+		GrantedToRoles:         row.GrantedToRoles,
+		GrantedToDatabaseRoles: row.GrantedToDatabaseRoles,
+		GrantedDatabaseRoles:   row.GrantedDatabaseRoles,
 	}
 	if row.IsDefault.Valid {
 		databaseRole.IsDefault = row.IsDefault.String == "Y"
@@ -120,15 +123,6 @@ func (row databaseRoleDBRow) convert() *DatabaseRole {
 	}
 	if row.IsInherited.Valid {
 		databaseRole.IsInherited = row.IsInherited.String == "Y"
-	}
-	if row.GrantedToRoles.Valid {
-		databaseRole.GrantedToRoles = row.GrantedToRoles.String
-	}
-	if row.GrantedToDatabaseRoles.Valid {
-		databaseRole.GrantedToDatabaseRoles = row.GrantedToDatabaseRoles.String
-	}
-	if row.GrantedDatabaseRoles.Valid {
-		databaseRole.GrantedDatabaseRoles = row.GrantedDatabaseRoles.String
 	}
 	if row.Comment.Valid {
 		databaseRole.Comment = row.Comment.String
