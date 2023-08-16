@@ -52,12 +52,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 		return nil, err
 	}
 
-	for _, pipe := range pipes {
-		if pipe.ID().name == id.Name() {
-			return &pipe, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return findOne(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
 }
 
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
