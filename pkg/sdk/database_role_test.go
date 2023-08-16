@@ -263,7 +263,7 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 		opts := setUpOpts()
 		opts.ParentRole.DatabaseRoleName = &databaseRoleId
 
-		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO DATABASE ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 
 	t.Run("grant to account role", func(t *testing.T) {
@@ -312,7 +312,7 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 		opts := setUpOpts()
 		opts.ParentRole.DatabaseRoleName = &databaseRoleId
 
-		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM DATABASE ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 
 	t.Run("revoke from account role", func(t *testing.T) {

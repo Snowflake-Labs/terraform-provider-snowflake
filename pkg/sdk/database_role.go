@@ -144,7 +144,7 @@ type grantDatabaseRoleOptions struct {
 	grant        bool                            `ddl:"static" sql:"GRANT"`
 	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
 	name         DatabaseObjectIdentifier        `ddl:"identifier"`
-	toRole       bool                            `ddl:"static" sql:"TO ROLE"`
+	to           bool                            `ddl:"static" sql:"TO"`
 	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
 }
 
@@ -153,14 +153,14 @@ type revokeDatabaseRoleOptions struct {
 	revoke       bool                            `ddl:"static" sql:"REVOKE"`
 	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
 	name         DatabaseObjectIdentifier        `ddl:"identifier"`
-	fromRole     bool                            `ddl:"static" sql:"FROM ROLE"`
+	from         bool                            `ddl:"static" sql:"FROM"`
 	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
 }
 
 type grantOrRevokeDatabaseRoleObject struct {
 	// One of
-	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier"`
-	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier"`
+	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
 }
 
 // grantDatabaseRoleToShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role-share.
