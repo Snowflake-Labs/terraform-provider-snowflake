@@ -7,7 +7,7 @@ import (
 func TestPipesCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	setUpOpts := func() *PipeCreateOptions {
+	defaultOpts := func() *PipeCreateOptions {
 		return &PipeCreateOptions{
 			name:          id,
 			copyStatement: "<copy_statement>",
@@ -20,24 +20,24 @@ func TestPipesCreate(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: copy statement required", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.copyStatement = ""
 		assertOptsInvalid(t, opts, errCopyStatementRequired)
 	})
 
 	t.Run("basic", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `CREATE PIPE %s AS <copy_statement>`, id.FullyQualifiedName())
 	})
 
 	t.Run("all optional", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.AutoIngest = Bool(true)
 		opts.ErrorIntegration = String("some_error_integration")
@@ -51,7 +51,7 @@ func TestPipesCreate(t *testing.T) {
 func TestPipesAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	setUpOpts := func() *PipeAlterOptions {
+	defaultOpts := func() *PipeAlterOptions {
 		return &PipeAlterOptions{
 			name: id,
 		}
@@ -63,18 +63,18 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsInvalid(t, opts, errAlterNeedsExactlyOneAction)
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Set = &PipeSet{
 			ErrorIntegration: String("new_error_integration"),
 		}
@@ -85,13 +85,13 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("validation: no property to set", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Set = &PipeSet{}
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 
 	t.Run("validation: empty tags slice for set", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{},
 		}
@@ -99,13 +99,13 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Unset = &PipeUnset{}
 		assertOptsInvalid(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 
 	t.Run("validation: empty tags slice for unset", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{},
 		}
@@ -113,7 +113,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("set tag: single", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{
 				{
@@ -126,7 +126,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("set tag: multiple", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.SetTags = &PipeSetTags{
 			Tag: []TagAssociation{
 				{
@@ -143,7 +143,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("set all", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &PipeSet{
 			ErrorIntegration:    String("new_error_integration"),
@@ -154,7 +154,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("unset tag: single", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag_name1"),
@@ -164,7 +164,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("unset tag: multi", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.UnsetTags = &PipeUnsetTags{
 			Tag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag_name1"),
@@ -175,7 +175,7 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("unset all", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &PipeUnset{
 			PipeExecutionPaused: Bool(true),
@@ -185,13 +185,13 @@ func TestPipesAlter(t *testing.T) {
 	})
 
 	t.Run("refresh", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Refresh = &PipeRefresh{}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE %s REFRESH`, id.FullyQualifiedName())
 	})
 
 	t.Run("refresh with all", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Refresh = &PipeRefresh{
 			Prefix:        String("/d1"),
@@ -204,7 +204,7 @@ func TestPipesAlter(t *testing.T) {
 func TestPipesDrop(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	setUpOpts := func() *PipeDropOptions {
+	defaultOpts := func() *PipeDropOptions {
 		return &PipeDropOptions{
 			name: id,
 		}
@@ -216,18 +216,18 @@ func TestPipesDrop(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DROP PIPE %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("with if exists", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `DROP PIPE IF EXISTS %s`, id.FullyQualifiedName())
 	})
@@ -238,7 +238,7 @@ func TestPipesShow(t *testing.T) {
 	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
-	setUpOpts := func() *PipeShowOptions {
+	defaultOpts := func() *PipeShowOptions {
 		return &PipeShowOptions{}
 	}
 
@@ -248,19 +248,19 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{}
 		assertOptsInvalid(t, opts, errPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: empty in", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.In = &In{}
 		assertOptsInvalid(t, opts, errScopeRequiredForInKeyword)
 	})
 
 	t.Run("validation: exactly one scope for in", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.In = &In{
 			Account:  Bool(true),
 			Database: databaseIdentifier,
@@ -269,12 +269,12 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES`)
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
@@ -282,7 +282,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("in account", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.In = &In{
 			Account: Bool(true),
 		}
@@ -290,7 +290,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("in database", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.In = &In{
 			Database: databaseIdentifier,
 		}
@@ -298,7 +298,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("in schema", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.In = &In{
 			Schema: schemaIdentifier,
 		}
@@ -306,7 +306,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
@@ -317,7 +317,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
@@ -328,7 +328,7 @@ func TestPipesShow(t *testing.T) {
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
@@ -342,7 +342,7 @@ func TestPipesShow(t *testing.T) {
 func TestPipesDescribe(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	setUpOpts := func() *describePipeOptions {
+	defaultOpts := func() *describePipeOptions {
 		return &describePipeOptions{
 			name: id,
 		}
@@ -354,13 +354,13 @@ func TestPipesDescribe(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("with name", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PIPE %s`, id.FullyQualifiedName())
 	})
 }

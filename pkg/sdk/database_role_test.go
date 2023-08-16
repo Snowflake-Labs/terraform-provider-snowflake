@@ -7,7 +7,7 @@ import (
 func TestDatabaseRoleCreate(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *createDatabaseRoleOptions {
+	defaultOpts := func() *createDatabaseRoleOptions {
 		return &createDatabaseRoleOptions{
 			name: id,
 		}
@@ -19,20 +19,20 @@ func TestDatabaseRoleCreate(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
@@ -40,12 +40,12 @@ func TestDatabaseRoleCreate(t *testing.T) {
 	})
 
 	t.Run("basic", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE ROLE %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("all optional", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(false)
 		opts.Comment = String("some comment")
@@ -56,7 +56,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 func TestDatabaseRoleAlter(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *alterDatabaseRoleOptions {
+	defaultOpts := func() *alterDatabaseRoleOptions {
 		return &alterDatabaseRoleOptions{
 			name: id,
 		}
@@ -68,18 +68,18 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Set = &DatabaseRoleSet{
 			Comment: "new comment",
 		}
@@ -90,7 +90,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
 			Name: NewDatabaseObjectIdentifier("", ""),
 		}
@@ -100,7 +100,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	t.Run("validation: new name from different db", func(t *testing.T) {
 		newId := NewDatabaseObjectIdentifier(id.DatabaseName()+randomStringN(t, 1), randomStringN(t, 12))
 
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
 			Name: newId,
 		}
@@ -108,7 +108,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: false,
 		}
@@ -118,7 +118,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	t.Run("rename", func(t *testing.T) {
 		newId := NewDatabaseObjectIdentifier(id.DatabaseName(), randomStringN(t, 12))
 
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
 			Name: newId,
 		}
@@ -126,7 +126,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &DatabaseRoleSet{
 			Comment: "new comment",
@@ -135,7 +135,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("set comment to empty", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &DatabaseRoleSet{
 			Comment: "",
@@ -144,7 +144,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: true,
@@ -156,7 +156,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 func TestDatabaseRoleDrop(t *testing.T) {
 	id := randomDatabaseObjectIdentifier(t)
 
-	setUpOpts := func() *dropDatabaseRoleOptions {
+	defaultOpts := func() *dropDatabaseRoleOptions {
 		return &dropDatabaseRoleOptions{
 			name: id,
 		}
@@ -168,18 +168,18 @@ func TestDatabaseRoleDrop(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE ROLE %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("with if exists", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE ROLE IF EXISTS %s`, id.FullyQualifiedName())
 	})
@@ -188,7 +188,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 func TestDatabaseRolesShow(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
-	setUpOpts := func() *showDatabaseRoleOptions {
+	defaultOpts := func() *showDatabaseRoleOptions {
 		return &showDatabaseRoleOptions{
 			Database: id,
 		}
@@ -200,24 +200,24 @@ func TestDatabaseRolesShow(t *testing.T) {
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Database = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{}
 		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("show", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES IN DATABASE %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("show with like", func(t *testing.T) {
-		opts := setUpOpts()
+		opts := defaultOpts()
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
