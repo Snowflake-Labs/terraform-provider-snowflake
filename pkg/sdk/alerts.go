@@ -300,7 +300,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
 		},
 	})
 	if err != nil {

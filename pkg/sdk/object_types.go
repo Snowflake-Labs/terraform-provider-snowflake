@@ -146,7 +146,7 @@ func (o ObjectType) GetObjectIdentifier(fullyQualifiedName string) ObjectIdentif
 	dbName := parts[0]
 	if o == ObjectTypeSchema {
 		schemaName := strings.Join(parts[1:], ".")
-		return NewSchemaIdentifier(dbName, schemaName)
+		return NewDatabaseObjectIdentifier(dbName, schemaName)
 	}
 	schemaName := parts[1]
 	objectName := strings.Join(parts[2:], ".")

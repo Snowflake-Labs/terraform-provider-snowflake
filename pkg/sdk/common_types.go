@@ -44,9 +44,9 @@ type LimitFrom struct {
 }
 
 type In struct {
-	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
-	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Account  *bool                    `ddl:"keyword" sql:"ACCOUNT"`
+	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 }
 
 type Like struct {

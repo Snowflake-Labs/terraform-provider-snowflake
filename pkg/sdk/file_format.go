@@ -656,7 +656,7 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.databaseName, id.schemaName),
+			Schema: NewDatabaseObjectIdentifier(id.databaseName, id.schemaName),
 		},
 	})
 	if err != nil {

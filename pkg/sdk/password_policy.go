@@ -323,7 +323,7 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
 		},
 	})
 	if err != nil {

@@ -71,7 +71,7 @@ func ReadPipes(d *schema.ResourceData, meta interface{}) error {
 
 	extractedPipes, err := client.Pipes.Show(ctx, &sdk.PipeShowOptions{
 		In: &sdk.In{
-			Schema: sdk.NewSchemaIdentifier(databaseName, schemaName),
+			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
 		},
 	})
 	if err != nil {

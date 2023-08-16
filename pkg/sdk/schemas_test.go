@@ -51,9 +51,9 @@ func TestSchemasCreate(t *testing.T) {
 func TestSchemasAlter(t *testing.T) {
 	t.Run("rename to", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:     NewSchemaIdentifier("database_name", "schema_name"),
+			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			IfExists: Bool(true),
-			NewName:  NewSchemaIdentifier("database_name", "new_schema_name"),
+			NewName:  NewDatabaseObjectIdentifier("database_name", "new_schema_name"),
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -63,9 +63,9 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("swap with", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:     NewSchemaIdentifier("database_name", "schema_name"),
+			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			IfExists: Bool(false),
-			SwapWith: NewSchemaIdentifier("database_name", "target_schema_name"),
+			SwapWith: NewDatabaseObjectIdentifier("database_name", "target_schema_name"),
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("set options", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewSchemaIdentifier("database_name", "schema_name"),
+			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Set: &SchemaSet{
 				DataRetentionTimeInDays:    Int(3),
 				MaxDataExtensionTimeInDays: Int(2),
@@ -91,7 +91,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewSchemaIdentifier("database_name", "schema_name"),
+			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Set: &SchemaSet{
 				Tag: []TagAssociation{
 					{
@@ -113,7 +113,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("unset tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewSchemaIdentifier("database_name", "schema_name"),
+			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Unset: &SchemaUnset{
 				Tag: []ObjectIdentifier{
 					NewAccountObjectIdentifier("tag1"),
@@ -129,7 +129,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("unset options", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewSchemaIdentifier("database_name", "schema_name"),
+			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Unset: &SchemaUnset{
 				DataRetentionTimeInDays:    Bool(true),
 				MaxDataExtensionTimeInDays: Bool(true),
@@ -145,7 +145,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("enable managed access", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:                NewSchemaIdentifier("database_name", "schema_name"),
+			name:                NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			EnableManagedAccess: Bool(true),
 		}
 		actual, err := structToSQL(opts)
@@ -156,7 +156,7 @@ func TestSchemasAlter(t *testing.T) {
 
 	t.Run("disable managed access", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:                 NewSchemaIdentifier("database_name", "schema_name"),
+			name:                 NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			DisableManagedAccess: Bool(true),
 		}
 		actual, err := structToSQL(opts)
@@ -170,7 +170,7 @@ func TestSchemasDrop(t *testing.T) {
 	t.Run("cascade", func(t *testing.T) {
 		opts := &DropSchemaOptions{
 			IfExists: Bool(true),
-			name:     NewSchemaIdentifier("database_name", "schema_name"),
+			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Cascade:  Bool(true),
 		}
 		actual, err := structToSQL(opts)
@@ -181,7 +181,7 @@ func TestSchemasDrop(t *testing.T) {
 
 	t.Run("restrict", func(t *testing.T) {
 		opts := &DropSchemaOptions{
-			name:     NewSchemaIdentifier("database_name", "schema_name"),
+			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Restrict: Bool(true),
 		}
 		actual, err := structToSQL(opts)
@@ -193,7 +193,7 @@ func TestSchemasDrop(t *testing.T) {
 
 func TestSchemasUndrop(t *testing.T) {
 	opts := &undropSchemaOptions{
-		name: NewSchemaIdentifier("database_name", "schema_name"),
+		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 	}
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)
@@ -203,7 +203,7 @@ func TestSchemasUndrop(t *testing.T) {
 
 func TestSchemasDescribe(t *testing.T) {
 	opts := &describeSchemaOptions{
-		name: NewSchemaIdentifier("database_name", "schema_name"),
+		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 	}
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)

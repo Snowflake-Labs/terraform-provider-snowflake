@@ -165,9 +165,9 @@ func (v *GrantOnAccountObject) validate() error {
 }
 
 type GrantOnSchema struct {
-	Schema                  *SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
-	AllSchemasInDatabase    *AccountObjectIdentifier `ddl:"identifier" sql:"ALL SCHEMAS IN DATABASE"`
-	FutureSchemasInDatabase *AccountObjectIdentifier `ddl:"identifier" sql:"FUTURE SCHEMAS IN DATABASE"`
+	Schema                  *DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
+	AllSchemasInDatabase    *AccountObjectIdentifier  `ddl:"identifier" sql:"ALL SCHEMAS IN DATABASE"`
+	FutureSchemasInDatabase *AccountObjectIdentifier  `ddl:"identifier" sql:"FUTURE SCHEMAS IN DATABASE"`
 }
 
 func (v *GrantOnSchema) validate() error {
@@ -191,9 +191,9 @@ func (v *GrantOnSchemaObject) validate() error {
 }
 
 type GrantOnSchemaObjectIn struct {
-	PluralObjectType PluralObjectType         `ddl:"keyword" sql:"ALL"`
-	InDatabase       *AccountObjectIdentifier `ddl:"identifier" sql:"IN DATABASE"`
-	InSchema         *SchemaIdentifier        `ddl:"identifier" sql:"IN SCHEMA"`
+	PluralObjectType PluralObjectType          `ddl:"keyword" sql:"ALL"`
+	InDatabase       *AccountObjectIdentifier  `ddl:"identifier" sql:"IN DATABASE"`
+	InSchema         *DatabaseObjectIdentifier `ddl:"identifier" sql:"IN SCHEMA"`
 }
 
 func (v *GrantOnSchemaObjectIn) validate() error {
@@ -298,11 +298,11 @@ func (opts *grantPrivilegeToShareOptions) validate() error {
 }
 
 type GrantPrivilegeToShareOn struct {
-	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
-	Function SchemaObjectIdentifier  `ddl:"identifier" sql:"FUNCTION"`
-	Table    *OnTable                `ddl:"-"`
-	View     SchemaObjectIdentifier  `ddl:"identifier" sql:"VIEW"`
+	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
+	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
+	Table    *OnTable                 `ddl:"-"`
+	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
 }
 
 func (v *GrantPrivilegeToShareOn) validate() error {
@@ -318,8 +318,8 @@ func (v *GrantPrivilegeToShareOn) validate() error {
 }
 
 type OnTable struct {
-	Name        SchemaObjectIdentifier `ddl:"identifier" sql:"TABLE"`
-	AllInSchema SchemaIdentifier       `ddl:"identifier" sql:"ALL TABLES IN SCHEMA"`
+	Name        SchemaObjectIdentifier   `ddl:"identifier" sql:"TABLE"`
+	AllInSchema DatabaseObjectIdentifier `ddl:"identifier" sql:"ALL TABLES IN SCHEMA"`
 }
 
 func (v *OnTable) validate() error {
@@ -372,10 +372,10 @@ func (opts *revokePrivilegeFromShareOptions) validate() error {
 }
 
 type RevokePrivilegeFromShareOn struct {
-	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
-	Table    *OnTable                `ddl:"-"`
-	View     *OnView                 `ddl:"-"`
+	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
+	Table    *OnTable                 `ddl:"-"`
+	View     *OnView                  `ddl:"-"`
 }
 
 func (v *RevokePrivilegeFromShareOn) validate() error {
@@ -392,8 +392,8 @@ func (v *RevokePrivilegeFromShareOn) validate() error {
 }
 
 type OnView struct {
-	Name        SchemaObjectIdentifier `ddl:"identifier" sql:"VIEW"`
-	AllInSchema SchemaIdentifier       `ddl:"identifier" sql:"ALL VIEWS IN SCHEMA"`
+	Name        SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
+	AllInSchema DatabaseObjectIdentifier `ddl:"identifier" sql:"ALL VIEWS IN SCHEMA"`
 }
 
 func (v *OnView) validate() error {
@@ -441,8 +441,8 @@ func (opts *ShowGrantOptions) validate() error {
 }
 
 type ShowGrantsIn struct {
-	Schema   *SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
-	Database *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
+	Schema   *DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
+	Database *AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
 }
 
 type ShowGrantsOn struct {

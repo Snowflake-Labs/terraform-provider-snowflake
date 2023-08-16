@@ -5,6 +5,8 @@ import (
 	"database/sql"
 )
 
+var _ convertibleRow[Pipe] = new(pipeDBRow)
+
 type Pipes interface {
 	// Create creates a pipe.
 	Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *PipeCreateOptions) error
@@ -13,7 +15,7 @@ type Pipes interface {
 	// Drop removes a pipe.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of pipes.
-	Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error)
+	Show(ctx context.Context, opts *PipeShowOptions) ([]Pipe, error)
 	// ShowByID returns a pipe by ID.
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 	// Describe returns the details of a pipe.
@@ -146,7 +148,7 @@ func (v *Pipe) ObjectType() ObjectType {
 	return ObjectTypePipe
 }
 
-func (row pipeDBRow) toPipe() *Pipe {
+func (row pipeDBRow) convert() *Pipe {
 	pipe := Pipe{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,

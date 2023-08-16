@@ -156,7 +156,7 @@ func TestInt_UseSchema(t *testing.T) {
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		originalSchemaIdentifier := NewSchemaIdentifier(originalDB, originalSchema)
+		originalSchemaIdentifier := NewDatabaseObjectIdentifier(originalDB, originalSchema)
 		if !validObjectidentifier(originalSchemaIdentifier) {
 			return
 		}

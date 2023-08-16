@@ -10,7 +10,7 @@ import (
 
 func TestComments(t *testing.T) {
 	t.Run("set on schema", func(t *testing.T) {
-		id := NewSchemaIdentifier("db1", "schema2")
+		id := NewDatabaseObjectIdentifier("db1", "schema2")
 		opts := &SetCommentOptions{
 			ObjectType: ObjectTypeSchema,
 			ObjectName: &id,
@@ -38,7 +38,7 @@ func TestComments(t *testing.T) {
 
 	t.Run("set column comment", func(t *testing.T) {
 		opts := &SetColumnCommentOptions{
-			Column: NewSchemaIdentifier("table3", "column4"),
+			Column: NewDatabaseObjectIdentifier("table3", "column4"),
 			Value:  String("mycomment3"),
 		}
 		actual, err := structToSQL(opts)
