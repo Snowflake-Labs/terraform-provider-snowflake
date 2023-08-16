@@ -51,9 +51,7 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	// TODO: what to do with decode snowflake id method in case of SchemaIdentifier and DatabaseObjectIdentifier?
-	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
-	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
 	ctx := context.Background()
 	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, objectIdentifier)
@@ -109,8 +107,7 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
-	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
 	if d.HasChange("comment") {
 		_, newVal := d.GetChange("comment")
@@ -131,8 +128,7 @@ func DeleteDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	schemaIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaIdentifier)
-	objectIdentifier := sdk.NewDatabaseObjectIdentifier(schemaIdentifier.DatabaseName(), schemaIdentifier.Name())
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
 	ctx := context.Background()
 	dropRequest := sdk.NewDropDatabaseRoleRequest(objectIdentifier)
