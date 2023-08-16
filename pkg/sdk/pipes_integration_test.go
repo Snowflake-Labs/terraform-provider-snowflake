@@ -20,11 +20,11 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
+	schemaIdentifier := NewDatabaseObjectIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -75,11 +75,11 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table1, table1Cleanup := createTable(t, client, database, schema)
@@ -169,11 +169,11 @@ func TestInt_PipeCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -251,11 +251,11 @@ func TestInt_PipeDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -289,11 +289,11 @@ func TestInt_PipeAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)

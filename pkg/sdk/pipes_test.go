@@ -236,7 +236,7 @@ func TestPipesDrop(t *testing.T) {
 func TestPipesShow(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
-	schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
+	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
 	setUpOpts := func() *PipeShowOptions {
 		return &PipeShowOptions{}
